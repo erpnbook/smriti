@@ -6,7 +6,7 @@
 frappe.pages['smriti-shift'].on_page_load = function(wrapper) {
     const page = frappe.ui.make_app_page({
         parent: wrapper,
-        title: 'SMRITI Day Open / Close',
+        title: 'Day Open / Close',
         single_column: true
     });
 
@@ -53,7 +53,7 @@ class SmritiShiftPage {
                     <div class="brand">
                         <div class="brand-icon">🏪</div>
                         <div>
-                            <div class="brand-title">SMRITI Retail OS</div>
+                            <div class="brand-title">Day Open / Close</div>
                             <div class="brand-sub">Day Open / Close</div>
                         </div>
                     </div>

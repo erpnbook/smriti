@@ -5,7 +5,7 @@
 frappe.pages['smriti-loyalty'].on_page_load = function(wrapper) {
     const page = frappe.ui.make_app_page({
         parent: wrapper,
-        title: __('SMRITI Loyalty & Promotions'),
+        title: __('Loyalty & Promotions'),
         single_column: true
     });
 

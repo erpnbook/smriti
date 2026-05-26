@@ -1,7 +1,7 @@
 frappe.pages["smriti-reports"].on_page_load = function (wrapper) {
     frappe.ui.make_app_page({
         parent: wrapper,
-        title: "SMRITI Reports",
+        title: "Reports",
         single_column: true
     });
 

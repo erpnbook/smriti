@@ -1,7 +1,7 @@
 frappe.pages['smriti-inventory'].on_page_load = function(wrapper) {
     var page = frappe.ui.make_app_page({
         parent: wrapper,
-        title: __('SMRITI Inventory Operations'),
+        title: __('Inventory Operations'),
         single_column: true
     });
 

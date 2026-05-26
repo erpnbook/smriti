@@ -5,7 +5,7 @@
 frappe.pages['smriti-purchase'].on_page_load = function(wrapper) {
     const page = frappe.ui.make_app_page({
         parent: wrapper,
-        title: 'SMRITI Purchase Management',
+        title: 'Purchase Management',
         single_column: true
     });
 

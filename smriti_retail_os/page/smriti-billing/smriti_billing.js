@@ -1,7 +1,7 @@
 frappe.pages['smriti-billing'].on_page_load = function(wrapper) {
     var page = frappe.ui.make_app_page({
         parent: wrapper,
-        title: __('SMRITI Retail Billing'),
+        title: __('Retail Billing'),
         single_column: true
     });
 

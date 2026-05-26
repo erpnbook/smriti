@@ -5,7 +5,7 @@
 frappe.pages['smriti-desk'].on_page_load = function(wrapper) {
     const page = frappe.ui.make_app_page({
         parent: wrapper,
-        title: 'SMRITI Control Center',
+        title: 'Control Center',
         single_column: true
     });
 
@@ -49,7 +49,7 @@ class SmritiDeskPage {
                     <div class="desk-brand">
                         <div class="desk-brand-icon">🏪</div>
                         <div>
-                            <div class="desk-brand-title">SMRITI Retail OS</div>
+                            <div class="desk-brand-title">Control Center</div>
                             <div class="desk-brand-sub">Smarter Retail. Built for India.</div>
                         </div>
                     </div>
@@ -62,7 +62,7 @@ class SmritiDeskPage {
                 <!-- Welcome Section -->
                 <div class="desk-welcome-section">
                     <div class="desk-welcome-title">Welcome back, ${user_fullname}!</div>
-                    <div class="desk-welcome-desc">Here is the current operational status for SMRITI Retail OS.</div>
+                    <div class="desk-welcome-desc">Here is your current operational status.</div>
                 </div>
 
                 <!-- KPI Grid -->
@@ -106,35 +106,35 @@ class SmritiDeskPage {
                     <!-- Billing -->
                     <div class="action-card" data-route="smriti-billing">
                         <div class="action-icon">🖥️</div>
-                        <div class="action-name">POS Billing</div>
+                        <div class="action-name">Retail Billing</div>
                         <div class="action-desc">Launch checkout terminal and scan barcoded items.</div>
                     </div>
 
                     <!-- Shift -->
                     <div class="action-card" data-route="smriti-shift">
                         <div class="action-icon">🌅</div>
-                        <div class="action-name">Shift Manager</div>
+                        <div class="action-name">Day Open / Close</div>
                         <div class="action-desc">Open cashier shift or count cash for Day Close.</div>
                     </div>
 
                     <!-- Inventory -->
                     <div class="action-card" data-route="smriti-inventory">
                         <div class="action-icon">📦</div>
-                        <div class="action-name">Inventory Audit</div>
+                        <div class="action-name">Inventory Operations</div>
                         <div class="action-desc">Check current item stock counts and sync ledger.</div>
                     </div>
 
                     <!-- Purchase -->
                     <div class="action-card" data-route="smriti-purchase">
                         <div class="action-icon">🛒</div>
-                        <div class="action-name">Purchase Mgmt</div>
+                        <div class="action-name">Purchase Management</div>
                         <div class="action-desc">Manage Purchase Orders and record simple purchases.</div>
                     </div>
 
                     <!-- Barcode -->
                     <div class="action-card" data-route="smriti-barcode">
                         <div class="action-icon">🏷️</div>
-                        <div class="action-name">Barcode Print</div>
+                        <div class="action-name">Barcode Printing</div>
                         <div class="action-desc">Generate, inspect, and print retail price tags.</div>
                     </div>
                 </div>
@@ -368,10 +368,9 @@ class SmritiDeskPage {
                 <div class="alert-item danger">
                     <div class="alert-item-icon">⚠️</div>
                     <div class="alert-item-content">
-                        No active shift opened! You must open a shift in <strong>Shift Manager</strong> before POS Billing.
+                        No active shift opened! You must open a shift in <strong>Day Open / Close</strong> before Retail Billing.
                         <div class="alert-item-time">Action Required</div>
-                    </div>
-                </div>
+                    </div>                </div>
             `);
         }
     }
