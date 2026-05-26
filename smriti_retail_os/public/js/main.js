@@ -506,6 +506,7 @@ function get_smriti_active_page() {
     if (page_name === "smriti-desk")      return "desk";
     if (page_name === "smriti-shift")     return "shift";
     if (page_name === "smriti-reports")   return "reports";
+    if (page_name === "smriti-loyalty")   return "loyalty";
     if (page_name === "customer" || route[1] === "Customer") return "customers";
     if (page_name === "sales-invoice" || route[1] === "Sales Invoice") return "sales_invoices";
     if (page_name === "purchase-order" || route[1] === "Purchase Order") return "purchase_orders";

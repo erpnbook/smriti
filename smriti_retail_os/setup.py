@@ -176,6 +176,20 @@ def setup_smriti_retail_os():
             "link_type": "DocType",
             "link_to": "Supplier",
             "label_for_links": "Simplified supplier credit terms tracker."
+        },
+        {
+            "label": "Loyalty Schemes",
+            "type": "Link",
+            "link_type": "Page",
+            "link_to": "smriti-loyalty",
+            "label_for_links": "Configure customer points tiers and conversion rules."
+        },
+        {
+            "label": "Store Reports",
+            "type": "Link",
+            "link_type": "Page",
+            "link_to": "smriti-reports",
+            "label_for_links": "Visual sales, stock, and outstanding analytics."
         }
     ]
 
@@ -419,7 +433,63 @@ def setup_module_profiles():
         except Exception as e:
             print(f"[SMRITI] Warning — could not save Module Profile '{profile_name}': {e}")
 
+    setup_default_loyalty()
     frappe.db.commit()
+
+
+def setup_default_loyalty():
+    """
+    Creates a default SMRITI Loyalty Program to ensure out-of-the-box working.
+    """
+    program_name = "SMRITI Standard Loyalty"
+    if frappe.db.exists("Loyalty Program", program_name):
+        return
+
+    company = frappe.db.get_default("company") or frappe.get_all("Company")[0].name
+    
+    # Resolve fallback expense account and cost center
+    expense_account = frappe.db.get_value(
+        "Account", 
+        {"root_type": "Expense", "company": company}, 
+        "name"
+    ) or frappe.db.get_value(
+        "Account", 
+        {"account_type": "Expense Account", "company": company}, 
+        "name"
+    )
+    
+    cost_center = frappe.db.get_value(
+        "Cost Center", 
+        {"company": company, "is_group": 0}, 
+        "name"
+    )
+    
+    if not expense_account or not cost_center:
+        return
+
+    try:
+        from frappe.utils import today
+        doc = frappe.new_doc("Loyalty Program")
+        doc.loyalty_program_name = program_name
+        doc.loyalty_program_type = "Single Tier Program"
+        doc.conversion_factor = 1.0
+        doc.auto_opt_in = 1
+        doc.from_date = today()
+        doc.company = company
+        doc.expense_account = expense_account
+        doc.cost_center = cost_center
+        
+        doc.append("collection_rules", {
+            "tier_name": "Regular",
+            "min_spent": 0.0,
+            "collection_factor": 1.0
+        })
+        
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print(f"[SMRITI] Default Loyalty Program '{program_name}' created successfully.")
+    except Exception as e:
+        print(f"[SMRITI] Warning — could not create default Loyalty Program: {e}")
 
 
 def setup_role_profiles():

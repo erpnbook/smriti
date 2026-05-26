@@ -41,6 +41,8 @@ SMRITI.renderSidebar = function(active_page) {
              url:"/app/purchase-receipt"},
             {id:"reports", icon:"📊", label:"Reports",
              url:"/app/smriti-reports"},
+            {id:"loyalty", icon:"🎁", label:"Loyalty Schemes",
+             url:"/app/smriti-loyalty"},
             {id:"desk",    icon:"🏠", label:"Dashboard",
              url:"/app/smriti-desk"}
         ] : [])

@@ -21,10 +21,13 @@ class SmritiBillingController {
         this.current_invoice_name = null;
         this.active_price_list = "Standard Selling";
         this.redeemed_loyalty = 0;
+        this.loyalty_conversion_factor = 0.0;
+        this.loyalty_balance_points = 0;
         
         this.setup_layout();
         this.bind_keyboard_shortcuts();
         this.bind_actions();
+        this.fetch_loyalty_details();
         this.focus_barcode();
     }
 
@@ -330,17 +333,23 @@ class SmritiBillingController {
 
         const grand_total = (subtotal_net + subtotal_tax);
         
+        // Calculate loyalty discount
+        const points = cint($("#redeem-points-input").val()) || 0;
+        const conversion = this.loyalty_conversion_factor || 0.0;
+        const loyalty_discount = points * conversion;
+        const final_due = Math.max(0, grand_total - loyalty_discount);
+
         $("#smriti-total-items-qty").text(total_items);
         $("#smriti-subtotal-net").text("INR " + subtotal_net.toFixed(2));
         $("#smriti-subtotal-tax").text("INR " + subtotal_tax.toFixed(2));
-        $("#smriti-grand-total").text("INR " + grand_total.toFixed(2));
+        $("#smriti-grand-total").text("INR " + final_due.toFixed(2));
 
         const cash_paid = flt($("#pay-cash-input").val());
         const upi_paid = flt($("#pay-upi-input").val());
         const card_paid = flt($("#pay-card-input").val());
         const total_paid = (cash_paid + upi_paid + card_paid);
         
-        const pending = (grand_total - total_paid);
+        const pending = (final_due - total_paid);
 
         if (pending > 0) {
             $("#pay-drawer-alert").removeClass("reconciled").addClass("pending");
@@ -467,6 +476,7 @@ class SmritiBillingController {
                     $("#smriti-cust-name").text(me.active_customer);
 
                     me.render_grid_rows();
+                    me.fetch_loyalty_details();
                     me.update_totals();
                     me.focus_barcode();
                 }
@@ -531,6 +541,8 @@ class SmritiBillingController {
                     me.items = [];
                     me.current_invoice_name = null;
                     me.redeemed_loyalty = 0;
+                    me.loyalty_conversion_factor = 0.0;
+                    me.loyalty_balance_points = 0;
                     $("#smriti-invoice-id").text("NEW BILL");
                     $("#pay-cash-input").val(0);
                     $("#pay-upi-input").val(0);
@@ -538,6 +550,7 @@ class SmritiBillingController {
                     $("#redeem-points-input").val(0);
 
                     me.render_grid_rows();
+                    me.fetch_loyalty_details();
                     me.update_totals();
                     me.focus_barcode();
                 }
@@ -592,6 +605,7 @@ class SmritiBillingController {
                                 const id = $(this).data("id");
                                 me.active_customer = id;
                                 $("#smriti-cust-name").text(me.active_customer);
+                                me.fetch_loyalty_details();
                                 dialog.hide();
                             });
                         } else {
@@ -710,5 +724,51 @@ class SmritiBillingController {
         };
 
         dialog.show();
+    }
+
+    fetch_loyalty_details() {
+        var me = this;
+        if (!me.active_customer || me.active_customer === "Walk-In Customer") {
+            $("#smriti-cust-loyalty").hide();
+            $("#redeem-points-input").val(0).prop("max", 0);
+            me.loyalty_conversion_factor = 0.0;
+            me.loyalty_balance_points = 0;
+            return;
+        }
+
+        frappe.call({
+            method: "smriti_retail_os.loyalty_api.get_loyalty_details",
+            args: { customer: me.active_customer },
+            callback: function(r) {
+                if (r.message && r.message.enrolled) {
+                    const ld = r.message;
+                    me.loyalty_conversion_factor = ld.conversion_factor;
+                    me.loyalty_balance_points = ld.loyalty_points;
+
+                    $("#smriti-cust-loyalty").show().html(`
+                        ${__('Loyalty Balance')}: <b style="color: #0d9488;">${ld.loyalty_points} Pts</b> (Value: <b>₹${ld.redeem_amount.toFixed(2)}</b>)<br>
+                        ${__('Redeem')}: <input type="number" id="redeem-points-input" value="0" min="0" max="${ld.loyalty_points}" style="max-width: 60px; display: inline-block; padding: 2px 5px; background: rgba(31,41,55,0.6); border: 1px solid rgba(255,255,255,0.08); color: white; border-radius: 4px; margin-top:4px;"> Pts
+                    `);
+
+                    // Re-bind input events
+                    $("#redeem-points-input").off("input").on("input", function() {
+                        let pts = cint($(this).val());
+                        if (pts > ld.loyalty_points) {
+                            pts = ld.loyalty_points;
+                            $(this).val(pts);
+                        }
+                        me.update_totals();
+                    });
+                } else {
+                    $("#smriti-cust-loyalty").show().html(`
+                        <span class="text-muted" style="font-size:11px;">Not Enrolled in Loyalty Program</span>
+                    `);
+                    $("#redeem-points-input").val(0).prop("max", 0);
+                    me.loyalty_conversion_factor = 0.0;
+                    me.loyalty_balance_points = 0;
+                }
+                me.update_totals();
+            }
+        });
     }
 }
