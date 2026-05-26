@@ -127,7 +127,7 @@ def get_shift_summary(opening_entry_name):
     mode_totals = {}
     if invoice_names:
         payments = frappe.db.get_all(
-            "Sales Invoice Payment",
+            "POS Invoice Payment",
             filters={"parent": ["in", invoice_names]},
             fields=["mode_of_payment", "amount"]
         )

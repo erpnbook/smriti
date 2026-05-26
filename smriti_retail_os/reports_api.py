@@ -38,8 +38,8 @@ def get_sales_report(from_date=None, to_date=None, granularity="daily"):
         fields=[
             "name", "posting_date", "posting_time",
             "grand_total", "net_total", "total_taxes_and_charges",
-            "customer", "cashier", "pos_profile",
-            "custom_discount_amount"
+            "customer", "owner as cashier", "pos_profile",
+            "discount_amount"
         ],
         order_by="posting_date asc, posting_time asc"
     )
@@ -48,7 +48,7 @@ def get_sales_report(from_date=None, to_date=None, granularity="daily"):
     total_sales    = sum(flt(i.grand_total) for i in invoices)
     total_net      = sum(flt(i.net_total) for i in invoices)
     total_tax      = sum(flt(i.total_taxes_and_charges) for i in invoices)
-    total_discount = sum(flt(i.custom_discount_amount or 0) for i in invoices)
+    total_discount = sum(flt(i.discount_amount or 0) for i in invoices)
     total_bills    = len(invoices)
     avg_bill       = flt(total_sales / total_bills, 2) if total_bills else 0
 
@@ -91,7 +91,7 @@ def _get_payment_breakdown(from_date, to_date):
         rows = frappe.db.sql("""
             SELECT pp.mode_of_payment, SUM(pp.amount) as total
             FROM `tabPOS Invoice` pi
-            JOIN `tabSales Invoice Payment` pp ON pp.parent = pi.name
+            JOIN `tabPOS Invoice Payment` pp ON pp.parent = pi.name
             WHERE pi.docstatus = 1
               AND pi.posting_date BETWEEN %(from_date)s AND %(to_date)s
             GROUP BY pp.mode_of_payment
@@ -129,13 +129,13 @@ def _get_cashier_summary(from_date, to_date):
     try:
         rows = frappe.db.sql("""
             SELECT
-                cashier,
+                owner as cashier,
                 COUNT(*) as bills,
                 SUM(grand_total) as total_sales
             FROM `tabPOS Invoice`
             WHERE docstatus = 1
               AND posting_date BETWEEN %(from_date)s AND %(to_date)s
-            GROUP BY cashier
+            GROUP BY owner
             ORDER BY total_sales DESC
         """, {"from_date": from_date, "to_date": to_date}, as_dict=True)
         return rows
@@ -319,7 +319,7 @@ def get_gst_report(from_date=None, to_date=None):
             FROM `tabPOS Invoice`
             WHERE docstatus = 1
               AND posting_date BETWEEN %(from_date)s AND %(to_date)s
-              AND (customer_gstin IS NULL OR customer_gstin = '')
+              AND (gstin IS NULL OR gstin = '')
         """, {"from_date": from_date, "to_date": to_date}, as_dict=True)
         b2c_data = b2c[0] if b2c else {}
     except Exception:

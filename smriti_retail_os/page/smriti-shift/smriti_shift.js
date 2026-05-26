@@ -11,7 +11,7 @@ frappe.pages['smriti-shift'].on_page_load = function(wrapper) {
     });
 
     if (window.SMRITI && typeof SMRITI.renderSidebar === 'function') {
-        SMRITI.renderSidebar(null);
+        SMRITI.renderSidebar("shift");
     }
 
     window.smriti_shift = new SmritiShiftPage(wrapper);

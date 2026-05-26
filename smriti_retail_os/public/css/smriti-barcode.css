@@ -1,20 +1,20 @@
-/* SMRITI Retail OS - Premium Glassmorphic Barcode Printing Stylesheet */
+/* SMRITI Retail OS - Premium Barcode Printing Stylesheet (Light Mode) */
 
 :root {
-    --smriti-bg: #0b0f19;
-    --smriti-card-bg: rgba(17, 24, 39, 0.7);
-    --smriti-glass-border: rgba(255, 255, 255, 0.08);
-    --smriti-text: #f3f4f6;
-    --smriti-text-muted: #9ca3af;
-    --smriti-primary: #6366f1;
-    --smriti-primary-glow: rgba(99, 102, 241, 0.4);
-    --smriti-accent: #0d9488;
-    --smriti-accent-glow: rgba(13, 148, 136, 0.35);
-    --smriti-danger: #e11d48;
-    --smriti-danger-glow: rgba(225, 29, 72, 0.35);
-    --smriti-success: #10b981;
-    --smriti-success-glow: rgba(16, 185, 129, 0.35);
-    --smriti-amber: #f59e0b;
+    --smriti-bg: #f9fafb;
+    --smriti-card-bg: #ffffff;
+    --smriti-glass-border: #d0d5dd;
+    --smriti-text: #101828;
+    --smriti-text-muted: #475467;
+    --smriti-primary: #6941c6;
+    --smriti-primary-glow: rgba(105, 65, 198, 0.1);
+    --smriti-accent: #067647;
+    --smriti-accent-glow: rgba(6, 118, 71, 0.1);
+    --smriti-danger: #b42318;
+    --smriti-danger-glow: rgba(180, 35, 24, 0.1);
+    --smriti-success: #027a48;
+    --smriti-success-glow: rgba(2, 122, 72, 0.1);
+    --smriti-amber: #b54708;
 }
 
 /* Main Screen Wrapper */
@@ -25,7 +25,7 @@
     padding: 20px;
     border-radius: 12px;
     min-height: 82vh;
-    box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.1), 0 1px 2px rgba(16, 24, 40, 0.06);
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -38,7 +38,6 @@
     align-items: center;
     background: var(--smriti-card-bg);
     border: 1px solid var(--smriti-glass-border);
-    backdrop-filter: blur(12px);
     padding: 10px 20px;
     border-radius: 10px;
 }
@@ -49,7 +48,7 @@
 }
 
 .smriti-mode-btn {
-    background: rgba(31, 41, 55, 0.5);
+    background: #f2f4f7;
     border: 1px solid var(--smriti-glass-border);
     color: var(--smriti-text-muted);
     padding: 8px 16px;
@@ -62,13 +61,14 @@
 .smriti-mode-btn:hover {
     color: var(--smriti-text);
     border-color: var(--smriti-primary);
+    background: #ffffff;
 }
 
 .smriti-mode-btn.active {
     color: white;
-    background: linear-gradient(135deg, var(--smriti-primary), #4f46e5);
+    background: var(--smriti-primary);
     border-color: var(--smriti-primary);
-    box-shadow: 0 0 12px var(--smriti-primary-glow);
+    box-shadow: 0 0 8px var(--smriti-primary-glow);
 }
 
 .smriti-shortcuts-hint {
@@ -103,9 +103,9 @@
 .smriti-header-fields-card {
     background: var(--smriti-card-bg);
     border: 1px solid var(--smriti-glass-border);
-    backdrop-filter: blur(12px);
     border-radius: 10px;
     padding: 15px 20px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
 }
 
 .s-label {
@@ -119,9 +119,9 @@
 }
 
 .s-input {
-    background: rgba(17, 24, 39, 0.8) !important;
+    background: #ffffff !important;
     border: 1px solid var(--smriti-glass-border) !important;
-    color: white !important;
+    color: var(--smriti-text) !important;
     font-size: 0.95em !important;
     font-weight: 500 !important;
     border-radius: 6px !important;
@@ -132,19 +132,19 @@
 
 .s-input:focus {
     border-color: var(--smriti-primary) !important;
-    box-shadow: 0 0 10px var(--smriti-primary-glow) !important;
+    box-shadow: 0 0 0 4px var(--smriti-primary-glow) !important;
 }
 
 /* Cart Grid Table wrapper */
 .billing-table-wrapper {
     background: var(--smriti-card-bg);
     border: 1px solid var(--smriti-glass-border);
-    backdrop-filter: blur(12px);
     border-radius: 10px;
     padding: 15px;
     flex-grow: 1;
     overflow-y: auto;
     position: relative;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
 }
 
 #smriti-barcode-table {
@@ -153,7 +153,7 @@
 }
 
 #smriti-barcode-table th {
-    background-color: rgba(31, 41, 55, 0.5);
+    background-color: #f9fafb;
     border-color: var(--smriti-glass-border);
     color: var(--smriti-text-muted);
     font-weight: 600;
@@ -164,7 +164,7 @@
 }
 
 #smriti-barcode-table td {
-    border-color: var(--smriti-glass-border);
+    border-color: #f2f4f7;
     color: var(--smriti-text);
     vertical-align: middle;
     padding: 10px 8px;
@@ -177,9 +177,9 @@
 }
 
 .grid-qty-input {
-    background: rgba(31, 41, 55, 0.6) !important;
+    background: #ffffff !important;
     border: 1px solid var(--smriti-glass-border) !important;
-    color: white !important;
+    color: var(--smriti-text) !important;
     font-weight: 600 !important;
     border-radius: 4px;
     padding: 5px !important;
@@ -187,8 +187,8 @@
 }
 
 .grid-qty-input:focus {
-    border-color: var(--smriti-accent) !important;
-    box-shadow: 0 0 8px var(--smriti-accent-glow) !important;
+    border-color: var(--smriti-primary) !important;
+    box-shadow: 0 0 0 2px var(--smriti-primary-glow) !important;
 }
 
 .barcode-row {
@@ -197,7 +197,7 @@
 }
 
 .barcode-row:hover {
-    background: rgba(255, 255, 255, 0.03) !important;
+    background: #f9fafb !important;
 }
 
 /* Empty View state */
@@ -226,9 +226,9 @@
 .summary-card, .payment-drawer-card {
     background: var(--smriti-card-bg);
     border: 1px solid var(--smriti-glass-border);
-    backdrop-filter: blur(12px);
     border-radius: 10px;
     padding: 15px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
 }
 
 .summary-header, .payment-drawer-header {
@@ -237,7 +237,7 @@
     color: var(--smriti-primary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 1px solid var(--smriti-glass-border);
+    border-bottom: 1px solid #f2f4f7;
     padding-bottom: 8px;
     margin-bottom: 12px;
 }
@@ -247,18 +247,18 @@
     justify-content: center;
     align-items: center;
     padding: 15px 0;
-    background: rgba(0, 0, 0, 0.3);
+    background: #f2f4f7;
     border-radius: 8px;
     border: 1px dashed var(--smriti-glass-border);
 }
 
-/* Simulated Label Card */
+/* Simulated Label Card - Always keep physical label colors */
 .smriti-simulated-label {
     background: #ffffff;
     color: #000000;
     border-radius: 4px;
     padding: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    box-shadow: 0 5px 15px rgba(16, 24, 40, 0.1);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -268,25 +268,10 @@
 }
 
 /* Simulated Sizing Classes */
-.smriti-simulated-label.sz-50x25 {
-    width: 200px;
-    height: 100px;
-}
-
-.smriti-simulated-label.sz-50x30 {
-    width: 200px;
-    height: 120px;
-}
-
-.smriti-simulated-label.sz-75x50 {
-    width: 250px;
-    height: 166px;
-}
-
-.smriti-simulated-label.sz-100x50 {
-    width: 300px;
-    height: 150px;
-}
+.smriti-simulated-label.sz-50x25 { width: 200px; height: 100px; }
+.smriti-simulated-label.sz-50x30 { width: 200px; height: 120px; }
+.smriti-simulated-label.sz-75x50 { width: 250px; height: 166px; }
+.smriti-simulated-label.sz-100x50 { width: 300px; height: 150px; }
 
 .smriti-simulated-label .sim-brand {
     font-size: 9px;
@@ -342,6 +327,7 @@
 
 .summary-val {
     font-weight: 600;
+    color: var(--smriti-text);
 }
 
 .text-teal {
@@ -350,19 +336,18 @@
 
 .summary-val.highlight {
     color: var(--smriti-amber);
-    text-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
     font-size: 1.25em;
     font-weight: 700;
 }
 
 .summary-divider {
-    border-top: 1px solid var(--smriti-glass-border);
+    border-top: 1px solid #f2f4f7;
     margin: 10px 0;
 }
 
 /* Commit print save buttons */
 .btn-checkout-save {
-    background: linear-gradient(135deg, var(--smriti-accent), #0f766e);
+    background: var(--smriti-primary);
     border: none;
     color: white;
     font-weight: 700;
@@ -374,6 +359,7 @@
 }
 
 .btn-checkout-save:hover {
+    background: #53389e;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px var(--smriti-accent-glow);
+    box-shadow: 0 4px 12px var(--smriti-primary-glow);
 }

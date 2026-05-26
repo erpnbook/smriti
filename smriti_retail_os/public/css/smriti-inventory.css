@@ -1,20 +1,20 @@
-/* SMRITI Retail OS - Premium Glassmorphic Inventory Stylesheet */
+/* SMRITI Retail OS - Premium Inventory Stylesheet (Light Mode) */
 
 :root {
-    --smriti-bg: #0b0f19;
-    --smriti-card-bg: rgba(17, 24, 39, 0.7);
-    --smriti-glass-border: rgba(255, 255, 255, 0.08);
-    --smriti-text: #f3f4f6;
-    --smriti-text-muted: #9ca3af;
-    --smriti-primary: #6366f1;
-    --smriti-primary-glow: rgba(99, 102, 241, 0.4);
-    --smriti-accent: #0d9488;
-    --smriti-accent-glow: rgba(13, 148, 136, 0.35);
-    --smriti-danger: #e11d48;
-    --smriti-danger-glow: rgba(225, 29, 72, 0.35);
-    --smriti-success: #10b981;
-    --smriti-success-glow: rgba(16, 185, 129, 0.35);
-    --smriti-amber: #f59e0b;
+    --smriti-bg: #f9fafb;
+    --smriti-card-bg: #ffffff;
+    --smriti-glass-border: #d0d5dd;
+    --smriti-text: #101828;
+    --smriti-text-muted: #475467;
+    --smriti-primary: #6941c6;
+    --smriti-primary-glow: rgba(105, 65, 198, 0.1);
+    --smriti-accent: #067647;
+    --smriti-accent-glow: rgba(6, 118, 71, 0.1);
+    --smriti-danger: #b42318;
+    --smriti-danger-glow: rgba(180, 35, 24, 0.1);
+    --smriti-success: #027a48;
+    --smriti-success-glow: rgba(2, 122, 72, 0.1);
+    --smriti-amber: #b54708;
 }
 
 /* Widescreen Main Container */
@@ -25,7 +25,7 @@
     padding: 20px;
     border-radius: 12px;
     min-height: 82vh;
-    box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.1), 0 1px 2px rgba(16, 24, 40, 0.06);
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -38,7 +38,6 @@
     align-items: center;
     background: var(--smriti-card-bg);
     border: 1px solid var(--smriti-glass-border);
-    backdrop-filter: blur(12px);
     padding: 10px 20px;
     border-radius: 10px;
     flex-wrap: wrap;
@@ -51,7 +50,7 @@
 }
 
 .smriti-tab-btn {
-    background: rgba(31, 41, 55, 0.5);
+    background: #f2f4f7;
     border: 1px solid var(--smriti-glass-border);
     color: var(--smriti-text-muted);
     padding: 8px 16px;
@@ -64,13 +63,13 @@
 
 .smriti-tab-btn:hover {
     color: var(--smriti-text);
-    background: rgba(31, 41, 55, 0.8);
+    background: #ffffff;
     border-color: var(--smriti-primary);
 }
 
 .smriti-tab-btn.active {
     color: white;
-    background: linear-gradient(135deg, var(--smriti-primary), #4f46e5);
+    background: var(--smriti-primary);
     border-color: var(--smriti-primary);
     box-shadow: 0 0 15px var(--smriti-primary-glow);
 }
@@ -96,17 +95,15 @@
 }
 
 .badge-mgr {
-    background: rgba(16, 185, 129, 0.15);
-    border: 1px solid var(--smriti-success);
-    color: var(--smriti-success);
-    box-shadow: 0 0 8px var(--smriti-success-glow);
+    background: #ecfdf3;
+    border: 1px solid #abefc6;
+    color: #027a48;
 }
 
 .badge-csh {
-    background: rgba(245, 158, 10, 0.15);
-    border: 1px solid var(--smriti-amber);
-    color: var(--smriti-amber);
-    box-shadow: 0 0 8px rgba(245, 158, 10, 0.3);
+    background: #fffaeb;
+    border: 1px solid #fedf89;
+    color: #b54708;
 }
 
 /* Widescreen Panel Split */
@@ -130,13 +127,13 @@
     gap: 15px;
 }
 
-/* Glassmorphic Field card */
+/* Field card */
 .smriti-header-fields-card {
     background: var(--smriti-card-bg);
     border: 1px solid var(--smriti-glass-border);
-    backdrop-filter: blur(12px);
     border-radius: 10px;
     padding: 15px 20px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
 }
 
 .s-label {
@@ -150,9 +147,9 @@
 }
 
 .s-input {
-    background: rgba(17, 24, 39, 0.8) !important;
+    background: #ffffff !important;
     border: 1px solid var(--smriti-glass-border) !important;
-    color: white !important;
+    color: var(--smriti-text) !important;
     font-size: 0.95em !important;
     font-weight: 500 !important;
     border-radius: 6px !important;
@@ -163,7 +160,7 @@
 
 .s-input:focus {
     border-color: var(--smriti-primary) !important;
-    box-shadow: 0 0 10px var(--smriti-primary-glow) !important;
+    box-shadow: 0 0 0 4px var(--smriti-primary-glow) !important;
     outline: none !important;
 }
 
@@ -183,12 +180,13 @@
     top: 50%;
     transform: translateY(-50%);
     font-size: 1.25em;
+    color: var(--smriti-primary);
     animation: flash 1.5s infinite;
 }
 
 #smriti-inv-barcode-input {
     width: 100%;
-    background: rgba(17, 24, 39, 0.8);
+    background: #ffffff;
     border: 1px solid var(--smriti-glass-border);
     border-radius: 8px;
     padding: 12px 12px 12px 45px;
@@ -201,14 +199,13 @@
 #smriti-inv-barcode-input:focus {
     outline: none;
     border-color: var(--smriti-primary);
-    box-shadow: 0 0 15px var(--smriti-primary-glow);
+    box-shadow: 0 0 0 4px var(--smriti-primary-glow);
 }
 
 /* Cart Grid Table wrapper */
 .billing-table-wrapper {
     background: var(--smriti-card-bg);
     border: 1px solid var(--smriti-glass-border);
-    backdrop-filter: blur(12px);
     border-radius: 10px;
     padding: 15px;
     flex-grow: 1;
@@ -216,6 +213,7 @@
     max-height: 520px;
     min-height: 250px;
     position: relative;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
 }
 
 #smriti-inv-table {
@@ -224,7 +222,7 @@
 }
 
 #smriti-inv-table th {
-    background-color: rgba(31, 41, 55, 0.5);
+    background-color: #f9fafb;
     border-color: var(--smriti-glass-border);
     color: var(--smriti-text-muted);
     font-weight: 600;
@@ -235,7 +233,7 @@
 }
 
 #smriti-inv-table td {
-    border-color: var(--smriti-glass-border);
+    border-color: #f2f4f7;
     color: var(--smriti-text);
     vertical-align: middle;
     padding: 8px;
@@ -243,9 +241,9 @@
 
 /* Inner Grid inputs */
 .grid-qty-input, .grid-rate-input, .grid-expiry-input {
-    background: rgba(31, 41, 55, 0.6) !important;
+    background: #ffffff !important;
     border: 1px solid var(--smriti-glass-border) !important;
-    color: white !important;
+    color: var(--smriti-text) !important;
     font-weight: 600 !important;
     border-radius: 4px;
     padding: 6px !important;
@@ -253,8 +251,8 @@
 }
 
 .grid-qty-input:focus, .grid-rate-input:focus, .grid-expiry-input:focus {
-    border-color: var(--smriti-accent) !important;
-    box-shadow: 0 0 8px var(--smriti-accent-glow) !important;
+    border-color: var(--smriti-primary) !important;
+    box-shadow: 0 0 0 2px var(--smriti-primary-glow) !important;
     outline: none !important;
 }
 
@@ -272,7 +270,7 @@
 
 .btn-remove-row {
     background: transparent;
-    border: 1px solid rgba(225, 29, 72, 0.3);
+    border: 1px solid rgba(180, 35, 24, 0.2);
     color: var(--smriti-danger);
     border-radius: 4px;
     padding: 4px 8px;
@@ -283,7 +281,6 @@
 .btn-remove-row:hover {
     background: var(--smriti-danger);
     color: white;
-    box-shadow: 0 0 10px var(--smriti-danger-glow);
 }
 
 /* Empty view state */
@@ -316,12 +313,12 @@
 .summary-card {
     background: var(--smriti-card-bg);
     border: 1px solid var(--smriti-glass-border);
-    backdrop-filter: blur(12px);
     border-radius: 10px;
     padding: 15px;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
 }
 
 .summary-header {
@@ -330,7 +327,7 @@
     color: var(--smriti-primary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 1px solid var(--smriti-glass-border);
+    border-bottom: 1px solid #f2f4f7;
     padding-bottom: 8px;
 }
 
@@ -346,11 +343,11 @@
 
 .summary-val {
     font-weight: 600;
+    color: var(--smriti-text);
 }
 
 .summary-val.highlight {
     color: var(--smriti-amber);
-    text-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
     font-size: 1.15em;
 }
 
@@ -358,13 +355,13 @@
 .payment-drawer-card {
     background: var(--smriti-card-bg);
     border: 1px solid var(--smriti-glass-border);
-    backdrop-filter: blur(12px);
     border-radius: 10px;
     padding: 15px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
 }
 
 .btn-checkout-save {
-    background: linear-gradient(135deg, var(--smriti-accent), #0f766e);
+    background: var(--smriti-primary);
     border: none;
     color: white;
     font-weight: 700;
@@ -376,8 +373,9 @@
 }
 
 .btn-checkout-save:hover:not(:disabled) {
+    background: #53389e;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px var(--smriti-accent-glow);
+    box-shadow: 0 4px 12px var(--smriti-primary-glow);
 }
 
 .btn-checkout-save:disabled {
@@ -388,5 +386,5 @@
 /* Scanner Icon Pulse */
 @keyframes flash {
     0%, 100% { opacity: 0.4; }
-    50% { opacity: 1; color: var(--smriti-primary); text-shadow: 0 0 10px var(--smriti-primary-glow); }
+    50% { opacity: 1; color: var(--smriti-primary); }
 }

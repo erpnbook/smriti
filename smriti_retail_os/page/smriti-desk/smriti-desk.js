@@ -10,7 +10,7 @@ frappe.pages['smriti-desk'].on_page_load = function(wrapper) {
     });
 
     if (window.SMRITI && typeof SMRITI.renderSidebar === 'function') {
-        SMRITI.renderSidebar("reports");
+        SMRITI.renderSidebar("desk");
     }
 
     window.smriti_desk = new SmritiDeskPage(wrapper);

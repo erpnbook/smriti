@@ -1,59 +1,59 @@
 :root {
     /* Login */
-    --login-bg-color:              #0b0f19;
-    --login-btn-bg:                #e94560;
-    --login-btn-hover-bg:          #c73652;
+    --login-bg-color:              #f9fafb;
+    --login-btn-bg:                #6941c6;
+    --login-btn-hover-bg:          #53389e;
     --login-btn-color:             #ffffff;
-    --login-box-bg:                #16213e;
+    --login-box-bg:                #ffffff;
     --login-title-display:         none;
     --login-title-after-display:   flex;
     --login-title-after-content:   "SMRITI Retail OS";
-    --login-title-after-color:     #e2e8f0;
+    --login-title-after-color:     #101828;
     --login-title-after-margin:    0;
     --login-title-after-justify:   center;
-    --page-heading-color:          #e2e8f0;
+    --page-heading-color:          #101828;
 
     /* Navbar */
-    --navbar-bg:                   #16213e;
-    --navbar-color:                #e2e8f0;
+    --navbar-bg:                   #ffffff;
+    --navbar-color:                #101828;
 
     /* Body */
-    --body-bg:                     #0b0f19;
-    --main-content-bg:             #16213e;
+    --body-bg:                     #f9fafb;
+    --main-content-bg:             #ffffff;
 
     /* Sidebar */
-    --sidebar-bg:                  #16213e;
-    --sidebar-text-color:          #e2e8f0;
+    --sidebar-bg:                  #ffffff;
+    --sidebar-text-color:          #475467;
 
     /* Buttons */
-    --btn-primary-bg:              #e94560;
-    --btn-primary-hover-bg:        #c73652;
+    --btn-primary-bg:              #6941c6;
+    --btn-primary-hover-bg:        #53389e;
     --btn-primary-color:           #ffffff;
-    --btn-secondary-bg:            #1a2744;
-    --btn-secondary-color:         #e2e8f0;
-    --btn-secondary-hover-bg:      #2a3a5c;
+    --btn-secondary-bg:            #ffffff;
+    --btn-secondary-color:         #344054;
+    --btn-secondary-hover-bg:      #f9fafb;
 
     /* Inputs */
-    --input-bg:                    #1a2744;
-    --input-border:                #2a3a5c;
-    --input-color:                 #e2e8f0;
-    --input-label-color:           #8892a4;
+    --input-bg:                    #ffffff;
+    --input-border:                #d0d5dd;
+    --input-color:                 #101828;
+    --input-label-color:           #344054;
 
     /* Tables */
-    --table-head-bg:               #1a2744;
-    --table-head-color:            #e2e8f0;
-    --table-body-bg:               #16213e;
-    --table-body-color:            #e2e8f0;
+    --table-head-bg:               #f9fafb;
+    --table-head-color:            #475467;
+    --table-body-bg:               #ffffff;
+    --table-body-color:            #101828;
 
     /* Widgets */
-    --widget-bg:                   #16213e;
-    --widget-border:               #2a3a5c;
-    --widget-color:                #e2e8f0;
+    --widget-bg:                   #ffffff;
+    --widget-border:               #e4e7ec;
+    --widget-color:                #101828;
 
     /* Footer */
-    --footer-bg:                   #16213e;
-    --footer-color:                #8892a4;
-    --footer-border:               #2a3a5c;
+    --footer-bg:                   #ffffff;
+    --footer-color:                #475467;
+    --footer-border:               #e4e7ec;
     --footer-display:              flex;
 
     /* Hide clutter */
@@ -67,6 +67,7 @@
 body {
     font-family: 'Inter', sans-serif !important;
     background-color: var(--body-bg) !important;
+    color: var(--input-color) !important;
 }
 
 #page-login {
@@ -90,8 +91,9 @@ body {
 
 .login-content.page-card {
     background-color: var(--login-box-bg) !important;
-    border: 1px solid #2a3a5c !important;
+    border: 1px solid #d0d5dd !important;
     border-radius: 14px !important;
+    box-shadow: 0 4px 20px rgba(16, 24, 40, 0.08) !important;
 }
 
 .btn-primary.btn-login,
@@ -107,7 +109,7 @@ body {
 
 .navbar {
     background-color: var(--navbar-bg) !important;
-    border-bottom: 1px solid #2a3a5c !important;
+    border-bottom: 1px solid #e4e7ec !important;
 }
 
 .navbar-brand,
@@ -126,7 +128,7 @@ body {
     left: 0;
     top: 50%;
     transform: translateY(-50%);
-    color: #e94560;
+    color: #6941c6;
     font-weight: 700;
     font-size: 1rem;
     white-space: nowrap;
@@ -136,7 +138,7 @@ body {
 .layout-side-section,
 .sidebar-wrapper {
     background-color: var(--sidebar-bg) !important;
-    border-right: 1px solid #2a3a5c !important;
+    border-right: 1px solid #e4e7ec !important;
 }
 
 .sidebar-item-label,
@@ -161,8 +163,8 @@ body {
 }
 
 .form-control:focus {
-    border-color: #e94560 !important;
-    box-shadow: 0 0 0 3px rgba(233,69,96,0.2) !important;
+    border-color: #6941c6 !important;
+    box-shadow: 0 0 0 3px rgba(105, 65, 198, 0.1) !important;
 }
 
 label.control-label {
@@ -174,18 +176,24 @@ label.control-label {
     background-color: var(--btn-primary-bg) !important;
     border-color: var(--btn-primary-bg) !important;
     border-radius: 8px !important;
+    color: var(--btn-primary-color) !important;
 }
 
 .btn-primary:hover {
     background-color: var(--btn-primary-hover-bg) !important;
-    box-shadow: 0 4px 12px rgba(233,69,96,0.4) !important;
+    box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08) !important;
 }
 
 .btn-default,
 .btn-default:active {
     background-color: var(--btn-secondary-bg) !important;
     color: var(--btn-secondary-color) !important;
+    border-color: #d0d5dd !important;
     border-radius: 8px !important;
+}
+
+.btn-default:hover {
+    background-color: #f9fafb !important;
 }
 
 .level.list-row-head.text-muted {
@@ -201,12 +209,14 @@ div.level-right {
 .level.list-row {
     background-color: var(--table-body-bg) !important;
     color: var(--table-body-color) !important;
+    border-bottom: 1px solid #e4e7ec !important;
 }
 
 .widget.number-widget-box,
 .widget.dashboard-widget-box {
     background-color: var(--widget-bg) !important;
     border: 1px solid var(--widget-border) !important;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.1) !important;
 }
 
 .widget-head,
@@ -217,15 +227,16 @@ div.level-right {
 }
 
 .modal-content {
-    background-color: var(--sidebar-bg) !important;
-    border: 1px solid #2a3a5c !important;
+    background-color: #ffffff !important;
+    border: 1px solid #d0d5dd !important;
     border-radius: 12px !important;
-    color: #e2e8f0 !important;
+    color: #101828 !important;
+    box-shadow: 0 10px 30px rgba(16, 24, 40, 0.1) !important;
 }
 
 .modal-header,
 .modal-footer {
-    border-color: #2a3a5c !important;
+    border-color: #e4e7ec !important;
 }
 
 .page-card-head h4 {
@@ -251,12 +262,12 @@ div.level-right {
     display: none !important;
 }
 
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: #0b0f19; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f9fafb; }
 ::-webkit-scrollbar-thumb {
-    background: #2a3a5c;
+    background: #d0d5dd;
     border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: #e94560;
+    background: #6941c6;
 }

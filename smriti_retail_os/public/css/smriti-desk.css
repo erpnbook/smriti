@@ -1,28 +1,27 @@
 /* ============================================================
-   SMRITI Retail OS — Control Center Styles
+   SMRITI Retail OS — Control Center Styles (Light Mode)
    ============================================================ */
 
 #smriti-desk-root {
-    --smriti-primary: #4f46e5;
-    --smriti-primary-glow: rgba(79, 70, 229, 0.15);
-    --smriti-success: #12b76a;
-    --smriti-success-glow: rgba(18, 183, 106, 0.12);
-    --smriti-warning: #f79009;
-    --smriti-danger: #f04438;
-    --smriti-bg-dark: #0b0f19;
-    --smriti-card-bg: rgba(17, 24, 39, 0.8);
-    --smriti-card-border: rgba(255, 255, 255, 0.08);
-    --smriti-text-main: #f3f4f6;
-    --smriti-text-muted: #9ca3af;
-    --smriti-text-bright: #ffffff;
+    --smriti-primary: #6941c6;
+    --smriti-primary-glow: rgba(105, 65, 198, 0.1);
+    --smriti-success: #027a48;
+    --smriti-success-glow: rgba(2, 122, 72, 0.1);
+    --smriti-warning: #b54708;
+    --smriti-danger: #b42318;
+    --smriti-bg: #f9fafb;
+    --smriti-card-bg: #ffffff;
+    --smriti-card-border: #e4e7ec;
+    --smriti-text-main: #101828;
+    --smriti-text-muted: #475467;
+    --smriti-text-bright: #101828;
     
     font-family: 'Outfit', 'Inter', sans-serif;
     color: var(--smriti-text-main);
-    background-color: var(--smriti-bg-dark);
+    background-color: var(--smriti-bg);
     min-height: 85vh;
     padding: 24px;
     border-radius: 12px;
-    box-sizing: border-radius;
 }
 
 /* ─── Header ──────────────────────────────────────────────── */
@@ -43,12 +42,13 @@
 
 .desk-brand-icon {
     font-size: 32px;
-    background: linear-gradient(135deg, #4f46e5, #818cf8);
+    background: linear-gradient(135deg, #6941c6, #9e77ed);
     padding: 10px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: white;
     box-shadow: 0 4px 12px var(--smriti-primary-glow);
 }
 
@@ -56,9 +56,7 @@
     font-size: 24px;
     font-weight: 800;
     letter-spacing: -0.5px;
-    background: linear-gradient(135deg, var(--smriti-text-bright), #a5b4fc);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--smriti-text-main);
 }
 
 .desk-brand-sub {
@@ -77,20 +75,20 @@
     border-radius: 20px;
     font-size: 13px;
     font-weight: 600;
-    background: rgba(17, 24, 39, 0.6);
+    background: #ffffff;
     border: 1px solid var(--smriti-card-border);
 }
 
 .shift-status-badge.open {
-    border-color: rgba(18, 183, 106, 0.4);
-    background: rgba(18, 183, 106, 0.08);
-    color: var(--smriti-success);
+    border-color: #abefc6;
+    background: #ecfdf3;
+    color: #027a48;
 }
 
 .shift-status-badge.closed {
-    border-color: rgba(240, 68, 56, 0.4);
-    background: rgba(240, 68, 56, 0.08);
-    color: var(--smriti-danger);
+    border-color: #fecdca;
+    background: #fef3f2;
+    color: #b42318;
 }
 
 .shift-status-badge .dot {
@@ -98,7 +96,6 @@
     height: 8px;
     border-radius: 50%;
     background-color: currentColor;
-    box-shadow: 0 0 8px currentColor;
 }
 
 .shift-status-badge.open .dot {
@@ -107,7 +104,7 @@
 
 @keyframes pulse-green {
     0% { transform: scale(0.9); opacity: 0.6; }
-    50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 12px var(--smriti-success); }
+    50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 8px #12b76a; }
     100% { transform: scale(0.9); opacity: 0.6; }
 }
 
@@ -137,19 +134,17 @@
 
 .glass-card {
     background: var(--smriti-card-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--smriti-card-border);
     border-radius: 16px;
     padding: 24px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.1), 0 1px 2px rgba(16, 24, 40, 0.06);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card:hover {
     transform: translateY(-4px);
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+    border-color: var(--smriti-primary);
+    box-shadow: 0 12px 24px rgba(16, 24, 40, 0.08);
 }
 
 .kpi-card {
@@ -174,6 +169,7 @@
 .kpi-icon {
     font-size: 20px;
     opacity: 0.8;
+    color: var(--smriti-primary);
 }
 
 .kpi-value {
@@ -216,7 +212,7 @@
 }
 
 .action-card {
-    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+    background: #ffffff;
     border: 1px solid var(--smriti-card-border);
     border-radius: 16px;
     padding: 24px;
@@ -228,50 +224,35 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
-}
-
-.action-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at center, rgba(79, 70, 229, 0.12) 0%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 0;
-}
-
-.action-card:hover::before {
-    opacity: 1;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
 }
 
 .action-card:hover {
     transform: translateY(-6px);
-    border-color: rgba(79, 70, 229, 0.4);
+    border-color: var(--smriti-primary);
     box-shadow: 0 8px 30px var(--smriti-primary-glow);
 }
 
 .action-icon {
     font-size: 38px;
     margin-bottom: 16px;
-    background: rgba(255, 255, 255, 0.05);
+    background: #f9fafb;
     width: 68px;
     height: 68px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid #f2f4f7;
+    color: var(--smriti-primary);
     transition: all 0.3s ease;
     z-index: 1;
 }
 
 .action-card:hover .action-icon {
     background: var(--smriti-primary);
+    color: white;
     transform: scale(1.1);
-    box-shadow: 0 0 15px rgba(79, 70, 229, 0.6);
 }
 
 .action-name {
@@ -319,23 +300,23 @@
     gap: 12px;
     padding: 12px;
     border-radius: 10px;
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.03);
+    background: #f9fafb;
+    border: 1px solid #f2f4f7;
 }
 
 .alert-item.warning {
-    border-color: rgba(247, 144, 9, 0.2);
-    background: rgba(247, 144, 9, 0.03);
+    border-color: #fedf89;
+    background: #fffaeb;
 }
 
 .alert-item.info {
-    border-color: rgba(79, 70, 229, 0.2);
-    background: rgba(79, 70, 229, 0.03);
+    border-color: #b2ddff;
+    background: #f0f9ff;
 }
 
 .alert-item.danger {
-    border-color: rgba(240, 68, 56, 0.2);
-    background: rgba(240, 68, 56, 0.03);
+    border-color: #fecdca;
+    background: #fef3f2;
 }
 
 .alert-item-icon {
@@ -346,6 +327,7 @@
 .alert-item-content {
     font-size: 13px;
     line-height: 1.4;
+    color: #344054;
 }
 
 .alert-item-time {
@@ -366,7 +348,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 10px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
+    border-bottom: 1px solid #f2f4f7;
     font-size: 13px;
 }
 
