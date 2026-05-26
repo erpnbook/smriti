@@ -160,14 +160,7 @@ def extend_bootinfo(bootinfo):
 
     # ── Role-based routing ─────────────────────────────────────────────────────
     user = frappe.session.user
-    if user == "Administrator":
-        return
-
     roles = frappe.get_roles(user)
-
-    # System Manager NO redirect:
-    if "System Manager" in roles:
-        return  # nothing — normal ERPNext
 
     # Cashier redirect:
     if "SMRITI Cashier" in roles:

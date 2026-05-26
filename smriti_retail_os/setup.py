@@ -171,27 +171,27 @@ def setup_smriti_retail_os():
             "label_for_links": "Cashier-friendly quick customer onboarding."
         },
         {
-            "label": "Suppliers",
+            "label": "Inventory",
             "type": "Link",
-            "link_type": "DocType",
-            "link_to": "Supplier",
-            "label_for_links": "Simplified supplier credit terms tracker."
+            "link_type": "Page",
+            "link_to": "smriti-inventory",
+            "label_for_links": "Mobile-ready quick scanning barcode inventory."
         },
+        ...
         {
-            "label": "Loyalty Schemes",
+            "label": "Loyalty & Promotions",
             "type": "Link",
             "link_type": "Page",
             "link_to": "smriti-loyalty",
             "label_for_links": "Configure customer points tiers and conversion rules."
         },
         {
-            "label": "Store Reports",
+            "label": "Reports",
             "type": "Link",
             "link_type": "Page",
             "link_to": "smriti-reports",
             "label_for_links": "Visual sales, stock, and outstanding analytics."
         }
-    ]
 
     if frappe.db.exists("Workspace", workspace_name):
         ws = frappe.get_doc("Workspace", workspace_name)

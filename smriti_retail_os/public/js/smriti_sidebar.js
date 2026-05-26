@@ -28,13 +28,13 @@ SMRITI.renderSidebar = function(active_page) {
          url:"/app/smriti-inventory"},
         {id:"products",   icon:"🛍️", label:"Products",
          url:"/app/item"},
-        {id:"barcode",    icon:"🏷️",  label:"Barcodes",
+        {id:"barcode",    icon:"🏷️",  label:"Barcode Printing",
          url:"/app/smriti-barcode"},
         {id:"customers",  icon:"👥", label:"Customers",
          url:"/app/customer"},
         {id:"sales_invoices", icon:"📄", label:"Sales Invoices",
          url:"/app/sales-invoice"},
-        {id:"purchase",   icon:"🛒", label:"Purchase",
+        {id:"purchase",   icon:"🛒", label:"Purchase Manager",
          url:"/app/smriti-purchase"},
         ...(is_manager ? [
             {id:"purchase_orders", icon:"📝", label:"Purchase Orders",
@@ -45,9 +45,9 @@ SMRITI.renderSidebar = function(active_page) {
              url:"/app/supplier"},
             {id:"reports", icon:"📊", label:"Reports",
              url:"/app/smriti-reports"},
-            {id:"loyalty", icon:"🎁", label:"Loyalty Schemes",
+            {id:"loyalty", icon:"🎁", label:"Loyalty & Promotions",
              url:"/app/smriti-loyalty"},
-            {id:"desk",    icon:"🏠", label:"Dashboard",
+            {id:"desk",    icon:"🏠", label:"Control Center",
              url:"/app/smriti-desk"}
         ] : [])
     ];
