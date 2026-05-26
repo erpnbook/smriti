@@ -1,14 +1,15 @@
 app_name = "smriti_retail_os"
 app_title = "SMRITI Retail OS"
-app_publisher = "Antigravity"
+app_publisher = "SMRITI Retail OS"
 app_description = "Retail Experience Layer"
 app_email = "admin@smriti.io"
 app_license = "mit"
+brand_html = "<b style='color:#e94560;font-family:Inter,sans-serif'>SMRITI Retail OS</b>"
 
 # Apps
 # ------------------
 
-# required_apps = []
+required_apps = ["frappe", "erpnext", "india_compliance"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
@@ -25,12 +26,24 @@ app_license = "mit"
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/smriti_retail_os/css/smriti_retail_os.css"
-# app_include_js = "/assets/smriti_retail_os/js/smriti_retail_os.js"
+app_include_css = [
+    "/assets/smriti_retail_os/css/smriti_theme.css",
+    "/assets/smriti_retail_os/css/smriti_sidebar.css",
+    "/assets/smriti_retail_os/css/smriti_branding.css",
+    "/assets/smriti_retail_os/css/smriti-reports.css"
+]
+app_include_js = [
+    "/assets/smriti_retail_os/js/smriti_sidebar.js",
+    "/assets/smriti_retail_os/js/smriti_reports.js",
+    "/assets/smriti_retail_os/js/main.js"
+]
+
+# website page context override for whitelabel branding
+update_website_context = ["smriti_retail_os.website_context.get_context"]
 
 # include js, css files in header of web template
-# web_include_css = "/assets/smriti_retail_os/css/smriti_retail_os.css"
-# web_include_js = "/assets/smriti_retail_os/js/smriti_retail_os.js"
+web_include_css = "/assets/smriti_retail_os/css/smriti_branding.css"
+web_include_js = "/assets/smriti_retail_os/js/main.js"
 
 # include custom scss in every website theme (without file extension ".scss")
 # website_theme_scss = "smriti_retail_os/public/scss/website"
@@ -40,10 +53,17 @@ app_license = "mit"
 # webform_include_css = {"doctype": "public/css/doctype.css"}
 
 # include js in page
-# page_js = {"page" : "public/js/file.js"}
+# page_js entries removed — each page's JS file lives inside its own
+# page directory (e.g. page/smriti-billing/smriti-billing.js) and is
+# auto-loaded by Frappe's standard page loading mechanism.
+# page_js = {}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+    "Item": "public/js/item.js",
+    "Customer": "public/js/customer.js",
+    "Supplier": "public/js/supplier.js"
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -57,12 +77,16 @@ app_license = "mit"
 # ----------
 
 # application home page (will override Website Settings)
-# home_page = "login"
+home_page = "index"
 
 # website user home page (by Role)
-# role_home_page = {
-# 	"Role": "home_page"
-# }
+# Note: role_home_page is for non-desk/website users.
+# Desk users are handled via bootinfo.default_route in boot.py
+role_home_page = {
+    "SMRITI Cashier": "smriti-billing",
+    "SMRITI Store Manager": "smriti-desk",
+    "System Manager": "smriti-desk"
+}
 
 # Generators
 # ----------
@@ -86,7 +110,10 @@ app_license = "mit"
 # ------------
 
 # before_install = "smriti_retail_os.install.before_install"
-# after_install = "smriti_retail_os.install.after_install"
+after_install = "smriti_retail_os.setup.after_install"
+after_migrate = ["smriti_retail_os.setup.setup_smriti_retail_os"]
+boot_session = "smriti_retail_os.boot.boot_session"
+extend_bootinfo = "smriti_retail_os.boot.extend_bootinfo"
 
 # Uninstallation
 # ------------
@@ -138,13 +165,18 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+    "Item": {
+        "before_save": "smriti_retail_os.hooks_logic.sync_item_taxes_and_prices",
+        "on_update": "smriti_retail_os.hooks_logic.after_item_save"
+    },
+    "Customer": {
+        "on_update": "smriti_retail_os.hooks_logic.sync_customer_address"
+    },
+    "Supplier": {
+        "on_update": "smriti_retail_os.hooks_logic.sync_supplier_address_and_credit_days"
+    }
+}
 
 # Scheduled Tasks
 # ---------------
@@ -180,12 +212,9 @@ app_license = "mit"
 # 	"Task": "smriti_retail_os.custom.task.CustomTaskMixin"
 # }
 
-# Overriding Methods
-# ------------------------------
-#
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "smriti_retail_os.event.get_events"
-# }
+override_whitelisted_methods = {
+    "frappe.utils.change_log.get_versions": "smriti_retail_os.branding_api.get_versions"
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
@@ -255,4 +284,12 @@ app_license = "mit"
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
+
+# Login page override
+website_route_rules = [
+    {
+        "from_route": "/login",
+        "to_route": "login"
+    }
+]
 

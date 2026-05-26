@@ -1,0 +1,472 @@
+import frappe
+from frappe.utils import flt, cint, now_datetime, nowdate
+from frappe import _
+
+@frappe.whitelist()
+def add_item_by_barcode(barcode, price_list="Standard Selling"):
+    """
+    Looks up an item by barcode and returns item code, rate, MRP, tax details, and stock.
+    """
+    if not barcode:
+        return None
+
+    # Search in barcodes child table
+    item_code = frappe.db.get_value("Item Barcode", {"barcode": barcode}, "parent")
+    
+    if not item_code:
+        # Fallback: check if barcode matches item_code directly
+        if frappe.db.exists("Item", barcode):
+            item_code = barcode
+
+    if not item_code:
+        return None
+
+    item_doc = frappe.get_doc("Item", item_code)
+    
+    # Get standard selling price
+    rate = frappe.db.get_value(
+        "Item Price", 
+        {"item_code": item_code, "price_list": price_list}, 
+        "price_list_rate"
+    ) or item_doc.valuation_rate or 0.0
+
+    # Get MRP
+    mrp = item_doc.custom_mrp or frappe.db.get_value(
+        "Item Price", 
+        {"item_code": item_code, "price_list": "MRP"}, 
+        "price_list_rate"
+    ) or rate
+
+    # Resolve tax details (India Compliance Integration)
+    gst_percentage = cint(item_doc.custom_gst_percentage) if item_doc.custom_gst_percentage else 0
+    tax_template = ""
+    if item_doc.taxes:
+        tax_template = item_doc.taxes[0].item_tax_template
+
+    # Fetch dynamic stock for the default warehouse using raw SQL to bypass strict SELECT sanitization
+    stock_res = frappe.db.sql(
+        "SELECT SUM(actual_qty) FROM `tabBin` WHERE item_code=%s",
+        (item_code,)
+    )
+    stock_qty = stock_res[0][0] if stock_res and stock_res[0][0] is not None else 0.0
+
+    return {
+        "item_code": item_doc.name,
+        "item_name": item_doc.item_name,
+        "stock_uom": item_doc.stock_uom,
+        "brand": item_doc.brand,
+        "item_group": item_doc.item_group,
+        "rate": flt(rate),
+        "mrp": flt(mrp),
+        "gst_percentage": gst_percentage,
+        "tax_template": tax_template,
+        "available_qty": flt(stock_qty)
+    }
+
+
+@frappe.whitelist()
+def search_customer(query):
+    """
+    Searches for a customer by name or mobile number.
+    """
+    if not query:
+        return []
+
+    res = frappe.db.get_all(
+        "Customer",
+        filters={
+            "disabled": 0
+        },
+        or_filters={
+            "customer_name": ["like", f"%{query}%"],
+            "mobile_no": ["like", f"%{query}%"]
+        },
+        fields=["name", "customer_name", "mobile_no", "loyalty_program"]
+    )
+    
+    # Map mobile_no to primary_mobile_no for frontend compatibility
+    for r in res:
+        r["primary_mobile_no"] = r.get("mobile_no")
+        
+    return res
+
+
+@frappe.whitelist()
+def hold_bill(cashier, customer, items):
+    """
+    Holds the active bill by creating a Draft POS Invoice (docstatus = 0) with:
+    - custom_is_held = 1
+    - custom_held_by = cashier
+    - custom_hold_time = now_datetime()
+    """
+    if not items:
+        frappe.throw(_("Cannot hold an empty bill."))
+
+    items_list = frappe.parse_json(items)
+    
+    pos_invoice = frappe.new_doc("POS Invoice")
+    pos_invoice.owner = cashier
+    pos_invoice.customer = customer or "Walk-In Customer"
+    pos_invoice.posting_date = nowdate()
+    
+    # Custom SMRITI Hold Fields
+    pos_invoice.custom_is_held = 1
+    pos_invoice.custom_held_by = cashier
+    pos_invoice.custom_hold_time = now_datetime()
+    
+    # Set standard POS defaults
+    pos_invoice.company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+    pos_invoice.currency = "INR"
+    pos_invoice.selling_price_list = "Standard Selling"
+    
+    # Append items
+    for it in items_list:
+        pos_invoice.append("items", {
+            "item_code": it.get("item_code"),
+            "qty": flt(it.get("qty")),
+            "rate": flt(it.get("rate")),
+            "price_list_rate": flt(it.get("mrp")),
+            "uom": it.get("stock_uom") or "Nos"
+        })
+        
+    pos_invoice.docstatus = 0 # Draft
+    pos_invoice.flags.ignore_validate = True # Bypass POS opening entry / profile checks for held draft holds!
+    pos_invoice.flags.ignore_mandatory = True # Bypass standard database mandatory field checks!
+    pos_invoice.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    return {
+        "invoice_name": pos_invoice.name,
+        "message": _("Bill put on hold successfully.")
+    }
+
+
+@frappe.whitelist()
+def recall_bill(cashier):
+    """
+    Returns the list of held draft invoices where custom_is_held = 1 and custom_held_by = cashier.
+    """
+    return frappe.db.get_all(
+        "POS Invoice",
+        filters={
+            "docstatus": 0,
+            "custom_is_held": 1,
+            "custom_held_by": cashier
+        },
+        fields=["name", "customer", "posting_date", "grand_total", "custom_hold_time"],
+        order_by="custom_hold_time desc"
+    )
+
+
+@frappe.whitelist()
+def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_name=None):
+    """
+    Creates and submits a standard POS Invoice or falls back to Sales Invoice.
+    If a cashier shift is open, creates a POS Invoice.
+    If no cashier shift is open, creates a standard Sales Invoice directly, bypassing shift checks.
+    Automatically maps India Compliance taxes, loyalty redemption, and payment rows.
+    """
+    if not items:
+        frappe.throw(_("Cannot submit an empty bill."))
+
+    items_list = frappe.parse_json(items)
+    payments_list = frappe.parse_json(payments)
+    
+    company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+    
+    # Check if there is an active open shift for this cashier
+    has_open_shift = frappe.db.exists("POS Opening Entry", {
+        "user": cashier,
+        "status": "Open",
+        "docstatus": 1
+    })
+
+    # If overwriting a recalled held draft POS Invoice
+    is_recalled = bool(invoice_name and frappe.db.exists("POS Invoice", invoice_name))
+    
+    use_pos = is_recalled or has_open_shift
+    doctype = "POS Invoice" if use_pos else "Sales Invoice"
+
+    if is_recalled:
+        invoice_doc = frappe.get_doc("POS Invoice", invoice_name)
+        invoice_doc.custom_is_held = 0 # Release hold
+        invoice_doc.items = []
+        invoice_doc.payments = []
+    else:
+        invoice_doc = frappe.new_doc(doctype)
+        invoice_doc.owner = cashier
+        
+    invoice_doc.customer = customer or "Walk-In Customer"
+    invoice_doc.posting_date = nowdate()
+    invoice_doc.company = company
+    invoice_doc.currency = "INR"
+    invoice_doc.selling_price_list = "Standard Selling"
+    invoice_doc.update_stock = 1 if use_pos else 0
+    invoice_doc.is_pos = 1 if use_pos else 0
+    
+    # Pre-resolve a company-level fallback warehouse once (avoid repeated DB hits)
+    _fallback_wh = (
+        frappe.defaults.get_user_default("warehouse")
+        or frappe.db.get_value("Warehouse", {"warehouse_name": "Stores", "company": company}, "name")
+        or frappe.db.get_value("Warehouse", {"company": company, "is_group": 0}, "name")
+    )
+
+    # Resolve default taxes and charges template for the company if none set
+    default_tax_template = frappe.db.get_value(
+        "Sales Taxes and Charges Template",
+        {"company": company, "is_default": 1},
+        "name"
+    )
+    if default_tax_template:
+        invoice_doc.taxes_and_charges = default_tax_template
+        invoice_doc.run_method("set_taxes")
+
+    for it in items_list:
+        # Item Default child table holds per-company default warehouses
+        item_wh = frappe.db.get_value(
+            "Item Default",
+            {"parent": it.get("item_code"), "company": company},
+            "default_warehouse"
+        ) or _fallback_wh
+
+        # Resolve tax template
+        tax_template = it.get("tax_template") or it.get("item_tax_template")
+        if not tax_template:
+            item_doc = frappe.get_doc("Item", it.get("item_code"))
+            if item_doc.taxes:
+                tax_template = item_doc.taxes[0].item_tax_template
+
+        invoice_doc.append("items", {
+            "item_code": it.get("item_code"),
+            "qty": flt(it.get("qty")),
+            "rate": flt(it.get("rate")),
+            "price_list_rate": flt(it.get("mrp")),
+            "uom": it.get("stock_uom") or "Nos",
+            "warehouse": item_wh,
+            "item_tax_template": tax_template
+        })
+        
+    # 2. Split Payments
+    for p in payments_list:
+        if flt(p.get("amount")) > 0:
+            mop = p.get("mode_of_payment")
+            mop_account = frappe.db.get_value(
+                "Mode of Payment Account",
+                {"parent": mop, "company": company},
+                "default_account"
+            )
+            invoice_doc.append("payments", {
+                "mode_of_payment": mop,
+                "amount": flt(p.get("amount")),
+                "account": mop_account
+            })
+            
+    # 3. Loyalty Points Redemption
+    if loyalty_points and int(loyalty_points) > 0:
+        loyalty_program = frappe.db.get_value("Customer", invoice_doc.customer, "loyalty_program")
+        if loyalty_program:
+            invoice_doc.redeem_loyalty_points = 1
+            invoice_doc.loyalty_points = int(loyalty_points)
+            invoice_doc.loyalty_program = loyalty_program
+
+    # 4. Save and Submit
+    if is_recalled:
+        invoice_doc.save(ignore_permissions=True)
+    else:
+        invoice_doc.insert(ignore_permissions=True)
+    
+    invoice_doc.submit()
+    
+    if doctype == "Sales Invoice":
+        # Create a Payment Entry to reconcile the fallback credit invoice (making it fully paid)
+        from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+        total_paid = sum(flt(p.get("amount")) for p in payments_list)
+        if total_paid > 0:
+            pe = get_payment_entry(doctype, invoice_doc.name)
+            if payments_list:
+                first_p = payments_list[0]
+                pe.mode_of_payment = first_p.get("mode_of_payment")
+                pe.paid_to = frappe.db.get_value(
+                    "Mode of Payment Account",
+                    {"parent": pe.mode_of_payment, "company": company},
+                    "default_account"
+                ) or pe.paid_to
+            pe.flags.ignore_permissions = True
+            pe.insert(ignore_permissions=True)
+            pe.submit()
+            
+    frappe.db.commit()
+    
+    # 5. Return success details with standard printing URL
+    print_url = f"/api/method/frappe.utils.print_format.download_pdf?doctype={doctype}&name={invoice_doc.name}&format=Standard"
+    
+    return {
+        "invoice": invoice_doc.name,
+        "grand_total": flt(invoice_doc.grand_total),
+        "print_url": print_url
+    }
+
+
+@frappe.whitelist()
+def search_items(query, price_list="Standard Selling"):
+    """
+    Searches items by code, name, brand, or group. Returns rates, MRPs, and GST details.
+    """
+    if not query:
+        return []
+    
+    items = frappe.db.get_all(
+        "Item",
+        filters={
+            "disabled": 0,
+            "custom_is_retail_item": 1
+        },
+        or_filters={
+            "item_code": ["like", f"%{query}%"],
+            "item_name": ["like", f"%{query}%"],
+            "brand": ["like", f"%{query}%"],
+            "item_group": ["like", f"%{query}%"]
+        },
+        fields=["name", "item_name", "stock_uom", "brand", "item_group", "custom_mrp", "custom_gst_percentage", "valuation_rate"]
+    )
+    
+    results = []
+    for it in items:
+        # Get standard selling price
+        rate = frappe.db.get_value(
+            "Item Price", 
+            {"item_code": it.name, "price_list": price_list}, 
+            "price_list_rate"
+        ) or it.valuation_rate or 0.0
+        
+        # Get MRP
+        mrp = it.custom_mrp or frappe.db.get_value(
+            "Item Price", 
+            {"item_code": it.name, "price_list": "MRP"}, 
+            "price_list_rate"
+        ) or rate
+        
+        gst_percentage = cint(it.custom_gst_percentage) if it.custom_gst_percentage else 0
+        
+        # Resolve tax template
+        tax_template = ""
+        item_doc = frappe.get_cached_doc("Item", it.name)
+        if item_doc.taxes:
+            tax_template = item_doc.taxes[0].item_tax_template
+            
+        results.append({
+            "item_code": it.name,
+            "item_name": it.item_name,
+            "stock_uom": it.stock_uom,
+            "brand": it.brand,
+            "item_group": it.item_group,
+            "rate": flt(rate),
+            "mrp": flt(mrp),
+            "gst_percentage": gst_percentage,
+            "tax_template": tax_template
+        })
+    return results
+
+
+@frappe.whitelist()
+def load_held_invoice(invoice_name):
+    """
+    Loads a held Draft POS Invoice so the frontend can reconstruct its cart.
+    """
+    if not invoice_name:
+        return None
+    
+    inv = frappe.get_doc("POS Invoice", invoice_name)
+    if inv.docstatus != 0 or not inv.custom_is_held:
+        frappe.throw(_("Invoice {0} is not a held draft invoice.").format(invoice_name))
+        
+    items = []
+    for it in inv.items:
+        item_doc = frappe.get_cached_doc("Item", it.item_code)
+        
+        # Get MRP
+        mrp = item_doc.custom_mrp or frappe.db.get_value(
+            "Item Price", 
+            {"item_code": it.item_code, "price_list": "MRP"}, 
+            "price_list_rate"
+        ) or it.rate
+        
+        gst_percentage = cint(item_doc.custom_gst_percentage) if item_doc.custom_gst_percentage else 0
+        
+        # Resolve tax template
+        tax_template = ""
+        if item_doc.taxes:
+            tax_template = item_doc.taxes[0].item_tax_template
+            
+        items.append({
+            "item_code": it.item_code,
+            "item_name": it.item_name,
+            "stock_uom": it.uom,
+            "qty": flt(it.qty),
+            "rate": flt(it.rate),
+            "mrp": flt(mrp),
+            "gst_percentage": gst_percentage,
+            "tax_template": tax_template
+        })
+        
+    return {
+        "invoice_name": inv.name,
+        "customer": inv.customer,
+        "items": items
+    }
+
+
+@frappe.whitelist()
+def validate_manager_override(pin, action_type, invoice_name=None):
+    """
+    Validates entered PIN against users with SMRITI Store Manager or System Manager role,
+    and logs the approved action in a standard Comment on the target document or system logs.
+    """
+    if not pin:
+        return {"authorized": False, "message": _("PIN is required.")}
+
+    import frappe.auth
+
+    # Find users with manager roles
+    managers = frappe.db.get_all(
+        "Has Role",
+        filters={"role": ["in", ["SMRITI Store Manager", "System Manager"]]},
+        pluck="parent"
+    )
+
+    for mgr in set(managers):
+        # Only active users
+        if not frappe.db.get_value("User", mgr, "enabled"):
+            continue
+        try:
+            # Use frappe.auth.check_password to authenticate the manager's password
+            frappe.auth.check_password(mgr, pin)
+            
+            # Verify manager role after auth
+            roles = frappe.get_roles(mgr)
+            if "SMRITI Store Manager" in roles or "System Manager" in roles:
+                # Log override action using standard Comment
+                if invoice_name:
+                    frappe.get_doc({
+                        "doctype": "Comment",
+                        "comment_type": "Comment",
+                        "reference_doctype": "POS Invoice",
+                        "reference_name": invoice_name,
+                        "content": f"Manager Override approved by {mgr} for action: {action_type}",
+                        "comment_email": frappe.session.user,
+                        "comment_by": frappe.session.user
+                    }).insert(ignore_permissions=True)
+                else:
+                    # Generic Comment / Log
+                    frappe.logger().info(f"SMRITI: Manager Override approved by {mgr} for action: {action_type}")
+                
+                return {
+                    "authorized": True,
+                    "manager": mgr
+                }
+        except frappe.AuthenticationError:
+            pass
+        except Exception as e:
+            frappe.log_error(title="SMRITI Manager Password Authentication Error", message=frappe.get_traceback())
+
+    return {"authorized": False, "message": _("Invalid PIN Code or unauthorized role.")}

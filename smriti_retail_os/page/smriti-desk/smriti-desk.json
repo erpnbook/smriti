@@ -1,0 +1,26 @@
+{
+ "content": null,
+ "creation": "2026-05-26 15:30:00",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2026-05-26 15:30:00",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "smriti-desk",
+ "owner": "Administrator",
+ "page_name": "smriti-desk",
+ "roles": [
+  {
+   "role": "SMRITI Store Manager"
+  },
+  {
+   "role": "SMRITI Cashier"
+  },
+  {
+   "role": "System Manager"
+  }
+ ],
+ "standard": "Yes",
+ "title": "SMRITI Control Center"
+}

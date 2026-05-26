@@ -1,0 +1,262 @@
+:root {
+    /* Login */
+    --login-bg-color:              #0b0f19;
+    --login-btn-bg:                #e94560;
+    --login-btn-hover-bg:          #c73652;
+    --login-btn-color:             #ffffff;
+    --login-box-bg:                #16213e;
+    --login-title-display:         none;
+    --login-title-after-display:   flex;
+    --login-title-after-content:   "SMRITI Retail OS";
+    --login-title-after-color:     #e2e8f0;
+    --login-title-after-margin:    0;
+    --login-title-after-justify:   center;
+    --page-heading-color:          #e2e8f0;
+
+    /* Navbar */
+    --navbar-bg:                   #16213e;
+    --navbar-color:                #e2e8f0;
+
+    /* Body */
+    --body-bg:                     #0b0f19;
+    --main-content-bg:             #16213e;
+
+    /* Sidebar */
+    --sidebar-bg:                  #16213e;
+    --sidebar-text-color:          #e2e8f0;
+
+    /* Buttons */
+    --btn-primary-bg:              #e94560;
+    --btn-primary-hover-bg:        #c73652;
+    --btn-primary-color:           #ffffff;
+    --btn-secondary-bg:            #1a2744;
+    --btn-secondary-color:         #e2e8f0;
+    --btn-secondary-hover-bg:      #2a3a5c;
+
+    /* Inputs */
+    --input-bg:                    #1a2744;
+    --input-border:                #2a3a5c;
+    --input-color:                 #e2e8f0;
+    --input-label-color:           #8892a4;
+
+    /* Tables */
+    --table-head-bg:               #1a2744;
+    --table-head-color:            #e2e8f0;
+    --table-body-bg:               #16213e;
+    --table-body-color:            #e2e8f0;
+
+    /* Widgets */
+    --widget-bg:                   #16213e;
+    --widget-border:               #2a3a5c;
+    --widget-color:                #e2e8f0;
+
+    /* Footer */
+    --footer-bg:                   #16213e;
+    --footer-color:                #8892a4;
+    --footer-border:               #2a3a5c;
+    --footer-display:              flex;
+
+    /* Hide clutter */
+    --hide-app-switcher:           none;
+    --hide-help:                   none;
+    --hide-like-comment:           none;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif !important;
+    background-color: var(--body-bg) !important;
+}
+
+#page-login {
+    background: var(--login-bg-color);
+    height: 100vh;
+}
+
+.for-login .page-card-head h4 {
+    display: var(--login-title-display);
+}
+
+.for-login .page-card-head::after {
+    display: var(--login-title-after-display);
+    content: var(--login-title-after-content);
+    color: var(--login-title-after-color);
+    justify-content: var(--login-title-after-justify);
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-top: var(--login-title-after-margin);
+}
+
+.login-content.page-card {
+    background-color: var(--login-box-bg) !important;
+    border: 1px solid #2a3a5c !important;
+    border-radius: 14px !important;
+}
+
+.btn-primary.btn-login,
+.btn-primary.btn-forgot {
+    background-color: var(--login-btn-bg);
+    color: var(--login-btn-color);
+}
+
+.btn-primary.btn-login:hover,
+.btn-primary.btn-forgot:hover {
+    background-color: var(--login-btn-hover-bg);
+}
+
+.navbar {
+    background-color: var(--navbar-bg) !important;
+    border-bottom: 1px solid #2a3a5c !important;
+}
+
+.navbar-brand,
+.navbar.container {
+    color: var(--navbar-color) !important;
+}
+
+.navbar-brand {
+    visibility: hidden;
+    position: relative;
+}
+.navbar-brand::after {
+    content: "SMRITI Retail OS";
+    visibility: visible;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #e94560;
+    font-weight: 700;
+    font-size: 1rem;
+    white-space: nowrap;
+}
+
+.desk-sidebar,
+.layout-side-section,
+.sidebar-wrapper {
+    background-color: var(--sidebar-bg) !important;
+    border-right: 1px solid #2a3a5c !important;
+}
+
+.sidebar-item-label,
+.sidebar-item-icon svg,
+.sidebar-item-control button {
+    color: var(--sidebar-text-color) !important;
+}
+
+.content.page-container,
+.page-head,
+.layout-main-section,
+.form-layout,
+.layout-main {
+    background-color: var(--body-bg) !important;
+}
+
+.form-control {
+    background-color: var(--input-bg) !important;
+    border: 1px solid var(--input-border) !important;
+    color: var(--input-color) !important;
+    border-radius: 8px !important;
+}
+
+.form-control:focus {
+    border-color: #e94560 !important;
+    box-shadow: 0 0 0 3px rgba(233,69,96,0.2) !important;
+}
+
+label.control-label {
+    color: var(--input-label-color) !important;
+}
+
+.btn-primary,
+.btn-primary:active {
+    background-color: var(--btn-primary-bg) !important;
+    border-color: var(--btn-primary-bg) !important;
+    border-radius: 8px !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--btn-primary-hover-bg) !important;
+    box-shadow: 0 4px 12px rgba(233,69,96,0.4) !important;
+}
+
+.btn-default,
+.btn-default:active {
+    background-color: var(--btn-secondary-bg) !important;
+    color: var(--btn-secondary-color) !important;
+    border-radius: 8px !important;
+}
+
+.level.list-row-head.text-muted {
+    background-color: var(--table-head-bg) !important;
+}
+
+.level-left.list-header-subject,
+span.level-item,
+div.level-right {
+    color: var(--table-head-color) !important;
+}
+
+.level.list-row {
+    background-color: var(--table-body-bg) !important;
+    color: var(--table-body-color) !important;
+}
+
+.widget.number-widget-box,
+.widget.dashboard-widget-box {
+    background-color: var(--widget-bg) !important;
+    border: 1px solid var(--widget-border) !important;
+}
+
+.widget-head,
+.widget-label,
+.widget-title,
+.widget-body {
+    color: var(--widget-color) !important;
+}
+
+.modal-content {
+    background-color: var(--sidebar-bg) !important;
+    border: 1px solid #2a3a5c !important;
+    border-radius: 12px !important;
+    color: #e2e8f0 !important;
+}
+
+.modal-header,
+.modal-footer {
+    border-color: #2a3a5c !important;
+}
+
+.page-card-head h4 {
+    color: var(--page-heading-color) !important;
+}
+
+.d-lg-block,
+.d-sm-block {
+    display: var(--hide-help) !important;
+}
+
+.sidebar-item-control {
+    display: var(--hide-app-switcher) !important;
+}
+
+.like-icon,
+.comment-count {
+    display: var(--hide-like-comment) !important;
+}
+
+.powered-by,
+.footer-powered-by {
+    display: none !important;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #0b0f19; }
+::-webkit-scrollbar-thumb {
+    background: #2a3a5c;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #e94560;
+}

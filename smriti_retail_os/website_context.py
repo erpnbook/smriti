@@ -1,0 +1,33 @@
+"""
+SMRITI Retail OS — Website Context Hook
+Overrides ERPNext/Frappe branding on all web/portal pages (Jinja-rendered).
+Registered in hooks.py via: website_context = "smriti_retail_os.website_context.get_context"
+"""
+
+_BRAND_NAME = "SMRITI Retail OS"
+_LOGO_URL   = "/assets/smriti_retail_os/images/logo.svg"
+_FAVICON    = "/assets/smriti_retail_os/favicon.png"
+
+
+def get_context(context):
+    """
+    Frappe calls this for every web page render.
+    We inject SMRITI branding into the Jinja context so all
+    {{ app_name }}, {{ brand_html }}, {{ favicon }} references
+    render with SMRITI values — no JS patching needed on web pages.
+    """
+    context.update(
+        {
+            "app_name":   _BRAND_NAME,
+            "brand_html": (
+                '<img src="{logo}" style="height:36px;width:auto;" '
+                'alt="{name}">'.format(logo=_LOGO_URL, name=_BRAND_NAME)
+            ),
+            "favicon":          _FAVICON,
+            "splash_image":     _LOGO_URL,
+            "top_bar_brand":    _BRAND_NAME,
+            "meta_description": "SMRITI Retail OS — Smarter Retail, Built for India.",
+            "meta_title":       _BRAND_NAME,
+        }
+    )
+    return context

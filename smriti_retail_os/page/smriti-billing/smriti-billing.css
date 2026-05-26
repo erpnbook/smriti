@@ -1,0 +1,409 @@
+/* SMRITI Retail OS - Premium Glassmorphic Billing Stylesheet */
+
+:root {
+    --smriti-bg: #0b0f19;
+    --smriti-card-bg: rgba(17, 24, 39, 0.7);
+    --smriti-glass-border: rgba(255, 255, 255, 0.08);
+    --smriti-text: #f3f4f6;
+    --smriti-text-muted: #9ca3af;
+    --smriti-primary: #6366f1;
+    --smriti-primary-glow: rgba(99, 102, 241, 0.4);
+    --smriti-accent: #0d9488;
+    --smriti-accent-glow: rgba(13, 148, 136, 0.35);
+    --smriti-danger: #e11d48;
+    --smriti-danger-glow: rgba(225, 29, 72, 0.35);
+    --smriti-success: #10b981;
+    --smriti-success-glow: rgba(16, 185, 129, 0.35);
+    --smriti-amber: #f59e0b;
+}
+
+/* Widescreen Main Container */
+.smriti-billing-container {
+    background-color: var(--smriti-bg);
+    color: var(--smriti-text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 20px;
+    border-radius: 12px;
+    min-height: 82vh;
+    box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Top Navbar Badge styling */
+.smriti-top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--smriti-card-bg);
+    border: 1px solid var(--smriti-glass-border);
+    backdrop-filter: blur(12px);
+    padding: 12px 20px;
+    border-radius: 10px;
+}
+
+.smriti-cashier-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.badge-dot.green {
+    background-color: var(--smriti-success);
+    box-shadow: 0 0 10px var(--smriti-success);
+}
+
+.smriti-active-invoice .invoice-number {
+    font-size: 1.15em;
+    letter-spacing: 0.5px;
+    color: var(--smriti-amber);
+    text-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
+.smriti-shortcuts-hint {
+    font-size: 0.9em;
+    color: var(--smriti-text-muted);
+}
+
+.smriti-shortcuts-hint b {
+    color: var(--smriti-primary);
+}
+
+/* Split Pane Grid Layout */
+.smriti-grid {
+    display: grid;
+    grid-template-columns: 2.1fr 1fr;
+    gap: 20px;
+    height: 100%;
+}
+
+/* Left Panel - Barcode & Cart Grid */
+.smriti-main-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.barcode-wrapper {
+    display: flex;
+    gap: 10px;
+}
+
+.barcode-input-container {
+    position: relative;
+    flex-grow: 1;
+}
+
+.scanner-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.25em;
+    animation: flash 1.5s infinite;
+}
+
+#smriti-barcode-input {
+    width: 100%;
+    background: rgba(17, 24, 39, 0.8);
+    border: 1px solid var(--smriti-glass-border);
+    border-radius: 8px;
+    padding: 12px 12px 12px 45px;
+    color: var(--smriti-text);
+    font-size: 1.15em;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+#smriti-barcode-input:focus {
+    outline: none;
+    border-color: var(--smriti-primary);
+    box-shadow: 0 0 15px var(--smriti-primary-glow);
+}
+
+.btn-scan {
+    background: linear-gradient(135deg, var(--smriti-primary), #4f46e5);
+    color: white;
+    border: none;
+    font-weight: 600;
+    padding: 0 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-scan:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px var(--smriti-primary-glow);
+}
+
+/* Cart Grid Table container */
+.billing-table-wrapper {
+    background: var(--smriti-card-bg);
+    border: 1px solid var(--smriti-glass-border);
+    backdrop-filter: blur(12px);
+    border-radius: 10px;
+    padding: 15px;
+    flex-grow: 1;
+    overflow-y: auto;
+    max-height: 520px;
+    position: relative;
+}
+
+#smriti-billing-table {
+    margin-bottom: 0;
+}
+
+#smriti-billing-table th {
+    background-color: rgba(31, 41, 55, 0.5);
+    border-color: var(--smriti-glass-border);
+    color: var(--smriti-text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 0.5px;
+    padding: 12px 8px;
+}
+
+#smriti-billing-table td {
+    border-color: var(--smriti-glass-border);
+    color: var(--smriti-text);
+    vertical-align: middle;
+    padding: 10px 8px;
+}
+
+/* Input boxes inside Grid table */
+.grid-qty-input, .grid-rate-input {
+    background: rgba(31, 41, 55, 0.6) !important;
+    border: 1px solid var(--smriti-glass-border) !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border-radius: 4px;
+    padding: 5px !important;
+}
+
+.grid-qty-input:focus, .grid-rate-input:focus {
+    border-color: var(--smriti-accent) !important;
+    box-shadow: 0 0 8px var(--smriti-accent-glow) !important;
+}
+
+.btn-remove-row {
+    background: transparent;
+    border: 1px solid rgba(225, 29, 72, 0.3);
+    color: var(--smriti-danger);
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-remove-row:hover {
+    background: var(--smriti-danger);
+    color: white;
+    box-shadow: 0 0 10px var(--smriti-danger-glow);
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 100px 0;
+    color: var(--smriti-text-muted);
+}
+
+.empty-icon {
+    font-size: 4em;
+    margin-bottom: 15px;
+    opacity: 0.3;
+}
+
+/* Right Panel - Customer, Calculation, checkout drawer */
+.smriti-side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Customer card details */
+.customer-card, .summary-card, .payment-drawer-card {
+    background: var(--smriti-card-bg);
+    border: 1px solid var(--smriti-glass-border);
+    backdrop-filter: blur(12px);
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.customer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.cust-title {
+    font-weight: 600;
+    color: var(--smriti-text-muted);
+    font-size: 0.9em;
+}
+
+.btn-change-cust {
+    padding: 2px 10px;
+    font-size: 0.8em;
+    font-weight: 600;
+    border-color: var(--smriti-glass-border);
+    background: rgba(31, 41, 55, 0.5);
+    color: white;
+}
+
+.cust-name {
+    font-size: 1.3em;
+    font-weight: 700;
+    color: var(--smriti-accent);
+    display: block;
+}
+
+.cust-loyalty {
+    font-size: 0.85em;
+    color: var(--smriti-text-muted);
+}
+
+.cust-loyalty b {
+    color: var(--smriti-amber);
+}
+
+/* Totals Summary Card */
+.summary-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.05em;
+}
+
+.summary-label {
+    color: var(--smriti-text-muted);
+}
+
+.summary-val {
+    font-weight: 600;
+}
+
+.summary-divider {
+    border-top: 1px solid var(--smriti-glass-border);
+    margin: 8px 0;
+}
+
+.grand-total-row {
+    font-size: 1.4em !important;
+    font-weight: 700 !important;
+}
+
+.grand-total-row .summary-val.highlight {
+    color: var(--smriti-amber);
+    text-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+}
+
+/* Split Payment Drawer layout */
+.payment-drawer-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.payment-drawer-header {
+    font-weight: 700;
+    font-size: 1em;
+    color: var(--smriti-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.payment-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.payment-field-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.payment-field-row label {
+    font-size: 0.9em;
+    color: var(--smriti-text-muted);
+    margin-bottom: 0;
+}
+
+.payment-field-row input {
+    background: rgba(31, 41, 55, 0.8);
+    border: 1px solid var(--smriti-glass-border);
+    color: white;
+    font-weight: 700;
+    text-align: right;
+    width: 120px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 1.1em;
+}
+
+.payment-field-row input:focus {
+    outline: none;
+    border-color: var(--smriti-primary);
+    box-shadow: 0 0 10px var(--smriti-primary-glow);
+}
+
+/* Payment Alert pending box */
+.payment-alert-box {
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.payment-alert-box.pending {
+    background: rgba(225, 29, 72, 0.1);
+    border: 1px solid var(--smriti-danger-glow);
+    color: var(--smriti-danger);
+}
+
+.payment-alert-box.reconciled {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid var(--smriti-success-glow);
+    color: var(--smriti-success);
+}
+
+/* Submit Block Action Button */
+.btn-checkout-save {
+    background: linear-gradient(135deg, var(--smriti-accent), #0f766e);
+    border: none;
+    color: white;
+    font-weight: 700;
+    font-size: 1.15em;
+    padding: 12px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-checkout-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px var(--smriti-accent-glow);
+}
+
+/* Glow Keyframes */
+@keyframes flash {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; color: var(--smriti-primary); text-shadow: 0 0 10px var(--smriti-primary-glow); }
+}

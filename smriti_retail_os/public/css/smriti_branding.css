@@ -1,0 +1,348 @@
+/* ============================================================
+   SMRITI Retail OS — Brand Overrides
+   100% SMRITI branding. Zero ERPNext / Frappe mentions.
+   Premium Light Theme.
+   ============================================================ */
+
+/* ----- Google Font: Inter ----- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
+
+/* ----- Design Tokens — Premium Light Theme ----- */
+:root {
+  --smriti-primary:      #6941c6; /* premium indigo/purple */
+  --smriti-primary-dark: #53389e;
+  --smriti-accent:       #0e7490;
+  --smriti-bg-dark:      #f9fafb; /* soft off-white */
+  --smriti-bg-card:      #ffffff; /* pure white */
+  --smriti-text:         #101828; /* dark slate */
+  --smriti-text-muted:   #475467; /* muted slate */
+  --smriti-border:       #e4e7ec; /* light border */
+  --smriti-gradient:     linear-gradient(135deg, #7f56d9 0%, #06b6d4 100%);
+  --smriti-shadow:       0 8px 30px rgba(105, 65, 198, 0.05);
+}
+
+/* ============================================================
+   GLOBAL FONT & BACKGROUNDS
+   ============================================================ */
+body, *, input, button, select, textarea {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+body {
+  background-color: var(--smriti-bg-dark) !important;
+  color: var(--smriti-text) !important;
+}
+
+/* ============================================================
+   HIDE ALL FRAPPE / ERPNEXT BRANDING ELEMENTS
+   ============================================================ */
+
+/* "Powered by Frappe", "Built with ERPNext" banners */
+.powered-by,
+.built-with,
+.frappe-copyright,
+.footer-info {
+  display: none !important;
+}
+
+/* Any link pointing to frappe.io, frappeframework.com, erpnext.com */
+a[href*="frappe.io"],
+a[href*="frappeframework.com"],
+a[href*="erpnext.com"] {
+  display: none !important;
+}
+
+/* ERPNext / Frappe logo images */
+img[src*="erpnext"],
+img[src*="frappe-logo"],
+img[src*="frappe/images"],
+img[alt="ERPNext"],
+img[alt="Frappe Framework"],
+img[alt="Frappe"] {
+  content: url('/assets/smriti_retail_os/images/logo.svg') !important;
+  max-height: 38px !important;
+  width: auto !important;
+}
+
+/* ============================================================
+   LOGIN / SPLASH PAGE
+   ============================================================ */
+body.login-page,
+.page-body.login-page,
+.login-content,
+.page-card-head {
+  background: var(--smriti-bg-dark) !important;
+}
+
+.login-content .card,
+.login-content .page-card,
+.page-card {
+  background: var(--smriti-bg-card) !important;
+  border: 1px solid var(--smriti-border) !important;
+  border-radius: 16px !important;
+  box-shadow: var(--smriti-shadow) !important;
+}
+
+.login-content .navbar-brand img,
+.login-content img[src*="erpnext"],
+.login-content img[src*="frappe"] {
+  content: url('/assets/smriti_retail_os/images/logo.svg') !important;
+  max-height: 48px !important;
+  width: auto !important;
+}
+
+.login-content .page-card-head .navbar-brand {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0 8px;
+}
+
+.login-content .navbar-brand-image {
+  height: 56px !important;
+  width: auto !important;
+}
+
+.login-content .app-name,
+.page-card-head h4,
+.login-content h4 {
+  color: var(--smriti-text) !important;
+  font-weight: 700 !important;
+  font-size: 1.5rem !important;
+  background: var(--smriti-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.login-content label,
+.page-card label {
+  color: var(--smriti-text-muted) !important;
+  font-weight: 500 !important;
+}
+
+.login-content input.form-control,
+.page-card input.form-control {
+  background: var(--smriti-bg-card) !important;
+  border: 1px solid var(--smriti-border) !important;
+  border-radius: 8px !important;
+  color: var(--smriti-text) !important;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.login-content input.form-control:focus,
+.page-card input.form-control:focus {
+  border-color: var(--smriti-primary) !important;
+  box-shadow: 0 0 0 3px rgba(105, 65, 198, 0.15) !important;
+  outline: none !important;
+}
+
+.login-content .btn-primary,
+.page-card .btn-primary {
+  background: var(--smriti-gradient) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.3px !important;
+  box-shadow: 0 4px 15px rgba(105, 65, 198, 0.2) !important;
+  transition: transform 0.15s, box-shadow 0.15s !important;
+}
+.login-content .btn-primary:hover,
+.page-card .btn-primary:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(105, 65, 198, 0.35) !important;
+}
+
+.login-content a, .page-card a {
+  color: var(--smriti-primary) !important;
+  font-weight: 500;
+}
+
+/* Hide "Forgot Password" Frappe link footnote and any copyright on login */
+.login-content .login-footer,
+.page-card .login-footer {
+  color: var(--smriti-text-muted) !important;
+  font-size: 0.75rem !important;
+}
+
+/* ============================================================
+   TOP NAV BAR
+   ============================================================ */
+.navbar,
+.navbar-desk,
+.desk-navbar {
+  background: var(--smriti-bg-card) !important;
+  border-bottom: 1px solid var(--smriti-border) !important;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05) !important;
+}
+
+.navbar .navbar-brand img,
+.navbar-brand img,
+header .brand-logo {
+  content: url('/assets/smriti_retail_os/images/logo.svg') !important;
+  height: 32px !important;
+  width: auto !important;
+}
+
+.navbar .nav-link,
+.navbar .navbar-nav a,
+.navbar-desk .nav-link {
+  color: var(--smriti-text-muted) !important;
+}
+.navbar .nav-link:hover,
+.navbar-desk .nav-link:hover {
+  color: var(--smriti-text) !important;
+}
+
+.navbar .form-control.search-bar,
+.navbar .search-bar {
+  background: var(--smriti-bg-dark) !important;
+  border-color: var(--smriti-border) !important;
+  color: var(--smriti-text) !important;
+  border-radius: 8px !important;
+}
+
+/* ============================================================
+   LOADING / SPLASH
+   ============================================================ */
+.splash-screen,
+#splash,
+.app-loading {
+  background: var(--smriti-bg-dark) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.splash-screen img,
+#splash img,
+.app-loading img {
+  content: url('/assets/smriti_retail_os/images/logo.svg') !important;
+  height: 80px !important;
+  width: auto !important;
+  animation: smriti-pulse 1.6s ease-in-out infinite !important;
+}
+
+@keyframes smriti-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(0.95); }
+}
+
+.loading-state .progress,
+.page-loading-indicator,
+.page-loading-indicator > .progress-bar {
+  background: var(--smriti-gradient) !important;
+  height: 3px !important;
+  border-radius: 2px !important;
+}
+
+/* ============================================================
+   DESK SIDEBAR
+   ============================================================ */
+.desk-sidebar,
+.sidebar-wrapper,
+.layout-side-section {
+  background: var(--smriti-bg-card) !important;
+  border-right: 1px solid var(--smriti-border) !important;
+}
+
+.desk-sidebar .active,
+.sidebar-item.active,
+.sidebar-item:hover {
+  background: rgba(105, 65, 198, 0.05) !important;
+  border-left: 3px solid var(--smriti-primary) !important;
+  color: var(--smriti-primary) !important;
+}
+
+/* ============================================================
+   ABOUT DIALOG — hide leftover Frappe attribution rows
+   ============================================================ */
+/* In case any Frappe link slips through the JS override */
+.modal-body a[href*="frappe.io"],
+.modal-body a[href*="frappeframework.com"],
+.modal-body a[href*="erpnext.com"],
+.modal-body p:has(a[href*="frappe.io"]),
+.modal-body p:has(a[href*="frappeframework.com"]) {
+  display: none !important;
+}
+
+/* ============================================================
+   BILLING PAGE
+   ============================================================ */
+#page-smriti-billing {
+  background: var(--smriti-bg-dark) !important;
+}
+
+/* ============================================================
+   GOOGLE MATERIAL ICONS / SYMBOLS RULES
+   ============================================================ */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'liga';
+  vertical-align: middle;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s;
+}
+
+.scanner-icon .material-symbols-outlined {
+  color: var(--smriti-primary);
+  font-size: 22px;
+}
+
+.empty-icon .material-symbols-outlined {
+  font-size: 48px;
+  color: var(--smriti-text-muted);
+  opacity: 0.5;
+  margin-bottom: 12px;
+}
+
+.btn:hover .material-symbols-outlined {
+  transform: scale(1.08) translateY(-0.5px);
+}
+
+.workspace-switcher .app-name,
+.sidebar-header .app-name,
+.workspace-switcher-sub,
+.sidebar-header .text-muted,
+.workspace-switcher-container .text-muted,
+.workspace-switcher-container .dropdown-toggle div:last-child,
+.workspace-switcher .dropdown-toggle div:last-child,
+.workspace-switcher-container .dropdown-toggle span:last-child,
+.workspace-switcher .dropdown-toggle span:last-child,
+.workspace-switcher-container .dropdown-toggle > div > div:last-child,
+.workspace-switcher .dropdown-toggle > div > div:last-child,
+.sidebar-header .dropdown-toggle div:last-child,
+.sidebar-header .dropdown-toggle span:last-child {
+  display: none !important;
+}
+
+/* SMRITI Role Sidebar Hide & Layout Adjustment */
+body.smriti-user-layout .layout-side-section,
+body.smriti-user-layout .sidebar-wrapper,
+body.smriti-user-layout .desk-sidebar {
+  display: none !important;
+}
+
+body.smriti-user-layout .layout-main-section-wrapper {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  width: 100% !important;
+}
+
+body.smriti-user-layout .layout-container {
+  display: flex !important;
+  flex-direction: row !important;
+}
+

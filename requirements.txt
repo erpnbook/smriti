@@ -1,0 +1,18 @@
+# Python dependencies for SMRITI Retail OS
+#
+# NOTE: frappe and erpnext are managed entirely by the bench/Docker image.
+# They should NOT be pip-installed separately as they are pre-bundled in
+# the frappe/erpnext Docker image (v16.19.1).
+#
+# india_compliance is mounted as a local editable install via pwd.yml volumes.
+# Its own dependencies (listed below for reference) are installed at container
+# startup by the entrypoint pip install command in pwd.yml.
+#
+# india_compliance dependencies (auto-installed via its pyproject.toml):
+#   python-barcode~=0.15.1
+#   titlecase~=2.3
+#   pycryptodome~=3.19.0
+#   pypng~=0.20220715.0
+#
+# No additional third-party Python packages are required by smriti_retail_os
+# beyond what frappe, erpnext, and india_compliance already provide.

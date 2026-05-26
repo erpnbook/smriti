@@ -1,7 +1,7 @@
 [project]
 name = "smriti_retail_os"
 authors = [
-    { name = "Antigravity", email = "admin@smriti.io"}
+    { name = "SMRITI Retail OS", email = "admin@smriti.io"}
 ]
 description = "Retail Experience Layer"
 requires-python = ">=3.14"

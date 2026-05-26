@@ -1,0 +1,269 @@
+/* ============================================================
+   SMRITI Sidebar Stylesheet — Premium Dark Mode Sidebar
+   ============================================================ */
+
+#smriti-sidebar {
+    width: 260px;
+    height: 100vh;
+    background: #0f172a !important; /* deep dark slate */
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    color: #f1f5f9;
+    z-index: 101;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+#smriti-sidebar.collapsed {
+    width: 68px;
+}
+
+/* --- Brand Header --- */
+.smriti-side-brand {
+    padding: 20px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.smriti-side-logo {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+.smriti-side-title {
+    font-weight: 700;
+    font-size: 1.15rem;
+    background: linear-gradient(135deg, #a855f7 0%, #06b6d4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+#smriti-sidebar.collapsed .smriti-side-title {
+    display: none;
+}
+
+/* --- Toggle Button --- */
+.smriti-side-toggle {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+}
+.smriti-side-toggle:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #f1f5f9;
+}
+
+#smriti-sidebar.collapsed .smriti-side-toggle {
+    margin: 0 auto;
+}
+
+/* --- Navigation Menu --- */
+.smriti-side-menu {
+    flex: 1;
+    padding: 16px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+}
+
+.smriti-side-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    color: #94a3b8 !important;
+    text-decoration: none !important;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    min-height: 44px; /* Touch target size */
+    transition: background 0.15s, color 0.15s;
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.smriti-side-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: #f1f5f9 !important;
+}
+
+.smriti-side-item.active {
+    background: rgba(168, 85, 247, 0.08); /* light violet */
+    color: #c084fc !important; /* purple */
+    font-weight: 600;
+}
+
+.smriti-side-item .icon,
+.smriti-side-item .side-item-emoji {
+    font-size: 20px;
+    flex-shrink: 0;
+    width: 24px;
+    text-align: center;
+    display: inline-block;
+}
+
+#smriti-sidebar.collapsed .smriti-side-item {
+    justify-content: center;
+    padding: 10px 0;
+}
+
+#smriti-sidebar.collapsed .smriti-side-item span:not(.icon):not(.side-item-emoji) {
+    display: none;
+}
+
+/* --- Bottom Section --- */
+.smriti-side-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.04);
+    padding: 16px 12px;
+    background: #090d16;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+}
+
+#smriti-sidebar.collapsed .smriti-side-footer {
+    align-items: center;
+    padding: 16px 0;
+}
+
+.smriti-side-cashier {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+}
+
+.smriti-side-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #a855f7;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.smriti-side-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.smriti-side-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #f1f5f9;
+}
+
+.smriti-side-role {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+#smriti-sidebar.collapsed .smriti-side-info {
+    display: none;
+}
+
+/* --- Shift Status --- */
+.smriti-side-shift {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+.smriti-side-shift-badge {
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.smriti-side-shift-badge.open {
+    background: rgba(34, 197, 94, 0.1);
+    color: #4ade80;
+}
+
+.smriti-side-shift-badge.closed {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+}
+
+#smriti-sidebar.collapsed .smriti-side-shift {
+    display: none;
+}
+
+/* --- Logout Button --- */
+.smriti-side-logout {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    color: #f87171 !important;
+    text-decoration: none !important;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: background 0.15s;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    min-height: 38px;
+}
+
+.smriti-side-logout:hover {
+    background: rgba(239, 68, 68, 0.08);
+}
+
+#smriti-sidebar.collapsed .smriti-side-logout {
+    justify-content: center;
+    padding: 8px 0;
+    color: #f87171 !important;
+}
+
+#smriti-sidebar.collapsed .smriti-side-logout span:not(.icon) {
+    display: none;
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+    #smriti-sidebar {
+        position: fixed;
+        left: -260px;
+        top: 0;
+        bottom: 0;
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.35);
+        transition: left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    #smriti-sidebar.open-mobile {
+        left: 0;
+    }
+}

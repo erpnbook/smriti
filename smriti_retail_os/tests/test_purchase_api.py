@@ -1,0 +1,209 @@
+import frappe
+import unittest
+from frappe.utils import flt, cint, nowdate
+from smriti_retail_os.purchase_api import (
+    get_open_purchase_orders,
+    get_po_details,
+    create_purchase_order,
+    create_purchase_receipt
+)
+
+class TestSmritiRetailPurchaseAPI(unittest.TestCase):
+    
+    def setUp(self):
+        # Resolve UOM
+        self.uom = frappe.db.exists("UOM", "Nos") or frappe.db.get_value("UOM", {}, "name")
+        if not self.uom:
+            uom_doc = frappe.new_doc("UOM")
+            uom_doc.uom_name = "Nos"
+            uom_doc.insert(ignore_permissions=True)
+            self.uom = uom_doc.name
+
+        # Resolve Item Group
+        self.item_group = frappe.db.exists("Item Group", "All Item Groups") or frappe.db.get_value("Item Group", {}, "name")
+        if not self.item_group:
+            ig = frappe.new_doc("Item Group")
+            ig.item_group_name = "All Item Groups"
+            ig.is_group = 0
+            ig.insert(ignore_permissions=True)
+            self.item_group = ig.name
+
+        # Resolve Company
+        self.company = frappe.db.get_value("Company", {}, "name")
+        if not self.company:
+            comp = frappe.new_doc("Company")
+            comp.company_name = "_Test Company"
+            comp.country = "India"
+            comp.default_currency = "INR"
+            comp.insert(ignore_permissions=True)
+            self.company = comp.name
+
+        # Resolve Warehouse
+        self.warehouse = frappe.db.get_value("Warehouse", {"company": self.company}, "name")
+        if not self.warehouse:
+            w = frappe.new_doc("Warehouse")
+            w.warehouse_name = "Test Stores"
+            w.company = self.company
+            w.insert(ignore_permissions=True)
+            self.warehouse = w.name
+
+        # Resolve Supplier
+        self.supplier = frappe.db.get_value("Supplier", {}, "name")
+        if not self.supplier:
+            sup = frappe.new_doc("Supplier")
+            sup.supplier_name = "Test Supplier"
+            sup.supplier_group = frappe.db.get_value("Supplier Group", {}, "name") or "All Supplier Groups"
+            sup.insert(ignore_permissions=True)
+            self.supplier = sup.name
+
+        # Create active Fiscal Year robustly if missing
+        fy_name = "2026-2027"
+        if not frappe.db.exists("Fiscal Year", fy_name):
+            fy = frappe.new_doc("Fiscal Year")
+            fy.year = fy_name
+            fy.year_start_date = "2026-04-01"
+            fy.year_end_date = "2027-03-31"
+            fy.append("companies", {
+                "company": self.company
+            })
+            fy.insert(ignore_permissions=True)
+
+        # Resolve Liability Account robustly for Stock Received But Not Billed
+        self.liability_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Liability", "is_group": 0}, "name")
+        if not self.liability_account:
+            parent_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Liability", "is_group": 1}, "name")
+            if not parent_account:
+                p_acc = frappe.new_doc("Account")
+                p_acc.account_name = "Root Liability Group"
+                p_acc.company = self.company
+                p_acc.root_type = "Liability"
+                p_acc.is_group = 1
+                p_acc.insert(ignore_permissions=True)
+                parent_account = p_acc.name
+                
+            acc = frappe.new_doc("Account")
+            acc.account_name = "Stock Received But Not Billed"
+            acc.company = self.company
+            acc.root_type = "Liability"
+            acc.account_type = "Stock Received But Not Billed"
+            acc.parent_account = parent_account
+            acc.insert(ignore_permissions=True)
+            self.liability_account = acc.name
+
+        # Resolve Asset Account
+        self.asset_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Asset", "is_group": 0}, "name")
+
+        # Update Company defaults
+        frappe.db.set_value("Company", self.company, "default_inventory_account", self.asset_account)
+        frappe.db.set_value("Company", self.company, "stock_received_but_not_billed", self.liability_account)
+        frappe.db.commit()
+
+        # Resolve GST HSN Code
+        self.hsn_code = frappe.db.exists("GST HSN Code", "998311") or frappe.db.get_value("GST HSN Code", {}, "name")
+        if not self.hsn_code:
+            hsn = frappe.new_doc("GST HSN Code")
+            hsn.hsn_code = "998311"
+            hsn.description = "Test Services"
+            hsn.insert(ignore_permissions=True)
+            self.hsn_code = hsn.name
+
+        # Create active item
+        self.item_code = "SM-TEST-INV-ITEM"
+        if not frappe.db.exists("Item", self.item_code):
+            it = frappe.new_doc("Item")
+            it.item_code = self.item_code
+            it.item_name = "Test Inventory Item"
+            it.item_group = self.item_group
+            it.stock_uom = self.uom
+            it.custom_is_retail_item = 1
+            it.is_stock_item = 1
+            it.gst_hsn_code = self.hsn_code
+            it.valuation_rate = 150.0
+            it.insert(ignore_permissions=True)
+
+        # Set user as Administrator
+        frappe.set_user("Administrator")
+
+    def test_create_purchase_order(self):
+        items = [{
+            "item_code": self.item_code,
+            "qty": 5,
+            "rate": 120.0,
+            "warehouse": self.warehouse,
+            "stock_uom": self.uom
+        }]
+        
+        res = create_purchase_order(self.supplier, items)
+        self.assertIsNotNone(res)
+        self.assertTrue(res["name"])
+        self.assertTrue(frappe.db.exists("Purchase Order", res["name"]))
+
+    def test_get_open_purchase_orders(self):
+        pos = get_open_purchase_orders(self.supplier)
+        self.assertIsInstance(pos, list)
+
+    def test_get_po_details(self):
+        # Create a PO first
+        items = [{
+            "item_code": self.item_code,
+            "qty": 5,
+            "rate": 120.0,
+            "warehouse": self.warehouse,
+            "stock_uom": self.uom
+        }]
+        po = create_purchase_order(self.supplier, items)
+        
+        details = get_po_details(po["name"])
+        self.assertIsNotNone(details)
+        self.assertEqual(details["name"], po["name"])
+        self.assertEqual(details["supplier"], self.supplier)
+        self.assertTrue(len(details["items"]) > 0)
+        self.assertEqual(details["items"][0]["item_code"], self.item_code)
+
+    def test_create_purchase_receipt_standalone(self):
+        items = [{
+            "item_code": self.item_code,
+            "qty": 10,
+            "rate": 150.0,
+            "warehouse": self.warehouse,
+            "stock_uom": self.uom
+        }]
+        
+        res = create_purchase_receipt(self.supplier, items)
+        self.assertIsNotNone(res)
+        self.assertTrue(res["name"])
+        self.assertTrue(frappe.db.exists("Purchase Receipt", res["name"]))
+
+    def test_create_purchase_receipt_against_po(self):
+        # 1. Create and submit PO
+        items = [{
+            "item_code": self.item_code,
+            "qty": 10,
+            "rate": 120.0,
+            "warehouse": self.warehouse,
+            "stock_uom": self.uom
+        }]
+        po = create_purchase_order(self.supplier, items)
+        
+        # 2. Get PO details to fetch child item row name
+        details = get_po_details(po["name"])
+        po_item_name = details["items"][0]["po_item_name"]
+        
+        # 3. Create PR against this PO
+        receipt_items = [{
+            "item_code": self.item_code,
+            "qty": 10,
+            "rate": 120.0,
+            "warehouse": self.warehouse,
+            "stock_uom": self.uom,
+            "po_item_name": po_item_name
+        }]
+        
+        res = create_purchase_receipt(self.supplier, receipt_items, po["name"])
+        self.assertIsNotNone(res)
+        self.assertTrue(res["name"])
+        self.assertTrue(frappe.db.exists("Purchase Receipt", res["name"]))
+        
+        # Check that PO is received
+        po_received_qty = frappe.db.get_value("Purchase Order Item", po_item_name, "received_qty")
+        self.assertEqual(flt(po_received_qty), 10.0)
