@@ -407,3 +407,51 @@
     0%, 100% { opacity: 0.4; }
     50% { opacity: 1; color: var(--smriti-primary); text-shadow: 0 0 10px var(--smriti-primary-glow); }
 }
+
+/* Responsive adjustments for Tablets and Mobile devices */
+@media (max-width: 1024px) {
+    .smriti-grid {
+        grid-template-columns: 1fr; /* Stack panels vertically */
+        gap: 15px;
+    }
+    
+    .smriti-side-panel {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Side-by-side elements on tablets */
+        gap: 15px;
+    }
+    
+    .payment-drawer-card {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .smriti-billing-container {
+        padding: 10px;
+    }
+    
+    .smriti-top-nav {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+        align-items: center;
+    }
+    
+    .smriti-side-panel {
+        grid-template-columns: 1fr; /* Stack vertically on small mobile phones */
+    }
+    
+    .payment-drawer-card {
+        grid-column: span 1;
+    }
+    
+    .billing-table-wrapper {
+        overflow-x: auto;
+    }
+    
+    #smriti-billing-table {
+        min-width: 600px;
+    }
+}
+

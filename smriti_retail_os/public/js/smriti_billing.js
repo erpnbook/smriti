@@ -57,6 +57,9 @@ class SmritiBillingController {
                                 <span class="scanner-icon"><span class="material-symbols-outlined">barcode_scanner</span></span>
                                 <input type="text" id="smriti-barcode-input" autocomplete="off" placeholder="${__('Scan Barcode or Type Code...')}">
                             </div>
+                            <button class="btn btn-secondary btn-scan-camera" id="smriti-btn-scan-camera" title="Use Camera to Scan Barcode" style="padding: 0 15px; border: 1px solid var(--smriti-glass-border); border-radius: 8px; background: rgba(17, 24, 39, 0.8); color: white; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
+                                <span class="material-symbols-outlined">photo_camera</span>
+                            </button>
                         </div>
 
                         <!-- Item Grid Table -->
@@ -206,6 +209,7 @@ class SmritiBillingController {
     bind_actions() {
         var me = this;
         $("#smriti-btn-cust-lookup").off("click").on("click", () => me.trigger_customer_lookup());
+        $("#smriti-btn-scan-camera").off("click").on("click", () => me.trigger_camera_scanner());
         $("#smriti-btn-checkout").off("click").on("click", () => me.checkout_and_save_invoice());
     }
 
@@ -771,4 +775,109 @@ class SmritiBillingController {
             }
         });
     }
+
+    trigger_camera_scanner() {
+        var me = this;
+        
+        var dialog = new frappe.ui.Dialog({
+            title: `<span class="material-symbols-outlined" style="vertical-align: text-top; margin-right: 6px; color: #6366f1;">photo_camera</span> Live Camera Barcode Scanner`,
+            fields: [
+                {
+                    fieldname: 'camera_html',
+                    fieldtype: 'HTML'
+                }
+            ],
+            primary_action_label: __('Close'),
+            primary_action: function() {
+                dialog.hide();
+            }
+        });
+
+        dialog.fields_dict.camera_html.$wrapper.html(`
+            <div style="position: relative; text-align: center; background: #000; border-radius: 8px; overflow: hidden; max-width: 480px; margin: 0 auto; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                <video id="smriti-scanner-video" width="100%" height="auto" autoplay playsinline style="display: block; border-radius: 8px; transform: scaleX(1);"></video>
+                <div style="position: absolute; border: 2px dashed #e94560; top: 20%; bottom: 20%; left: 10%; right: 10%; pointer-events: none; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.4); animation: scan-pulse 2s infinite alternate;"></div>
+                <div id="smriti-scanner-status" style="position: absolute; bottom: 10px; left: 0; right: 0; color: white; background: rgba(0,0,0,0.7); padding: 5px; font-size: 11px;">Initializing camera stream...</div>
+            </div>
+            <style>
+                @keyframes scan-pulse {
+                    0% { border-color: #e94560; }
+                    100% { border-color: #6366f1; }
+                }
+            </style>
+        `);
+
+        dialog.show();
+
+        const video = document.getElementById("smriti-scanner-video");
+        const status = document.getElementById("smriti-scanner-status");
+        let stream = null;
+        let active = true;
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then(s => {
+                stream = s;
+                video.srcObject = s;
+                status.textContent = "Camera active. Point at barcode to scan...";
+                
+                // Initialize barcode detection loop
+                startDetection();
+            })
+            .catch(err => {
+                console.error(err);
+                status.textContent = "Camera access denied or unavailable: " + err.message;
+                status.style.color = "#ef4444";
+            });
+
+        function startDetection() {
+            if (!active) return;
+            
+            if ('BarcodeDetector' in window) {
+                const barcodeDetector = new BarcodeDetector({
+                    formats: ['ean_13', 'code_128', 'code_39', 'qr']
+                });
+                
+                function detect() {
+                    if (!active) return;
+                    barcodeDetector.detect(video)
+                        .then(barcodes => {
+                            if (barcodes.length > 0) {
+                                const code = barcodes[0].rawValue;
+                                me.add_barcode_item(code);
+                                active = false;
+                                stopCamera();
+                                dialog.hide();
+                                frappe.show_alert({message: `Scanned: ${code}`, indicator: 'green'});
+                            } else {
+                                requestAnimationFrame(detect);
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            requestAnimationFrame(detect);
+                        });
+                }
+                
+                // Delay slightly to let camera adjust focus
+                setTimeout(() => {
+                    detect();
+                }, 500);
+            } else {
+                status.textContent = "Native scanner not supported. Please use physical scanner.";
+                status.style.color = "#ef4444";
+            }
+        }
+
+        function stopCamera() {
+            active = false;
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        dialog.on_cancel = function() {
+            stopCamera();
+        };
+    }
 }
+

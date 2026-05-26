@@ -1,0 +1,17 @@
+{
+  "short_name": "SMRITI OS",
+  "name": "SMRITI Retail OS",
+  "description": "Retail Experience Layer for High-performance Store Operations",
+  "icons": [
+    {
+      "src": "/assets/smriti_retail_os/images/logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/login",
+  "background_color": "#0b0f19",
+  "theme_color": "#e94560",
+  "display": "standalone",
+  "orientation": "portrait"
+}
