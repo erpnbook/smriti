@@ -3,16 +3,18 @@
    ============================================================ */
 
 #smriti-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
     width: 260px;
-    height: 100vh;
     background: #ffffff !important; /* Pure white */
     border-right: 1px solid #e4e7ec;
     display: flex;
     flex-direction: column;
-    flex-shrink: 0;
     transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     color: #475467;
-    z-index: 101;
+    z-index: 1041; /* Above Frappe Navbar (1040) and Modals */
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 

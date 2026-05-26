@@ -487,10 +487,15 @@ function _sidebar_lockdown() {
 
 function _is_smriti_user() {
     if (!window.frappe || !frappe.session) return false;
+    
+    // If we are on a SMRITI page, always use the SMRITI layout
+    if (get_smriti_active_page()) return true;
+
     var roles = frappe.user_roles || [];
     var is_smriti = roles.includes("SMRITI Cashier") || roles.includes("SMRITI Store Manager");
     var is_admin = roles.includes("System Manager");
-    return is_smriti && !is_admin;
+    // Option B: Allow System Manager to also see the SMRITI layout
+    return is_smriti || is_admin;
 }
 
 function get_smriti_active_page() {
@@ -508,6 +513,8 @@ function get_smriti_active_page() {
     if (page_name === "smriti-reports")   return "reports";
     if (page_name === "smriti-loyalty")   return "loyalty";
     if (page_name === "customer" || route[1] === "Customer") return "customers";
+    if (page_name === "item" || route[1] === "Item") return "products";
+    if (page_name === "supplier" || route[1] === "Supplier") return "suppliers";
     if (page_name === "sales-invoice" || route[1] === "Sales Invoice") return "sales_invoices";
     if (page_name === "purchase-order" || route[1] === "Purchase Order") return "purchase_orders";
     if (page_name === "purchase-receipt" || route[1] === "Purchase Receipt") return "purchase_receipts";
@@ -527,9 +534,15 @@ function _render_smriti_sidebar_if_applicable() {
 
 function _setup_smriti_layout_class() {
     if (_is_smriti_user()) {
-        $('body').addClass('smriti-user-layout');
+        if (!$('body').hasClass('smriti-user-layout')) {
+            console.log("[SMRITI] Applying SMRITI layout class to body");
+            $('body').addClass('smriti-user-layout');
+        }
     } else {
-        $('body').removeClass('smriti-user-layout');
+        if ($('body').hasClass('smriti-user-layout')) {
+            console.log("[SMRITI] Removing SMRITI layout class from body");
+            $('body').removeClass('smriti-user-layout');
+        }
     }
 }
 

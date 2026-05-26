@@ -33,7 +33,7 @@ class SmritiBillingController {
 
     setup_layout() {
         this.wrapper.find(".layout-main-section").html(`
-            <div class="smriti-billing-container dark-mode">
+            <div class="smriti-billing-container">
                 <!-- Top Navbar: Status indicators -->
                 <div class="smriti-top-nav">
                     <div class="smriti-cashier-badge">

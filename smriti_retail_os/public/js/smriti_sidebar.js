@@ -7,8 +7,8 @@ window.SMRITI = window.SMRITI || {};
 SMRITI.renderSidebar = function(active_page) {
     if (!window.frappe || !frappe.session) return;
 
-    // 1. System Manager bypass
-    if (frappe.user.has_role("System Manager")) return;
+    // 1. System Manager bypass — REMOVED to allow Admin layout testing
+    // if (frappe.user.has_role("System Manager")) return;
 
     // 2. Hide ERPNext default sidebar
     document.querySelector(
