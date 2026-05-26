@@ -62,7 +62,10 @@ web_include_js = "/assets/smriti_retail_os/js/main.js"
 doctype_js = {
     "Item": "public/js/item.js",
     "Customer": "public/js/customer.js",
-    "Supplier": "public/js/supplier.js"
+    "Supplier": "public/js/supplier.js",
+    "Sales Invoice": "public/js/sales_invoice.js",
+    "Purchase Order": "public/js/purchase_order.js",
+    "Purchase Receipt": "public/js/purchase_receipt.js"
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
