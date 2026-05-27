@@ -331,7 +331,9 @@ header .brand-logo {
 /* SMRITI Role Sidebar Hide & Layout Adjustment */
 body.smriti-user-layout .layout-side-section,
 body.smriti-user-layout .sidebar-wrapper,
-body.smriti-user-layout .desk-sidebar {
+body.smriti-user-layout .desk-sidebar,
+body.smriti-user-layout .body-sidebar-container,
+body.smriti-user-layout .body-sidebar {
   display: none !important;
 }
 

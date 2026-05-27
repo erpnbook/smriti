@@ -547,14 +547,20 @@ function _sidebar_lockdown() {
 function _is_smriti_user() {
     if (!window.frappe || !frappe.session) return false;
     
-    // If we are on a SMRITI page, always use the SMRITI layout
-    if (get_smriti_active_page()) return true;
-
+    var active_page = get_smriti_active_page();
     var roles = frappe.user_roles || [];
-    var is_smriti = roles.includes("SMRITI Cashier") || roles.includes("SMRITI Store Manager");
+    var is_retail = roles.includes("SMRITI Cashier") || roles.includes("SMRITI Store Manager");
     var is_admin = roles.includes("System Manager");
-    // Option B: Allow System Manager to also see the SMRITI layout
-    return is_smriti || is_admin;
+
+    // Retail users always get the SMRITI layout
+    if (is_retail) return true;
+
+    // Admin (System Manager) gets SMRITI layout ONLY when on a SMRITI page
+    if (is_admin) {
+        return !!active_page;
+    }
+
+    return false;
 }
 
 function get_smriti_active_page() {
