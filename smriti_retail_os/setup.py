@@ -5,84 +5,17 @@ def setup_smriti_retail_os():
     """
     Initializes custom fields, roles, and workspaces for standard DocTypes
     to extend ERPNext for SMRITI Retail OS.
-    This function is upgrade-safe, idempotent, and runs during bench migrate.
     """
-    # 1. Custom Fields setup
+
+    # 1. Custom Fields Provisioning
     custom_fields = {
-        "Item": [
+        "User": [
             {
-                "fieldname": "custom_is_retail_item",
-                "label": "Is Retail Item",
+                "fieldname": "custom_is_smriti_user",
+                "label": "Is SMRITI User",
                 "fieldtype": "Check",
-                "default": "1",
-                "insert_after": "item_name"
-            },
-            {
-                "fieldname": "custom_department",
-                "label": "Department",
-                "fieldtype": "Link",
-                "options": "Item Group",
-                "insert_after": "custom_is_retail_item"
-            },
-            {
-                "fieldname": "custom_gst_percentage",
-                "label": "GST %",
-                "fieldtype": "Select",
-                "options": "\n0\n5\n12\n18\n28",
-                "insert_after": "custom_department"
-            },
-            {
-                "fieldname": "custom_mrp",
-                "label": "MRP",
-                "fieldtype": "Currency",
-                "insert_after": "custom_gst_percentage"
-            },
-            {
-                "fieldname": "custom_current_stock_html",
-                "label": "Current Stock",
-                "fieldtype": "HTML",
-                "insert_after": "custom_mrp"
-            },
-            {
-                "fieldname": "custom_barcode_size",
-                "label": "Barcode Size",
-                "fieldtype": "Select",
-                "options": "\n50x25\n50x30\n75x50\n100x50",
-                "insert_after": "custom_current_stock_html"
-            }
-        ],
-        "Customer": [
-            {
-                "fieldname": "custom_address_text",
-                "label": "Address",
-                "fieldtype": "Small Text",
-                "insert_after": "customer_name"
-            },
-            {
-                "fieldname": "custom_birthday",
-                "label": "Birthday",
-                "fieldtype": "Date",
-                "insert_after": "custom_address_text"
-            },
-            {
-                "fieldname": "custom_anniversary",
-                "label": "Anniversary",
-                "fieldtype": "Date",
-                "insert_after": "custom_birthday"
-            }
-        ],
-        "Supplier": [
-            {
-                "fieldname": "custom_address_text",
-                "label": "Address",
-                "fieldtype": "Small Text",
-                "insert_after": "supplier_name"
-            },
-            {
-                "fieldname": "custom_credit_days",
-                "label": "Credit Days",
-                "fieldtype": "Int",
-                "insert_after": "custom_address_text"
+                "insert_after": "role_profile_name",
+                "default": "1"
             }
         ],
         "POS Invoice": [
@@ -90,33 +23,51 @@ def setup_smriti_retail_os():
                 "fieldname": "custom_is_held",
                 "label": "Is Held",
                 "fieldtype": "Check",
-                "default": "0",
-                "insert_after": "customer"
+                "insert_after": "status",
+                "read_only": 1,
+                "default": "0"
             },
             {
                 "fieldname": "custom_held_by",
                 "label": "Held By",
                 "fieldtype": "Link",
                 "options": "User",
-                "insert_after": "custom_is_held"
+                "insert_after": "custom_is_held",
+                "read_only": 1
             },
             {
                 "fieldname": "custom_hold_time",
                 "label": "Hold Time",
                 "fieldtype": "Datetime",
-                "insert_after": "custom_held_by"
+                "insert_after": "custom_held_by",
+                "read_only": 1
             }
         ],
+        "Item": [
+            {
+                "fieldname": "custom_mrp",
+                "label": "MRP (Maximum Retail Price)",
+                "fieldtype": "Currency",
+                "insert_after": "standard_rate",
+                "bold": 1
+            },
+            {
+                "fieldname": "custom_gst_percentage",
+                "label": "GST Percentage (%)",
+                "fieldtype": "Select",
+                "options": "\n0\n5\n12\n18\n28",
+                "insert_after": "custom_mrp"
+            }
+        ]
     }
 
     create_custom_fields(custom_fields, ignore_validate=True)
 
+    # 2. Role Provisioning
     # Clean up custom SMRITI PIN from User DocType if it exists
     if frappe.db.exists("Custom Field", "User-custom_smriti_pin"):
         frappe.delete_doc("Custom Field", "User-custom_smriti_pin", ignore_permissions=True)
-        frappe.db.commit()
-    
-    # 2. Programmatic Role Creation
+
     for role_name in ["SMRITI Cashier", "SMRITI Store Manager"]:
         if not frappe.db.exists("Role", role_name):
             role = frappe.new_doc("Role")
@@ -143,7 +94,7 @@ def setup_smriti_retail_os():
             "label_for_links": "Open and close cashier shifts with denomination count."
         },
         {
-            "label": "Retail Inventory",
+            "label": "Inventory",
             "type": "Link",
             "link_type": "Page",
             "link_to": "smriti-inventory",
@@ -171,13 +122,12 @@ def setup_smriti_retail_os():
             "label_for_links": "Cashier-friendly quick customer onboarding."
         },
         {
-            "label": "Inventory",
+            "label": "Suppliers",
             "type": "Link",
-            "link_type": "Page",
-            "link_to": "smriti-inventory",
-            "label_for_links": "Mobile-ready quick scanning barcode inventory."
+            "link_type": "DocType",
+            "link_to": "Supplier",
+            "label_for_links": "Simplified supplier credit terms tracker."
         },
-        ...
         {
             "label": "Loyalty & Promotions",
             "type": "Link",
@@ -192,6 +142,7 @@ def setup_smriti_retail_os():
             "link_to": "smriti-reports",
             "label_for_links": "Visual sales, stock, and outstanding analytics."
         }
+    ]
 
     if frappe.db.exists("Workspace", workspace_name):
         ws = frappe.get_doc("Workspace", workspace_name)
@@ -226,22 +177,35 @@ def setup_smriti_retail_os():
             "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1}
         },
         "Supplier": {
-            "SMRITI Cashier": {"read": 1},
             "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1}
+        },
+        "Sales Invoice": {
+            "SMRITI Cashier": {"read": 1, "write": 1, "create": 1, "submit": 1},
+            "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "submit": 1, "cancel": 1, "amend": 1}
         },
         "POS Invoice": {
             "SMRITI Cashier": {"read": 1, "write": 1, "create": 1, "submit": 1},
+            "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "submit": 1, "cancel": 1, "amend": 1}
+        },
+        "POS Opening Entry": {
+            "SMRITI Cashier": {"read": 1, "write": 1, "create": 1, "submit": 1},
+            "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "submit": 1, "cancel": 1, "amend": 1}
+        },
+        "POS Closing Entry": {
+            "SMRITI Cashier": {"read": 1, "write": 1, "create": 1, "submit": 1},
+            "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "submit": 1, "cancel": 1, "amend": 1}
+        },
+        "Purchase Order": {
             "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "submit": 1}
         },
-        "POS Profile": {
+        "Purchase Receipt": {
+            "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "submit": 1}
+        },
+        "Bin": {
             "SMRITI Cashier": {"read": 1},
             "SMRITI Store Manager": {"read": 1, "write": 1}
         },
-        "Dashboard": {
-            "SMRITI Cashier": {"read": 1},
-            "SMRITI Store Manager": {"read": 1, "write": 1}
-        },
-        "Dashboard Chart": {
+        "Stock Ledger Entry": {
             "SMRITI Cashier": {"read": 1},
             "SMRITI Store Manager": {"read": 1, "write": 1}
         },
@@ -249,292 +213,93 @@ def setup_smriti_retail_os():
             "SMRITI Cashier": {"read": 1},
             "SMRITI Store Manager": {"read": 1, "write": 1}
         },
-        "POS Opening Entry": {
-            "SMRITI Cashier": {"read": 1, "write": 1, "create": 1, "submit": 1},
-            "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "submit": 1}
-        },
-        "POS Closing Entry": {
-            "SMRITI Cashier": {"read": 1, "write": 1, "create": 1, "submit": 1},
-            "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "submit": 1}
-        },
-        "Purchase Receipt": {
-            "SMRITI Cashier": {"read": 1},
-            "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "submit": 1}
-        },
-        "Purchase Order": {
-            "SMRITI Cashier": {"read": 1},
-            "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "submit": 1}
-        },
-        "Purchase Invoice": {
-            "SMRITI Cashier": {"read": 1},
-            "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "submit": 1}
-        },
-        "Stock Entry": {
-            "SMRITI Cashier": {"read": 1},
-            "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "submit": 1}
-        },
-        "Stock Reconciliation": {
-            "SMRITI Cashier": {"read": 1},
-            "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "submit": 1}
-        },
-        "POS Settings": {
+        "Dashboard": {
             "SMRITI Cashier": {"read": 1},
             "SMRITI Store Manager": {"read": 1, "write": 1}
-        },
-        "Warehouse": {
-            "SMRITI Cashier": {"read": 1},
-            "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1}
-        },
-        "Mode of Payment": {
-            "SMRITI Cashier": {"read": 1},
-            "SMRITI Store Manager": {"read": 1}
-        },
-        "Batch": {
-            "SMRITI Cashier": {"read": 1},
-            "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1}
-        },
-        "Bin": {
-            "SMRITI Cashier": {"read": 1},
-            "SMRITI Store Manager": {"read": 1}
-        },
-        "Sales Invoice": {
-            "SMRITI Cashier": {"read": 1, "write": 1, "create": 1, "submit": 1},
-            "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "submit": 1}
-        },
-        "Page": {
-            "SMRITI Cashier": {"read": 1},
-            "SMRITI Store Manager": {"read": 1}
         }
     }
 
-    for doctype, roles_dict in doctype_permissions.items():
-        for role, perms in roles_dict.items():
-            dp_name = frappe.db.get_value("Custom DocPerm", {"parent": doctype, "role": role})
-            if dp_name:
-                dp = frappe.get_doc("Custom DocPerm", dp_name)
-            else:
-                dp = frappe.new_doc("Custom DocPerm")
-                dp.parent = doctype
-                dp.parenttype = "DocType"
-                dp.parentfield = "permissions"
-                dp.role = role
+    for dt, roles in doctype_permissions.items():
+        for role, perm in roles.items():
+            if not frappe.db.exists("Custom DocPerm", {"parent": dt, "role": role}):
+                p = frappe.get_doc({
+                    "doctype": "Custom DocPerm",
+                    "parent": dt,
+                    "parenttype": "DocType",
+                    "parentfield": "permissions",
+                    "role": role,
+                    "read": perm.get("read", 0),
+                    "write": perm.get("write", 0),
+                    "create": perm.get("create", 0),
+                    "submit": perm.get("submit", 0),
+                    "cancel": perm.get("cancel", 0),
+                    "amend": perm.get("amend", 0),
+                    "export": perm.get("export", 0),
+                    "print": perm.get("print", 0),
+                    "email": perm.get("email", 0),
+                    "report": 1,
+                    "idx": 0
+                })
+                p.insert(ignore_permissions=True)
+                print(f"Set custom permissions for {dt} -> {role}")
 
-            dp.read = perms.get("read", 0)
-            dp.write = perms.get("write", 0)
-            dp.create = perms.get("create", 0)
-            dp.submit = perms.get("submit", 0)
-            dp.save(ignore_permissions=True)
-            print(f"Configured SMRITI permissions on {doctype} for {role}")
-
-    # 5. Programmatic Branding setup for SMRITI Retail OS
-    # SVG logo path (served by Frappe asset pipeline from public/images/ root)
-    SVG_LOGO   = "/assets/smriti_retail_os/images/logo.svg"
-
-    # Website Settings
-    if frappe.db.exists("DocType", "Website Settings"):
-        web_settings = frappe.get_doc("Website Settings", "Website Settings")
-        web_settings.app_name = "SMRITI Retail OS"
-        web_settings.app_logo = SVG_LOGO
-        web_settings.favicon = SVG_LOGO
-        web_settings.splash_image = SVG_LOGO
-        web_settings.brand_html = (
-            f'<img src="{SVG_LOGO}" alt="SMRITI" '
-            f'style="height:28px;width:auto;vertical-align:middle;margin-right:8px;"/>'
-            f'<span style="font-weight:700;color:#9e77ed;font-family:Outfit,sans-serif;">SMRITI Retail OS</span>'
-        )
-        web_settings.save(ignore_permissions=True)
-        print("SMRITI Retail OS branding configured in Website Settings")
-
-    # Navbar Settings
-    if frappe.db.exists("DocType", "Navbar Settings"):
-        nav_settings = frappe.get_doc("Navbar Settings", "Navbar Settings")
-        nav_settings.app_logo = SVG_LOGO
-        nav_settings.app_title = "SMRITI Retail OS"
-        nav_settings.save(ignore_permissions=True)
-        print("SMRITI Retail OS branding configured in Navbar Settings")
-
-    # System Settings
-    if frappe.db.exists("DocType", "System Settings"):
-        sys_settings = frappe.get_doc("System Settings", "System Settings")
-        sys_settings.app_name = "SMRITI Retail OS"
-        sys_settings.save(ignore_permissions=True)
-        print("SMRITI Retail OS branding configured in System Settings")
+    # 5. Create Block Module Profiles for simplified Desk experience
+    # Note: These are linked to SMRITI Roles via Role Profile or manual assignment
+    _setup_module_profiles()
 
     frappe.db.commit()
-    print("SMRITI Retail OS setup successfully initialized!")
-
-    # 6. Module Profiles
-    setup_module_profiles()
-
-    # 7. Role Profiles
-    setup_role_profiles()
 
 
-def setup_module_profiles():
-    """
-    Creates dedicated Frappe Module Profiles for SMRITI roles.
-
-    Module Profile controls which sidebar modules (apps) are visible per user.
-    Two profiles are provisioned:
-      * SMRITI Cashier Profile        — billing-only, minimal footprint
-      * SMRITI Store Manager Profile  — full retail + buying + stock view
-    """
-
-    # Modules visible to a Cashier (minimal — only what they need at the POS)
-    cashier_modules = [
-        "SMRITI Retail OS",
-        "Accounts",
-        "Selling",
-        "Setup",
-    ]
-
-    # Modules visible to a Store Manager (broader retail footprint)
-    manager_modules = [
-        "SMRITI Retail OS",
-        "Accounts",
-        "Buying",
-        "Stock",
-        "Selling",
-        "Setup",
-        "Reports",
-        "Integrations",
-    ]
-
+def _setup_module_profiles():
+    """Restricts visible modules for SMRITI users to keep the Desk uncluttered."""
     profiles = {
-        "SMRITI Cashier Profile": cashier_modules,
-        "SMRITI Store Manager Profile": manager_modules,
+        "SMRITI Cashier Profile": [
+            "Accounts", "Stock", "Buying", "Selling", "CRM", "HR", "Projects", 
+            "Support", "Asset", "Quality Management", "Agriculture", "Education", 
+            "Manufacturing", "Retail", "Ecommerce"
+        ],
+        "SMRITI Store Manager Profile": [
+            "CRM", "HR", "Projects", "Support", "Asset", "Quality Management", 
+            "Agriculture", "Education", "Manufacturing", "Ecommerce"
+        ]
     }
 
-    for profile_name, allowed_modules in profiles.items():
-        if frappe.db.exists("Module Profile", profile_name):
-            doc = frappe.get_doc("Module Profile", profile_name)
-            doc.block_modules = []
-        else:
+    for profile_name, blocked in profiles.items():
+        if not frappe.db.exists("Module Profile", profile_name):
             doc = frappe.new_doc("Module Profile")
             doc.module_profile_name = profile_name
-
-        # Frappe stores the modules a user CANNOT see as block_modules.
-        # Discover all installed modules and block everything not in our allow-list.
-        try:
-            all_installed = frappe.get_all("Module Def", pluck="name")
-        except Exception:
-            all_installed = []
-
-        for module in all_installed:
-            if module not in allowed_modules:
-                doc.append("block_modules", {"module": module})
-
-        try:
-            if doc.is_new():
-                doc.insert(ignore_permissions=True)
-            else:
-                doc.save(ignore_permissions=True)
+            for m in blocked:
+                doc.append("block_modules", {"module": m})
+            doc.insert(ignore_permissions=True)
             print(f"[SMRITI] Module Profile created/updated: {profile_name}")
-        except Exception as e:
-            print(f"[SMRITI] Warning — could not save Module Profile '{profile_name}': {e}")
 
-    setup_default_loyalty()
-    frappe.db.commit()
-
-
-def setup_default_loyalty():
-    """
-    Creates a default SMRITI Loyalty Program to ensure out-of-the-box working.
-    """
-    program_name = "SMRITI Standard Loyalty"
-    if frappe.db.exists("Loyalty Program", program_name):
-        return
-
-    company = frappe.db.get_default("company") or frappe.get_all("Company")[0].name
-    
-    # Resolve fallback expense account and cost center
-    expense_account = frappe.db.get_value(
-        "Account", 
-        {"root_type": "Expense", "company": company}, 
-        "name"
-    ) or frappe.db.get_value(
-        "Account", 
-        {"account_type": "Expense Account", "company": company}, 
-        "name"
-    )
-    
-    cost_center = frappe.db.get_value(
-        "Cost Center", 
-        {"company": company, "is_group": 0}, 
-        "name"
-    )
-    
-    if not expense_account or not cost_center:
-        return
-
-    try:
-        from frappe.utils import today
-        doc = frappe.new_doc("Loyalty Program")
-        doc.loyalty_program_name = program_name
-        doc.loyalty_program_type = "Single Tier Program"
-        doc.conversion_factor = 1.0
-        doc.auto_opt_in = 1
-        doc.from_date = today()
-        doc.company = company
-        doc.expense_account = expense_account
-        doc.cost_center = cost_center
-        
-        doc.append("collection_rules", {
-            "tier_name": "Regular",
-            "min_spent": 0.0,
-            "collection_factor": 1.0
-        })
-        
-        doc.insert(ignore_permissions=True)
-        frappe.db.commit()
-        print(f"[SMRITI] Default Loyalty Program '{program_name}' created successfully.")
-    except Exception as e:
-        print(f"[SMRITI] Warning — could not create default Loyalty Program: {e}")
-
-
-def setup_role_profiles():
-    """
-    Creates dedicated Frappe Role Profiles for SMRITI roles.
-
-    A Role Profile is a named bundle of roles that can be assigned to a user
-    in one click — instead of manually assigning each role individually.
-
-    Two profiles are provisioned:
-      * SMRITI Cashier Role Profile       — assigns SMRITI Cashier role
-      * SMRITI Store Manager Role Profile — assigns SMRITI Store Manager role
-    """
-
+    # Create Role Profiles to bundle SMRITI roles
     role_profiles = {
         "SMRITI Cashier Role Profile": [
-            "SMRITI Cashier",
+            "SMRITI Cashier", 
+            "Desk User"
         ],
         "SMRITI Store Manager Role Profile": [
             "SMRITI Store Manager",
             "SMRITI Cashier",       # Managers can also operate the POS
-        ],
+            "Desk User",
+            "Stock Manager",
+            "Sales Manager",
+            "Purchase Manager"
+        ]
     }
 
     for profile_name, roles in role_profiles.items():
-        if frappe.db.exists("Role Profile", profile_name):
-            doc = frappe.get_doc("Role Profile", profile_name)
-            doc.roles = []  # Reset roles before re-applying
-        else:
+        if not frappe.db.exists("Role Profile", profile_name):
             doc = frappe.new_doc("Role Profile")
-            doc.role_profile = profile_name
-
-        for role in roles:
-            # Only add the role if it actually exists
-            if frappe.db.exists("Role", role):
-                doc.append("roles", {"role": role})
-
-        try:
-            if doc.is_new():
+            doc.role_profile_name = profile_name
+            for r in roles:
+                doc.append("roles", {"role": r})
+            try:
                 doc.insert(ignore_permissions=True)
-            else:
-                doc.save(ignore_permissions=True)
-            print(f"[SMRITI] Role Profile created/updated: {profile_name}")
-        except Exception as e:
-            print(f"[SMRITI] Warning — could not save Role Profile '{profile_name}': {e}")
+                print(f"[SMRITI] Role Profile created/updated: {profile_name}")
+            except Exception as e:
+                print(f"[SMRITI] Warning — could not save Role Profile '{profile_name}': {e}")
 
     frappe.db.commit()
 

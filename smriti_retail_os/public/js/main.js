@@ -460,22 +460,35 @@ function _patch_sidebar_prototype() {
 
 /* ── 9. Role-based redirect to dedicated desk ───────────────────────────── */
 function _redirect_to_smriti_home() {
-    if (!window.frappe || !frappe.session || !frappe.get_route_str) return;
-    if (typeof frappe.get_route !== 'function' || !frappe.get_route()) return;
+    if (!window.frappe || !frappe.session) return;
+    
+    // If not logged in, do nothing
+    if (frappe.session.user === "Guest") return;
 
-    var current_route;
+    var current_route = "";
     try {
-        current_route = frappe.get_route_str();
-    } catch (e) {
-        return;
-    }
+        current_route = (typeof frappe.get_route_str === 'function') ? frappe.get_route_str() : "";
+    } catch (e) {}
 
-    if (current_route === 'workspace/Home' || current_route === '' || current_route === 'desk') {
+    // 1. If we are in the Desk (SPA)
+    if (window.location.pathname.startsWith('/app')) {
+        if (current_route === 'workspace/Home' || current_route === '' || current_route === 'desk') {
+            var roles = frappe.user_roles || [];
+            if (roles.includes('SMRITI Cashier')) {
+                frappe.set_route('smriti-billing');
+            } else {
+                frappe.set_route('smriti-desk');
+            }
+        }
+    } 
+    // 2. If we are on the Website Home Page
+    else if (window.location.pathname === '/' || window.location.pathname === '/smriti-home') {
+        console.log("[SMRITI] Logged in user on home page, redirecting to app...");
         var roles = frappe.user_roles || [];
         if (roles.includes('SMRITI Cashier')) {
-            frappe.set_route('smriti-billing');
+            window.location.href = '/app/smriti-billing';
         } else {
-            frappe.set_route('smriti-desk');
+            window.location.href = '/app/smriti-desk';
         }
     }
 }

@@ -80,7 +80,7 @@ doctype_js = {
 # ----------
 
 # application home page (will override Website Settings)
-home_page = "smriti-home"
+home_page = "index"
 
 # website user home page (by Role)
 # Note: role_home_page is for non-desk/website users.
