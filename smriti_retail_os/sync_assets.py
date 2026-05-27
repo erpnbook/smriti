@@ -37,13 +37,30 @@ def _run_sync():
         os.makedirs(sites_assets_dir, exist_ok=True)
         print(f"  - Created directory: {sites_assets_dir}")
 
-    # ── Step 2: Copy assets.json / assets-rtl.json ──
+    # ── Step 2: Merge assets.json / assets-rtl.json ──
     for json_file in ["assets.json", "assets-rtl.json"]:
         src = os.path.join(bench_assets_dir, json_file)
         dst = os.path.join(sites_assets_dir, json_file)
         if os.path.exists(src):
-            shutil.copy2(src, dst)
-            print(f"  - Copied {json_file}")
+            if os.path.exists(dst):
+                try:
+                    import json
+                    with open(src, "r") as f:
+                        src_data = json.load(f)
+                    with open(dst, "r") as f:
+                        dst_data = json.load(f)
+                    merged = {}
+                    merged.update(src_data)
+                    merged.update(dst_data)
+                    with open(dst, "w") as f:
+                        json.dump(merged, f, indent=4)
+                    print(f"  - Merged {json_file}")
+                except Exception as e:
+                    print(f"  - Error merging {json_file}: {e}, falling back to copy")
+                    shutil.copy2(src, dst)
+            else:
+                shutil.copy2(src, dst)
+                print(f"  - Copied {json_file}")
 
     # ── Step 3: Copy css / js / locale from bench/assets/ ──
     for subdir in ["css", "js", "locale"]:
