@@ -250,6 +250,11 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
             if not tmpl_company or tmpl_company != company:
                 tax_template = None
 
+        # Resolve cost center robustly to prevent validation failures on clean DBs
+        item_cc = it.get("cost_center") or frappe.db.get_value("Company", company, "cost_center")
+        if not item_cc:
+            item_cc = frappe.db.get_value("Cost Center", {"company": company, "is_group": 0}, "name")
+
         invoice_doc.append("items", {
             "item_code": it.get("item_code"),
             "qty": flt(it.get("qty")),
@@ -257,7 +262,8 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
             "price_list_rate": flt(it.get("mrp")),
             "uom": it.get("stock_uom") or "Nos",
             "warehouse": item_wh,
-            "item_tax_template": tax_template
+            "item_tax_template": tax_template,
+            "cost_center": item_cc
         })
         
     # 2. Split Payments

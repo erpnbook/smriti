@@ -33,6 +33,13 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
 
         self.company = frappe.db.exists("Company", "_Test Company") or frappe.db.get_value("Company", {}, "name")
         if not self.company:
+            # Create Transit Warehouse Type if missing to support default warehouse creation on Company insert
+            if not frappe.db.exists("Warehouse Type", "Transit"):
+                wt = frappe.new_doc("Warehouse Type")
+                wt.name = "Transit"
+                wt.warehouse_type = "Transit"
+                wt.insert(ignore_permissions=True)
+                
             comp = frappe.new_doc("Company")
             comp.company_name = "_Test Company"
             comp.country = "India"
