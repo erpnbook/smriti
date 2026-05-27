@@ -462,3 +462,7 @@ def hide_non_retail_modules():
 def after_install():
     """Called once immediately after `bench install-app smriti_retail_os`."""
     setup_smriti_retail_os()
+    # Sync branding assets into the shared sites/assets volume
+    from smriti_retail_os.sync_assets import sync_assets
+    sync_assets()
+

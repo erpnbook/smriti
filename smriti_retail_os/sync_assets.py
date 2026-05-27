@@ -1,20 +1,33 @@
 import os
 import shutil
-import frappe
+
 
 def sync_assets():
-    print("[SMRITI] Starting hard-sync of assets into sites/assets (shared volume)...")
-    
-    frappe.init(site="frontend")
-    frappe.connect()
+    """
+    Hard-syncs SMRITI Retail OS and all core app assets from the app's
+    public/ directory (and bench/assets/) into the shared sites/assets volume.
 
-    bench_path = "/home/frappe/frappe-bench"
+    Called automatically in THREE places so manual runs are NEVER needed:
+      1. Fresh install  — via pwd.yml create-site service
+      2. bench migrate  — via after_migrate hook in hooks.py
+      3. Container boot — via backend entrypoint startup script in pwd.yml
+
+    No frappe.init() required — runs standalone from bash or Python context.
+    """
+    _run_sync()
+
+
+def _run_sync():
+    print("[SMRITI] Starting hard-sync of assets into sites/assets (shared volume)...")
+
+    bench_path       = os.environ.get("BENCH_PATH", "/home/frappe/frappe-bench")
     sites_assets_dir = os.path.join(bench_path, "sites", "assets")
-    
-    # Standard apps to sync
+    bench_assets_dir = os.path.join(bench_path, "assets")
+
+    # Apps whose assets must be present in the shared volume
     apps = ["frappe", "erpnext", "india_compliance", "smriti_retail_os"]
-    
-    # 1. Remove the symlink if sites/assets is a symlink (it points to container-local /assets)
+
+    # ── Step 1: Ensure sites/assets is a real directory (never a symlink) ──
     if os.path.islink(sites_assets_dir):
         print(f"  - Removing symlink: {sites_assets_dir}")
         os.unlink(sites_assets_dir)
@@ -24,8 +37,7 @@ def sync_assets():
         os.makedirs(sites_assets_dir, exist_ok=True)
         print(f"  - Created directory: {sites_assets_dir}")
 
-    # 2. Copy assets.json and assets-rtl.json from bench assets dir
-    bench_assets_dir = os.path.join(bench_path, "assets")
+    # ── Step 2: Copy assets.json / assets-rtl.json ──
     for json_file in ["assets.json", "assets-rtl.json"]:
         src = os.path.join(bench_assets_dir, json_file)
         dst = os.path.join(sites_assets_dir, json_file)
@@ -33,7 +45,7 @@ def sync_assets():
             shutil.copy2(src, dst)
             print(f"  - Copied {json_file}")
 
-    # 3. Copy css, js, locale directories from bench assets
+    # ── Step 3: Copy css / js / locale from bench/assets/ ──
     for subdir in ["css", "js", "locale"]:
         src = os.path.join(bench_assets_dir, subdir)
         dst = os.path.join(sites_assets_dir, subdir)
@@ -45,18 +57,15 @@ def sync_assets():
             shutil.copytree(src, dst, symlinks=False, dirs_exist_ok=True)
             print(f"  - Copied {subdir}/")
 
-    # 4. Copy each app's public directory into sites/assets/<app>
+    # ── Step 4: Copy each app's public assets ──
     for app in apps:
         dst = os.path.join(sites_assets_dir, app)
-        
-        # Try container-local bench assets first (where bench build puts compiled output)
+
+        # Prefer bench/assets/<app> (compiled output); fall back to app/public/
         bench_app_assets = os.path.join(bench_assets_dir, app)
-        # Also check the app source public directory
-        app_public_path = os.path.join(bench_path, "apps", app, app, "public")
-        
-        # Determine source: prefer bench assets (has compiled dist/) over raw public/
+        app_public_path  = os.path.join(bench_path, "apps", app, app, "public")
+
         if os.path.islink(bench_app_assets):
-            # It's a symlink - resolve and copy from the target
             src = os.path.realpath(bench_app_assets)
         elif os.path.isdir(bench_app_assets):
             src = bench_app_assets
@@ -65,31 +74,33 @@ def sync_assets():
         else:
             print(f"  - Source for {app} not found, skipping.")
             continue
-        
-        # Remove old destination
+
+        # Remove stale destination
         if os.path.islink(dst):
             os.unlink(dst)
         elif os.path.isdir(dst):
             shutil.rmtree(dst, ignore_errors=True)
-            
+
         print(f"  - Copying {app} assets from {src}...")
         shutil.copytree(
-            src, 
-            dst, 
-            symlinks=False, 
-            ignore=shutil.ignore_patterns("node_modules", "*.pyc", "__pycache__", ".git", ".github")
+            src, dst,
+            symlinks=False,
+            ignore=shutil.ignore_patterns(
+                "node_modules", "*.pyc", "__pycache__", ".git", ".github"
+            ),
         )
-        
-        # Also copy the dist/ directory from bench assets if it exists separately
+
+        # Also copy dist/ from bench assets if it exists separately
         bench_dist = os.path.join(bench_assets_dir, app, "dist")
-        dst_dist = os.path.join(dst, "dist")
+        dst_dist   = os.path.join(dst, "dist")
         if os.path.exists(bench_dist) and not os.path.exists(dst_dist):
             shutil.copytree(bench_dist, dst_dist, symlinks=False)
             print(f"    + Copied dist/ for {app}")
-        
+
         print(f"    Done: {app}")
-            
-    print("[SMRITI] Asset sync complete. Physical files in sites/assets/ (shared volume).")
+
+    print("[SMRITI] Asset sync complete — physical files now in sites/assets/ (shared volume).")
+
 
 if __name__ == "__main__":
-    sync_assets()
+    _run_sync()

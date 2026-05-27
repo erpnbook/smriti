@@ -115,7 +115,11 @@ role_home_page = {
 
 # before_install = "smriti_retail_os.install.before_install"
 after_install = "smriti_retail_os.setup.after_install"
-after_migrate = ["smriti_retail_os.setup.setup_smriti_retail_os"]
+after_migrate = [
+    "smriti_retail_os.setup.setup_smriti_retail_os",
+    "smriti_retail_os.sync_assets.sync_assets",
+]
+
 boot_session = "smriti_retail_os.boot.boot_session"
 extend_bootinfo = "smriti_retail_os.boot.extend_bootinfo"
 
