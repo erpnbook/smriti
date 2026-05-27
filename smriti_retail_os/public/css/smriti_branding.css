@@ -376,5 +376,72 @@ header .brand-logo {
   line-height: 1.2 !important;
 }
 
+/* ============================================================
+   TOGGLEABLE SIDEBAR (LEFT / RIGHT)
+   ============================================================ */
+
+/* Body flex direction swap when sidebar is on the right */
+body.smriti-sidebar-right {
+  flex-direction: row-reverse !important;
+}
+
+/* Swap sidebar border and adjust resize handle */
+body.smriti-sidebar-right .body-sidebar {
+  border-right: none !important;
+  border-left: 1px solid var(--smriti-border) !important;
+}
+
+body.smriti-sidebar-right .sidebar-resize-handle {
+  right: auto !important;
+  left: -4px !important;
+  cursor: w-resize !important;
+}
+
+/* Set explicit coordinates when expanded and on the right */
+body.smriti-sidebar-right .body-sidebar-container.expanded .body-sidebar {
+  left: auto !important;
+  right: 0 !important;
+}
+
+/* Adjust overlay alignment in mobile view when sidebar is on the right */
+body.smriti-sidebar-right .body-sidebar-container.expanded .overlay {
+  left: auto !important;
+  right: var(--sidebar-width) !important;
+}
+
+/* Sidebar Toggle Button styling */
+.smriti-sidebar-toggle-sidebtn {
+  background: transparent !important;
+  border: none !important;
+  padding: 6px !important;
+  margin-left: auto !important;
+  border-radius: 50% !important;
+  color: var(--smriti-text-muted) !important;
+  cursor: pointer !important;
+  display: none !important; /* hidden when collapsed */
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+  z-index: 10 !important;
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.body-sidebar-container.expanded .smriti-sidebar-toggle-sidebtn {
+  display: flex !important;
+}
+
+.smriti-sidebar-toggle-sidebtn:hover {
+  background: rgba(105, 65, 198, 0.08) !important;
+  color: var(--smriti-primary) !important;
+  transform: rotate(180deg) !important;
+}
+
+.smriti-sidebar-toggle-sidebtn .material-symbols-outlined {
+  font-size: 20px !important;
+  line-height: 1 !important;
+}
+
+
 
 

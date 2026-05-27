@@ -604,6 +604,52 @@ function _setup_smriti_layout_class() {
     }
 }
 
+function _setup_sidebar_toggle() {
+    if (!window.frappe) return;
+    
+    // 1. Read position from localStorage and apply immediately to body
+    var savedPosition = localStorage.getItem('smriti-sidebar-position') || 'left';
+    var hasRightClass = $('body').hasClass('smriti-sidebar-right');
+    if (savedPosition === 'right' && !hasRightClass) {
+        $('body').addClass('smriti-sidebar-right');
+    } else if (savedPosition === 'left' && hasRightClass) {
+        $('body').removeClass('smriti-sidebar-right');
+    }
+
+    // 2. Inject toggle button into the sidebar header if it's not already there
+    var sidebarHeader = $('.body-sidebar-container .sidebar-header');
+    if (sidebarHeader.length && !sidebarHeader.find('.smriti-sidebar-toggle-sidebtn').length) {
+        var toggleBtn = $(
+            '<button class="smriti-sidebar-toggle-sidebtn" title="Toggle Sidebar Left/Right" type="button">' +
+                '<span class="material-symbols-outlined">swap_horiz</span>' +
+            '</button>'
+        );
+        
+        toggleBtn.on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            var currentPos = localStorage.getItem('smriti-sidebar-position') || 'left';
+            var newPos = (currentPos === 'left') ? 'right' : 'left';
+            
+            localStorage.setItem('smriti-sidebar-position', newPos);
+            
+            if (newPos === 'right') {
+                $('body').addClass('smriti-sidebar-right');
+            } else {
+                $('body').removeClass('smriti-sidebar-right');
+            }
+        });
+        
+        var titleContainer = sidebarHeader.find('.title-container');
+        if (titleContainer.length) {
+            titleContainer.after(toggleBtn);
+        } else {
+            sidebarHeader.append(toggleBtn);
+        }
+    }
+}
+
 /* ── 10. Frappe lifecycle hooks ─────────────────────────────────────────── */
 $(document).on('app_ready', function () {
     _patch_sidebar_prototype();
@@ -615,6 +661,7 @@ $(document).on('app_ready', function () {
     _render_smriti_sidebar_if_applicable();
     _do_scrub();
     _sidebar_lockdown();
+    _setup_sidebar_toggle();
 });
 
 $(document).on('page-change route-change', function () {
@@ -626,6 +673,7 @@ $(document).on('page-change route-change', function () {
     _render_smriti_sidebar_if_applicable();
     _scrub_dom();
     _sidebar_lockdown();
+    _setup_sidebar_toggle();
 });
 
 /* Periodic safety net */
@@ -640,6 +688,11 @@ setInterval(function () {
     _monkey_patch_about(); /* re-attempt lock on each cycle */
 }, 1500);
 
+/* Periodic safety net for sidebar position & toggle button */
+setInterval(function () {
+    _setup_sidebar_toggle();
+}, 1000);
+
 /* Scan open modals frequently so Frappe About is replaced within 150 ms */
 setInterval(_scan_modals, 150);
 
@@ -650,6 +703,7 @@ function _boot_scrub_sequence() {
     _redirect_to_smriti_home();
     _setup_smriti_layout_class();
     _render_smriti_sidebar_if_applicable();
+    _setup_sidebar_toggle();
     [100, 300, 700, 1500, 3000].forEach(function (ms) {
         setTimeout(function () {
             _patch_sidebar_prototype();
@@ -658,6 +712,7 @@ function _boot_scrub_sequence() {
             _setup_smriti_layout_class();
             _render_smriti_sidebar_if_applicable();
             _do_scrub();
+            _setup_sidebar_toggle();
         }, ms);
     });
 }
@@ -667,3 +722,4 @@ if (document.readyState === 'loading') {
 } else {
     _boot_scrub_sequence();
 }
+
