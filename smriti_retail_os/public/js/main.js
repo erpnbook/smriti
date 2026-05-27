@@ -237,6 +237,40 @@ function _do_scrub() {
     ).forEach(function (el) {
         if (_SCRUB_RE.test(el.textContent)) el.textContent = _replace(el.textContent);
     });
+
+    /* H. Help & Support Navbar override - replace erpnext/frappe support with erpnbook.com */
+    _sanitize_navbar_help(root);
+}
+
+function _sanitize_navbar_help(root) {
+    if (!window.frappe) return;
+    
+    // Find the Help dropdown item in the header
+    var help_menu = root.querySelector('#navbar-help, .dropdown-help');
+    if (help_menu) {
+        if (!_is_smriti_user()) {
+            help_menu.style.display = '';
+            return;
+        }
+        
+        // Clean out default ERPNext/Frappe help links and substitute erpnbook.com support
+        var dropdown_menu = help_menu.querySelector('.dropdown-menu');
+        if (dropdown_menu && !dropdown_menu.getAttribute('data-smriti-sanitized')) {
+            dropdown_menu.setAttribute('data-smriti-sanitized', 'true');
+            dropdown_menu.innerHTML = `
+                <li><a class="dropdown-item" href="https://erpnbook.com" target="_blank">🌐 erpnbook.com Support</a></li>
+                <li><a class="dropdown-item" href="https://erpnbook.com" target="_blank">📖 SMRITI User Guide</a></li>
+                <li class="divider"></li>
+                <li><a class="dropdown-item" href="#" onclick="window.frappe.ui.misc.about(); return false;">ℹ️ About SMRITI Retail OS</a></li>
+            `;
+            
+            // Customize the main Help dropdown button text
+            var main_link = help_menu.querySelector('.nav-link');
+            if (main_link) {
+                main_link.innerHTML = 'Help & Support';
+            }
+        }
+    }
 }
 
 /* ── 5. MutationObserver — re-scrub on every DOM addition ───────────────── */
@@ -259,8 +293,8 @@ function _smriti_about_html() {
         '<p style="text-align:center;font-size:1.15rem;font-weight:800;color:var(--smriti-primary,#4f46e5);margin:0 0 2px">' + SMRITI_BRAND + '</p>' +
         '<p style="text-align:center;color:#888;font-size:.82rem;margin:0 0 14px">Smarter Retail. Built for India.</p>' +
         '<hr>' +
-        '<p>🌐 <a href="https://smriti.in" target="_blank" style="color:var(--smriti-primary,#4f46e5)">smriti.in</a></p>' +
-        '<p>✉ <a href="mailto:support@smriti.in" style="color:var(--smriti-primary,#4f46e5)">support@smriti.in</a></p>' +
+        '<p>🌐 <a href="https://erpnbook.com" target="_blank" style="color:var(--smriti-primary,#4f46e5)">erpnbook.com</a></p>' +
+        '<p>✉ <a href="mailto:support@erpnbook.com" style="color:var(--smriti-primary,#4f46e5)">support@erpnbook.com</a></p>' +
         '<hr>' +
         '<h5 style="margin:8px 0 4px">Installed Apps</h5><div id="smriti-versions">Loading…</div><hr>' +
         '<p style="font-size:.78rem;color:#aaa;margin:6px 0 0">' +
