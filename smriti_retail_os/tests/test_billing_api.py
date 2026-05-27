@@ -143,6 +143,16 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
                 mop_doc.save(ignore_permissions=True)
                 frappe.db.commit()
 
+        # Resolve standard selling price list
+        if not frappe.db.exists("Price List", "Standard Selling"):
+            pl = frappe.new_doc("Price List")
+            pl.price_list_name = "Standard Selling"
+            pl.enabled = 1
+            pl.selling = 1
+            pl.buying = 0
+            pl.currency = "INR"
+            pl.insert(ignore_permissions=True)
+
         # Create test POS Profile for saving Draft POS Invoices
         self.pos_profile_name = "Test POS Profile"
         if not frappe.db.exists("POS Profile", self.pos_profile_name):

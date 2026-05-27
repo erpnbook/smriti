@@ -57,6 +57,67 @@ def setup_smriti_retail_os():
                 "fieldtype": "Select",
                 "options": "\n0\n5\n12\n18\n28",
                 "insert_after": "custom_mrp"
+            },
+            {
+                "fieldname": "custom_is_retail_item",
+                "label": "Is Retail Item",
+                "fieldtype": "Check",
+                "default": "1",
+                "insert_after": "custom_gst_percentage"
+            },
+            {
+                "fieldname": "custom_department",
+                "label": "Department",
+                "fieldtype": "Link",
+                "options": "Item Group",
+                "insert_after": "custom_is_retail_item"
+            },
+            {
+                "fieldname": "custom_barcode_size",
+                "label": "Barcode Size",
+                "fieldtype": "Select",
+                "options": "\n50x25\n50x30\n75x50\n100x50",
+                "insert_after": "custom_department"
+            },
+            {
+                "fieldname": "custom_current_stock_html",
+                "label": "Current Stock HTML",
+                "fieldtype": "HTML",
+                "insert_after": "custom_barcode_size"
+            }
+        ],
+        "Customer": [
+            {
+                "fieldname": "custom_address_text",
+                "label": "Address Text",
+                "fieldtype": "Small Text",
+                "insert_after": "customer_name"
+            },
+            {
+                "fieldname": "custom_birthday",
+                "label": "Birthday",
+                "fieldtype": "Date",
+                "insert_after": "custom_address_text"
+            },
+            {
+                "fieldname": "custom_anniversary",
+                "label": "Anniversary",
+                "fieldtype": "Date",
+                "insert_after": "custom_birthday"
+            }
+        ],
+        "Supplier": [
+            {
+                "fieldname": "custom_address_text",
+                "label": "Address Text",
+                "fieldtype": "Small Text",
+                "insert_after": "supplier_name"
+            },
+            {
+                "fieldname": "custom_credit_days",
+                "label": "Credit Days",
+                "fieldtype": "Int",
+                "insert_after": "custom_address_text"
             }
         ]
     }

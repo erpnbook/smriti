@@ -123,11 +123,11 @@ def get_shift_summary(opening_entry_name):
     total_sales = sum(flt(inv.grand_total) for inv in invoices)
     invoice_count = len(invoices)
 
-    # Payment mode breakdown from POS Invoice Payment rows
+    # Payment mode breakdown from Sales Invoice Payment rows
     mode_totals = {}
     if invoice_names:
         payments = frappe.db.get_all(
-            "POS Invoice Payment",
+            "Sales Invoice Payment",
             filters={"parent": ["in", invoice_names]},
             fields=["mode_of_payment", "amount"]
         )

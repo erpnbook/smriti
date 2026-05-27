@@ -91,7 +91,7 @@ def _get_payment_breakdown(from_date, to_date):
         rows = frappe.db.sql("""
             SELECT pp.mode_of_payment, SUM(pp.amount) as total
             FROM `tabPOS Invoice` pi
-            JOIN `tabPOS Invoice Payment` pp ON pp.parent = pi.name
+            JOIN `tabSales Invoice Payment` pp ON pp.parent = pi.name
             WHERE pi.docstatus = 1
               AND pi.posting_date BETWEEN %(from_date)s AND %(to_date)s
             GROUP BY pp.mode_of_payment
@@ -319,7 +319,7 @@ def get_gst_report(from_date=None, to_date=None):
             FROM `tabPOS Invoice`
             WHERE docstatus = 1
               AND posting_date BETWEEN %(from_date)s AND %(to_date)s
-              AND (gstin IS NULL OR gstin = '')
+              AND (billing_address_gstin IS NULL OR billing_address_gstin = '')
         """, {"from_date": from_date, "to_date": to_date}, as_dict=True)
         b2c_data = b2c[0] if b2c else {}
     except Exception:
