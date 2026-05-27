@@ -1,4 +1,5 @@
 import frappe
+import json
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
 def setup_smriti_retail_os():
@@ -308,6 +309,9 @@ def setup_smriti_retail_os():
     # Note: These are linked to SMRITI Roles via Role Profile or manual assignment
     _setup_module_profiles()
 
+    # 6. Hide all non-retail modules system-wide by default
+    hide_non_retail_modules()
+
     frappe.db.commit()
 
 
@@ -361,6 +365,96 @@ def _setup_module_profiles():
                 print(f"[SMRITI] Role Profile created/updated: {profile_name}")
             except Exception as e:
                 print(f"[SMRITI] Warning — could not save Role Profile '{profile_name}': {e}")
+
+    frappe.db.commit()
+
+
+def hide_non_retail_modules():
+    """
+    Hides all ERPNext modules and Workspaces that are irrelevant to a Retail Store
+    or B2B Distributor — system-wide for all users by default.
+
+    Modules kept visible (Retail / B2B relevant):
+      Accounts, Buying, Selling, Stock, HR (basic), CRM,
+      SMRITI Retail OS, India Compliance
+
+    Modules hidden:
+      Manufacturing, Projects, Agriculture, Education, Healthcare,
+      Non Profit, Quality Management, Assets, Hospitality, Payroll,
+      Loans, Support, E-commerce, ERPNext Integrations
+    """
+
+    # ── 1. System-wide global hide via Frappe Defaults ───────────────────────
+    # These are stored in tabDefaultValue with parent="__default".
+    # Frappe reads them via frappe.get_default("hide_modules") to build the Desk.
+    NON_RETAIL_MODULES = [
+        "Manufacturing",
+        "Projects",
+        "Agriculture",
+        "Education",
+        "Healthcare",
+        "Non Profit",
+        "Quality Management",
+        "Assets",
+        "Hospitality",
+        "Payroll",
+        "Loans",
+        "Support",
+        "E-commerce",
+        "ERPNext Integrations",
+        "Integrations",
+    ]
+
+    # Read existing hidden list so we don't overwrite manual changes
+    existing_hidden_raw = frappe.db.get_default("hide_modules") or "[]"
+    try:
+        existing_hidden = json.loads(existing_hidden_raw)
+    except Exception:
+        existing_hidden = []
+
+    merged = list(set(existing_hidden) | set(NON_RETAIL_MODULES))
+    frappe.db.set_default("hide_modules", json.dumps(merged))
+    print(f"[SMRITI] Hidden {len(merged)} non-retail modules globally.")
+
+    # ── 2. Mark matching Workspaces as hidden ────────────────────────────────
+    # Workspace.is_hidden = 1 removes the sidebar entry for all users.
+    NON_RETAIL_WORKSPACES = [
+        # ERPNext Workspaces
+        "Manufacturing",
+        "Project",
+        "Agriculture",
+        "Education",
+        "Healthcare",
+        "Non Profit",
+        "Quality Management",
+        "Asset",
+        "Hospitality",
+        "Payroll",
+        "Loans",
+        "Support",
+        "E-Commerce",
+        "ERPNext Integrations",
+        "Integrations",
+        # Specific DocType-level workspaces irrelevant to retail
+        "Timesheet",
+        "Delivery Note",
+        "Contract",
+        "Driver",
+        "Fleet Management",
+        "Maintenance",
+    ]
+
+    hidden_ws_count = 0
+    for ws_name in NON_RETAIL_WORKSPACES:
+        if frappe.db.exists("Workspace", ws_name):
+            frappe.db.set_value(
+                "Workspace", ws_name, "is_hidden", 1,
+                update_modified=False
+            )
+            hidden_ws_count += 1
+
+    if hidden_ws_count:
+        print(f"[SMRITI] Hid {hidden_ws_count} non-retail Workspaces.")
 
     frappe.db.commit()
 

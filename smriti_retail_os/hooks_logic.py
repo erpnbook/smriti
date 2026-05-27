@@ -27,9 +27,10 @@ def sync_item_taxes_and_prices(doc, method):
     
     if doc.custom_gst_percentage:
         pct = cint(doc.custom_gst_percentage)
+        company = frappe.defaults.get_user_default("company") or frappe.db.get_value("Company", {}, "name")
         template_name = frappe.db.get_value(
             "Item Tax Template", 
-            {"name": ["like", f"%{pct}%"]}, 
+            {"name": ["like", f"%{pct}%"], "company": company}, 
             "name"
         )
         

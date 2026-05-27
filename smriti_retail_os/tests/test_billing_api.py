@@ -31,7 +31,7 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
             ig.insert(ignore_permissions=True)
             self.item_group = ig.name
 
-        self.company = frappe.db.get_value("Company", {}, "name")
+        self.company = frappe.db.exists("Company", "_Test Company") or frappe.db.get_value("Company", {}, "name")
         if not self.company:
             comp = frappe.new_doc("Company")
             comp.company_name = "_Test Company"
@@ -59,8 +59,9 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
             w.insert(ignore_permissions=True)
             self.warehouse = w.name
             
-        # Set cashier user default warehouse to the Transit warehouse to bypass negative stock checks in unit tests
+        # Set cashier user default warehouse and company to align all lookups and bypass negative stock checks
         frappe.defaults.set_user_default("warehouse", self.warehouse, frappe.session.user)
+        frappe.defaults.set_user_default("company", self.company, frappe.session.user)
 
         # Resolve Cost Center robustly
         self.cost_center = frappe.db.get_value("Company", self.company, "cost_center")
@@ -116,6 +117,26 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         comp_doc.default_cash_account = frappe.db.get_value("Account", {"company": self.company, "account_type": "Cash"}, "name") or frappe.db.get_value("Account", {"company": self.company, "account_name": "Cash"}, "name")
         comp_doc.save(ignore_permissions=True)
         frappe.db.commit()
+
+        # Create active Fiscal Year robustly if missing or if company is not in it
+        fy_name = "2026-2027"
+        if not frappe.db.exists("Fiscal Year", fy_name):
+            fy = frappe.new_doc("Fiscal Year")
+            fy.year = fy_name
+            fy.year_start_date = "2026-04-01"
+            fy.year_end_date = "2027-03-31"
+            fy.append("companies", {
+                "company": self.company
+            })
+            fy.insert(ignore_permissions=True)
+        else:
+            fy = frappe.get_doc("Fiscal Year", fy_name)
+            if not any(c.company == self.company for c in fy.companies):
+                fy.append("companies", {
+                    "company": self.company
+                })
+                fy.save(ignore_permissions=True)
+                frappe.db.commit()
 
         # Resolve Mode of Payment
         self.mode_of_payment = frappe.db.get_value("Mode of Payment", {}, "name")
@@ -177,30 +198,44 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
 
         # Clean up potential old test records including barcodes child table orphans, tax templates and tax account
         frappe.db.delete("Item Price", {"item_code": "TEST-ITEM-BAR"})
+        frappe.db.delete("Item Barcode", {"parent": "TEST-ITEM-BAR"})
         frappe.db.delete("Item Barcode", {"barcode": "8901234567890"})
+        # CRITICAL: purge all child table rows before deleting Item to prevent orphan accumulation
+        # frappe.db.delete("Item", ...) is raw SQL and does NOT cascade to child tables
+        frappe.db.delete("Item Tax", {"parent": "TEST-ITEM-BAR"})
+        frappe.db.delete("Item Supplier", {"parent": "TEST-ITEM-BAR"})
+        frappe.db.delete("Item Variant Attribute", {"parent": "TEST-ITEM-BAR"})
         frappe.db.delete("Item", {"item_code": "TEST-ITEM-BAR"})
         frappe.db.delete("Customer", {"customer_name": "Test Billing Customer"})
         frappe.db.delete("POS Invoice", {"customer": "Test Billing Customer"})
         frappe.db.delete("Comment", {"reference_doctype": "POS Invoice"})
         
         # Clean up tax templates via delete_doc to ensure child tables are fully purged
-        for item in frappe.db.get_all("Item Tax Template", filters={"title": "18% GST"}):
-            frappe.delete_doc("Item Tax Template", item.name, ignore_missing=True, force=True)
-        for item in frappe.db.get_all("Sales Taxes and Charges Template", filters={"title": "18% GST Template"}):
-            frappe.delete_doc("Sales Taxes and Charges Template", item.name, ignore_missing=True, force=True)
+        for name in frappe.db.get_all("Item Tax Template", filters={"name": ["like", "%18%"]}, pluck="name"):
+            frappe.delete_doc("Item Tax Template", name, ignore_missing=True, force=True)
+        for name in frappe.db.get_all("Sales Taxes and Charges Template", filters={"name": ["like", "%18%"]}, pluck="name"):
+            frappe.delete_doc("Sales Taxes and Charges Template", name, ignore_missing=True, force=True)
             
         frappe.db.delete("Account", {"account_name": "GST 9+9", "company": self.company})
         frappe.db.commit()
 
+
         # Resolve or create a single non-group Tax account
-        self.tax_account = "GST 9+9 - _C"
+        company_abbr = frappe.db.get_value("Company", self.company, "abbr") or "_C"
+        self.tax_account = f"GST 9+9 - {company_abbr}"
         if not frappe.db.exists("Account", self.tax_account):
+            parent_account = frappe.db.get_value("Account", {"company": self.company, "account_type": "Tax", "is_group": 1}, "name")
+            if not parent_account:
+                parent_account = frappe.db.get_value("Account", {"company": self.company, "account_name": f"Duties and Taxes - {company_abbr}"}, "name")
+            if not parent_account:
+                parent_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Liability", "is_group": 1}, "name")
+            
             acc = frappe.new_doc("Account")
             acc.account_name = "GST 9+9"
             acc.company = self.company
             acc.root_type = "Liability"
             acc.account_type = "Tax"
-            acc.parent_account = "Duties and Taxes - _C"
+            acc.parent_account = parent_account
             acc.insert(ignore_permissions=True)
 
         # Create test Item Tax Template for 18% GST

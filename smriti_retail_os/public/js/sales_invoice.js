@@ -65,8 +65,32 @@ function _pure_apply_clutter_removal(frm) {
     frm.toggle_display("items", true);
     frm.toggle_display("rounded_total", true);
 
-    // Make inputs look sleeker
-    frm.get_field("items").grid.wrapper.find(".grid-heading-row").css({"background-color": "#f9fafb", "font-weight": "600"});
+    // 4. Simplify the Items Grid Columns
+    if (frm.fields_dict.items && frm.fields_dict.items.grid) {
+        const grid = frm.fields_dict.items.grid;
+        
+        // Define kept fields and their column spans (should sum to 12)
+        const kept_fields = {
+            "item_code": 2,
+            "item_name": 4,
+            "qty": 2,
+            "rate": 2,
+            "amount": 2
+        };
+
+        grid.docfields.forEach(df => {
+            if (kept_fields[df.fieldname] !== undefined) {
+                df.hidden = 0;
+                df.in_list_view = 1;
+                df.columns = kept_fields[df.fieldname];
+            } else {
+                df.hidden = 1;
+                df.in_list_view = 0;
+            }
+        });
+        
+        grid.refresh();
+    }
 }
 
 function _pure_render_sleek_ui(frm) {
@@ -76,25 +100,25 @@ function _pure_render_sleek_ui(frm) {
     const tax = frappe.format(frm.doc.total_taxes_and_charges, {fieldtype:"Currency"});
     const items_count = (frm.doc.items || []).length;
     
-    // Inject custom "Rearranged" Sleek Header
+    // Inject custom "Rearranged" Sleek Header styled by smriti_sales_invoice.css
     frm.dashboard.set_headline(`
-        <div style="background: #ffffff; border: 1px solid #e4e7ec; border-radius: 12px; padding: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+        <div class="dashboard-headline-card" style="padding: 20px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
             <div style="display: flex; gap: 40px;">
                 <div>
-                    <div style="font-size: 11px; text-transform: uppercase; color: #667085; font-weight: 700; margin-bottom: 4px;">Customer</div>
+                    <div style="font-size: 11px; text-transform: uppercase; color: #667085; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px;">Customer</div>
                     <div style="font-size: 16px; font-weight: 600; color: #101828;">${frm.doc.customer_name || 'Walk-In Customer'}</div>
                 </div>
                 <div>
-                    <div style="font-size: 11px; text-transform: uppercase; color: #667085; font-weight: 700; margin-bottom: 4px;">Date</div>
+                    <div style="font-size: 11px; text-transform: uppercase; color: #667085; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px;">Date</div>
                     <div style="font-size: 16px; font-weight: 600; color: #101828;">${frappe.datetime.str_to_user(frm.doc.posting_date)}</div>
                 </div>
                 <div>
-                    <div style="font-size: 11px; text-transform: uppercase; color: #667085; font-weight: 700; margin-bottom: 4px;">Items</div>
+                    <div style="font-size: 11px; text-transform: uppercase; color: #667085; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px;">Items</div>
                     <div style="font-size: 16px; font-weight: 600; color: #101828;">${items_count} SKU(s)</div>
                 </div>
             </div>
             <div style="text-align: right;">
-                <div style="font-size: 11px; text-transform: uppercase; color: #667085; font-weight: 700; margin-bottom: 2px;">Total Payable</div>
+                <div style="font-size: 11px; text-transform: uppercase; color: #667085; font-weight: 700; margin-bottom: 2px; letter-spacing: 0.5px;">Total Payable</div>
                 <div style="font-size: 38px; font-weight: 900; color: #6941c6; line-height: 1;">${amount}</div>
                 <div style="font-size: 11px; color: #027a48; font-weight: 600; margin-top: 4px;">Incl. GST: ${tax}</div>
             </div>

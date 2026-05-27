@@ -1,0 +1,140 @@
+/* ─────────────────────────────────────────────
+   SMRITI — Premium Sales Invoice Retail Theme
+   Styling for a beautiful, clutter-free POS experience
+   ───────────────────────────────────────────── */
+
+/* Scope to non-System Managers and only when in Sales Invoice view */
+body.smriti-user-layout [data-doctype="Sales Invoice"] {
+    background-color: #f9fafb !important;
+}
+
+/* Glassmorphism Headline/Dashboard Card */
+body.smriti-user-layout [data-doctype="Sales Invoice"] .dashboard-headline-card {
+    background: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(16px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+    border: 1px solid rgba(208, 213, 221, 0.4) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px rgba(16, 24, 40, 0.04) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+body.smriti-user-layout [data-doctype="Sales Invoice"] .dashboard-headline-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 12px 40px rgba(105, 65, 198, 0.08) !important;
+}
+
+/* Clean grid items table */
+body.smriti-user-layout [data-doctype="Sales Invoice"] .grid-container {
+    border: 1px solid #eaecf0 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 20px rgba(16, 24, 40, 0.02) !important;
+}
+
+body.smriti-user-layout [data-doctype="Sales Invoice"] .grid-heading-row {
+    background-color: #f9fafb !important;
+    border-bottom: 2px solid #eaecf0 !important;
+    color: #475467 !important;
+    text-transform: uppercase !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+}
+
+body.smriti-user-layout [data-doctype="Sales Invoice"] .grid-row {
+    border-bottom: 1px solid #f2f4f7 !important;
+    transition: background-color 0.15s ease !important;
+}
+
+body.smriti-user-layout [data-doctype="Sales Invoice"] .grid-row:hover {
+    background-color: #f9f5ff !important;
+}
+
+/* Simplified item grid inputs */
+body.smriti-user-layout [data-doctype="Sales Invoice"] .grid-row input {
+    background-color: transparent !important;
+    border: none !important;
+    font-weight: 500 !important;
+    color: #101828 !important;
+}
+
+body.smriti-user-layout [data-doctype="Sales Invoice"] .grid-row input:focus {
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 2px rgba(105, 65, 198, 0.2) !important;
+    border-radius: 6px !important;
+}
+
+/* Hide default Form section headers/lines */
+body.smriti-user-layout [data-doctype="Sales Invoice"] .section-head {
+    border-bottom: none !important;
+    margin-bottom: 8px !important;
+}
+
+body.smriti-user-layout [data-doctype="Sales Invoice"] .section-head .section-title {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #344054 !important;
+    letter-spacing: -0.2px !important;
+}
+
+/* Make Form Fields look premium */
+body.smriti-user-layout [data-doctype="Sales Invoice"] .form-section {
+    background-color: #ffffff !important;
+    border: 1px solid #f2f4f7 !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+    margin-bottom: 20px !important;
+    box-shadow: 0 2px 12px rgba(16, 24, 40, 0.01) !important;
+}
+
+/* Standard Status Badge Override */
+body.smriti-user-layout [data-doctype="Sales Invoice"] .indicator {
+    padding: 6px 12px !important;
+    border-radius: 20px !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    border: 1px solid transparent !important;
+}
+
+body.smriti-user-layout [data-doctype="Sales Invoice"] .indicator.orange {
+    background-color: #fffaeb !important;
+    color: #b54708 !important;
+    border-color: #fedf89 !important;
+}
+
+body.smriti-user-layout [data-doctype="Sales Invoice"] .indicator.green {
+    background-color: #ecfdf3 !important;
+    color: #027a48 !important;
+    border-color: #a6f4c5 !important;
+}
+
+body.smriti-user-layout [data-doctype="Sales Invoice"] .indicator.red {
+    background-color: #fef3f2 !important;
+    color: #b42318 !important;
+    border-color: #fecdca !important;
+}
+
+/* Clean Form inputs styling */
+body.smriti-user-layout [data-doctype="Sales Invoice"] .control-input {
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+}
+
+/* Make primary action button prominent and beautiful */
+body.smriti-user-layout [data-doctype="Sales Invoice"] .primary-action {
+    background-color: #6941c6 !important;
+    border-color: #6941c6 !important;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 0 0 4px rgba(105, 65, 198, 0.1) !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+}
+
+body.smriti-user-layout [data-doctype="Sales Invoice"] .primary-action:hover {
+    background-color: #53389e !important;
+    border-color: #53389e !important;
+}

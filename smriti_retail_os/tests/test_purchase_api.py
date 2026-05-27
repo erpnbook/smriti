@@ -29,7 +29,7 @@ class TestSmritiRetailPurchaseAPI(unittest.TestCase):
             self.item_group = ig.name
 
         # Resolve Company
-        self.company = frappe.db.get_value("Company", {}, "name")
+        self.company = frappe.db.exists("Company", "_Test Company") or frappe.db.get_value("Company", {}, "name")
         if not self.company:
             comp = frappe.new_doc("Company")
             comp.company_name = "_Test Company"
@@ -56,7 +56,7 @@ class TestSmritiRetailPurchaseAPI(unittest.TestCase):
             sup.insert(ignore_permissions=True)
             self.supplier = sup.name
 
-        # Create active Fiscal Year robustly if missing
+        # Create active Fiscal Year robustly if missing or if company is not in it
         fy_name = "2026-2027"
         if not frappe.db.exists("Fiscal Year", fy_name):
             fy = frappe.new_doc("Fiscal Year")
@@ -67,6 +67,14 @@ class TestSmritiRetailPurchaseAPI(unittest.TestCase):
                 "company": self.company
             })
             fy.insert(ignore_permissions=True)
+        else:
+            fy = frappe.get_doc("Fiscal Year", fy_name)
+            if not any(c.company == self.company for c in fy.companies):
+                fy.append("companies", {
+                    "company": self.company
+                })
+                fy.save(ignore_permissions=True)
+                frappe.db.commit()
 
         # Resolve Liability Account robustly for Stock Received But Not Billed
         self.liability_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Liability", "is_group": 0}, "name")

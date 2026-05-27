@@ -31,7 +31,7 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
             self.item_group = ig.name
 
         # Resolve Company
-        self.company = frappe.db.get_value("Company", {}, "name")
+        self.company = frappe.db.exists("Company", "_Test Company") or frappe.db.get_value("Company", {}, "name")
         if not self.company:
             comp = frappe.new_doc("Company")
             comp.company_name = "_Test Company"
@@ -132,7 +132,7 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
                 doc.purpose = name
                 doc.insert(ignore_permissions=True)
 
-        # Create active Fiscal Year robustly
+        # Create active Fiscal Year robustly if missing or if company is not in it
         fy_name = "2026-2027"
         if not frappe.db.exists("Fiscal Year", fy_name):
             fy = frappe.new_doc("Fiscal Year")
@@ -143,6 +143,14 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
                 "company": self.company
             })
             fy.insert(ignore_permissions=True)
+        else:
+            fy = frappe.get_doc("Fiscal Year", fy_name)
+            if not any(c.company == self.company for c in fy.companies):
+                fy.append("companies", {
+                    "company": self.company
+                })
+                fy.save(ignore_permissions=True)
+                frappe.db.commit()
 
         # Resolve Liability Account robustly for Stock Received But Not Billed
         self.liability_account = frappe.db.get_value("Account", {"company": self.company, "root_type": "Liability", "is_group": 0}, "name")
@@ -228,8 +236,15 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
         self.assertTrue(frappe.db.exists("Purchase Receipt", res["name"]))
 
     def test_stock_transfer(self):
-        # Create transit/target warehouse
-        target_wh = frappe.db.get_value("Warehouse", {"name": ["!=", self.warehouse]}) or "Work In Progress - _C"
+        # Create transit/target warehouse (must belong to same company to avoid InvalidWarehouseCompany)
+        target_wh = frappe.db.get_value("Warehouse", {"name": ["!=", self.warehouse], "company": self.company, "is_group": 0})
+        if not target_wh:
+            # Create a dedicated transit warehouse for this company
+            tw = frappe.new_doc("Warehouse")
+            tw.warehouse_name = "Test Transit"
+            tw.company = self.company
+            tw.insert(ignore_permissions=True)
+            target_wh = tw.name
         
         items = [{
             "item_code": self.item_code,

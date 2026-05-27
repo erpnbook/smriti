@@ -205,11 +205,15 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     invoice_doc.is_pos = 1 if use_pos else 0
     
     # Pre-resolve a company-level fallback warehouse once (avoid repeated DB hits)
-    _fallback_wh = (
-        frappe.defaults.get_user_default("warehouse")
-        or frappe.db.get_value("Warehouse", {"warehouse_name": "Stores", "company": company}, "name")
-        or frappe.db.get_value("Warehouse", {"company": company, "is_group": 0}, "name")
-    )
+    _fallback_wh = frappe.defaults.get_user_default("warehouse")
+    if _fallback_wh and frappe.db.get_value("Warehouse", _fallback_wh, "company") != company:
+        _fallback_wh = None
+        
+    if not _fallback_wh:
+        _fallback_wh = (
+            frappe.db.get_value("Warehouse", {"warehouse_name": "Stores", "company": company}, "name")
+            or frappe.db.get_value("Warehouse", {"company": company, "is_group": 0}, "name")
+        )
 
     # Resolve default taxes and charges template for the company if none set
     default_tax_template = frappe.db.get_value(
@@ -229,12 +233,22 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
             "default_warehouse"
         ) or _fallback_wh
 
-        # Resolve tax template
+        # Resolve tax template — prefer caller-supplied, fall back to item's first matching template
         tax_template = it.get("tax_template") or it.get("item_tax_template")
         if not tax_template:
             item_doc = frappe.get_doc("Item", it.get("item_code"))
-            if item_doc.taxes:
-                tax_template = item_doc.taxes[0].item_tax_template
+            for t in item_doc.taxes:
+                # Verify this template actually exists and belongs to the target company
+                tmpl_company = frappe.db.get_value("Item Tax Template", t.item_tax_template, "company")
+                if tmpl_company == company:
+                    tax_template = t.item_tax_template
+                    break
+
+        # Final safety: verify the resolved template exists and belongs to this company
+        if tax_template:
+            tmpl_company = frappe.db.get_value("Item Tax Template", tax_template, "company")
+            if not tmpl_company or tmpl_company != company:
+                tax_template = None
 
         invoice_doc.append("items", {
             "item_code": it.get("item_code"),

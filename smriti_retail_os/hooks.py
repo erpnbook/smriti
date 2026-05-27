@@ -30,7 +30,8 @@ app_include_css = [
     "/assets/smriti_retail_os/css/smriti_theme.css",
     "/assets/smriti_retail_os/css/smriti_sidebar.css",
     "/assets/smriti_retail_os/css/smriti_branding.css",
-    "/assets/smriti_retail_os/css/smriti-reports.css"
+    "/assets/smriti_retail_os/css/smriti-reports.css",
+    "/assets/smriti_retail_os/css/smriti_sales_invoice.css"
 ]
 app_include_js = [
     "/assets/smriti_retail_os/js/smriti_sidebar.js",
