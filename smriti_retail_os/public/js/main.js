@@ -240,6 +240,18 @@ function _do_scrub() {
 
     /* H. Help & Support Navbar override - replace erpnext/frappe support with erpnbook.com */
     _sanitize_navbar_help(root);
+
+    /* I. Hide standard sidebar Help button completely in SMRITI layout */
+    if (_is_smriti_user()) {
+        root.querySelectorAll('.standard-sidebar-item, .sidebar-item, .sidebar-link, .nav-link, a').forEach(function (el) {
+            var txt = (el.textContent || '').trim();
+            if (txt === 'Help' && el.closest('.desk-sidebar, .sidebar-wrapper, .layout-side-section')) {
+                el.style.display = 'none';
+                var li = el.closest('li, .sidebar-item-container');
+                if (li) li.style.display = 'none';
+            }
+        });
+    }
 }
 
 function _sanitize_navbar_help(root) {
