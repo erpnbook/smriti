@@ -357,7 +357,7 @@ def _setup_module_profiles():
     for profile_name, roles in role_profiles.items():
         if not frappe.db.exists("Role Profile", profile_name):
             doc = frappe.new_doc("Role Profile")
-            doc.role_profile_name = profile_name
+            doc.role_profile = profile_name
             for r in roles:
                 doc.append("roles", {"role": r})
             try:
