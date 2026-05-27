@@ -598,16 +598,9 @@ function _render_smriti_sidebar_if_applicable() {
 }
 
 function _setup_smriti_layout_class() {
-    if (_is_smriti_user()) {
-        if (!$('body').hasClass('smriti-user-layout')) {
-            console.log("[SMRITI] Applying SMRITI layout class to body");
-            $('body').addClass('smriti-user-layout');
-        }
-    } else {
-        if ($('body').hasClass('smriti-user-layout')) {
-            console.log("[SMRITI] Removing SMRITI layout class from body");
-            $('body').removeClass('smriti-user-layout');
-        }
+    if ($('body').hasClass('smriti-user-layout')) {
+        console.log("[SMRITI] Removing SMRITI layout class from body");
+        $('body').removeClass('smriti-user-layout');
     }
 }
 

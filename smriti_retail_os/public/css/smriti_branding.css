@@ -328,43 +328,53 @@ header .brand-logo {
   display: none !important;
 }
 
-/* SMRITI Role Sidebar Hide & Layout Adjustment */
-body.smriti-user-layout .layout-side-section,
-body.smriti-user-layout .sidebar-wrapper,
-body.smriti-user-layout .desk-sidebar,
-body.smriti-user-layout .body-sidebar-container,
-body.smriti-user-layout .body-sidebar {
-  display: none !important;
-}
-
-body.smriti-user-layout .layout-main-section-wrapper {
-  position: absolute !important;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  top: 0 !important;
-  left: 260px !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: auto !important;
+/* ============================================================
+   STANDARD SIDEBAR HEADER FIXES
+   ============================================================ */
+.sidebar-header {
   height: auto !important;
-  min-height: 100vh !important;
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-  transition: left 0.25s;
-  background-color: var(--smriti-bg-dark) !important;
-  z-index: 1 !important;
-  overflow-y: auto !important;
+  min-height: 52px !important;
+  padding: 10px 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  border-bottom: 1px solid var(--smriti-border) !important;
+  margin-bottom: 8px !important;
 }
 
-/* Handle Collapsed Sidebar */
-body.smriti-user-layout:has(#smriti-sidebar.collapsed) .layout-main-section-wrapper {
-  left: 68px !important;
+.sidebar-header .sidebar-item-icon {
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: transparent !important;
 }
 
-body.smriti-user-layout .layout-container {
-  display: block !important; /* Back to block, since sidebar is fixed */
-  width: 100% !important;
-  max-width: 100vw !important;
+.sidebar-header .header-logo img {
+  max-height: 32px !important;
+  width: auto !important;
 }
+
+.sidebar-header .title-container {
+  margin-left: 10px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+.sidebar-header .header-title {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--smriti-text) !important;
+  line-height: 1.2 !important;
+}
+
+.sidebar-header .header-subtitle {
+  font-size: 11px !important;
+  color: var(--smriti-text-muted) !important;
+  margin-top: 2px !important;
+  line-height: 1.2 !important;
+}
+
+
 
