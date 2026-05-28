@@ -1,5 +1,5 @@
 /**
- * @file: smriti_retail_os/public/js/smriti_desk.js
+ * @file: smriti_retail_os/page/smriti-desk/smriti-desk.js
  * @description: Handles user login, registration, and JWT token generation.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
@@ -15,9 +15,14 @@
 frappe.pages['smriti-desk'].on_page_load = function(wrapper) {
     const page = frappe.ui.make_app_page({
         parent: wrapper,
-        title: 'SMRITI Control Center',
+        title: 'Control Center',
         single_column: true
     });
+
+    if (window.SMRITI && typeof SMRITI.renderSidebar === 'function') {
+        SMRITI.renderSidebar("desk");
+    }
+
     window.smriti_desk = new SmritiDeskPage(wrapper);
 };
 
@@ -54,7 +59,7 @@ class SmritiDeskPage {
                     <div class="desk-brand">
                         <div class="desk-brand-icon">🏪</div>
                         <div>
-                            <div class="desk-brand-title">SMRITI Retail OS</div>
+                            <div class="desk-brand-title">Control Center</div>
                             <div class="desk-brand-sub">Smarter Retail. Built for India.</div>
                         </div>
                     </div>
@@ -67,7 +72,7 @@ class SmritiDeskPage {
                 <!-- Welcome Section -->
                 <div class="desk-welcome-section">
                     <div class="desk-welcome-title">Welcome back, ${user_fullname}!</div>
-                    <div class="desk-welcome-desc">Here is the current operational status for SMRITI Retail OS.</div>
+                    <div class="desk-welcome-desc">Here is your current operational status.</div>
                 </div>
 
                 <!-- KPI Grid -->
@@ -109,35 +114,85 @@ class SmritiDeskPage {
                 </div>
                 <div class="action-grid">
                     <!-- Billing -->
-                    <div class="action-card billing-card" style="padding: 18px 24px;">
+                    <div class="action-card billing-card" style="padding: 18px 24px; display: flex; flex-direction: column;">
                         <div class="action-icon" style="margin-bottom: 8px;">🖥️</div>
-                        <div class="action-name" style="margin-bottom: 2px;">POS Billing</div>
-                        <div class="action-desc" style="margin-bottom: 12px;">Launch keyboard-driven Point-of-Sale checkout terminal.</div>
-                        <div class="action-buttons" style="display: flex; gap: 8px; width: 100%;">
-                            <button class="btn btn-primary btn-xs btn-desk-billing-std" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px;" data-route="smriti-billing">🖥️ Standard</button>
-                            <button class="btn btn-default btn-xs btn-desk-billing-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="window.smriti_desk.launch_popout()">📺 Popout POS</button>
+                        <div class="action-name" style="margin-bottom: 2px;">Retail Billing</div>
+                        <div class="action-desc" style="margin-bottom: 12px; flex: 1;">Launch checkout terminal and scan barcoded items.</div>
+                        <div class="action-buttons" style="display: flex; gap: 8px; width: 100%; margin-top: auto;">
+                            <button class="btn btn-primary btn-xs btn-desk-billing-std" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px;">🖥️ Standard</button>
+                            <button class="btn btn-default btn-xs btn-desk-billing-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/app/smriti-billing')">📺 Popout</button>
                         </div>
                     </div>
 
                     <!-- Shift -->
-                    <div class="action-card" data-route="smriti-shift">
-                        <div class="action-icon">🌅</div>
-                        <div class="action-name">Shift Manager</div>
-                        <div class="action-desc">Open cashier shift or count cash for Day Close.</div>
+                    <div class="action-card" style="padding: 18px 24px; display: flex; flex-direction: column;">
+                        <div class="action-icon" style="margin-bottom: 8px;">🌅</div>
+                        <div class="action-name" style="margin-bottom: 2px;">Day Open / Close</div>
+                        <div class="action-desc" style="margin-bottom: 12px; flex: 1;">Open cashier shift or count cash for Day Close.</div>
+                        <div class="action-buttons" style="display: flex; gap: 8px; width: 100%; margin-top: auto;">
+                            <button class="btn btn-primary btn-xs btn-desk-shift-std" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px;">🌅 Standard</button>
+                            <button class="btn btn-default btn-xs btn-desk-shift-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/app/smriti-shift')">📺 Popout</button>
+                        </div>
                     </div>
 
                     <!-- Inventory -->
-                    <div class="action-card" data-route="smriti-inventory">
-                        <div class="action-icon">📦</div>
-                        <div class="action-name">Inventory Audit</div>
-                        <div class="action-desc">Check current item stock counts and sync ledger.</div>
+                    <div class="action-card" style="padding: 18px 24px; display: flex; flex-direction: column;">
+                        <div class="action-icon" style="margin-bottom: 8px;">📦</div>
+                        <div class="action-name" style="margin-bottom: 2px;">Inventory Operations</div>
+                        <div class="action-desc" style="margin-bottom: 12px; flex: 1;">Check current item stock counts and sync ledger.</div>
+                        <div class="action-buttons" style="display: flex; gap: 8px; width: 100%; margin-top: auto;">
+                            <button class="btn btn-primary btn-xs btn-desk-inventory-std" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px;">📦 Standard</button>
+                            <button class="btn btn-default btn-xs btn-desk-inventory-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/app/smriti-inventory')">📺 Popout</button>
+                        </div>
+                    </div>
+
+                    <!-- Purchase -->
+                    <div class="action-card" style="padding: 18px 24px; display: flex; flex-direction: column;">
+                        <div class="action-icon" style="margin-bottom: 8px;">🛒</div>
+                        <div class="action-name" style="margin-bottom: 2px;">Purchase Management</div>
+                        <div class="action-desc" style="margin-bottom: 12px; flex: 1;">Manage Purchase Orders and record simple purchases.</div>
+                        <div class="action-buttons" style="display: flex; gap: 8px; width: 100%; margin-top: auto;">
+                            <button class="btn btn-primary btn-xs btn-desk-purchase-std" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px;">🛒 Standard</button>
+                            <button class="btn btn-default btn-xs btn-desk-purchase-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/app/smriti-purchase')">📺 Popout</button>
+                        </div>
                     </div>
 
                     <!-- Barcode -->
-                    <div class="action-card" data-route="smriti-barcode">
-                        <div class="action-icon">🏷️</div>
-                        <div class="action-name">Barcode Print</div>
-                        <div class="action-desc">Generate, inspect, and print retail price tags.</div>
+                    <div class="action-card" style="padding: 18px 24px; display: flex; flex-direction: column;">
+                        <div class="action-icon" style="margin-bottom: 8px;">🏷️</div>
+                        <div class="action-name" style="margin-bottom: 2px;">Barcode Printing</div>
+                        <div class="action-desc" style="margin-bottom: 12px; flex: 1;">Generate, inspect, and print retail price tags.</div>
+                        <div class="action-buttons" style="display: flex; gap: 8px; width: 100%; margin-top: auto;">
+                            <button class="btn btn-primary btn-xs btn-desk-barcode-std" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px;">🏷️ Standard</button>
+                            <button class="btn btn-default btn-xs btn-desk-barcode-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/app/smriti-barcode')">📺 Popout</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Masters -->
+                <div class="actions-title" style="margin-top: 40px;">
+                    <span>📖 Quick Masters</span>
+                </div>
+                <div class="action-grid">
+                    <!-- Add Item -->
+                    <div class="action-card master-action" data-type="item">
+                        <div class="action-icon">🛍️</div>
+                        <div class="action-name">Add Product</div>
+                        <div class="action-desc">Quickly create a new retail item with barcode and price.</div>
+                    </div>
+
+                    <!-- Add Customer -->
+                    <div class="action-card master-action" data-type="customer">
+                        <div class="action-icon">🤝</div>
+                        <div class="action-name">Add Customer</div>
+                        <div class="action-desc">Onboard a new customer for loyalty and billing.</div>
+                    </div>
+
+                    <!-- Add Supplier -->
+                    <div class="action-card master-action" data-type="supplier">
+                        <div class="action-icon">🚛</div>
+                        <div class="action-name">Add Supplier</div>
+                        <div class="action-desc">Add a new supplier for purchase orders and GRN.</div>
                     </div>
                 </div>
 
@@ -203,22 +258,110 @@ class SmritiDeskPage {
             }
         });
 
+        // Bind standard action buttons
         $('#smriti-desk-root .btn-desk-billing-std').on('click', (e) => {
             e.stopPropagation();
             frappe.set_route('smriti-billing');
         });
+        $('#smriti-desk-root .btn-desk-shift-std').on('click', (e) => {
+            e.stopPropagation();
+            frappe.set_route('smriti-shift');
+        });
+        $('#smriti-desk-root .btn-desk-inventory-std').on('click', (e) => {
+            e.stopPropagation();
+            frappe.set_route('smriti-inventory');
+        });
+        $('#smriti-desk-root .btn-desk-purchase-std').on('click', (e) => {
+            e.stopPropagation();
+            frappe.set_route('smriti-purchase');
+        });
+        $('#smriti-desk-root .btn-desk-barcode-std').on('click', (e) => {
+            e.stopPropagation();
+            frappe.set_route('smriti-barcode');
+        });
+
+        // Bind master action clicks
+        $('#smriti-desk-root .master-action').on('click', (e) => {
+            const type = $(e.currentTarget).data('type');
+            if (type === 'item') this.quick_add_item();
+            else if (type === 'customer') this.quick_add_customer();
+            else if (type === 'supplier') this.quick_add_supplier();
+        });
     }
 
-    launch_popout() {
-        const url = window.location.origin + "/app/smriti-billing?popout=true";
-        const w = screen.width - 60;
-        const h = screen.height - 60;
-        const left = 30;
-        const top = 30;
-        const win = window.open(url, "SMRITI Billing Terminal", `width=${w},height=${h},top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`);
-        if (win) {
-            win.focus();
-        }
+    quick_add_item() {
+        let d = new frappe.ui.Dialog({
+            title: __('📖 Quick Add Product'),
+            fields: [
+                { label: __('Barcode'), fieldname: 'barcode', fieldtype: 'Data', reqd: 1 },
+                { label: __('Item Name'), fieldname: 'item_name', fieldtype: 'Data', reqd: 1 },
+                { label: __('Selling Price'), fieldname: 'rate', fieldtype: 'Currency', reqd: 1 },
+                { label: __('MRP'), fieldname: 'mrp', fieldtype: 'Currency', reqd: 1 },
+                { label: __('GST %'), fieldname: 'gst_percentage', fieldtype: 'Select', options: '0\n5\n12\n18\n28', default: '18' }
+            ],
+            primary_action_label: __('Create Product'),
+            primary_action(values) {
+                frappe.call({
+                    method: "smriti_retail_os.master_api.quick_create_item",
+                    args: values,
+                    callback: function(r) {
+                        if (r.message) {
+                            frappe.show_alert({message: __("Product Created Successfully"), indicator: 'green'});
+                            d.hide();
+                        }
+                    }
+                });
+            }
+        });
+        d.show();
+    }
+
+    quick_add_customer() {
+        let d = new frappe.ui.Dialog({
+            title: __('🤝 Quick Add Customer'),
+            fields: [
+                { label: __('Full Name'), fieldname: 'customer_name', fieldtype: 'Data', reqd: 1 },
+                { label: __('Mobile Number'), fieldname: 'mobile_no', fieldtype: 'Data' }
+            ],
+            primary_action_label: __('Create Customer'),
+            primary_action(values) {
+                frappe.call({
+                    method: "smriti_retail_os.master_api.quick_create_customer",
+                    args: values,
+                    callback: function(r) {
+                        if (r.message) {
+                            frappe.show_alert({message: __("Customer Created Successfully"), indicator: 'green'});
+                            d.hide();
+                        }
+                    }
+                });
+            }
+        });
+        d.show();
+    }
+
+    quick_add_supplier() {
+        let d = new frappe.ui.Dialog({
+            title: __('🚛 Quick Add Supplier'),
+            fields: [
+                { label: __('Supplier Name'), fieldname: 'supplier_name', fieldtype: 'Data', reqd: 1 },
+                { label: __('Contact Number'), fieldname: 'mobile_no', fieldtype: 'Data' }
+            ],
+            primary_action_label: __('Create Supplier'),
+            primary_action(values) {
+                frappe.call({
+                    method: "smriti_retail_os.master_api.quick_create_supplier",
+                    args: values,
+                    callback: function(r) {
+                        if (r.message) {
+                            frappe.show_alert({message: __("Supplier Created Successfully"), indicator: 'green'});
+                            d.hide();
+                        }
+                    }
+                });
+            }
+        });
+        d.show();
     }
 
     // ─── Load Dashboard Data ──────────────────────────────────
@@ -280,10 +423,9 @@ class SmritiDeskPage {
                 <div class="alert-item danger">
                     <div class="alert-item-icon">⚠️</div>
                     <div class="alert-item-content">
-                        No active shift opened! You must open a shift in <strong>Shift Manager</strong> before POS Billing.
+                        No active shift opened! You must open a shift in <strong>Day Open / Close</strong> before Retail Billing.
                         <div class="alert-item-time">Action Required</div>
-                    </div>
-                </div>
+                    </div>                </div>
             `);
         }
     }

@@ -21,6 +21,9 @@ var SMRITI_LOGO  = '/assets/smriti_retail_os/images/logo.svg';
 var SMRITI_BRAND = 'SMRITI Retail OS';
 var SMRITI_YEAR  = new Date().getFullYear();
 
+// Global Fallback for India Compliance GST settings to prevent depends_on evaluation crashes
+window.gst_settings = window.gst_settings || {};
+
 /* ── 1. Favicon + initial title ─────────────────────────────────────────── */
 (function () {
     document.title = SMRITI_BRAND;
