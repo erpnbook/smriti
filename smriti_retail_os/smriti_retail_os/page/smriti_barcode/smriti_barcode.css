@@ -1,31 +1,32 @@
-/* SMRITI Retail OS - Premium Glassmorphic Barcode Printing Stylesheet */
+/* SMRITI Retail OS - Premium Light Mode Barcode Printing Stylesheet */
 
 :root {
-    --smriti-bg: #0b0f19;
-    --smriti-card-bg: rgba(17, 24, 39, 0.7);
-    --smriti-glass-border: rgba(255, 255, 255, 0.08);
-    --smriti-text: #f3f4f6;
-    --smriti-text-muted: #9ca3af;
-    --smriti-primary: #6366f1;
-    --smriti-primary-glow: rgba(99, 102, 241, 0.4);
-    --smriti-accent: #0d9488;
-    --smriti-accent-glow: rgba(13, 148, 136, 0.35);
-    --smriti-danger: #e11d48;
-    --smriti-danger-glow: rgba(225, 29, 72, 0.35);
-    --smriti-success: #10b981;
-    --smriti-success-glow: rgba(16, 185, 129, 0.35);
-    --smriti-amber: #f59e0b;
+    --smriti-bg: #f9fafb;
+    --smriti-card-bg: #ffffff;
+    --smriti-glass-border: #eaecf0;
+    --smriti-text: #1d2939;
+    --smriti-text-muted: #475467;
+    --smriti-primary: #6941c6;
+    --smriti-primary-glow: rgba(105, 65, 198, 0.15);
+    --smriti-accent: #0e7490;
+    --smriti-accent-glow: rgba(14, 116, 144, 0.15);
+    --smriti-danger: #d92d20;
+    --smriti-danger-glow: rgba(217, 45, 32, 0.1);
+    --smriti-success: #039855;
+    --smriti-success-glow: rgba(3, 152, 85, 0.1);
+    --smriti-amber: #b54708;
 }
 
 /* Main Screen Wrapper */
 .smriti-barcode-container {
-    background-color: var(--smriti-bg);
-    color: var(--smriti-text);
+    background-color: var(--smriti-bg) !important;
+    color: var(--smriti-text) !important;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     padding: 20px;
     border-radius: 12px;
     min-height: 82vh;
-    box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid #eaecf0 !important;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -36,9 +37,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: var(--smriti-card-bg);
-    border: 1px solid var(--smriti-glass-border);
-    backdrop-filter: blur(12px);
+    background: var(--smriti-card-bg) !important;
+    border: 1px solid var(--smriti-glass-border) !important;
     padding: 10px 20px;
     border-radius: 10px;
 }
@@ -49,9 +49,9 @@
 }
 
 .smriti-mode-btn {
-    background: rgba(31, 41, 55, 0.5);
-    border: 1px solid var(--smriti-glass-border);
-    color: var(--smriti-text-muted);
+    background: #ffffff !important;
+    border: 1px solid #d0d5dd !important;
+    color: var(--smriti-text-muted) !important;
     padding: 8px 16px;
     border-radius: 6px;
     font-weight: 600;
@@ -60,24 +60,24 @@
 }
 
 .smriti-mode-btn:hover {
-    color: var(--smriti-text);
-    border-color: var(--smriti-primary);
+    color: var(--smriti-text) !important;
+    border-color: var(--smriti-primary) !important;
 }
 
 .smriti-mode-btn.active {
-    color: white;
-    background: linear-gradient(135deg, var(--smriti-primary), #4f46e5);
-    border-color: var(--smriti-primary);
-    box-shadow: 0 0 12px var(--smriti-primary-glow);
+    color: white !important;
+    background: linear-gradient(135deg, var(--smriti-primary), #53389e) !important;
+    border-color: var(--smriti-primary) !important;
+    box-shadow: 0 0 12px var(--smriti-primary-glow) !important;
 }
 
 .smriti-shortcuts-hint {
     font-size: 0.9em;
-    color: var(--smriti-text-muted);
+    color: var(--smriti-text-muted) !important;
 }
 
 .smriti-shortcuts-hint b {
-    color: var(--smriti-primary);
+    color: var(--smriti-primary) !important;
 }
 
 /* Widescreen Panel Split */
@@ -101,16 +101,15 @@
 }
 
 .smriti-header-fields-card {
-    background: var(--smriti-card-bg);
-    border: 1px solid var(--smriti-glass-border);
-    backdrop-filter: blur(12px);
+    background: var(--smriti-card-bg) !important;
+    border: 1px solid var(--smriti-glass-border) !important;
     border-radius: 10px;
     padding: 15px 20px;
 }
 
 .s-label {
     font-size: 0.85em;
-    color: var(--smriti-text-muted);
+    color: var(--smriti-text-muted) !important;
     font-weight: 600;
     margin-bottom: 6px;
     text-transform: uppercase;
@@ -119,9 +118,9 @@
 }
 
 .s-input {
-    background: rgba(17, 24, 39, 0.8) !important;
-    border: 1px solid var(--smriti-glass-border) !important;
-    color: white !important;
+    background: #ffffff !important;
+    border: 1px solid #d0d5dd !important;
+    color: var(--smriti-text) !important;
     font-size: 0.95em !important;
     font-weight: 500 !important;
     border-radius: 6px !important;
@@ -137,9 +136,8 @@
 
 /* Cart Grid Table wrapper */
 .billing-table-wrapper {
-    background: var(--smriti-card-bg);
-    border: 1px solid var(--smriti-glass-border);
-    backdrop-filter: blur(12px);
+    background: var(--smriti-card-bg) !important;
+    border: 1px solid var(--smriti-glass-border) !important;
     border-radius: 10px;
     padding: 15px;
     flex-grow: 1;
@@ -153,9 +151,9 @@
 }
 
 #smriti-barcode-table th {
-    background-color: rgba(31, 41, 55, 0.5);
-    border-color: var(--smriti-glass-border);
-    color: var(--smriti-text-muted);
+    background-color: #f9fafb !important;
+    border-color: var(--smriti-glass-border) !important;
+    color: var(--smriti-text-muted) !important;
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.85em;
@@ -164,8 +162,8 @@
 }
 
 #smriti-barcode-table td {
-    border-color: var(--smriti-glass-border);
-    color: var(--smriti-text);
+    border-color: var(--smriti-glass-border) !important;
+    color: var(--smriti-text) !important;
     vertical-align: middle;
     padding: 10px 8px;
 }
@@ -177,9 +175,9 @@
 }
 
 .grid-qty-input {
-    background: rgba(31, 41, 55, 0.6) !important;
-    border: 1px solid var(--smriti-glass-border) !important;
-    color: white !important;
+    background: #ffffff !important;
+    border: 1px solid #d0d5dd !important;
+    color: var(--smriti-text) !important;
     font-weight: 600 !important;
     border-radius: 4px;
     padding: 5px !important;
@@ -197,7 +195,7 @@
 }
 
 .barcode-row:hover {
-    background: rgba(255, 255, 255, 0.03) !important;
+    background: rgba(0, 0, 0, 0.02) !important;
 }
 
 /* Empty View state */
@@ -207,7 +205,7 @@
     align-items: center;
     justify-content: center;
     padding: 80px 0;
-    color: var(--smriti-text-muted);
+    color: var(--smriti-text-muted) !important;
 }
 
 .empty-icon {
@@ -224,9 +222,8 @@
 }
 
 .summary-card, .payment-drawer-card {
-    background: var(--smriti-card-bg);
-    border: 1px solid var(--smriti-glass-border);
-    backdrop-filter: blur(12px);
+    background: var(--smriti-card-bg) !important;
+    border: 1px solid var(--smriti-glass-border) !important;
     border-radius: 10px;
     padding: 15px;
 }
@@ -234,10 +231,10 @@
 .summary-header, .payment-drawer-header {
     font-weight: 700;
     font-size: 0.95em;
-    color: var(--smriti-primary);
+    color: var(--smriti-primary) !important;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 1px solid var(--smriti-glass-border);
+    border-bottom: 1px solid var(--smriti-glass-border) !important;
     padding-bottom: 8px;
     margin-bottom: 12px;
 }
@@ -247,18 +244,18 @@
     justify-content: center;
     align-items: center;
     padding: 15px 0;
-    background: rgba(0, 0, 0, 0.3);
+    background: #f2f4f7 !important;
     border-radius: 8px;
-    border: 1px dashed var(--smriti-glass-border);
+    border: 1px dashed var(--smriti-glass-border) !important;
 }
 
 /* Simulated Label Card */
 .smriti-simulated-label {
-    background: #ffffff;
-    color: #000000;
+    background: #ffffff !important;
+    color: #000000 !important;
     border-radius: 4px;
     padding: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -342,7 +339,7 @@
 }
 
 .summary-label {
-    color: var(--smriti-text-muted);
+    color: var(--smriti-text-muted) !important;
 }
 
 .summary-val {
@@ -354,22 +351,22 @@
 }
 
 .summary-val.highlight {
-    color: var(--smriti-amber);
-    text-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+    color: var(--smriti-amber) !important;
+    text-shadow: none !important;
     font-size: 1.25em;
     font-weight: 700;
 }
 
 .summary-divider {
-    border-top: 1px solid var(--smriti-glass-border);
+    border-top: 1px solid var(--smriti-glass-border) !important;
     margin: 10px 0;
 }
 
 /* Commit print save buttons */
 .btn-checkout-save {
-    background: linear-gradient(135deg, var(--smriti-accent), #0f766e);
+    background: linear-gradient(135deg, var(--smriti-accent), #0b5a70) !important;
     border: none;
-    color: white;
+    color: white !important;
     font-weight: 700;
     font-size: 1.1em;
     padding: 10px;
@@ -380,5 +377,5 @@
 
 .btn-checkout-save:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px var(--smriti-accent-glow);
+    box-shadow: 0 5px 15px var(--smriti-accent-glow) !important;
 }
