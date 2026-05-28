@@ -271,3 +271,27 @@ body.smriti-sidebar-right .body-sidebar-container.expanded .overlay {
   font-size: 20px !important;
   line-height: 1 !important;
 }
+
+/* ============================================================
+   NAVBAR BREADCRUMBS — Disabled (non-clickable) on SMRITI pages
+   Keeps breadcrumbs visible for context but removes navigation.
+   pointer-events: none  → no click, no hover highlight
+   cursor: default       → arrow cursor instead of hand
+   ============================================================ */
+body.smriti-sidebar-active .navbar-breadcrumbs a,
+body.smriti-sidebar-active .navbar-breadcrumbs .nav-link,
+body.smriti-sidebar-active ul.navbar-breadcrumbs a,
+body.smriti-sidebar-active ul.navbar-breadcrumbs li a {
+  pointer-events: none !important;
+  cursor: default !important;
+  text-decoration: none !important;
+  /* Slightly dim to visually signal disabled state */
+  opacity: 0.55 !important;
+}
+
+/* Keep the last breadcrumb (current page) at full opacity */
+body.smriti-sidebar-active .navbar-breadcrumbs li:last-child a,
+body.smriti-sidebar-active ul.navbar-breadcrumbs li:last-child a {
+  opacity: 1 !important;
+  color: var(--smriti-text, #101828) !important;
+}
