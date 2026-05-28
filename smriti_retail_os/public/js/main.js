@@ -578,19 +578,15 @@ function _sidebar_lockdown() {
 
 function _is_smriti_user() {
     if (!window.frappe || !frappe.session) return false;
+    if (frappe.session.user === "Guest") return false;
     
-    var active_page = get_smriti_active_page();
     var roles = frappe.user_roles || [];
-    var is_retail = roles.includes("SMRITI Cashier") || roles.includes("SMRITI Store Manager");
-    var is_admin = roles.includes("System Manager");
-
     // Retail users always get the SMRITI layout
-    if (is_retail) return true;
+    if (roles.includes("SMRITI Cashier") || roles.includes("SMRITI Store Manager")) return true;
 
-    // Admin (System Manager) gets SMRITI layout ONLY when on a SMRITI page
-    if (is_admin) {
-        return !!active_page;
-    }
+    // System Manager: since this is a SMRITI-branded install, always show our sidebar
+    // so admins can navigate SMRITI pages easily
+    if (roles.includes("System Manager")) return true;
 
     return false;
 }
@@ -601,10 +597,13 @@ function get_smriti_active_page() {
     if (route.length === 0) return null;
     
     var page_name = route[0];
-    if (page_name === "smriti-retail-os") return "desk";
-    if ((page_name === "workspace" || page_name === "workspaces") && 
-        (route[1] === "SMRITI Retail OS" || route[1] === "smriti-retail-os")) {
-        return "desk";
+    var page_name_lower = (page_name || "").toLowerCase();
+    
+    // Workspace routes — check both slug and human-readable name
+    if (page_name_lower === "smriti-retail-os") return "desk";
+    if (page_name_lower === "workspace" || page_name_lower === "workspaces") {
+        var ws_name = (route[1] || "").toLowerCase().replace(/\s+/g, "-");
+        if (ws_name === "smriti-retail-os" || ws_name.includes("smriti")) return "desk";
     }
     
     if (page_name === "smriti-billing")   return "billing";
@@ -615,6 +614,7 @@ function get_smriti_active_page() {
     if (page_name === "smriti-shift")     return "shift";
     if (page_name === "smriti-reports")   return "reports";
     if (page_name === "smriti-loyalty")   return "loyalty";
+    if (page_name === "smriti-item-master") return "item_import";
     if (page_name === "customer" || route[1] === "Customer") return "customers";
     if (page_name === "item" || route[1] === "Item") return "products";
     if (page_name === "supplier" || route[1] === "Supplier") return "suppliers";
