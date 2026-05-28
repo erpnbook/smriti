@@ -5,7 +5,6 @@
 window.SMRITI = window.SMRITI || {};
 
 SMRITI.renderSidebar = function(active_page) {
-    return; // DISABLED: Use standard Frappe sidebar
 
     // 3. Remove existing SMRITI sidebar if present
     document.getElementById("smriti-sidebar")?.remove();

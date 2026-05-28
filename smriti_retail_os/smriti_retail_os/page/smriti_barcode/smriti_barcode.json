@@ -1,10 +1,10 @@
 {
  "content": null,
- "creation": "2026-05-26 19:38:12.836376",
+ "creation": "2026-05-26 14:00:00",
  "docstatus": 0,
  "doctype": "Page",
  "idx": 0,
- "modified": "2026-05-26 19:38:12.836376",
+ "modified": "2026-05-26 14:00:00",
  "modified_by": "Administrator",
  "module": "SMRITI Retail OS",
  "name": "smriti-barcode",
@@ -18,9 +18,6 @@
    "role": "System Manager"
   }
  ],
- "script": null,
  "standard": "Yes",
- "style": null,
- "system_page": 0,
- "title": "SMRITI Barcode Printing"
+ "title": "Barcode Printing"
 }

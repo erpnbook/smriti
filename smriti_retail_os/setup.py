@@ -16,7 +16,8 @@ def setup_smriti_retail_os():
                 "label": "Is SMRITI User",
                 "fieldtype": "Check",
                 "insert_after": "role_profile_name",
-                "default": "1"
+                "default": "1",
+                "module": "SMRITI Retail OS"
             }
         ],
         "POS Invoice": [
@@ -26,7 +27,8 @@ def setup_smriti_retail_os():
                 "fieldtype": "Check",
                 "insert_after": "status",
                 "read_only": 1,
-                "default": "0"
+                "default": "0",
+                "module": "SMRITI Retail OS"
             },
             {
                 "fieldname": "custom_held_by",
@@ -34,14 +36,16 @@ def setup_smriti_retail_os():
                 "fieldtype": "Link",
                 "options": "User",
                 "insert_after": "custom_is_held",
-                "read_only": 1
+                "read_only": 1,
+                "module": "SMRITI Retail OS"
             },
             {
                 "fieldname": "custom_hold_time",
                 "label": "Hold Time",
                 "fieldtype": "Datetime",
                 "insert_after": "custom_held_by",
-                "read_only": 1
+                "read_only": 1,
+                "module": "SMRITI Retail OS"
             }
         ],
         "Item": [
@@ -50,41 +54,47 @@ def setup_smriti_retail_os():
                 "label": "MRP (Maximum Retail Price)",
                 "fieldtype": "Currency",
                 "insert_after": "standard_rate",
-                "bold": 1
+                "bold": 1,
+                "module": "SMRITI Retail OS"
             },
             {
                 "fieldname": "custom_gst_percentage",
                 "label": "GST Percentage (%)",
                 "fieldtype": "Select",
                 "options": "\n0\n5\n12\n18\n28",
-                "insert_after": "custom_mrp"
+                "insert_after": "custom_mrp",
+                "module": "SMRITI Retail OS"
             },
             {
                 "fieldname": "custom_is_retail_item",
                 "label": "Is Retail Item",
                 "fieldtype": "Check",
                 "default": "1",
-                "insert_after": "custom_gst_percentage"
+                "insert_after": "custom_gst_percentage",
+                "module": "SMRITI Retail OS"
             },
             {
                 "fieldname": "custom_department",
                 "label": "Department",
                 "fieldtype": "Link",
                 "options": "Item Group",
-                "insert_after": "custom_is_retail_item"
+                "insert_after": "custom_is_retail_item",
+                "module": "SMRITI Retail OS"
             },
             {
                 "fieldname": "custom_barcode_size",
                 "label": "Barcode Size",
                 "fieldtype": "Select",
                 "options": "\n50x25\n50x30\n75x50\n100x50",
-                "insert_after": "custom_department"
+                "insert_after": "custom_department",
+                "module": "SMRITI Retail OS"
             },
             {
                 "fieldname": "custom_current_stock_html",
                 "label": "Current Stock HTML",
                 "fieldtype": "HTML",
-                "insert_after": "custom_barcode_size"
+                "insert_after": "custom_barcode_size",
+                "module": "SMRITI Retail OS"
             }
         ],
         "Customer": [
@@ -92,19 +102,22 @@ def setup_smriti_retail_os():
                 "fieldname": "custom_address_text",
                 "label": "Address Text",
                 "fieldtype": "Small Text",
-                "insert_after": "customer_name"
+                "insert_after": "customer_name",
+                "module": "SMRITI Retail OS"
             },
             {
                 "fieldname": "custom_birthday",
                 "label": "Birthday",
                 "fieldtype": "Date",
-                "insert_after": "custom_address_text"
+                "insert_after": "custom_address_text",
+                "module": "SMRITI Retail OS"
             },
             {
                 "fieldname": "custom_anniversary",
                 "label": "Anniversary",
                 "fieldtype": "Date",
-                "insert_after": "custom_birthday"
+                "insert_after": "custom_birthday",
+                "module": "SMRITI Retail OS"
             }
         ],
         "Supplier": [
@@ -112,18 +125,28 @@ def setup_smriti_retail_os():
                 "fieldname": "custom_address_text",
                 "label": "Address Text",
                 "fieldtype": "Small Text",
-                "insert_after": "supplier_name"
+                "insert_after": "supplier_name",
+                "module": "SMRITI Retail OS"
             },
             {
                 "fieldname": "custom_credit_days",
                 "label": "Credit Days",
                 "fieldtype": "Int",
-                "insert_after": "custom_address_text"
+                "insert_after": "custom_address_text",
+                "module": "SMRITI Retail OS"
             }
         ]
     }
 
     create_custom_fields(custom_fields, ignore_validate=True)
+
+    # Force sync all existing Custom Fields to SMRITI Retail OS module in the database
+    for dt, fields in custom_fields.items():
+        for f in fields:
+            fieldname = f.get("fieldname")
+            custom_field_name = f"{dt}-{fieldname}"
+            if frappe.db.exists("Custom Field", custom_field_name):
+                frappe.db.set_value("Custom Field", custom_field_name, "module", "SMRITI Retail OS")
 
     # 2. Role Provisioning
     # Clean up custom SMRITI PIN from User DocType if it exists
@@ -141,6 +164,12 @@ def setup_smriti_retail_os():
     # 3. Programmatic Workspace Provisioning
     workspace_name = "SMRITI Retail OS"
     required_links = [
+        # Card 1: Quick Access
+        {
+            "label": "Quick Access",
+            "type": "Card Break",
+            "icon": "desktop"
+        },
         {
             "label": "Retail Billing",
             "type": "Link",
@@ -169,6 +198,13 @@ def setup_smriti_retail_os():
             "link_to": "smriti-barcode",
             "label_for_links": "Transaction-based or bulk label printing."
         },
+
+        # Card 2: Master Data
+        {
+            "label": "Master Data",
+            "type": "Card Break",
+            "icon": "database"
+        },
         {
             "label": "Products",
             "type": "Link",
@@ -190,6 +226,13 @@ def setup_smriti_retail_os():
             "link_to": "Supplier",
             "label_for_links": "Simplified supplier credit terms tracker."
         },
+
+        # Card 3: Operations & Marketing
+        {
+            "label": "Operations & Marketing",
+            "type": "Card Break",
+            "icon": "settings"
+        },
         {
             "label": "Loyalty & Promotions",
             "type": "Link",
@@ -206,27 +249,69 @@ def setup_smriti_retail_os():
         }
     ]
 
+    blocks = [
+        {
+            "id": "hdr_smriti",
+            "type": "header",
+            "data": {
+                "text": "<span class=\"h4\"><b>SMRITI Retail Operations</b></span>",
+                "col": 12
+            }
+        },
+        {
+            "id": "card_quick_access",
+            "type": "card",
+            "data": {
+                "card_name": "Quick Access",
+                "col": 4
+            }
+        },
+        {
+            "id": "card_master_data",
+            "type": "card",
+            "data": {
+                "card_name": "Master Data",
+                "col": 4
+            }
+        },
+        {
+            "id": "card_ops_marketing",
+            "type": "card",
+            "data": {
+                "card_name": "Operations & Marketing",
+                "col": 4
+            }
+        }
+    ]
+    workspace_content = json.dumps(blocks)
+
     if frappe.db.exists("Workspace", workspace_name):
         ws = frappe.get_doc("Workspace", workspace_name)
         ws.links = []
         for l in required_links:
             ws.append("links", l)
+        ws.module = "Selling"
+        ws.content = workspace_content
+        ws.public = 1
         ws.flags.ignore_links = True
         ws.save(ignore_permissions=True)
-        print(f"Updated standard SMRITI Workspace: {workspace_name}")
+        print(f"Updated SMRITI Workspace: {workspace_name}")
     else:
         ws = frappe.new_doc("Workspace")
         ws.label = workspace_name
         ws.title = workspace_name
         ws.icon = "shopping-cart"
         ws.public = 1
-        ws.is_standard = 1
-        ws.module = "Custom"
+        ws.module = "Selling"
         for l in required_links:
             ws.append("links", l)
+        ws.content = workspace_content
         ws.flags.ignore_links = True
         ws.insert(ignore_permissions=True)
         print(f"Created custom SMRITI Workspace: {workspace_name}")
+
+    frappe.db.set_value("Workspace", workspace_name, "module", "Selling")
+    frappe.db.set_value("Workspace", workspace_name, "public", 1)
 
     # 4. Programmatic Role Permissions setup
     doctype_permissions = {

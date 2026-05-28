@@ -28,23 +28,68 @@ class SmritiBillingController {
         this.bind_keyboard_shortcuts();
         this.bind_actions();
         this.fetch_loyalty_details();
+        this.apply_popout_branding();
         this.focus_barcode();
+    }
+
+    apply_popout_branding() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('popout') === 'true') {
+            // Apply a class to document body to trigger whitelabeling
+            $('body').addClass('smriti-popout-active');
+            
+            // Hide ERPNext standard elements
+            setTimeout(() => {
+                $('.navbar').hide();
+                $('#smriti-sidebar, .desk-sidebar, .layout-side-section').hide();
+                
+                // Adjust page containers to be full screen
+                $('.page-container, .layout-main-section, .page-head').css({
+                    'padding': '0',
+                    'margin': '0',
+                    'max-width': '100vw',
+                    'height': '100vh',
+                    'border': 'none',
+                    'border-radius': '0'
+                });
+                
+                // Hide standard page title header
+                $('.page-head').hide();
+            }, 100);
+            
+            // Automatically prompt fullscreen on first click
+            $(document).one('click keydown', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {});
+                }
+            });
+        }
     }
 
     setup_layout() {
         this.wrapper.find(".layout-main-section").html(`
             <div class="smriti-billing-container">
                 <!-- Top Navbar: Status indicators -->
-                <div class="smriti-top-nav">
-                    <div class="smriti-cashier-badge">
-                        <span class="badge-dot green"></span>
-                        <span class="badge-label">${__('Cashier')}: <b>${this.cashier}</b></span>
+                <div class="smriti-top-nav" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        <div class="smriti-cashier-badge">
+                            <span class="badge-dot green"></span>
+                            <span class="badge-label">${__('Cashier')}: <b>${this.cashier}</b></span>
+                        </div>
+                        <div class="smriti-active-invoice">
+                            <span class="invoice-number">${__('Invoice')}: <b id="smriti-invoice-id">NEW BILL</b></span>
+                        </div>
                     </div>
-                    <div class="smriti-active-invoice">
-                        <span class="invoice-number">${__('Invoice')}: <b id="smriti-invoice-id">NEW BILL</b></span>
-                    </div>
-                    <div class="smriti-shortcuts-hint">
+                    <div class="smriti-shortcuts-hint" style="margin: 0 auto; padding: 0 10px;">
                         <span><b>F2</b> Search | <b>F3</b> Customer | <b>F4</b> Hold | <b>F5</b> Recall | <b>F6</b> Checkout</span>
+                    </div>
+                    <div class="smriti-top-nav-actions" style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn btn-default btn-xs btn-smriti-fullscreen" style="padding: 6px 12px; font-size: 11px; background: rgba(31,41,55,0.6); border: 1px solid rgba(255,255,255,0.08); color: white; border-radius: 6px; display: flex; align-items: center; gap: 4px;" title="Toggle Fullscreen Mode">
+                            <span class="material-symbols-outlined" style="font-size: 14px; color: white;">fullscreen</span> <b>Fullscreen</b>
+                        </button>
+                        <button class="btn btn-default btn-xs btn-smriti-popout" style="padding: 6px 12px; font-size: 11px; background: rgba(99,102,241,0.6); border: 1px solid rgba(255,255,255,0.08); color: white; border-radius: 6px; display: flex; align-items: center; gap: 4px;" title="Open in Popout Window">
+                            <span class="material-symbols-outlined" style="font-size: 14px; color: white;">open_in_new</span> <b>Popout</b>
+                        </button>
                     </div>
                 </div>
 
@@ -211,6 +256,33 @@ class SmritiBillingController {
         $("#smriti-btn-cust-lookup").off("click").on("click", () => me.trigger_customer_lookup());
         $("#smriti-btn-scan-camera").off("click").on("click", () => me.trigger_camera_scanner());
         $("#smriti-btn-checkout").off("click").on("click", () => me.checkout_and_save_invoice());
+
+        $(".btn-smriti-fullscreen").off("click").on("click", () => me.toggle_fullscreen());
+        $(".btn-smriti-popout").off("click").on("click", () => me.popout_terminal());
+    }
+
+    toggle_fullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    }
+
+    popout_terminal() {
+        const url = window.location.origin + "/app/smriti-billing?popout=true";
+        const w = screen.width - 60;
+        const h = screen.height - 60;
+        const left = 30;
+        const top = 30;
+        const win = window.open(url, "SMRITI Billing Terminal", `width=${w},height=${h},top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`);
+        if (win) {
+            win.focus();
+        }
     }
 
     focus_barcode() {

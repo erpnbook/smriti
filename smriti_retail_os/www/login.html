@@ -81,11 +81,13 @@ body {
 }
 
 .login-card {
-    background: #16213e;
-    border: 1px solid #2a3a5c;
+    background: rgba(22, 33, 94, 0.85) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(42, 58, 92, 0.7);
     border-radius: 16px;
     padding: 40px;
-    box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+    box-shadow: 0 24px 48px rgba(0,0,0,0.6), 0 0 30px rgba(233,69,96,0.05);
 }
 
 /* Logo area */
@@ -107,18 +109,24 @@ body {
     font-size: 28px;
     margin: 0 auto 16px;
     box-shadow: 0 8px 24px rgba(233,69,96,0.3);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+
+.brand-logo:hover {
+    transform: rotate(6deg) scale(1.08);
+    box-shadow: 0 12px 28px rgba(233,69,96,0.5);
 }
 
 .brand-name {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #e2e8f0;
+    color: #f8fafc;
     letter-spacing: 0.3px;
 }
 
 .brand-sub {
     font-size: 0.85rem;
-    color: #8892a4;
+    color: #94a3b8;
     margin-top: 4px;
 }
 
@@ -131,7 +139,7 @@ body {
     display: block;
     font-size: 0.85rem;
     font-weight: 500;
-    color: #8892a4;
+    color: #94a3b8;
     margin-bottom: 8px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -140,23 +148,44 @@ body {
 .form-input {
     width: 100%;
     padding: 12px 16px;
-    background: #1a2744;
-    border: 1px solid #2a3a5c;
+    background: #1a2744 !important;
+    border: 1px solid #2a3a5c !important;
     border-radius: 8px;
-    color: #e2e8f0;
+    color: #f8fafc !important;
     font-size: 0.95rem;
     font-family: 'Inter', sans-serif;
-    transition: all 0.2s;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     outline: none;
 }
 
+.form-input:hover {
+    border-color: #3b4f7c !important;
+}
+
 .form-input:focus {
-    border-color: #e94560;
-    box-shadow: 0 0 0 3px rgba(233,69,96,0.15);
+    border-color: #e94560 !important;
+    box-shadow: 0 0 0 3px rgba(233,69,96,0.25) !important;
+    background: #1e2d4e !important;
 }
 
 .form-input::placeholder {
-    color: #4a5568;
+    color: #4b5b7c;
+}
+
+/* Force browser autofill styles to blend beautifully into the dark mode layout */
+.form-input:-webkit-autofill,
+.form-input:-webkit-autofill:hover,
+.form-input:-webkit-autofill:focus,
+.form-input:-webkit-autofill:active {
+    -webkit-text-fill-color: #f8fafc !important;
+    -webkit-box-shadow: 0 0 0 1000px #1a2744 inset !important;
+    border: 1px solid #2a3a5c !important;
+    transition: background-color 50000s ease-in-out 0s;
+}
+
+.form-input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px #1e2d4e inset !important;
+    border-color: #e94560 !important;
 }
 
 /* Login button */
@@ -173,14 +202,17 @@ body {
     font-weight: 600;
     font-family: 'Inter', sans-serif;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     margin-top: 8px;
     letter-spacing: 0.3px;
 }
 
 .btn-login:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(233,69,96,0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(233,69,96,0.45);
+    background: linear-gradient(
+        135deg, #f05470, #d63e5b
+    );
 }
 
 .btn-login:active {

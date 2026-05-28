@@ -99,10 +99,14 @@ class SmritiDeskPage {
                 </div>
                 <div class="action-grid">
                     <!-- Billing -->
-                    <div class="action-card" data-route="smriti-billing">
-                        <div class="action-icon">🖥️</div>
-                        <div class="action-name">POS Billing</div>
-                        <div class="action-desc">Launch checkout terminal and scan barcoded items.</div>
+                    <div class="action-card billing-card" style="padding: 18px 24px;">
+                        <div class="action-icon" style="margin-bottom: 8px;">🖥️</div>
+                        <div class="action-name" style="margin-bottom: 2px;">POS Billing</div>
+                        <div class="action-desc" style="margin-bottom: 12px;">Launch keyboard-driven Point-of-Sale checkout terminal.</div>
+                        <div class="action-buttons" style="display: flex; gap: 8px; width: 100%;">
+                            <button class="btn btn-primary btn-xs btn-desk-billing-std" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px;" data-route="smriti-billing">🖥️ Standard</button>
+                            <button class="btn btn-default btn-xs btn-desk-billing-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="window.smriti_desk.launch_popout()">📺 Popout POS</button>
+                        </div>
                     </div>
 
                     <!-- Shift -->
@@ -180,11 +184,31 @@ class SmritiDeskPage {
 
         // Bind quick action routing
         $('#smriti-desk-root .action-card').on('click', (e) => {
+            if ($(e.target).closest('button').length) {
+                return; // Do not trigger route if clicking card buttons
+            }
             const route = $(e.currentTarget).data('route');
             if (route) {
                 frappe.set_route(route);
             }
         });
+
+        $('#smriti-desk-root .btn-desk-billing-std').on('click', (e) => {
+            e.stopPropagation();
+            frappe.set_route('smriti-billing');
+        });
+    }
+
+    launch_popout() {
+        const url = window.location.origin + "/app/smriti-billing?popout=true";
+        const w = screen.width - 60;
+        const h = screen.height - 60;
+        const left = 30;
+        const top = 30;
+        const win = window.open(url, "SMRITI Billing Terminal", `width=${w},height=${h},top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`);
+        if (win) {
+            win.focus();
+        }
     }
 
     // ─── Load Dashboard Data ──────────────────────────────────

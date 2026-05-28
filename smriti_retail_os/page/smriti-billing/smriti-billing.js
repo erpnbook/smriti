@@ -652,14 +652,45 @@ class SmritiBillingController {
                     label: __('Search Customer'),
                     fieldname: 'query',
                     fieldtype: 'Data',
-                    reqd: 1,
+                    reqd: 0,
                     description: __('Query mobile number or name.')
                 },
                 {
                     fieldname: 'results_html',
                     fieldtype: 'HTML'
+                },
+                {
+                    fieldname: 'action_buttons',
+                    fieldtype: 'HTML'
                 }
             ]
+        });
+
+        // Set up custom actions buttons (Walk-In and Register)
+        let buttons_html = `
+            <div style="display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 15px;">
+                <button class="btn btn-outline-danger btn-block flex-fill btn-set-walkin" type="button" style="font-weight: 600;">
+                    🚶 ${__('Walk-In (Unregister)')}
+                </button>
+                <button class="btn btn-primary btn-block flex-fill btn-register-new" type="button" style="font-weight: 600; margin-top: 0 !important;">
+                    ➕ ${__('Register New Customer')}
+                </button>
+            </div>
+        `;
+        dialog.fields_dict.action_buttons.$wrapper.html(buttons_html);
+
+        // Bind Walk-In action
+        dialog.$wrapper.find(".btn-set-walkin").off("click").on("click", function() {
+            me.active_customer = "Walk-In Customer";
+            $("#smriti-cust-name").text(me.active_customer);
+            frappe.show_alert({message: __("Switched to Walk-In Customer"), indicator: 'green'});
+            dialog.hide();
+        });
+
+        // Bind Register New action
+        dialog.$wrapper.find(".btn-register-new").off("click").on("click", function() {
+            dialog.hide();
+            me.show_quick_customer_modal();
         });
 
         dialog.fields_dict.query.$wrapper.find("input").on("input", function() {
@@ -697,10 +728,53 @@ class SmritiBillingController {
                         }
                     }
                 });
+            } else if (val.length === 0) {
+                dialog.fields_dict.results_html.$wrapper.html("");
             }
         });
 
         dialog.show();
+    }
+
+    show_quick_customer_modal() {
+        var me = this;
+        let d = new frappe.ui.Dialog({
+            title: __('Register New Customer'),
+            fields: [
+                {
+                    label: __('Customer Name'),
+                    fieldname: 'customer_name',
+                    fieldtype: 'Data',
+                    reqd: 1
+                },
+                {
+                    label: __('Mobile Number'),
+                    fieldname: 'mobile_no',
+                    fieldtype: 'Data',
+                    reqd: 1
+                }
+            ],
+            primary_action_label: __('Register & Select'),
+            primary_action(values) {
+                frappe.call({
+                    method: "smriti_retail_os.master_api.quick_create_customer",
+                    args: {
+                        customer_name: values.customer_name,
+                        mobile_no: values.mobile_no
+                    },
+                    callback: function(res) {
+                        if (res.message) {
+                            me.active_customer = res.message.name;
+                            $("#smriti-cust-name").text(me.active_customer);
+                            d.hide();
+                            frappe.show_alert({message: __("Customer Registered & Selected"), indicator: 'green'});
+                        }
+                    }
+                });
+            }
+        });
+        d.show();
+        setTimeout(() => d.get_field('customer_name').$input.focus(), 400);
     }
 
     trigger_fast_item_search() {

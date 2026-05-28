@@ -122,6 +122,7 @@ class SmritiBarcodeController {
                                     <option value="50x30">50 x 30 mm</option>
                                     <option value="75x50">75 x 50 mm</option>
                                     <option value="100x50">100 x 50 mm</option>
+                                    <option value="106x55">106.6 x 55.4 mm (TSPL)</option>
                                 </select>
                             </div>
 
@@ -193,7 +194,7 @@ class SmritiBarcodeController {
             me.selected_label_size = $(this).val();
             // Update preview box size dynamically
             const sim = $("#smriti-barcode-preview-box");
-            sim.removeClass("sz-50x25 sz-50x30 sz-75x50 sz-100x50").addClass("sz-" + me.selected_label_size);
+            sim.removeClass("sz-50x25 sz-50x30 sz-75x50 sz-100x50 sz-106x55").addClass("sz-" + me.selected_label_size);
         });
 
         $("#smriti-btn-preview-prn").off("click").on("click", () => me.trigger_prn_preview_code());
