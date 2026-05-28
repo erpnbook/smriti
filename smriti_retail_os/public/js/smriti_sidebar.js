@@ -343,7 +343,6 @@ SMRITI.openPopout = function(url) {
         win.focus();
     }
 };
-};
 
 // Handle resize events to dynamically add or remove the mobile hamburger menu
 window.addEventListener("resize", function() {

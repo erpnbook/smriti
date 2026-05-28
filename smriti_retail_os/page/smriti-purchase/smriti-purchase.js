@@ -28,7 +28,7 @@ frappe.pages['smriti-purchase'].on_page_load = function(wrapper) {
 
 class SmritiPurchasePage {
     constructor(wrapper) {
-        this.wrapper = wrapper;
+        this.wrapper = $(wrapper);
         
         // Roles & Permissions
         this.user = frappe.session.user;
