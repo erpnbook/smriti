@@ -601,6 +601,12 @@ function get_smriti_active_page() {
     if (route.length === 0) return null;
     
     var page_name = route[0];
+    if (page_name === "smriti-retail-os") return "desk";
+    if ((page_name === "workspace" || page_name === "workspaces") && 
+        (route[1] === "SMRITI Retail OS" || route[1] === "smriti-retail-os")) {
+        return "desk";
+    }
+    
     if (page_name === "smriti-billing")   return "billing";
     if (page_name === "smriti-inventory") return "inventory";
     if (page_name === "smriti-barcode")   return "barcode";
@@ -620,7 +626,7 @@ function get_smriti_active_page() {
 
 function _render_smriti_sidebar_if_applicable() {
     var active_page = get_smriti_active_page();
-    if (active_page) {
+    if (active_page || _is_smriti_user()) {
         document.body.classList.add("smriti-sidebar-active");
         if (window.SMRITI && typeof SMRITI.renderSidebar === 'function') {
             SMRITI.renderSidebar(active_page);
