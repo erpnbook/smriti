@@ -1,5 +1,5 @@
 /* ============================================================
-   SMRITI Sidebar Stylesheet — Premium Light Mode Sidebar
+   SMRITI Sidebar Stylesheet — Premium Cyberpunk Dark Mode Sidebar
    ============================================================ */
 
 #smriti-sidebar {
@@ -8,12 +8,12 @@
     left: 0;
     bottom: 0;
     width: 260px;
-    background: #ffffff !important; /* Pure white */
-    border-right: 1px solid #e4e7ec;
+    background: #16213e !important; /* Midnight slate background */
+    border-right: 1px solid #2a3a5c !important; /* Deep border */
     display: flex;
     flex-direction: column;
     transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    color: #475467;
+    color: #94a3b8 !important; /* Cool grey text */
     z-index: 1041; /* Above Frappe Navbar (1040) and Modals */
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -28,7 +28,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    border-bottom: 1px solid #f2f4f7;
+    border-bottom: 1px solid #2a3a5c !important;
     overflow: hidden;
     white-space: nowrap;
 }
@@ -42,10 +42,10 @@
 .smriti-side-title {
     font-weight: 700;
     font-size: 1.15rem;
-    background: linear-gradient(135deg, #6941c6 0%, #9e77ed 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    background: linear-gradient(135deg, #e94560 0%, #6941c6 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
 }
 
 #smriti-sidebar.collapsed .smriti-side-title {
@@ -57,17 +57,18 @@
     margin-left: auto;
     background: none;
     border: none;
-    color: #667085;
+    color: #94a3b8;
     cursor: pointer;
     padding: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 6px;
+    transition: all 0.2s;
 }
 .smriti-side-toggle:hover {
-    background: #f9fafb;
-    color: #101828;
+    background: #1a2744;
+    color: #ffffff;
 }
 
 #smriti-sidebar.collapsed .smriti-side-toggle {
@@ -89,7 +90,7 @@
     align-items: center;
     gap: 12px;
     padding: 10px 12px;
-    color: #475467 !important;
+    color: #94a3b8 !important;
     text-decoration: none !important;
     border-radius: 8px;
     font-weight: 500;
@@ -102,13 +103,13 @@
 }
 
 .smriti-side-item:hover {
-    background: #f9fafb;
-    color: #101828 !important;
+    background: #1a2744 !important;
+    color: #ffffff !important;
 }
 
 .smriti-side-item.active {
-    background: rgba(105, 65, 198, 0.05); /* very light indigo */
-    color: #6941c6 !important; /* Indigo */
+    background: rgba(233, 69, 96, 0.15) !important; /* Glowing coral */
+    color: #e94560 !important;
     font-weight: 600;
 }
 
@@ -132,9 +133,9 @@
 
 /* --- Bottom Section --- */
 .smriti-side-footer {
-    border-top: 1px solid #f2f4f7;
+    border-top: 1px solid #2a3a5c !important;
     padding: 16px 12px;
-    background: #ffffff;
+    background: #16213e !important;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -157,7 +158,7 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: #6941c6;
+    background: #e94560;
     color: white;
     display: flex;
     align-items: center;
@@ -175,12 +176,12 @@
 .smriti-side-name {
     font-weight: 600;
     font-size: 0.9rem;
-    color: #101828;
+    color: #ffffff !important;
 }
 
 .smriti-side-role {
     font-size: 0.75rem;
-    color: #667085;
+    color: #94a3b8 !important;
 }
 
 #smriti-sidebar.collapsed .smriti-side-info {
@@ -194,7 +195,7 @@
     gap: 8px;
     font-size: 0.82rem;
     font-weight: 600;
-    color: #475467;
+    color: #94a3b8 !important;
     white-space: nowrap;
 }
 
@@ -207,13 +208,13 @@
 }
 
 .smriti-side-shift-badge.open {
-    background: rgba(18, 183, 106, 0.1);
-    color: #027a48;
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: #10b981 !important;
 }
 
 .smriti-side-shift-badge.closed {
-    background: rgba(240, 68, 56, 0.1);
-    color: #b42318;
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #ef4444 !important;
 }
 
 #smriti-sidebar.collapsed .smriti-side-shift {
@@ -226,7 +227,7 @@
     align-items: center;
     gap: 10px;
     padding: 8px 12px;
-    color: #b42318 !important;
+    color: #ef4444 !important;
     text-decoration: none !important;
     border-radius: 6px;
     font-weight: 600;
@@ -241,13 +242,13 @@
 }
 
 .smriti-side-logout:hover {
-    background: rgba(240, 68, 56, 0.05);
+    background: rgba(239, 68, 68, 0.1) !important;
 }
 
 #smriti-sidebar.collapsed .smriti-side-logout {
     justify-content: center;
     padding: 8px 0;
-    color: #b42318 !important;
+    color: #ef4444 !important;
 }
 
 #smriti-sidebar.collapsed .smriti-side-logout span:not(.icon) {
@@ -261,7 +262,7 @@
         left: -260px;
         top: 0;
         bottom: 0;
-        box-shadow: 10px 0 30px rgba(16, 24, 40, 0.15);
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5) !important;
         transition: left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
     

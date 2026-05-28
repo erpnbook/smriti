@@ -8,18 +8,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
 
-/* ----- Design Tokens — Premium Light Theme ----- */
+/* ----- Design Tokens — Premium Cyberpunk Dark Theme ----- */
 :root {
-  --smriti-primary:      #6941c6; /* premium indigo/purple */
-  --smriti-primary-dark: #53389e;
-  --smriti-accent:       #0e7490;
-  --smriti-bg-dark:      #f9fafb; /* soft off-white */
-  --smriti-bg-card:      #ffffff; /* pure white */
-  --smriti-text:         #101828; /* dark slate */
-  --smriti-text-muted:   #475467; /* muted slate */
-  --smriti-border:       #e4e7ec; /* light border */
-  --smriti-gradient:     linear-gradient(135deg, #7f56d9 0%, #06b6d4 100%);
-  --smriti-shadow:       0 8px 30px rgba(105, 65, 198, 0.05);
+  --smriti-primary:      #e94560; /* premium coral/crimson */
+  --smriti-primary-dark: #c73652;
+  --smriti-accent:       #0d9488;
+  --smriti-bg-dark:      #0b0f19; /* midnight dark */
+  --smriti-bg-card:      #16213e; /* dark slate card */
+  --smriti-text:         #f8fafc; /* high contrast light text */
+  --smriti-text-muted:   #94a3b8; /* cool slate grey */
+  --smriti-border:       #2a3a5c; /* blue-grey border */
+  --smriti-gradient:     linear-gradient(135deg, #e94560 0%, #6941c6 100%);
+  --smriti-shadow:       0 12px 40px rgba(0, 0, 0, 0.5);
 }
 
 /* ============================================================
@@ -249,7 +249,7 @@ header .brand-logo {
 .desk-sidebar .active,
 .sidebar-item.active,
 .sidebar-item:hover {
-  background: rgba(105, 65, 198, 0.05) !important;
+  background: rgba(233, 69, 96, 0.12) !important;
   border-left: 3px solid var(--smriti-primary) !important;
   color: var(--smriti-primary) !important;
 }
