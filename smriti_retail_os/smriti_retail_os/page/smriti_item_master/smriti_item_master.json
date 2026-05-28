@@ -1,0 +1,16 @@
+{
+ "doctype": "Page",
+ "module": "SMRITI Retail OS",
+ "name": "smriti-item-master",
+ "page_name": "smriti-item-master",
+ "title": "Item Master Import",
+ "standard": "Yes",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "SMRITI Store Manager"
+  }
+ ]
+}

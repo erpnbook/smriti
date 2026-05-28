@@ -1,3 +1,13 @@
+/**
+ * @file: smriti_retail_os/public/js/purchase_order.js
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+
 /* ─────────────────────────────────────────────
    SMRITI — Purchase Order Form Simplification
    Retail-focused PO creation for Store Manager.

@@ -1,0 +1,511 @@
+/**
+ * @file: smriti_retail_os/smriti_retail_os/page/smriti_item_master/smriti_item_master.css
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+
+/* ============================================================
+   SMRITI Item Master Import — Premium Spreadsheet Grid Styles
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --sim-bg:           #0f1117;
+  --sim-surface:      #1a1d27;
+  --sim-surface2:     #21263a;
+  --sim-border:       rgba(255,255,255,0.08);
+  --sim-accent:       #6c63ff;
+  --sim-accent2:      #a78bfa;
+  --sim-green:        #10b981;
+  --sim-yellow:       #f59e0b;
+  --sim-red:          #ef4444;
+  --sim-text:         #e2e8f0;
+  --sim-muted:        #64748b;
+  --sim-header-h:     52px;
+  --sim-row-h:        36px;
+  --sim-font:         'Inter', 'Outfit', sans-serif;
+}
+
+/* ── Page wrapper ─────────────────────────────────────────── */
+.sim-page {
+  font-family: var(--sim-font);
+  background: var(--sim-bg);
+  min-height: 100vh;
+  color: var(--sim-text);
+  padding: 0;
+}
+
+/* ── Page header bar ──────────────────────────────────────── */
+.sim-page-header {
+  background: linear-gradient(135deg, #1e1b4b 0%, #1a1d27 100%);
+  border-bottom: 1px solid var(--sim-border);
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.sim-page-header h1 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sim-page-header h1 span.sim-badge {
+  background: var(--sim-accent);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+}
+
+/* ── Tabs ─────────────────────────────────────────────────── */
+.sim-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 16px 28px 0;
+  border-bottom: 1px solid var(--sim-border);
+  background: var(--sim-surface);
+}
+.sim-tab {
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--sim-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  border-radius: 6px 6px 0 0;
+  user-select: none;
+}
+.sim-tab:hover { color: var(--sim-text); background: rgba(255,255,255,0.04); }
+.sim-tab.active { color: var(--sim-accent2); border-bottom-color: var(--sim-accent2); }
+
+/* ── Tab panels ───────────────────────────────────────────── */
+.sim-panel { display: none; padding: 20px 28px; }
+.sim-panel.active { display: block; }
+
+/* ── Paste zone ───────────────────────────────────────────── */
+.sim-paste-zone {
+  background: rgba(108,99,255,0.06);
+  border: 2px dashed rgba(108,99,255,0.4);
+  border-radius: 12px;
+  padding: 24px 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  margin-bottom: 20px;
+  position: relative;
+}
+.sim-paste-zone:hover,
+.sim-paste-zone.active {
+  border-color: var(--sim-accent);
+  background: rgba(108,99,255,0.12);
+  box-shadow: 0 0 0 4px rgba(108,99,255,0.1);
+}
+.sim-paste-zone.active { border-style: solid; }
+.sim-paste-zone .pz-icon { font-size: 2rem; margin-bottom: 8px; }
+.sim-paste-zone .pz-title { font-size: 1rem; font-weight: 600; color: var(--sim-text); margin-bottom: 4px; }
+.sim-paste-zone .pz-sub { font-size: 0.78rem; color: var(--sim-muted); }
+.sim-paste-zone .pz-hint {
+  font-size: 0.72rem;
+  color: var(--sim-accent2);
+  margin-top: 8px;
+  font-weight: 500;
+}
+/* Hidden textarea that captures the paste */
+#sim-paste-capture {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ── Stats bar ────────────────────────────────────────────── */
+.sim-stats {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 0 14px;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+.sim-stat { display: flex; align-items: center; gap: 5px; }
+.sim-stat .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.sim-stat.valid .dot { background: var(--sim-green); }
+.sim-stat.warn .dot  { background: var(--sim-yellow); }
+.sim-stat.err .dot   { background: var(--sim-red); }
+.sim-stat .cnt { font-weight: 700; }
+
+.sim-stats-right { margin-left: auto; display: flex; gap: 10px; }
+
+/* ── Grid container ───────────────────────────────────────── */
+.sim-grid-wrapper {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 340px);
+  border: 1px solid var(--sim-border);
+  border-radius: 10px;
+  background: var(--sim-surface);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+
+/* ── Grid table ───────────────────────────────────────────── */
+.sim-grid {
+  border-collapse: collapse;
+  width: max-content;
+  min-width: 100%;
+  font-size: 0.8rem;
+}
+
+/* Header row */
+.sim-grid thead tr {
+  background: linear-gradient(90deg, #1e1b4b, #1a1d27);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.sim-grid thead th {
+  padding: 0 10px;
+  height: var(--sim-header-h);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sim-muted);
+  border-bottom: 2px solid var(--sim-border);
+  border-right: 1px solid var(--sim-border);
+  text-align: left;
+  white-space: nowrap;
+  user-select: none;
+}
+.sim-grid thead th.required-col { color: var(--sim-accent2); }
+.sim-grid thead th:first-child { position: sticky; left: 0; z-index: 11; background: #1e1b4b; min-width: 36px; }
+.sim-grid thead th:nth-child(2) { position: sticky; left: 36px; z-index: 11; background: #1e1b4b; }
+.sim-grid thead th:nth-child(3) { position: sticky; left: 36px; z-index: 11; background: #1e1b4b; }
+
+/* Body rows */
+.sim-grid tbody tr {
+  border-bottom: 1px solid var(--sim-border);
+  transition: background 0.15s;
+}
+.sim-grid tbody tr:hover { background: rgba(255,255,255,0.03); }
+
+/* Row status colouring via left border */
+.sim-grid tbody tr.row-valid  { border-left: 3px solid var(--sim-green); }
+.sim-grid tbody tr.row-warn   { border-left: 3px solid var(--sim-yellow); }
+.sim-grid tbody tr.row-error  { border-left: 3px solid var(--sim-red); background: rgba(239,68,68,0.04); }
+
+/* Cells */
+.sim-grid td {
+  padding: 0 8px;
+  height: var(--sim-row-h);
+  border-right: 1px solid var(--sim-border);
+  vertical-align: middle;
+  white-space: nowrap;
+  position: relative;
+}
+.sim-grid td:first-child {
+  position: sticky;
+  left: 0;
+  background: var(--sim-surface);
+  z-index: 5;
+  min-width: 36px;
+  text-align: center;
+}
+.sim-grid td:first-child.row-valid  { background: rgba(16,185,129,0.08); }
+.sim-grid td:first-child.row-error  { background: rgba(239,68,68,0.1); }
+.sim-grid td:first-child.row-warn   { background: rgba(245,158,11,0.08); }
+
+/* Editable cell input */
+.sim-cell-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--sim-text);
+  font-family: var(--sim-font);
+  font-size: 0.8rem;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+.sim-cell-input:focus {
+  background: rgba(108,99,255,0.12);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--sim-accent);
+}
+.sim-cell-input.cell-error { color: var(--sim-red); }
+.sim-cell-input[readonly] { color: var(--sim-muted); cursor: default; }
+
+/* Row number cell */
+.sim-rownum {
+  font-size: 0.7rem;
+  color: var(--sim-muted);
+  font-weight: 500;
+  min-width: 28px;
+}
+
+/* Status indicator cell */
+.sim-status-cell { font-size: 0.9rem; }
+
+/* Delete row button */
+.sim-del-btn {
+  background: none;
+  border: none;
+  color: var(--sim-muted);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.sim-del-btn:hover { color: var(--sim-red); background: rgba(239,68,68,0.1); }
+
+/* Error tooltip on cell hover */
+.sim-err-tip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  background: #1e1b4b;
+  border: 1px solid var(--sim-red);
+  color: var(--sim-red);
+  font-size: 0.72rem;
+  padding: 5px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  z-index: 200;
+  max-width: 280px;
+  white-space: normal;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+.sim-grid td:hover .sim-err-tip { display: block; }
+.sim-grid td.has-warn .sim-err-tip { border-color: var(--sim-yellow); color: var(--sim-yellow); }
+
+/* ── Toolbar buttons ──────────────────────────────────────── */
+.sim-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.sim-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  font-family: var(--sim-font);
+}
+.sim-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.sim-btn-primary {
+  background: linear-gradient(135deg, #6c63ff, #a78bfa);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(108,99,255,0.35);
+}
+.sim-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(108,99,255,0.5);
+}
+
+.sim-btn-success {
+  background: linear-gradient(135deg, #10b981, #34d399);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(16,185,129,0.3);
+}
+.sim-btn-success:hover:not(:disabled) { transform: translateY(-1px); }
+
+.sim-btn-ghost {
+  background: rgba(255,255,255,0.06);
+  color: var(--sim-text);
+  border: 1px solid var(--sim-border);
+}
+.sim-btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,0.1); }
+
+.sim-btn-danger {
+  background: rgba(239,68,68,0.1);
+  color: var(--sim-red);
+  border: 1px solid rgba(239,68,68,0.2);
+}
+.sim-btn-danger:hover:not(:disabled) { background: rgba(239,68,68,0.2); }
+
+/* ── Import settings panel ────────────────────────────────── */
+.sim-settings {
+  background: var(--sim-surface);
+  border: 1px solid var(--sim-border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+}
+.sim-setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sim-setting-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sim-muted);
+}
+.sim-setting-group select,
+.sim-setting-group input[type="number"] {
+  background: var(--sim-surface2);
+  border: 1px solid var(--sim-border);
+  color: var(--sim-text);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-family: var(--sim-font);
+  font-size: 0.82rem;
+  min-width: 140px;
+}
+.sim-setting-group select:focus,
+.sim-setting-group input:focus {
+  outline: none;
+  border-color: var(--sim-accent);
+}
+
+/* ── Progress panel ───────────────────────────────────────── */
+.sim-progress-panel {
+  background: var(--sim-surface);
+  border: 1px solid var(--sim-border);
+  border-radius: 12px;
+  padding: 24px 24px;
+  margin-top: 20px;
+  display: none;
+}
+.sim-progress-panel.active { display: block; }
+
+.sim-progress-bar-wrap {
+  background: rgba(255,255,255,0.06);
+  border-radius: 20px;
+  height: 8px;
+  margin: 12px 0;
+  overflow: hidden;
+}
+.sim-progress-bar {
+  height: 100%;
+  border-radius: 20px;
+  background: linear-gradient(90deg, var(--sim-accent), var(--sim-accent2));
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.sim-progress-label {
+  font-size: 0.82rem;
+  color: var(--sim-muted);
+  margin-bottom: 4px;
+}
+
+.sim-result-summary {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sim-result-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+.sim-result-line.success { background: rgba(16,185,129,0.08); color: var(--sim-green); }
+.sim-result-line.warning { background: rgba(245,158,11,0.08); color: var(--sim-yellow); }
+.sim-result-line.error   { background: rgba(239,68,68,0.08);  color: var(--sim-red); }
+
+/* ── Error detail table ───────────────────────────────────── */
+.sim-err-detail {
+  margin-top: 14px;
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 8px;
+  overflow: hidden;
+  display: none;
+}
+.sim-err-detail.active { display: block; }
+.sim-err-detail table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.sim-err-detail th {
+  padding: 8px 12px;
+  background: rgba(239,68,68,0.08);
+  color: var(--sim-red);
+  font-weight: 600;
+  text-align: left;
+  border-bottom: 1px solid rgba(239,68,68,0.15);
+}
+.sim-err-detail td {
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--sim-border);
+  color: var(--sim-text);
+  vertical-align: top;
+}
+.sim-err-detail td.err-msg { color: var(--sim-red); }
+
+/* ── Upload zone ──────────────────────────────────────────── */
+.sim-upload-zone {
+  background: rgba(255,255,255,0.03);
+  border: 2px dashed var(--sim-border);
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  margin-bottom: 20px;
+}
+.sim-upload-zone:hover { border-color: var(--sim-accent); background: rgba(108,99,255,0.06); }
+.sim-upload-zone.dragover { border-color: var(--sim-accent); background: rgba(108,99,255,0.12); }
+.sim-upload-zone .uz-icon { font-size: 2.5rem; margin-bottom: 10px; }
+.sim-upload-zone .uz-title { font-weight: 600; margin-bottom: 6px; }
+.sim-upload-zone .uz-sub   { font-size: 0.8rem; color: var(--sim-muted); }
+#sim-file-input { display: none; }
+
+/* ── Scrollbar ────────────────────────────────────────────── */
+.sim-grid-wrapper::-webkit-scrollbar { width: 6px; height: 6px; }
+.sim-grid-wrapper::-webkit-scrollbar-track { background: transparent; }
+.sim-grid-wrapper::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+.sim-grid-wrapper::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+
+/* ── Empty state ──────────────────────────────────────────── */
+.sim-empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--sim-muted);
+}
+.sim-empty-state .es-icon { font-size: 3rem; margin-bottom: 12px; }
+.sim-empty-state .es-text { font-size: 0.9rem; }
+
+/* ── Column header tooltip ────────────────────────────────── */
+.sim-grid thead th abbr { text-decoration: none; cursor: help; }

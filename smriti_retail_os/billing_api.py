@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+#
+# @file: smriti_retail_os/billing_api.py
+# @description: Handles user login, registration, and JWT token generation.
+# @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+# @date: 2026-05-28
+# @version: 1.0.0
+# @license: MIT
+# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+#
+
 import frappe
 from frappe.utils import flt, cint, now_datetime, nowdate
 from frappe import _
@@ -92,7 +103,7 @@ def search_customer(query):
 
 
 @frappe.whitelist()
-def hold_bill(cashier, customer, items):
+def hold_bill(cashier, customer, items, remarks=None, sales_staff=None):
     """
     Holds the active bill by creating a Draft POS Invoice (docstatus = 0) with:
     - custom_is_held = 1
@@ -119,12 +130,23 @@ def hold_bill(cashier, customer, items):
     pos_invoice.currency = "INR"
     pos_invoice.selling_price_list = "Standard Selling"
     
+    # Prepend Sales Staff commission context cleanly to remarks
+    final_remarks = ""
+    if sales_staff:
+        final_remarks += f"[Sales Staff: {sales_staff}] "
+    if remarks:
+        final_remarks += remarks
+        
+    if final_remarks:
+        pos_invoice.remarks = final_remarks
+
     # Append items
     for it in items_list:
         pos_invoice.append("items", {
             "item_code": it.get("item_code"),
             "qty": flt(it.get("qty")),
             "rate": flt(it.get("rate")),
+            "discount_percentage": flt(it.get("discount_percentage") or 0.0),
             "price_list_rate": flt(it.get("mrp")),
             "uom": it.get("stock_uom") or "Nos"
         })
@@ -159,7 +181,7 @@ def recall_bill(cashier):
 
 
 @frappe.whitelist()
-def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_name=None):
+def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_name=None, remarks=None, sales_staff=None):
     """
     Creates and submits a standard POS Invoice or falls back to Sales Invoice.
     If a cashier shift is open, creates a POS Invoice.
@@ -204,6 +226,16 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     invoice_doc.update_stock = 1 if use_pos else 0
     invoice_doc.is_pos = 1 if use_pos else 0
     
+    # Combine remarks and sales staff cleanly to bypass standard database migration overrides
+    final_remarks = ""
+    if sales_staff:
+        final_remarks += f"[Sales Staff: {sales_staff}] "
+    if remarks:
+        final_remarks += remarks
+        
+    if final_remarks:
+        invoice_doc.remarks = final_remarks
+
     # Pre-resolve a company-level fallback warehouse once (avoid repeated DB hits)
     _fallback_wh = frappe.defaults.get_user_default("warehouse")
     if _fallback_wh and frappe.db.get_value("Warehouse", _fallback_wh, "company") != company:
@@ -238,7 +270,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
         if not tax_template:
             item_doc = frappe.get_doc("Item", it.get("item_code"))
             for t in item_doc.taxes:
-                # Verify this template actually exists and belongs to the target company
+                # Verify this template actually exists and belongs to the company
                 tmpl_company = frappe.db.get_value("Item Tax Template", t.item_tax_template, "company")
                 if tmpl_company == company:
                     tax_template = t.item_tax_template
@@ -260,6 +292,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
             "qty": flt(it.get("qty")),
             "rate": flt(it.get("rate")),
             "price_list_rate": flt(it.get("mrp")),
+            "discount_percentage": flt(it.get("discount_percentage") or 0.0),
             "uom": it.get("stock_uom") or "Nos",
             "warehouse": item_wh,
             "item_tax_template": tax_template,
@@ -424,6 +457,7 @@ def load_held_invoice(invoice_name):
             "stock_uom": it.uom,
             "qty": flt(it.qty),
             "rate": flt(it.rate),
+            "discount_percentage": flt(it.discount_percentage or 0.0),
             "mrp": flt(mrp),
             "gst_percentage": gst_percentage,
             "tax_template": tax_template
@@ -432,6 +466,7 @@ def load_held_invoice(invoice_name):
     return {
         "invoice_name": inv.name,
         "customer": inv.customer,
+        "remarks": inv.remarks,
         "items": items
     }
 

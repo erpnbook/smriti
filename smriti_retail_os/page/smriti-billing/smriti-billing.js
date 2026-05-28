@@ -1,3 +1,13 @@
+/**
+ * @file: smriti_retail_os/page/smriti-billing/smriti-billing.js
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+
 frappe.pages['smriti-billing'].on_page_load = function(wrapper) {
     var page = frappe.ui.make_app_page({
         parent: wrapper,
@@ -66,13 +76,14 @@ class SmritiBillingController {
                                 <thead>
                                     <tr>
                                         <th style="width: 5%">${__('#')}</th>
-                                        <th style="width: 35%">${__('Item Details')}</th>
-                                        <th style="width: 10%">${__('UOM')}</th>
-                                        <th style="width: 10%">${__('Qty')}</th>
-                                        <th style="width: 12%">${__('Rate (INR)')}</th>
-                                        <th style="width: 10%">${__('GST %')}</th>
+                                        <th style="width: 30%">${__('Item Details')}</th>
+                                        <th style="width: 8%">${__('UOM')}</th>
+                                        <th style="width: 8%">${__('Qty')}</th>
+                                        <th style="width: 11%">${__('Rate (INR)')}</th>
+                                        <th style="width: 10%">${__('Disc %')}</th>
+                                        <th style="width: 8%">${__('GST %')}</th>
                                         <th style="width: 15%">${__('Amount (INR)')}</th>
-                                        <th style="width: 3%"></th>
+                                        <th style="width: 5%"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="smriti-item-grid-body">
@@ -94,9 +105,21 @@ class SmritiBillingController {
                                 <span class="cust-title"><span class="material-symbols-outlined">person</span> ${__('Customer')}</span>
                                 <button class="btn btn-secondary btn-xs" id="smriti-btn-cust-lookup">F3: ${__('Lookup')}</button>
                             </div>
-                            <div class="customer-details">
-                                <span class="cust-name" id="smriti-cust-name">${this.active_customer}</span>
-                                <span class="cust-loyalty" id="smriti-cust-loyalty">${__('Redeem Points')}: <input type="number" id="redeem-points-input" value="0" min="0" style="max-width: 60px; display: inline-block; padding: 2px 5px; background: rgba(31,41,55,0.6); border: 1px solid rgba(255,255,255,0.08); color: white; border-radius: 4px;"></span>
+                            <div class="customer-details" style="display: flex; flex-direction: column; gap: 8px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span class="cust-name" id="smriti-cust-name">${this.active_customer}</span>
+                                    <span class="cust-loyalty" id="smriti-cust-loyalty" style="font-size: 12px;">${__('Redeem')}: <input type="number" id="redeem-points-input" value="0" min="0" style="max-width: 60px; display: inline-block; padding: 2px 5px; background: rgba(31,41,55,0.6); border: 1px solid rgba(255,255,255,0.08); color: white; border-radius: 4px;"></span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+                                    <span style="font-size: 12px; color: var(--smriti-text-muted); min-width: 75px;"><span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">badge</span> ${__('Sales Staff')}:</span>
+                                    <select id="smriti-sales-staff" class="form-control" style="height: 28px; padding: 2px 6px; font-size: 12px; background: rgba(31,41,55,0.6); border: 1px solid rgba(255,255,255,0.08); color: white; border-radius: 4px; flex-grow: 1;">
+                                        <option value="Administrator">Administrator</option>
+                                        <option value="Store Cashier">Store Cashier</option>
+                                        <option value="Store Manager">Store Manager</option>
+                                        <option value="Sales Exec 01">Sales Exec 01</option>
+                                        <option value="Sales Exec 02">Sales Exec 02</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
@@ -146,6 +169,10 @@ class SmritiBillingController {
                             </div>
                             <div class="payment-alert-box" id="pay-drawer-alert">
                                 <span>Pending: <b id="pay-pending-total">INR 0.00</b></span>
+                            </div>
+                            <div class="payment-field-row" style="margin-top: 5px; margin-bottom: 5px; display: flex; flex-direction: column; align-items: stretch; gap: 4px;">
+                                <label style="display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--smriti-text-muted);"><span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">notes</span> ${__('Remarks')}:</label>
+                                <input type="text" id="smriti-remarks-input" placeholder="${__('e.g. Home Delivery, Notes...')}" style="width: 100%; padding: 6px 10px; font-size: 12px; background: rgba(31,41,55,0.6); border: 1px solid rgba(255,255,255,0.08); color: white; border-radius: 4px; box-sizing: border-box;">
                             </div>
                             <button class="btn btn-success btn-block btn-checkout-save" id="smriti-btn-checkout"><span class="material-symbols-outlined" style="color: white; margin-right: 4px;">print</span> F9: ${__('Submit & Print')}</button>
                         </div>
@@ -227,7 +254,8 @@ class SmritiBillingController {
         let subtotal_net = 0;
         let subtotal_tax = 0;
         this.items.forEach(it => {
-            const net = (it.qty * it.rate);
+            const disc_percent = it.discount_percentage || 0;
+            const net = (it.qty * it.rate) * (1 - disc_percent / 100);
             subtotal_net += net;
             subtotal_tax += (net * (it.gst_percentage / 100));
         });
@@ -337,6 +365,7 @@ class SmritiBillingController {
                 stock_uom: item.stock_uom,
                 qty: 1,
                 rate: item.rate,
+                discount_percentage: item.discount_percentage || 0,
                 mrp: item.mrp,
                 gst_percentage: item.gst_percentage,
                 tax_template: item.tax_template
@@ -358,7 +387,8 @@ class SmritiBillingController {
         $("#smriti-empty-state-msg").hide();
 
         this.items.forEach((it, idx) => {
-            const row_total = (it.qty * it.rate);
+            const disc_percent = it.discount_percentage || 0;
+            const row_total = (it.qty * it.rate) * (1 - disc_percent / 100);
             tbody.append(`
                 <tr data-idx="${idx}">
                     <td>${idx + 1}</td>
@@ -371,6 +401,9 @@ class SmritiBillingController {
                     </td>
                     <td>
                         <input type="number" class="grid-rate-input form-control text-right" value="${it.rate}" min="0.01" style="max-width: 100px;">
+                    </td>
+                    <td>
+                        <input type="number" class="grid-discount-input form-control text-center" value="${disc_percent}" min="0" max="100" style="max-width: 70px;">
                     </td>
                     <td>${it.gst_percentage}%</td>
                     <td class="text-right font-weight-bold" style="color: #0d9488;">INR ${row_total.toFixed(2)}</td>
@@ -401,6 +434,22 @@ class SmritiBillingController {
             });
         });
 
+        tbody.find(".grid-discount-input").off("change").on("change", function() {
+            const idx = $(this).closest("tr").data("idx");
+            const new_disc = flt($(this).val());
+            const old_disc = flt(me.items[idx].discount_percentage || 0);
+
+            if (new_disc === old_disc) return;
+
+            me.trigger_manager_override("Row Discount Override", () => {
+                me.items[idx].discount_percentage = new_disc;
+                me.render_grid_rows();
+                me.update_totals();
+            }, () => {
+                me.render_grid_rows();
+            });
+        });
+
         tbody.find(".btn-remove-row").off("click").on("click", function() {
             const idx = $(this).closest("tr").data("idx");
             me.trigger_manager_override("Void Row Override", () => {
@@ -418,7 +467,8 @@ class SmritiBillingController {
 
         this.items.forEach(it => {
             total_items += it.qty;
-            const net_row_amount = (it.qty * it.rate);
+            const disc_percent = it.discount_percentage || 0;
+            const net_row_amount = (it.qty * it.rate) * (1 - disc_percent / 100);
             const gst_factor = (it.gst_percentage / 100);
             const row_tax = (net_row_amount * gst_factor);
             
@@ -458,12 +508,17 @@ class SmritiBillingController {
             return;
         }
 
+        const remarks = $("#smriti-remarks-input").val() || "";
+        const sales_staff = $("#smriti-sales-staff").val() || "Administrator";
+
         frappe.call({
             method: "smriti_retail_os.billing_api.hold_bill",
             args: {
                 cashier: me.cashier,
                 customer: me.active_customer,
-                items: JSON.stringify(me.items)
+                items: JSON.stringify(me.items),
+                remarks: remarks,
+                sales_staff: sales_staff
             },
             freeze: true,
             freeze_message: __("Putting current active bill on hold..."),
@@ -473,6 +528,8 @@ class SmritiBillingController {
                     me.items = []; 
                     me.current_invoice_name = null;
                     $("#smriti-invoice-id").text("NEW BILL");
+                    $("#smriti-remarks-input").val("");
+                    $("#smriti-sales-staff").val("Administrator");
                     me.render_grid_rows();
                     me.update_totals();
                     me.focus_barcode();
@@ -564,6 +621,20 @@ class SmritiBillingController {
                     $("#smriti-invoice-id").html(`<span style="color: #ea580c;">RECALLED: ${me.current_invoice_name}</span>`);
                     $("#smriti-cust-name").text(me.active_customer);
 
+                    // Parse remarks and sales staff
+                    let raw_remarks = r.message.remarks || "";
+                    let sales_staff = "Administrator";
+                    let remarks = raw_remarks;
+                    if (raw_remarks.startsWith("[Sales Staff: ")) {
+                        let end_idx = raw_remarks.indexOf("]");
+                        if (end_idx !== -1) {
+                            sales_staff = raw_remarks.substring(14, end_idx);
+                            remarks = raw_remarks.substring(end_idx + 1).trim();
+                        }
+                    }
+                    $("#smriti-remarks-input").val(remarks);
+                    $("#smriti-sales-staff").val(sales_staff);
+
                     me.render_grid_rows();
                     me.update_totals();
                     me.focus_barcode();
@@ -579,8 +650,8 @@ class SmritiBillingController {
             return;
         }
 
-        const subtotal_net = this.items.reduce((s, it) => s + (it.qty * it.rate), 0);
-        const subtotal_tax = this.items.reduce((s, it) => s + (it.qty * it.rate * (it.gst_percentage / 100)), 0);
+        const subtotal_net = this.items.reduce((s, it) => s + (it.qty * it.rate * (1 - (it.discount_percentage || 0) / 100)), 0);
+        const subtotal_tax = this.items.reduce((s, it) => s + (it.qty * it.rate * (1 - (it.discount_percentage || 0) / 100) * (it.gst_percentage / 100)), 0);
         const grand_total = (subtotal_net + subtotal_tax);
 
         const cash_paid = flt($("#pay-cash-input").val());
@@ -604,6 +675,8 @@ class SmritiBillingController {
         ].filter(p => p.amount > 0);
 
         const loyalty_points = cint($("#redeem-points-input").val()) || 0;
+        const remarks = $("#smriti-remarks-input").val() || "";
+        const sales_staff = $("#smriti-sales-staff").val() || "Administrator";
 
         frappe.call({
             method: "smriti_retail_os.billing_api.submit_bill",
@@ -613,7 +686,9 @@ class SmritiBillingController {
                 items: JSON.stringify(me.items),
                 payments: JSON.stringify(payments),
                 loyalty_points: loyalty_points,
-                invoice_name: me.current_invoice_name
+                invoice_name: me.current_invoice_name,
+                remarks: remarks,
+                sales_staff: sales_staff
             },
             freeze: true,
             freeze_message: __("Submitting Billing through India Compliance..."),
@@ -634,6 +709,8 @@ class SmritiBillingController {
                     $("#pay-upi-input").val(0);
                     $("#pay-card-input").val(0);
                     $("#redeem-points-input").val(0);
+                    $("#smriti-remarks-input").val("");
+                    $("#smriti-sales-staff").val("Administrator");
 
                     me.render_grid_rows();
                     me.update_totals();

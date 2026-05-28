@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+#
+# @file: smriti_retail_os/setup.py
+# @description: Handles user login, registration, and JWT token generation.
+# @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+# @date: 2026-05-28
+# @version: 1.0.0
+# @license: MIT
+# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+#
+
 import frappe
 import json
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
@@ -94,6 +105,67 @@ def setup_smriti_retail_os():
                 "label": "Current Stock HTML",
                 "fieldtype": "HTML",
                 "insert_after": "custom_barcode_size",
+                "module": "SMRITI Retail OS"
+            },
+            # ── Fashion / Footwear attributes ─────────────────────────────
+            {
+                "fieldname": "custom_purchase_class",
+                "label": "Purchase Class",
+                "fieldtype": "Select",
+                "options": "\nFW\nMFW\nLFW\nBFW\nGFW\nKFW\nASSTED\nSPORTS\nACC\nBAG\nFORMAL\nCASUAL",
+                "insert_after": "custom_current_stock_html",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_merchandise_category",
+                "label": "Merchandise Category",
+                "fieldtype": "Data",
+                "insert_after": "custom_purchase_class",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_sub_category",
+                "label": "Sub Category",
+                "fieldtype": "Data",
+                "insert_after": "custom_merchandise_category",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_gender",
+                "label": "Gender",
+                "fieldtype": "Select",
+                "options": "\nMENS\nLADIES\nBOYS\nGIRLS\nUNISEX\nKIDS",
+                "insert_after": "custom_sub_category",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_upper_material",
+                "label": "Upper Material",
+                "fieldtype": "Data",
+                "insert_after": "custom_gender",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_outsole",
+                "label": "Outsole",
+                "fieldtype": "Data",
+                "insert_after": "custom_upper_material",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_heel_type",
+                "label": "Heel Type",
+                "fieldtype": "Data",
+                "insert_after": "custom_outsole",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_style_code",
+                "label": "Style / Article No",
+                "fieldtype": "Data",
+                "insert_after": "custom_heel_type",
+                "in_list_view": 1,
+                "bold": 1,
                 "module": "SMRITI Retail OS"
             }
         ],
@@ -211,6 +283,13 @@ def setup_smriti_retail_os():
             "link_type": "DocType",
             "link_to": "Item",
             "label_for_links": "Simplified retail products catalog."
+        },
+        {
+            "label": "Item Master Import",
+            "type": "Link",
+            "link_type": "Page",
+            "link_to": "smriti-item-master",
+            "label_for_links": "Paste from Excel or upload CSV to bulk-create items with variants."
         },
         {
             "label": "Customers",
