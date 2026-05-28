@@ -498,3 +498,42 @@ body.smriti-popout-active .smriti-billing-container {
     height: 100vh !important;
     padding: 15px !important;
 }
+
+/* ============================================================
+   Top Nav Action Buttons (Fullscreen / Popout)
+   ============================================================ */
+.btn-smriti-topaction {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid var(--smriti-glass-border);
+    background: #f9fafb;
+    color: var(--smriti-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-smriti-topaction:hover {
+    background: #f2f4f7;
+    border-color: var(--smriti-primary);
+    color: var(--smriti-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px var(--smriti-primary-glow);
+}
+
+.btn-smriti-topaction-primary {
+    background: var(--smriti-primary);
+    color: #ffffff !important;
+    border-color: var(--smriti-primary);
+}
+
+.btn-smriti-topaction-primary:hover {
+    background: #53389e;
+    color: #ffffff !important;
+    border-color: #53389e;
+}

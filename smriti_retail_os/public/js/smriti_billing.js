@@ -80,8 +80,8 @@ class SmritiBillingController {
         this.wrapper.find(".layout-main-section").html(`
             <div class="smriti-billing-container">
                 <!-- Top Navbar: Status indicators -->
-                <div class="smriti-top-nav" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <div style="display: flex; gap: 20px; align-items: center;">
+                <div class="smriti-top-nav" style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px;">
+                    <div style="display: flex; gap: 16px; align-items: center; flex-shrink: 0;">
                         <div class="smriti-cashier-badge">
                             <span class="badge-dot green"></span>
                             <span class="badge-label">${__('Cashier')}: <b>${this.cashier}</b></span>
@@ -90,15 +90,17 @@ class SmritiBillingController {
                             <span class="invoice-number">${__('Invoice')}: <b id="smriti-invoice-id">NEW BILL</b></span>
                         </div>
                     </div>
-                    <div class="smriti-shortcuts-hint" style="margin: 0 auto; padding: 0 10px;">
-                        <span><b>F2</b> Search | <b>F3</b> Customer | <b>F4</b> Hold | <b>F5</b> Recall | <b>F6</b> Checkout</span>
+                    <div class="smriti-shortcuts-hint" style="flex: 1; text-align: center; padding: 0 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+                        <span><b>F2</b> Search | <b>F3</b> Customer | <b>F4</b> Hold | <b>F5</b> Recall | <b>F6</b> Pay</span>
                     </div>
-                    <div class="smriti-top-nav-actions" style="display: flex; gap: 8px; align-items: center;">
-                        <button class="btn btn-default btn-xs btn-smriti-fullscreen" style="padding: 6px 12px; font-size: 11px; background: rgba(31,41,55,0.6); border: 1px solid rgba(255,255,255,0.08); color: white; border-radius: 6px; display: flex; align-items: center; gap: 4px;" title="Toggle Fullscreen Mode">
-                            <span class="material-symbols-outlined" style="font-size: 14px; color: white;">fullscreen</span> <b>Fullscreen</b>
+                    <div class="smriti-top-nav-actions" style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
+                        <button class="btn-smriti-topaction btn-smriti-fullscreen" title="Toggle Fullscreen Mode">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">fullscreen</span>
+                            <span>Fullscreen</span>
                         </button>
-                        <button class="btn btn-default btn-xs btn-smriti-popout" style="padding: 6px 12px; font-size: 11px; background: rgba(99,102,241,0.6); border: 1px solid rgba(255,255,255,0.08); color: white; border-radius: 6px; display: flex; align-items: center; gap: 4px;" title="Open in Popout Window">
-                            <span class="material-symbols-outlined" style="font-size: 14px; color: white;">open_in_new</span> <b>Popout</b>
+                        <button class="btn-smriti-topaction btn-smriti-topaction-primary btn-smriti-popout" title="Open Billing in Popout Window">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">open_in_new</span>
+                            <span>Popout</span>
                         </button>
                     </div>
                 </div>
