@@ -59,6 +59,68 @@ def create_master_doctypes():
             except Exception as e:
                 frappe.log_error(f"Error creating custom Master DocType {doctype_name}: {str(e)}")
 
+    # Create SMRITI Print Template DocType specifically
+    if not frappe.db.exists("DocType", "SMRITI Print Template"):
+        try:
+            doc = frappe.new_doc("DocType")
+            doc.name = "SMRITI Print Template"
+            doc.module = "SMRITI Retail OS"
+            doc.custom = 1
+            doc.autoname = "field:template_name"
+            doc.editable_grid = 1
+            doc.quick_entry = 1
+            doc.track_changes = 1
+            
+            doc.append("fields", {
+                "fieldname": "template_name",
+                "fieldtype": "Data",
+                "label": "Template Name",
+                "reqd": 1,
+                "unique": 1,
+                "in_list_view": 1
+            })
+            
+            doc.append("fields", {
+                "fieldname": "label_size",
+                "fieldtype": "Select",
+                "label": "Label Size",
+                "options": "\n50x25\n50x30\n75x50\n100x50\n106x55",
+                "reqd": 1,
+                "in_list_view": 1
+            })
+            
+            doc.append("fields", {
+                "fieldname": "printer_language",
+                "fieldtype": "Select",
+                "label": "Printer Language",
+                "options": "\nZPL\nTSPL",
+                "reqd": 1,
+                "in_list_view": 1
+            })
+            
+            doc.append("fields", {
+                "fieldname": "raw_template",
+                "fieldtype": "Code",
+                "options": "text",
+                "label": "Raw PRN Template",
+                "reqd": 1
+            })
+            
+            doc.append("permissions", {
+                "role": "System Manager",
+                "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+            })
+            
+            doc.append("permissions", {
+                "role": "SMRITI Store Manager",
+                "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+            })
+            
+            doc.insert(ignore_permissions=True)
+            frappe.db.commit()
+        except Exception as e:
+            frappe.log_error(f"Error creating custom SMRITI Print Template: {str(e)}")
+
 def seed_master_doctypes():
     seeds = {
         "SMRITI Gender": ["MENS", "LADIES", "BOYS", "GIRLS", "UNISEX", "KIDS"],
@@ -77,6 +139,31 @@ def seed_master_doctypes():
                         doc.insert(ignore_permissions=True)
                     except Exception as e:
                         frappe.log_error(f"Error seeding {val} to {doctype_name}: {str(e)}")
+
+    # Seed default Print Templates
+    if frappe.db.exists("DocType", "SMRITI Print Template"):
+        default_templates = [
+            {
+                "template_name": "Zebra 50x25 Standard Label",
+                "label_size": "50x25",
+                "printer_language": "ZPL",
+                "raw_template": "^XA\n^FO20,10^BCN,60,Y,N,N^FD{barcode}^FS\n^FO20,80^ADN,18,10^FD{item_name}^FS\n^FO20,100^ADN,18,10^FDMRP: Rs.{mrp}^FS\n^FO20,120^ADN,14,8^FD{brand} | Size: {size} | Color: {color}^FS\n^XZ"
+            },
+            {
+                "template_name": "TSC 106x55 3-Up Footwear Label",
+                "label_size": "106x55",
+                "printer_language": "TSPL",
+                "raw_template": "SIZE 106.6 mm, 55.4 mm\nGAP 3 mm, 0 mm\nSPEED 4\nDENSITY 14\nDIRECTION 0,0\nREFERENCE 0,0\nOFFSET 0 mm\nSET PEEL OFF\nSET CUTTER OFF\nSET TEAR ON\nCLS\nCODEPAGE 850\nTEXT 820,372,\"2\",180,2,2,\"{color}\"\nTEXT 702,318,\"2\",180,3,3,\"{size}\"\nTEXT 820,428,\"3\",180,2,2,\"{item_code}\"\nTEXT 556,335,\"4\",180,1,1,\"{mrp}/-\"\nTEXT 824,260,\"3\",180,1,1,\"{brand}\"\nTEXT 809,304,\"1\",180,2,2,\"SIZE-\"\nTEXT 475,401,\"1\",180,1,1,\"Footwear\"\nTEXT 596,401,\"1\",180,1,1,\"Commodity :\"\nTEXT 594,381,\"1\",180,1,1,\"Net Contents :\"\nTEXT 448,381,\"1\",180,1,1,\"1 Pair\"\nTEXT 600,301,\"1\",180,1,1,\"(Incl of all Taxes)\"\nTEXT 594,358,\"1\",180,1,1,\"Pkd On :\"\nTEXT 501,358,\"1\",180,1,1,\"{pkd_date}\"\nBARCODE 613,279,\"128\",95,0,180,2,4,\"{barcode}\"\nTEXT 597,176,\"3\",180,1,1,\"{barcode}\"\nPRINT 1,1"
+            }
+        ]
+        for t in default_templates:
+            if not frappe.db.exists("SMRITI Print Template", t["template_name"]):
+                try:
+                    doc = frappe.new_doc("SMRITI Print Template")
+                    doc.update(t)
+                    doc.insert(ignore_permissions=True)
+                except Exception as e:
+                    frappe.log_error(f"Error seeding print template {t['template_name']}: {str(e)}")
     frappe.db.commit()
 
 def backup_and_seed_existing_data():

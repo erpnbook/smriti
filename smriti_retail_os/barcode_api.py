@@ -1,32 +1,70 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/barcode_api.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Barcode printing API — ZPL/TSPL generation, LAN printing, template management.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.0.0
+# @version: 2.0.0
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
 import frappe
+import socket
+import datetime
 from frappe.utils import flt, cint
 from frappe import _
+
+
+# ---------------------------------------------------------------------------
+# FILTER HELPERS
+# ---------------------------------------------------------------------------
 
 @frappe.whitelist()
 def get_barcode_filters():
     """
-    Returns available brands, categories, and custom barcode sizes
-    to populate filters on the printing interface.
+    Returns available brands, categories, barcode sizes and print templates
+    to populate filters/dropdowns on the barcode printing interface.
     """
     brands = [b.name for b in frappe.get_all("Brand", fields=["name"], order_by="name asc")]
     categories = [ig.name for ig in frappe.get_all("Item Group", fields=["name"], order_by="name asc")]
     sizes = ["50x25", "50x30", "75x50", "100x50", "106x55"]
+
+    # Load available print templates from SMRITI Print Template DocType
+    templates = []
+    if frappe.db.exists("DocType", "SMRITI Print Template"):
+        templates = frappe.get_all(
+            "SMRITI Print Template",
+            fields=["name", "template_name", "label_size", "printer_language"],
+            order_by="template_name asc"
+        )
+
     return {
         "brands": brands,
         "categories": categories,
-        "sizes": sizes
+        "sizes": sizes,
+        "print_templates": templates
     }
+
+
+@frappe.whitelist()
+def get_print_templates():
+    """
+    Returns all available SMRITI Print Templates for dropdown selection.
+    """
+    if not frappe.db.exists("DocType", "SMRITI Print Template"):
+        return []
+
+    return frappe.get_all(
+        "SMRITI Print Template",
+        fields=["name", "template_name", "label_size", "printer_language"],
+        order_by="template_name asc"
+    )
+
+
+# ---------------------------------------------------------------------------
+# ITEM LOADING
+# ---------------------------------------------------------------------------
 
 @frappe.whitelist()
 def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
@@ -41,7 +79,7 @@ def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
         if source_doctype == "Purchase Receipt":
             if not frappe.db.exists("Purchase Receipt", source_name):
                 frappe.throw(_("Purchase Receipt {0} not found.").format(source_name))
-            
+
             pr = frappe.get_doc("Purchase Receipt", source_name)
             for it in pr.items:
                 items.append(get_item_print_details(it.item_code, it.qty))
@@ -49,23 +87,23 @@ def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
         elif source_doctype == "Stock Entry":
             if not frappe.db.exists("Stock Entry", source_name):
                 frappe.throw(_("Stock Entry {0} not found.").format(source_name))
-            
+
             se = frappe.get_doc("Stock Entry", source_name)
             for it in se.items:
                 items.append(get_item_print_details(it.item_code, it.qty))
-                
+
     elif filters:
         # Manual bulk filter mode
         flt_dict = frappe.parse_json(filters)
-        db_filters = {"disabled": 0, "custom_is_retail_item": 1}
-        
+        db_filters = {"disabled": 0}
+
         if flt_dict.get("brand"):
             db_filters["brand"] = flt_dict.get("brand")
         if flt_dict.get("item_group"):
             db_filters["item_group"] = flt_dict.get("item_group")
         if flt_dict.get("custom_barcode_size"):
             db_filters["custom_barcode_size"] = flt_dict.get("custom_barcode_size")
-            
+
         or_filters = {}
         if flt_dict.get("search_text"):
             txt = flt_dict.get("search_text")
@@ -81,65 +119,113 @@ def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
             fields=["name"],
             limit=100
         )
-        
+
         for it in item_list:
             items.append(get_item_print_details(it.name, 1))
 
     return items
 
+
 def get_item_print_details(item_code, default_print_qty):
     """
-    Helper function to resolve standard printing parameters for a single item.
+    Resolves standard printing parameters for a single item.
+    Includes all custom Item Master fields used as PRN placeholders.
     """
     item_doc = frappe.get_doc("Item", item_code)
-    
-    # 1. Fetch Barcode
-    barcode = frappe.db.get_value("Item Barcode", {"parent": item_code}, "barcode") or item_code
-    
-    # 2. Fetch MRP or standard price
-    mrp = item_doc.custom_mrp or frappe.db.get_value(
-        "Item Price", 
-        {"item_code": item_code, "price_list": "MRP"}, 
-        "price_list_rate"
-    ) or frappe.db.get_value(
-        "Item Price", 
-        {"item_code": item_code, "price_list": "Standard Selling"}, 
-        "price_list_rate"
-    ) or item_doc.valuation_rate or 0.0
 
-    # 3. Resolve Size from attributes or default
+    # 1. Fetch Barcode
+    barcode = (
+        frappe.db.get_value("Item Barcode", {"parent": item_code}, "barcode")
+        or item_code
+    )
+
+    # 2. Fetch MRP — custom_mrp > MRP price list > Standard Selling > valuation_rate
+    mrp = (
+        item_doc.get("custom_mrp")
+        or frappe.db.get_value("Item Price", {"item_code": item_code, "price_list": "MRP"}, "price_list_rate")
+        or frappe.db.get_value("Item Price", {"item_code": item_code, "price_list": "Standard Selling"}, "price_list_rate")
+        or item_doc.valuation_rate
+        or 0.0
+    )
+
+    # 3. Size from Item Attributes
     size = "L"
     if item_doc.attributes:
         for attr in item_doc.attributes:
-            if attr.attribute in ["Size", "size", "SIZE"]:
+            if attr.attribute.upper() in ["SIZE", "SHOE SIZE", "FOOTWEAR SIZE"]:
                 size = attr.attribute_value
                 break
 
-    # 4. Resolve Color from attributes or default
-    color = "BRONZE"
+    # 4. Color from Item Attributes
+    color = ""
     if item_doc.attributes:
         for attr in item_doc.attributes:
             if attr.attribute.lower() in ["color", "colour", "shade"]:
                 color = attr.attribute_value
                 break
 
+    # 5. Style / Article Number (item_code prefix before first hyphen)
+    style = item_code
+    if "-" in style:
+        style = style.split("-")[0]
+
+    # 6. Packing Date
+    pkd_date = datetime.datetime.now().strftime("%m/%y")
+
     return {
         "item_code": item_doc.name,
-        "item_name": item_doc.item_name,
+        "item_name": item_doc.item_name or "",
         "brand": item_doc.brand or "SMRITI",
-        "item_group": item_doc.item_group,
+        "item_group": item_doc.item_group or "",
         "barcode": barcode,
         "mrp": flt(mrp),
         "size": size,
         "color": color,
+        "style": style,
+        "pkd_date": pkd_date,
+        # Custom Footwear Attributes
+        "gender": item_doc.get("custom_gender") or "",
+        "heel_type": item_doc.get("custom_heel_type") or "",
+        "outsole": item_doc.get("custom_outsole") or "",
+        "upper_material": item_doc.get("custom_upper_material") or "",
+        "merchandise_category": item_doc.get("custom_merchandise_category") or "",
+        "sub_category": item_doc.get("custom_sub_category") or "",
+        "purchase_class": item_doc.get("custom_purchase_class") or "",
         "print_qty": cint(default_print_qty) or 1,
-        "label_size": item_doc.custom_barcode_size or "50x25"
+        "label_size": item_doc.get("custom_barcode_size") or "50x25"
     }
 
+
+# ---------------------------------------------------------------------------
+# PRN GENERATION — TEMPLATE-DRIVEN
+# ---------------------------------------------------------------------------
+
 @frappe.whitelist()
-def generate_prn(items):
+def generate_prn(items, template_name=None):
     """
-    Takes a JSON string of items and returns a merged Zebra ZPL PRN instructions string.
+    Generates raw ZPL/TSPL PRN content for the given items list.
+
+    If template_name is provided and exists in SMRITI Print Template,
+    it uses that template's raw_template with Python .format() substitution.
+    Otherwise falls back to built-in hardcoded templates.
+
+    Placeholder tokens in raw_template (all lowercase, wrapped in {}):
+        {barcode}       — EAN/UPC barcode number
+        {item_code}     — ERPNext Item Code (also used as Style/Article No)
+        {item_name}     — Full item name / description
+        {brand}         — Brand name
+        {mrp}           — MRP price (number only, e.g. 499)
+        {size}          — Shoe/garment size (e.g. 7, 8, L, XL)
+        {color}         — Color value
+        {style}         — Style/Article prefix (item_code before first hyphen)
+        {pkd_date}      — Packing date in MM/YY format
+        {gender}        — Gender (MENS/LADIES/BOYS/GIRLS/UNISEX/KIDS)
+        {heel_type}     — Heel Type (FLAT/BLOCK/WEDGE/PENCIL/PLATFORM)
+        {outsole}       — Outsole material (EVA/TPR/PU/RUBBER/PVC)
+        {upper_material}— Upper material (SYNTHETIC/LEATHER/MESH etc.)
+        {merchandise_category} — Merchandise Category
+        {sub_category}  — Sub Category
+        {purchase_class}— Purchase Class (FW/MFW/LFW etc.)
     """
     if not items:
         return ""
@@ -147,30 +233,71 @@ def generate_prn(items):
     items_list = frappe.parse_json(items)
     prn_output = []
 
-    for it in items_list:
-        barcode = it.get("barcode")
-        item_name = it.get("item_name")[:25]  # Limit to fit label
-        item_code = it.get("item_code") or ""
-        mrp = flt(it.get("mrp"))
-        brand = it.get("brand") or "SMRITI"
-        size = it.get("size") or "Nos"
-        color = it.get("color") or "BRONZE"
-        qty = cint(it.get("print_qty")) or 1
-        label_size = it.get("label_size") or "50x25"
+    # --- Try to load custom template from DB ---
+    db_template = None
+    if template_name and frappe.db.exists("DocType", "SMRITI Print Template"):
+        if frappe.db.exists("SMRITI Print Template", template_name):
+            db_template = frappe.get_doc("SMRITI Print Template", template_name)
 
-        # Check if the requested size is the TSPL 106.6 x 55.4 mm (3-up labels)
+    for it in items_list:
+        barcode        = it.get("barcode") or ""
+        item_name      = (it.get("item_name") or "")[:28]
+        item_code      = it.get("item_code") or ""
+        mrp            = flt(it.get("mrp"))
+        brand          = it.get("brand") or "SMRITI"
+        size           = it.get("size") or "Nos"
+        color          = it.get("color") or ""
+        style          = it.get("style") or item_code.split("-")[0]
+        pkd_date       = it.get("pkd_date") or datetime.datetime.now().strftime("%m/%y")
+        gender         = it.get("gender") or ""
+        heel_type      = it.get("heel_type") or ""
+        outsole        = it.get("outsole") or ""
+        upper_material = it.get("upper_material") or ""
+        merch_cat      = it.get("merchandise_category") or ""
+        sub_cat        = it.get("sub_category") or ""
+        purch_class    = it.get("purchase_class") or ""
+        qty            = cint(it.get("print_qty")) or 1
+        label_size     = it.get("label_size") or "50x25"
+
+        # Token substitution dict for user-defined templates
+        token_dict = {
+            "barcode":              barcode,
+            "item_code":            item_code,
+            "item_name":            item_name,
+            "brand":                brand,
+            "mrp":                  f"{int(mrp)}",
+            "size":                 size,
+            "color":                color,
+            "style":                style,
+            "pkd_date":             pkd_date,
+            "gender":               gender,
+            "heel_type":            heel_type,
+            "outsole":              outsole,
+            "upper_material":       upper_material,
+            "merchandise_category": merch_cat,
+            "sub_category":         sub_cat,
+            "purchase_class":       purch_class,
+        }
+
+        # If a DB template matches, use it
+        if db_template:
+            try:
+                raw = db_template.raw_template or ""
+                label_str = raw.format(**token_dict)
+                for _ in range(qty):
+                    prn_output.append(label_str)
+                continue
+            except Exception as e:
+                frappe.log_error(
+                    f"PRN template substitution failed for '{template_name}': {e}",
+                    "Barcode API"
+                )
+                # Fall through to built-in templates
+
+        # --- Built-in fallback: TSPL 106x55 3-up label ---
         if label_size == "106x55":
-            mrp_str = f"{int(mrp)}/-/-"
+            mrp_str       = f"{int(mrp)}/-/-"
             mrp_str_short = f"{int(mrp)}/-"
-            
-            import datetime
-            pkd_date = datetime.datetime.now().strftime("%m/%y")
-            
-            style = item_code
-            if "-" in style:
-                parts = style.split("-")
-                style = parts[0]
-                
             label_tspl = (
                 f"SIZE 106.6 mm, 55.4 mm\n"
                 f"GAP 3 mm, 0 mm\n"
@@ -184,6 +311,7 @@ def generate_prn(items):
                 f"SET TEAR ON\n"
                 f"CLS\n"
                 f"CODEPAGE 850\n"
+                # --- Column 1: Full MRP label ---
                 f'TEXT 820,372,"2",180,2,2,"{color}"\n'
                 f'TEXT 702,318,"2",180,3,3,"{size}"\n'
                 f'TEXT 820,428,"3",180,2,2,"{style}"\n'
@@ -194,19 +322,12 @@ def generate_prn(items):
                 f'TEXT 596,401,"1",180,1,1,"Commodity :"\n'
                 f'TEXT 594,381,"1",180,1,1,"Net Contents :"\n'
                 f'TEXT 448,381,"1",180,1,1,"1 Pair"\n'
-                f'TEXT 596,426,"1",180,1,1,""\n'
-                f'TEXT 763,213,"2",180,1,1,""\n'
                 f'TEXT 600,301,"1",180,1,1,"(Incl of all Taxes)"\n'
                 f'TEXT 594,358,"1",180,1,1,"Pkd On :"\n'
                 f'TEXT 501,358,"1",180,1,1,"{pkd_date}"\n'
-                f'TEXT 816,140,"3",180,1,1,"Pkd. Big Boss Shoes."\n'
-                f'TEXT 816,114,"1",180,1,1,"8/15 Dattatray Shopping Centre, Manikpur"\n'
-                f'TEXT 816,91,"1",180,1,1,"Vasai Rd (W), Thane- 401202, Maharashtra"\n'
-                f'TEXT 816,70,"1",180,1,1,"For Comments/Feedback please write us to"\n'
-                f'TEXT 816,51,"1",180,1,1,"bigboss.gobrani@yahoo.com/Call-07498131219"\n'
                 f'BARCODE 613,279,"128",95,0,180,2,4,"{barcode}"\n'
                 f'TEXT 597,176,"3",180,1,1,"{barcode}"\n'
-                
+                # --- Column 2: Shoe tag (smaller) ---
                 f'TEXT 315,89,"3",180,1,1,"{color}"\n'
                 f'TEXT 310,47,"2",180,1,1,"{style}"\n'
                 f'TEXT 149,91,"3",180,1,1,"{mrp_str_short}"\n'
@@ -217,7 +338,7 @@ def generate_prn(items):
                 f'TEXT 149,45,"1",180,1,1,"{brand}"\n'
                 f'BARCODE 312,190,"39",62,0,180,1,3,"{barcode}"\n'
                 f'TEXT 297,120,"3",180,1,1,"{barcode}"\n'
-                
+                # --- Column 3: Box tag (smaller) ---
                 f'TEXT 307,313,"3",180,1,1,"{color}"\n'
                 f'TEXT 302,272,"2",180,1,1,"{style}"\n'
                 f'TEXT 141,315,"3",180,1,1,"{mrp_str_short}"\n'
@@ -228,7 +349,7 @@ def generate_prn(items):
                 f'TEXT 141,270,"1",180,1,1,"{brand}"\n'
                 f'BARCODE 304,406,"39",58,0,180,1,3,"{barcode}"\n'
                 f'TEXT 288,339,"3",180,1,1,"{barcode}"\n'
-                
+                # MRP labels in Rs
                 f'TEXT 598,335,"0",180,12,12,"Rs."\n'
                 f'TEXT 177,315,"0",180,8,8,"Rs."\n'
                 f'TEXT 186,91,"0",180,8,8,"Rs."\n'
@@ -238,37 +359,40 @@ def generate_prn(items):
                 prn_output.append(label_tspl)
             continue
 
-        # Generate ZPL coordinates depending on label size
-        # standard 50x25 label (small)
-        x_offset = 20
-        y_offset_bc = 10
+        # --- Built-in fallback: Zebra ZPL (50x25, 50x30, 75x50, 100x50) ---
+        x_offset      = 20
+        y_offset_bc   = 10
         y_offset_name = 80
-        y_offset_mrp = 100
+        y_offset_mrp  = 100
         y_offset_brand = 120
-        
+
         if label_size == "50x30":
-            y_offset_name = 85
-            y_offset_mrp = 110
+            y_offset_name  = 85
+            y_offset_mrp   = 110
             y_offset_brand = 135
         elif label_size == "75x50":
-            x_offset = 40
-            y_offset_bc = 20
-            y_offset_name = 120
-            y_offset_mrp = 155
+            x_offset       = 40
+            y_offset_bc    = 20
+            y_offset_name  = 120
+            y_offset_mrp   = 155
             y_offset_brand = 190
         elif label_size == "100x50":
-            x_offset = 50
-            y_offset_bc = 20
-            y_offset_name = 130
-            y_offset_mrp = 170
+            x_offset       = 50
+            y_offset_bc    = 20
+            y_offset_name  = 130
+            y_offset_mrp   = 170
             y_offset_brand = 210
+
+        size_color_line = f"{brand} | Sz:{size}"
+        if color:
+            size_color_line += f" | {color}"
 
         label_zpl = (
             f"^XA\n"
             f"^FO{x_offset},{y_offset_bc}^BCN,60,Y,N,N^FD{barcode}^FS\n"
             f"^FO{x_offset},{y_offset_name}^ADN,18,10^FD{item_name}^FS\n"
             f"^FO{x_offset},{y_offset_mrp}^ADN,18,10^FDMRP: Rs.{mrp:.2f}^FS\n"
-            f"^FO{x_offset},{y_offset_brand}^ADN,14,8^FD{brand} | {size}^FS\n"
+            f"^FO{x_offset},{y_offset_brand}^ADN,14,8^FD{size_color_line}^FS\n"
             f"^XZ"
         )
 
@@ -276,3 +400,173 @@ def generate_prn(items):
             prn_output.append(label_zpl)
 
     return "\n".join(prn_output)
+
+
+# ---------------------------------------------------------------------------
+# NETWORK (LAN) PRINTER — Raw Socket Printing
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()
+def send_to_network_printer(items, template_name=None, printer_ip=None, printer_port=9100):
+    """
+    Generates PRN content and streams it directly to a network label printer
+    via a raw TCP/IP socket connection (LAN/Wi-Fi).
+
+    Args:
+        items (str):         JSON string of items (same format as generate_prn)
+        template_name (str): Name of SMRITI Print Template to use
+        printer_ip (str):    IP address of the label printer on the network
+        printer_port (int):  TCP port — default 9100 (standard raw printing port)
+
+    Returns:
+        dict: { success: bool, message: str, labels_sent: int }
+    """
+    if not printer_ip:
+        frappe.throw(_("Printer IP address is required for LAN printing."))
+
+    prn_data = generate_prn(items, template_name=template_name)
+    if not prn_data:
+        frappe.throw(_("No PRN data generated. Check items and template."))
+
+    port = cint(printer_port) or 9100
+    labels_sent = prn_data.count("^XA") + prn_data.count("PRINT 1,1")
+
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(10)
+            s.connect((printer_ip.strip(), port))
+            s.sendall(prn_data.encode("utf-8", errors="replace"))
+
+        return {
+            "success": True,
+            "message": _(
+                "Successfully sent {0} label(s) to printer at {1}:{2}"
+            ).format(labels_sent, printer_ip, port),
+            "labels_sent": labels_sent
+        }
+
+    except socket.timeout:
+        frappe.throw(
+            _("Connection timed out. Verify printer IP {0} and port {1} are reachable.").format(
+                printer_ip, port
+            )
+        )
+    except ConnectionRefusedError:
+        frappe.throw(
+            _("Printer at {0}:{1} refused the connection. Ensure the printer is online and raw TCP port is enabled.").format(
+                printer_ip, port
+            )
+        )
+    except Exception as e:
+        frappe.throw(_("Printer error: {0}").format(str(e)))
+
+
+# ---------------------------------------------------------------------------
+# FIELD MAPPING REFERENCE (for UI helper dialog)
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()
+def get_field_mapping_reference():
+    """
+    Returns a structured reference of Item Master fields and their
+    corresponding PRN template placeholder tokens.
+    Used by the UI to display the mapping helper dialog to operators.
+    """
+    return [
+        {
+            "placeholder": "{barcode}",
+            "item_master_field": "Item Barcode (child table)",
+            "example": "8901030987654",
+            "description": "Scanned barcode / EAN-13 number printed as barcode + human-readable text"
+        },
+        {
+            "placeholder": "{item_code}",
+            "item_master_field": "Item Code",
+            "example": "BBM-40-BRZ",
+            "description": "ERPNext item code — also used as the full Style/Article reference"
+        },
+        {
+            "placeholder": "{style}",
+            "item_master_field": "Item Code (prefix before first hyphen)",
+            "example": "BBM",
+            "description": "Short style/article code — auto-derived from item_code split on '-'"
+        },
+        {
+            "placeholder": "{item_name}",
+            "item_master_field": "Item Name",
+            "example": "Big Boss Men Casual Loafer",
+            "description": "Full product name / description (truncated to 28 chars on label)"
+        },
+        {
+            "placeholder": "{brand}",
+            "item_master_field": "Brand",
+            "example": "BIG BOSS",
+            "description": "Brand name printed prominently on label"
+        },
+        {
+            "placeholder": "{mrp}",
+            "item_master_field": "Custom MRP / Item Price (MRP list)",
+            "example": "499",
+            "description": "Maximum Retail Price — integer only (e.g. 499, not 499.00)"
+        },
+        {
+            "placeholder": "{size}",
+            "item_master_field": "Item Attributes → Size",
+            "example": "8",
+            "description": "Shoe/garment size from Item Attribute table (attribute name: Size)"
+        },
+        {
+            "placeholder": "{color}",
+            "item_master_field": "Item Attributes → Color",
+            "example": "BRONZE",
+            "description": "Color from Item Attribute table (attribute names: Color/Colour/Shade)"
+        },
+        {
+            "placeholder": "{pkd_date}",
+            "item_master_field": "Auto-generated at print time",
+            "example": "05/26",
+            "description": "Packing date in MM/YY format — stamped when the PRN is generated"
+        },
+        {
+            "placeholder": "{gender}",
+            "item_master_field": "Custom Gender (custom_gender) → SMRITI Gender master",
+            "example": "MENS",
+            "description": "Target gender — MENS / LADIES / BOYS / GIRLS / UNISEX / KIDS"
+        },
+        {
+            "placeholder": "{heel_type}",
+            "item_master_field": "Custom Heel Type (custom_heel_type) → SMRITI Heel Type master",
+            "example": "FLAT",
+            "description": "Heel construction — FLAT / BLOCK / WEDGE / PENCIL / PLATFORM"
+        },
+        {
+            "placeholder": "{outsole}",
+            "item_master_field": "Custom Outsole (custom_outsole) → SMRITI Outsole master",
+            "example": "EVA",
+            "description": "Outsole material — EVA / TPR / PU / RUBBER / PVC"
+        },
+        {
+            "placeholder": "{upper_material}",
+            "item_master_field": "Custom Upper Material (custom_upper_material) → SMRITI Upper Material master",
+            "example": "SYNTHETIC",
+            "description": "Upper material — SYNTHETIC / LEATHER / MESH / CANVAS / KNITTED"
+        },
+        {
+            "placeholder": "{merchandise_category}",
+            "item_master_field": "Custom Merchandise Category (custom_merchandise_category)",
+            "example": "CASUAL WEAR",
+            "description": "Broad merchandise grouping for reporting and display"
+        },
+        {
+            "placeholder": "{sub_category}",
+            "item_master_field": "Custom Sub Category (custom_sub_category)",
+            "example": "LOAFERS",
+            "description": "Detailed sub-classification within merchandise category"
+        },
+        {
+            "placeholder": "{purchase_class}",
+            "item_master_field": "Custom Purchase Class (custom_purchase_class) → SMRITI Purchase Class master",
+            "example": "MFW",
+            "description": "Buying classification — FW/MFW/LFW/BFW/GFW/KFW/SPORTS/ACC/BAG etc."
+        },
+    ]
