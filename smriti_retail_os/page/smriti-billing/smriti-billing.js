@@ -1,5 +1,5 @@
 /**
- * @file: smriti_retail_os/page/smriti-billing/smriti-billing.js
+ * @file: smriti_retail_os/public/js/smriti_billing.js
  * @description: Handles user login, registration, and JWT token generation.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
@@ -11,13 +11,9 @@
 frappe.pages['smriti-billing'].on_page_load = function(wrapper) {
     var page = frappe.ui.make_app_page({
         parent: wrapper,
-        title: __('Retail Billing'),
+        title: __('SMRITI Retail Billing'),
         single_column: true
     });
-
-    if (window.SMRITI && typeof SMRITI.renderSidebar === 'function') {
-        SMRITI.renderSidebar("billing");
-    }
 
     var smriti_billing = new SmritiBillingController(wrapper, page);
 }
@@ -35,27 +31,77 @@ class SmritiBillingController {
         this.current_invoice_name = null;
         this.active_price_list = "Standard Selling";
         this.redeemed_loyalty = 0;
+        this.loyalty_conversion_factor = 0.0;
+        this.loyalty_balance_points = 0;
         
         this.setup_layout();
         this.bind_keyboard_shortcuts();
         this.bind_actions();
+        this.fetch_loyalty_details();
+        this.apply_popout_branding();
         this.focus_barcode();
+    }
+
+    apply_popout_branding() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('popout') === 'true') {
+            // Apply a class to document body to trigger whitelabeling
+            $('body').addClass('smriti-popout-active');
+            
+            // Hide ERPNext standard elements
+            setTimeout(() => {
+                $('.navbar').hide();
+                $('#smriti-sidebar, .desk-sidebar, .layout-side-section').hide();
+                
+                // Adjust page containers to be full screen
+                $('.page-container, .layout-main-section, .page-head').css({
+                    'padding': '0',
+                    'margin': '0',
+                    'max-width': '100vw',
+                    'height': '100vh',
+                    'border': 'none',
+                    'border-radius': '0'
+                });
+                
+                // Hide standard page title header
+                $('.page-head').hide();
+            }, 100);
+            
+            // Automatically prompt fullscreen on first click
+            $(document).one('click keydown', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {});
+                }
+            });
+        }
     }
 
     setup_layout() {
         this.wrapper.find(".layout-main-section").html(`
-            <div class="smriti-billing-container dark-mode">
+            <div class="smriti-billing-container">
                 <!-- Top Navbar: Status indicators -->
-                <div class="smriti-top-nav">
-                    <div class="smriti-cashier-badge">
-                        <span class="badge-dot green"></span>
-                        <span class="badge-label">${__('Cashier')}: <b>${this.cashier}</b></span>
+                <div class="smriti-top-nav" style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px;">
+                    <div style="display: flex; gap: 16px; align-items: center; flex-shrink: 0;">
+                        <div class="smriti-cashier-badge">
+                            <span class="badge-dot green"></span>
+                            <span class="badge-label">${__('Cashier')}: <b>${this.cashier}</b></span>
+                        </div>
+                        <div class="smriti-active-invoice">
+                            <span class="invoice-number">${__('Invoice')}: <b id="smriti-invoice-id">NEW BILL</b></span>
+                        </div>
                     </div>
-                    <div class="smriti-active-invoice">
-                        <span class="invoice-number">${__('Invoice')}: <b id="smriti-invoice-id">NEW BILL</b></span>
+                    <div class="smriti-shortcuts-hint" style="flex: 1; text-align: center; padding: 0 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+                        <span><b>F2</b> Search | <b>F3</b> Customer | <b>F4</b> Hold | <b>F5</b> Recall | <b>F6</b> Pay</span>
                     </div>
-                    <div class="smriti-shortcuts-hint">
-                        <span><b>F2</b> Search | <b>F3</b> Customer | <b>F4</b> Hold | <b>F5</b> Recall | <b>F6</b> Checkout</span>
+                    <div class="smriti-top-nav-actions" style="display: flex; gap: 8px; align-items: center; flex-shrink: 0;">
+                        <button class="btn-smriti-topaction btn-smriti-fullscreen" title="Toggle Fullscreen Mode">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">fullscreen</span>
+                            <span>Fullscreen</span>
+                        </button>
+                        <button class="btn-smriti-topaction btn-smriti-topaction-primary btn-smriti-popout" title="Open Billing in Popout Window">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">open_in_new</span>
+                            <span>Popout</span>
+                        </button>
                     </div>
                 </div>
 
@@ -68,6 +114,9 @@ class SmritiBillingController {
                                 <span class="scanner-icon"><span class="material-symbols-outlined">barcode_scanner</span></span>
                                 <input type="text" id="smriti-barcode-input" autocomplete="off" placeholder="${__('Scan Barcode or Type Code...')}">
                             </div>
+                            <button class="btn btn-secondary btn-scan-camera" id="smriti-btn-scan-camera" title="Use Camera to Scan Barcode" style="padding: 0 15px; border: 1px solid var(--smriti-glass-border); border-radius: 8px; background: rgba(17, 24, 39, 0.8); color: white; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
+                                <span class="material-symbols-outlined">photo_camera</span>
+                            </button>
                         </div>
 
                         <!-- Item Grid Table -->
@@ -76,14 +125,13 @@ class SmritiBillingController {
                                 <thead>
                                     <tr>
                                         <th style="width: 5%">${__('#')}</th>
-                                        <th style="width: 30%">${__('Item Details')}</th>
-                                        <th style="width: 8%">${__('UOM')}</th>
-                                        <th style="width: 8%">${__('Qty')}</th>
-                                        <th style="width: 11%">${__('Rate (INR)')}</th>
-                                        <th style="width: 10%">${__('Disc %')}</th>
-                                        <th style="width: 8%">${__('GST %')}</th>
+                                        <th style="width: 35%">${__('Item Details')}</th>
+                                        <th style="width: 10%">${__('UOM')}</th>
+                                        <th style="width: 10%">${__('Qty')}</th>
+                                        <th style="width: 12%">${__('Rate (INR)')}</th>
+                                        <th style="width: 10%">${__('GST %')}</th>
                                         <th style="width: 15%">${__('Amount (INR)')}</th>
-                                        <th style="width: 5%"></th>
+                                        <th style="width: 3%"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="smriti-item-grid-body">
@@ -105,21 +153,9 @@ class SmritiBillingController {
                                 <span class="cust-title"><span class="material-symbols-outlined">person</span> ${__('Customer')}</span>
                                 <button class="btn btn-secondary btn-xs" id="smriti-btn-cust-lookup">F3: ${__('Lookup')}</button>
                             </div>
-                            <div class="customer-details" style="display: flex; flex-direction: column; gap: 8px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span class="cust-name" id="smriti-cust-name">${this.active_customer}</span>
-                                    <span class="cust-loyalty" id="smriti-cust-loyalty" style="font-size: 12px;">${__('Redeem')}: <input type="number" id="redeem-points-input" value="0" min="0" style="max-width: 60px; display: inline-block; padding: 2px 5px; background: rgba(31,41,55,0.6); border: 1px solid rgba(255,255,255,0.08); color: white; border-radius: 4px;"></span>
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
-                                    <span style="font-size: 12px; color: var(--smriti-text-muted); min-width: 75px;"><span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">badge</span> ${__('Sales Staff')}:</span>
-                                    <select id="smriti-sales-staff" class="form-control" style="height: 28px; padding: 2px 6px; font-size: 12px; background: rgba(31,41,55,0.6); border: 1px solid rgba(255,255,255,0.08); color: white; border-radius: 4px; flex-grow: 1;">
-                                        <option value="Administrator">Administrator</option>
-                                        <option value="Store Cashier">Store Cashier</option>
-                                        <option value="Store Manager">Store Manager</option>
-                                        <option value="Sales Exec 01">Sales Exec 01</option>
-                                        <option value="Sales Exec 02">Sales Exec 02</option>
-                                    </select>
-                                </div>
+                            <div class="customer-details">
+                                <span class="cust-name" id="smriti-cust-name">${this.active_customer}</span>
+                                <span class="cust-loyalty" id="smriti-cust-loyalty">${__('Redeem Points')}: <input type="number" id="redeem-points-input" value="0" min="0" style="max-width: 60px; display: inline-block; padding: 2px 5px; background: rgba(31,41,55,0.6); border: 1px solid rgba(255,255,255,0.08); color: white; border-radius: 4px;"></span>
                             </div>
                         </div>
 
@@ -146,13 +182,7 @@ class SmritiBillingController {
 
                         <!-- Payment Split Drawer -->
                         <div class="payment-drawer-card">
-                            <div class="payment-drawer-header"><span class="material-symbols-outlined">payments</span> ${__('Payment Options')}</div>
-                            
-                            <div class="payment-quick-actions" style="display: flex; gap: 8px; margin-bottom: 15px;">
-                                <button class="btn btn-outline-success btn-sm flex-fill" id="btn-quick-cash" style="font-weight: 600;">💵 ${__('Cash Only')}</button>
-                                <button class="btn btn-outline-info btn-sm flex-fill" id="btn-quick-upi" style="font-weight: 600;">📱 ${__('UPI Only')}</button>
-                            </div>
-
+                            <div class="payment-drawer-header"><span class="material-symbols-outlined">payments</span> ${__('F6: Split Payments')}</div>
                             <div class="payment-fields">
                                 <div class="payment-field-row">
                                     <label><span class="material-symbols-outlined">payments</span> ${__('Cash')}:</label>
@@ -169,10 +199,6 @@ class SmritiBillingController {
                             </div>
                             <div class="payment-alert-box" id="pay-drawer-alert">
                                 <span>Pending: <b id="pay-pending-total">INR 0.00</b></span>
-                            </div>
-                            <div class="payment-field-row" style="margin-top: 5px; margin-bottom: 5px; display: flex; flex-direction: column; align-items: stretch; gap: 4px;">
-                                <label style="display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--smriti-text-muted);"><span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">notes</span> ${__('Remarks')}:</label>
-                                <input type="text" id="smriti-remarks-input" placeholder="${__('e.g. Home Delivery, Notes...')}" style="width: 100%; padding: 6px 10px; font-size: 12px; background: rgba(31,41,55,0.6); border: 1px solid rgba(255,255,255,0.08); color: white; border-radius: 4px; box-sizing: border-box;">
                             </div>
                             <button class="btn btn-success btn-block btn-checkout-save" id="smriti-btn-checkout"><span class="material-symbols-outlined" style="color: white; margin-right: 4px;">print</span> F9: ${__('Submit & Print')}</button>
                         </div>
@@ -240,40 +266,35 @@ class SmritiBillingController {
     bind_actions() {
         var me = this;
         $("#smriti-btn-cust-lookup").off("click").on("click", () => me.trigger_customer_lookup());
+        $("#smriti-btn-scan-camera").off("click").on("click", () => me.trigger_camera_scanner());
         $("#smriti-btn-checkout").off("click").on("click", () => me.checkout_and_save_invoice());
 
-        $("#btn-quick-cash").off("click").on("click", () => me.quick_pay("Cash"));
-        $("#btn-quick-upi").off("click").on("click", () => me.quick_pay("UPI"));
+        $(".btn-smriti-fullscreen").off("click").on("click", () => me.toggle_fullscreen());
+        $(".btn-smriti-popout").off("click").on("click", () => me.popout_terminal());
     }
 
-    quick_pay(mode) {
-        var me = this;
-        if (this.items.length === 0) return;
-
-        // Calculate total
-        let subtotal_net = 0;
-        let subtotal_tax = 0;
-        this.items.forEach(it => {
-            const disc_percent = it.discount_percentage || 0;
-            const net = (it.qty * it.rate) * (1 - disc_percent / 100);
-            subtotal_net += net;
-            subtotal_tax += (net * (it.gst_percentage / 100));
-        });
-        const total = (subtotal_net + subtotal_tax);
-
-        // Reset all inputs
-        $("#pay-cash-input, #pay-upi-input, #pay-card-input").val(0);
-
-        if (mode === "Cash") {
-            $("#pay-cash-input").val(total.toFixed(2));
+    toggle_fullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
         } else {
-            $("#pay-upi-input").val(total.toFixed(2));
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
         }
+    }
 
-        this.update_totals();
-        
-        // Auto-checkout
-        me.checkout_and_save_invoice();
+    popout_terminal() {
+        const url = window.location.origin + "/app/smriti-billing?popout=true";
+        const w = screen.width - 60;
+        const h = screen.height - 60;
+        const left = 30;
+        const top = 30;
+        const win = window.open(url, "SMRITI Billing Terminal", `width=${w},height=${h},top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`);
+        if (win) {
+            win.focus();
+        }
     }
 
     focus_barcode() {
@@ -289,69 +310,13 @@ class SmritiBillingController {
                 if (r.message) {
                     me.add_item_to_cart(r.message);
                 } else {
-                    me.show_quick_item_modal(barcode);
+                    frappe.show_alert({
+                        message: __('Barcode "{0}" not found.').format(barcode),
+                        indicator: 'red'
+                    });
                 }
             }
         });
-    }
-
-    show_quick_item_modal(barcode) {
-        var me = this;
-        let d = new frappe.ui.Dialog({
-            title: __('Quick Add New Item'),
-            fields: [
-                {
-                    label: __('Barcode'),
-                    fieldname: 'barcode',
-                    fieldtype: 'Data',
-                    default: barcode,
-                    read_only: 1
-                },
-                {
-                    label: __('Item Name'),
-                    fieldname: 'item_name',
-                    fieldtype: 'Data',
-                    reqd: 1
-                },
-                {
-                    label: __('Selling Price'),
-                    fieldname: 'rate',
-                    fieldtype: 'Currency',
-                    reqd: 1
-                },
-                {
-                    label: __('MRP'),
-                    fieldname: 'mrp',
-                    fieldtype: 'Currency',
-                    reqd: 1
-                },
-                {
-                    label: __('GST %'),
-                    fieldname: 'gst_percentage',
-                    fieldtype: 'Select',
-                    options: '0\n5\n12\n18\n28',
-                    default: '18'
-                }
-            ],
-            primary_action_label: __('Save & Add to Bill'),
-            primary_action(values) {
-                frappe.call({
-                    method: "smriti_retail_os.master_api.quick_create_item",
-                    args: values,
-                    callback: function(res) {
-                        if (res.message) {
-                            me.add_item_to_cart(res.message);
-                            d.hide();
-                            frappe.show_alert({message: __("Item Created & Added"), indicator: 'green'});
-                        }
-                    }
-                });
-            }
-        });
-        
-        d.show();
-        // Auto-focus Item Name
-        setTimeout(() => d.get_field('item_name').$input.focus(), 400);
     }
 
     add_item_to_cart(item) {
@@ -365,7 +330,6 @@ class SmritiBillingController {
                 stock_uom: item.stock_uom,
                 qty: 1,
                 rate: item.rate,
-                discount_percentage: item.discount_percentage || 0,
                 mrp: item.mrp,
                 gst_percentage: item.gst_percentage,
                 tax_template: item.tax_template
@@ -387,8 +351,7 @@ class SmritiBillingController {
         $("#smriti-empty-state-msg").hide();
 
         this.items.forEach((it, idx) => {
-            const disc_percent = it.discount_percentage || 0;
-            const row_total = (it.qty * it.rate) * (1 - disc_percent / 100);
+            const row_total = (it.qty * it.rate);
             tbody.append(`
                 <tr data-idx="${idx}">
                     <td>${idx + 1}</td>
@@ -401,9 +364,6 @@ class SmritiBillingController {
                     </td>
                     <td>
                         <input type="number" class="grid-rate-input form-control text-right" value="${it.rate}" min="0.01" style="max-width: 100px;">
-                    </td>
-                    <td>
-                        <input type="number" class="grid-discount-input form-control text-center" value="${disc_percent}" min="0" max="100" style="max-width: 70px;">
                     </td>
                     <td>${it.gst_percentage}%</td>
                     <td class="text-right font-weight-bold" style="color: #0d9488;">INR ${row_total.toFixed(2)}</td>
@@ -434,22 +394,6 @@ class SmritiBillingController {
             });
         });
 
-        tbody.find(".grid-discount-input").off("change").on("change", function() {
-            const idx = $(this).closest("tr").data("idx");
-            const new_disc = flt($(this).val());
-            const old_disc = flt(me.items[idx].discount_percentage || 0);
-
-            if (new_disc === old_disc) return;
-
-            me.trigger_manager_override("Row Discount Override", () => {
-                me.items[idx].discount_percentage = new_disc;
-                me.render_grid_rows();
-                me.update_totals();
-            }, () => {
-                me.render_grid_rows();
-            });
-        });
-
         tbody.find(".btn-remove-row").off("click").on("click", function() {
             const idx = $(this).closest("tr").data("idx");
             me.trigger_manager_override("Void Row Override", () => {
@@ -467,8 +411,7 @@ class SmritiBillingController {
 
         this.items.forEach(it => {
             total_items += it.qty;
-            const disc_percent = it.discount_percentage || 0;
-            const net_row_amount = (it.qty * it.rate) * (1 - disc_percent / 100);
+            const net_row_amount = (it.qty * it.rate);
             const gst_factor = (it.gst_percentage / 100);
             const row_tax = (net_row_amount * gst_factor);
             
@@ -478,17 +421,23 @@ class SmritiBillingController {
 
         const grand_total = (subtotal_net + subtotal_tax);
         
+        // Calculate loyalty discount
+        const points = cint($("#redeem-points-input").val()) || 0;
+        const conversion = this.loyalty_conversion_factor || 0.0;
+        const loyalty_discount = points * conversion;
+        const final_due = Math.max(0, grand_total - loyalty_discount);
+
         $("#smriti-total-items-qty").text(total_items);
         $("#smriti-subtotal-net").text("INR " + subtotal_net.toFixed(2));
         $("#smriti-subtotal-tax").text("INR " + subtotal_tax.toFixed(2));
-        $("#smriti-grand-total").text("INR " + grand_total.toFixed(2));
+        $("#smriti-grand-total").text("INR " + final_due.toFixed(2));
 
         const cash_paid = flt($("#pay-cash-input").val());
         const upi_paid = flt($("#pay-upi-input").val());
         const card_paid = flt($("#pay-card-input").val());
         const total_paid = (cash_paid + upi_paid + card_paid);
         
-        const pending = (grand_total - total_paid);
+        const pending = (final_due - total_paid);
 
         if (pending > 0) {
             $("#pay-drawer-alert").removeClass("reconciled").addClass("pending");
@@ -508,17 +457,12 @@ class SmritiBillingController {
             return;
         }
 
-        const remarks = $("#smriti-remarks-input").val() || "";
-        const sales_staff = $("#smriti-sales-staff").val() || "Administrator";
-
         frappe.call({
             method: "smriti_retail_os.billing_api.hold_bill",
             args: {
                 cashier: me.cashier,
                 customer: me.active_customer,
-                items: JSON.stringify(me.items),
-                remarks: remarks,
-                sales_staff: sales_staff
+                items: JSON.stringify(me.items)
             },
             freeze: true,
             freeze_message: __("Putting current active bill on hold..."),
@@ -528,8 +472,6 @@ class SmritiBillingController {
                     me.items = []; 
                     me.current_invoice_name = null;
                     $("#smriti-invoice-id").text("NEW BILL");
-                    $("#smriti-remarks-input").val("");
-                    $("#smriti-sales-staff").val("Administrator");
                     me.render_grid_rows();
                     me.update_totals();
                     me.focus_barcode();
@@ -621,21 +563,8 @@ class SmritiBillingController {
                     $("#smriti-invoice-id").html(`<span style="color: #ea580c;">RECALLED: ${me.current_invoice_name}</span>`);
                     $("#smriti-cust-name").text(me.active_customer);
 
-                    // Parse remarks and sales staff
-                    let raw_remarks = r.message.remarks || "";
-                    let sales_staff = "Administrator";
-                    let remarks = raw_remarks;
-                    if (raw_remarks.startsWith("[Sales Staff: ")) {
-                        let end_idx = raw_remarks.indexOf("]");
-                        if (end_idx !== -1) {
-                            sales_staff = raw_remarks.substring(14, end_idx);
-                            remarks = raw_remarks.substring(end_idx + 1).trim();
-                        }
-                    }
-                    $("#smriti-remarks-input").val(remarks);
-                    $("#smriti-sales-staff").val(sales_staff);
-
                     me.render_grid_rows();
+                    me.fetch_loyalty_details();
                     me.update_totals();
                     me.focus_barcode();
                 }
@@ -650,8 +579,8 @@ class SmritiBillingController {
             return;
         }
 
-        const subtotal_net = this.items.reduce((s, it) => s + (it.qty * it.rate * (1 - (it.discount_percentage || 0) / 100)), 0);
-        const subtotal_tax = this.items.reduce((s, it) => s + (it.qty * it.rate * (1 - (it.discount_percentage || 0) / 100) * (it.gst_percentage / 100)), 0);
+        const subtotal_net = this.items.reduce((s, it) => s + (it.qty * it.rate), 0);
+        const subtotal_tax = this.items.reduce((s, it) => s + (it.qty * it.rate * (it.gst_percentage / 100)), 0);
         const grand_total = (subtotal_net + subtotal_tax);
 
         const cash_paid = flt($("#pay-cash-input").val());
@@ -675,8 +604,6 @@ class SmritiBillingController {
         ].filter(p => p.amount > 0);
 
         const loyalty_points = cint($("#redeem-points-input").val()) || 0;
-        const remarks = $("#smriti-remarks-input").val() || "";
-        const sales_staff = $("#smriti-sales-staff").val() || "Administrator";
 
         frappe.call({
             method: "smriti_retail_os.billing_api.submit_bill",
@@ -686,9 +613,7 @@ class SmritiBillingController {
                 items: JSON.stringify(me.items),
                 payments: JSON.stringify(payments),
                 loyalty_points: loyalty_points,
-                invoice_name: me.current_invoice_name,
-                remarks: remarks,
-                sales_staff: sales_staff
+                invoice_name: me.current_invoice_name
             },
             freeze: true,
             freeze_message: __("Submitting Billing through India Compliance..."),
@@ -704,15 +629,16 @@ class SmritiBillingController {
                     me.items = [];
                     me.current_invoice_name = null;
                     me.redeemed_loyalty = 0;
+                    me.loyalty_conversion_factor = 0.0;
+                    me.loyalty_balance_points = 0;
                     $("#smriti-invoice-id").text("NEW BILL");
                     $("#pay-cash-input").val(0);
                     $("#pay-upi-input").val(0);
                     $("#pay-card-input").val(0);
                     $("#redeem-points-input").val(0);
-                    $("#smriti-remarks-input").val("");
-                    $("#smriti-sales-staff").val("Administrator");
 
                     me.render_grid_rows();
+                    me.fetch_loyalty_details();
                     me.update_totals();
                     me.focus_barcode();
                 }
@@ -729,45 +655,14 @@ class SmritiBillingController {
                     label: __('Search Customer'),
                     fieldname: 'query',
                     fieldtype: 'Data',
-                    reqd: 0,
+                    reqd: 1,
                     description: __('Query mobile number or name.')
                 },
                 {
                     fieldname: 'results_html',
                     fieldtype: 'HTML'
-                },
-                {
-                    fieldname: 'action_buttons',
-                    fieldtype: 'HTML'
                 }
             ]
-        });
-
-        // Set up custom actions buttons (Walk-In and Register)
-        let buttons_html = `
-            <div style="display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 15px;">
-                <button class="btn btn-outline-danger btn-block flex-fill btn-set-walkin" type="button" style="font-weight: 600;">
-                    🚶 ${__('Walk-In (Unregister)')}
-                </button>
-                <button class="btn btn-primary btn-block flex-fill btn-register-new" type="button" style="font-weight: 600; margin-top: 0 !important;">
-                    ➕ ${__('Register New Customer')}
-                </button>
-            </div>
-        `;
-        dialog.fields_dict.action_buttons.$wrapper.html(buttons_html);
-
-        // Bind Walk-In action
-        dialog.$wrapper.find(".btn-set-walkin").off("click").on("click", function() {
-            me.active_customer = "Walk-In Customer";
-            $("#smriti-cust-name").text(me.active_customer);
-            frappe.show_alert({message: __("Switched to Walk-In Customer"), indicator: 'green'});
-            dialog.hide();
-        });
-
-        // Bind Register New action
-        dialog.$wrapper.find(".btn-register-new").off("click").on("click", function() {
-            dialog.hide();
-            me.show_quick_customer_modal();
         });
 
         dialog.fields_dict.query.$wrapper.find("input").on("input", function() {
@@ -798,6 +693,7 @@ class SmritiBillingController {
                                 const id = $(this).data("id");
                                 me.active_customer = id;
                                 $("#smriti-cust-name").text(me.active_customer);
+                                me.fetch_loyalty_details();
                                 dialog.hide();
                             });
                         } else {
@@ -805,53 +701,10 @@ class SmritiBillingController {
                         }
                     }
                 });
-            } else if (val.length === 0) {
-                dialog.fields_dict.results_html.$wrapper.html("");
             }
         });
 
         dialog.show();
-    }
-
-    show_quick_customer_modal() {
-        var me = this;
-        let d = new frappe.ui.Dialog({
-            title: __('Register New Customer'),
-            fields: [
-                {
-                    label: __('Customer Name'),
-                    fieldname: 'customer_name',
-                    fieldtype: 'Data',
-                    reqd: 1
-                },
-                {
-                    label: __('Mobile Number'),
-                    fieldname: 'mobile_no',
-                    fieldtype: 'Data',
-                    reqd: 1
-                }
-            ],
-            primary_action_label: __('Register & Select'),
-            primary_action(values) {
-                frappe.call({
-                    method: "smriti_retail_os.master_api.quick_create_customer",
-                    args: {
-                        customer_name: values.customer_name,
-                        mobile_no: values.mobile_no
-                    },
-                    callback: function(res) {
-                        if (res.message) {
-                            me.active_customer = res.message.name;
-                            $("#smriti-cust-name").text(me.active_customer);
-                            d.hide();
-                            frappe.show_alert({message: __("Customer Registered & Selected"), indicator: 'green'});
-                        }
-                    }
-                });
-            }
-        });
-        d.show();
-        setTimeout(() => d.get_field('customer_name').$input.focus(), 400);
     }
 
     trigger_fast_item_search() {
@@ -960,4 +813,155 @@ class SmritiBillingController {
 
         dialog.show();
     }
+
+    fetch_loyalty_details() {
+        var me = this;
+        if (!me.active_customer || me.active_customer === "Walk-In Customer") {
+            $("#smriti-cust-loyalty").hide();
+            $("#redeem-points-input").val(0).prop("max", 0);
+            me.loyalty_conversion_factor = 0.0;
+            me.loyalty_balance_points = 0;
+            return;
+        }
+
+        frappe.call({
+            method: "smriti_retail_os.loyalty_api.get_loyalty_details",
+            args: { customer: me.active_customer },
+            callback: function(r) {
+                if (r.message && r.message.enrolled) {
+                    const ld = r.message;
+                    me.loyalty_conversion_factor = ld.conversion_factor;
+                    me.loyalty_balance_points = ld.loyalty_points;
+
+                    $("#smriti-cust-loyalty").show().html(`
+                        ${__('Loyalty Balance')}: <b style="color: #0d9488;">${ld.loyalty_points} Pts</b> (Value: <b>₹${ld.redeem_amount.toFixed(2)}</b>)<br>
+                        ${__('Redeem')}: <input type="number" id="redeem-points-input" value="0" min="0" max="${ld.loyalty_points}" style="max-width: 60px; display: inline-block; padding: 2px 5px; background: rgba(31,41,55,0.6); border: 1px solid rgba(255,255,255,0.08); color: white; border-radius: 4px; margin-top:4px;"> Pts
+                    `);
+
+                    // Re-bind input events
+                    $("#redeem-points-input").off("input").on("input", function() {
+                        let pts = cint($(this).val());
+                        if (pts > ld.loyalty_points) {
+                            pts = ld.loyalty_points;
+                            $(this).val(pts);
+                        }
+                        me.update_totals();
+                    });
+                } else {
+                    $("#smriti-cust-loyalty").show().html(`
+                        <span class="text-muted" style="font-size:11px;">Not Enrolled in Loyalty Program</span>
+                    `);
+                    $("#redeem-points-input").val(0).prop("max", 0);
+                    me.loyalty_conversion_factor = 0.0;
+                    me.loyalty_balance_points = 0;
+                }
+                me.update_totals();
+            }
+        });
+    }
+
+    trigger_camera_scanner() {
+        var me = this;
+        
+        var dialog = new frappe.ui.Dialog({
+            title: `<span class="material-symbols-outlined" style="vertical-align: text-top; margin-right: 6px; color: #6366f1;">photo_camera</span> Live Camera Barcode Scanner`,
+            fields: [
+                {
+                    fieldname: 'camera_html',
+                    fieldtype: 'HTML'
+                }
+            ],
+            primary_action_label: __('Close'),
+            primary_action: function() {
+                dialog.hide();
+            }
+        });
+
+        dialog.fields_dict.camera_html.$wrapper.html(`
+            <div style="position: relative; text-align: center; background: #000; border-radius: 8px; overflow: hidden; max-width: 480px; margin: 0 auto; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                <video id="smriti-scanner-video" width="100%" height="auto" autoplay playsinline style="display: block; border-radius: 8px; transform: scaleX(1);"></video>
+                <div style="position: absolute; border: 2px dashed #e94560; top: 20%; bottom: 20%; left: 10%; right: 10%; pointer-events: none; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.4); animation: scan-pulse 2s infinite alternate;"></div>
+                <div id="smriti-scanner-status" style="position: absolute; bottom: 10px; left: 0; right: 0; color: white; background: rgba(0,0,0,0.7); padding: 5px; font-size: 11px;">Initializing camera stream...</div>
+            </div>
+            <style>
+                @keyframes scan-pulse {
+                    0% { border-color: #e94560; }
+                    100% { border-color: #6366f1; }
+                }
+            </style>
+        `);
+
+        dialog.show();
+
+        const video = document.getElementById("smriti-scanner-video");
+        const status = document.getElementById("smriti-scanner-status");
+        let stream = null;
+        let active = true;
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then(s => {
+                stream = s;
+                video.srcObject = s;
+                status.textContent = "Camera active. Point at barcode to scan...";
+                
+                // Initialize barcode detection loop
+                startDetection();
+            })
+            .catch(err => {
+                console.error(err);
+                status.textContent = "Camera access denied or unavailable: " + err.message;
+                status.style.color = "#ef4444";
+            });
+
+        function startDetection() {
+            if (!active) return;
+            
+            if ('BarcodeDetector' in window) {
+                const barcodeDetector = new BarcodeDetector({
+                    formats: ['ean_13', 'code_128', 'code_39', 'qr']
+                });
+                
+                function detect() {
+                    if (!active) return;
+                    barcodeDetector.detect(video)
+                        .then(barcodes => {
+                            if (barcodes.length > 0) {
+                                const code = barcodes[0].rawValue;
+                                me.add_barcode_item(code);
+                                active = false;
+                                stopCamera();
+                                dialog.hide();
+                                frappe.show_alert({message: `Scanned: ${code}`, indicator: 'green'});
+                            } else {
+                                requestAnimationFrame(detect);
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            requestAnimationFrame(detect);
+                        });
+                }
+                
+                // Delay slightly to let camera adjust focus
+                setTimeout(() => {
+                    detect();
+                }, 500);
+            } else {
+                status.textContent = "Native scanner not supported. Please use physical scanner.";
+                status.style.color = "#ef4444";
+            }
+        }
+
+        function stopCamera() {
+            active = false;
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        dialog.on_cancel = function() {
+            stopCamera();
+        };
+    }
 }
+

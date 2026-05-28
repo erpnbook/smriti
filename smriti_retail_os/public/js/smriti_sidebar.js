@@ -233,7 +233,10 @@ SMRITI._buildSidebarDOM = function(nav_items, active_page, shift) {
         menu_html += `
             <a class="smriti-side-item ${active_class}" data-id="${item.id}" href="${item.url}">
                 <span class="side-item-emoji">${item.icon}</span>
-                <span>${item.label}</span>
+                <span class="side-item-label">${item.label}</span>
+                <button class="smriti-side-item-popout" title="Open in Popout Window" data-url="${item.url}">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
             </a>
         `;
     });
@@ -308,6 +311,38 @@ SMRITI._buildSidebarDOM = function(nav_items, active_page, shift) {
             });
         });
     }
+
+    // Bind Popout Button click listeners
+    $(sidebar).on("click", ".smriti-side-item-popout", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var url = $(this).attr("data-url");
+        SMRITI.openPopout(url);
+    });
+};
+
+SMRITI.openPopout = function(url) {
+    if (!url) return;
+    var popout_url = url;
+    if (popout_url.indexOf('?') === -1) {
+        popout_url += '?popout=true';
+    } else if (popout_url.indexOf('popout=true') === -1) {
+        popout_url += '&popout=true';
+    }
+    
+    if (popout_url.startsWith('/')) {
+        popout_url = window.location.origin + popout_url;
+    }
+    
+    const w = screen.width - 60;
+    const h = screen.height - 60;
+    const left = 30;
+    const top = 30;
+    const win = window.open(popout_url, "_blank", `width=${w},height=${h},top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`);
+    if (win) {
+        win.focus();
+    }
+};
 };
 
 // Handle resize events to dynamically add or remove the mobile hamburger menu

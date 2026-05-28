@@ -699,6 +699,50 @@ function _setup_sidebar_toggle() {
     }
 }
 
+function _check_global_popout_mode() {
+    var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('popout') === 'true') {
+        $('body').addClass('smriti-popout-active');
+        _render_popout_floating_controls();
+    }
+}
+
+function _render_popout_floating_controls() {
+    if (!$('body').hasClass('smriti-popout-active')) return;
+    if (document.getElementById('smriti-popout-controls')) return;
+
+    var controls = document.createElement('div');
+    controls.id = 'smriti-popout-controls';
+    controls.className = 'smriti-popout-controls-floating';
+    
+    controls.innerHTML = `
+        <button class="smriti-popout-btn smriti-popout-fullscreen" title="Toggle Fullscreen">
+            <span class="material-symbols-outlined">fullscreen</span>
+        </button>
+        <button class="smriti-popout-btn smriti-popout-close" title="Exit Popout / Close Window">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    `;
+    document.body.appendChild(controls);
+
+    // Bind events
+    $(controls).find('.smriti-popout-fullscreen').off('click').on('click', function() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    });
+
+    $(controls).find('.smriti-popout-close').off('click').on('click', function() {
+        window.close();
+    });
+}
+
 /* ── 10. Frappe lifecycle hooks ─────────────────────────────────────────── */
 $(document).on('app_ready', function () {
     _patch_sidebar_prototype();
@@ -711,6 +755,7 @@ $(document).on('app_ready', function () {
     _do_scrub();
     _sidebar_lockdown();
     _setup_sidebar_toggle();
+    _check_global_popout_mode();
 });
 
 $(document).on('page-change route-change', function () {
@@ -723,6 +768,7 @@ $(document).on('page-change route-change', function () {
     _scrub_dom();
     _sidebar_lockdown();
     _setup_sidebar_toggle();
+    _check_global_popout_mode();
 });
 
 /* Periodic safety net */
@@ -735,6 +781,7 @@ setInterval(function () {
     _scrub_dom();
     _sidebar_lockdown();
     _monkey_patch_about(); /* re-attempt lock on each cycle */
+    _check_global_popout_mode();
 }, 1500);
 
 /* Periodic safety net for sidebar position & toggle button */
@@ -753,6 +800,7 @@ function _boot_scrub_sequence() {
     _setup_smriti_layout_class();
     _render_smriti_sidebar_if_applicable();
     _setup_sidebar_toggle();
+    _check_global_popout_mode();
     [100, 300, 700, 1500, 3000].forEach(function (ms) {
         setTimeout(function () {
             _patch_sidebar_prototype();
@@ -762,6 +810,7 @@ function _boot_scrub_sequence() {
             _render_smriti_sidebar_if_applicable();
             _do_scrub();
             _setup_sidebar_toggle();
+            _check_global_popout_mode();
         }, ms);
     });
 }

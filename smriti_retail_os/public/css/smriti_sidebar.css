@@ -375,3 +375,133 @@ body.smriti-mobile-sidebar-open .smriti-sidebar-backdrop {
     }
 }
 
+/* Sidebar Popout Button Styling */
+.smriti-side-item {
+    position: relative;
+    padding-right: 36px !important; /* Make room for popout button */
+}
+
+.smriti-side-item-popout {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted, #475467);
+    cursor: pointer;
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    opacity: 0; /* Hidden by default, show on hover */
+    transition: opacity 0.2s, background 0.2s, color 0.2s;
+    z-index: 2;
+}
+
+.smriti-side-item:hover .smriti-side-item-popout {
+    opacity: 1;
+}
+
+.smriti-side-item-popout:hover {
+    background: var(--border-color, #eaecf0) !important;
+    color: var(--primary-color, #6941c6) !important;
+}
+
+.smriti-side-item-popout span {
+    font-size: 16px !important;
+}
+
+/* Hide popout button when sidebar is collapsed */
+#smriti-sidebar.collapsed .smriti-side-item-popout {
+    display: none !important;
+}
+
+/* Global Popout Window Layout overrides */
+body.smriti-popout-active .navbar,
+body.smriti-popout-active #smriti-sidebar,
+body.smriti-popout-active .desk-sidebar,
+body.smriti-popout-active .layout-side-section,
+body.smriti-popout-active .page-head {
+    display: none !important;
+}
+
+body.smriti-popout-active .page-container,
+body.smriti-popout-active .layout-main-section,
+body.smriti-popout-active .layout-main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100vw !important;
+    width: 100vw !important;
+    min-height: 100vh !important;
+    height: 100vh !important;
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+/* Global Floating Controls for Popout windows */
+.smriti-popout-controls-floating {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    gap: 8px;
+    z-index: 999999;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 6px;
+    border-radius: 30px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+body.dark-mode .smriti-popout-controls-floating,
+body[data-theme="dark"] .smriti-popout-controls-floating {
+    background: rgba(17, 24, 39, 0.85);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.smriti-popout-controls-floating .smriti-popout-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: none;
+    color: #475467;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+body.dark-mode .smriti-popout-controls-floating .smriti-popout-btn,
+body[data-theme="dark"] .smriti-popout-controls-floating .smriti-popout-btn {
+    color: #d1d5db;
+}
+
+.smriti-popout-controls-floating .smriti-popout-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #111827;
+}
+
+body.dark-mode .smriti-popout-controls-floating .smriti-popout-btn:hover,
+body[data-theme="dark"] .smriti-popout-controls-floating .smriti-popout-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+}
+
+.smriti-popout-controls-floating .smriti-popout-close:hover {
+    background: #fee2e2 !important;
+    color: #b42318 !important;
+}
+
+@media print {
+    .smriti-popout-controls-floating {
+        display: none !important;
+    }
+}
+
