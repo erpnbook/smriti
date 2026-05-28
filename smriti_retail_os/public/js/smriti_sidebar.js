@@ -15,11 +15,6 @@
 window.SMRITI = window.SMRITI || {};
 
 SMRITI.renderSidebar = function(active_page) {
-
-    // 3. Remove existing SMRITI sidebar if present
-    document.getElementById("smriti-sidebar")?.remove();
-
-    // 4. Build sidebar HTML
     const is_manager = frappe.user.has_role("SMRITI Store Manager");
 
     const nav_items = [
@@ -59,7 +54,17 @@ SMRITI.renderSidebar = function(active_page) {
         ] : [])
     ];
 
-    // 5. Shift status fetch
+    var sidebar = document.getElementById("smriti-sidebar");
+    if (sidebar) {
+        // If sidebar is already present, just update active states and close mobile drawer
+        SMRITI._updateSidebarActiveState(active_page);
+        
+        // Optionally fetch and update shift status asynchronously to keep it fresh
+        SMRITI._updateShiftStatusAsync();
+        return;
+    }
+
+    // Shift status fetch
     frappe.call({
         method: "smriti_retail_os.shift_api.get_shift_status",
         callback: function(r) {
@@ -89,14 +94,104 @@ function setSidebarCollapsed(collapsed) {
     }
 }
 
-SMRITI._buildSidebarDOM = function(nav_items, active_page, shift) {
-    var layout_container = document.querySelector(".layout-container");
-    if (!layout_container) {
-        // Try again in 100ms if container is not ready
-        setTimeout(function() { SMRITI._buildSidebarDOM(nav_items, active_page, shift); }, 100);
+SMRITI._updateSidebarActiveState = function(active_page) {
+    var sidebar = document.getElementById("smriti-sidebar");
+    if (!sidebar) return;
+    
+    // Update active class on items
+    sidebar.querySelectorAll(".smriti-side-item").forEach(function(item) {
+        if (item.getAttribute("data-id") === active_page) {
+            item.classList.add("active");
+        } else {
+            item.classList.remove("active");
+        }
+    });
+    
+    // Close mobile menu drawer on routing
+    sidebar.classList.remove("open-mobile");
+    document.body.classList.remove("smriti-mobile-sidebar-open");
+};
+
+SMRITI._updateShiftStatusAsync = function() {
+    frappe.call({
+        method: "smriti_retail_os.shift_api.get_shift_status",
+        callback: function(r) {
+            if (!r.message) return;
+            var badge = document.getElementById("smriti-shift-badge");
+            if (badge) {
+                var shift_status = r.message.status || "Closed";
+                badge.textContent = shift_status;
+                badge.className = "smriti-side-shift-badge " + (shift_status.toLowerCase() === "open" ? "open" : "closed");
+            }
+        }
+    });
+};
+
+SMRITI._setupBackdropDOM = function() {
+    var backdrop = document.getElementById("smriti-sidebar-backdrop");
+    if (!backdrop) {
+        backdrop = document.createElement("div");
+        backdrop.id = "smriti-sidebar-backdrop";
+        backdrop.className = "smriti-sidebar-backdrop";
+        document.body.appendChild(backdrop);
+        
+        // Clicking backdrop closes the mobile sidebar drawer
+        backdrop.addEventListener("click", function() {
+            var sidebar = document.getElementById("smriti-sidebar");
+            if (sidebar) {
+                sidebar.classList.remove("open-mobile");
+            }
+            document.body.classList.remove("smriti-mobile-sidebar-open");
+        });
+    }
+};
+
+SMRITI.setupMobileToggle = function() {
+    // Only proceed if window is small enough or on mobile
+    if (window.innerWidth > 768) {
+        // Remove any residual mobile hamburger button if present
+        document.getElementById("smriti-mobile-hamburger-btn")?.remove();
         return;
     }
 
+    var navbar = document.querySelector(".navbar, header, .navbar-container");
+    if (!navbar) return;
+
+    var existing_btn = document.getElementById("smriti-mobile-hamburger-btn");
+    if (existing_btn) return;
+
+    var btn = document.createElement("button");
+    btn.id = "smriti-mobile-hamburger-btn";
+    btn.className = "smriti-mobile-hamburger";
+    btn.title = "Toggle Menu";
+    btn.innerHTML = '<span class="material-symbols-outlined">menu</span>';
+    
+    // Add click handler to toggle open mobile drawer
+    btn.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var sidebar = document.getElementById("smriti-sidebar");
+        if (sidebar) {
+            sidebar.classList.toggle("open-mobile");
+            var isOpen = sidebar.classList.contains("open-mobile");
+            if (isOpen) {
+                document.body.classList.add("smriti-mobile-sidebar-open");
+            } else {
+                document.body.classList.remove("smriti-mobile-sidebar-open");
+            }
+        }
+    });
+
+    // Insert as the first element in the navbar brand/container
+    var brand = navbar.querySelector(".navbar-brand, .brand-logo, .navbar-left");
+    if (brand) {
+        navbar.insertBefore(btn, brand);
+    } else {
+        navbar.insertBefore(btn, navbar.firstChild);
+    }
+};
+
+SMRITI._buildSidebarDOM = function(nav_items, active_page, shift) {
     // Double check that we don't have multiple sidebars
     document.getElementById("smriti-sidebar")?.remove();
 
@@ -104,8 +199,12 @@ SMRITI._buildSidebarDOM = function(nav_items, active_page, shift) {
     sidebar.id = "smriti-sidebar";
     
     // Check if collapsed state is cached
-    if (getSidebarCollapsed()) {
+    var is_collapsed = getSidebarCollapsed();
+    if (is_collapsed) {
         sidebar.classList.add("collapsed");
+        document.body.classList.add("smriti-sidebar-collapsed");
+    } else {
+        document.body.classList.remove("smriti-sidebar-collapsed");
     }
 
     // Load stylesheet dynamically if not present
@@ -117,7 +216,6 @@ SMRITI._buildSidebarDOM = function(nav_items, active_page, shift) {
         document.head.appendChild(link);
     }
 
-    var is_collapsed = sidebar.classList.contains("collapsed");
     var toggle_icon = is_collapsed ? "menu" : "menu_open";
     var brand_html = `
         <div class="smriti-side-brand">
@@ -173,7 +271,13 @@ SMRITI._buildSidebarDOM = function(nav_items, active_page, shift) {
     `;
 
     sidebar.innerHTML = brand_html + menu_html + footer_html;
-    layout_container.insertBefore(sidebar, layout_container.firstChild);
+    document.body.appendChild(sidebar);
+
+    // Setup backdrop overlay DOM element and listeners
+    SMRITI._setupBackdropDOM();
+
+    // Setup mobile toggle hamburger button in the navbar
+    SMRITI.setupMobileToggle();
 
     // Bind event listeners
     var toggle_btn = sidebar.querySelector(".smriti-side-toggle");
@@ -182,6 +286,12 @@ SMRITI._buildSidebarDOM = function(nav_items, active_page, shift) {
             sidebar.classList.toggle("collapsed");
             var collapsed = sidebar.classList.contains("collapsed");
             setSidebarCollapsed(collapsed);
+            
+            if (collapsed) {
+                document.body.classList.add("smriti-sidebar-collapsed");
+            } else {
+                document.body.classList.remove("smriti-sidebar-collapsed");
+            }
             
             var icon_el = toggle_btn.querySelector(".icon");
             if (icon_el) {
@@ -199,3 +309,10 @@ SMRITI._buildSidebarDOM = function(nav_items, active_page, shift) {
         });
     }
 };
+
+// Handle resize events to dynamically add or remove the mobile hamburger menu
+window.addEventListener("resize", function() {
+    if (document.body.classList.contains("smriti-sidebar-active")) {
+        SMRITI.setupMobileToggle();
+    }
+});

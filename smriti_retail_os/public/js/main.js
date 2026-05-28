@@ -621,11 +621,17 @@ function get_smriti_active_page() {
 function _render_smriti_sidebar_if_applicable() {
     var active_page = get_smriti_active_page();
     if (active_page) {
+        document.body.classList.add("smriti-sidebar-active");
         if (window.SMRITI && typeof SMRITI.renderSidebar === 'function') {
             SMRITI.renderSidebar(active_page);
         }
     } else {
+        document.body.classList.remove("smriti-sidebar-active");
+        document.body.classList.remove("smriti-sidebar-collapsed");
+        document.body.classList.remove("smriti-mobile-sidebar-open");
         document.getElementById("smriti-sidebar")?.remove();
+        document.getElementById("smriti-sidebar-backdrop")?.remove();
+        document.getElementById("smriti-mobile-hamburger-btn")?.remove();
     }
 }
 
@@ -638,6 +644,11 @@ function _setup_smriti_layout_class() {
 
 function _setup_sidebar_toggle() {
     if (!window.frappe) return;
+    if (_is_smriti_user()) {
+        // Skip native toggle logic when on SMRITI layout
+        $('body').removeClass('smriti-sidebar-right');
+        return;
+    }
     
     // 1. Read position from localStorage and apply immediately to body
     var savedPosition = localStorage.getItem('smriti-sidebar-position') || 'left';

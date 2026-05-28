@@ -262,6 +262,69 @@
     display: none;
 }
 
+/* ============================================================
+   Body Layout Shifting Rules (Custom Independent Sidebar)
+   ============================================================ */
+body.smriti-sidebar-active {
+    padding-left: 260px !important;
+    transition: padding-left 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+body.smriti-sidebar-active.smriti-sidebar-collapsed {
+    padding-left: 68px !important;
+}
+
+/* Shift Top Navbar and Header elements */
+body.smriti-sidebar-active .navbar,
+body.smriti-sidebar-active header,
+body.smriti-sidebar-active .navbar-default {
+    left: 260px !important;
+    width: calc(100% - 260px) !important;
+    transition: left 0.25s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+body.smriti-sidebar-active.smriti-sidebar-collapsed .navbar,
+body.smriti-sidebar-active.smriti-sidebar-collapsed header,
+body.smriti-sidebar-active.smriti-sidebar-collapsed .navbar-default {
+    left: 68px !important;
+    width: calc(100% - 68px) !important;
+}
+
+/* Hide standard Frappe sidebars completely when SMRITI sidebar is active */
+body.smriti-sidebar-active .layout-side-section,
+body.smriti-sidebar-active .desk-sidebar,
+body.smriti-sidebar-active .body-sidebar,
+body.smriti-sidebar-active .body-sidebar-container .sidebar-left,
+body.smriti-sidebar-active .layout-side-section.sidebar-left {
+    display: none !important;
+}
+
+/* Hamburger button hidden by default on desktop */
+.smriti-mobile-hamburger {
+    display: none;
+}
+
+/* Backdrop Overlay */
+.smriti-sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1040;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+body.smriti-mobile-sidebar-open .smriti-sidebar-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 /* --- Mobile Responsiveness --- */
 @media (max-width: 768px) {
     #smriti-sidebar {
@@ -276,4 +339,39 @@
     #smriti-sidebar.open-mobile {
         left: 0;
     }
+
+    /* Reset offsets on mobile screen */
+    body.smriti-sidebar-active {
+        padding-left: 0 !important;
+    }
+    body.smriti-sidebar-active.smriti-sidebar-collapsed {
+        padding-left: 0 !important;
+    }
+    body.smriti-sidebar-active .navbar,
+    body.smriti-sidebar-active header,
+    body.smriti-sidebar-active .navbar-default {
+        left: 0 !important;
+        width: 100% !important;
+    }
+
+    /* Mobile hamburger styling */
+    .smriti-mobile-hamburger {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        margin-right: 12px;
+        background: transparent;
+        border: none;
+        color: var(--text-color, #1d2939);
+        cursor: pointer;
+        border-radius: 50%;
+        transition: background 0.2s;
+        z-index: 1001; /* Above normal navbar items but below modals */
+    }
+    .smriti-mobile-hamburger:hover {
+        background: var(--bg-light-gray, #f8f9fc);
+    }
 }
+
