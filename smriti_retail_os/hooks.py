@@ -17,6 +17,20 @@ app_email = "admin@smriti.io"
 app_license = "mit"
 brand_html = "<b style='color:#e94560;font-family:Inter,sans-serif'>SMRITI Retail OS</b>"
 
+# Branding Configs
+app_logo_url = "/assets/smriti_retail_os/images/logo.svg"
+favicon = "/assets/smriti_retail_os/images/logo.svg"
+
+# Email Whitelabeling templates
+email_header = "smriti_retail_os/templates/emails/smriti_email_header.html"
+email_footer = "smriti_retail_os/templates/emails/smriti_email_footer.html"
+
+# Support Link Overrides
+help_links = [
+    {"title": "SMRITI Support Desk", "url": "https://support.smriti.io"},
+    {"title": "User Manual", "url": "/app/smriti-desk#user-manual"}
+]
+
 # Apps
 # ------------------
 
@@ -194,29 +208,23 @@ doc_events = {
     },
     "Supplier": {
         "on_update": "smriti_retail_os.hooks_logic.sync_supplier_address_and_credit_days"
+    },
+    "POS Invoice": {
+        "before_validate": "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
+    },
+    "Sales Invoice": {
+        "before_validate": "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
     }
 }
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"smriti_retail_os.tasks.all"
-# 	],
-# 	"daily": [
-# 		"smriti_retail_os.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"smriti_retail_os.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"smriti_retail_os.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"smriti_retail_os.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+    "daily": [
+        "smriti_retail_os.backup_api.run_scheduled_backup"
+    ]
+}
 
 # Testing
 # -------

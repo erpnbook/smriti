@@ -420,24 +420,99 @@ body.smriti-mobile-sidebar-open .smriti-sidebar-backdrop {
 
 /* Global Popout Window Layout overrides */
 body.smriti-popout-active .navbar,
+body.smriti-popout-active #navbar,
 body.smriti-popout-active #smriti-sidebar,
 body.smriti-popout-active .desk-sidebar,
+body.smriti-popout-active .body-sidebar,
 body.smriti-popout-active .layout-side-section,
-body.smriti-popout-active .page-head {
+body.smriti-popout-active .sidebar-left,
+body.smriti-popout-active .body-sidebar-container .sidebar-left,
+body.smriti-popout-active .layout-side-section.sidebar-left,
+body.smriti-popout-active .navbar-breadcrumbs,
+body.smriti-popout-active .navbar-container,
+body.smriti-popout-active .breadcrumb,
+body.smriti-popout-active .page-breadcrumbs {
     display: none !important;
+    width: 0 !important;
+    opacity: 0 !important;
 }
 
-body.smriti-popout-active .page-container,
-body.smriti-popout-active .layout-main-section,
-body.smriti-popout-active .layout-main {
+/* Hide page head ONLY for custom pages, but keep it on standard doctypes so save/submit works */
+body.smriti-popout-active.smriti-popout-custom-page .page-head {
+    display: none !important;
+    width: 0 !important;
+    opacity: 0 !important;
+}
+
+body.smriti-popout-active.smriti-popout-doctype .page-head {
+    padding: 12px 20px !important;
+    margin: 0 !important;
+    border-bottom: 1px solid var(--border-color, #eaecf0) !important;
+    background: var(--card-bg, #ffffff) !important;
+    left: 0 !important;
+}
+
+body[data-theme="dark"].smriti-popout-active.smriti-popout-doctype .page-head {
+    background: var(--smriti-bg, #111827) !important;
+}
+
+/* Make page content fill the screen width and behave correctly with scrolling */
+body.smriti-popout-active {
     padding: 0 !important;
     margin: 0 !important;
-    max-width: 100vw !important;
-    width: 100vw !important;
-    min-height: 100vh !important;
-    height: 100vh !important;
+    overflow-x: hidden !important;
+    --sidebar-width: 0px !important;
+    --page-sidebar-width: 0px !important;
+    --sidebar-left: 0px !important;
+    --navbar-height: 0px !important;
+}
+
+body.smriti-popout-active #web-page,
+body.smriti-popout-active #web-page > div,
+body.smriti-popout-active [id^="page-"],
+body.smriti-popout-active .page-container,
+body.smriti-popout-active .page-body,
+body.smriti-popout-active .layout-main-section,
+body.smriti-popout-active .layout-main-section-wrapper,
+body.smriti-popout-active .layout-main-section-wrapper > div,
+body.smriti-popout-active .layout-main,
+body.smriti-popout-active .body-sidebar-container,
+body.smriti-popout-active .body-sidebar-container > div,
+body.smriti-popout-active .page-content,
+body.smriti-popout-active .form-layout,
+body.smriti-popout-active .container {
+    padding: 0 !important;
+    margin: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
     border: none !important;
     border-radius: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+}
+
+/* Force layout wrapper elements to ignore grid template columns and take 100% width */
+body.smriti-popout-active .body-sidebar-container,
+body.smriti-popout-active .page-content,
+body.smriti-popout-active .layout-main-section-wrapper,
+body.smriti-popout-active .layout-main {
+    display: block !important;
+    grid-template-columns: 1fr !important;
+    grid-template-areas: none !important;
+    flex-direction: column !important;
+}
+
+/* Force main content areas to span all columns of any grid container */
+body.smriti-popout-active .layout-main,
+body.smriti-popout-active .layout-main-section,
+body.smriti-popout-active .layout-main-section-wrapper,
+body.smriti-popout-active [id^="page-"] {
+    grid-column: 1 / -1 !important;
+    grid-row: 1 / -1 !important;
 }
 
 /* Global Floating Controls for Popout windows */

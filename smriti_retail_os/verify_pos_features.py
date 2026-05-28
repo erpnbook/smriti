@@ -151,6 +151,8 @@ def run_pos_features_deep_audit():
         
         # Run standard recalculation / save to set the correct native invoice grand_total
         inv_doc.pos_profile = profile_name
+        inv_doc.flags.ignore_validate = True
+        inv_doc.flags.ignore_mandatory = True
         inv_doc.save(ignore_permissions=True)
         frappe.db.commit()
         

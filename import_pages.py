@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: import_pages.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Handles page registration safely inside docker.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0
@@ -13,7 +13,30 @@ import frappe
 import json
 import os
 
+# Monkeypatch export_module_json to prevent PermissionError when in developer_mode
+import frappe.modules.utils
+frappe.modules.utils.export_module_json = lambda *args, **kwargs: None
+
+try:
+    import frappe.core.doctype.page.page
+    frappe.core.doctype.page.page.export_module_json = lambda *args, **kwargs: None
+except ImportError:
+    pass
+
+try:
+    import frappe.modules.export_file
+    frappe.modules.export_file.export_module_json = lambda *args, **kwargs: None
+except ImportError:
+    pass
+
+frappe.init(site="frontend", sites_path="/home/frappe/frappe-bench/sites")
+frappe.connect()
+frappe.flags.in_import = True
+
+# Force developer_mode to 1 globally so standard pages can be imported/deleted
 frappe.conf.developer_mode = 1
+if hasattr(frappe.local, 'conf'):
+    frappe.local.conf.developer_mode = 1
 
 def import_page(page_name):
     json_path = f'/home/frappe/frappe-bench/apps/smriti_retail_os/smriti_retail_os/page/{page_name}/{page_name}.json'
@@ -45,5 +68,6 @@ import_page('smriti-barcode')
 import_page('smriti-purchase')
 import_page('smriti-reports')
 import_page('smriti-loyalty')
+import_page('smriti-backup')
 frappe.db.commit()
 print("DONE")

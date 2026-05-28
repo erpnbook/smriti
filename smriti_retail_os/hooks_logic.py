@@ -224,3 +224,100 @@ def sync_supplier_address_and_credit_days(doc, method):
 
         if doc.payment_terms != template_name:
             frappe.db.set_value("Supplier", doc.name, "payment_terms", template_name)
+
+
+# --- POS Invoice / Sales Invoice Hooks ---
+
+def validate_and_reconcile_retail_invoice(doc, method):
+    """
+    Triggers before_validate on POS Invoice and Sales Invoice during submission.
+    1. Validates loyalty redemption credits against database ledgers to prevent margin leaks.
+    2. Auto-heals inventory mismatches. If an item is out of stock in the target warehouse,
+       automatically creates a Draft Stock Entry (Material Receipt) for the missing quantity
+       and submits it, ensuring that checkout never fails due to negative stock exceptions!
+    """
+    print(f"[HOOKS LOGIC] Called validate_and_reconcile_retail_invoice: docstatus={doc.docstatus}, update_stock={doc.get('update_stock')}")
+    if doc.docstatus != 1:
+        return
+
+    # 1. Validate Loyalty Redemption Credits
+    if doc.redeem_loyalty_points and doc.loyalty_points > 0:
+        try:
+            from erpnext.accounts.doctype.loyalty_program.loyalty_program import get_loyalty_details
+            if doc.customer:
+                loyalty_details = get_loyalty_details(doc.customer, doc.posting_date)
+                available_points = loyalty_details.get("loyalty_points", 0)
+                if doc.loyalty_points > available_points:
+                    frappe.throw(
+                        _("Customer loyalty points balance ({0}) is less than points requested for redemption ({1}).").format(
+                            available_points, doc.loyalty_points
+                        )
+                    )
+        except Exception:
+            # Fallback raw database check to be bulletproof
+            loyalty_program = frappe.db.get_value("Customer", doc.customer, "loyalty_program")
+            if loyalty_program:
+                points = frappe.db.get_value("Loyalty Point Entry", {"customer": doc.customer, "loyalty_program": loyalty_program}, "SUM(remaining_points)") or 0
+                if doc.loyalty_points > points:
+                    frappe.throw(
+                        _("Customer loyalty points balance ({0}) is less than points requested for redemption ({1}).").format(
+                            points, doc.loyalty_points
+                        )
+                    )
+
+    # 2. Auto-heal negative stock on target warehouse to prevent transaction failures!
+    if doc.update_stock:
+        for item in doc.items:
+            # Check current actual quantity in target warehouse
+            actual_qty = frappe.db.get_value(
+                "Bin",
+                {"item_code": item.item_code, "warehouse": item.warehouse},
+                "actual_qty"
+            ) or 0.0
+
+            # If the quantity to sell is greater than actual available stock, auto-reconcile
+            needed_qty = flt(item.qty) - flt(actual_qty)
+            if needed_qty > 0:
+                # Log stock adjustment start
+                frappe.logger().info(f"SMRITI Auto-Reconciliation: Item {item.item_code} requires {needed_qty} qty in warehouse {item.warehouse}. Creating auto-material receipt.")
+                
+                try:
+                    # Create automatic Material Receipt Stock Entry
+                    se = frappe.new_doc("Stock Entry")
+                    se.purpose = "Material Receipt"
+                    se.stock_entry_type = "Material Receipt"
+                    se.company = doc.company
+                    se.posting_date = doc.posting_date
+                    se.append("items", {
+                        "item_code": item.item_code,
+                        "qty": needed_qty,
+                        "t_warehouse": item.warehouse,
+                        "uom": item.uom,
+                        "basic_rate": flt(item.rate) or 1.0,
+                        "cost_center": item.cost_center
+                    })
+                    se.flags.ignore_permissions = True
+                    se.insert(ignore_permissions=True)
+                    se.submit()
+                    
+                    # Force update actual stock in Bin immediately
+                    frappe.db.sql(
+                        "UPDATE `tabBin` SET actual_qty = actual_qty + %s WHERE item_code=%s AND warehouse=%s",
+                        (needed_qty, item.item_code, item.warehouse)
+                    )
+                    
+                    # Log override action in document timeline comments
+                    frappe.get_doc({
+                        "doctype": "Comment",
+                        "comment_type": "Comment",
+                        "reference_doctype": doc.doctype,
+                        "reference_name": doc.name,
+                        "content": f"SMRITI: Auto-Reconciled negative stock. Restocked {needed_qty} qty of item {item.item_code} in warehouse {item.warehouse} to authorize instant checkout.",
+                        "comment_email": "system@smriti.io",
+                        "comment_by": "SMRITI Retail OS"
+                    }).insert(ignore_permissions=True)
+                except Exception as stock_ex:
+                    frappe.log_error(
+                        title="SMRITI Auto-Reconciliation Failure",
+                        message=f"Failed to reconcile item {item.item_code} in warehouse {item.warehouse}: {str(stock_ex)}"
+                    )
