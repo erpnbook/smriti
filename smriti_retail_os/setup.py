@@ -13,11 +13,108 @@ import frappe
 import json
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
+def create_master_doctypes():
+    masters = [
+        ("SMRITI Heel Type", "Heel Type"),
+        ("SMRITI Outsole", "Outsole"),
+        ("SMRITI Upper Material", "Upper Material"),
+        ("SMRITI Gender", "Gender"),
+        ("SMRITI Purchase Class", "Purchase Class"),
+        ("SMRITI Merchandise Category", "Merchandise Category"),
+        ("SMRITI Sub Category", "Sub Category")
+    ]
+    for doctype_name, label in masters:
+        if not frappe.db.exists("DocType", doctype_name):
+            try:
+                doc = frappe.new_doc("DocType")
+                doc.name = doctype_name
+                doc.module = "SMRITI Retail OS"
+                doc.custom = 1
+                doc.autoname = "field:attribute_value"
+                doc.editable_grid = 1
+                doc.quick_entry = 1
+                doc.track_changes = 1
+                
+                doc.append("fields", {
+                    "fieldname": "attribute_value",
+                    "fieldtype": "Data",
+                    "label": "Value",
+                    "reqd": 1,
+                    "unique": 1,
+                    "in_list_view": 1
+                })
+                
+                doc.append("permissions", {
+                    "role": "System Manager",
+                    "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+                })
+                
+                doc.append("permissions", {
+                    "role": "SMRITI Store Manager",
+                    "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+                })
+                
+                doc.insert(ignore_permissions=True)
+                frappe.db.commit()
+            except Exception as e:
+                frappe.log_error(f"Error creating custom Master DocType {doctype_name}: {str(e)}")
+
+def seed_master_doctypes():
+    seeds = {
+        "SMRITI Gender": ["MENS", "LADIES", "BOYS", "GIRLS", "UNISEX", "KIDS"],
+        "SMRITI Purchase Class": ["FW", "MFW", "LFW", "BFW", "GFW", "KFW", "ASSTED", "SPORTS", "ACC", "BAG", "FORMAL", "CASUAL"],
+        "SMRITI Heel Type": ["FLAT", "BLOCK", "WEDGE", "PENCIL", "PLATFORM"],
+        "SMRITI Outsole": ["EVA", "TPR", "PU", "RUBBER", "PVC"],
+        "SMRITI Upper Material": ["SYNTHETIC", "LEATHER", "MESH", "CANVAS", "KNITTED"]
+    }
+    for doctype_name, values in seeds.items():
+        if frappe.db.exists("DocType", doctype_name):
+            for val in values:
+                if not frappe.db.exists(doctype_name, val):
+                    try:
+                        doc = frappe.new_doc(doctype_name)
+                        doc.attribute_value = val
+                        doc.insert(ignore_permissions=True)
+                    except Exception as e:
+                        frappe.log_error(f"Error seeding {val} to {doctype_name}: {str(e)}")
+    frappe.db.commit()
+
+def backup_and_seed_existing_data():
+    field_to_doctype = {
+        "custom_heel_type": "SMRITI Heel Type",
+        "custom_outsole": "SMRITI Outsole",
+        "custom_upper_material": "SMRITI Upper Material",
+        "custom_gender": "SMRITI Gender",
+        "custom_sub_category": "SMRITI Sub Category",
+        "custom_merchandise_category": "SMRITI Merchandise Category",
+        "custom_purchase_class": "SMRITI Purchase Class"
+    }
+    for field, dt in field_to_doctype.items():
+        if frappe.db.exists("DocType", dt) and frappe.db.has_column("Item", field):
+            try:
+                unique_vals = frappe.db.sql(f"select distinct `{field}` from `tabItem` where `{field}` is not null and `{field}` != ''", as_list=True)
+                for (val,) in unique_vals:
+                    val_clean = str(val).strip()
+                    if val_clean and not frappe.db.exists(dt, val_clean):
+                        try:
+                            doc = frappe.new_doc(dt)
+                            doc.attribute_value = val_clean
+                            doc.insert(ignore_permissions=True)
+                        except Exception as e:
+                            frappe.log_error(f"Error backing up {val_clean} to {dt}: {str(e)}")
+            except Exception as e:
+                frappe.log_error(f"Error reading column {field} from Item: {str(e)}")
+    frappe.db.commit()
+
 def setup_smriti_retail_os():
     """
     Initializes custom fields, roles, and workspaces for standard DocTypes
     to extend ERPNext for SMRITI Retail OS.
     """
+    # 0. Provision dynamic attribute Master DocTypes + preserve existing database entries
+    create_master_doctypes()
+    backup_and_seed_existing_data()
+    seed_master_doctypes()
 
     # 1. Custom Fields Provisioning
     custom_fields = {
@@ -111,51 +208,56 @@ def setup_smriti_retail_os():
             {
                 "fieldname": "custom_purchase_class",
                 "label": "Purchase Class",
-                "fieldtype": "Select",
-                "options": "\nFW\nMFW\nLFW\nBFW\nGFW\nKFW\nASSTED\nSPORTS\nACC\nBAG\nFORMAL\nCASUAL",
+                "fieldtype": "Link",
+                "options": "SMRITI Purchase Class",
                 "insert_after": "custom_current_stock_html",
                 "module": "SMRITI Retail OS"
             },
             {
                 "fieldname": "custom_merchandise_category",
                 "label": "Merchandise Category",
-                "fieldtype": "Data",
+                "fieldtype": "Link",
+                "options": "SMRITI Merchandise Category",
                 "insert_after": "custom_purchase_class",
                 "module": "SMRITI Retail OS"
             },
             {
                 "fieldname": "custom_sub_category",
                 "label": "Sub Category",
-                "fieldtype": "Data",
+                "fieldtype": "Link",
+                "options": "SMRITI Sub Category",
                 "insert_after": "custom_merchandise_category",
                 "module": "SMRITI Retail OS"
             },
             {
                 "fieldname": "custom_gender",
                 "label": "Gender",
-                "fieldtype": "Select",
-                "options": "\nMENS\nLADIES\nBOYS\nGIRLS\nUNISEX\nKIDS",
+                "fieldtype": "Link",
+                "options": "SMRITI Gender",
                 "insert_after": "custom_sub_category",
                 "module": "SMRITI Retail OS"
             },
             {
                 "fieldname": "custom_upper_material",
                 "label": "Upper Material",
-                "fieldtype": "Data",
+                "fieldtype": "Link",
+                "options": "SMRITI Upper Material",
                 "insert_after": "custom_gender",
                 "module": "SMRITI Retail OS"
             },
             {
                 "fieldname": "custom_outsole",
                 "label": "Outsole",
-                "fieldtype": "Data",
+                "fieldtype": "Link",
+                "options": "SMRITI Outsole",
                 "insert_after": "custom_upper_material",
                 "module": "SMRITI Retail OS"
             },
             {
                 "fieldname": "custom_heel_type",
                 "label": "Heel Type",
-                "fieldtype": "Data",
+                "fieldtype": "Link",
+                "options": "SMRITI Heel Type",
                 "insert_after": "custom_outsole",
                 "module": "SMRITI Retail OS"
             },

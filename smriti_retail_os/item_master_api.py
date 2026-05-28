@@ -106,6 +106,21 @@ def validate_import_rows(rows_json):
         if brand and not frappe.db.exists("Brand", brand):
             warnings.append(f"Brand '{brand}' not found — will be auto-created")
 
+        # ── Attribute Soft Checks (auto-create warnings) ──────────────────
+        attr_checks = [
+            ("GENDER", "SMRITI Gender", "Gender"),
+            ("PURCHASE CLASS", "SMRITI Purchase Class", "Purchase Class"),
+            ("MERCHANDISE CATEGORY", "SMRITI Merchandise Category", "Merchandise Category"),
+            ("Sub category", "SMRITI Sub Category", "Sub Category"),
+            ("UPPER MATERIAL", "SMRITI Upper Material", "Upper Material"),
+            ("OUTSOLE", "SMRITI Outsole", "Outsole"),
+            ("HEELS", "SMRITI Heel Type", "Heel Type")
+        ]
+        for row_key, doctype_name, label in attr_checks:
+            val = str(row.get(row_key, "")).strip()
+            if val and not frappe.db.exists(doctype_name, val):
+                warnings.append(f"{label} '{val}' not found — will be auto-created")
+
         status = "error" if errors else ("warning" if warnings else "valid")
         results.append({
             "row_idx": idx,
@@ -283,6 +298,22 @@ def import_item_master(rows_json):
 #  HELPERS
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _ensure_master_value(doctype_name, value):
+    """Checks if a value exists in a Master DocType, and inserts it if not."""
+    val_clean = str(value or "").strip()
+    if not val_clean:
+        return ""
+    if not frappe.db.exists(doctype_name, val_clean):
+        try:
+            doc = frappe.new_doc(doctype_name)
+            doc.attribute_value = val_clean
+            doc.insert(ignore_permissions=True)
+            frappe.db.commit()
+        except Exception as e:
+            frappe.log_error(f"Failed to auto-create {val_clean} in {doctype_name}: {str(e)}")
+    return val_clean
+
+
 def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
                              gst_pct, hsn_code, image_link, gender, upper_material,
                              outsole, heel_type, purchase_class, merch_cat, sub_cat,
@@ -307,13 +338,13 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
     item.custom_mrp             = mrp
     item.valuation_rate         = cost
     item.custom_gst_percentage  = gst_pct
-    item.custom_gender          = gender
-    item.custom_upper_material  = upper_material
-    item.custom_outsole         = outsole
-    item.custom_heel_type       = heel_type
-    item.custom_purchase_class  = purchase_class
-    item.custom_merchandise_category = merch_cat
-    item.custom_sub_category    = sub_cat
+    item.custom_gender          = _ensure_master_value("SMRITI Gender", gender)
+    item.custom_upper_material  = _ensure_master_value("SMRITI Upper Material", upper_material)
+    item.custom_outsole         = _ensure_master_value("SMRITI Outsole", outsole)
+    item.custom_heel_type       = _ensure_master_value("SMRITI Heel Type", heel_type)
+    item.custom_purchase_class  = _ensure_master_value("SMRITI Purchase Class", purchase_class)
+    item.custom_merchandise_category = _ensure_master_value("SMRITI Merchandise Category", merch_cat)
+    item.custom_sub_category    = _ensure_master_value("SMRITI Sub Category", sub_cat)
 
     if brand:
         item.brand = brand
