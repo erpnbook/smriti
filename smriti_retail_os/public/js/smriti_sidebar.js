@@ -25,6 +25,8 @@ SMRITI.renderSidebar = function(active_page) {
     const nav_items = [
         {id:"billing",    icon:"💳", label:"Billing",
          url:"/app/smriti-billing"},
+        {id:"shift",      icon:"🌅", label:"Shift Management",
+         url:"/app/smriti-shift"},
         {id:"inventory",  icon:"📦", label:"Inventory",
          url:"/app/smriti-inventory"},
         {id:"products",   icon:"🛍️", label:"Products",
@@ -38,6 +40,10 @@ SMRITI.renderSidebar = function(active_page) {
         {id:"purchase",   icon:"🛒", label:"Purchase Manager",
          url:"/app/smriti-purchase"},
         ...(is_manager ? [
+            {id:"item_import", icon:"📥", label:"Item Master Import",
+             url:"/app/smriti-item-master"},
+            {id:"print_templates", icon:"📐", label:"Print Templates",
+             url:"/app/smriti-print-template"},
             {id:"purchase_orders", icon:"📝", label:"Purchase Orders",
              url:"/app/purchase-order"},
             {id:"purchase_receipts", icon:"🚚", label:"Purchase Receipts",

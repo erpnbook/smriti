@@ -147,6 +147,13 @@ class SmritiDeskPage {
                         <div class="action-name">Barcode Printing</div>
                         <div class="action-desc">Generate, inspect, and print retail price tags.</div>
                     </div>
+
+                    <!-- Item Master Import -->
+                    <div class="action-card" data-route="smriti-item-master">
+                        <div class="action-icon">📥</div>
+                        <div class="action-name">Item Import Wizard</div>
+                        <div class="action-desc">Upload catalog from Excel sheet with auto footwear attributes.</div>
+                    </div>
                 </div>
 
                 <!-- Quick Masters -->
@@ -173,6 +180,13 @@ class SmritiDeskPage {
                         <div class="action-icon">🚛</div>
                         <div class="action-name">Add Supplier</div>
                         <div class="action-desc">Add a new supplier for purchase orders and GRN.</div>
+                    </div>
+
+                    <!-- Print Templates -->
+                    <div class="action-card" data-route="List/SMRITI Print Template">
+                        <div class="action-icon">📐</div>
+                        <div class="action-name">Barcode Templates</div>
+                        <div class="action-desc">Customize layout configurations for ZPL and TSPL printers.</div>
                     </div>
                 </div>
 
