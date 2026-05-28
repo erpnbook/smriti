@@ -93,6 +93,7 @@ function _patch_frappe_boot() {
 
         /* c) Sidebar pages — each workspace page carries an app_title */
         var pages = (frappe.boot.sidebar_pages && frappe.boot.sidebar_pages.pages) ||
+                    (frappe.boot.workspaces && frappe.boot.workspaces.pages) ||
                     (frappe.workspace_sidebar && frappe.workspace_sidebar.all_pages) || [];
         if (Array.isArray(pages)) {
             pages.forEach(function (page) {
@@ -104,6 +105,27 @@ function _patch_frappe_boot() {
                 }
             });
         }
+
+        /* c2) workspace_sidebar_item / workspace_sidebar_items */
+        ['workspace_sidebar_item', 'workspace_sidebar_items'].forEach(function (key) {
+            var ws_items = frappe.boot[key];
+            if (ws_items && typeof ws_items === 'object') {
+                Object.keys(ws_items).forEach(function (ws_name) {
+                    var ws_data = ws_items[ws_name];
+                    if (ws_data && typeof ws_data === 'object') {
+                        if (ws_data.app_title && _SCRUB_RE.test(ws_data.app_title)) ws_data.app_title = _replace(ws_data.app_title);
+                        if (ws_data.app && /erpnext/i.test(ws_data.app)) ws_data.app_title = SMRITI_BRAND;
+                        var items = ws_data.items || [];
+                        if (Array.isArray(items)) {
+                            items.forEach(function (item) {
+                                if (item.app_title && _SCRUB_RE.test(item.app_title)) item.app_title = _replace(item.app_title);
+                                if (item.app && /erpnext/i.test(item.app)) item.app_title = SMRITI_BRAND;
+                            });
+                        }
+                    }
+                });
+            }
+        });
 
         /* d) Version map */
         if (frappe.boot.versions) {

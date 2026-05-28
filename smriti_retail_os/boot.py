@@ -102,8 +102,8 @@ def _apply_branding(bootinfo):
             app["title"]       = _APP_TITLE_OVERRIDES[name]
             app["description"] = "Smarter Retail. Built for India."
 
-    # 8. ── CRITICAL: sidebar_pages ────────────────────────────────────────────
-    # Frappe builds the workspace sidebar from bootinfo.sidebar_pages.
+    # 8. ── CRITICAL: sidebar_pages & workspaces ────────────────────────────────
+    # Frappe builds the workspace sidebar from bootinfo.sidebar_pages or bootinfo.workspaces.
     # Each entry has { name, title, app, app_title, ... }
     # "app_title" is what appears as the subtitle under each workspace link.
     sidebar_pages = bootinfo.get("sidebar_pages") or {}
@@ -116,9 +116,16 @@ def _apply_branding(bootinfo):
         for page in sidebar_pages:
             _patch_page(page)
 
-    # 9. Also patch top-level workspace_sidebar_items if present
+    workspaces = bootinfo.get("workspaces")
+    if isinstance(workspaces, dict):
+        pages = workspaces.get("pages") or []
+        for page in pages:
+            _patch_page(page)
+
+    # 9. Also patch top-level workspace_sidebar_items / workspace_sidebar_item if present
     for key in (
         "workspace_sidebar_items",
+        "workspace_sidebar_item",
         "allowed_pages",
         "module_wise_workspaces",
     ):
@@ -133,6 +140,14 @@ def _apply_branding(bootinfo):
                         _patch_page(p)
                 elif isinstance(page, dict):
                     _patch_page(page)
+            # If key is workspace_sidebar_item, also patch its values/items dicts
+            if key == "workspace_sidebar_item":
+                for ws_name, ws_data in val.items():
+                    if isinstance(ws_data, dict):
+                        _patch_page(ws_data)
+                        items = ws_data.get("items") or []
+                        for item in items:
+                            _patch_page(item)
 
     # 10. nav_items (top navbar links that may carry ERPNext labels)
     nav_items = bootinfo.get("nav_items") or []
