@@ -379,7 +379,7 @@ SMRITI.openPopout = function(url) {
     const h = screen.height - 60;
     const left = 30;
     const top = 30;
-    const win = window.open(popout_url, "_blank", `width=${w},height=${h},top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`);
+    const win = window.open(popout_url, "smriti-popout-window", `width=${w},height=${h},top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`);
     if (win) {
         win.focus();
     }
