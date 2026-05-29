@@ -783,6 +783,10 @@ function _force_popout_full_width() {
 function _check_global_popout_mode() {
     var urlParams = new URLSearchParams(window.location.search);
     
+    if (urlParams.get('popout') === 'true') {
+        window.name = "smriti-popout-window";
+    }
+    
     // Determine if the current window is a popout window using standard window.name
     var isPopout = window.name === "smriti-popout-window" || 
                    window.name === "SMRITI Billing Terminal" || 
