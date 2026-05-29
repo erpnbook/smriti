@@ -1,5 +1,5 @@
 /**
- * @file: smriti_retail_os/smriti_retail_os/page/smriti_inventory/smriti_inventory.css
+ * @file: smriti_retail_os/public/css/smriti-inventory.css
  * @description: Handles user login, registration, and JWT token generation.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
@@ -215,7 +215,7 @@
     background: var(--smriti-bg) !important;
     border: 1px solid var(--smriti-card-border) !important;
     border-radius: var(--radius-md) !important;
-    padding: 12px 12px 12px 45px !important;
+    padding: 12px 12px 12px 45px;
     color: var(--smriti-text) !important;
     font-size: 1.1em;
     font-weight: 500;

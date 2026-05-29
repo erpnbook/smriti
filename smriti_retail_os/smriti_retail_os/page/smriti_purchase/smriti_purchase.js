@@ -1,5 +1,5 @@
 /**
- * @file: smriti_retail_os/page/smriti-purchase/smriti-purchase.js
+ * @file: smriti_retail_os/public/js/smriti_purchase.js
  * @description: Handles user login, registration, and JWT token generation.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
@@ -15,14 +15,9 @@
 frappe.pages['smriti-purchase'].on_page_load = function(wrapper) {
     const page = frappe.ui.make_app_page({
         parent: wrapper,
-        title: 'Purchase Manager',
+        title: 'SMRITI Purchase Management',
         single_column: true
     });
-
-    if (window.SMRITI && typeof SMRITI.renderSidebar === 'function') {
-        SMRITI.renderSidebar("purchase");
-    }
-
     window.smriti_purchase = new SmritiPurchasePage(wrapper);
 };
 
@@ -513,68 +508,10 @@ class SmritiPurchasePage {
                 if (r.message) {
                     me.add_scanned_item_to_grid(r.message);
                 } else {
-                    me.show_quick_item_modal(barcode);
+                    frappe.show_alert({message: __("Barcode not found in catalog."), indicator: 'red'});
                 }
             }
         });
-    }
-
-    show_quick_item_modal(barcode) {
-        var me = this;
-        let d = new frappe.ui.Dialog({
-            title: __('Quick Add New Item'),
-            fields: [
-                {
-                    label: __('Barcode'),
-                    fieldname: 'barcode',
-                    fieldtype: 'Data',
-                    default: barcode,
-                    read_only: 1
-                },
-                {
-                    label: __('Item Name'),
-                    fieldname: 'item_name',
-                    fieldtype: 'Data',
-                    reqd: 1
-                },
-                {
-                    label: __('Purchase Rate'),
-                    fieldname: 'rate',
-                    fieldtype: 'Currency',
-                    reqd: 1
-                },
-                {
-                    label: __('Selling MRP'),
-                    fieldname: 'mrp',
-                    fieldtype: 'Currency',
-                    reqd: 1
-                },
-                {
-                    label: __('GST %'),
-                    fieldname: 'gst_percentage',
-                    fieldtype: 'Select',
-                    options: '0\n5\n12\n18\n28',
-                    default: '18'
-                }
-            ],
-            primary_action_label: __('Save & Add to Grid'),
-            primary_action(values) {
-                frappe.call({
-                    method: "smriti_retail_os.master_api.quick_create_item",
-                    args: values,
-                    callback: function(res) {
-                        if (res.message) {
-                            me.add_scanned_item_to_grid(res.message);
-                            d.hide();
-                            frappe.show_alert({message: __("Item Created & Added"), indicator: 'green'});
-                        }
-                    }
-                });
-            }
-        });
-        
-        d.show();
-        setTimeout(() => d.get_field('item_name').$input.focus(), 400);
     }
 
     add_scanned_item_to_grid(item) {

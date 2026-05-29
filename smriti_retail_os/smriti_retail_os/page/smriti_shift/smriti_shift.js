@@ -1,5 +1,5 @@
 /**
- * @file: smriti_retail_os/page/smriti-shift/smriti-shift.js
+ * @file: smriti_retail_os/public/js/smriti_shift.js
  * @description: Handles user login, registration, and JWT token generation.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
@@ -16,14 +16,9 @@
 frappe.pages['smriti-shift'].on_page_load = function(wrapper) {
     const page = frappe.ui.make_app_page({
         parent: wrapper,
-        title: 'Day Open / Close',
+        title: 'SMRITI Day Open / Close',
         single_column: true
     });
-
-    if (window.SMRITI && typeof SMRITI.renderSidebar === 'function') {
-        SMRITI.renderSidebar("shift");
-    }
-
     window.smriti_shift = new SmritiShiftPage(wrapper);
 };
 
@@ -63,7 +58,7 @@ class SmritiShiftPage {
                     <div class="brand">
                         <div class="brand-icon">🏪</div>
                         <div>
-                            <div class="brand-title">Day Open / Close</div>
+                            <div class="brand-title">SMRITI Retail OS</div>
                             <div class="brand-sub">Day Open / Close</div>
                         </div>
                     </div>

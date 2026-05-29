@@ -1,5 +1,5 @@
 /**
- * @file: smriti_retail_os/smriti_retail_os/page/smriti_billing/smriti_billing.css
+ * @file: smriti_retail_os/public/css/smriti-billing.css
  * @description: Handles user login, registration, and JWT token generation.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
@@ -575,4 +575,56 @@ body.smriti-popout-active .smriti-billing-container {
 .btn-smriti-topaction-primary:hover {
     transform: translateY(-1px);
     box-shadow: 5px 5px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ── Premium Switch Toggle (For B2B Credit) ── */
+.smriti-switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+}
+
+.smriti-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.smriti-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--smriti-bg);
+    border: 1px solid var(--smriti-card-border);
+    transition: .3s;
+    border-radius: 24px;
+    box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1);
+}
+
+.smriti-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--smriti-text-muted);
+    transition: .3s;
+    border-radius: 50%;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+.smriti-switch input:checked + .smriti-slider {
+    background-color: var(--smriti-primary-light);
+    border-color: var(--smriti-primary);
+}
+
+.smriti-switch input:checked + .smriti-slider:before {
+    transform: translateX(22px);
+    background-color: #ffffff;
+    box-shadow: -1px 1px 2px rgba(0,0,0,0.2);
 }

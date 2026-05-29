@@ -1,5 +1,5 @@
 /**
- * @file: smriti_retail_os/page/smriti-barcode/smriti-barcode.js
+ * @file: smriti_retail_os/public/js/smriti_barcode.js
  * @description: Handles user login, registration, and JWT token generation.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
@@ -11,13 +11,9 @@
 frappe.pages['smriti-barcode'].on_page_load = function(wrapper) {
     var page = frappe.ui.make_app_page({
         parent: wrapper,
-        title: __('Barcode Printing'),
+        title: __('SMRITI Barcode Printing'),
         single_column: true
     });
-
-    if (window.SMRITI && typeof SMRITI.renderSidebar === 'function') {
-        SMRITI.renderSidebar("barcode");
-    }
 
     var smriti_barcode = new SmritiBarcodeController(wrapper, page);
 }
@@ -132,7 +128,6 @@ class SmritiBarcodeController {
                                     <option value="50x30">50 x 30 mm</option>
                                     <option value="75x50">75 x 50 mm</option>
                                     <option value="100x50">100 x 50 mm</option>
-                                    <option value="106x55">106.6 x 55.4 mm (TSPL)</option>
                                 </select>
                             </div>
 
@@ -204,7 +199,7 @@ class SmritiBarcodeController {
             me.selected_label_size = $(this).val();
             // Update preview box size dynamically
             const sim = $("#smriti-barcode-preview-box");
-            sim.removeClass("sz-50x25 sz-50x30 sz-75x50 sz-100x50 sz-106x55").addClass("sz-" + me.selected_label_size);
+            sim.removeClass("sz-50x25 sz-50x30 sz-75x50 sz-100x50").addClass("sz-" + me.selected_label_size);
         });
 
         $("#smriti-btn-preview-prn").off("click").on("click", () => me.trigger_prn_preview_code());

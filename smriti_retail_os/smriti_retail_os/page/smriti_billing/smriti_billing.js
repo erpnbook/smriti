@@ -196,6 +196,17 @@ class SmritiBillingController {
                                     <label><span class="material-symbols-outlined">credit_card</span> ${__('Card')}:</label>
                                     <input type="number" id="pay-card-input" value="0" min="0">
                                 </div>
+                                <div class="payment-field-row credit-toggle-row" style="margin-top: 10px; border-top: 1px dashed var(--smriti-card-border); padding-top: 10px;">
+                                    <label style="display: flex; align-items: center; justify-content: space-between; width: 100%; cursor: pointer;">
+                                        <span style="display: flex; align-items: center; gap: 6px; font-weight: 700; color: var(--smriti-primary);">
+                                            <span class="material-symbols-outlined">handshake</span> ${__('On B2B Credit')}
+                                        </span>
+                                        <div class="smriti-switch">
+                                            <input type="checkbox" id="pay-credit-toggle">
+                                            <span class="smriti-slider"></span>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
                             <div class="payment-alert-box" id="pay-drawer-alert">
                                 <span>Pending: <b id="pay-pending-total">INR 0.00</b></span>
@@ -271,6 +282,20 @@ class SmritiBillingController {
 
         $(".btn-smriti-fullscreen").off("click").on("click", () => me.toggle_fullscreen());
         $(".btn-smriti-popout").off("click").on("click", () => me.popout_terminal());
+
+        $("#pay-credit-toggle").off("change").on("change", function() {
+            const on_credit = $(this).is(":checked");
+            if (on_credit) {
+                $("#pay-cash-input").val(0).prop("disabled", true);
+                $("#pay-upi-input").val(0).prop("disabled", true);
+                $("#pay-card-input").val(0).prop("disabled", true);
+            } else {
+                $("#pay-cash-input").prop("disabled", false);
+                $("#pay-upi-input").prop("disabled", false);
+                $("#pay-card-input").prop("disabled", false);
+            }
+            me.update_totals();
+        });
     }
 
     toggle_fullscreen() {
@@ -437,14 +462,20 @@ class SmritiBillingController {
         const card_paid = flt($("#pay-card-input").val());
         const total_paid = (cash_paid + upi_paid + card_paid);
         
-        const pending = (final_due - total_paid);
-
-        if (pending > 0) {
-            $("#pay-drawer-alert").removeClass("reconciled").addClass("pending");
-            $("#pay-pending-total").text("INR " + pending.toFixed(2));
-        } else {
+        const on_credit = $("#pay-credit-toggle").is(":checked");
+        
+        if (on_credit) {
             $("#pay-drawer-alert").removeClass("pending").addClass("reconciled");
-            $("#pay-pending-total").text("PAID / NO DUE");
+            $("#pay-pending-total").text("ON B2B CREDIT");
+        } else {
+            const pending = (final_due - total_paid);
+            if (pending > 0) {
+                $("#pay-drawer-alert").removeClass("reconciled").addClass("pending");
+                $("#pay-pending-total").text("INR " + pending.toFixed(2));
+            } else {
+                $("#pay-drawer-alert").removeClass("pending").addClass("reconciled");
+                $("#pay-pending-total").text("PAID / NO DUE");
+            }
         }
     }
 
@@ -588,7 +619,9 @@ class SmritiBillingController {
         const card_paid = flt($("#pay-card-input").val());
         const total_paid = (cash_paid + upi_paid + card_paid);
 
-        if (total_paid < grand_total) {
+        const on_credit = $("#pay-credit-toggle").is(":checked");
+
+        if (!on_credit && total_paid < grand_total) {
             frappe.msgprint({
                 title: __('Payment Incomplete'),
                 message: __('Total paid must be equal to or greater than Grand Total. Please adjust payments.'),
@@ -613,7 +646,8 @@ class SmritiBillingController {
                 items: JSON.stringify(me.items),
                 payments: JSON.stringify(payments),
                 loyalty_points: loyalty_points,
-                invoice_name: me.current_invoice_name
+                invoice_name: me.current_invoice_name,
+                on_credit: on_credit ? 1 : 0
             },
             freeze: true,
             freeze_message: __("Submitting Billing through India Compliance..."),
@@ -632,9 +666,10 @@ class SmritiBillingController {
                     me.loyalty_conversion_factor = 0.0;
                     me.loyalty_balance_points = 0;
                     $("#smriti-invoice-id").text("NEW BILL");
-                    $("#pay-cash-input").val(0);
-                    $("#pay-upi-input").val(0);
-                    $("#pay-card-input").val(0);
+                    $("#pay-credit-toggle").prop("checked", false);
+                    $("#pay-cash-input").val(0).prop("disabled", false);
+                    $("#pay-upi-input").val(0).prop("disabled", false);
+                    $("#pay-card-input").val(0).prop("disabled", false);
                     $("#redeem-points-input").val(0);
 
                     me.render_grid_rows();

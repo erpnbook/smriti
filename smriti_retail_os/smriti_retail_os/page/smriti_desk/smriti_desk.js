@@ -167,17 +167,6 @@ class SmritiDeskPage {
                             <button class="btn btn-default btn-xs btn-desk-barcode-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/app/smriti-barcode')">📺 Popout</button>
                         </div>
                     </div>
-
-                    <!-- Backup -->
-                    <div class="action-card" style="padding: 18px 24px; display: flex; flex-direction: column;">
-                        <div class="action-icon" style="margin-bottom: 8px;">🔄</div>
-                        <div class="action-name" style="margin-bottom: 2px;">Backup & Restore</div>
-                        <div class="action-desc" style="margin-bottom: 12px; flex: 1;">Configure backups, schedule, and perform restores.</div>
-                        <div class="action-buttons" style="display: flex; gap: 8px; width: 100%; margin-top: auto;">
-                            <button class="btn btn-primary btn-xs btn-desk-backup-std" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px;">🔄 Standard</button>
-                            <button class="btn btn-default btn-xs btn-desk-backup-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/app/smriti-backup')">📺 Popout</button>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Quick Masters -->
@@ -289,10 +278,6 @@ class SmritiDeskPage {
         $('#smriti-desk-root .btn-desk-barcode-std').on('click', (e) => {
             e.stopPropagation();
             frappe.set_route('smriti-barcode');
-        });
-        $('#smriti-desk-root .btn-desk-backup-std').on('click', (e) => {
-            e.stopPropagation();
-            frappe.set_route('smriti-backup');
         });
 
         // Bind master action clicks

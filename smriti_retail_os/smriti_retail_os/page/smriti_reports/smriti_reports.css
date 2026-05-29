@@ -1,0 +1,271 @@
+/**
+ * @file: smriti_retail_os/public/css/smriti-reports.css
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+/**
+ * @file smriti-reports.css
+ * @description SMRITI Reports — Clean Neumorphic Hybrid v3.0
+ *              Tokens inherited from smriti_theme.css
+ */
+
+/* Tokens from smriti_theme.css :root — no redefinition */
+
+.smriti-reports-container {
+    background-color: var(--smriti-bg);
+    color: var(--smriti-text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    min-height: 82vh;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ── Filter Bar — FLAT white ── */
+.reports-filter-bar {
+    background: var(--smriti-card-bg);
+    border: 1px solid var(--smriti-card-border);
+    border-radius: var(--radius-md);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    box-shadow: var(--shadow-sm);
+}
+
+.reports-filter-bar .filter-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--smriti-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+}
+
+/* Filter inputs — INSET neumorphic */
+.reports-filter-bar input,
+.reports-filter-bar select {
+    background: var(--smriti-bg) !important;
+    border: 1px solid transparent !important;
+    border-radius: var(--radius-md) !important;
+    color: var(--smriti-text) !important;
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+    box-shadow: var(--neu-pressed-sm) !important;
+    transition: box-shadow var(--t-base) var(--ease), border-color var(--t-base) var(--ease) !important;
+    outline: none !important;
+    min-width: 140px;
+}
+.reports-filter-bar input:focus,
+.reports-filter-bar select:focus {
+    border-color: var(--smriti-primary) !important;
+    box-shadow: var(--neu-pressed-sm), 0 0 0 3px var(--smriti-primary-glow) !important;
+}
+
+/* ── Report buttons — NEUMORPHIC ── */
+.btn-report {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition: all var(--t-base) var(--ease);
+    background: var(--smriti-bg);
+    color: var(--smriti-text);
+    box-shadow: var(--neu-float);
+}
+.btn-report:hover  { box-shadow: var(--neu-float-lg); color: var(--smriti-primary); transform: translateY(-1px); }
+.btn-report:active { box-shadow: var(--neu-pressed); transform: translateY(0); }
+
+.btn-report-primary {
+    background: linear-gradient(145deg, var(--smriti-primary-light), var(--smriti-primary));
+    color: white;
+    box-shadow: 5px 5px 12px rgba(83,56,158,.35), -3px -3px 8px rgba(158,119,237,.20);
+}
+.btn-report-primary:hover {
+    box-shadow: 7px 7px 16px rgba(83,56,158,.42), -4px -4px 10px rgba(158,119,237,.25);
+    color: white;
+    transform: translateY(-1px);
+}
+.btn-report-primary:active {
+    box-shadow: inset 4px 4px 8px rgba(83,56,158,.4), inset -2px -2px 5px rgba(139,92,246,.2);
+    transform: translateY(0);
+}
+
+/* ── KPI cards — NEUMORPHIC ── */
+.report-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.report-kpi-card {
+    background: var(--smriti-bg);
+    border-radius: var(--radius-xl);
+    padding: 20px 22px;
+    box-shadow: var(--neu-float);
+    cursor: default;
+    transition: box-shadow var(--t-base) var(--ease), transform var(--t-base) var(--ease);
+    border: none;
+}
+.report-kpi-card:hover { box-shadow: var(--neu-float-lg); transform: translateY(-1px); }
+
+.report-kpi-accent {
+    height: 3px;
+    border-radius: var(--radius-full);
+    margin-bottom: 14px;
+}
+
+.report-kpi-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--smriti-text-muted);
+    margin-bottom: 8px;
+}
+
+.report-kpi-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--smriti-text);
+    letter-spacing: -0.8px;
+    font-variant-numeric: tabular-nums;
+}
+
+.report-kpi-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    margin-top: 8px;
+}
+.report-kpi-change.up   { color: var(--smriti-success); background: var(--smriti-success-bg); }
+.report-kpi-change.down { color: var(--smriti-danger);  background: var(--smriti-danger-bg); }
+
+/* ── Chart container — FLAT white ── */
+.report-chart-card {
+    background: var(--smriti-card-bg);
+    border: 1px solid var(--smriti-card-border);
+    border-radius: var(--radius-lg);
+    padding: 22px 24px;
+    box-shadow: none;
+}
+
+.report-chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--smriti-card-border);
+}
+
+.report-chart-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--smriti-text);
+}
+
+/* ── Data table — FLAT crisp ── */
+.report-table-card {
+    background: var(--smriti-card-bg);
+    border: 1px solid var(--smriti-card-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: none;
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.report-table th {
+    background: var(--smriti-card-bg-2);
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--smriti-text-muted);
+    border-bottom: 1px solid var(--smriti-card-border);
+}
+
+.report-table td {
+    padding: 11px 16px;
+    font-size: 13px;
+    color: var(--smriti-text);
+    border-bottom: 1px solid var(--smriti-card-border);
+    vertical-align: middle;
+}
+
+.report-table tbody tr { transition: background var(--t-fast); }
+.report-table tbody tr:hover td { background: var(--smriti-card-bg-2); }
+.report-table tbody tr:last-child td { border-bottom: none; }
+
+/* Status pills */
+.rpill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px;
+    border-radius: var(--radius-full);
+    font-size: 11px; font-weight: 700;
+    border: 1px solid transparent;
+}
+.rpill.paid    { color: var(--smriti-success); background: var(--smriti-success-bg); border-color: var(--smriti-success-border); }
+.rpill.pending { color: var(--smriti-warning); background: var(--smriti-warning-bg); border-color: var(--smriti-warning-border); }
+.rpill.failed  { color: var(--smriti-danger);  background: var(--smriti-danger-bg);  border-color: var(--smriti-danger-border); }
+
+/* Export button row */
+.report-export-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 14px 20px;
+    border-top: 1px solid var(--smriti-card-border);
+    background: var(--smriti-card-bg-2);
+}
+
+/* Empty state */
+.report-empty {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 60px 0;
+    color: var(--smriti-text-muted);
+    text-align: center;
+}
+.report-empty-icon { font-size: 3em; opacity: 0.3; margin-bottom: 14px; }
+.report-empty-text { font-size: 14px; }
+
+/* Progress bars in reports */
+.report-progress-track {
+    height: 6px;
+    background: var(--smriti-card-border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+.report-progress-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: linear-gradient(90deg, var(--smriti-primary), var(--smriti-primary-light));
+    transition: width 0.5s var(--ease);
+}

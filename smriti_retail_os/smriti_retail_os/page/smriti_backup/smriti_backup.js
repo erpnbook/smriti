@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# @file: smriti_retail_os/page/smriti-backup/smriti-backup.js
+# @file: smriti_retail_os/public/js/smriti_backup.js
 # @description: Interactive backup & restore panel with confirmation flow.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28

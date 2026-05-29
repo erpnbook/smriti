@@ -1,5 +1,5 @@
 /**
- * @file: smriti_retail_os/page/smriti-inventory/smriti-inventory.js
+ * @file: smriti_retail_os/public/js/smriti_inventory.js
  * @description: Handles user login, registration, and JWT token generation.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
@@ -11,13 +11,9 @@
 frappe.pages['smriti-inventory'].on_page_load = function(wrapper) {
     var page = frappe.ui.make_app_page({
         parent: wrapper,
-        title: __('Inventory'),
+        title: __('SMRITI Inventory Operations'),
         single_column: true
     });
-
-    if (window.SMRITI && typeof SMRITI.renderSidebar === 'function') {
-        SMRITI.renderSidebar("inventory");
-    }
 
     var smriti_inventory = new SmritiInventoryController(wrapper, page);
 }
