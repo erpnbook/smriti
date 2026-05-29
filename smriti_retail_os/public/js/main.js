@@ -751,35 +751,6 @@ function is_doctype_route() {
     return false;
 }
 
-function _force_popout_full_width() {
-    if (!$('body').hasClass('smriti-popout-active')) return;
-    
-    // Target main page content containers
-    var targets = $('.layout-main-section, .layout-main, .page-container, .sim-page, .smriti-billing-container, .page-content, .layout-main-section-wrapper, [id^="page-"]');
-    if (!targets.length) return;
-    
-    targets.each(function() {
-        var el = $(this);
-        while (el.length && !el.is('body') && !el.is('html')) {
-            var style = el.attr('style') || '';
-            
-            // Clean up old values to avoid duplicate bloating
-            style = style.replace(/margin-left:[^;]+;?/g, '')
-                         .replace(/margin-right:[^;]+;?/g, '')
-                         .replace(/padding-left:[^;]+;?/g, '')
-                         .replace(/padding-right:[^;]+;?/g, '')
-                         .replace(/width:[^;]+;?/g, '')
-                         .replace(/max-width:[^;]+;?/g, '')
-                         .replace(/left:[^;]+;?/g, '')
-                         .replace(/transform:[^;]+;?/g, '');
-                         
-            style += '; margin-left: 0px !important; margin-right: 0px !important; padding-left: 0px !important; padding-right: 0px !important; width: 100% !important; max-width: 100% !important; left: 0px !important; transform: none !important;';
-            el.attr('style', style);
-            el = el.parent();
-        }
-    });
-}
-
 function _check_global_popout_mode() {
     var urlParams = new URLSearchParams(window.location.search);
     
@@ -805,7 +776,6 @@ function _check_global_popout_mode() {
         }
         
         _render_popout_floating_controls();
-        _force_popout_full_width();
     } else {
         $('body').removeClass('smriti-popout-active');
         $('body').removeClass('smriti-popout-doctype');
@@ -876,13 +846,11 @@ $(document).on('page-change route-change', function () {
     _sidebar_lockdown();
     _setup_sidebar_toggle();
     _check_global_popout_mode();
-    _force_popout_full_width();
 });
 
 /* Periodic safety net */
 setInterval(function () {
     _check_global_popout_mode();
-    _force_popout_full_width();
     if (!_is_smriti_user()) return;
     _patch_sidebar_prototype();
     _patch_frappe_boot();
@@ -910,7 +878,6 @@ function _boot_scrub_sequence() {
     _render_smriti_sidebar_if_applicable();
     _setup_sidebar_toggle();
     _check_global_popout_mode();
-    _force_popout_full_width();
     [100, 300, 700, 1500, 3000].forEach(function (ms) {
         setTimeout(function () {
             _patch_sidebar_prototype();
@@ -921,7 +888,6 @@ function _boot_scrub_sequence() {
             _do_scrub();
             _setup_sidebar_toggle();
             _check_global_popout_mode();
-            _force_popout_full_width();
         }, ms);
     });
 }
