@@ -780,13 +780,47 @@ function _force_popout_full_width() {
     });
 }
 
+function _normalize_lowercase_user_route() {
+    var pathname = window.location.pathname;
+    if (pathname.includes('/user/') || pathname.endsWith('/user')) {
+        var new_path = pathname.replace('/user/', '/User/').replace('/user', '/User');
+        console.log("[SMRITI] Normalizing lowercase route: " + pathname + " -> " + new_path);
+        window.location.replace(window.location.origin + new_path + window.location.search + window.location.hash);
+    }
+}
+
 function _check_global_popout_mode() {
     var urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('popout') === 'false') {
         sessionStorage.removeItem('smriti_popout_mode');
     }
     
-    var isPopout = urlParams.get('popout') === 'true' || sessionStorage.getItem('smriti_popout_mode') === 'true';
+    // Check if the current page is one of SMRITI's custom pages
+    var current_route = "";
+    try {
+        current_route = (typeof frappe.get_route_str === 'function') ? frappe.get_route_str() : "";
+    } catch (e) {}
+    
+    var is_smriti_page = false;
+    var smriti_pages = [
+        'smriti-billing', 'smriti-shift', 'smriti-inventory', 
+        'smriti-purchase', 'smriti-barcode', 'smriti-reports', 
+        'smriti-loyalty', 'smriti-backup', 'smriti-desk', 
+        'smriti-item-master', 'smriti-print-template'
+    ];
+    smriti_pages.forEach(function(p) {
+        if (current_route.includes(p)) {
+            is_smriti_page = true;
+        }
+    });
+    
+    // If it's a standard Frappe page and there's no explicit popout=true in the URL, automatically exit popout mode!
+    var has_explicit_popout = urlParams.get('popout') === 'true';
+    if (!is_smriti_page && !has_explicit_popout) {
+        sessionStorage.removeItem('smriti_popout_mode');
+    }
+    
+    var isPopout = has_explicit_popout || sessionStorage.getItem('smriti_popout_mode') === 'true';
     if (isPopout) {
         sessionStorage.setItem('smriti_popout_mode', 'true');
         $('body').addClass('smriti-popout-active');
@@ -848,6 +882,7 @@ function _render_popout_floating_controls() {
 
 /* ── 10. Frappe lifecycle hooks ─────────────────────────────────────────── */
 $(document).on('app_ready', function () {
+    _normalize_lowercase_user_route();
     _patch_sidebar_prototype();
     _patch_frappe_boot();
     _patch_workspace_sidebar_controller();
@@ -862,6 +897,7 @@ $(document).on('app_ready', function () {
 });
 
 $(document).on('page-change route-change', function () {
+    _normalize_lowercase_user_route();
     _patch_sidebar_prototype();
     _patch_frappe_boot();
     _patch_workspace_sidebar_controller();
@@ -877,6 +913,7 @@ $(document).on('page-change route-change', function () {
 
 /* Periodic safety net */
 setInterval(function () {
+    _normalize_lowercase_user_route();
     _check_global_popout_mode();
     _force_popout_full_width();
     if (!_is_smriti_user()) return;
@@ -900,6 +937,7 @@ setInterval(_scan_modals, 150);
 /* Rapid initial scrub — run at 100 ms, 300 ms, 700 ms, 1500 ms after DOMContentLoaded
    to catch Frappe's progressive hydration phases */
 function _boot_scrub_sequence() {
+    _normalize_lowercase_user_route();
     _do_scrub();
     _redirect_to_smriti_home();
     _setup_smriti_layout_class();
@@ -909,6 +947,7 @@ function _boot_scrub_sequence() {
     _force_popout_full_width();
     [100, 300, 700, 1500, 3000].forEach(function (ms) {
         setTimeout(function () {
+            _normalize_lowercase_user_route();
             _patch_sidebar_prototype();
             _patch_frappe_boot();
             _redirect_to_smriti_home();
