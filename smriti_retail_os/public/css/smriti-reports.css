@@ -7,516 +7,265 @@
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
+/**
+ * @file smriti-reports.css
+ * @description SMRITI Reports — Clean Neumorphic Hybrid v3.0
+ *              Tokens inherited from smriti_theme.css
+ */
 
-/* ─── SMRITI Reports Page CSS (Light Mode) ─── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Tokens from smriti_theme.css :root — no redefinition */
 
-.smriti-reports-wrap {
-    font-family: 'Inter', sans-serif;
-    background: #f9fafb;
-    min-height: 100vh;
-    color: #101828;
-    padding: 0 0 60px 0;
-}
-
-/* ── Tab Bar ── */
-.sr-tabs {
-    display: flex;
-    gap: 4px;
-    background: #ffffff;
-    border-bottom: 1px solid #e4e7ec;
-    padding: 0 24px;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-}
-
-.sr-tab {
-    padding: 14px 20px;
-    font-size: 13px;
-    font-weight: 500;
-    color: #475467;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.sr-tab:hover { color: #101828; }
-
-.sr-tab.active {
-    color: #6941c6;
-    border-bottom-color: #6941c6;
-}
-
-.sr-tab .tab-icon { font-size: 16px; }
-
-/* ── Date Filter Bar ── */
-.sr-filter-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 24px;
-    background: #ffffff;
-    border-bottom: 1px solid #e4e7ec;
-    flex-wrap: wrap;
-}
-
-.sr-filter-bar label {
-    font-size: 12px;
-    color: #475467;
-    font-weight: 500;
-}
-
-.sr-filter-bar input[type="date"],
-.sr-filter-bar select {
-    background: #ffffff;
-    border: 1px solid #d0d5dd;
-    color: #101828;
-    padding: 7px 12px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-family: 'Inter', sans-serif;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-.sr-filter-bar input[type="date"]:focus,
-.sr-filter-bar select:focus {
-    border-color: #6941c6;
-    box-shadow: 0 0 0 4px rgba(105, 65, 198, 0.1);
-}
-
-.sr-btn {
-    padding: 8px 18px;
-    border-radius: 6px;
-    border: none;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    transition: all 0.2s;
-}
-
-.sr-btn-primary {
-    background: #6941c6;
-    color: #fff;
-}
-
-.sr-btn-primary:hover { background: #53389e; transform: translateY(-1px); }
-
-.sr-btn-outline {
-    background: #ffffff;
-    border: 1px solid #d0d5dd;
-    color: #344054;
-}
-
-.sr-btn-outline:hover { border-color: #6941c6; color: #6941c6; }
-
-.sr-quick-btns {
-    display: flex;
-    gap: 6px;
-    margin-left: auto;
-}
-
-.sr-quick-btn {
-    padding: 6px 12px;
-    border-radius: 5px;
-    border: 1px solid #d0d5dd;
-    background: #ffffff;
-    color: #475467;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    transition: all 0.2s;
-}
-
-.sr-quick-btn:hover, .sr-quick-btn.active {
-    background: #6941c6;
-    border-color: #6941c6;
-    color: #fff;
-}
-
-/* ── Content Area ── */
-.sr-content {
-    padding: 24px;
-}
-
-/* ── KPI Cards ── */
-.sr-kpis {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
-    margin-bottom: 28px;
-}
-
-.sr-kpi {
-    background: #ffffff;
-    border: 1px solid #e4e7ec;
-    border-radius: 12px;
+.smriti-reports-container {
+    background-color: var(--smriti-bg);
+    color: var(--smriti-text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     padding: 20px;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    border-radius: var(--radius-lg);
+    min-height: 82vh;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
-.sr-kpi::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--kpi-color, #6941c6);
+/* ── Filter Bar — FLAT white ── */
+.reports-filter-bar {
+    background: var(--smriti-card-bg);
+    border: 1px solid var(--smriti-card-border);
+    border-radius: var(--radius-md);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    box-shadow: var(--shadow-sm);
 }
 
-.sr-kpi:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(16, 24, 40, 0.08); }
-
-.sr-kpi-label {
+.reports-filter-bar .filter-label {
     font-size: 11px;
-    font-weight: 600;
-    color: #475467;
+    font-weight: 700;
+    color: var(--smriti-text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+}
+
+/* Filter inputs — INSET neumorphic */
+.reports-filter-bar input,
+.reports-filter-bar select {
+    background: var(--smriti-bg) !important;
+    border: 1px solid transparent !important;
+    border-radius: var(--radius-md) !important;
+    color: var(--smriti-text) !important;
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+    box-shadow: var(--neu-pressed-sm) !important;
+    transition: box-shadow var(--t-base) var(--ease), border-color var(--t-base) var(--ease) !important;
+    outline: none !important;
+    min-width: 140px;
+}
+.reports-filter-bar input:focus,
+.reports-filter-bar select:focus {
+    border-color: var(--smriti-primary) !important;
+    box-shadow: var(--neu-pressed-sm), 0 0 0 3px var(--smriti-primary-glow) !important;
+}
+
+/* ── Report buttons — NEUMORPHIC ── */
+.btn-report {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    transition: all var(--t-base) var(--ease);
+    background: var(--smriti-bg);
+    color: var(--smriti-text);
+    box-shadow: var(--neu-float);
+}
+.btn-report:hover  { box-shadow: var(--neu-float-lg); color: var(--smriti-primary); transform: translateY(-1px); }
+.btn-report:active { box-shadow: var(--neu-pressed); transform: translateY(0); }
+
+.btn-report-primary {
+    background: linear-gradient(145deg, var(--smriti-primary-light), var(--smriti-primary));
+    color: white;
+    box-shadow: 5px 5px 12px rgba(83,56,158,.35), -3px -3px 8px rgba(158,119,237,.20);
+}
+.btn-report-primary:hover {
+    box-shadow: 7px 7px 16px rgba(83,56,158,.42), -4px -4px 10px rgba(158,119,237,.25);
+    color: white;
+    transform: translateY(-1px);
+}
+.btn-report-primary:active {
+    box-shadow: inset 4px 4px 8px rgba(83,56,158,.4), inset -2px -2px 5px rgba(139,92,246,.2);
+    transform: translateY(0);
+}
+
+/* ── KPI cards — NEUMORPHIC ── */
+.report-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.report-kpi-card {
+    background: var(--smriti-bg);
+    border-radius: var(--radius-xl);
+    padding: 20px 22px;
+    box-shadow: var(--neu-float);
+    cursor: default;
+    transition: box-shadow var(--t-base) var(--ease), transform var(--t-base) var(--ease);
+    border: none;
+}
+.report-kpi-card:hover { box-shadow: var(--neu-float-lg); transform: translateY(-1px); }
+
+.report-kpi-accent {
+    height: 3px;
+    border-radius: var(--radius-full);
+    margin-bottom: 14px;
+}
+
+.report-kpi-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--smriti-text-muted);
     margin-bottom: 8px;
 }
 
-.sr-kpi-value {
-    font-size: 22px;
-    font-weight: 700;
-    color: #101828;
-    margin-bottom: 4px;
-}
-
-.sr-kpi-sub {
-    font-size: 12px;
-    color: #475467;
-}
-
-.sr-kpi-icon {
-    position: absolute;
-    top: 16px; right: 16px;
+.report-kpi-value {
+    font-family: 'Outfit', sans-serif;
     font-size: 28px;
-    color: #6941c6;
-    opacity: 0.1;
+    font-weight: 800;
+    color: var(--smriti-text);
+    letter-spacing: -0.8px;
+    font-variant-numeric: tabular-nums;
 }
 
-.kpi-up { color: #027a48; }
-.kpi-down { color: #b42318; }
-
-/* ── Section title ── */
-.sr-section-title {
-    font-size: 14px;
+.report-kpi-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
     font-weight: 600;
-    color: #101828;
-    margin: 24px 0 12px 0;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    margin-top: 8px;
+}
+.report-kpi-change.up   { color: var(--smriti-success); background: var(--smriti-success-bg); }
+.report-kpi-change.down { color: var(--smriti-danger);  background: var(--smriti-danger-bg); }
+
+/* ── Chart container — FLAT white ── */
+.report-chart-card {
+    background: var(--smriti-card-bg);
+    border: 1px solid var(--smriti-card-border);
+    border-radius: var(--radius-lg);
+    padding: 22px 24px;
+    box-shadow: none;
+}
+
+.report-chart-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-}
-
-.sr-section-title::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #e4e7ec;
-}
-
-/* ── Two-column grid ── */
-.sr-grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 24px;
-}
-
-@media (max-width: 900px) { .sr-grid-2 { grid-template-columns: 1fr; } }
-
-/* ── Cards ── */
-.sr-card {
-    background: #ffffff;
-    border: 1px solid #e4e7ec;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
-}
-
-.sr-card-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: #475467;
+    justify-content: space-between;
     margin-bottom: 16px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--smriti-card-border);
 }
 
-/* ── Bar Chart ── */
-.sr-bar-chart {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.report-chart-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--smriti-text);
 }
 
-.sr-bar-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.sr-bar-label {
-    font-size: 11px;
-    color: #475467;
-    width: 80px;
-    text-align: right;
-    flex-shrink: 0;
-    white-space: nowrap;
+/* ── Data table — FLAT crisp ── */
+.report-table-card {
+    background: var(--smriti-card-bg);
+    border: 1px solid var(--smriti-card-border);
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    text-overflow: ellipsis;
+    box-shadow: none;
 }
 
-.sr-bar-track {
-    flex: 1;
-    height: 20px;
-    background: #f2f4f7;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.sr-bar-fill {
-    height: 100%;
-    border-radius: 4px;
-    background: #6941c6;
-    transition: width 0.6s ease;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding-right: 6px;
-    font-size: 10px;
-    color: rgba(255,255,255,0.9);
-    font-weight: 600;
-    min-width: 4px;
-}
-
-.sr-bar-value {
-    font-size: 11px;
-    color: #101828;
-    font-weight: 600;
-    width: 80px;
-    flex-shrink: 0;
-}
-
-/* ── Payment pill chart ── */
-.sr-payment-pills {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.sr-payment-pill {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.sr-pill-icon {
-    width: 36px; height: 36px;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-}
-
-.sr-pill-info { flex: 1; }
-
-.sr-pill-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: #101828;
-}
-
-.sr-pill-amount {
-    font-size: 12px;
-    color: #475467;
-}
-
-/* ── Data Table ── */
-.sr-table-wrap {
-    overflow-x: auto;
-    border-radius: 10px;
-    border: 1px solid #e4e7ec;
-    background: #ffffff;
-}
-
-.sr-table {
+.report-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
 }
 
-.sr-table th {
-    background: #f9fafb;
-    color: #475467;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    font-size: 11px;
-    padding: 10px 14px;
+.report-table th {
+    background: var(--smriti-card-bg-2);
     text-align: left;
-    border-bottom: 1px solid #e4e7ec;
+    padding: 10px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--smriti-text-muted);
+    border-bottom: 1px solid var(--smriti-card-border);
 }
 
-.sr-table td {
-    padding: 10px 14px;
-    border-bottom: 1px solid #f2f4f7;
-    color: #101828;
+.report-table td {
+    padding: 11px 16px;
+    font-size: 13px;
+    color: var(--smriti-text);
+    border-bottom: 1px solid var(--smriti-card-border);
     vertical-align: middle;
 }
 
-.sr-table tr:last-child td { border-bottom: none; }
+.report-table tbody tr { transition: background var(--t-fast); }
+.report-table tbody tr:hover td { background: var(--smriti-card-bg-2); }
+.report-table tbody tr:last-child td { border-bottom: none; }
 
-.sr-table tr:hover td { background: #f9fafb; }
-
-.sr-table .num { text-align: right; font-variant-numeric: tabular-nums; }
-
-/* ── Badges ── */
-.sr-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 600;
+/* Status pills */
+.rpill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px;
+    border-radius: var(--radius-full);
+    font-size: 11px; font-weight: 700;
+    border: 1px solid transparent;
 }
+.rpill.paid    { color: var(--smriti-success); background: var(--smriti-success-bg); border-color: var(--smriti-success-border); }
+.rpill.pending { color: var(--smriti-warning); background: var(--smriti-warning-bg); border-color: var(--smriti-warning-border); }
+.rpill.failed  { color: var(--smriti-danger);  background: var(--smriti-danger-bg);  border-color: var(--smriti-danger-border); }
 
-.sr-badge-red { background: #fef3f2; color: #b42318; border: 1px solid #fecdca; }
-.sr-badge-yellow { background: #fffaeb; color: #b54708; border: 1px solid #fedf89; }
-.sr-badge-green { background: #ecfdf3; color: #027a48; border: 1px solid #abefc6; }
-
-/* ── GST Slab Table ── */
-.sr-gst-slabs {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.sr-gst-slab {
-    background: #f9fafb;
-    border: 1px solid #e4e7ec;
-    border-radius: 10px;
-    padding: 16px;
-    text-align: center;
-}
-
-.sr-gst-slab-rate {
-    font-size: 22px;
-    font-weight: 700;
-    color: #6941c6;
-    margin-bottom: 4px;
-}
-
-.sr-gst-slab-label {
-    font-size: 11px;
-    color: #475467;
-    margin-bottom: 8px;
-}
-
-.sr-gst-slab-amount {
-    font-size: 14px;
-    font-weight: 600;
-    color: #101828;
-}
-
-/* ── Aging buckets ── */
-.sr-aging {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.sr-aging-bucket {
-    background: #f9fafb;
-    border: 1px solid #e4e7ec;
-    border-radius: 8px;
-    padding: 14px 10px;
-    text-align: center;
-}
-
-.sr-aging-bucket .bucket-label {
-    font-size: 10px;
-    font-weight: 600;
-    color: #475467;
-    margin-bottom: 6px;
-    text-transform: uppercase;
-}
-
-.sr-aging-bucket .bucket-value {
-    font-size: 15px;
-    font-weight: 700;
-    color: #101828;
-}
-
-/* ── Stock low-stock badge ── */
-.low-stock-row td { background: #fef3f2 !important; }
-
-/* ── Empty state ── */
-.sr-empty {
-    text-align: center;
-    padding: 60px 20px;
-    color: #475467;
-}
-
-.sr-empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
-.sr-empty-text { font-size: 14px; }
-
-/* ── Loading ── */
-.sr-loading {
+/* Export button row */
+.report-export-row {
     display: flex;
+    gap: 10px;
     align-items: center;
-    justify-content: center;
-    padding: 60px;
-    gap: 12px;
-    color: #475467;
-    font-size: 14px;
+    justify-content: flex-end;
+    padding: 14px 20px;
+    border-top: 1px solid var(--smriti-card-border);
+    background: var(--smriti-card-bg-2);
 }
 
-.sr-spinner {
-    width: 24px; height: 24px;
-    border: 3px solid #f2f4f7;
-    border-top-color: #6941c6;
-    border-radius: 50%;
-    animation: sr-spin 0.7s linear infinite;
+/* Empty state */
+.report-empty {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 60px 0;
+    color: var(--smriti-text-muted);
+    text-align: center;
 }
+.report-empty-icon { font-size: 3em; opacity: 0.3; margin-bottom: 14px; }
+.report-empty-text { font-size: 14px; }
 
-@keyframes sr-spin { to { transform: rotate(360deg); } }
-
-/* ── Export button ── */
-.sr-export-btn {
-    margin-left: auto;
-    padding: 6px 14px;
-    border-radius: 6px;
-    border: 1px solid #d0d5dd;
-    background: #ffffff;
-    color: #344054;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    display: flex; align-items: center; gap: 6px;
-    transition: all 0.2s;
+/* Progress bars in reports */
+.report-progress-track {
+    height: 6px;
+    background: var(--smriti-card-border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
 }
-
-.sr-export-btn:hover {
-    border-color: #6941c6;
-    color: #6941c6;
-}
-
-/* ── Print ── */
-@media print {
-    .sr-tabs, .sr-filter-bar { display: none !important; }
-    .smriti-reports-wrap { background: #fff; color: #000; }
-    .sr-card { border: 1px solid #ddd; background: #fff; }
+.report-progress-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: linear-gradient(90deg, var(--smriti-primary), var(--smriti-primary-light));
+    transition: width 0.5s var(--ease);
 }

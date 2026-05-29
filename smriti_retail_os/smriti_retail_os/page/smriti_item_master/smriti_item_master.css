@@ -15,17 +15,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --sim-bg:           #0f1117;
-  --sim-surface:      #1a1d27;
-  --sim-surface2:     #21263a;
-  --sim-border:       rgba(255,255,255,0.08);
-  --sim-accent:       #6c63ff;
-  --sim-accent2:      #a78bfa;
-  --sim-green:        #10b981;
-  --sim-yellow:       #f59e0b;
-  --sim-red:          #ef4444;
-  --sim-text:         #e2e8f0;
-  --sim-muted:        #64748b;
+  --sim-bg:           var(--smriti-bg);
+  --sim-surface:      var(--smriti-card-bg);
+  --sim-surface2:     var(--smriti-card-bg-2);
+  --sim-border:       var(--smriti-card-border);
+  --sim-accent:       var(--smriti-primary);
+  --sim-accent2:      var(--smriti-primary-light);
+  --sim-green:        var(--smriti-success);
+  --sim-yellow:       var(--smriti-warning);
+  --sim-red:          var(--smriti-danger);
+  --sim-text:         var(--smriti-text);
+  --sim-muted:        var(--smriti-text-muted);
   --sim-header-h:     52px;
   --sim-row-h:        36px;
   --sim-font:         'Inter', 'Outfit', sans-serif;
@@ -342,35 +342,59 @@ select.sim-cell-input {
 .sim-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .sim-btn-primary {
-  background: linear-gradient(135deg, #6c63ff, #a78bfa);
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(108,99,255,0.35);
+  background: linear-gradient(135deg, var(--smriti-primary-light), var(--smriti-primary)) !important;
+  color: #fff !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.45) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.45) !important;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.35), -2px -2px 8px rgba(255, 255, 255, 0.05) !important;
+  transition: all var(--t-base) var(--ease) !important;
 }
 .sim-btn-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(108,99,255,0.5);
+  transform: translateY(-1px) !important;
+  box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.4), -3px -3px 10px rgba(255, 255, 255, 0.08) !important;
+}
+.sim-btn-primary:active:not(:disabled) {
+  transform: translateY(1px) !important;
+  border-color: transparent !important;
+  box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.5), inset -3px -3px 6px rgba(255, 255, 255, 0.05) !important;
 }
 
 .sim-btn-success {
-  background: linear-gradient(135deg, #10b981, #34d399);
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(16,185,129,0.3);
+  background: linear-gradient(135deg, #027a48, var(--smriti-success)) !important;
+  color: #fff !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.45) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.45) !important;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.25) !important;
+  transition: all var(--t-base) var(--ease) !important;
 }
-.sim-btn-success:hover:not(:disabled) { transform: translateY(-1px); }
+.sim-btn-success:hover:not(:disabled) { transform: translateY(-1px) !important; }
+.sim-btn-success:active:not(:disabled) { transform: translateY(1px) !important; border-color: transparent !important; box-shadow: inset 3px 3px 6px rgba(0,0,0,0.4) !important; }
 
 .sim-btn-ghost {
-  background: rgba(255,255,255,0.06);
-  color: var(--sim-text);
-  border: 1px solid var(--sim-border);
+  background: var(--smriti-bg) !important;
+  color: var(--smriti-text-muted) !important;
+  border: 1px solid var(--smriti-card-border) !important;
+  box-shadow: none !important;
+  transition: all var(--t-base) var(--ease) !important;
 }
-.sim-btn-ghost:hover:not(:disabled) { background: rgba(255,255,255,0.1); }
+.sim-btn-ghost:hover:not(:disabled) { background: var(--smriti-card-bg-2) !important; color: var(--smriti-text) !important; }
 
 .sim-btn-danger {
-  background: rgba(239,68,68,0.1);
-  color: var(--sim-red);
-  border: 1px solid rgba(239,68,68,0.2);
+  background: linear-gradient(135deg, #b42318, var(--smriti-danger)) !important;
+  color: #fff !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.45) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.45) !important;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.25) !important;
+  transition: all var(--t-base) var(--ease) !important;
 }
-.sim-btn-danger:hover:not(:disabled) { background: rgba(239,68,68,0.2); }
+.sim-btn-danger:hover:not(:disabled) { transform: translateY(-1px) !important; }
+.sim-btn-danger:active:not(:disabled) { transform: translateY(1px) !important; border-color: transparent !important; box-shadow: inset 3px 3px 6px rgba(0,0,0,0.4) !important; }
 
 /* ── Import settings panel ────────────────────────────────── */
 .sim-settings {

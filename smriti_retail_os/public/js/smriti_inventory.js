@@ -188,7 +188,7 @@ class SmritiInventoryController {
 
                         <!-- Main Submit Button -->
                         <div class="payment-drawer-card" style="margin-top: 15px;">
-                            <button class="btn btn-success btn-block btn-checkout-save" id="smriti-inv-btn-submit" ${!this.is_manager ? 'disabled' : ''}>
+                            <button class="btn btn-primary btn-block btn-checkout-save" id="smriti-inv-btn-submit" ${!this.is_manager ? 'disabled' : ''}>
                                 <span class="material-symbols-outlined" style="color: white; margin-right: 4px;">send</span> F9: ${__('Commit to ERPNext')}
                             </button>
                         </div>

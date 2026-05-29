@@ -24,6 +24,19 @@ var SMRITI_YEAR  = new Date().getFullYear();
 // Global Fallback for India Compliance GST settings to prevent depends_on evaluation crashes
 window.gst_settings = window.gst_settings || {};
 
+// Restore SMRITI UI Style (Hybrid vs Minimalist) early to prevent FOUC (Flash of Unstyled Content)
+(function () {
+    try {
+        var savedStyle = localStorage.getItem('smriti-theme-style') || 'hybrid';
+        if (savedStyle === 'minimalist') {
+            document.documentElement.classList.add('theme-minimalist');
+            document.addEventListener('DOMContentLoaded', function() {
+                document.body.classList.add('theme-minimalist');
+            });
+        }
+    } catch (e) {}
+})();
+
 /* ── 1. Favicon + initial title ─────────────────────────────────────────── */
 (function () {
     document.title = SMRITI_BRAND;
@@ -204,6 +217,20 @@ function _do_scrub() {
 
     var root = document.body;
     if (!root) return;
+
+    // Proactively sync SMRITI UI Style preference to body class to prevent other SPA apps from wiping it
+    try {
+        var savedStyle = localStorage.getItem('smriti-theme-style') || 'hybrid';
+        if (savedStyle === 'minimalist') {
+            if (!root.classList.contains('theme-minimalist')) {
+                root.classList.add('theme-minimalist');
+            }
+        } else {
+            if (root.classList.contains('theme-minimalist')) {
+                root.classList.remove('theme-minimalist');
+            }
+        }
+    } catch (e) {}
 
     /* A. Text nodes */
     var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
@@ -556,7 +583,11 @@ function _redirect_to_smriti_home() {
 
     // 1. If we are in the Desk (SPA)
     if (is_desk_env) {
-        if (current_route === 'workspace/Home' || current_route === '' || current_route === 'desk') {
+        // Only redirect if the browser's active path is strictly the root Desk entry
+        var is_root_path = window.location.pathname === '/app' || window.location.pathname === '/app/' || 
+                           window.location.pathname === '/desk' || window.location.pathname === '/desk/';
+        
+        if (is_root_path && (current_route === 'workspace/Home' || current_route === '' || current_route === 'desk')) {
             var roles = frappe.user_roles || [];
             if (roles.includes('SMRITI Cashier')) {
                 frappe.set_route('smriti-billing');

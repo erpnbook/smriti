@@ -9,16 +9,16 @@
  */
 
 .sbc-container {
-    --primary: #6941c6;
-    --primary-glow: rgba(105, 65, 198, 0.08);
-    --success: #027a48;
-    --warning: #b54708;
-    --danger: #b42318;
-    --danger-glow: rgba(180, 35, 24, 0.08);
-    --bg-card: #ffffff;
-    --border-color: #e4e7ec;
-    --text-main: #101828;
-    --text-muted: #475467;
+    --primary: var(--smriti-primary);
+    --primary-glow: var(--smriti-primary-glow);
+    --success: var(--smriti-success);
+    --warning: var(--smriti-warning);
+    --danger: var(--smriti-danger);
+    --danger-glow: var(--smriti-danger-glow);
+    --bg-card: var(--smriti-card-bg);
+    --border-color: var(--smriti-card-border);
+    --text-main: var(--smriti-text);
+    --text-muted: var(--smriti-text-muted);
     
     font-family: 'Outfit', 'Inter', sans-serif;
     color: var(--text-main);
@@ -55,14 +55,14 @@
 
 .sbc-stat-card .stat-icon {
     font-size: 28px;
-    background: #f9fafb;
+    background: var(--smriti-bg);
     width: 56px;
     height: 56px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #f2f4f7;
+    border: 1px solid var(--border-color);
     flex-shrink: 0;
 }
 
@@ -217,10 +217,10 @@
 }
 
 .email-smtp-fields {
-    background: #f9fafb;
+    background: var(--smriti-bg);
     border-radius: 12px;
     padding: 16px;
-    border: 1px solid #f2f4f7;
+    border: 1px solid var(--border-color);
     margin-top: 14px;
     display: flex;
     flex-direction: column;
@@ -387,7 +387,7 @@
 }
 
 .sbc-table th {
-    background: #f9fafb;
+    background: var(--smriti-card-bg-2);
     padding: 12px 16px;
     font-weight: 600;
     color: var(--text-muted);

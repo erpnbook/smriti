@@ -255,12 +255,26 @@ SMRITI._buildSidebarDOM = function(nav_items, active_page, shift) {
         role_label = "Store Manager";
     }
 
+    var is_minimalist = document.body.classList.contains("theme-minimalist");
+    var style_hybrid_active = is_minimalist ? "" : "active";
+    var style_minimalist_active = is_minimalist ? "active" : "";
+
     var footer_html = `
         <div class="smriti-side-footer">
             <div class="smriti-side-shift" style="cursor: pointer;" onclick="frappe.set_route('smriti-shift')" title="Open Shift Page">
                 <span>Shift:</span>
                 <span class="smriti-side-shift-badge ${shift_class}" id="smriti-shift-badge">${shift_status}</span>
             </div>
+            
+            <div class="smriti-side-theme-toggle-bar">
+                <button class="smriti-side-theme-pill ${style_hybrid_active}" data-style="hybrid" title="Tactile Neumorphic Hybrid Theme">
+                    <span>🎛️ Hybrid</span>
+                </button>
+                <button class="smriti-side-theme-pill ${style_minimalist_active}" data-style="minimalist" title="Clean Minimalist Enterprise Theme">
+                    <span>🖥️ Minimal</span>
+                </button>
+            </div>
+
             <div class="smriti-side-cashier">
                 <div class="smriti-side-avatar" id="smriti-cashier-avatar">${first_letter}</div>
                 <div class="smriti-side-info">
@@ -320,6 +334,31 @@ SMRITI._buildSidebarDOM = function(nav_items, active_page, shift) {
         e.stopPropagation();
         var url = $(this).attr("data-url");
         SMRITI.openPopout(url);
+    });
+
+    // Bind Theme Toggle click listeners
+    $(sidebar).on("click", ".smriti-side-theme-pill", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        var style = $(this).attr("data-style");
+        sidebar.querySelectorAll(".smriti-side-theme-pill").forEach(function(pill) {
+            if (pill.getAttribute("data-style") === style) {
+                pill.classList.add("active");
+            } else {
+                pill.classList.remove("active");
+            }
+        });
+
+        if (style === "minimalist") {
+            document.body.classList.add("theme-minimalist");
+            localStorage.setItem("smriti-theme-style", "minimalist");
+        } else {
+            document.body.classList.remove("theme-minimalist");
+            localStorage.setItem("smriti-theme-style", "hybrid");
+        }
+        
+        $(document).trigger("smriti-theme-style-changed", [style]);
     });
 };
 

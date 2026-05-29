@@ -7,83 +7,92 @@
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
+/**
+ * @file smriti_purchase.css
+ * @description SMRITI Purchase — Clean Neumorphic Hybrid v3.0
+ *              Strictly complies with global theme design system.
+ *              No muddy overrides, no fuzzy glows.
+ */
 
-/* SMRITI Retail OS - Premium Purchase Stylesheet (Light Mode) */
-
-:root {
-    --smriti-bg: #f9fafb;
-    --smriti-card-bg: #ffffff;
-    --smriti-glass-border: #d0d5dd;
-    --smriti-text: #101828;
-    --smriti-text-muted: #475467;
-    --smriti-primary: #6941c6;
-    --smriti-primary-glow: rgba(105, 65, 198, 0.1);
-    --smriti-accent: #067647;
-    --smriti-accent-glow: rgba(6, 118, 71, 0.1);
-    --smriti-danger: #b42318;
-    --smriti-danger-glow: rgba(180, 35, 24, 0.1);
-    --smriti-success: #027a48;
-    --smriti-success-glow: rgba(2, 122, 72, 0.1);
-    --smriti-amber: #b54708;
-}
-
-/* Widescreen Main Container */
+/* ── Main Container ── */
 .smriti-purchase-container {
     background-color: var(--smriti-bg);
     color: var(--smriti-text);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     padding: 20px;
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     min-height: 82vh;
-    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.1), 0 1px 2px rgba(16, 24, 40, 0.06);
     display: flex;
     flex-direction: column;
     gap: 15px;
+    box-shadow: none !important;
 }
 
-/* Top Navbar: Tab buttons + Permission Badge */
+/* ── Top Navbar ── */
 .smriti-top-nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: var(--smriti-card-bg);
-    border: 1px solid var(--smriti-glass-border);
+    background: var(--smriti-card-bg) !important;
+    border: 1px solid var(--smriti-card-border) !important;
     padding: 10px 20px;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     flex-wrap: wrap;
     gap: 10px;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
 }
 
 .smriti-tabs-bar {
     display: flex;
-    gap: 8px;
+    gap: 4px;
+    background: var(--smriti-bg);
+    border-radius: var(--radius-md);
+    padding: 4px;
+    border: 1px solid var(--smriti-card-border);
 }
 
 .smriti-tab-btn {
-    background: #f2f4f7;
-    border: 1px solid var(--smriti-glass-border);
-    color: var(--smriti-text-muted);
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    color: var(--smriti-text-muted) !important;
     padding: 8px 16px;
-    border-radius: 6px;
+    border-radius: calc(var(--radius-md) - 2px);
     font-weight: 600;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 13px;
+    transition: all var(--t-base) var(--ease);
     cursor: pointer;
     outline: none;
 }
 
 .smriti-tab-btn:hover {
-    color: var(--smriti-text);
-    background: #ffffff;
-    border-color: var(--smriti-primary);
+    color: var(--smriti-text) !important;
+    background: var(--smriti-card-bg) !important;
+    border-color: var(--smriti-card-border) !important;
 }
 
 .smriti-tab-btn.active {
-    color: white;
-    background: var(--smriti-primary);
-    border-color: var(--smriti-primary);
-    box-shadow: 0 0 15px var(--smriti-primary-glow);
+    background: linear-gradient(135deg, var(--smriti-primary-light), var(--smriti-primary)) !important;
+    color: #ffffff !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.25) !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.45) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.45) !important;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.35), -2px -2px 8px rgba(255, 255, 255, 0.05) !important;
 }
 
+.smriti-tab-btn.active:hover {
+    transform: translateY(-1px);
+    box-shadow: 5px 5px 12px rgba(0, 0, 0, 0.42), -3px -3px 10px rgba(255, 255, 255, 0.08) !important;
+}
+
+.smriti-tab-btn.active:active {
+    transform: translateY(1px);
+    border-color: transparent !important;
+    box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.5), inset -3px -3px 6px rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ── Status indicators ── */
 .smriti-status-indicators {
     display: flex;
     align-items: center;
@@ -97,26 +106,30 @@
 
 .smriti-badge {
     padding: 4px 10px;
-    border-radius: 20px;
+    border-radius: var(--radius-full);
     font-weight: 700;
     font-size: 0.8em;
     letter-spacing: 0.5px;
     text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
 }
 
 .badge-mgr {
-    background: #ecfdf3;
-    border: 1px solid #abefc6;
-    color: #027a48;
+    background: var(--smriti-success-bg) !important;
+    border: 1px solid var(--smriti-success-border) !important;
+    color: var(--smriti-success) !important;
+    box-shadow: none !important;
 }
 
 .badge-csh {
-    background: #fffaeb;
-    border: 1px solid #fedf89;
-    color: #b54708;
+    background: var(--smriti-warning-bg) !important;
+    border: 1px solid var(--smriti-warning-border) !important;
+    color: var(--smriti-warning) !important;
+    box-shadow: none !important;
 }
 
-/* Widescreen Panel Split */
+/* ── Grid Layout ── */
 .smriti-grid {
     display: grid;
     grid-template-columns: 2.1fr 1fr;
@@ -130,51 +143,52 @@
     }
 }
 
-/* Left panel main operations flow */
 .smriti-main-panel {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
-/* Field card */
+/* ── Header Fields Card ── */
 .smriti-header-fields-card {
-    background: var(--smriti-card-bg);
-    border: 1px solid var(--smriti-glass-border);
-    border-radius: 10px;
+    background: var(--smriti-card-bg) !important;
+    border: 1px solid var(--smriti-card-border) !important;
+    border-radius: var(--radius-md);
     padding: 15px 20px;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    box-shadow: none !important;
+    backdrop-filter: none !important;
 }
 
 .s-label {
-    font-size: 0.85em;
+    font-size: 0.82em;
     color: var(--smriti-text-muted);
-    font-weight: 600;
+    font-weight: 700;
     margin-bottom: 6px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     display: block;
 }
 
+/* Inputs — FLAT BY DEFAULT */
 .s-input {
-    background: #ffffff !important;
-    border: 1px solid var(--smriti-glass-border) !important;
+    background: var(--smriti-bg) !important;
+    border: 1px solid var(--smriti-card-border) !important;
     color: var(--smriti-text) !important;
     font-size: 0.95em !important;
     font-weight: 500 !important;
-    border-radius: 6px !important;
+    border-radius: var(--radius-md) !important;
     padding: 8px 12px !important;
     height: auto !important;
-    transition: all 0.2s ease !important;
+    box-shadow: none !important;
+    transition: box-shadow var(--t-base) var(--ease), border-color var(--t-base) var(--ease) !important;
 }
 
 .s-input:focus {
     border-color: var(--smriti-primary) !important;
-    box-shadow: 0 0 0 4px var(--smriti-primary-glow) !important;
+    box-shadow: var(--neu-pressed-sm) !important;
     outline: none !important;
 }
 
-/* Scanner Wrapper */
 .barcode-wrapper {
     display: flex;
 }
@@ -196,34 +210,36 @@
 
 #smriti-pur-barcode-input {
     width: 100%;
-    background: #ffffff;
-    border: 1px solid var(--smriti-glass-border);
-    border-radius: 8px;
+    background: var(--smriti-bg) !important;
+    border: 1px solid var(--smriti-card-border) !important;
+    border-radius: var(--radius-md) !important;
     padding: 12px 12px 12px 45px;
-    color: var(--smriti-text);
-    font-size: 1.15em;
+    color: var(--smriti-text) !important;
+    font-size: 1.1em;
     font-weight: 500;
-    transition: all 0.3s ease;
+    box-shadow: none !important;
+    transition: all var(--t-base) var(--ease);
 }
 
 #smriti-pur-barcode-input:focus {
     outline: none;
-    border-color: var(--smriti-primary);
-    box-shadow: 0 0 0 4px var(--smriti-primary-glow);
+    border-color: var(--smriti-primary) !important;
+    box-shadow: var(--neu-pressed-sm) !important;
 }
 
-/* Cart Grid Table wrapper */
+/* ── Table Wrapper — SOLID FLAT ── */
 .billing-table-wrapper {
-    background: var(--smriti-card-bg);
-    border: 1px solid var(--smriti-glass-border);
-    border-radius: 10px;
+    background: var(--smriti-card-bg) !important;
+    border: 1px solid var(--smriti-card-border) !important;
+    border-radius: var(--radius-md);
     padding: 15px;
     flex-grow: 1;
     overflow-y: auto;
     max-height: 520px;
     min-height: 250px;
     position: relative;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    box-shadow: none !important;
+    backdrop-filter: none !important;
 }
 
 #smriti-pur-table {
@@ -232,42 +248,44 @@
 }
 
 #smriti-pur-table th {
-    background-color: #f9fafb;
-    border-color: var(--smriti-glass-border);
-    color: var(--smriti-text-muted);
-    font-weight: 600;
+    background-color: var(--smriti-card-bg-2) !important;
+    border-color: var(--smriti-card-border) !important;
+    color: var(--smriti-text-muted) !important;
+    font-weight: 700;
     text-transform: uppercase;
-    font-size: 0.85em;
+    font-size: 0.82em;
     letter-spacing: 0.5px;
     padding: 12px 8px;
 }
 
 #smriti-pur-table td {
-    border-color: #f2f4f7;
-    color: var(--smriti-text);
+    border-color: var(--smriti-card-border) !important;
+    color: var(--smriti-text) !important;
     vertical-align: middle;
     padding: 8px;
 }
 
-/* Inner Grid inputs */
+/* ── Grid inputs ── */
 .grid-qty-input, .grid-rate-input, .grid-expiry-input {
-    background: #ffffff !important;
-    border: 1px solid var(--smriti-glass-border) !important;
+    background: var(--smriti-bg) !important;
+    border: 1px solid var(--smriti-card-border) !important;
+    border-radius: var(--radius-sm) !important;
     color: var(--smriti-text) !important;
     font-weight: 600 !important;
-    border-radius: 4px;
     padding: 6px !important;
     height: auto !important;
+    box-shadow: none !important;
+    transition: all var(--t-base) var(--ease);
 }
 
 .grid-qty-input:focus, .grid-rate-input:focus, .grid-expiry-input:focus {
     border-color: var(--smriti-primary) !important;
-    box-shadow: 0 0 0 2px var(--smriti-primary-glow) !important;
+    box-shadow: var(--neu-pressed-sm) !important;
     outline: none !important;
 }
 
 .text-teal {
-    color: var(--smriti-accent) !important;
+    color: var(--smriti-success) !important;
 }
 
 .text-green {
@@ -275,45 +293,48 @@
 }
 
 .text-orange {
-    color: var(--smriti-amber) !important;
+    color: var(--smriti-warning) !important;
 }
 
 .btn-remove-row {
-    background: transparent;
-    border: 1px solid rgba(180, 35, 24, 0.2);
-    color: var(--smriti-danger);
-    border-radius: 4px;
+    background: var(--smriti-bg) !important;
+    border: 1px solid var(--smriti-card-border) !important;
+    color: var(--smriti-danger) !important;
+    border-radius: var(--radius-sm);
     padding: 4px 8px;
-    transition: all 0.2s ease;
+    box-shadow: none !important;
+    transition: all var(--t-base) var(--ease);
     cursor: pointer;
 }
 
 .btn-remove-row:hover {
-    background: var(--smriti-danger);
-    color: white;
+    background: linear-gradient(145deg, #c4392d, var(--smriti-danger)) !important;
+    color: white !important;
+    border-color: transparent !important;
 }
 
-/* Empty view state */
+/* ── Empty state placeholder ── */
 .empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 80px 0;
-    color: var(--smriti-text-muted);
+    color: var(--smriti-text-subtle) !important;
 }
 
 .empty-icon {
     font-size: 3.5em;
     margin-bottom: 15px;
-    opacity: 0.3;
+    opacity: 0.5;
+    color: var(--smriti-text-subtle) !important;
 }
 
 .empty-text {
     font-size: 1.05em;
 }
 
-/* Right panel stats / quick summaries */
+/* ── Side Panel ── */
 .smriti-side-panel {
     display: flex;
     flex-direction: column;
@@ -321,24 +342,27 @@
 }
 
 .summary-card {
-    background: var(--smriti-card-bg);
-    border: 1px solid var(--smriti-glass-border);
-    border-radius: 10px;
+    background: var(--smriti-card-bg) !important;
+    border: 1px solid var(--smriti-card-border) !important;
+    border-radius: var(--radius-md);
     padding: 15px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    box-shadow: none !important;
+    backdrop-filter: none !important;
 }
 
 .summary-header {
     font-weight: 700;
-    font-size: 0.95em;
+    font-size: 0.9em;
     color: var(--smriti-primary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 1px solid #f2f4f7;
+    border-bottom: 1px solid var(--smriti-card-border);
     padding-bottom: 8px;
+    display: inline-flex;
+    align-items: center;
 }
 
 .summary-row {
@@ -357,50 +381,63 @@
 }
 
 .summary-val.highlight {
-    color: var(--smriti-amber);
+    color: var(--smriti-warning) !important;
     font-size: 1.15em;
 }
 
-/* Bottom submit button card */
 .payment-drawer-card {
-    background: var(--smriti-card-bg);
-    border: 1px solid var(--smriti-glass-border);
-    border-radius: 10px;
+    background: var(--smriti-card-bg) !important;
+    border: 1px solid var(--smriti-card-border) !important;
+    border-radius: var(--radius-md);
     padding: 15px;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    box-shadow: none !important;
+    backdrop-filter: none !important;
 }
 
+/* ── Checkout submit button — Tactile Outset ── */
 .btn-checkout-save {
-    background: var(--smriti-primary);
+    background: linear-gradient(135deg, var(--smriti-primary-light), var(--smriti-primary)) !important;
     border: none;
-    color: white;
+    color: white !important;
     font-weight: 700;
-    font-size: 1.1em;
+    font-size: 1.05em;
     padding: 12px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    cursor: pointer;
     width: 100%;
+    border-radius: var(--radius-md);
+    border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.25) !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.45) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.45) !important;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.35), -2px -2px 8px rgba(255, 255, 255, 0.05) !important;
+    transition: all var(--t-base) var(--ease);
+    cursor: pointer;
 }
 
 .btn-checkout-save:hover:not(:disabled) {
-    background: #53389e;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--smriti-primary-glow);
+    transform: translateY(-1px);
+    box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.4), -3px -3px 10px rgba(255, 255, 255, 0.08) !important;
+}
+
+.btn-checkout-save:active:not(:disabled) {
+    transform: translateY(1px);
+    border-color: transparent !important;
+    box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.5), inset -3px -3px 6px rgba(255, 255, 255, 0.05) !important;
 }
 
 .btn-checkout-save:disabled {
     opacity: 0.35;
     cursor: not-allowed;
+    box-shadow: none !important;
+    border: 1px solid var(--smriti-card-border) !important;
 }
 
-/* Toggle Switcher for PO vs Direct */
+/* ── Toggle Switcher for PO vs Direct ── */
 .pur-toggle-container {
     display: flex;
     margin-bottom: 12px;
-    background: #f2f4f7;
-    border-radius: 6px;
-    border: 1px solid var(--smriti-glass-border);
+    background: var(--smriti-bg);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--smriti-card-border);
     padding: 4px;
 }
 
@@ -408,25 +445,24 @@
     flex-grow: 1;
     background: transparent;
     border: none;
-    color: var(--smriti-text-muted);
+    color: var(--smriti-text-muted) !important;
     font-weight: 600;
     font-size: 0.85em;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     padding: 6px 12px;
-    border-radius: 4px;
+    border-radius: calc(var(--radius-sm) - 2px);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--t-base) var(--ease);
 }
 
 .pur-toggle-btn.active {
-    background: var(--smriti-primary);
-    color: white;
-    box-shadow: 0 2px 8px var(--smriti-primary-glow);
+    background: linear-gradient(135deg, var(--smriti-primary-light), var(--smriti-primary)) !important;
+    color: white !important;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2) !important;
 }
 
-/* Scanner Icon Pulse */
 @keyframes flash {
     0%, 100% { opacity: 0.4; }
-    50% { opacity: 1; color: var(--smriti-primary); }
+    50% { opacity: 1; }
 }

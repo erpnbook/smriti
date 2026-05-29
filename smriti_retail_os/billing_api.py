@@ -181,7 +181,7 @@ def recall_bill(cashier):
 
 
 @frappe.whitelist()
-def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_name=None, remarks=None, sales_staff=None):
+def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_name=None, remarks=None, sales_staff=None, on_credit=0):
     """
     Creates and submits a standard POS Invoice or falls back to Sales Invoice.
     If a cashier shift is open, creates a POS Invoice.
@@ -193,6 +193,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
 
     items_list = frappe.parse_json(items)
     payments_list = frappe.parse_json(payments)
+    on_credit = cint(on_credit)
     
     company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
     
@@ -206,8 +207,15 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     # If overwriting a recalled held draft POS Invoice
     is_recalled = bool(invoice_name and frappe.db.exists("POS Invoice", invoice_name))
     
-    use_pos = is_recalled or has_open_shift
-    doctype = "POS Invoice" if use_pos else "Sales Invoice"
+    if on_credit:
+        doctype = "Sales Invoice"
+        use_pos = False
+        if is_recalled:
+            frappe.delete_doc("POS Invoice", invoice_name, ignore_permissions=True)
+            is_recalled = False
+    else:
+        use_pos = is_recalled or has_open_shift
+        doctype = "POS Invoice" if use_pos else "Sales Invoice"
 
     if is_recalled:
         invoice_doc = frappe.get_doc("POS Invoice", invoice_name)
@@ -223,7 +231,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     invoice_doc.company = company
     invoice_doc.currency = "INR"
     invoice_doc.selling_price_list = "Standard Selling"
-    invoice_doc.update_stock = 1 if use_pos else 0
+    invoice_doc.update_stock = 1 if (use_pos or on_credit) else 0
     invoice_doc.is_pos = 1 if use_pos else 0
     
     # Combine remarks and sales staff cleanly to bypass standard database migration overrides

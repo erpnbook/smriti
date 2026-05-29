@@ -516,3 +516,48 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         # Clean up created Sales Invoice
         frappe.db.delete("Sales Invoice", {"name": invoice_name})
         frappe.db.commit()
+
+    def test_submit_bill_on_credit(self):
+        """
+        Verifies that when on_credit=1, submit_bill successfully submits a standard
+        outstanding Sales Invoice without payment entries and sets update_stock = 1.
+        """
+        # Ensure no open shift exists or is isolated for the cashier
+        frappe.db.delete("POS Opening Entry", {"user": frappe.session.user})
+        frappe.db.commit()
+
+        items_payload = [{
+            "item_code": "TEST-ITEM-BAR",
+            "stock_uom": self.uom,
+            "qty": 2,
+            "rate": 100.0,
+            "mrp": 150.0,
+            "gst_percentage": 18,
+            "tax_template": ""
+        }]
+
+        # Submit bill on credit (empty payments payload)
+        res = submit_bill(
+            cashier=frappe.session.user,
+            customer="Test Billing Customer",
+            items=frappe.as_json(items_payload),
+            payments=frappe.as_json([]),
+            on_credit=1
+        )
+
+        self.assertIsNotNone(res)
+        invoice_name = res["invoice"]
+        self.assertTrue(frappe.db.exists("Sales Invoice", invoice_name))
+        
+        # Verify it is a standard Sales Invoice, submitted (docstatus=1) and outstanding matches grand total
+        invoice = frappe.get_doc("Sales Invoice", invoice_name)
+        self.assertEqual(invoice.docstatus, 1)
+        self.assertEqual(invoice.is_pos, 0)
+        self.assertEqual(invoice.update_stock, 1)
+        self.assertEqual(flt(invoice.grand_total), 236.0) # Qty 2 * Rate 100 * 1.18 Tax = 236.0
+        self.assertEqual(flt(invoice.outstanding_amount), 236.0) # Outstanding matches grand_total on credit sale
+        self.assertEqual(len(invoice.payments), 0)
+
+        # Clean up created Sales Invoice
+        frappe.db.delete("Sales Invoice", {"name": invoice_name})
+        frappe.db.commit()
