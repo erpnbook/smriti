@@ -226,3 +226,59 @@ class TestSmritiRetailPurchaseAPI(unittest.TestCase):
         # Check that PO is received
         po_received_qty = frappe.db.get_value("Purchase Order Item", po_item_name, "received_qty")
         self.assertEqual(flt(po_received_qty), 10.0)
+
+    def test_create_purchase_order_footwear_matrix(self):
+        # Ensure price lists exist
+        for pl in ["Standard Selling", "MRP"]:
+            if not frappe.db.exists("Price List", pl):
+                pl_doc = frappe.new_doc("Price List")
+                pl_doc.price_list_name = pl
+                pl_doc.enabled = 1
+                pl_doc.insert(ignore_permissions=True)
+
+        variant_code = "TESTSTYLE-BLACK-38"
+        if frappe.db.exists("Item", variant_code):
+            try:
+                frappe.delete_doc("Item", variant_code, force=True)
+            except Exception:
+                pass
+
+        items = [{
+            "item_code": variant_code,
+            "qty": 12,
+            "rate": 350.0,
+            "warehouse": self.warehouse,
+            "stock_uom": self.uom
+        }]
+
+        res = create_purchase_order(
+            self.supplier, 
+            items, 
+            schedule_date="2026-06-15", 
+            remarks="Matrix PO Test Remarks",
+            image_base64="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+            image_filename="test_image.png"
+        )
+        self.assertIsNotNone(res)
+        self.assertTrue(res["name"])
+        self.assertTrue(frappe.db.exists("Purchase Order", res["name"]))
+        
+        # Verify custom schedule date and remarks
+        po_doc = frappe.get_doc("Purchase Order", res["name"])
+        self.assertEqual(str(po_doc.schedule_date), "2026-06-15")
+        self.assertEqual(po_doc.terms, "Matrix PO Test Remarks")
+
+        # Verify variant item was created correctly
+        self.assertTrue(frappe.db.exists("Item", variant_code))
+        item_doc = frappe.get_doc("Item", variant_code)
+        self.assertEqual(item_doc.item_name, "TESTSTYLE BLACK 38")
+        self.assertTrue(item_doc.image)
+        self.assertTrue(item_doc.image.startswith("/files/"))
+        self.assertEqual(item_doc.stock_uom, self.uom)
+        self.assertEqual(cint(item_doc.custom_is_retail_item), 1)
+
+        # Verify price list entries
+        selling_rate = frappe.db.get_value("Item Price", {"item_code": variant_code, "price_list": "Standard Selling"}, "price_list_rate")
+        mrp_rate = frappe.db.get_value("Item Price", {"item_code": variant_code, "price_list": "MRP"}, "price_list_rate")
+        self.assertEqual(flt(selling_rate), 350.0 * 1.2)
+        self.assertEqual(flt(mrp_rate), 350.0 * 1.5)

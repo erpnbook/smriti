@@ -104,9 +104,10 @@ def get_po_details(po_name):
     }
 
 @frappe.whitelist()
-def create_purchase_order(supplier, items):
+def create_purchase_order(supplier, items, schedule_date=None, remarks=None, image_base64=None, image_filename=None):
     """
     Creates and submits a standard Purchase Order.
+    Includes auto-creation of footwear variant items if they do not exist.
     """
     check_store_manager_role()
 
@@ -117,11 +118,37 @@ def create_purchase_order(supplier, items):
     company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
     warehouse = frappe.db.get_value("Warehouse", {"warehouse_name": "Stores"}, "name") or "Stores - _C"
 
+    # Save uploaded image file if present
+    file_url = None
+    if image_base64 and image_filename:
+        try:
+            import base64
+            from frappe.utils.file_manager import save_file
+            
+            if "," in image_base64:
+                image_base64 = image_base64.split(",")[1]
+            file_content = base64.b64decode(image_base64)
+            
+            first_code = items_list[0].get("item_code") if len(items_list) > 0 else "temp_item"
+            saved_file = save_file(
+                image_filename, 
+                file_content, 
+                "Item", 
+                first_code, 
+                decode=False, 
+                is_private=0
+            )
+            file_url = saved_file.file_url
+        except Exception as e:
+            frappe.log_error(f"SMRITI: Failed to save uploaded variant image: {str(e)}")
+
     po = frappe.new_doc("Purchase Order")
     po.supplier = supplier
     po.transaction_date = nowdate()
-    po.schedule_date = nowdate()
+    po.schedule_date = schedule_date or nowdate()
     po.company = company
+    if remarks:
+        po.terms = remarks
 
     for it in items_list:
         item_code = it.get("item_code")
@@ -129,12 +156,71 @@ def create_purchase_order(supplier, items):
         rate = flt(it.get("rate"))
         wh = it.get("warehouse") or warehouse
 
+        # Self-healing Item Variant Auto-creation
+        if not frappe.db.exists("Item", item_code):
+            parts = item_code.split('-')
+            style = parts[0] if len(parts) > 0 else "UNKNOWN"
+            color = parts[1] if len(parts) > 1 else "UNKNOWN"
+            size = parts[2] if len(parts) > 2 else "UNKNOWN"
+
+            item = frappe.new_doc("Item")
+            item.item_code = item_code
+            item.item_name = f"{style} {color} {size}"
+            item.item_group = "Footwear" if frappe.db.exists("Item Group", "Footwear") else "Products"
+            item.stock_uom = "Nos"
+            item.is_stock_item = 1
+            item.standard_rate = rate
+            item.custom_is_retail_item = 1
+            item.custom_mrp = flt(rate * 1.5) # Auto default MRP to cost * 1.5
+            
+            # Assign uploaded image or fallback to existing variant image
+            if file_url:
+                item.image = file_url
+            else:
+                existing_img = frappe.db.get_value("Item", {"item_code": ["like", f"{style}-%"], "image": ["is", "set"]}, "image")
+                if existing_img:
+                    item.image = existing_img
+
+            # Retrieve default GST HSN code for Footwear or any active HSN code
+            hsn_code = frappe.db.get_value("GST HSN Code", {"name": ["like", "64%"]}, "name")
+            if not hsn_code:
+                hsn_code = frappe.db.get_value("GST HSN Code", {}, "name")
+            if hsn_code:
+                item.gst_hsn_code = hsn_code
+            
+            # Resolve GST Tax template (use standard 18% as default or try to match)
+            template_name = frappe.db.get_value(
+                "Item Tax Template", 
+                {"name": ["like", "%18%"]}, 
+                "name"
+            )
+            if template_name:
+                item.append("taxes", {
+                    "item_tax_template": template_name,
+                    "tax_category": ""
+                })
+            item.insert(ignore_permissions=True)
+
+            # Create/update price list entries
+            for pl_name, pl_rate in [("Standard Selling", rate * 1.2), ("MRP", rate * 1.5)]:
+                existing_ip = frappe.db.get_value("Item Price", {"item_code": item_code, "price_list": pl_name}, "name")
+                if existing_ip:
+                    frappe.db.set_value("Item Price", existing_ip, "price_list_rate", flt(pl_rate))
+                else:
+                    ip = frappe.new_doc("Item Price")
+                    ip.item_code = item_code
+                    ip.price_list = pl_name
+                    ip.price_list_rate = flt(pl_rate)
+                    ip.currency = "INR"
+                    ip.uom = "Nos"
+                    ip.insert(ignore_permissions=True)
+
         po.append("items", {
             "item_code": item_code,
             "qty": qty,
             "rate": rate,
             "warehouse": wh,
-            "schedule_date": nowdate(),
+            "schedule_date": schedule_date or nowdate(),
             "uom": it.get("stock_uom") or frappe.db.get_value("Item", item_code, "stock_uom")
         })
 

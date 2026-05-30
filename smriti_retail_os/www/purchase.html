@@ -244,6 +244,11 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .status-badge.partial { background:rgba(99,102,241,0.12); color:var(--primary-lt); }
 .status-badge.complete { background:rgba(16,185,129,0.12); color:var(--success); }
 
+.matrix-qty-input { width: 55px; padding: 5px; text-align: center; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600; outline: none; }
+.matrix-qty-input:focus { border-color: var(--primary); }
+.matrix-color-input { width: 100%; padding: 5px 8px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-weight: 600; outline: none; text-transform: uppercase; }
+.matrix-color-input:focus { border-color: var(--primary); }
+
 @keyframes spin { to { transform:rotate(360deg); } }
 </style>
 </head>
@@ -281,6 +286,9 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
             </button>
             <button class="tab-btn" id="tab-new-po" onclick="switchTab('new-po')">
                 <span class="material-symbols-outlined">add_circle</span> New Purchase Order
+            </button>
+            <button class="tab-btn" id="tab-matrix-po" onclick="switchTab('matrix-po')">
+                <span class="material-symbols-outlined">grid_on</span> Footwear PO Grid
             </button>
         </div>
         <div class="topbar-right">
@@ -395,19 +403,145 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 </div>
             </div>
 
+            <!-- Footwear Matrix PO Tab -->
+            <div class="tab-view" id="tab-view-matrix-po">
+                <div class="new-po-wrap">
+
+                    <div class="form-section">
+                        <div class="form-section-title"><span class="material-symbols-outlined">storefront</span> Footwear Order Details</div>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <div style="flex: 2; min-width: 300px; display: flex; flex-direction: column; gap: 12px;">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Supplier *</label>
+                                        <input type="text" class="form-input" id="matrix-po-supplier" placeholder="Click to search supplier…" readonly onclick="openSupplierSearchFor('matrix-po')" style="cursor:pointer;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Style / Article Code *</label>
+                                        <input type="text" class="form-input" id="matrix-po-style" placeholder="e.g. HANYA-101" style="text-transform: uppercase;" onchange="fetchStyleImage()">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Purchase Rate (Cost Price) *</label>
+                                        <input type="number" class="form-input" id="matrix-po-rate" placeholder="₹ e.g. 370" min="0" step="0.01">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Delivery Date</label>
+                                        <input type="date" class="form-input" id="matrix-po-delivery-date">
+                                    </div>
+                                </div>
+                                <div class="form-row full">
+                                    <div class="form-group">
+                                        <label class="form-label">Remarks / Notes</label>
+                                        <input type="text" class="form-input" id="matrix-po-remarks" placeholder="Add order notes here…">
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="flex: 1; min-width: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg2); border: 1px dashed var(--border2); border-radius: var(--radius); padding: 16px; position: relative;">
+                                <label class="form-label" style="align-self: flex-start; margin-bottom: 8px;">Style Image</label>
+                                <div id="matrix-image-preview-container" style="width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); overflow: hidden; background: rgba(0,0,0,0.2); border: 1px solid var(--border);">
+                                    <span class="material-symbols-outlined" style="font-size: 48px; color: var(--text-sub);" id="matrix-image-placeholder">image</span>
+                                    <img id="matrix-image-preview" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                <button class="btn-action secondary" style="margin-top: 10px; padding: 5px 10px; font-size: 11px;" onclick="document.getElementById('matrix-image-file').click()">
+                                    <span class="material-symbols-outlined" style="font-size: 14px;">upload</span> Upload Image
+                                </button>
+                                <input type="file" id="matrix-image-file" style="display: none;" accept="image/*" onchange="previewMatrixImage(this)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-title"><span class="material-symbols-outlined">grid_on</span> Size-Color Matrix</div>
+                        <div style="overflow-x: auto; margin-top: 10px;">
+                            <table class="grn-table" style="width: 100%; min-width: 800px;">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 180px;">Color</th>
+                                        <th style="text-align: center; width: 60px;">35</th>
+                                        <th style="text-align: center; width: 60px;">36</th>
+                                        <th style="text-align: center; width: 60px;">37</th>
+                                        <th style="text-align: center; width: 60px;">38</th>
+                                        <th style="text-align: center; width: 60px;">39</th>
+                                        <th style="text-align: center; width: 60px;">40</th>
+                                        <th style="text-align: center; width: 60px;">41</th>
+                                        <th style="text-align: center; width: 60px;">42</th>
+                                        <th style="text-align: center; width: 60px;">43</th>
+                                        <th style="text-align: center; width: 80px;">Total</th>
+                                        <th style="width: 50px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="matrix-po-rows"></tbody>
+                            </table>
+                        </div>
+                        <button class="btn-add-row" onclick="addMatrixColorRow()" style="margin-top: 12px;">
+                            <span class="material-symbols-outlined">add</span> Add Color Row
+                        </button>
+                    </div>
+
+                    <div class="po-new-actions">
+                        <button class="btn-action secondary" onclick="resetMatrixPO()">
+                            <span class="material-symbols-outlined">restart_alt</span> Reset Matrix
+                        </button>
+                        <button class="btn-submit-po" id="btn-create-matrix-po" onclick="createMatrixPO()">
+                            <span class="material-symbols-outlined">send</span> Submit Purchase Order
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 
 <!-- Supplier Search Modal -->
 <div class="modal-backdrop" id="supplier-modal">
-    <div class="modal">
-        <div class="modal-title">
+    <div class="modal" style="max-width: 450px;">
+        <div class="modal-title" id="supplier-modal-title">
             <span class="material-symbols-outlined">storefront</span> Search Supplier
             <button class="modal-close" onclick="closeModal('supplier-modal')"><span class="material-symbols-outlined">close</span></button>
         </div>
-        <input type="text" class="modal-input" id="supplier-search-input" placeholder="Type supplier name…" autocomplete="off">
-        <div id="supplier-results"></div>
+        
+        <!-- Search View -->
+        <div id="supplier-search-view">
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <input type="text" class="modal-input" id="supplier-search-input" placeholder="Type supplier name…" autocomplete="off" style="margin-bottom: 0; flex: 1;">
+                <button class="btn-action primary" onclick="showSupplierForm()" style="padding: 0 14px; border-radius: var(--radius);">
+                    <span class="material-symbols-outlined">add</span>
+                </button>
+            </div>
+            <div id="supplier-results" style="max-height: 250px; overflow-y: auto;"></div>
+        </div>
+
+        <!-- Form View (Create / Edit) -->
+        <div id="supplier-form-view" style="display: none; flex-direction: column; gap: 12px;">
+            <input type="hidden" id="supplier-form-id">
+            <div class="form-group">
+                <label class="form-label">Supplier Name *</label>
+                <input type="text" class="form-input" id="supplier-form-name" placeholder="Enter supplier name">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Supplier Group *</label>
+                <select class="form-input" id="supplier-form-group">
+                    <option value="Local">Local</option>
+                    <option value="All Supplier Groups">All Supplier Groups</option>
+                    <option value="Distributor">Distributor</option>
+                    <option value="Manufacturer">Manufacturer</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Supplier Type</label>
+                <select class="form-input" id="supplier-form-type">
+                    <option value="Company">Company</option>
+                    <option value="Individual">Individual</option>
+                </select>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
+                <button class="btn-action secondary" onclick="hideSupplierForm()">Cancel</button>
+                <button class="btn-action primary" id="btn-save-supplier" onclick="saveSupplierOnFly()">Save Supplier</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -467,7 +601,11 @@ const S = {
     noPoSupplier: '',
     activeItemRowTarget: null, // 'new-po' or 'nopo'
     activeItemRowIdx: null,
-    supplierTarget: null,     // 'new-po' or 'nopo'
+    supplierTarget: null,     // 'new-po' or 'nopo' or 'matrix-po'
+    matrixRows: [],
+    matrixRowCount: 0,
+    matrixImageBase64: null,
+    matrixImageName: null,
 };
 
 // ── API ──
@@ -518,6 +656,8 @@ function showApp() {
     document.getElementById('app').style.display = 'flex';
     document.getElementById('tb-user').textContent = S.user;
     document.getElementById('new-po-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('matrix-po-delivery-date').value = new Date().toISOString().split('T')[0];
+    resetMatrixPO();
     loadPOList();
 }
 
@@ -824,6 +964,7 @@ function openSupplierSearchFor(target) {
     S.supplierTarget = target;
     document.getElementById('supplier-search-input').value = '';
     document.getElementById('supplier-results').innerHTML = '';
+    hideSupplierForm();
     openModal('supplier-modal');
     setTimeout(() => document.getElementById('supplier-search-input').focus(), 100);
 }
@@ -850,6 +991,11 @@ document.addEventListener('DOMContentLoaded', () => {
     addNewPORow();
 });
 
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
 async function searchSuppliers(q) {
     const el = document.getElementById('supplier-results');
     el.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">Searching…</div>';
@@ -857,20 +1003,106 @@ async function searchSuppliers(q) {
         const res = await api('frappe.client.get_list', {
             doctype: 'Supplier',
             filters: [['supplier_name', 'like', `%${q}%`]],
-            fields: ['name', 'supplier_name', 'supplier_group'],
+            fields: ['name', 'supplier_name', 'supplier_group', 'supplier_type'],
             limit_page_length: 20
         });
         const suppliers = res || [];
         if (!suppliers.length) { el.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">No suppliers found</div>'; return; }
         el.innerHTML = suppliers.map((s, i) => `
-            <div class="result-item" onclick="selectSupplier('${s.name}','${s.supplier_name}')">
-                <div class="ri-name">${s.supplier_name}</div>
-                <div class="ri-sub">${s.supplier_group || ''}</div>
+            <div class="result-item" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border);">
+                <div onclick="selectSupplier('${s.name}','${s.supplier_name}')" style="flex: 1; padding: 4px 0;">
+                    <div class="ri-name">${s.supplier_name}</div>
+                    <div class="ri-sub">${s.supplier_group || ''}</div>
+                </div>
+                <button class="btn-del-row" style="border-color: var(--border2); color: var(--primary-lt); padding: 4px 8px; margin-left: 10px;" onclick="event.stopPropagation(); editSupplierOnFly('${s.name}', '${escapeHtml(s.supplier_name)}', '${escapeHtml(s.supplier_group)}', '${escapeHtml(s.supplier_type || 'Company')}')">
+                    <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
+                </button>
             </div>
         `).join('');
     } catch(e) {
         el.innerHTML = `<div style="color:var(--danger);padding:12px;">${e.message}</div>`;
     }
+}
+
+function showSupplierForm(name = '', supplier_name = '', supplier_group = 'Local', supplier_type = 'Company') {
+    document.getElementById('supplier-form-id').value = name;
+    document.getElementById('supplier-form-name').value = supplier_name;
+    document.getElementById('supplier-form-group').value = supplier_group;
+    document.getElementById('supplier-form-type').value = supplier_type;
+
+    const titleEl = document.getElementById('supplier-modal-title');
+    const saveBtn = document.getElementById('btn-save-supplier');
+    if (name) {
+        titleEl.innerHTML = '<span class="material-symbols-outlined">edit</span> Edit Supplier';
+        saveBtn.textContent = 'Update Supplier';
+    } else {
+        titleEl.innerHTML = '<span class="material-symbols-outlined">add</span> Add New Supplier';
+        saveBtn.textContent = 'Save Supplier';
+    }
+    
+    document.getElementById('supplier-search-view').style.display = 'none';
+    document.getElementById('supplier-form-view').style.display = 'flex';
+}
+
+function hideSupplierForm() {
+    document.getElementById('supplier-modal-title').innerHTML = '<span class="material-symbols-outlined">storefront</span> Search Supplier';
+    document.getElementById('supplier-form-view').style.display = 'none';
+    document.getElementById('supplier-search-view').style.display = 'block';
+}
+
+function editSupplierOnFly(name, supplier_name, supplier_group, supplier_type) {
+    showSupplierForm(name, supplier_name, supplier_group, supplier_type);
+}
+
+async function saveSupplierOnFly() {
+    const name = document.getElementById('supplier-form-id').value;
+    const supplier_name = document.getElementById('supplier-form-name').value.trim();
+    const supplier_group = document.getElementById('supplier-form-group').value;
+    const supplier_type = document.getElementById('supplier-form-type').value;
+
+    if (!supplier_name) {
+        toast('Please enter a supplier name', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('btn-save-supplier');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 1s linear infinite">progress_activity</span> Saving…';
+
+    try {
+        if (name) {
+            // Edit existing
+            await api('frappe.client.set_value', {
+                doctype: 'Supplier',
+                name: name,
+                fieldname: {
+                    supplier_name: supplier_name,
+                    supplier_group: supplier_group,
+                    supplier_type: supplier_type
+                }
+            });
+            toast('Supplier updated successfully', 'success');
+            selectSupplier(name, supplier_name);
+        } else {
+            // Create new
+            const res = await api('frappe.client.insert', {
+                doc: {
+                    doctype: 'Supplier',
+                    supplier_name: supplier_name,
+                    supplier_group: supplier_group,
+                    supplier_type: supplier_type
+                }
+            });
+            toast('Supplier created successfully', 'success');
+            selectSupplier(res.name, res.supplier_name);
+        }
+        hideSupplierForm();
+    } catch (e) {
+        toast('Failed to save supplier: ' + e.message, 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = name ? 'Update Supplier' : 'Save Supplier';
 }
 
 function selectSupplier(name, displayName) {
@@ -879,6 +1111,9 @@ function selectSupplier(name, displayName) {
         el.value = displayName; el.dataset.name = name;
     } else if (S.supplierTarget === 'nopo') {
         const el = document.getElementById('nopo-supplier');
+        el.value = displayName; el.dataset.name = name;
+    } else if (S.supplierTarget === 'matrix-po') {
+        const el = document.getElementById('matrix-po-supplier');
         el.value = displayName; el.dataset.name = name;
     }
     closeModal('supplier-modal');
@@ -943,10 +1178,199 @@ function selectItemForRow(i) {
 
 // ── Tab switch ──
 function switchTab(tab) {
-    ['grn','new-po'].forEach(t => {
+    ['grn','new-po','matrix-po'].forEach(t => {
         document.getElementById(`tab-view-${t}`).classList.toggle('active', t === tab);
         document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
     });
+}
+
+// ── Matrix PO functions ──
+function addMatrixColorRow(colorName = '') {
+    const idx = S.matrixRowCount++;
+    S.matrixRows.push(idx);
+
+    const row = document.createElement('tr');
+    row.id = `matrix-row-${idx}`;
+    row.innerHTML = `
+        <td>
+            <input type="text" class="matrix-color-input" id="matrix-color-${idx}" value="${colorName}" placeholder="Color, e.g. BLACK" oninput="this.value = this.value.toUpperCase()">
+        </td>
+        <td><input type="number" class="matrix-qty-input" id="matrix-qty-${idx}-35" value="" min="0" oninput="calcMatrixRowTotal(${idx})"></td>
+        <td><input type="number" class="matrix-qty-input" id="matrix-qty-${idx}-36" value="" min="0" oninput="calcMatrixRowTotal(${idx})"></td>
+        <td><input type="number" class="matrix-qty-input" id="matrix-qty-${idx}-37" value="" min="0" oninput="calcMatrixRowTotal(${idx})"></td>
+        <td><input type="number" class="matrix-qty-input" id="matrix-qty-${idx}-38" value="" min="0" oninput="calcMatrixRowTotal(${idx})"></td>
+        <td><input type="number" class="matrix-qty-input" id="matrix-qty-${idx}-39" value="" min="0" oninput="calcMatrixRowTotal(${idx})"></td>
+        <td><input type="number" class="matrix-qty-input" id="matrix-qty-${idx}-40" value="" min="0" oninput="calcMatrixRowTotal(${idx})"></td>
+        <td><input type="number" class="matrix-qty-input" id="matrix-qty-${idx}-41" value="" min="0" oninput="calcMatrixRowTotal(${idx})"></td>
+        <td><input type="number" class="matrix-qty-input" id="matrix-qty-${idx}-42" value="" min="0" oninput="calcMatrixRowTotal(${idx})"></td>
+        <td><input type="number" class="matrix-qty-input" id="matrix-qty-${idx}-43" value="" min="0" oninput="calcMatrixRowTotal(${idx})"></td>
+        <td style="text-align: center; font-weight: bold; color: var(--primary-lt);" id="matrix-total-${idx}">0</td>
+        <td>
+            <button class="btn-del-row" onclick="removeMatrixRow(${idx})">
+                <span class="material-symbols-outlined">delete</span>
+            </button>
+        </td>
+    `;
+    document.getElementById('matrix-po-rows').appendChild(row);
+}
+
+function calcMatrixRowTotal(idx) {
+    const sizes = [35, 36, 37, 38, 39, 40, 41, 42, 43];
+    let total = 0;
+    sizes.forEach(sz => {
+        const val = parseInt(document.getElementById(`matrix-qty-${idx}-${sz}`)?.value) || 0;
+        total += val;
+    });
+    const totalEl = document.getElementById(`matrix-total-${idx}`);
+    if (totalEl) {
+        totalEl.textContent = total;
+    }
+}
+
+function removeMatrixRow(idx) {
+    document.getElementById(`matrix-row-${idx}`)?.remove();
+    const pos = S.matrixRows.indexOf(idx);
+    if (pos > -1) {
+        S.matrixRows.splice(pos, 1);
+    }
+}
+
+function resetMatrixPO() {
+    document.getElementById('matrix-po-supplier').value = '';
+    document.getElementById('matrix-po-supplier').dataset.name = '';
+    document.getElementById('matrix-po-style').value = '';
+    document.getElementById('matrix-po-rate').value = '';
+    document.getElementById('matrix-po-delivery-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('matrix-po-remarks').value = '';
+    document.getElementById('matrix-po-rows').innerHTML = '';
+    S.matrixRows = [];
+    S.matrixRowCount = 0;
+    S.matrixImageBase64 = null;
+    S.matrixImageName = null;
+    document.getElementById('matrix-image-file').value = '';
+    document.getElementById('matrix-image-preview').style.display = 'none';
+    document.getElementById('matrix-image-placeholder').style.display = 'block';
+    addMatrixColorRow('');
+}
+
+function previewMatrixImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+    S.matrixImageName = file.name;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        S.matrixImageBase64 = e.target.result;
+        const img = document.getElementById('matrix-image-preview');
+        img.src = e.target.result;
+        img.style.display = 'block';
+        document.getElementById('matrix-image-placeholder').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+async function fetchStyleImage() {
+    const style = document.getElementById('matrix-po-style').value.trim().toUpperCase();
+    if (!style) return;
+    try {
+        const items = await api('frappe.client.get_list', {
+            doctype: 'Item',
+            filters: [
+                ['item_code', 'like', style + '-%'],
+                ['image', 'is', 'set']
+            ],
+            fields: ['image'],
+            limit_page_length: 1
+        });
+        if (items && items.length > 0 && items[0].image) {
+            const imgUrl = items[0].image;
+            const img = document.getElementById('matrix-image-preview');
+            img.src = imgUrl;
+            img.style.display = 'block';
+            document.getElementById('matrix-image-placeholder').style.display = 'none';
+            S.matrixImageBase64 = null;
+            S.matrixImageName = null;
+        }
+    } catch (e) {
+        console.error("Failed to fetch style image:", e);
+    }
+}
+
+async function createMatrixPO() {
+    const supplier = document.getElementById('matrix-po-supplier').dataset.name;
+    const style = document.getElementById('matrix-po-style').value.trim().toUpperCase();
+    const rate = parseFloat(document.getElementById('matrix-po-rate').value) || 0;
+    const deliveryDate = document.getElementById('matrix-po-delivery-date').value;
+    const remarks = document.getElementById('matrix-po-remarks').value.trim();
+
+    if (!supplier) {
+        toast('Please select a supplier', 'error');
+        openSupplierSearchFor('matrix-po');
+        return;
+    }
+    if (!style) {
+        toast('Please enter a Style / Article Code', 'error');
+        document.getElementById('matrix-po-style').focus();
+        return;
+    }
+    if (rate <= 0) {
+        toast('Please enter a valid Cost Price', 'error');
+        document.getElementById('matrix-po-rate').focus();
+        return;
+    }
+
+    const items = [];
+    const sizes = [35, 36, 37, 38, 39, 40, 41, 42, 43];
+
+    for (let idx of S.matrixRows) {
+        const color = document.getElementById(`matrix-color-${idx}`)?.value.trim().toUpperCase();
+        if (!color) {
+            toast('Please fill in color names for all rows', 'error');
+            document.getElementById(`matrix-color-${idx}`)?.focus();
+            return;
+        }
+
+        sizes.forEach(sz => {
+            const qty = parseInt(document.getElementById(`matrix-qty-${idx}-${sz}`)?.value) || 0;
+            if (qty > 0) {
+                const itemCode = `${style}-${color}-${sz}`;
+                items.push({
+                    item_code: itemCode,
+                    qty: qty,
+                    rate: rate,
+                    stock_uom: 'Nos'
+                });
+            }
+        });
+    }
+
+    if (!items.length) {
+        toast('Add at least one item with quantity > 0 in the matrix', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('btn-create-matrix-po');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 1s linear infinite">progress_activity</span> Submitting…';
+
+    try {
+        const res = await api('smriti_retail_os.purchase_api.create_purchase_order', {
+            supplier: supplier,
+            items: JSON.stringify(items),
+            schedule_date: deliveryDate || null,
+            remarks: remarks || null,
+            image_base64: S.matrixImageBase64 || null,
+            image_filename: S.matrixImageName || null
+        });
+        toast(`PO Submitted: ${res.name}`, 'success');
+        resetMatrixPO();
+        switchTab('grn');
+        loadPOList();
+    } catch(e) {
+        toast(`PO failed: ${e.message}`, 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined">send</span> Submit Purchase Order';
 }
 
 // ── Modal helpers ──
