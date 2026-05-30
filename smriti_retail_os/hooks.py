@@ -373,6 +373,12 @@ website_route_rules = [
         # Standalone Billing Invoices — served from www/sales_invoices.html + www/sales_invoices.py
         "from_route": "/sales_invoices",
         "to_route": "sales_invoices"
+    },
+    {
+        # Standalone Item Master Import — served from www/item_master.html + www/item_master.py
+        "from_route": "/item_master",
+        "to_route": "item_master"
     }
 ]
+
 

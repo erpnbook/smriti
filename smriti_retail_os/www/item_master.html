@@ -1,0 +1,1468 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/item_master.html
+  @description: SMRITI Item Master Import — Standalone UI (Zero Frappe chrome)
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @version: 1.0.0
+  @license: MIT
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMRITI Item Master Import</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg:         #0a0f1e;
+    --bg2:        #0f1629;
+    --card:       #131d35;
+    --card2:      #172040;
+    --border:     rgba(255,255,255,0.07);
+    --border2:    rgba(255,255,255,0.12);
+    --primary:    #6366f1;
+    --primary-lt: #818cf8;
+    --accent:     #f59e0b;
+    --success:    #10b981;
+    --warning:    #f59e0b;
+    --danger:     #ef4444;
+    --text:       #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-sub:   #475569;
+    --radius:     12px;
+    --radius-sm:  8px;
+    --radius-lg:  16px;
+    --t:          0.2s ease;
+
+    --sim-bg:           var(--bg);
+    --sim-surface:      var(--card);
+    --sim-surface2:     var(--card2);
+    --sim-border:       var(--border);
+    --sim-accent:       var(--primary);
+    --sim-accent2:      var(--primary-lt);
+    --sim-green:        var(--success);
+    --sim-yellow:       var(--warning);
+    --sim-red:          var(--danger);
+    --sim-text:         var(--text);
+    --sim-muted:        var(--text-muted);
+    --sim-header-h:     44px;
+    --sim-row-h:        34px;
+    --sim-font:         'Inter', 'Outfit', sans-serif;
+}
+
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+
+/* Ambient background grid */
+.bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 0;
+}
+
+#app { position:relative; z-index:1; width:100vw; height:100vh; display:flex; overflow:hidden; }
+
+/* Sidebar */
+.sidebar { width:260px; flex-shrink:0; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:10; }
+.sidebar-brand { padding:20px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border); }
+.sidebar-logo { width:32px; height:32px; background:linear-gradient(135deg,var(--primary),var(--primary-lt)); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; }
+.sidebar-logo span { font-size:20px; }
+.sidebar-title { font-family:'Outfit',sans-serif; font-weight:800; font-size:1.15rem; background:linear-gradient(135deg,#fff,var(--text-muted)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.sidebar-menu { flex:1; overflow-y:auto; padding:16px 12px; display:flex; flex-direction:column; gap:6px; }
+.sidebar-item { position:relative; display:flex; align-items:center; gap:12px; padding:11px 14px; padding-right:36px !important; border-radius:var(--radius); color:var(--text-muted); text-decoration:none; font-weight:600; font-size:0.92rem; transition:all var(--t); cursor:pointer; }
+.sidebar-item span.emoji { font-size:16px; width:20px; text-align:center; }
+.sidebar-item:hover, .sidebar-item.active { background:rgba(99,102,241,0.08); color:var(--text); }
+.sidebar-item.active { border-left:3px solid var(--primary); }
+.popout-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.2s, color 0.2s;
+    color: var(--text-muted);
+    cursor: pointer;
+    border: none;
+    background: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+}
+.sidebar-item:hover .popout-btn { opacity: 1; }
+.popout-btn:hover { color: var(--primary-lt); }
+.popout-btn span { font-size: 16px !important; }
+.sidebar-footer { padding:16px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.15); }
+.sidebar-user { display:flex; align-items:center; gap:10px; }
+.sidebar-avatar { width:36px; height:36px; background:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; color:white; font-size:1.1rem; text-transform:uppercase; }
+.sidebar-info { display:flex; flex-direction:column; }
+.sidebar-name { font-size:0.85rem; font-weight:700; color:var(--text); }
+.sidebar-role { font-size:0.75rem; color:var(--text-muted); }
+.sidebar-logout { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:var(--radius-sm); border:none; background:transparent; color:#ef4444; font-weight:600; font-size:0.85rem; cursor:pointer; width:100%; transition:background var(--t); }
+.sidebar-logout:hover { background:rgba(239,68,68,0.1); }
+body.popout-mode .sidebar { display: none !important; }
+
+/* Main Wrapper */
+.main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+/* Topbar */
+.topbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
+.topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--text-muted); }
+.topbar-breadcrumbs span.sep { color:var(--text-sub); }
+.topbar-breadcrumbs span.active { color:var(--text); }
+.topbar-right { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
+.topbtn { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:var(--radius-sm); font-size:12px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); white-space:nowrap; }
+.topbtn span { font-size:16px; }
+.topbtn:hover { border-color:var(--primary); color:var(--primary-lt); }
+
+/* Dashboard Container */
+.dashboard-container { flex:1; overflow-y:auto; padding:24px 32px; display:flex; flex-direction:column; gap:20px; }
+
+/* ── Item Master CSS ──────────────────────────────────────── */
+.sim-page {
+  font-family: var(--sim-font);
+  background: var(--sim-bg);
+  color: var(--sim-text);
+  padding: 0;
+}
+.sim-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--sim-border);
+  padding-bottom: 14px;
+}
+.sim-page-header h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sim-page-header h1 span.sim-badge {
+  background: var(--sim-accent);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+}
+.sim-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--sim-border);
+}
+.sim-tab {
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--sim-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  border-radius: 6px 6px 0 0;
+  user-select: none;
+}
+.sim-tab:hover { color: var(--sim-text); background: rgba(255,255,255,0.04); }
+.sim-tab.active { color: var(--sim-accent2); border-bottom-color: var(--sim-accent2); }
+
+.sim-panel { display: none; padding: 16px 0; }
+.sim-panel.active { display: block; }
+
+.sim-paste-zone {
+  background: rgba(108,99,255,0.04);
+  border: 2px dashed rgba(108,99,255,0.3);
+  border-radius: 12px;
+  padding: 20px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  margin-bottom: 16px;
+  position: relative;
+}
+.sim-paste-zone:hover,
+.sim-paste-zone.active {
+  border-color: var(--sim-accent);
+  background: rgba(108,99,255,0.08);
+  box-shadow: 0 0 0 4px rgba(108,99,255,0.05);
+}
+.sim-paste-zone.active { border-style: solid; }
+.sim-paste-zone .pz-icon { font-size: 1.8rem; margin-bottom: 6px; }
+.sim-paste-zone .pz-title { font-size: 0.95rem; font-weight: 600; color: var(--sim-text); margin-bottom: 2px; }
+.sim-paste-zone .pz-sub { font-size: 0.78rem; color: var(--sim-muted); }
+.sim-paste-zone .pz-hint {
+  font-size: 0.72rem;
+  color: var(--sim-accent2);
+  margin-top: 6px;
+  font-weight: 500;
+}
+#sim-paste-capture {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sim-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0 12px;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+.sim-stat { display: flex; align-items: center; gap: 5px; }
+.sim-stat .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.sim-stat.valid .dot { background: var(--sim-green); }
+.sim-stat.warn .dot  { background: var(--sim-yellow); }
+.sim-stat.err .dot   { background: var(--sim-red); }
+.sim-stat .cnt { font-weight: 700; }
+.sim-stats-right { margin-left: auto; display: flex; gap: 8px; }
+
+.sim-grid-wrapper {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 350px);
+  border: 1px solid var(--sim-border);
+  border-radius: 10px;
+  background: var(--sim-surface);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+.sim-grid {
+  border-collapse: collapse;
+  width: max-content;
+  min-width: 100%;
+  font-size: 0.8rem;
+}
+.sim-grid thead tr {
+  background: linear-gradient(90deg, #1e1b4b, #1a1d27);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.sim-grid thead th {
+  padding: 0 10px;
+  height: var(--sim-header-h);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sim-muted);
+  border-bottom: 2px solid var(--sim-border);
+  border-right: 1px solid var(--sim-border);
+  text-align: left;
+  white-space: nowrap;
+  user-select: none;
+}
+.sim-grid thead th.required-col { color: var(--sim-accent2); }
+.sim-grid thead th:first-child { position: sticky; left: 0; z-index: 11; background: #1e1b4b; min-width: 36px; }
+.sim-grid thead th:nth-child(2) { position: sticky; left: 36px; z-index: 11; background: #1e1b4b; }
+.sim-grid thead th:nth-child(3) { position: sticky; left: 36px; z-index: 11; background: #1e1b4b; }
+
+.sim-grid tbody tr {
+  border-bottom: 1px solid var(--sim-border);
+  transition: background 0.15s;
+}
+.sim-grid tbody tr:hover { background: rgba(255,255,255,0.03); }
+.sim-grid tbody tr.row-valid  { border-left: 3px solid var(--sim-green); }
+.sim-grid tbody tr.row-warn   { border-left: 3px solid var(--sim-yellow); }
+.sim-grid tbody tr.row-error  { border-left: 3px solid var(--sim-red); background: rgba(239,68,68,0.04); }
+
+.sim-grid td {
+  padding: 0 8px;
+  height: var(--sim-row-h);
+  border-right: 1px solid var(--sim-border);
+  vertical-align: middle;
+  white-space: nowrap;
+  position: relative;
+}
+.sim-grid td:first-child {
+  position: sticky;
+  left: 0;
+  background: var(--sim-surface);
+  z-index: 5;
+  min-width: 36px;
+  text-align: center;
+}
+.sim-grid td:first-child.row-valid  { background: rgba(16,185,129,0.08); }
+.sim-grid td:first-child.row-error  { background: rgba(239,68,68,0.1); }
+.sim-grid td:first-child.row-warn   { background: rgba(245,158,11,0.08); }
+
+.sim-cell-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--sim-text);
+  font-family: var(--sim-font);
+  font-size: 0.8rem;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+select.sim-cell-input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%2364748b' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  background-size: 14px;
+  padding-right: 16px !important;
+  cursor: pointer;
+}
+.sim-cell-input option {
+  background-color: #1a1d27 !important;
+  color: #e2e8f0 !important;
+}
+.sim-cell-input:focus {
+  background: rgba(108,99,255,0.12);
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--sim-accent);
+}
+.sim-cell-input.cell-error { color: var(--sim-red); }
+.sim-cell-input[readonly] { color: var(--sim-muted); cursor: default; }
+
+.sim-rownum {
+  font-size: 0.7rem;
+  color: var(--sim-muted);
+  font-weight: 500;
+  min-width: 28px;
+}
+.sim-status-cell { font-size: 0.9rem; }
+.sim-del-btn {
+  background: none;
+  border: none;
+  color: var(--sim-muted);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.sim-del-btn:hover { color: var(--sim-red); background: rgba(239,68,68,0.1); }
+
+.sim-err-tip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  background: #1e1b4b;
+  border: 1px solid var(--sim-red);
+  color: var(--sim-red);
+  font-size: 0.72rem;
+  padding: 5px 10px;
+  border-radius: 6px;
+  z-index: 200;
+  max-width: 280px;
+  white-space: normal;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+.sim-grid td:hover .sim-err-tip { display: block; }
+.sim-grid td.has-warn .sim-err-tip { border-color: var(--sim-yellow); color: var(--sim-yellow); }
+
+.sim-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.sim-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  font-family: var(--sim-font);
+}
+.sim-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.sim-btn-primary {
+  background: linear-gradient(135deg, var(--primary-lt), var(--primary)) !important;
+  color: #fff !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.45) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.45) !important;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.35), -2px -2px 8px rgba(255, 255, 255, 0.05) !important;
+}
+.sim-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px) !important;
+  box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.4), -3px -3px 10px rgba(255, 255, 255, 0.08) !important;
+}
+
+.sim-btn-success {
+  background: linear-gradient(135deg, #027a48, var(--success)) !important;
+  color: #fff !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.45) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.45) !important;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.25) !important;
+}
+.sim-btn-success:hover:not(:disabled) { transform: translateY(-1px) !important; }
+
+.sim-btn-ghost {
+  background: var(--bg) !important;
+  color: var(--text-muted) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+.sim-btn-ghost:hover:not(:disabled) { background: var(--card2) !important; color: var(--text) !important; }
+
+.sim-btn-danger {
+  background: linear-gradient(135deg, #b42318, var(--danger)) !important;
+  color: #fff !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.45) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.45) !important;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.25) !important;
+}
+.sim-btn-danger:hover:not(:disabled) { transform: translateY(-1px) !important; }
+
+.sim-settings {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 18px;
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+.sim-setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sim-setting-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+.sim-setting-group select {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-family: var(--sim-font);
+  font-size: 0.82rem;
+  min-width: 140px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%2364748b' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 28px !important;
+  cursor: pointer;
+}
+.sim-setting-group select option {
+  background-color: #1a1d27 !important;
+  color: #e2e8f0 !important;
+}
+.sim-setting-group select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.sim-progress-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-top: 16px;
+  display: none;
+}
+.sim-progress-panel.active { display: block; }
+.sim-progress-bar-wrap {
+  background: rgba(255,255,255,0.06);
+  border-radius: 20px;
+  height: 8px;
+  margin: 10px 0;
+  overflow: hidden;
+}
+.sim-progress-bar {
+  height: 100%;
+  border-radius: 20px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-lt));
+  transition: width 0.3s ease;
+  width: 0%;
+}
+.sim-progress-label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.sim-result-summary {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sim-result-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+.sim-result-line.success { background: rgba(16,185,129,0.08); color: var(--success); }
+.sim-result-line.warning { background: rgba(245,158,11,0.08); color: var(--warning); }
+.sim-result-line.error   { background: rgba(239,68,68,0.08);  color: var(--danger); }
+
+.sim-err-detail {
+  margin-top: 10px;
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 8px;
+  overflow: hidden;
+  display: none;
+}
+.sim-err-detail.active { display: block; }
+.sim-err-detail table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.sim-err-detail th {
+  padding: 8px 12px;
+  background: rgba(239,68,68,0.08);
+  color: var(--danger);
+  font-weight: 600;
+  text-align: left;
+  border-bottom: 1px solid rgba(239,68,68,0.15);
+}
+.sim-err-detail td {
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: top;
+}
+.sim-err-detail td.err-msg { color: var(--danger); }
+
+.sim-upload-zone {
+  background: rgba(255,255,255,0.02);
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  margin-bottom: 16px;
+}
+.sim-upload-zone:hover { border-color: var(--primary); background: rgba(108,99,255,0.04); }
+.sim-upload-zone.dragover { border-color: var(--primary); background: rgba(108,99,255,0.08); }
+.sim-upload-zone .uz-icon { font-size: 2.2rem; margin-bottom: 8px; }
+.sim-upload-zone .uz-title { font-weight: 600; margin-bottom: 4px; }
+.sim-upload-zone .uz-sub   { font-size: 0.8rem; color: var(--text-muted); }
+#sim-file-input { display: none; }
+
+.sim-grid-wrapper::-webkit-scrollbar { width: 6px; height: 6px; }
+.sim-grid-wrapper::-webkit-scrollbar-track { background: transparent; }
+.sim-grid-wrapper::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+.sim-grid-wrapper::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+
+.sim-empty-state {
+  text-align: center;
+  padding: 36px 24px;
+  color: var(--text-muted);
+}
+.sim-empty-state .es-icon { font-size: 2.5rem; margin-bottom: 10px; }
+.sim-empty-state .es-text { font-size: 0.9rem; }
+.sim-grid thead th abbr { text-decoration: none; cursor: help; }
+
+/* Toast Container */
+#toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
+.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+.toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
+.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
+.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+.toast span { font-size:20px; }
+@keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+</style>
+</head>
+<body>
+<script>
+    if (new URLSearchParams(window.location.search).get('popout') === 'true') {
+        document.body.classList.add('popout-mode');
+    }
+</script>
+
+<div class="bg-grid"></div>
+
+<div id="app">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <div class="sidebar-logo"><span class="material-symbols-outlined">description</span></div>
+            <div class="sidebar-title">SMRITI OS</div>
+        </div>
+        <div class="sidebar-menu">
+            <a class="sidebar-item" href="/desk">
+                <span class="emoji">🏠</span>
+                <span>Control Center</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/desk')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
+            </a>
+            <a class="sidebar-item" href="/billing">
+                <span class="emoji">💳</span>
+                <span>Retail Billing</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/billing')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
+            </a>
+            <a class="sidebar-item" href="/shift">
+                <span class="emoji">🌅</span>
+                <span>Shift Management</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/shift')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
+            </a>
+            <a class="sidebar-item" href="/inventory">
+                <span class="emoji">📦</span>
+                <span>Inventory Ops</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/inventory')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
+            </a>
+            <a class="sidebar-item" href="/purchase">
+                <span class="emoji">🛒</span>
+                <span>Purchase Manager</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/purchase')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
+            </a>
+            <a class="sidebar-item" href="/barcode">
+                <span class="emoji">🏷️</span>
+                <span>Barcode Printing</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/barcode')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
+            </a>
+            <a class="sidebar-item" href="/products">
+                <span class="emoji">🛍️</span>
+                <span>Products Catalog</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/products')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
+            </a>
+            <a class="sidebar-item active" href="/item_master">
+                <span class="emoji">📋</span>
+                <span>Item Master Import</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/item_master')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
+            </a>
+            <a class="sidebar-item" href="/customers">
+                <span class="emoji">👥</span>
+                <span>Customers</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/customers')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
+            </a>
+            <a class="sidebar-item" href="/suppliers">
+                <span class="emoji">🏢</span>
+                <span>Suppliers</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/suppliers')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
+            </a>
+            <a class="sidebar-item" href="/sales_invoices">
+                <span class="emoji">📄</span>
+                <span>Billing Invoices</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/sales_invoices')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
+            </a>
+        </div>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar" id="sb-avatar">M</div>
+                <div class="sidebar-info">
+                    <span class="sidebar-name" id="sb-user">Manager</span>
+                    <span class="sidebar-role" id="sb-role">Store Manager</span>
+                </div>
+            </div>
+            <button class="sidebar-logout" onclick="doLogout()">
+                <span class="material-symbols-outlined" style="font-size:16px;">logout</span> Sign Out
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-breadcrumbs">
+                <span>SMRITI</span>
+                <span class="sep">/</span>
+                <span class="active">Item Master Import</span>
+            </div>
+
+            <div class="topbar-right">
+                <button class="topbtn" onclick="history.back()" title="Go Back">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+                <button class="topbtn" onclick="history.forward()" title="Go Forward">
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Container -->
+        <div class="dashboard-container" id="item-master-content-wrapper">
+            <div class="sim-page">
+                <div class="sim-page-header">
+                  <h1>📋 Item Master Import <span class="sim-badge">SMRITI</span></h1>
+                  <div style="display:flex;gap:10px">
+                    <button class="sim-btn sim-btn-ghost" id="sim-download-tpl">⬇ Download Template</button>
+                    <button class="sim-btn sim-btn-ghost" id="sim-view-items">📦 View Items</button>
+                  </div>
+                </div>
+
+                <div class="sim-tabs">
+                  <div class="sim-tab active" data-tab="paste">📋 Paste from Excel</div>
+                  <div class="sim-tab" data-tab="upload">📂 Upload File</div>
+                  <div class="sim-tab" data-tab="manual">✏️ Manual Entry</div>
+                </div>
+
+                <!-- TAB: Paste from Excel -->
+                <div class="sim-panel active" id="sim-panel-paste">
+                  <div class="sim-paste-zone" id="sim-paste-zone" tabindex="0">
+                    <div class="pz-icon">📋</div>
+                    <div class="pz-title">Click here, then press Ctrl+V</div>
+                    <div class="pz-sub">Paste your Excel data (select rows including header row)</div>
+                    <div class="pz-hint">✦ First pasted row is treated as column headers — auto-matched</div>
+                    <textarea id="sim-paste-capture" aria-hidden="true"></textarea>
+                  </div>
+                  <!-- Grid Placeholder -->
+                  <div id="grid-container-paste"></div>
+                </div>
+
+                <!-- TAB: Upload File -->
+                <div class="sim-panel" id="sim-panel-upload">
+                  <div class="sim-upload-zone" id="sim-upload-zone">
+                    <div class="uz-icon">📂</div>
+                    <div class="uz-title">Drag & drop your file here, or click to browse</div>
+                    <div class="uz-sub">Accepts .csv, .xlsx, .xls files</div>
+                    <input type="file" id="sim-file-input" accept=".csv,.xlsx,.xls" />
+                  </div>
+                  <button class="sim-btn sim-btn-ghost" id="sim-download-tpl2" style="margin-bottom:12px;">⬇ Download CSV Template</button>
+                  <!-- Grid Placeholder -->
+                  <div id="grid-container-upload"></div>
+                </div>
+
+                <!-- TAB: Manual Entry -->
+                <div class="sim-panel" id="sim-panel-manual">
+                  <p style="color:var(--sim-muted);font-size:0.83rem;margin-bottom:14px;">
+                    Add items one-by-one. Use Tab to move between cells. Same validation as paste mode.
+                  </p>
+                  <!-- Grid Placeholder -->
+                  <div id="grid-container-manual"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+let loggedUser = '{{ cashier }}';
+
+// Setup User Info
+document.getElementById('sb-user').textContent = loggedUser.split('@')[0];
+document.getElementById('sb-avatar').textContent = loggedUser.charAt(0).toUpperCase();
+
+// REST API
+function api(method, params = {}) {
+    return fetch(`/api/method/${method}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Frappe-CSRF-Token': CSRF_TOKEN
+        },
+        body: JSON.stringify(params)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.exc) throw new Error(d._error_message || d.exc);
+        return d.message;
+    });
+}
+
+function doLogout() {
+    fetch('/api/method/logout', { credentials: 'include' })
+    .then(() => { window.location.href = '/login'; });
+}
+
+function toast(msg, type = 'success') {
+    const cont = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icon = type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info';
+    t.innerHTML = `<span class="material-symbols-outlined">${icon}</span> <span>${msg}</span>`;
+    cont.appendChild(t);
+    setTimeout(() => { t.remove(); }, 4000);
+}
+
+function openPopout(e, url) {
+    e.preventDefault();
+    e.stopPropagation();
+    let popout_url = url;
+    if (popout_url.indexOf('?') === -1) {
+        popout_url += '?popout=true';
+    } else if (popout_url.indexOf('popout=true') === -1) {
+        popout_url += '&popout=true';
+    }
+    const w = screen.width - 60;
+    const h = screen.height - 60;
+    const left = 30;
+    const top = 30;
+    const win = window.open(popout_url, "smriti-popout-window", `width=${w},height=${h},top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`);
+    if (win) {
+        win.focus();
+    }
+}
+
+// ── Mocked frappe client API namespace ─────────────────────────────
+const frappe = {
+    show_alert: (msgObj, duration) => {
+        toast(msgObj.message, msgObj.indicator === 'red' ? 'error' : msgObj.indicator === 'orange' ? 'warning' : 'success');
+    },
+    call: async (options) => {
+        try {
+            const res = await api(options.method, options.args);
+            return { message: res };
+        } catch (e) {
+            throw e;
+        }
+    },
+    set_route: (type, doc) => {
+        if (type === 'List' && doc === 'Item') {
+            window.location.href = '/products';
+        }
+    }
+};
+
+// ── SmritiItemMasterController and Grid JS ─────────────────────────
+const SIM_COLS = [
+    { key: 'BARCODE NO',           label: 'Barcode',     width: '150px', required: true },
+    { key: 'PRODUCT STYLE CODE',   label: 'Style/Article No', width: '150px', required: true },
+    { key: 'ITEM DESCRIPTION',     label: 'Description', width: '220px', required: true },
+    { key: 'BRAND NAME',           label: 'Brand',       width: '110px' },
+    { key: 'COLOR',                label: 'Color',       width: '100px', required: true },
+    { key: 'SIZE',                 label: 'Size',        width: '65px',  required: true },
+    { key: 'PLANNED MRP',          label: 'MRP ₹',       width: '90px',  required: true, type: 'number' },
+    { key: 'COST PRICE',           label: 'Cost ₹',      width: '90px',  type: 'number' },
+    { key: 'PRODUCT TAX',          label: 'GST%',        width: '65px',  type: 'number', choices: ['', '0', '5', '12', '18', '28'] },
+    { key: 'HSN CODE',             label: 'HSN Code',    width: '100px' },
+    { key: 'GENDER',               label: 'Gender',      width: '90px',  choices: ['', 'MENS', 'LADIES', 'BOYS', 'GIRLS', 'UNISEX', 'KIDS'] },
+    { key: 'VENDOR CODE',          label: 'Vendor/Supplier', width: '130px' },
+    { key: 'PURCHASE CLASS',       label: 'Purch. Class', width: '110px',  choices: ['', 'FW', 'MFW', 'LFW', 'BFW', 'GFW', 'KFW', 'ASSTED', 'SPORTS', 'ACC', 'BAG', 'FORMAL', 'CASUAL'] },
+    { key: 'DEPARTMENT',           label: 'Department',  width: '120px' },
+    { key: 'MERCHANDISE CATEGORY', label: 'Merch. Cat.', width: '120px' },
+    { key: 'Sub category',         label: 'Sub Category', width: '120px' },
+    { key: 'HEELS',                label: 'Heels',       width: '90px' },
+    { key: 'UPPER MATERIAL',       label: 'Upper Mat.',  width: '120px' },
+    { key: 'OUTSOLE',              label: 'Outsole',     width: '100px' },
+    { key: 'IMAGE LINK',           label: 'Image URL',   width: '130px' },
+    { key: 'Product Tax Group',    label: 'Tax Group',   width: '120px' },
+];
+
+const REQUIRED_KEYS = SIM_COLS.filter(c => c.required).map(c => c.key);
+const HEADER_ALIASES = {};
+SIM_COLS.forEach(c => {
+    HEADER_ALIASES[c.key.toLowerCase()] = c.key;
+    HEADER_ALIASES[c.label.toLowerCase()] = c.key;
+});
+
+const EXTRA_ALIASES = {
+    'barcode': 'BARCODE NO', 'barcode no': 'BARCODE NO', 'barcode number': 'BARCODE NO',
+    'style code': 'PRODUCT STYLE CODE', 'article': 'PRODUCT STYLE CODE', 'article no': 'PRODUCT STYLE CODE',
+    'item description': 'ITEM DESCRIPTION', 'description': 'ITEM DESCRIPTION', 'name': 'ITEM DESCRIPTION',
+    'brand': 'BRAND NAME', 'brand name': 'BRAND NAME',
+    'mrp': 'PLANNED MRP', 'planned mrp': 'PLANNED MRP', 'selling price': 'PLANNED MRP',
+    'cost': 'COST PRICE', 'cost price': 'COST PRICE', 'purchase price': 'COST PRICE',
+    'gst': 'PRODUCT TAX', 'gst%': 'PRODUCT TAX', 'tax%': 'PRODUCT TAX',
+    'hsn': 'HSN CODE', 'hsn code': 'HSN CODE',
+    'dept': 'DEPARTMENT', 'department': 'DEPARTMENT',
+    'vendor': 'VENDOR CODE', 'vendor code': 'VENDOR CODE', 'supplier': 'VENDOR CODE',
+    'heels': 'HEELS', 'heel': 'HEELS', 'heel type': 'HEELS',
+    'upper': 'UPPER MATERIAL', 'upper material': 'UPPER MATERIAL',
+    'outsole': 'OUTSOLE', 'sole': 'OUTSOLE',
+    'image': 'IMAGE LINK', 'image link': 'IMAGE LINK', 'image url': 'IMAGE LINK',
+    'tax group': 'Product Tax Group', 'product tax group': 'Product Tax Group',
+    'purchase class': 'PURCHASE CLASS', 'p class': 'PURCHASE CLASS',
+    'merch category': 'MERCHANDISE CATEGORY', 'merchandise category': 'MERCHANDISE CATEGORY',
+    'sub cat': 'Sub category', 'sub category': 'Sub category',
+};
+Object.assign(HEADER_ALIASES, EXTRA_ALIASES);
+
+class SmritiItemMasterController {
+    constructor(wrapper) {
+        this.wrapper  = wrapper;
+        this.rows     = [];
+        this.col_map  = null;
+        this.importing = false;
+
+        this._inject_grids();
+        this._bind_events();
+    }
+
+    _grid_html(suffix = 'paste') {
+        return `
+<div class="sim-stats" id="sim-stats-${suffix}">
+  <span class="sim-stat valid"><span class="dot"></span><span class="cnt" id="cnt-valid-${suffix}">0</span> valid</span>
+  <span class="sim-stat warn"> <span class="dot"></span><span class="cnt" id="cnt-warn-${suffix}">0</span> warnings</span>
+  <span class="sim-stat err">  <span class="dot"></span><span class="cnt" id="cnt-err-${suffix}">0</span> errors</span>
+  <div class="sim-stats-right">
+    <button class="sim-btn sim-btn-ghost sim-btn-clear" data-suffix="${suffix}">🗑 Clear</button>
+    <button class="sim-btn sim-btn-ghost sim-btn-addrow" data-suffix="${suffix}">➕ Add Row</button>
+  </div>
+</div>
+<div class="sim-grid-wrapper" id="sim-grid-wrapper-${suffix}">
+  <table class="sim-grid" id="sim-grid-${suffix}">
+    <thead><tr id="sim-grid-thead-${suffix}"></tr></thead>
+    <tbody id="sim-grid-tbody-${suffix}">
+      <tr><td colspan="${SIM_COLS.length + 2}" class="sim-empty-state">
+        <div class="es-icon">📋</div>
+        <div class="es-text">No data yet — paste from Excel, upload a file, or add rows manually</div>
+      </td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="sim-settings">
+  <div class="sim-setting-group">
+    <div class="sim-setting-label">On Duplicate Barcode</div>
+    <select id="sim-dup-action-${suffix}" class="sim-dup-action">
+      <option value="block" selected>🚫 Block (Hard Error)</option>
+    </select>
+  </div>
+  <div class="sim-setting-group">
+    <div class="sim-setting-label">Selling Price Source</div>
+    <select id="sim-price-src-${suffix}">
+      <option value="mrp" selected>Use Planned MRP (Standard Selling)</option>
+    </select>
+  </div>
+</div>
+
+<div class="sim-toolbar">
+  <button class="sim-btn sim-btn-primary sim-btn-validate" data-suffix="${suffix}">🔍 Validate Rows</button>
+  <button class="sim-btn sim-btn-success sim-btn-import" data-suffix="${suffix}" disabled>🚀 Import Valid Rows</button>
+</div>
+
+<div class="sim-progress-panel" id="sim-progress-${suffix}">
+  <div class="sim-progress-label" id="sim-prog-label-${suffix}">Preparing import…</div>
+  <div class="sim-progress-bar-wrap"><div class="sim-progress-bar" id="sim-prog-bar-${suffix}"></div></div>
+  <div class="sim-result-summary" id="sim-result-${suffix}"></div>
+  <div class="sim-err-detail" id="sim-err-detail-${suffix}">
+    <table>
+      <thead><tr><th>Row</th><th>Barcode</th><th>Style Code</th><th>Error</th></tr></thead>
+      <tbody id="sim-err-tbody-${suffix}"></tbody>
+    </table>
+  </div>
+</div>`;
+    }
+
+    _inject_grids() {
+        $('#grid-container-paste').html(this._grid_html('paste'));
+        $('#grid-container-upload').html(this._grid_html('upload'));
+        $('#grid-container-manual').html(this._grid_html('manual'));
+
+        this._render_grid_rows('paste');
+        this._render_grid_rows('upload');
+        this._render_grid_rows('manual');
+    }
+
+    _render_grid_header(suffix) {
+        const $thead = $(`#sim-grid-thead-${suffix}`);
+        $thead.empty();
+        let html = '<th class="sim-rownum">#</th><th title="Row status">✓</th>';
+        SIM_COLS.forEach(col => {
+            const req = col.required ? ' required-col' : '';
+            html += `<th class="${req}" style="min-width:${col.width}">
+                       <abbr title="${col.key}">${col.label}${col.required ? ' *' : ''}</abbr>
+                     </th>`;
+        });
+        html += '<th style="width:36px"></th>';
+        $thead.html(html);
+    }
+
+    _render_grid_rows(suffix) {
+        this._render_grid_header(suffix);
+        const $tbody = $(`#sim-grid-tbody-${suffix}`);
+        $tbody.empty();
+
+        const rows = this._get_rows(suffix);
+
+        if (!rows.length) {
+            $tbody.html(`<tr><td colspan="${SIM_COLS.length + 3}" class="sim-empty-state">
+              <div class="es-icon">📋</div>
+              <div class="es-text">No data yet — ${suffix === 'paste' ? 'paste from Excel above' : suffix === 'upload' ? 'upload a file above' : 'click ➕ Add Row to start'}</div>
+            </td></tr>`);
+            return;
+        }
+
+        rows.forEach((row, idx) => {
+            const statusClass = row.status === 'error' ? 'row-error' : row.status === 'warning' ? 'row-warn' : row.status === 'valid' ? 'row-valid' : '';
+            const statusIcon  = row.status === 'error' ? '🔴' : row.status === 'warning' ? '🟡' : row.status === 'valid' ? '🟢' : '⬜';
+            const allMsgs     = [...(row.errors || []), ...(row.warnings || [])];
+            const tipHtml     = allMsgs.length ? `<span class="sim-err-tip">${allMsgs.join('<br>')}</span>` : '';
+
+            let tds = `<td class="sim-rownum ${statusClass}">${tipHtml}${idx + 1}</td>`;
+            tds += `<td class="sim-status-cell">${statusIcon}</td>`;
+
+            SIM_COLS.forEach(col => {
+                const val = row.data[col.key] || '';
+                if (col.choices) {
+                    let optionsHtml = col.choices.map(opt => {
+                        const selected = String(opt).trim().toUpperCase() === String(val).trim().toUpperCase() ? 'selected' : '';
+                        return `<option value="${_esc(opt)}" ${selected}>${_esc(opt)}</option>`;
+                    }).join('');
+                    tds += `<td><select class="sim-cell-input" 
+                                data-suffix="${suffix}" data-row="${idx}" data-col="${col.key}">
+                              ${optionsHtml}
+                            </select></td>`;
+                } else {
+                    tds += `<td><input class="sim-cell-input" 
+                                data-suffix="${suffix}" data-row="${idx}" data-col="${col.key}"
+                                type="text" value="${_esc(val)}"
+                                ${col.type === 'number' ? 'inputmode="decimal"' : ''}></td>`;
+                }
+            });
+
+            tds += `<td><button class="sim-del-btn sim-btn-delrow" data-suffix="${suffix}" data-row="${idx}" title="Delete row">✕</button></td>`;
+            $tbody.append(`<tr class="${statusClass}" id="sim-row-${suffix}-${idx}">${tds}</tr>`);
+        });
+
+        this._update_stats(suffix);
+    }
+
+    _get_rows(suffix) {
+        this._rows = this._rows || {};
+        if (!this._rows[suffix]) {
+            this._rows[suffix] = [];
+            if (suffix === 'manual') {
+                for (let i = 0; i < 5; i++) {
+                    this._rows[suffix].push({ data: {}, status: null, errors: [], warnings: [] });
+                }
+            }
+        }
+        return this._rows[suffix];
+    }
+
+    _set_rows(suffix, rows) {
+        this._rows = this._rows || {};
+        if (suffix === 'manual' && (!rows || rows.length === 0)) {
+            rows = [];
+            for (let i = 0; i < 5; i++) {
+                rows.push({ data: {}, status: null, errors: [], warnings: [] });
+            }
+        }
+        this._rows[suffix] = rows;
+    }
+
+    _bind_events() {
+        const self = this;
+
+        // Tab switching
+        $(this.wrapper).on('click', '.sim-tab', function () {
+            $('.sim-tab').removeClass('active');
+            $('.sim-panel').removeClass('active');
+            $(this).addClass('active');
+            $(`#sim-panel-${$(this).data('tab')}`).addClass('active');
+        });
+
+        // Paste zone activation
+        $(this.wrapper).on('click', '#sim-paste-zone', function () {
+            $(this).addClass('active');
+            $('#sim-paste-capture').focus();
+        });
+
+        $(this.wrapper).on('paste', '#sim-paste-capture', function (e) {
+            e.preventDefault();
+            const text = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+            $('#sim-paste-zone').removeClass('active');
+            if (text) self._handle_paste(text, 'paste');
+        });
+
+        // Cell editing
+        $(this.wrapper).on('change', '.sim-cell-input', function () {
+            const suffix = $(this).data('suffix');
+            const rowIdx = parseInt($(this).data('row'));
+            const col    = $(this).data('col');
+            const rows   = self._get_rows(suffix);
+            if (rows[rowIdx]) {
+                rows[rowIdx].data[col] = $(this).val();
+                rows[rowIdx].status    = null;
+            }
+            self._update_stats(suffix);
+        });
+
+        // Keyboard navigation
+        $(this.wrapper).on('keydown', '.sim-cell-input', function (e) {
+            const $inputs = $(this).closest('table').find('.sim-cell-input');
+            const idx     = $inputs.index(this);
+            const colCount = SIM_COLS.length;
+            if (e.key === 'Tab' || e.key === 'Enter') {
+                e.preventDefault();
+                $inputs.eq(idx + 1).focus().select();
+            } else if (e.key === 'ArrowRight' && this.selectionStart === this.value.length) {
+                $inputs.eq(idx + 1).focus().select();
+            } else if (e.key === 'ArrowLeft' && this.selectionStart === 0) {
+                $inputs.eq(idx - 1).focus().select();
+            } else if (e.key === 'ArrowDown') {
+                $inputs.eq(idx + colCount).focus().select();
+            } else if (e.key === 'ArrowUp') {
+                $inputs.eq(idx - colCount).focus().select();
+            }
+        });
+
+        // Delete row
+        $(this.wrapper).on('click', '.sim-btn-delrow', function () {
+            const suffix = $(this).data('suffix');
+            const idx    = parseInt($(this).data('row'));
+            const rows   = self._get_rows(suffix);
+            rows.splice(idx, 1);
+            self._set_rows(suffix, rows);
+            self._render_grid_rows(suffix);
+        });
+
+        // Add row
+        $(this.wrapper).on('click', '.sim-btn-addrow', function () {
+            const suffix = $(this).data('suffix');
+            const rows   = self._get_rows(suffix);
+            rows.push({ data: {}, status: null, errors: [], warnings: [] });
+            self._set_rows(suffix, rows);
+            self._render_grid_rows(suffix);
+            setTimeout(() => {
+                $(`#sim-grid-${suffix} .sim-cell-input`).last().closest('tr').find('.sim-cell-input').first().focus();
+            }, 50);
+        });
+
+        // Clear grid
+        $(this.wrapper).on('click', '.sim-btn-clear', function () {
+            const suffix = $(this).data('suffix');
+            if (!self._get_rows(suffix).length || confirm('Clear all rows?')) {
+                self._set_rows(suffix, []);
+                self._render_grid_rows(suffix);
+                $(`#sim-progress-${suffix}`).removeClass('active');
+            }
+        });
+
+        // Validate
+        $(this.wrapper).on('click', '.sim-btn-validate', async function () {
+            const suffix = $(this).data('suffix');
+            await self._validate_rows(suffix);
+        });
+
+        // Import
+        $(this.wrapper).on('click', '.sim-btn-import', async function () {
+            if (self.importing) return;
+            const suffix = $(this).data('suffix');
+            await self._import_rows(suffix);
+        });
+
+        // File upload
+        $(this.wrapper).on('click', '#sim-upload-zone', function (e) {
+            if ($(e.target).is('#sim-file-input')) return;
+            $('#sim-file-input').click();
+        });
+        $(this.wrapper).on('change', '#sim-file-input', function () {
+            const file = this.files[0];
+            if (file) self._handle_file_upload(file);
+        });
+
+        const $uz = $(this.wrapper).find('#sim-upload-zone');
+        $uz.on('dragover', e => { e.preventDefault(); $uz.addClass('dragover'); });
+        $uz.on('dragleave', () => $uz.removeClass('dragover'));
+        $uz.on('drop', e => {
+            e.preventDefault();
+            $uz.removeClass('dragover');
+            const file = e.originalEvent.dataTransfer.files[0];
+            if (file) self._handle_file_upload(file);
+        });
+
+        $(this.wrapper).on('click', '#sim-download-tpl, #sim-download-tpl2', () => self._download_template());
+        $(this.wrapper).on('click', '#sim-view-items', () => {
+            frappe.set_route('List', 'Item');
+        });
+    }
+
+    _handle_paste(text, suffix) {
+        const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim().split('\n');
+        if (lines.length < 2) {
+            frappe.show_alert({ message: 'Paste at least 2 rows (header + 1 data row)', indicator: 'orange' }, 4);
+            return;
+        }
+
+        const firstRow  = _parse_tsv_line(lines[0]);
+        const colMap    = _auto_detect_columns(firstRow);
+        const hasHeader = Object.keys(colMap).length > 0;
+
+        const dataLines = hasHeader ? lines.slice(1) : lines;
+
+        const newRows = dataLines
+            .filter(l => l.trim())
+            .map(line => {
+                const cells = _parse_tsv_line(line);
+                const data  = {};
+                if (hasHeader) {
+                    firstRow.forEach((hdr, i) => {
+                        const canonical = colMap[i];
+                        if (canonical) data[canonical] = cells[i] || '';
+                    });
+                } else {
+                    SIM_COLS.forEach((col, i) => { data[col.key] = cells[i] || ''; });
+                }
+                return { data, status: null, errors: [], warnings: [] };
+            });
+
+        const existing = this._get_rows(suffix);
+        this._set_rows(suffix, [...existing, ...newRows]);
+        this._render_grid_rows(suffix);
+
+        frappe.show_alert({
+            message: `✅ ${newRows.length} row${newRows.length > 1 ? 's' : ''} pasted — click Validate to check`,
+            indicator: 'green'
+        }, 4);
+    }
+
+    async _validate_rows(suffix) {
+        const rows = this._get_rows(suffix);
+        if (!rows.length) {
+            frappe.show_alert({ message: 'No rows to validate', indicator: 'orange' }, 3);
+            return;
+        }
+
+        frappe.show_alert({ message: 'Validating…', indicator: 'blue' }, 2);
+        const rowData = rows.map(r => r.data);
+
+        try {
+            const results = await frappe.call({
+                method: 'smriti_retail_os.item_master_api.validate_import_rows',
+                args: { rows_json: JSON.stringify(rowData) }
+            });
+
+            const validations = results.message || [];
+            validations.forEach((v, i) => {
+                if (rows[i]) {
+                    rows[i].status   = v.status;
+                    rows[i].errors   = v.errors;
+                    rows[i].warnings = v.warnings;
+                }
+            });
+            this._set_rows(suffix, rows);
+            this._render_grid_rows(suffix);
+
+            const validCount = rows.filter(r => r.status === 'valid').length;
+            const warnCount  = rows.filter(r => r.status === 'warning').length;
+            const errCount   = rows.filter(r => r.status === 'error').length;
+
+            const hasImportable = validCount + warnCount > 0;
+            $(`[data-suffix="${suffix}"].sim-btn-import`).prop('disabled', !hasImportable).text(
+                `🚀 Import ${validCount + warnCount} Valid Row${(validCount + warnCount) !== 1 ? 's' : ''}`
+            );
+
+            frappe.show_alert({
+                message: `Validation done — ${validCount} valid, ${warnCount} warnings, ${errCount} errors`,
+                indicator: errCount > 0 ? (validCount > 0 ? 'orange' : 'red') : 'green'
+            }, 5);
+
+        } catch (err) {
+            frappe.show_alert({ message: 'Validation failed: ' + (err.message || err), indicator: 'red' }, 6);
+        }
+    }
+
+    async _import_rows(suffix) {
+        const rows = this._get_rows(suffix);
+        const importable = rows.filter(r => r.status === 'valid' || r.status === 'warning');
+
+        if (!importable.length) {
+            frappe.show_alert({ message: 'No valid rows to import. Run Validate first.', indicator: 'orange' }, 4);
+            return;
+        }
+
+        const $panel = $(`#sim-progress-${suffix}`);
+        const $bar   = $(`#sim-prog-bar-${suffix}`);
+        const $label = $(`#sim-prog-label-${suffix}`);
+        const $res   = $(`#sim-result-${suffix}`);
+        const $errDet = $(`#sim-err-detail-${suffix}`);
+        const $errTbody = $(`#sim-err-tbody-${suffix}`);
+
+        $panel.addClass('active');
+        $res.empty();
+        $errTbody.empty();
+        $errDet.removeClass('active');
+        $bar.css('width', '5%');
+        $label.text(`Importing ${importable.length} rows…`);
+        this.importing = true;
+        $(`[data-suffix="${suffix}"].sim-btn-import`).prop('disabled', true);
+
+        try {
+            const result = await frappe.call({
+                method: 'smriti_retail_os.item_master_api.import_item_master',
+                args: { rows_json: JSON.stringify(importable.map(r => r.data)) }
+            });
+
+            $bar.css('width', '100%');
+
+            const r = result.message || {};
+            const created   = r.created          || 0;
+            const dups      = r.duplicate_errors || [];
+            const failed    = r.failed           || [];
+
+            $label.text('Import complete');
+
+            if (created > 0) {
+                $res.append(`<div class="sim-result-line success">✅ ${created} item${created !== 1 ? 's' : ''} created / updated successfully</div>`);
+            }
+            if (dups.length) {
+                $res.append(`<div class="sim-result-line warning">🚫 ${dups.length} row${dups.length !== 1 ? 's' : ''} rejected — duplicate barcode</div>`);
+                dups.forEach(d => {
+                    $errTbody.append(`<tr>
+                      <td>${d.row}</td>
+                      <td>${_esc(d.barcode)}</td>
+                      <td>—</td>
+                      <td class="err-msg">🚫 ${_esc(d.reason)}</td>
+                    </tr>`);
+                });
+            }
+            if (failed.length) {
+                $res.append(`<div class="sim-result-line error">❌ ${failed.length} row${failed.length !== 1 ? 's' : ''} failed due to errors</div>`);
+                failed.forEach(f => {
+                    $errTbody.append(`<tr>
+                      <td>${f.row}</td>
+                      <td>${_esc(f.barcode)}</td>
+                      <td>${_esc(f.style_code)}</td>
+                      <td class="err-msg">❌ ${_esc((f.error || '').substring(0, 120))}</td>
+                    </tr>`);
+                });
+            }
+
+            if (dups.length || failed.length) $errDet.addClass('active');
+
+            if (created > 0) {
+                frappe.show_alert({ message: `✅ ${created} items created!`, indicator: 'green' }, 6);
+            }
+
+        } catch (err) {
+            $bar.css('width', '100%').css('background', 'var(--sim-red)');
+            $label.text('Import failed');
+            $res.append(`<div class="sim-result-line error">❌ ${err.message || 'Unexpected error during import'}</div>`);
+            frappe.show_alert({ message: 'Import error: ' + (err.message || err), indicator: 'red' }, 8);
+        }
+
+        this.importing = false;
+        $(`[data-suffix="${suffix}"].sim-btn-import`).prop('disabled', false);
+    }
+
+    _handle_file_upload(file) {
+        const suffix = 'upload';
+        const ext    = file.name.split('.').pop().toLowerCase();
+
+        if (ext === 'csv') {
+            const reader = new FileReader();
+            reader.onload = (e) => this._handle_paste(e.target.result, suffix);
+            reader.readAsText(file, 'utf-8');
+        } else {
+            frappe.show_alert({
+                message: 'For .xlsx files, please save as CSV in Excel first (File → Save As → CSV UTF-8), then upload.',
+                indicator: 'orange'
+            }, 8);
+        }
+    }
+
+    _download_template() {
+        const headers  = SIM_COLS.map(c => `"${c.key}"`).join(',');
+        const sample1  = '"2000000001","D-20001-SND","BELLARINA ASHA CASUAL","ASSIA","PEACH","8","29","18","5","64159090","LADIES","SUP001","FW","LADIES FTW","FLAT","BASIC","CASUAL","CLOTH","EVA","","12"';
+        const sample2  = '"2000000002","D-20001-SND","BELLARINA ASHA CASUAL","ASSIA","BLACK","8","29","18","5","64159090","LADIES","SUP001","FW","LADIES FTW","FLAT","BASIC","CASUAL","CLOTH","EVA","","12"';
+        const csv = `${headers}\n${sample1}\n${sample2}`;
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url; a.download = 'smriti_item_master_template.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    _update_stats(suffix) {
+        const rows = this._get_rows(suffix);
+        $(`#cnt-valid-${suffix}`).text(rows.filter(r => r.status === 'valid').length);
+        $(`#cnt-warn-${suffix}`).text(rows.filter(r => r.status === 'warning').length);
+        $(`#cnt-err-${suffix}`).text(rows.filter(r => r.status === 'error').length);
+    }
+}
+
+function _parse_tsv_line(line) {
+    const sep = line.includes('\t') ? '\t' : ',';
+    if (sep === '\t') return line.split('\t').map(c => c.trim().replace(/^"|"$/g, ''));
+    const result = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"' && (i === 0 || line[i-1] === sep)) { inQ = true; continue; }
+        if (ch === '"' && inQ) { inQ = false; continue; }
+        if (ch === sep && !inQ) { result.push(cur.trim()); cur = ''; continue; }
+        cur += ch;
+    }
+    result.push(cur.trim());
+    return result;
+}
+
+function _auto_detect_columns(headerRow) {
+    const map = {};
+    headerRow.forEach((hdr, i) => {
+        const norm = hdr.trim().toLowerCase();
+        const canonical = HEADER_ALIASES[norm];
+        if (canonical) map[i] = canonical;
+    });
+    return map;
+}
+
+function _esc(str) {
+    return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+$(document).ready(function() {
+    new SmritiItemMasterController($('#item-master-content-wrapper'));
+});
+</script>
+</body>
+</html>
+{% endblock %}
