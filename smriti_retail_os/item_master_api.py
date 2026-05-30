@@ -145,9 +145,10 @@ def import_item_master(rows_json):
     skipped_duplicates = []
     failed = []
 
+    companies = frappe.get_all("Company", limit=1)
     company = (
         frappe.defaults.get_user_default("company") or
-        frappe.get_all("Company", limit=1)[0].name
+        (companies[0].name if companies else None)
     )
 
     # Collect barcodes already seen in this batch to prevent intra-batch duplication
@@ -414,6 +415,8 @@ def _ensure_attribute_value(attribute, value):
 
 def _attach_tax_template(item, tax_group, gst_pct, company):
     """Resolve and attach an Item Tax Template."""
+    if not company:
+        return
     template_name = None
     if tax_group:
         template_name = frappe.db.get_value(
