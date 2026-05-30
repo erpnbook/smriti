@@ -21,7 +21,7 @@ SMRITI.renderSidebar = function(active_page) {
         {id:"billing",    icon:"💳", label:"Billing",
          url:"/billing"},   // Standalone billing terminal — zero Frappe chrome
         {id:"shift",      icon:"🌅", label:"Shift Management",
-         url:"/app/smriti-shift"},
+         url:"/shift"},
         {id:"inventory",  icon:"📦", label:"Inventory",
          url:"/inventory"},
         {id:"products",   icon:"🛍️", label:"Products",

@@ -341,6 +341,12 @@ website_route_rules = [
         # Zero Frappe chrome. Custom stock transfer & adjustment.
         "from_route": "/inventory",
         "to_route": "inventory"
+    },
+    {
+        # Standalone Shift Management — served from www/shift.html + www/shift.py
+        # Zero Frappe chrome. Custom cashier open & close shift.
+        "from_route": "/shift",
+        "to_route": "shift"
     }
 ]
 
