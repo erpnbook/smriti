@@ -614,9 +614,9 @@ function openPopout(url) {
 // Fetch dashboard data
 async function loadDashboard() {
     try {
-        // Setup User details
-        document.getElementById('sb-user').textContent = loggedUser.split('@')[0];
-        document.getElementById('sb-avatar').textContent = loggedUser.charAt(0).toUpperCase();
+        // Setup User details (sidebar renders these elements dynamically — guard against null)
+        const _sbu = document.getElementById('sb-user'); if (_sbu) _sbu.textContent = loggedUser.split('@')[0];
+        const _sba = document.getElementById('sb-avatar'); if (_sba) _sba.textContent = loggedUser.charAt(0).toUpperCase();
         document.getElementById('welcome-msg').textContent = `Welcome back, ${loggedUser.split('@')[0]}!`;
 
         const shift = await api('smriti_retail_os.shift_api.get_active_shift', { cashier: loggedUser });
