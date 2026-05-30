@@ -118,8 +118,13 @@ def validate_import_rows(rows_json):
         ]
         for row_key, doctype_name, label in attr_checks:
             val = str(row.get(row_key, "")).strip()
-            if val and not frappe.db.exists(doctype_name, val):
-                warnings.append(f"{label} '{val}' not found — will be auto-created")
+            if val:
+                # Guard: DocType may not exist on fresh installs
+                try:
+                    if frappe.db.exists("DocType", doctype_name) and not frappe.db.exists(doctype_name, val):
+                        warnings.append(f"{label} '{val}' not found — will be auto-created")
+                except Exception:
+                    pass
 
         status = "error" if errors else ("warning" if warnings else "valid")
         results.append({
@@ -204,6 +209,17 @@ def import_item_master(rows_json):
             # ── Ensure Item Group exists ───────────────────────────────────
             if not frappe.db.exists("Item Group", item_group):
                 item_group = "Products"
+            # Also guard the fallback — "Products" may not exist either
+            if not frappe.db.exists("Item Group", item_group):
+                existing_group = frappe.db.get_all("Item Group", pluck="name", limit=1)
+                if existing_group:
+                    item_group = existing_group[0]
+                else:
+                    ig = frappe.new_doc("Item Group")
+                    ig.item_group_name = "Products"
+                    ig.is_group = 0
+                    ig.insert(ignore_permissions=True)
+                    item_group = "Products"
 
             # ── Ensure Color / Size attribute values exist ─────────────────
             _ensure_item_attribute("Color")
@@ -244,14 +260,14 @@ def import_item_master(rows_json):
                 variant.item_group   = item_group
                 variant.stock_uom    = "Nos"
                 variant.is_stock_item = 1
-                variant.custom_is_retail_item = 1
-                variant.custom_mrp   = mrp
-                variant.custom_gst_percentage = gst_pct
+                _safe_set(variant, "custom_is_retail_item", 1)
+                _safe_set(variant, "custom_mrp", mrp)
+                _safe_set(variant, "custom_gst_percentage", gst_pct)
                 if image_link:
                     variant.image = image_link
                 if hsn_code:
                     variant.gst_hsn_code = hsn_code
-                    variant.gn_hsn_code = hsn_code
+                    _safe_set(variant, "gn_hsn_code", hsn_code)
 
                 variant.append("attributes", {"attribute": "Color", "attribute_value": color})
                 variant.append("attributes", {"attribute": "Size",  "attribute_value": str(size)})
@@ -384,7 +400,7 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
             hsn_doc.insert(ignore_permissions=True)
             frappe.db.commit()
         item.gst_hsn_code = hsn_code
-        item.gn_hsn_code = hsn_code
+        _safe_set(item, "gn_hsn_code", hsn_code)
     if image_link:
         item.image = image_link
 
@@ -431,9 +447,17 @@ def _ensure_attribute_value(attribute, value):
     )
     if not exists:
         attr_doc = frappe.get_doc("Item Attribute", attribute)
+        # Build a unique abbr — use full value shortened, with collision avoidance
+        base_abbr = value[:6].upper().replace(" ", "").replace("-", "")
+        abbr = base_abbr
+        counter = 1
+        existing_abbrs = {v.abbr for v in attr_doc.item_attribute_values}
+        while abbr in existing_abbrs:
+            abbr = f"{base_abbr[:4]}{counter}"
+            counter += 1
         attr_doc.append("item_attribute_values", {
             "attribute_value": value,
-            "abbr": value[:4].upper().replace(" ", "")
+            "abbr": abbr
         })
         attr_doc.save(ignore_permissions=True)
 

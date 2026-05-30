@@ -30,10 +30,14 @@ def quick_create_item(item_name, barcode, rate, mrp, gst_percentage):
     item.stock_uom = "Nos"
     item.is_stock_item = 1
     item.opening_stock = 0
-    item.custom_is_retail_item = 1
-    item.custom_gst_percentage = str(gst_percentage)
-    item.custom_mrp = flt(mrp)
     item.standard_rate = flt(rate)
+    # Custom fields — use safe setter in case not installed
+    try: item.custom_is_retail_item = 1
+    except Exception: pass
+    try: item.custom_gst_percentage = str(gst_percentage)
+    except Exception: pass
+    try: item.custom_mrp = flt(mrp)
+    except Exception: pass
     
     # Auto-resolve Item Tax Template from percentage
     template_name = frappe.db.get_value(
@@ -197,8 +201,16 @@ def save_supplier_on_fly(supplier_name, supplier_group, supplier_type, name=None
     else:
         doc = frappe.new_doc("Supplier")
         doc.supplier_name = supplier_name
-        doc.supplier_group = supplier_group
         doc.supplier_type = supplier_type
+        # Robust group resolution — same as quick_create_supplier
+        resolved_group = supplier_group
+        if not frappe.db.exists("Supplier Group", resolved_group):
+            if frappe.db.exists("Supplier Group", "All Supplier Groups"):
+                resolved_group = "All Supplier Groups"
+            else:
+                existing = frappe.db.get_all("Supplier Group", pluck="name", limit=1)
+                resolved_group = existing[0] if existing else "Local"
+        doc.supplier_group = resolved_group
         doc.insert(ignore_permissions=True)
 
     frappe.db.commit()
