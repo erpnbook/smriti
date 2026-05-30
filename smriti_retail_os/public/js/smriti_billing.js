@@ -45,27 +45,13 @@ class SmritiBillingController {
     apply_popout_branding() {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('popout') === 'true') {
-            // Apply a class to document body to trigger whitelabeling
+            // Apply popout class — all layout overrides are in CSS
             $('body').addClass('smriti-popout-active');
-            
-            // Hide ERPNext standard elements
-            setTimeout(() => {
-                $('.navbar').hide();
-                $('#smriti-sidebar, .desk-sidebar, .layout-side-section').hide();
-                
-                // Adjust page containers to be full screen
-                $('.page-container, .layout-main-section, .page-head').css({
-                    'padding': '0',
-                    'margin': '0',
-                    'max-width': '100vw',
-                    'height': '100vh',
-                    'border': 'none',
-                    'border-radius': '0'
-                });
-                
-                // Hide standard page title header
-                $('.page-head').hide();
-            }, 100);
+            // Remove sidebar classes that add padding-left to body
+            $('body').removeClass('smriti-sidebar-active');
+            $('body').removeClass('smriti-sidebar-collapsed');
+            // Remove sidebar DOM to prevent re-injection
+            document.getElementById('smriti-sidebar')?.remove();
             
             // Automatically prompt fullscreen on first click
             $(document).one('click keydown', () => {

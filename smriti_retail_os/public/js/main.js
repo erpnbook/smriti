@@ -662,6 +662,10 @@ function get_smriti_active_page() {
 }
 
 function _render_smriti_sidebar_if_applicable() {
+    // Never render sidebar in popout windows — it will be hidden
+    // and its body classes (padding-left:260px) would clip content
+    if ($('body').hasClass('smriti-popout-active')) return;
+    
     var active_page = get_smriti_active_page();
     if (active_page || _is_smriti_user()) {
         document.body.classList.add("smriti-sidebar-active");
@@ -765,6 +769,18 @@ function _check_global_popout_mode() {
                    
     if (isPopout) {
         $('body').addClass('smriti-popout-active');
+        
+        // CRITICAL: Remove sidebar body classes that add padding-left
+        // to the body element. Without this, the sidebar's 260px padding
+        // leaks into the popout window, pushing content offscreen.
+        $('body').removeClass('smriti-sidebar-active');
+        $('body').removeClass('smriti-sidebar-collapsed');
+        $('body').removeClass('smriti-mobile-sidebar-open');
+        
+        // Force-remove sidebar DOM elements in popout
+        document.getElementById('smriti-sidebar')?.remove();
+        document.getElementById('smriti-sidebar-backdrop')?.remove();
+        document.getElementById('smriti-mobile-hamburger-btn')?.remove();
         
         // Add custom vs doctype route helper class
         if (is_doctype_route()) {
