@@ -174,6 +174,46 @@ html, body {
 .topbtn.primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(99,102,241,0.4); }
 .topbtn span { font-size: 15px; }
 
+
+/* ── Standalone Popout controls styling override ── */
+.smriti-popout-controls-floating {
+    position: fixed !important;
+    bottom: 24px !important;
+    left: 24px !important;
+    top: auto !important;
+    right: auto !important;
+    display: flex !important;
+    gap: 8px;
+    z-index: 999999;
+    background: rgba(17, 24, 39, 0.85) !important;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 6px;
+    border-radius: 30px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+.smriti-popout-controls-floating .smriti-popout-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: none;
+    color: #d1d5db !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.smriti-popout-controls-floating .smriti-popout-btn:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+}
+.smriti-popout-controls-floating .smriti-popout-close:hover {
+    background: #fee2e2 !important;
+    color: #b42318 !important;
+}
+
 /* ── Main Content ── */
 .main {
     flex: 1;
