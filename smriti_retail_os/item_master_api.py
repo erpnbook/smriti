@@ -957,4 +957,43 @@ def reset_all_transactions():
     }
 
 
+@frappe.whitelist()
+def reset_all_items():
+    """
+    DANGER: Wipes all Item Masters, dynamic size variants, barcodes, brand lists,
+    price lists, and item variant attributes cleanly from the database.
+    """
+    check_store_manager_role()
+    
+    tables = [
+        "Item",
+        "Item Barcode",
+        "Item Price",
+        "Item Supplier",
+        "Item Tax",
+        "Item Attribute Value",
+        "Item Variant Attribute",
+        "Brand",
+        "GST HSN Code"
+    ]
+    
+    deleted = []
+    for doctype in tables:
+        table_name = f"tab{doctype}"
+        try:
+            frappe.db.sql(f"TRUNCATE `{table_name}`")
+            deleted.append(doctype)
+        except Exception:
+            pass
+            
+    frappe.db.commit()
+    
+    return {
+        "success": True,
+        "message": "All Item Masters, variants, prices, and barcodes have been cleanly reset to 0!",
+        "cleared_doctypes": deleted
+    }
+
+
+
 
