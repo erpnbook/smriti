@@ -60,10 +60,29 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .sidebar-logo span { font-size:20px; }
 .sidebar-title { font-family:'Outfit',sans-serif; font-weight:800; font-size:1.15rem; background:linear-gradient(135deg,#fff,var(--text-muted)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 .sidebar-menu { flex:1; overflow-y:auto; padding:16px 12px; display:flex; flex-direction:column; gap:6px; }
-.sidebar-item { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:var(--radius); color:var(--text-muted); text-decoration:none; font-weight:600; font-size:0.92rem; transition:all var(--t); cursor:pointer; }
+.sidebar-item { position:relative; display:flex; align-items:center; gap:12px; padding:11px 14px; padding-right:36px !important; border-radius:var(--radius); color:var(--text-muted); text-decoration:none; font-weight:600; font-size:0.92rem; transition:all var(--t); cursor:pointer; }
 .sidebar-item span.emoji { font-size:16px; width:20px; text-align:center; }
 .sidebar-item:hover, .sidebar-item.active { background:rgba(99,102,241,0.08); color:var(--text); }
 .sidebar-item.active { border-left:3px solid var(--primary); }
+.popout-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.2s, color 0.2s;
+    color: var(--text-muted);
+    cursor: pointer;
+    border: none;
+    background: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+}
+.sidebar-item:hover .popout-btn { opacity: 1; }
+.popout-btn:hover { color: var(--primary-lt); }
+.popout-btn span { font-size: 16px !important; }
 .sidebar-footer { padding:16px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.15); }
 .sidebar-user { display:flex; align-items:center; gap:10px; }
 .sidebar-avatar { width:36px; height:36px; background:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; color:white; font-size:1.1rem; text-transform:uppercase; }
@@ -167,42 +186,72 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
             <a class="sidebar-item" href="/desk">
                 <span class="emoji">🏠</span>
                 <span>Control Center</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/desk')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
             </a>
             <a class="sidebar-item" href="/billing">
                 <span class="emoji">💳</span>
                 <span>Retail Billing</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/billing')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
             </a>
             <a class="sidebar-item" href="/shift">
                 <span class="emoji">🌅</span>
                 <span>Shift Management</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/shift')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
             </a>
             <a class="sidebar-item" href="/inventory">
                 <span class="emoji">📦</span>
                 <span>Inventory Ops</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/inventory')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
             </a>
             <a class="sidebar-item" href="/purchase">
                 <span class="emoji">🛒</span>
                 <span>Purchase Manager</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/purchase')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
             </a>
             <a class="sidebar-item" href="/barcode">
                 <span class="emoji">🏷️</span>
                 <span>Barcode Printing</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/barcode')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
             </a>
             <a class="sidebar-item" href="/products">
                 <span class="emoji">🛍️</span>
                 <span>Products Catalog</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/products')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
             </a>
             <a class="sidebar-item" href="/customers">
                 <span class="emoji">👥</span>
                 <span>Customers</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/customers')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
             </a>
             <a class="sidebar-item" href="/suppliers">
                 <span class="emoji">🏢</span>
                 <span>Suppliers</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/suppliers')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
             </a>
             <a class="sidebar-item active" href="/sales_invoices">
                 <span class="emoji">📄</span>
                 <span>Billing Invoices</span>
+                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/sales_invoices')">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                </button>
             </a>
         </div>
         <div class="sidebar-footer">
@@ -518,6 +567,25 @@ function printReceipt() {
     const printArea = document.getElementById('print-area');
     printArea.innerHTML = html;
     window.print();
+}
+
+function openPopout(e, url) {
+    e.preventDefault();
+    e.stopPropagation();
+    let popout_url = url;
+    if (popout_url.indexOf('?') === -1) {
+        popout_url += '?popout=true';
+    } else if (popout_url.indexOf('popout=true') === -1) {
+        popout_url += '&popout=true';
+    }
+    const w = screen.width - 60;
+    const h = screen.height - 60;
+    const left = 30;
+    const top = 30;
+    const win = window.open(popout_url, "smriti-popout-window", `width=${w},height=${h},top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`);
+    if (win) {
+        win.focus();
+    }
 }
 
 window.onload = init;
