@@ -755,6 +755,53 @@ function is_doctype_route() {
     return false;
 }
 
+function _fix_popout_layout_dom() {
+    // ── Frappe v16 popout layout surgery ──────────────────────────────────
+    // Problem: Frappe renders body-sidebar-container as a flex row:
+    //   <div class="body-sidebar-container">        (display: flex)
+    //     <div class="sidebar-left">...</div>       (flex: 0 0 280px)
+    //     <div class="layout-main-section-wrapper">  (flex: 1)
+    //   </div>
+    //
+    // Even with sidebar-left display:none, flex still reserves its
+    // column space → huge empty gray zone on the left of the popout.
+    //
+    // Fix: switch the container to display:block and nuke the sidebar
+    // element entirely from the DOM so it takes zero space.
+
+    var container = document.querySelector('.body-sidebar-container');
+    if (container) {
+        container.style.cssText += '; display: block !important; padding: 0 !important; margin: 0 !important;';
+    }
+
+    // Collapse/remove sidebar-left DOM node
+    ['sidebar-left', 'body-sidebar', 'desk-sidebar'].forEach(function(cls) {
+        var el = document.querySelector('.' + cls);
+        if (el) {
+            el.style.cssText += '; display: none !important; width: 0 !important; min-width: 0 !important; max-width: 0 !important; flex: 0 0 0 !important; overflow: hidden !important; padding: 0 !important; margin: 0 !important; border: none !important;';
+        }
+    });
+
+    // Expand layout-main-section-wrapper to fill the full width
+    var wrapper = document.querySelector('.layout-main-section-wrapper');
+    if (wrapper) {
+        wrapper.style.cssText += '; width: 100% !important; max-width: 100% !important; min-width: 0 !important; flex: 1 1 100% !important; padding: 0 !important; margin: 0 !important; box-sizing: border-box !important;';
+    }
+
+    // Also kill navbar / page-head inline heights that create top dead zones
+    ['.navbar', '#navbar', '.navbar-container', '.page-head', '.sticky-top-bar'].forEach(function(sel) {
+        var el = document.querySelector(sel);
+        if (el) {
+            el.style.cssText += '; display: none !important; height: 0 !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; overflow: hidden !important;';
+        }
+    });
+
+    // Remove body padding injected by Frappe for navbar height
+    document.body.style.paddingTop = '0px';
+    document.body.style.paddingLeft = '0px';
+    document.body.style.marginLeft = '0px';
+}
+
 function _check_global_popout_mode() {
     var urlParams = new URLSearchParams(window.location.search);
     
@@ -781,6 +828,15 @@ function _check_global_popout_mode() {
         document.getElementById('smriti-sidebar')?.remove();
         document.getElementById('smriti-sidebar-backdrop')?.remove();
         document.getElementById('smriti-mobile-hamburger-btn')?.remove();
+
+        // ── DOM SURGERY: Fix the Frappe flex layout dead zone ──────────────
+        // Frappe's body-sidebar-container is a flex row with sidebar-left
+        // on the left. Even when sidebar-left is display:none, the flex
+        // container reserves space for it, creating a huge empty gray zone.
+        // We must DIRECTLY collapse sidebar-left and reset the container
+        // to display:block so layout-main-section-wrapper fills full width.
+        // CSS !important is not reliable against Frappe's inline JS styles.
+        _fix_popout_layout_dom();
         
         // Add custom vs doctype route helper class
         if (is_doctype_route()) {
@@ -867,6 +923,10 @@ $(document).on('page-change route-change', function () {
 /* Periodic safety net */
 setInterval(function () {
     _check_global_popout_mode();
+    // If in popout mode, keep re-applying DOM fixes as Frappe may re-inject layout
+    if ($('body').hasClass('smriti-popout-active')) {
+        _fix_popout_layout_dom();
+    }
     if (!_is_smriti_user()) return;
     _patch_sidebar_prototype();
     _patch_frappe_boot();
@@ -904,6 +964,10 @@ function _boot_scrub_sequence() {
             _do_scrub();
             _setup_sidebar_toggle();
             _check_global_popout_mode();
+            // Reapply DOM fix on each boot phase if in popout
+            if ($('body').hasClass('smriti-popout-active')) {
+                _fix_popout_layout_dom();
+            }
         }, ms);
     });
 }

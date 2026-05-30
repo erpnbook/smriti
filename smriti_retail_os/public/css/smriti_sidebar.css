@@ -418,15 +418,18 @@ body.smriti-mobile-sidebar-open .smriti-sidebar-backdrop {
     display: none !important;
 }
 
-/* ═══════════════════════════════════════════════════════
-   SMRITI Popout Window — Full-Viewport Clean Layout
-   Fixes: clipped modals, hidden overflow, overlapping UI,
-          missing content, grid chaos, sidebar padding leak
-   ═══════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════
+   SMRITI Popout Window — Nuclear Full-Viewport Reset v4.0
+   ROOT CAUSE: Frappe v16 uses body-sidebar-container as a FLEX ROW
+     with sidebar-left (width:280px) + layout-main-section-wrapper.
+     Even with sidebar hidden via display:none, the flex container
+     still allocates column space → huge gray dead zone on the left.
+   FIX: Force flex collapse on the container + display:block on wrapper.
+   ═══════════════════════════════════════════════════════════════════════ */
 
-/* 1. Hide all chrome elements in popout */
-body.smriti-popout-active header,
+/* ── 1. KILL ALL CHROME ELEMENTS ── */
 body.smriti-popout-active .navbar,
+body.smriti-popout-active .navbar-expand,
 body.smriti-popout-active #navbar,
 body.smriti-popout-active .navbar-container,
 body.smriti-popout-active #smriti-sidebar,
@@ -434,45 +437,70 @@ body.smriti-popout-active .desk-sidebar,
 body.smriti-popout-active .body-sidebar,
 body.smriti-popout-active .sidebar-left,
 body.smriti-popout-active .page-head,
-body.smriti-popout-active .layout-side-section {
+body.smriti-popout-active .layout-side-section,
+body.smriti-popout-active .sticky-top-bar {
     display: none !important;
     width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
     height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
     opacity: 0 !important;
     overflow: hidden !important;
     pointer-events: none !important;
+    flex: 0 0 0 !important;
 }
 
-/* 2. Reset body — CRITICAL: do NOT use overflow-x:hidden on body
-      as it turns position:fixed into position:absolute and clips
-      all dialogs, dropdowns, and modals. Use overflow:auto instead. */
+/* ── 2. RESET BODY ── */
 body.smriti-popout-active {
     padding: 0 !important;
     margin: 0 !important;
-    overflow-x: auto !important;
-    overflow-y: auto !important;
-    /* Cancel sidebar body padding that leaks from smriti-sidebar-active */
     padding-left: 0 !important;
+    padding-top: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
     --sidebar-width: 0px !important;
     --page-sidebar-width: 0px !important;
     --sidebar-left: 0px !important;
     --navbar-height: 0px !important;
+    --desk-sidebar-width: 0px !important;
 }
 
-/* 3. Expand all Frappe layout wrapper layers to fill viewport.
-      Use width:100% (not 100vw) to avoid scrollbar-induced overflow.
-      Use min-height:100vh + height:auto so content can scroll freely. */
+/* ── 3. THE CRITICAL FIX: body-sidebar-container FLEX ROW ──
+   Frappe's body-sidebar-container is:
+     display: flex; flex-direction: row;
+     children: .sidebar-left + .layout-main-section-wrapper
+   When sidebar-left is hidden, layout-main-section-wrapper
+   still only gets flex: 1 (not 100% width) due to flex behavior.
+   FIX: collapse the flex container itself to a plain block. */
+body.smriti-popout-active .body-sidebar-container {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 100vh !important;
+    height: auto !important;
+    position: static !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    flex: none !important;
+}
+
+/* ── 4. EXPAND ALL FRAPPE LAYOUT WRAPPERS ── */
 body.smriti-popout-active .page-container,
 body.smriti-popout-active .page-body,
 body.smriti-popout-active .layout-main-section-wrapper,
 body.smriti-popout-active .layout-main,
 body.smriti-popout-active .page-content,
-body.smriti-popout-active .body-sidebar-container,
 body.smriti-popout-active .layout-main-section {
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+    min-width: 0 !important;
     min-height: 100vh !important;
     height: auto !important;
     left: 0 !important;
@@ -482,21 +510,27 @@ body.smriti-popout-active .layout-main-section {
     box-sizing: border-box !important;
     overflow: visible !important;
     position: static !important;
+    flex: none !important;
+    flex-basis: auto !important;
+    flex-grow: 1 !important;
+    flex-shrink: 1 !important;
 }
 
-/* 4. Do NOT force grid-column/grid-row on all layout wrappers —
-      Frappe's internal grid system uses specific column counts and
-      forcing 1/-1 breaks list views, form layouts, and report tables.
-      Instead only reset the top-level page ID containers. */
-body.smriti-popout-active [id^="page-"] {
+/* ── 5. KILL FRAPPE SIDEBAR WIDTH VARIABLES ── */
+body.smriti-popout-active [id^="page-"],
+body.smriti-popout-active .container-fluid {
     width: 100% !important;
     max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
     box-sizing: border-box !important;
 }
 
-/* 5. Module-specific containers: fill width, scroll freely */
-body.smriti-popout-active .smriti-inventory-container,
+/* ── 6. MODULE CONTAINERS FILL FULL WIDTH ── */
 body.smriti-popout-active .smriti-billing-container,
+body.smriti-popout-active .smriti-inventory-container,
 body.smriti-popout-active #smriti-shift-root,
 body.smriti-popout-active .smriti-purchase-container,
 body.smriti-popout-active .smriti-reports-container,
@@ -522,10 +556,7 @@ body.smriti-popout-active .shift-main {
     box-sizing: border-box !important;
 }
 
-/* 6. Ensure Frappe modals, dialogs, and dropdowns are NEVER clipped
-      in popout mode. They use position:fixed so they need the body
-      overflow to be auto (not hidden) — already handled above.
-      Boost z-index to stay on top of everything. */
+/* ── 7. MODALS AND DIALOGS — NEVER CLIP ── */
 body.smriti-popout-active .modal,
 body.smriti-popout-active .frappe-dialog,
 body.smriti-popout-active [role="dialog"],
@@ -553,16 +584,6 @@ body.smriti-popout-active .modal-body {
     max-height: calc(85vh - 120px) !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-}
-
-/* 7. Fix Frappe's standard form/list views in popout — remove
-      any left offsets that remain from sidebar layout */
-body.smriti-popout-active .page-container,
-body.smriti-popout-active .container-fluid {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
 }
 
 /* Global Floating Controls for Popout windows */
