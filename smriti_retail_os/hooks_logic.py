@@ -66,6 +66,9 @@ def after_item_save(doc, method):
     """
     Triggers on_update on Item.
     """
+    if doc.has_variants:
+        return
+
     if doc.custom_mrp:
         sync_price_list_rate(doc.name, "MRP", flt(doc.custom_mrp), doc.stock_uom)
         

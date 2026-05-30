@@ -249,6 +249,7 @@ def import_item_master(rows_json):
                 if image_link:
                     variant.image = image_link
                 if hsn_code:
+                    variant.gst_hsn_code = hsn_code
                     variant.gn_hsn_code = hsn_code
 
                 variant.append("attributes", {"attribute": "Color", "attribute_value": color})
@@ -349,6 +350,14 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
     if brand:
         item.brand = brand
     if hsn_code:
+        if not frappe.db.exists("GST HSN Code", hsn_code):
+            hsn_doc = frappe.new_doc("GST HSN Code")
+            hsn_doc.name = hsn_code
+            hsn_doc.hsn_code = hsn_code
+            hsn_doc.description = "Auto-created HSN"
+            hsn_doc.insert(ignore_permissions=True)
+            frappe.db.commit()
+        item.gst_hsn_code = hsn_code
         item.gn_hsn_code = hsn_code
     if image_link:
         item.image = image_link
