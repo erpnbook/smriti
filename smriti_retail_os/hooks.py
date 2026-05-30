@@ -347,6 +347,12 @@ website_route_rules = [
         # Zero Frappe chrome. Custom cashier open & close shift.
         "from_route": "/shift",
         "to_route": "shift"
+    },
+    {
+        # Standalone Barcode Generator — served from www/barcode.html + www/barcode.py
+        # Zero Frappe chrome. Custom barcode generation & label printer.
+        "from_route": "/barcode",
+        "to_route": "barcode"
     }
 ]
 

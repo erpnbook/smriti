@@ -591,6 +591,10 @@ function _redirect_to_smriti_home() {
             window.location.href = '/shift';
             return;
         }
+        if (current_route === 'smriti-barcode') {
+            window.location.href = '/barcode';
+            return;
+        }
 
         // Only redirect if the browser's active path is strictly the root Desk entry
         var is_root_path = window.location.pathname === '/app' || window.location.pathname === '/app/' || 

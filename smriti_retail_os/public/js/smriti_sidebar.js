@@ -27,7 +27,7 @@ SMRITI.renderSidebar = function(active_page) {
         {id:"products",   icon:"🛍️", label:"Products",
          url:"/app/item"},
         {id:"barcode",    icon:"🏷️",  label:"Barcode Printing",
-         url:"/app/smriti-barcode"},
+         url:"/barcode"},
         {id:"customers",  icon:"👥", label:"Customers",
          url:"/app/customer"},
         {id:"sales_invoices", icon:"📄", label:"Sales Invoices",
