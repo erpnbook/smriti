@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/purchase.html
+  @description: SMRITI Purchase Manager — Standalone UI (Frappe as pure API backend)
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @version: 1.0.0 (Standalone)
+  @license: MIT
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMRITI Purchase Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg:         #0a0f1e;
+    --bg2:        #0f1629;
+    --card:       #131d35;
+    --card2:      #172040;
+    --border:     rgba(255,255,255,0.07);
+    --border2:    rgba(255,255,255,0.12);
+    --primary:    #6366f1;
+    --primary-lt: #818cf8;
+    --accent:     #f59e0b;
+    --success:    #10b981;
+    --warning:    #f59e0b;
+    --danger:     #ef4444;
+    --text:       #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-sub:   #475569;
+    --radius:     12px;
+    --radius-sm:  8px;
+    --radius-lg:  16px;
+    --t:          0.2s ease;
+}
+
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+
+/* ── Auth ── */
+#auth-overlay { position:fixed; inset:0; z-index:9999; background:#030712; display:flex; align-items:center; justify-content:center; }
+.auth-card { background:rgba(15,23,42,0.6); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.08); border-radius:24px; padding:48px 40px; width:100%; max-width:420px; text-align:center; box-shadow:0 25px 50px -12px rgba(0,0,0,0.6); }
+.auth-logo { width:64px; height:64px; background:linear-gradient(135deg,var(--accent),#d97706); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; box-shadow:0 0 30px rgba(245,158,11,0.3); }
+.auth-logo span { font-size:28px; color:white; }
+.auth-title { font-family:'Outfit',sans-serif; font-size:1.8rem; font-weight:800; margin-bottom:4px; }
+.auth-sub { color:var(--text-muted); font-size:0.88rem; margin-bottom:32px; }
+.auth-input { width:100%; padding:13px 16px; background:rgba(255,255,255,0.04); border:1px solid var(--border2); border-radius:var(--radius); color:var(--text); font-size:0.95rem; font-family:'Inter',sans-serif; outline:none; transition:all var(--t); margin-bottom:12px; }
+.auth-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(245,158,11,0.15); }
+.auth-btn { width:100%; padding:14px; background:linear-gradient(135deg,var(--accent),#d97706); border:none; border-radius:var(--radius); color:white; font-weight:700; font-size:1rem; cursor:pointer; transition:all var(--t); box-shadow:0 8px 24px rgba(245,158,11,0.25); }
+.auth-btn:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(245,158,11,0.4); }
+.auth-error { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#f87171; padding:10px 14px; border-radius:var(--radius-sm); font-size:0.85rem; margin-bottom:12px; display:none; }
+
+/* ── App Shell ── */
+#app { display:none; width:100vw; height:100vh; flex-direction:column; overflow:hidden; }
+
+/* ── Top Bar ── */
+.topbar { flex-shrink:0; height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 16px; gap:14px; }
+.topbar-brand { display:flex; align-items:center; gap:8px; font-family:'Outfit',sans-serif; font-weight:800; font-size:1.05rem; background:linear-gradient(135deg,var(--accent),var(--primary-lt)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; flex-shrink:0; }
+.topbar-brand span { font-size:18px; -webkit-text-fill-color:var(--accent); }
+.topbar-divider { width:1px; height:24px; background:var(--border2); flex-shrink:0; }
+.topbar-user { font-size:0.82rem; color:var(--text-muted); flex-shrink:0; }
+.topbar-user b { color:var(--text); }
+.topbar-tabs { display:flex; gap:4px; }
+.tab-btn { padding:6px 14px; border-radius:var(--radius-sm); font-size:12px; font-weight:700; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); display:flex; align-items:center; gap:5px; }
+.tab-btn span { font-size:16px; }
+.tab-btn.active { background:var(--primary); border-color:var(--primary); color:white; box-shadow:0 4px 12px rgba(99,102,241,0.3); }
+.tab-btn:hover:not(.active) { border-color:var(--primary-lt); color:var(--primary-lt); }
+.topbar-right { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
+.topbtn { display:inline-flex; align-items:center; gap:4px; padding:5px 11px; border-radius:var(--radius-sm); font-size:11px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); white-space:nowrap; }
+.topbtn span { font-size:15px; }
+.topbtn:hover { border-color:var(--primary); color:var(--primary-lt); }
+
+/* ── Main Layout ── */
+.main-content { flex:1; display:flex; overflow:hidden; min-height:0; }
+
+/* ── LEFT: PO List Panel ── */
+.po-list-panel { width:300px; flex-shrink:0; display:flex; flex-direction:column; border-right:1px solid var(--border); background:var(--bg2); overflow:hidden; }
+.panel-hdr { padding:12px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.panel-hdr-title { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); display:flex; align-items:center; gap:6px; }
+.panel-hdr-title span { font-size:16px; color:var(--primary-lt); }
+.search-box { padding:8px 12px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.search-input { width:100%; padding:8px 12px; background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.88rem; outline:none; transition:all var(--t); }
+.search-input:focus { border-color:var(--primary); }
+.po-list { flex:1; overflow-y:auto; }
+.po-item { padding:12px 14px; border-bottom:1px solid var(--border); cursor:pointer; transition:background var(--t); }
+.po-item:hover { background:rgba(99,102,241,0.06); }
+.po-item.active { background:rgba(99,102,241,0.12); border-left:3px solid var(--primary); }
+.po-item-name { font-weight:700; font-size:0.88rem; color:var(--text); margin-bottom:2px; }
+.po-item-supplier { font-size:0.78rem; color:var(--text-muted); }
+.po-item-meta { display:flex; justify-content:space-between; margin-top:6px; }
+.po-item-total { font-size:0.82rem; font-weight:700; color:var(--accent); }
+.po-progress { font-size:0.75rem; color:var(--text-sub); }
+.po-empty { padding:40px 20px; text-align:center; color:var(--text-sub); }
+.po-empty span { font-size:40px; display:block; margin-bottom:10px; opacity:0.3; }
+
+/* ── RIGHT: Detail Panel ── */
+.detail-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; min-height:0; }
+
+/* Tab Views */
+.tab-view { display:none; flex:1; flex-direction:column; overflow:hidden; min-height:0; }
+.tab-view.active { display:flex; }
+
+/* ── PO Detail View ── */
+.detail-hdr { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; flex-shrink:0; background:var(--card); }
+.detail-po-name { font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:800; color:var(--primary-lt); }
+.detail-po-supplier { font-size:0.85rem; color:var(--text-muted); }
+.detail-po-actions { margin-left:auto; display:flex; gap:8px; }
+.btn-action { padding:7px 14px; border-radius:var(--radius-sm); font-size:12px; font-weight:700; cursor:pointer; transition:all var(--t); border:none; display:flex; align-items:center; gap:5px; }
+.btn-action span { font-size:16px; }
+.btn-action.primary { background:linear-gradient(135deg,var(--success),#059669); color:white; box-shadow:0 4px 12px rgba(16,185,129,0.25); }
+.btn-action.primary:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(16,185,129,0.4); }
+.btn-action.secondary { background:var(--card2); color:var(--text-muted); border:1px solid var(--border2); }
+.btn-action.secondary:hover { border-color:var(--primary); color:var(--primary-lt); }
+.btn-action.danger { background:rgba(239,68,68,0.1); color:var(--danger); border:1px solid rgba(239,68,68,0.3); }
+.btn-action:disabled { opacity:0.4; cursor:not-allowed; transform:none !important; }
+
+.grn-items-wrap { flex:1; overflow:auto; padding:16px 18px; }
+
+/* GRN Table */
+.grn-table { width:100%; border-collapse:collapse; }
+.grn-table th { padding:9px 12px; background:var(--card2); color:var(--text-muted); font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--border); text-align:left; position:sticky; top:0; z-index:1; white-space:nowrap; }
+.grn-table td { padding:10px 12px; border-bottom:1px solid var(--border); color:var(--text); font-size:0.88rem; vertical-align:middle; }
+.grn-table tbody tr:hover td { background:rgba(99,102,241,0.04); }
+.grn-table tbody tr:last-child td { border-bottom:none; }
+.item-name-cell { font-weight:600; }
+.item-code-cell { font-size:0.75rem; color:var(--text-sub); margin-top:2px; }
+.grn-input { padding:5px 8px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-weight:600; font-size:0.88rem; text-align:right; outline:none; transition:all var(--t); }
+.grn-input:focus { border-color:var(--primary); }
+.grn-qty-input { width:80px; }
+.grn-rate-input { width:90px; }
+.grn-date-input { width:130px; font-size:0.82rem; }
+.batch-badge { display:inline-block; padding:2px 7px; border-radius:99px; font-size:0.72rem; font-weight:700; background:rgba(99,102,241,0.15); color:var(--primary-lt); }
+
+/* Placeholder panels */
+.placeholder-panel { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-sub); gap:12px; }
+.placeholder-panel span { font-size:56px; opacity:0.25; }
+.placeholder-panel h3 { font-size:1rem; font-weight:600; color:var(--text-muted); }
+.placeholder-panel p { font-size:0.85rem; text-align:center; max-width:320px; line-height:1.6; }
+
+/* ── NEW PO Form View ── */
+.new-po-wrap { flex:1; overflow-y:auto; padding:20px 24px; }
+.form-section { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px; margin-bottom:16px; }
+.form-section-title { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--primary-lt); margin-bottom:14px; display:flex; align-items:center; gap:6px; }
+.form-section-title span { font-size:18px; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+.form-row.full { grid-template-columns:1fr; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-label { font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+.form-input { padding:10px 12px; background:var(--bg2); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.9rem; outline:none; transition:all var(--t); font-family:'Inter',sans-serif; }
+.form-input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(99,102,241,0.12); }
+
+/* New PO Item rows */
+.po-new-items { margin-top:10px; }
+.po-new-item-row { display:grid; grid-template-columns:2fr 1fr 1fr 1fr auto; gap:8px; margin-bottom:8px; align-items:start; }
+.btn-del-row { padding:10px 10px; border-radius:var(--radius-sm); background:none; border:1px solid rgba(239,68,68,0.25); color:var(--danger); cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; }
+.btn-del-row:hover { background:rgba(239,68,68,0.1); }
+.btn-del-row span { font-size:18px; }
+.btn-add-row { display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:var(--radius-sm); background:rgba(99,102,241,0.1); border:1px dashed rgba(99,102,241,0.3); color:var(--primary-lt); cursor:pointer; font-size:0.85rem; font-weight:600; transition:all var(--t); margin-top:8px; }
+.btn-add-row:hover { background:rgba(99,102,241,0.15); border-color:var(--primary); }
+.btn-add-row span { font-size:18px; }
+
+.po-new-actions { display:flex; gap:12px; justify-content:flex-end; padding:16px 0; }
+.btn-submit-po { padding:12px 28px; background:linear-gradient(135deg,var(--accent),#d97706); border:none; border-radius:var(--radius); color:white; font-size:0.95rem; font-weight:700; cursor:pointer; transition:all var(--t); display:flex; align-items:center; gap:6px; box-shadow:0 4px 16px rgba(245,158,11,0.25); }
+.btn-submit-po span { font-size:20px; }
+.btn-submit-po:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(245,158,11,0.4); }
+.btn-submit-po:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+
+/* ── Toast ── */
+#toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
+.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+.toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
+.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
+.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+.toast span { font-size:20px; }
+@keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+/* ── Modal ── */
+.modal-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+.modal-backdrop.open { opacity:1; pointer-events:all; }
+.modal { background:var(--card2); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:28px; width:100%; max-width:520px; max-height:80vh; overflow-y:auto; transform:translateY(20px); transition:transform 0.2s; }
+.modal-backdrop.open .modal { transform:translateY(0); }
+.modal-title { font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:800; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.modal-title span { color:var(--primary-lt); font-size:22px; }
+.modal-close { margin-left:auto; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:22px; display:flex; align-items:center; transition:color var(--t); }
+.modal-close:hover { color:var(--danger); }
+.modal-input { width:100%; padding:11px 14px; background:var(--bg2); border:1px solid var(--border2); border-radius:var(--radius); color:var(--text); font-size:0.95rem; outline:none; margin-bottom:10px; transition:all var(--t); }
+.modal-input:focus { border-color:var(--primary); }
+.result-item { padding:10px 14px; border-radius:var(--radius-sm); cursor:pointer; transition:background var(--t); border-bottom:1px solid var(--border); }
+.result-item:hover { background:rgba(99,102,241,0.08); }
+.result-item:last-child { border-bottom:none; }
+.ri-name { font-weight:600; font-size:0.9rem; }
+.ri-sub { font-size:0.78rem; color:var(--text-muted); margin-top:2px; }
+
+/* Progress bar */
+.progress-bar { height:4px; background:var(--border2); border-radius:2px; overflow:hidden; margin-top:4px; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--success),var(--primary-lt)); border-radius:2px; transition:width 0.3s; }
+
+/* Status badge */
+.status-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:99px; font-size:0.72rem; font-weight:700; }
+.status-badge.pending { background:rgba(245,158,11,0.12); color:var(--warning); }
+.status-badge.partial { background:rgba(99,102,241,0.12); color:var(--primary-lt); }
+.status-badge.complete { background:rgba(16,185,129,0.12); color:var(--success); }
+
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- Auth Overlay -->
+<div id="auth-overlay">
+    <div class="auth-card">
+        <div class="auth-logo"><span class="material-symbols-outlined">shopping_cart</span></div>
+        <div class="auth-title">SMRITI</div>
+        <div class="auth-sub">Purchase Manager — Sign in to continue</div>
+        <div class="auth-error" id="auth-error"></div>
+        <input type="text"     class="auth-input" id="auth-user" placeholder="Username / Email"  autocomplete="username">
+        <input type="password" class="auth-input" id="auth-pass" placeholder="Password"          autocomplete="current-password">
+        <button class="auth-btn" id="auth-btn" onclick="doAuth()">
+            <span class="material-symbols-outlined" style="vertical-align:middle;margin-right:6px;font-size:18px;">login</span>Sign In
+        </button>
+    </div>
+</div>
+
+<!-- App -->
+<div id="app">
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="topbar-brand">
+            <span class="material-symbols-outlined">shopping_cart</span>Purchase
+        </div>
+        <div class="topbar-divider"></div>
+        <div class="topbar-user">Manager: <b id="tb-user"></b></div>
+        <div class="topbar-divider"></div>
+        <div class="topbar-tabs">
+            <button class="tab-btn active" id="tab-grn" onclick="switchTab('grn')">
+                <span class="material-symbols-outlined">local_shipping</span> GRN / Receive Stock
+            </button>
+            <button class="tab-btn" id="tab-new-po" onclick="switchTab('new-po')">
+                <span class="material-symbols-outlined">add_circle</span> New Purchase Order
+            </button>
+        </div>
+        <div class="topbar-right">
+            <button class="topbtn" onclick="refreshPOList()"><span class="material-symbols-outlined">refresh</span> Refresh</button>
+            <button class="topbtn" onclick="toggleFullscreen()"><span class="material-symbols-outlined">fullscreen</span></button>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="main-content">
+
+        <!-- Left: PO List -->
+        <div class="po-list-panel">
+            <div class="panel-hdr">
+                <div class="panel-hdr-title"><span class="material-symbols-outlined">list_alt</span> Open POs</div>
+                <span id="po-count-badge" style="font-size:0.75rem;font-weight:700;color:var(--accent);padding:2px 8px;background:rgba(245,158,11,0.1);border-radius:99px;">0</span>
+            </div>
+            <div class="search-box">
+                <input type="text" class="search-input" id="po-search" placeholder="Filter by PO# or supplier…" oninput="filterPOList(this.value)">
+            </div>
+            <div class="po-list" id="po-list">
+                <div class="po-empty"><span class="material-symbols-outlined">inbox</span>Loading…</div>
+            </div>
+        </div>
+
+        <!-- Right: Tabs -->
+        <div class="detail-panel">
+
+            <!-- GRN Tab -->
+            <div class="tab-view active" id="tab-view-grn">
+                <!-- No PO selected state -->
+                <div class="placeholder-panel" id="grn-placeholder">
+                    <span class="material-symbols-outlined">local_shipping</span>
+                    <h3>Select a Purchase Order</h3>
+                    <p>Pick an open PO from the left panel to receive stock against it (GRN). Or receive stock without a PO using the button below.</p>
+                    <button class="btn-action secondary" style="margin-top:8px;" onclick="openNoPoGrn()">
+                        <span class="material-symbols-outlined">add_box</span> Receive Without PO
+                    </button>
+                </div>
+                <!-- PO Detail -->
+                <div id="grn-detail" style="display:none; flex:1; flex-direction:column; overflow:hidden; min-height:0;">
+                    <div class="detail-hdr">
+                        <div>
+                            <div class="detail-po-name" id="grn-po-name">—</div>
+                            <div class="detail-po-supplier" id="grn-po-supplier">—</div>
+                        </div>
+                        <div class="detail-po-actions">
+                            <button class="btn-action secondary" onclick="openNoPoGrn()">
+                                <span class="material-symbols-outlined">add_box</span> Receive Without PO
+                            </button>
+                            <button class="btn-action primary" id="btn-submit-grn" onclick="submitGRN()">
+                                <span class="material-symbols-outlined">check_circle</span> Submit GRN
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grn-items-wrap">
+                        <table class="grn-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>PO Qty</th>
+                                    <th>Received</th>
+                                    <th>Pending</th>
+                                    <th>Receive Qty</th>
+                                    <th>Rate (₹)</th>
+                                    <th>Expiry Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="grn-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New PO Tab -->
+            <div class="tab-view" id="tab-view-new-po">
+                <div class="new-po-wrap">
+
+                    <div class="form-section">
+                        <div class="form-section-title"><span class="material-symbols-outlined">storefront</span> Supplier Details</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Supplier *</label>
+                                <input type="text" class="form-input" id="new-po-supplier" placeholder="Click to search supplier…" readonly onclick="openSupplierSearch()" style="cursor:pointer;">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Order Date</label>
+                                <input type="date" class="form-input" id="new-po-date">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-section-title"><span class="material-symbols-outlined">inventory_2</span> Items</div>
+                        <div class="po-new-item-row" style="font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;padding:0 4px;margin-bottom:4px;">
+                            <div>Item</div><div>Qty</div><div>Rate (₹)</div><div>UOM</div><div></div>
+                        </div>
+                        <div id="new-po-rows"></div>
+                        <button class="btn-add-row" onclick="addNewPORow()">
+                            <span class="material-symbols-outlined">add</span> Add Item Row
+                        </button>
+                    </div>
+
+                    <div class="po-new-actions">
+                        <button class="btn-action secondary" onclick="resetNewPO()">
+                            <span class="material-symbols-outlined">restart_alt</span> Reset
+                        </button>
+                        <button class="btn-submit-po" id="btn-create-po" onclick="createPO()">
+                            <span class="material-symbols-outlined">send</span> Submit Purchase Order
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Supplier Search Modal -->
+<div class="modal-backdrop" id="supplier-modal">
+    <div class="modal">
+        <div class="modal-title">
+            <span class="material-symbols-outlined">storefront</span> Search Supplier
+            <button class="modal-close" onclick="closeModal('supplier-modal')"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <input type="text" class="modal-input" id="supplier-search-input" placeholder="Type supplier name…" autocomplete="off">
+        <div id="supplier-results"></div>
+    </div>
+</div>
+
+<!-- Item Search Modal (for new PO row) -->
+<div class="modal-backdrop" id="item-modal">
+    <div class="modal">
+        <div class="modal-title">
+            <span class="material-symbols-outlined">search</span> Search Item
+            <button class="modal-close" onclick="closeModal('item-modal')"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <input type="text" class="modal-input" id="item-search-input" placeholder="Type item name or code…" autocomplete="off">
+        <div id="item-results"></div>
+    </div>
+</div>
+
+<!-- No-PO GRN Modal -->
+<div class="modal-backdrop" id="nopo-modal">
+    <div class="modal" style="max-width:640px;">
+        <div class="modal-title">
+            <span class="material-symbols-outlined">add_box</span> Receive Stock Without PO (Direct GRN)
+            <button class="modal-close" onclick="closeModal('nopo-modal')"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Supplier *</label>
+                <input type="text" class="form-input" id="nopo-supplier" placeholder="Search supplier…" readonly onclick="openSupplierSearchFor('nopo')" style="cursor:pointer;">
+            </div>
+        </div>
+        <div style="margin:10px 0 6px;font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Items to Receive</div>
+        <div id="nopo-rows"></div>
+        <button class="btn-add-row" onclick="addNOPoRow()" style="margin-bottom:14px;">
+            <span class="material-symbols-outlined">add</span> Add Item
+        </button>
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+            <button class="btn-action secondary" onclick="closeModal('nopo-modal')">Cancel</button>
+            <button class="btn-action primary" id="btn-nopo-submit" onclick="submitNoPoGRN()">
+                <span class="material-symbols-outlined">check_circle</span> Submit GRN
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+/* ══════════════════════════════════════════════
+   SMRITI Purchase Manager — Standalone v1.0
+   Frappe REST API Backend Only. Zero Frappe UI.
+   ══════════════════════════════════════════════ */
+
+const S = {
+    user: null,
+    activePO: null,
+    allPOs: [],
+    newPORows: [],
+    noPoRows: [],
+    noPoSupplier: '',
+    activeItemRowTarget: null, // 'new-po' or 'nopo'
+    activeItemRowIdx: null,
+    supplierTarget: null,     // 'new-po' or 'nopo'
+};
+
+// ── API ──
+function api(method, params = {}) {
+    const m = document.cookie.match(/(?:^|;\s*)X-Frappe-CSRF-Token=([^;]+)/);
+    const csrf = m ? decodeURIComponent(m[1]) : '';
+    return fetch(`/api/method/${method}`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': csrf },
+        body: JSON.stringify(params),
+    })
+    .then(r => r.json())
+    .then(d => { if (d.exc) throw new Error(d._error_message || d.exc); return d.message; });
+}
+
+
+// ── Auth ──
+async function checkAuth() {
+    try {
+        const r = await fetch('/api/method/frappe.auth.get_logged_user', { credentials: 'include' });
+        const d = await r.json();
+        if (d.message && d.message !== 'Guest') { S.user = d.message; showApp(); }
+    } catch(e) {}
+}
+
+async function doAuth() {
+    const usr = document.getElementById('auth-user').value.trim();
+    const pwd = document.getElementById('auth-pass').value;
+    const errEl = document.getElementById('auth-error');
+    const btn   = document.getElementById('auth-btn');
+    if (!usr || !pwd) { errEl.style.display='block'; errEl.textContent='Enter credentials.'; return; }
+    errEl.style.display = 'none'; btn.textContent = 'Signing in…'; btn.disabled = true;
+    try {
+        const r = await fetch('/api/method/login', {
+            method:'POST', credentials:'include',
+            headers:{'Content-Type':'application/json','X-Frappe-CSRF-Token':'fetch'},
+            body: JSON.stringify({ usr, pwd }),
+        });
+        const d = await r.json();
+        if (d.message === 'Logged In') { S.user = usr; showApp(); }
+        else { errEl.style.display='block'; errEl.textContent='Invalid credentials.'; }
+    } catch(e) { errEl.style.display='block'; errEl.textContent='Connection error.'; }
+    btn.textContent='Sign In'; btn.disabled=false;
+}
+
+function showApp() {
+    document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('tb-user').textContent = S.user;
+    document.getElementById('new-po-date').value = new Date().toISOString().split('T')[0];
+    loadPOList();
+}
+
+// ── PO List ──
+async function loadPOList() {
+    try {
+        const pos = await api('smriti_retail_os.purchase_api.get_open_purchase_orders');
+        S.allPOs = pos || [];
+        renderPOList(S.allPOs);
+    } catch(e) {
+        toast('Failed to load POs: ' + e.message, 'error');
+    }
+}
+
+function renderPOList(list) {
+    const el = document.getElementById('po-list');
+    document.getElementById('po-count-badge').textContent = list.length;
+    if (!list.length) {
+        el.innerHTML = '<div class="po-empty"><span class="material-symbols-outlined">inbox</span>No open Purchase Orders</div>';
+        return;
+    }
+    el.innerHTML = list.map((po, i) => {
+        const pct = Math.round(po.per_received || 0);
+        const status = pct === 0 ? 'pending' : pct >= 100 ? 'complete' : 'partial';
+        const statusLabel = pct === 0 ? 'Pending' : pct >= 100 ? 'Complete' : `${pct}% Received`;
+        return `
+        <div class="po-item" id="poi-${i}" onclick="selectPO('${po.name}', ${i})">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div class="po-item-name">${po.name}</div>
+                <span class="status-badge ${status}">${statusLabel}</span>
+            </div>
+            <div class="po-item-supplier">${po.supplier_name || po.supplier}</div>
+            <div class="po-item-meta">
+                <div class="po-item-total">₹ ${(po.grand_total||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</div>
+                <div class="po-progress">${po.transaction_date}</div>
+            </div>
+            <div class="progress-bar" style="margin-top:6px;">
+                <div class="progress-fill" style="width:${pct}%"></div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function filterPOList(q) {
+    const filtered = S.allPOs.filter(po =>
+        po.name.toLowerCase().includes(q.toLowerCase()) ||
+        (po.supplier_name || '').toLowerCase().includes(q.toLowerCase()) ||
+        po.supplier.toLowerCase().includes(q.toLowerCase())
+    );
+    renderPOList(filtered);
+}
+
+function refreshPOList() { S.activePO = null; showGRNPlaceholder(); loadPOList(); toast('PO list refreshed', 'info'); }
+
+// ── Select PO → load GRN detail ──
+async function selectPO(poName, idx) {
+    document.querySelectorAll('.po-item').forEach(el => el.classList.remove('active'));
+    document.getElementById(`poi-${idx}`)?.classList.add('active');
+    switchTab('grn');
+    try {
+        const po = await api('smriti_retail_os.purchase_api.get_po_details', { po_name: poName });
+        S.activePO = po;
+        renderGRNDetail(po);
+    } catch(e) { toast('Failed to load PO: ' + e.message, 'error'); }
+}
+
+function showGRNPlaceholder() {
+    document.getElementById('grn-placeholder').style.display = 'flex';
+    document.getElementById('grn-detail').style.display = 'none';
+}
+
+function renderGRNDetail(po) {
+    document.getElementById('grn-placeholder').style.display = 'none';
+    const detail = document.getElementById('grn-detail');
+    detail.style.display = 'flex';
+    detail.style.flexDirection = 'column';
+
+    document.getElementById('grn-po-name').textContent = po.name;
+    document.getElementById('grn-po-supplier').textContent = `Supplier: ${po.supplier_name || po.supplier}`;
+
+    const tbody = document.getElementById('grn-tbody');
+    tbody.innerHTML = po.items.map((it, i) => `
+        <tr>
+            <td>
+                <div class="item-name-cell">${it.item_name}</div>
+                <div class="item-code-cell">${it.item_code}</div>
+                ${it.has_batch_no ? '<span class="batch-badge">Batch Tracked</span>' : ''}
+            </td>
+            <td style="text-align:right;font-weight:600;">${it.po_qty}</td>
+            <td style="text-align:right;color:var(--success);">${it.received_qty}</td>
+            <td style="text-align:right;color:var(--warning);font-weight:700;">${it.qty}</td>
+            <td>
+                <input type="number" class="grn-input grn-qty-input" id="grn-qty-${i}"
+                    value="${it.qty}" min="0" step="0.001"
+                    data-item="${it.item_code}" data-rate="${it.rate}"
+                    data-uom="${it.stock_uom}" data-warehouse="${it.warehouse}"
+                    data-po-item="${it.po_item_name}">
+            </td>
+            <td>
+                <input type="number" class="grn-input grn-rate-input" id="grn-rate-${i}"
+                    value="${it.rate}" min="0" step="0.01">
+            </td>
+            <td>
+                ${it.has_batch_no
+                    ? `<input type="date" class="grn-input grn-date-input" id="grn-expiry-${i}" placeholder="Expiry date">`
+                    : '<span style="color:var(--text-sub);font-size:0.8rem;">N/A</span>'}
+            </td>
+        </tr>
+    `).join('');
+}
+
+// ── Submit GRN (against PO) ──
+async function submitGRN() {
+    if (!S.activePO) return;
+    const po = S.activePO;
+    const items = [];
+
+    po.items.forEach((it, i) => {
+        const qty  = parseFloat(document.getElementById(`grn-qty-${i}`)?.value) || 0;
+        const rate = parseFloat(document.getElementById(`grn-rate-${i}`)?.value) || it.rate;
+        const expiryEl = document.getElementById(`grn-expiry-${i}`);
+        const expiry = expiryEl ? expiryEl.value : null;
+
+        if (qty > 0) {
+            items.push({
+                item_code:    it.item_code,
+                qty:          qty,
+                rate:         rate,
+                stock_uom:    it.stock_uom,
+                warehouse:    it.warehouse,
+                po_item_name: it.po_item_name,
+                expiry_date:  expiry || null,
+            });
+        }
+    });
+
+    if (!items.length) { toast('No items to receive (all qtys are 0)', 'error'); return; }
+
+    const btn = document.getElementById('btn-submit-grn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 1s linear infinite">progress_activity</span> Submitting…';
+
+    try {
+        const res = await api('smriti_retail_os.purchase_api.create_purchase_receipt', {
+            supplier:  po.supplier,
+            items:     JSON.stringify(items),
+            po_name:   po.name,
+        });
+        toast(`GRN Submitted: ${res.name}`, 'success');
+        showGRNPlaceholder();
+        S.activePO = null;
+        document.querySelectorAll('.po-item').forEach(el => el.classList.remove('active'));
+        loadPOList();
+    } catch(e) {
+        toast(`GRN failed: ${e.message}`, 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Submit GRN';
+}
+
+// ── No-PO GRN ──
+function openNoPoGrn() {
+    S.noPoRows = [];
+    S.noPoSupplier = '';
+    document.getElementById('nopo-supplier').value = '';
+    document.getElementById('nopo-rows').innerHTML = '';
+    addNOPoRow();
+    openModal('nopo-modal');
+}
+
+function addNOPoRow() {
+    const idx = S.noPoRows.length;
+    S.noPoRows.push({ item_code:'', item_name:'', qty:1, rate:0, stock_uom:'Nos', expiry:'' });
+    const row = document.createElement('div');
+    row.className = 'po-new-item-row';
+    row.id = `nopo-row-${idx}`;
+    row.innerHTML = `
+        <input type="text" class="form-input" id="nopo-item-${idx}" placeholder="Click to search item…"
+            value="" readonly onclick="openItemSearchFor('nopo', ${idx})" style="cursor:pointer;">
+        <input type="number" class="form-input" id="nopo-qty-${idx}" value="1" min="0.001" step="0.001">
+        <input type="number" class="form-input" id="nopo-rate-${idx}" value="0" min="0" step="0.01" placeholder="₹ Rate">
+        <input type="date"   class="form-input" id="nopo-expiry-${idx}" title="Expiry date (for batch items)">
+        <button class="btn-del-row" onclick="removeNOPoRow(${idx})">
+            <span class="material-symbols-outlined">delete</span>
+        </button>
+    `;
+    document.getElementById('nopo-rows').appendChild(row);
+}
+
+function removeNOPoRow(idx) {
+    document.getElementById(`nopo-row-${idx}`)?.remove();
+    S.noPoRows[idx] = null;
+}
+
+async function submitNoPoGRN() {
+    const supplier = document.getElementById('nopo-supplier').value.trim();
+    if (!supplier) { toast('Please select a supplier', 'error'); return; }
+
+    const items = [];
+    S.noPoRows.forEach((r, i) => {
+        if (!r) return;
+        const item_code = S.noPoRows[i]?.item_code || '';
+        const qty  = parseFloat(document.getElementById(`nopo-qty-${i}`)?.value) || 0;
+        const rate = parseFloat(document.getElementById(`nopo-rate-${i}`)?.value) || 0;
+        const expiry = document.getElementById(`nopo-expiry-${i}`)?.value || null;
+        const uom  = S.noPoRows[i]?.stock_uom || 'Nos';
+        if (item_code && qty > 0) {
+            items.push({ item_code, qty, rate, stock_uom: uom, expiry_date: expiry });
+        }
+    });
+
+    if (!items.length) { toast('Add at least one item with qty > 0', 'error'); return; }
+
+    const btn = document.getElementById('btn-nopo-submit');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 1s linear infinite">progress_activity</span> Submitting…';
+
+    try {
+        const res = await api('smriti_retail_os.purchase_api.create_purchase_receipt', {
+            supplier,
+            items: JSON.stringify(items),
+            po_name: null,
+        });
+        toast(`GRN Submitted: ${res.name}`, 'success');
+        closeModal('nopo-modal');
+        loadPOList();
+    } catch(e) {
+        toast(`GRN failed: ${e.message}`, 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Submit GRN';
+}
+
+// ── New PO ──
+let newPORowCount = 0;
+function addNewPORow() {
+    const idx = newPORowCount++;
+    const row = document.createElement('div');
+    row.className = 'po-new-item-row';
+    row.id = `new-po-row-${idx}`;
+    row.innerHTML = `
+        <input type="text" class="form-input" id="new-po-item-${idx}" placeholder="Click to search item…"
+            value="" readonly onclick="openItemSearchFor('new-po', ${idx})" style="cursor:pointer;">
+        <input type="number" class="form-input" id="new-po-qty-${idx}"  value="1" min="0.001" step="0.001">
+        <input type="number" class="form-input" id="new-po-rate-${idx}" value="0" min="0"     step="0.01" placeholder="₹ Rate">
+        <input type="text"   class="form-input" id="new-po-uom-${idx}"  value="Nos" placeholder="UOM">
+        <button class="btn-del-row" onclick="document.getElementById('new-po-row-${idx}').remove()">
+            <span class="material-symbols-outlined">delete</span>
+        </button>
+    `;
+    document.getElementById('new-po-rows').appendChild(row);
+}
+
+function resetNewPO() {
+    document.getElementById('new-po-supplier').value = '';
+    document.getElementById('new-po-rows').innerHTML = '';
+    newPORowCount = 0;
+    addNewPORow();
+}
+
+async function createPO() {
+    const supplier = document.getElementById('new-po-supplier').value.trim();
+    if (!supplier) { toast('Please select a supplier', 'error'); openSupplierSearchFor('new-po'); return; }
+
+    const items = [];
+    document.querySelectorAll('[id^="new-po-row-"]').forEach(row => {
+        const idx  = row.id.split('-').pop();
+        const item = document.getElementById(`new-po-item-${idx}`)?.dataset.code;
+        const qty  = parseFloat(document.getElementById(`new-po-qty-${idx}`)?.value) || 0;
+        const rate = parseFloat(document.getElementById(`new-po-rate-${idx}`)?.value) || 0;
+        const uom  = document.getElementById(`new-po-uom-${idx}`)?.value || 'Nos';
+        if (item && qty > 0) items.push({ item_code: item, qty, rate, stock_uom: uom });
+    });
+
+    if (!items.length) { toast('Add at least one item row', 'error'); return; }
+
+    const btn = document.getElementById('btn-create-po');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 1s linear infinite">progress_activity</span> Submitting…';
+
+    try {
+        const res = await api('smriti_retail_os.purchase_api.create_purchase_order', {
+            supplier,
+            items: JSON.stringify(items),
+        });
+        toast(`PO Submitted: ${res.name}`, 'success');
+        resetNewPO();
+        switchTab('grn');
+        loadPOList();
+    } catch(e) {
+        toast(`PO failed: ${e.message}`, 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined">send</span> Submit Purchase Order';
+}
+
+// ── Supplier Search ──
+let supplierTimer = null;
+function openSupplierSearch() { openSupplierSearchFor('new-po'); }
+function openSupplierSearchFor(target) {
+    S.supplierTarget = target;
+    document.getElementById('supplier-search-input').value = '';
+    document.getElementById('supplier-results').innerHTML = '';
+    openModal('supplier-modal');
+    setTimeout(() => document.getElementById('supplier-search-input').focus(), 100);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('supplier-search-input').addEventListener('input', function() {
+        clearTimeout(supplierTimer);
+        const q = this.value.trim();
+        if (!q) { document.getElementById('supplier-results').innerHTML = ''; return; }
+        supplierTimer = setTimeout(() => searchSuppliers(q), 300);
+    });
+
+    // Item search
+    document.getElementById('item-search-input').addEventListener('input', function() {
+        clearTimeout(itemTimer);
+        const q = this.value.trim();
+        if (!q) { document.getElementById('item-results').innerHTML = ''; return; }
+        itemTimer = setTimeout(() => searchItemsModal(q), 300);
+    });
+
+    document.getElementById('auth-pass').addEventListener('keypress', e => { if (e.key === 'Enter') doAuth(); });
+    document.getElementById('auth-user').addEventListener('keypress', e => { if (e.key === 'Enter') doAuth(); });
+    checkAuth();
+    addNewPORow();
+});
+
+async function searchSuppliers(q) {
+    const el = document.getElementById('supplier-results');
+    el.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">Searching…</div>';
+    try {
+        const res = await api('frappe.client.get_list', {
+            doctype: 'Supplier',
+            filters: [['supplier_name', 'like', `%${q}%`]],
+            fields: ['name', 'supplier_name', 'supplier_group'],
+            limit_page_length: 20
+        });
+        const suppliers = res || [];
+        if (!suppliers.length) { el.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">No suppliers found</div>'; return; }
+        el.innerHTML = suppliers.map((s, i) => `
+            <div class="result-item" onclick="selectSupplier('${s.name}','${s.supplier_name}')">
+                <div class="ri-name">${s.supplier_name}</div>
+                <div class="ri-sub">${s.supplier_group || ''}</div>
+            </div>
+        `).join('');
+    } catch(e) {
+        el.innerHTML = `<div style="color:var(--danger);padding:12px;">${e.message}</div>`;
+    }
+}
+
+function selectSupplier(name, displayName) {
+    if (S.supplierTarget === 'new-po') {
+        const el = document.getElementById('new-po-supplier');
+        el.value = displayName; el.dataset.name = name;
+    } else if (S.supplierTarget === 'nopo') {
+        const el = document.getElementById('nopo-supplier');
+        el.value = displayName; el.dataset.name = name;
+    }
+    closeModal('supplier-modal');
+}
+
+// ── Item Search for PO rows ──
+let itemTimer = null;
+function openItemSearchFor(target, rowIdx) {
+    S.activeItemRowTarget = target;
+    S.activeItemRowIdx = rowIdx;
+    document.getElementById('item-search-input').value = '';
+    document.getElementById('item-results').innerHTML = '';
+    openModal('item-modal');
+    setTimeout(() => document.getElementById('item-search-input').focus(), 100);
+}
+
+async function searchItemsModal(q) {
+    const el = document.getElementById('item-results');
+    el.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">Searching…</div>';
+    try {
+        const items = await api('smriti_retail_os.billing_api.search_items', { query: q });
+        if (!items || !items.length) { el.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">No items found</div>'; return; }
+        el.innerHTML = items.map((it, i) => `
+            <div class="result-item" onclick="selectItemForRow(${i})">
+                <div style="display:flex;justify-content:space-between;">
+                    <div>
+                        <div class="ri-name">${it.item_name}</div>
+                        <div class="ri-sub">${it.item_code} · ${it.stock_uom || 'Nos'}</div>
+                    </div>
+                    <div style="font-weight:700;color:var(--text);font-size:0.88rem;">₹ ${(it.rate||0).toFixed(2)}</div>
+                </div>
+            </div>
+        `).join('');
+        window._itemSearchResults = items;
+    } catch(e) {
+        el.innerHTML = `<div style="color:var(--danger);padding:12px;">${e.message}</div>`;
+    }
+}
+
+function selectItemForRow(i) {
+    const it  = window._itemSearchResults[i];
+    const idx = S.activeItemRowIdx;
+    const target = S.activeItemRowTarget;
+
+    const prefix = target === 'new-po' ? 'new-po' : 'nopo';
+    const nameEl = document.getElementById(`${prefix}-item-${idx}`);
+    if (nameEl) { nameEl.value = it.item_name; nameEl.dataset.code = it.item_code; }
+
+    if (target === 'new-po') {
+        const rateEl = document.getElementById(`new-po-rate-${idx}`);
+        const uomEl  = document.getElementById(`new-po-uom-${idx}`);
+        if (rateEl) rateEl.value = it.rate || 0;
+        if (uomEl)  uomEl.value  = it.stock_uom || 'Nos';
+    } else {
+        const rateEl = document.getElementById(`nopo-rate-${idx}`);
+        if (rateEl) rateEl.value = it.rate || 0;
+        if (S.noPoRows[idx]) { S.noPoRows[idx].item_code = it.item_code; S.noPoRows[idx].stock_uom = it.stock_uom || 'Nos'; }
+    }
+
+    closeModal('item-modal');
+}
+
+// ── Tab switch ──
+function switchTab(tab) {
+    ['grn','new-po'].forEach(t => {
+        document.getElementById(`tab-view-${t}`).classList.toggle('active', t === tab);
+        document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+    });
+}
+
+// ── Modal helpers ──
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── Fullscreen ──
+function toggleFullscreen() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+    else document.exitFullscreen();
+}
+
+// ── Toast ──
+function toast(msg, type = 'info') {
+    const icons = { success:'check_circle', error:'error', info:'info' };
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.innerHTML = `<span class="material-symbols-outlined">${icons[type]||'info'}</span>${msg}`;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+}
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
+});
+</script>
+</body>
+</html>

@@ -323,6 +323,12 @@ website_route_rules = [
         # Zero Frappe chrome. Frappe used as pure REST API backend.
         "from_route": "/billing",
         "to_route": "billing"
+    },
+    {
+        # Standalone Purchase Manager — served from www/purchase.html + www/purchase.py
+        # Zero Frappe chrome. GRN, New PO, all via REST API.
+        "from_route": "/purchase",
+        "to_route": "purchase"
     }
 ]
 

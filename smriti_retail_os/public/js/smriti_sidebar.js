@@ -33,7 +33,7 @@ SMRITI.renderSidebar = function(active_page) {
         {id:"sales_invoices", icon:"📄", label:"Sales Invoices",
          url:"/app/sales-invoice"},
         {id:"purchase",   icon:"🛒", label:"Purchase Manager",
-         url:"/app/smriti-purchase"},
+         url:"/purchase"},
         ...(is_manager ? [
             {id:"item_import", icon:"📥", label:"Item Master Import",
              url:"/app/smriti-item-master"},
