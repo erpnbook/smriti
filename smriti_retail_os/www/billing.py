@@ -40,6 +40,7 @@ def get_context(context):
     context.no_breadcrumbs  = True
     context.no_cache        = True
     context.show_sidebar    = False
+    context.base_template_path = "smriti_retail_os/templates/blank.html"
 
     # Pass cashier info to template (available as {{ cashier }} in Jinja if needed)
     context.cashier = frappe.session.user
