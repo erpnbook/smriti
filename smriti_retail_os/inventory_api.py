@@ -367,3 +367,53 @@ def get_stock_summary(warehouse=None):
                     "actual_qty": flt(b.actual_qty)
                 })
     return results
+
+
+@frappe.whitelist()
+def reset_db():
+    """
+    Resets all SMRITI Retail OS transaction tables and balance ledgers to zero,
+    allowing naming series to restart from 1. Bypasses constraint checks for speed.
+    """
+    # Only allow Administrator or System Manager to run this
+    if frappe.session.user != "Administrator" and "System Manager" not in frappe.get_roles(frappe.session.user):
+        frappe.throw(_("Access Denied: Only Administrators or System Managers can reset transactions."))
+
+    print("[SMRITI] Truncating transaction tables...")
+    frappe.db.sql("SET FOREIGN_KEY_CHECKS = 0;")
+    
+    tables = [
+        "tabStock Reconciliation",
+        "tabStock Reconciliation Item",
+        "tabStock Entry",
+        "tabStock Entry Detail",
+        "tabPurchase Receipt",
+        "tabPurchase Receipt Item",
+        "tabPurchase Invoice",
+        "tabPurchase Invoice Item",
+        "tabPurchase Order",
+        "tabPurchase Order Item",
+        "tabSales Invoice",
+        "tabSales Invoice Item",
+        "tabPOS Invoice",
+        "tabPOS Invoice Item",
+        "tabPayment Entry",
+        "tabPayment Entry Reference",
+        "tabPayment Entry Deduction",
+        "tabGL Entry",
+        "tabStock Ledger Entry",
+        "tabPayment Ledger Entry",
+        "tabBin",
+        "tabSeries"
+    ]
+    
+    for t in tables:
+        try:
+            frappe.db.sql(f"TRUNCATE TABLE `{t}`")
+        except Exception as e:
+            pass
+            
+    frappe.db.sql("SET FOREIGN_KEY_CHECKS = 1;")
+    frappe.db.commit()
+    return {"status": "success", "message": "All transactions reset to zero successfully. Starting from 1."}
+

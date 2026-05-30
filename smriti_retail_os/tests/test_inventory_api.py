@@ -247,6 +247,15 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
         self.assertTrue(frappe.db.exists("Purchase Receipt", res["name"]))
 
     def test_stock_transfer(self):
+        # Add initial stock first so there is positive inventory to transfer
+        grn_items = [{
+            "item_code": self.item_code,
+            "qty": 10,
+            "rate": 150.0,
+            "warehouse": self.warehouse
+        }]
+        create_grn(self.supplier, "TEST-GRN-TRANSFER", grn_items)
+
         # Create transit/target warehouse (must belong to same company to avoid InvalidWarehouseCompany)
         target_wh = frappe.db.get_value("Warehouse", {"name": ["!=", self.warehouse], "company": self.company, "is_group": 0})
         if not target_wh:
@@ -267,6 +276,15 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
         self.assertTrue(frappe.db.exists("Stock Entry", res["name"]))
 
     def test_stock_adjustment(self):
+        # Add initial stock first so there is positive inventory to issue
+        grn_items = [{
+            "item_code": self.item_code,
+            "qty": 10,
+            "rate": 150.0,
+            "warehouse": self.warehouse
+        }]
+        create_grn(self.supplier, "TEST-GRN-ADJUST", grn_items)
+
         items = [{
             "item_code": self.item_code,
             "qty": 5,
@@ -290,3 +308,34 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
     def test_get_stock_summary(self):
         res = get_stock_summary(self.warehouse)
         self.assertIsInstance(res, list)
+
+    def tearDown(self):
+        # 100% safe cleanup that ONLY targets test transactions containing our specific test item
+        frappe.db.sql("SET FOREIGN_KEY_CHECKS = 0;")
+        
+        # 1. Clean Purchase Receipts
+        pr_names = frappe.db.sql_list("SELECT DISTINCT parent FROM `tabPurchase Receipt Item` WHERE item_code = %s", (self.item_code,))
+        if pr_names:
+            frappe.db.sql("DELETE FROM `tabPurchase Receipt Item` WHERE parent IN (%s)" % ", ".join(["%s"] * len(pr_names)), tuple(pr_names))
+            frappe.db.sql("DELETE FROM `tabPurchase Receipt` WHERE name IN (%s)" % ", ".join(["%s"] * len(pr_names)), tuple(pr_names))
+            
+        # 2. Clean Stock Entries
+        se_names = frappe.db.sql_list("SELECT DISTINCT parent FROM `tabStock Entry Detail` WHERE item_code = %s", (self.item_code,))
+        if se_names:
+            frappe.db.sql("DELETE FROM `tabStock Entry Detail` WHERE parent IN (%s)" % ", ".join(["%s"] * len(se_names)), tuple(se_names))
+            frappe.db.sql("DELETE FROM `tabStock Entry` WHERE name IN (%s)" % ", ".join(["%s"] * len(se_names)), tuple(se_names))
+            
+        # 3. Clean Stock Reconciliations
+        sr_names = frappe.db.sql_list("SELECT DISTINCT parent FROM `tabStock Reconciliation Item` WHERE item_code = %s", (self.item_code,))
+        if sr_names:
+            frappe.db.sql("DELETE FROM `tabStock Reconciliation Item` WHERE parent IN (%s)" % ", ".join(["%s"] * len(sr_names)), tuple(sr_names))
+            frappe.db.sql("DELETE FROM `tabStock Reconciliation` WHERE name IN (%s)" % ", ".join(["%s"] * len(sr_names)), tuple(sr_names))
+            
+        # 4. Clean Ledger entries & Bin for the test item
+        frappe.db.sql("DELETE FROM `tabGL Entry` WHERE voucher_no IN (SELECT DISTINCT parent FROM `tabPurchase Receipt Item` WHERE item_code = %s union SELECT DISTINCT parent FROM `tabStock Entry Detail` WHERE item_code = %s union SELECT DISTINCT parent FROM `tabStock Reconciliation Item` WHERE item_code = %s)", (self.item_code, self.item_code, self.item_code))
+        frappe.db.sql("DELETE FROM `tabStock Ledger Entry` WHERE item_code = %s", (self.item_code,))
+        frappe.db.sql("DELETE FROM `tabBin` WHERE item_code = %s", (self.item_code,))
+        
+        frappe.db.sql("SET FOREIGN_KEY_CHECKS = 1;")
+        frappe.db.commit()
+

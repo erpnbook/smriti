@@ -345,8 +345,21 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         frappe.db.delete("Item Barcode", {"barcode": "8901234567890"})
         frappe.db.delete("Item Price", {"item_code": "TEST-ITEM-BAR"})
         frappe.db.delete("Customer", {"customer_name": "Test Billing Customer"})
-        frappe.db.delete("POS Invoice", {"customer": "Test Billing Customer"})
-        frappe.db.delete("Sales Invoice", {"customer": "Test Billing Customer"})
+        
+        # Safely and fully delete POS Invoices and Sales Invoices along with their child table items
+        for dt, child_dt in [("POS Invoice", "POS Invoice Item"), ("Sales Invoice", "Sales Invoice Item")]:
+            names = frappe.db.sql_list("SELECT name FROM `tab%s` WHERE customer = %%s" % dt, ("Test Billing Customer",))
+            if names:
+                frappe.db.sql("DELETE FROM `tab%s` WHERE parent IN (%s)" % (child_dt, ", ".join(["%s"] * len(names))), tuple(names))
+                frappe.db.sql("DELETE FROM `tab%s` WHERE name IN (%s)" % (dt, ", ".join(["%s"] * len(names))), tuple(names))
+                
+        # Safely and fully delete Payment Entries along with their child table items
+        pe_names = frappe.db.sql_list("SELECT name FROM `tabPayment Entry` WHERE party = %s", ("Test Billing Customer",))
+        if pe_names:
+            frappe.db.sql("DELETE FROM `tabPayment Entry Reference` WHERE parent IN (%s)" % ", ".join(["%s"] * len(pe_names)), tuple(pe_names))
+            frappe.db.sql("DELETE FROM `tabPayment Entry Deduction` WHERE parent IN (%s)" % ", ".join(["%s"] * len(pe_names)), tuple(pe_names))
+            frappe.db.sql("DELETE FROM `tabPayment Entry` WHERE name IN (%s)" % ", ".join(["%s"] * len(pe_names)), tuple(pe_names))
+
         frappe.db.delete("GL Entry", {"party": "Test Billing Customer"})
         frappe.db.delete("Comment", {"reference_doctype": "POS Invoice"})
         
