@@ -19,7 +19,7 @@ SMRITI.renderSidebar = function(active_page) {
 
     const nav_items = [
         {id:"billing",    icon:"💳", label:"Billing",
-         url:"/app/smriti-billing"},
+         url:"/billing"},   // Standalone billing terminal — zero Frappe chrome
         {id:"shift",      icon:"🌅", label:"Shift Management",
          url:"/app/smriti-shift"},
         {id:"inventory",  icon:"📦", label:"Inventory",

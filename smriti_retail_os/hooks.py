@@ -112,7 +112,7 @@ home_page = "index"
 # Note: role_home_page is for non-desk/website users.
 # Desk users are handled via bootinfo.default_route in boot.py
 role_home_page = {
-    "SMRITI Cashier": "smriti-billing",
+    "SMRITI Cashier": "billing",          # → Standalone billing terminal at /billing
     "SMRITI Store Manager": "smriti-desk",
     "System Manager": "smriti-desk"
 }
@@ -312,11 +312,17 @@ override_whitelisted_methods = {
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
-# Login page override
+# Login page override + Billing terminal standalone route
 website_route_rules = [
     {
         "from_route": "/login",
         "to_route": "login"
+    },
+    {
+        # Standalone billing terminal — served from www/billing.html + www/billing.py
+        # Zero Frappe chrome. Frappe used as pure REST API backend.
+        "from_route": "/billing",
+        "to_route": "billing"
     }
 ]
 

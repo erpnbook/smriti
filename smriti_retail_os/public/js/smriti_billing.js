@@ -297,7 +297,8 @@ class SmritiBillingController {
     }
 
     popout_terminal() {
-        const url = window.location.origin + "/app/smriti-billing?popout=true";
+        // Open the fully standalone billing terminal (zero Frappe chrome)
+        const url = window.location.origin + "/billing";
         const w = screen.width - 60;
         const h = screen.height - 60;
         const left = 30;

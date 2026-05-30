@@ -590,7 +590,8 @@ function _redirect_to_smriti_home() {
         if (is_root_path && (current_route === 'workspace/Home' || current_route === '' || current_route === 'desk')) {
             var roles = frappe.user_roles || [];
             if (roles.includes('SMRITI Cashier')) {
-                frappe.set_route('smriti-billing');
+                // Redirect to standalone billing terminal (zero Frappe chrome)
+                window.location.href = '/billing';
             } else {
                 frappe.set_route('smriti-desk');
             }
@@ -601,7 +602,7 @@ function _redirect_to_smriti_home() {
         console.log("[SMRITI] Logged in user on home page, redirecting to app...");
         var roles = frappe.user_roles || [];
         if (roles.includes('SMRITI Cashier')) {
-            window.location.href = base_path + '/smriti-billing';
+            window.location.href = '/billing'; // Standalone billing terminal
         } else {
             window.location.href = base_path + '/smriti-desk';
         }

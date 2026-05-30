@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/billing.html
+  @description: SMRITI Retail Billing Terminal — Standalone UI (Frappe as pure API backend)
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @version: 2.0.0 (Standalone)
+  @license: MIT
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMRITI Billing Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+/* ── Reset & Base ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg:          #0a0f1e;
+    --bg2:         #0f1629;
+    --card:        #131d35;
+    --card2:       #172040;
+    --border:      rgba(255,255,255,0.07);
+    --border2:     rgba(255,255,255,0.12);
+    --primary:     #6366f1;
+    --primary-lt:  #818cf8;
+    --accent:      #e94560;
+    --success:     #10b981;
+    --warning:     #f59e0b;
+    --danger:      #ef4444;
+    --text:        #e2e8f0;
+    --text-muted:  #94a3b8;
+    --text-subtle: #475569;
+    --radius:      12px;
+    --radius-sm:   8px;
+    --radius-lg:   16px;
+    --t:           0.2s ease;
+}
+
+html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* ── Auth Overlay ── */
+#auth-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #030712;
+    display: flex; align-items: center; justify-content: center;
+}
+.auth-card {
+    background: rgba(15,23,42,0.6);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 24px;
+    padding: 48px 40px;
+    width: 100%; max-width: 420px;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
+}
+.auth-logo {
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, var(--accent), #c71f37);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    box-shadow: 0 0 30px rgba(233,69,96,0.3);
+}
+.auth-logo span { font-size: 28px; color: white; }
+.auth-title { font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; margin-bottom: 4px; }
+.auth-sub { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 32px; }
+.auth-input {
+    width: 100%; padding: 13px 16px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 0.95rem; font-family: 'Inter', sans-serif;
+    outline: none; transition: all var(--t);
+    margin-bottom: 12px;
+}
+.auth-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+.auth-btn {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, var(--accent), #c71f37);
+    border: none; border-radius: var(--radius);
+    color: white; font-weight: 700; font-size: 1rem;
+    cursor: pointer; transition: all var(--t);
+    box-shadow: 0 8px 24px rgba(233,69,96,0.25);
+    margin-top: 4px;
+}
+.auth-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(233,69,96,0.4); }
+.auth-error {
+    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+    color: #f87171; padding: 10px 14px; border-radius: var(--radius-sm);
+    font-size: 0.85rem; margin-bottom: 12px; display: none;
+}
+
+/* ── Main App Layout ── */
+#app {
+    display: none;
+    width: 100vw; height: 100vh;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ── Top Bar ── */
+.topbar {
+    flex-shrink: 0;
+    height: 52px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 16px; gap: 16px;
+}
+.topbar-brand {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Outfit', sans-serif; font-weight: 800;
+    font-size: 1.05rem;
+    background: linear-gradient(135deg, var(--accent), var(--primary-lt));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    flex-shrink: 0;
+}
+.topbar-brand span { font-size: 18px; color: var(--accent); -webkit-text-fill-color: var(--accent); }
+.topbar-divider { width: 1px; height: 24px; background: var(--border2); flex-shrink: 0; }
+.topbar-cashier {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.82rem; color: var(--text-muted); flex-shrink: 0;
+}
+.cashier-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 6px var(--success);
+    animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+.topbar-invoice {
+    font-size: 0.82rem; color: var(--text-muted); flex-shrink: 0;
+}
+.topbar-invoice b { color: var(--primary-lt); font-weight: 700; }
+
+.topbar-shortcuts {
+    flex: 1;
+    text-align: center;
+    font-size: 0.78rem; color: var(--text-subtle);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.topbar-shortcuts b { color: var(--primary-lt); }
+
+.topbar-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.topbtn {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 5px 10px; border-radius: var(--radius-sm);
+    font-size: 11px; font-weight: 600;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer; transition: all var(--t);
+    white-space: nowrap;
+}
+.topbtn:hover { border-color: var(--primary); color: var(--primary-lt); }
+.topbtn.primary {
+    background: linear-gradient(135deg, var(--primary), #4f46e5);
+    border-color: transparent; color: white;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.25);
+}
+.topbtn.primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(99,102,241,0.4); }
+.topbtn span { font-size: 15px; }
+
+/* ── Main Content ── */
+.main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 0;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* ── Left Panel ── */
+.left-panel {
+    display: flex; flex-direction: column;
+    padding: 14px; gap: 12px;
+    overflow: hidden; min-height: 0;
+    border-right: 1px solid var(--border);
+}
+
+/* Barcode */
+.barcode-row { display: flex; gap: 8px; flex-shrink: 0; }
+.barcode-wrap { position: relative; flex: 1; }
+.barcode-icon {
+    position: absolute; left: 14px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px; color: var(--primary-lt);
+    animation: flash-icon 1.5s infinite;
+}
+@keyframes flash-icon { 0%,100%{opacity:0.4} 50%{opacity:1} }
+
+#barcode-input {
+    width: 100%; padding: 11px 14px 11px 44px;
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text); font-size: 1rem; font-weight: 500;
+    outline: none; transition: all var(--t);
+}
+#barcode-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+}
+.btn-camera {
+    padding: 0 14px; border-radius: var(--radius);
+    border: 1px solid var(--border2);
+    background: var(--card); color: var(--text-muted);
+    cursor: pointer; transition: all var(--t);
+    display: flex; align-items: center; gap: 4px;
+    font-size: 13px; font-weight: 600; white-space: nowrap;
+}
+.btn-camera span { font-size: 18px; }
+.btn-camera:hover { border-color: var(--primary); color: var(--primary-lt); }
+
+/* Cart Table */
+.table-wrap {
+    flex: 1; overflow: auto;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    position: relative;
+    min-height: 0;
+}
+table { width: 100%; border-collapse: collapse; }
+thead th {
+    padding: 10px 12px;
+    background: var(--card2);
+    color: var(--text-muted);
+    font-size: 0.72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 1;
+    white-space: nowrap;
+}
+tbody td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text); font-size: 0.88rem;
+    vertical-align: middle;
+}
+tbody tr:hover td { background: rgba(99,102,241,0.04); }
+tbody tr:last-child td { border-bottom: none; }
+
+.qty-input, .rate-input {
+    width: 72px; padding: 4px 8px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text); font-weight: 600; font-size: 0.88rem;
+    text-align: right; outline: none; transition: all var(--t);
+}
+.qty-input:focus, .rate-input:focus { border-color: var(--primary); }
+
+.btn-del {
+    background: none; border: none;
+    color: var(--text-subtle); cursor: pointer;
+    padding: 3px; border-radius: 4px;
+    transition: all var(--t); display: flex; align-items: center;
+}
+.btn-del:hover { color: var(--danger); background: rgba(239,68,68,0.1); }
+.btn-del span { font-size: 18px; }
+
+/* Empty state */
+.empty-state {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: var(--text-subtle); gap: 12px;
+    pointer-events: none;
+}
+.empty-state span { font-size: 48px; opacity: 0.3; }
+.empty-state p { font-size: 0.88rem; font-weight: 500; }
+
+/* ── Right Panel ── */
+.right-panel {
+    display: flex; flex-direction: column;
+    gap: 10px; padding: 14px; overflow-y: auto;
+    background: var(--bg2);
+    min-height: 0;
+}
+
+/* Cards */
+.panel-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+}
+.card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+.card-title {
+    font-size: 0.72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 5px;
+}
+.card-title span { font-size: 16px; color: var(--primary-lt); }
+
+/* Customer */
+.cust-name-display {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem; font-weight: 800;
+    color: var(--primary-lt);
+    display: block; margin-bottom: 4px;
+}
+.cust-sub { font-size: 0.8rem; color: var(--text-muted); }
+
+.btn-xs {
+    padding: 4px 10px; border-radius: var(--radius-sm);
+    font-size: 11px; font-weight: 600;
+    border: 1px solid var(--border2);
+    background: transparent; color: var(--text-muted);
+    cursor: pointer; transition: all var(--t);
+}
+.btn-xs:hover { border-color: var(--primary); color: var(--primary-lt); }
+
+/* Summary */
+.summary-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 0; font-size: 0.88rem;
+}
+.summary-label { color: var(--text-muted); }
+.summary-val { font-weight: 600; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 8px 0; }
+.grand-row { font-size: 1.25rem !important; font-weight: 800 !important; }
+.grand-val { color: var(--warning) !important; font-family: 'Outfit', sans-serif; }
+
+/* Payments */
+.pay-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+}
+.pay-label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.85rem; color: var(--text-muted);
+}
+.pay-label span { font-size: 16px; }
+.pay-input {
+    width: 110px; padding: 7px 10px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text); font-weight: 700; font-size: 0.95rem;
+    text-align: right; outline: none; transition: all var(--t);
+}
+.pay-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,102,241,0.15); }
+.pay-input:disabled { opacity: 0.4; }
+
+/* Credit toggle */
+.credit-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0; border-top: 1px dashed var(--border2);
+    margin-top: 4px;
+}
+.credit-label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.85rem; font-weight: 700; color: var(--primary-lt);
+}
+.credit-label span { font-size: 16px; }
+
+/* Toggle switch */
+.switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 22px; transition: all 0.3s;
+}
+.slider::before {
+    content: ''; position: absolute;
+    height: 14px; width: 14px;
+    left: 3px; bottom: 3px;
+    background: var(--text-subtle); border-radius: 50%; transition: 0.3s;
+}
+.switch input:checked + .slider { background: rgba(99,102,241,0.3); border-color: var(--primary); }
+.switch input:checked + .slider::before { transform: translateX(22px); background: var(--primary-lt); }
+
+/* Balance/alert box */
+.balance-box {
+    padding: 8px 12px; border-radius: var(--radius-sm);
+    text-align: center; font-weight: 700; font-size: 0.82rem;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    transition: all var(--t);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+}
+.balance-box.pending { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.3); color: var(--danger); }
+.balance-box.ok { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.3); color: var(--success); }
+
+/* Checkout button */
+.btn-checkout {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, var(--success), #059669);
+    border: none; border-radius: var(--radius);
+    color: white; font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: all var(--t);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    box-shadow: 0 6px 20px rgba(16,185,129,0.2);
+}
+.btn-checkout span { font-size: 20px; }
+.btn-checkout:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(16,185,129,0.35); }
+.btn-checkout:active { transform: translateY(0); }
+.btn-checkout:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Loyalty points */
+.loyalty-input {
+    width: 72px; padding: 4px 8px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text); font-weight: 600; font-size: 0.88rem;
+    text-align: right; outline: none; transition: all var(--t);
+    display: inline-block;
+}
+.loyalty-input:focus { border-color: var(--warning); }
+
+/* ── Toast ── */
+#toast-container {
+    position: fixed; bottom: 24px; right: 24px;
+    display: flex; flex-direction: column; gap: 8px; z-index: 99999;
+}
+.toast {
+    padding: 12px 18px; border-radius: var(--radius);
+    font-size: 0.88rem; font-weight: 600;
+    color: white; min-width: 220px;
+    display: flex; align-items: center; gap: 10px;
+    animation: toast-in 0.3s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.toast.success { background: #065f46; border: 1px solid rgba(16,185,129,0.3); }
+.toast.error   { background: #7f1d1d; border: 1px solid rgba(239,68,68,0.3); }
+.toast.info    { background: #1e1b4b; border: 1px solid rgba(99,102,241,0.3); }
+.toast span { font-size: 20px; }
+@keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+/* ── Modal ── */
+.modal-backdrop {
+    position: fixed; inset: 0; z-index: 9000;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.modal-backdrop.open { opacity: 1; pointer-events: all; }
+.modal {
+    background: var(--card2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    width: 100%; max-width: 480px;
+    max-height: 80vh; overflow-y: auto;
+    transform: translateY(20px); transition: transform 0.2s;
+}
+.modal-backdrop.open .modal { transform: translateY(0); }
+.modal-title {
+    font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 800;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+}
+.modal-title span { color: var(--primary-lt); font-size: 22px; }
+.modal-close {
+    margin-left: auto; background: none; border: none;
+    color: var(--text-muted); cursor: pointer; font-size: 22px;
+    display: flex; align-items: center; transition: color var(--t);
+}
+.modal-close:hover { color: var(--danger); }
+.modal-input {
+    width: 100%; padding: 11px 14px;
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: var(--radius); color: var(--text);
+    font-size: 0.95rem; outline: none; margin-bottom: 12px;
+    transition: all var(--t);
+}
+.modal-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+.search-result-item {
+    padding: 10px 14px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: background var(--t);
+    border-bottom: 1px solid var(--border);
+}
+.search-result-item:hover { background: rgba(99,102,241,0.08); }
+.search-result-item:last-child { border-bottom: none; }
+.sri-name { font-weight: 600; font-size: 0.92rem; }
+.sri-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+.sri-badge {
+    display: inline-block; padding: 2px 7px;
+    border-radius: 99px; font-size: 0.72rem; font-weight: 700;
+    background: rgba(99,102,241,0.15); color: var(--primary-lt);
+}
+
+/* Success screen */
+#success-overlay {
+    position: fixed; inset: 0; z-index: 9500;
+    background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px;
+}
+.success-icon {
+    font-size: 72px; color: var(--success);
+    animation: pop-in 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+@keyframes pop-in { from{transform:scale(0)} to{transform:scale(1)} }
+.success-title { font-family:'Outfit',sans-serif; font-size:2rem; font-weight:800; color:var(--success); }
+.success-sub { color: var(--text-muted); font-size:1rem; }
+.success-actions { display:flex; gap:12px; margin-top:8px; }
+.btn-success-action {
+    padding: 12px 24px; border-radius: var(--radius);
+    font-size: 0.95rem; font-weight: 700; cursor: pointer;
+    transition: all var(--t); border: none;
+}
+.btn-success-action.primary { background: var(--primary); color: white; }
+.btn-success-action.secondary { background: var(--card); color: var(--text); border: 1px solid var(--border2); }
+.btn-success-action:hover { transform: translateY(-2px); }
+</style>
+</head>
+<body>
+
+<!-- ── Auth Overlay ── -->
+<div id="auth-overlay">
+    <div class="auth-card">
+        <div class="auth-logo"><span class="material-symbols-outlined">storefront</span></div>
+        <div class="auth-title">SMRITI</div>
+        <div class="auth-sub">Retail Billing Terminal — Sign in to continue</div>
+        <div class="auth-error" id="auth-error"></div>
+        <input type="text" class="auth-input" id="auth-user" placeholder="Username / Email" autocomplete="username">
+        <input type="password" class="auth-input" id="auth-pass" placeholder="Password" autocomplete="current-password">
+        <button class="auth-btn" id="auth-btn" onclick="doAuth()">
+            <span class="material-symbols-outlined" style="vertical-align:middle;margin-right:6px;font-size:18px;">login</span>Sign In
+        </button>
+    </div>
+</div>
+
+<!-- ── Main App ── -->
+<div id="app">
+
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="topbar-brand">
+            <span class="material-symbols-outlined">storefront</span>SMRITI
+        </div>
+        <div class="topbar-divider"></div>
+        <div class="topbar-cashier">
+            <div class="cashier-dot"></div>
+            Cashier: <b id="tb-cashier" style="color:var(--text);margin-left:3px;"></b>
+        </div>
+        <div class="topbar-divider"></div>
+        <div class="topbar-invoice">Invoice: <b id="tb-invoice">NEW BILL</b></div>
+        <div class="topbar-shortcuts">
+            <b>F2</b> Search &nbsp;|&nbsp; <b>F3</b> Customer &nbsp;|&nbsp; <b>F4</b> Hold &nbsp;|&nbsp; <b>F5</b> Recall &nbsp;|&nbsp; <b>F6</b> Pay &nbsp;|&nbsp; <b>F9</b> Submit
+        </div>
+        <div class="topbar-actions">
+            <button class="topbtn" onclick="toggleFullscreen()" title="Fullscreen">
+                <span class="material-symbols-outlined">fullscreen</span>
+            </button>
+            <button class="topbtn" onclick="holdBill()" title="F4: Hold Bill">
+                <span class="material-symbols-outlined">pause_circle</span> Hold
+            </button>
+            <button class="topbtn" onclick="openRecallModal()" title="F5: Recall">
+                <span class="material-symbols-outlined">history</span> Recall
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="main">
+
+        <!-- Left Panel -->
+        <div class="left-panel">
+
+            <!-- Barcode + Search -->
+            <div class="barcode-row">
+                <div class="barcode-wrap">
+                    <span class="material-symbols-outlined barcode-icon">barcode_scanner</span>
+                    <input type="text" id="barcode-input" placeholder="Scan Barcode or Type Item Code..." autocomplete="off">
+                </div>
+                <button class="btn-camera" onclick="openItemSearch()" title="F2: Search Items">
+                    <span class="material-symbols-outlined">search</span> F2 Search
+                </button>
+            </div>
+
+            <!-- Cart Table -->
+            <div class="table-wrap">
+                <div class="empty-state" id="empty-state">
+                    <span class="material-symbols-outlined">shopping_cart</span>
+                    <p>Cart is empty. Scan an item or press <b>F2</b> to search.</p>
+                </div>
+                <table id="cart-table" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th style="width:3%">#</th>
+                            <th style="width:32%">Item</th>
+                            <th style="width:8%">UOM</th>
+                            <th style="width:9%">Qty</th>
+                            <th style="width:12%">Rate (₹)</th>
+                            <th style="width:8%">GST%</th>
+                            <th style="width:13%">Amount (₹)</th>
+                            <th style="width:3%"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-body"></tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- Right Panel -->
+        <div class="right-panel">
+
+            <!-- Customer Card -->
+            <div class="panel-card">
+                <div class="card-header">
+                    <div class="card-title"><span class="material-symbols-outlined">person</span> Customer</div>
+                    <button class="btn-xs" onclick="openCustomerSearch()">F3: Lookup</button>
+                </div>
+                <span class="cust-name-display" id="cust-name">Walk-In Customer</span>
+                <div class="cust-sub">
+                    Loyalty Points:
+                    <input type="number" class="loyalty-input" id="loyalty-input" value="0" min="0"> pts
+                </div>
+            </div>
+
+            <!-- Totals Card -->
+            <div class="panel-card">
+                <div class="summary-row">
+                    <span class="summary-label">Total Items:</span>
+                    <span class="summary-val" id="total-items">0</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Subtotal (Net):</span>
+                    <span class="summary-val" id="subtotal-net">₹ 0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">GST Tax:</span>
+                    <span class="summary-val" id="subtotal-tax">₹ 0.00</span>
+                </div>
+                <hr class="divider">
+                <div class="summary-row grand-row">
+                    <span class="summary-label">GRAND TOTAL:</span>
+                    <span class="summary-val grand-val" id="grand-total">₹ 0.00</span>
+                </div>
+            </div>
+
+            <!-- Payments Card -->
+            <div class="panel-card">
+                <div class="card-header">
+                    <div class="card-title"><span class="material-symbols-outlined">payments</span> F6: Split Payments</div>
+                </div>
+                <div class="pay-row">
+                    <label class="pay-label"><span class="material-symbols-outlined">payments</span> Cash:</label>
+                    <input type="number" class="pay-input" id="pay-cash" value="0" min="0">
+                </div>
+                <div class="pay-row">
+                    <label class="pay-label"><span class="material-symbols-outlined">qr_code_2</span> UPI / QR:</label>
+                    <input type="number" class="pay-input" id="pay-upi" value="0" min="0">
+                </div>
+                <div class="pay-row">
+                    <label class="pay-label"><span class="material-symbols-outlined">credit_card</span> Card:</label>
+                    <input type="number" class="pay-input" id="pay-card" value="0" min="0">
+                </div>
+                <div class="credit-row">
+                    <div class="credit-label">
+                        <span class="material-symbols-outlined">handshake</span> On B2B Credit
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="pay-credit">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="balance-box" id="balance-box" style="margin-top:10px;">Pending: ₹ 0.00</div>
+                <button class="btn-checkout" id="btn-checkout" style="margin-top:10px;" onclick="checkout()">
+                    <span class="material-symbols-outlined">print</span> F9: Submit & Print
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ── Item Search Modal ── -->
+<div class="modal-backdrop" id="item-modal">
+    <div class="modal">
+        <div class="modal-title">
+            <span class="material-symbols-outlined">search</span> Search Items
+            <button class="modal-close" onclick="closeModal('item-modal')"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <input type="text" class="modal-input" id="item-search-input" placeholder="Type item name, code, or brand..." autocomplete="off">
+        <div id="item-results"></div>
+    </div>
+</div>
+
+<!-- ── Customer Search Modal ── -->
+<div class="modal-backdrop" id="cust-modal">
+    <div class="modal">
+        <div class="modal-title">
+            <span class="material-symbols-outlined">person_search</span> Customer Lookup
+            <button class="modal-close" onclick="closeModal('cust-modal')"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <input type="text" class="modal-input" id="cust-search-input" placeholder="Name or mobile number..." autocomplete="off">
+        <div id="cust-results"></div>
+    </div>
+</div>
+
+<!-- ── Recall Modal ── -->
+<div class="modal-backdrop" id="recall-modal">
+    <div class="modal">
+        <div class="modal-title">
+            <span class="material-symbols-outlined">history</span> Recall Held Bills
+            <button class="modal-close" onclick="closeModal('recall-modal')"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div id="recall-results"></div>
+    </div>
+</div>
+
+<!-- ── Success Overlay ── -->
+<div id="success-overlay">
+    <div class="success-icon">✅</div>
+    <div class="success-title">Invoice Submitted!</div>
+    <div class="success-sub" id="success-invoice-name"></div>
+    <div class="success-actions">
+        <button class="btn-success-action primary" onclick="printInvoice()">
+            <span class="material-symbols-outlined" style="vertical-align:middle;font-size:18px;margin-right:4px;">print</span>Print
+        </button>
+        <button class="btn-success-action secondary" onclick="newBill()">New Bill</button>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   SMRITI Billing Terminal — Standalone JS v2.0
+   Frappe REST API Backend Only. Zero Frappe Chrome.
+   ══════════════════════════════════════════════════ */
+
+// ── State ──
+const S = {
+    user: null,
+    csrf: null,
+    items: [],
+    customer: 'Walk-In Customer',
+    invoiceName: null,
+    lastPrintUrl: null,
+};
+
+// ── CSRF + API ──
+function getCsrf() {
+    return fetch('/api/method/frappe.auth.get_logged_user', { credentials: 'include' })
+        .then(r => r.json())
+        .then(d => {
+            // Get CSRF from cookie
+            const m = document.cookie.match(/X-Frappe-CSRF-Token=([^;]+)/);
+            if (m) S.csrf = decodeURIComponent(m[1]);
+            return d;
+        });
+}
+
+function api(method, params = {}) {
+    // Read CSRF from cookie fresh each call
+    const csrfMatch = document.cookie.match(/(?:^|;\s*)X-Frappe-CSRF-Token=([^;]+)/);
+    const csrf = csrfMatch ? decodeURIComponent(csrfMatch[1]) : (S.csrf || '');
+
+    return fetch(`/api/method/${method}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Frappe-CSRF-Token': csrf,
+        },
+        body: JSON.stringify(params),
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.exc) throw new Error(d._error_message || d.exc);
+        return d.message;
+    });
+}
+
+// ── Auth ──
+async function checkAuth() {
+    try {
+        const r = await fetch('/api/method/frappe.auth.get_logged_user', { credentials: 'include' });
+        const d = await r.json();
+        if (d.message && d.message !== 'Guest') {
+            S.user = d.message;
+            showApp();
+        }
+    } catch (e) {}
+}
+
+async function doAuth() {
+    const usr = document.getElementById('auth-user').value.trim();
+    const pwd = document.getElementById('auth-pass').value;
+    const errEl = document.getElementById('auth-error');
+    const btn = document.getElementById('auth-btn');
+
+    if (!usr || !pwd) {
+        errEl.style.display = 'block';
+        errEl.textContent = 'Please enter your credentials.';
+        return;
+    }
+
+    errEl.style.display = 'none';
+    btn.textContent = 'Signing in…';
+    btn.disabled = true;
+
+    try {
+        const r = await fetch('/api/method/login', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': 'fetch' },
+            body: JSON.stringify({ usr, pwd }),
+        });
+        const d = await r.json();
+
+        if (d.message === 'Logged In') {
+            S.user = usr;
+            showApp();
+        } else {
+            errEl.style.display = 'block';
+            errEl.textContent = 'Invalid credentials. Please try again.';
+        }
+    } catch (e) {
+        errEl.style.display = 'block';
+        errEl.textContent = 'Connection error. Please try again.';
+    }
+
+    btn.textContent = 'Sign In';
+    btn.disabled = false;
+}
+
+function showApp() {
+    document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('tb-cashier').textContent = S.user;
+    document.getElementById('barcode-input').focus();
+}
+
+// ── Cart ──
+function addItem(item) {
+    const existing = S.items.find(i => i.item_code === item.item_code);
+    if (existing) {
+        existing.qty += 1;
+    } else {
+        S.items.push({ ...item, qty: 1, discount_percentage: 0 });
+    }
+    renderCart();
+    toast(`Added: ${item.item_name}`, 'success');
+}
+
+function renderCart() {
+    const body = document.getElementById('cart-body');
+    const emptyState = document.getElementById('empty-state');
+    const tableEl = document.getElementById('cart-table');
+
+    body.innerHTML = '';
+
+    if (S.items.length === 0) {
+        emptyState.style.display = 'flex';
+        tableEl.style.display = 'none';
+        updateTotals();
+        return;
+    }
+
+    emptyState.style.display = 'none';
+    tableEl.style.display = 'table';
+
+    S.items.forEach((item, idx) => {
+        const taxAmt = (item.rate * item.qty * (item.gst_percentage || 0)) / 100;
+        const baseAmt = item.rate * item.qty;
+        const total = baseAmt + taxAmt;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="color:var(--text-subtle)">${idx + 1}</td>
+            <td>
+                <div style="font-weight:600;font-size:0.88rem;">${item.item_name}</div>
+                <div style="font-size:0.75rem;color:var(--text-subtle)">${item.item_code}</div>
+            </td>
+            <td style="color:var(--text-muted)">${item.stock_uom || 'Nos'}</td>
+            <td>
+                <input type="number" class="qty-input" value="${item.qty}" min="0.01" step="0.01"
+                    onchange="updateQty(${idx}, this.value)">
+            </td>
+            <td>
+                <input type="number" class="rate-input" value="${item.rate.toFixed(2)}" min="0" step="0.01"
+                    onchange="updateRate(${idx}, this.value)">
+            </td>
+            <td style="text-align:center;color:var(--text-muted)">${item.gst_percentage || 0}%</td>
+            <td style="font-weight:700;color:var(--text)">₹ ${total.toFixed(2)}</td>
+            <td>
+                <button class="btn-del" onclick="removeItem(${idx})" title="Remove">
+                    <span class="material-symbols-outlined">delete</span>
+                </button>
+            </td>
+        `;
+        body.appendChild(tr);
+    });
+
+    updateTotals();
+}
+
+function updateQty(idx, val) {
+    S.items[idx].qty = parseFloat(val) || 1;
+    renderCart();
+}
+
+function updateRate(idx, val) {
+    S.items[idx].rate = parseFloat(val) || 0;
+    renderCart();
+}
+
+function removeItem(idx) {
+    S.items.splice(idx, 1);
+    renderCart();
+}
+
+function updateTotals() {
+    let netTotal = 0, taxTotal = 0;
+
+    S.items.forEach(item => {
+        const base = item.rate * item.qty;
+        const tax = base * (item.gst_percentage || 0) / 100;
+        netTotal += base;
+        taxTotal += tax;
+    });
+
+    const grandTotal = netTotal + taxTotal;
+
+    // Payment deduction: loyalty
+    const loyaltyPoints = parseFloat(document.getElementById('loyalty-input').value) || 0;
+    const loyaltyDeduction = loyaltyPoints; // 1 pt = 1 INR (simplified, can be configured)
+
+    const totalPaid = getPaidAmount();
+    const pending = grandTotal - loyaltyDeduction - totalPaid;
+
+    document.getElementById('total-items').textContent = S.items.reduce((a, i) => a + i.qty, 0).toFixed(0);
+    document.getElementById('subtotal-net').textContent = `₹ ${netTotal.toFixed(2)}`;
+    document.getElementById('subtotal-tax').textContent = `₹ ${taxTotal.toFixed(2)}`;
+    document.getElementById('grand-total').textContent = `₹ ${grandTotal.toFixed(2)}`;
+
+    const balBox = document.getElementById('balance-box');
+    if (pending > 0.01) {
+        balBox.className = 'balance-box pending';
+        balBox.textContent = `Pending: ₹ ${pending.toFixed(2)}`;
+    } else if (pending < -0.01) {
+        balBox.className = 'balance-box ok';
+        balBox.textContent = `Change: ₹ ${Math.abs(pending).toFixed(2)}`;
+    } else {
+        balBox.className = 'balance-box ok';
+        balBox.textContent = '✔ Payment Balanced';
+    }
+}
+
+function getPaidAmount() {
+    return (parseFloat(document.getElementById('pay-cash').value) || 0)
+         + (parseFloat(document.getElementById('pay-upi').value) || 0)
+         + (parseFloat(document.getElementById('pay-card').value) || 0);
+}
+
+// ── Barcode ──
+document.getElementById('barcode-input').addEventListener('keypress', async function(e) {
+    if (e.key !== 'Enter') return;
+    const val = this.value.trim();
+    if (!val) return;
+    this.value = '';
+
+    try {
+        const item = await api('smriti_retail_os.billing_api.add_item_by_barcode', {
+            barcode: val, price_list: 'Standard Selling'
+        });
+        if (item) addItem(item);
+        else toast(`Barcode not found: ${val}`, 'error');
+    } catch (e) {
+        toast(`Error: ${e.message}`, 'error');
+    }
+});
+
+// ── Item Search Modal ──
+let itemSearchTimer = null;
+function openItemSearch() {
+    openModal('item-modal');
+    setTimeout(() => document.getElementById('item-search-input').focus(), 100);
+}
+document.getElementById('item-search-input').addEventListener('input', function() {
+    clearTimeout(itemSearchTimer);
+    const q = this.value.trim();
+    if (!q) { document.getElementById('item-results').innerHTML = ''; return; }
+    itemSearchTimer = setTimeout(() => searchItems(q), 300);
+});
+
+async function searchItems(q) {
+    const resultsEl = document.getElementById('item-results');
+    resultsEl.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">Searching…</div>';
+    try {
+        const items = await api('smriti_retail_os.billing_api.search_items', { query: q });
+        if (!items || items.length === 0) {
+            resultsEl.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">No items found</div>';
+            return;
+        }
+        resultsEl.innerHTML = items.map((it, idx) => `
+            <div class="search-result-item" onclick="selectSearchItem(${idx})">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                    <div>
+                        <div class="sri-name">${it.item_name}</div>
+                        <div class="sri-sub">${it.item_code} · ${it.stock_uom || 'Nos'}</div>
+                    </div>
+                    <div style="text-align:right;flex-shrink:0;">
+                        <div style="font-weight:700;color:var(--text)">₹ ${(it.rate||0).toFixed(2)}</div>
+                        ${it.gst_percentage ? `<span class="sri-badge">GST ${it.gst_percentage}%</span>` : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        // Store for later reference
+        window._itemResults = items;
+    } catch (e) {
+        resultsEl.innerHTML = `<div style="color:var(--danger);padding:12px;">${e.message}</div>`;
+    }
+}
+
+function selectSearchItem(idx) {
+    const item = window._itemResults[idx];
+    addItem(item);
+    closeModal('item-modal');
+    document.getElementById('item-search-input').value = '';
+    document.getElementById('item-results').innerHTML = '';
+    document.getElementById('barcode-input').focus();
+}
+
+// ── Customer Search ──
+let custTimer = null;
+function openCustomerSearch() {
+    openModal('cust-modal');
+    setTimeout(() => document.getElementById('cust-search-input').focus(), 100);
+}
+document.getElementById('cust-search-input').addEventListener('input', function() {
+    clearTimeout(custTimer);
+    const q = this.value.trim();
+    if (!q) { document.getElementById('cust-results').innerHTML = ''; return; }
+    custTimer = setTimeout(() => searchCustomers(q), 300);
+});
+
+async function searchCustomers(q) {
+    const el = document.getElementById('cust-results');
+    el.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">Searching…</div>';
+    try {
+        const custs = await api('smriti_retail_os.billing_api.search_customer', { query: q });
+        if (!custs || custs.length === 0) {
+            el.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">No customers found</div>';
+            return;
+        }
+        el.innerHTML = custs.map((c, i) => `
+            <div class="search-result-item" onclick="selectCustomer(${i})">
+                <div class="sri-name">${c.customer_name}</div>
+                <div class="sri-sub">${c.mobile_no || c.primary_mobile_no || ''} ${c.loyalty_program ? '· ' + c.loyalty_program : ''}</div>
+            </div>
+        `).join('');
+        window._custResults = custs;
+    } catch (e) {
+        el.innerHTML = `<div style="color:var(--danger);padding:12px;">${e.message}</div>`;
+    }
+}
+
+function selectCustomer(idx) {
+    const c = window._custResults[idx];
+    S.customer = c.customer_name || c.name;
+    document.getElementById('cust-name').textContent = S.customer;
+    closeModal('cust-modal');
+    document.getElementById('cust-search-input').value = '';
+    document.getElementById('cust-results').innerHTML = '';
+    toast(`Customer: ${S.customer}`, 'info');
+}
+
+// ── Hold Bill ──
+async function holdBill() {
+    if (S.items.length === 0) { toast('Cart is empty', 'error'); return; }
+    try {
+        const res = await api('smriti_retail_os.billing_api.hold_bill', {
+            cashier: S.user,
+            customer: S.customer,
+            items: JSON.stringify(S.items),
+        });
+        toast(`Bill held: ${res.invoice_name}`, 'success');
+        newBill();
+    } catch (e) {
+        toast(`Hold failed: ${e.message}`, 'error');
+    }
+}
+
+// ── Recall ──
+async function openRecallModal() {
+    openModal('recall-modal');
+    const el = document.getElementById('recall-results');
+    el.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">Loading…</div>';
+    try {
+        const held = await api('smriti_retail_os.billing_api.recall_bill', { cashier: S.user });
+        if (!held || held.length === 0) {
+            el.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">No held bills found</div>';
+            return;
+        }
+        el.innerHTML = held.map((h, i) => `
+            <div class="search-result-item" onclick="recallBill('${h.name}')">
+                <div style="display:flex;justify-content:space-between;">
+                    <div>
+                        <div class="sri-name">${h.name}</div>
+                        <div class="sri-sub">${h.customer} · ${h.posting_date}</div>
+                    </div>
+                    <div style="font-weight:700;color:var(--warning)">₹ ${(h.grand_total||0).toFixed(2)}</div>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        el.innerHTML = `<div style="color:var(--danger);padding:12px;">${e.message}</div>`;
+    }
+}
+
+async function recallBill(invoiceName) {
+    try {
+        const inv = await api('smriti_retail_os.billing_api.load_held_invoice', { invoice_name: invoiceName });
+        S.invoiceName = invoiceName;
+        S.customer = inv.customer;
+        S.items = inv.items;
+        document.getElementById('cust-name').textContent = S.customer;
+        document.getElementById('tb-invoice').textContent = invoiceName;
+        renderCart();
+        closeModal('recall-modal');
+        toast(`Recalled: ${invoiceName}`, 'success');
+    } catch (e) {
+        toast(`Recall failed: ${e.message}`, 'error');
+    }
+}
+
+// ── Checkout ──
+async function checkout() {
+    if (S.items.length === 0) { toast('Cart is empty', 'error'); return; }
+
+    const onCredit = document.getElementById('pay-credit').checked ? 1 : 0;
+    const payments = [];
+    const cash = parseFloat(document.getElementById('pay-cash').value) || 0;
+    const upi  = parseFloat(document.getElementById('pay-upi').value)  || 0;
+    const card = parseFloat(document.getElementById('pay-card').value) || 0;
+
+    if (!onCredit) {
+        if (cash > 0) payments.push({ mode_of_payment: 'Cash', amount: cash });
+        if (upi  > 0) payments.push({ mode_of_payment: 'UPI', amount: upi });
+        if (card > 0) payments.push({ mode_of_payment: 'Credit Card', amount: card });
+
+        const grandTotal = parseFloat(document.getElementById('grand-total').textContent.replace('₹','').trim()) || 0;
+        const totalPaid = cash + upi + card;
+        if (!onCredit && payments.length === 0 && grandTotal > 0) {
+            toast('Please enter payment amount', 'error');
+            document.getElementById('pay-cash').focus();
+            return;
+        }
+    }
+
+    const btn = document.getElementById('btn-checkout');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 1s linear infinite">progress_activity</span> Submitting…';
+
+    try {
+        const res = await api('smriti_retail_os.billing_api.submit_bill', {
+            cashier: S.user,
+            customer: S.customer,
+            items: JSON.stringify(S.items),
+            payments: JSON.stringify(payments),
+            loyalty_points: document.getElementById('loyalty-input').value || 0,
+            invoice_name: S.invoiceName || null,
+            on_credit: onCredit,
+        });
+
+        S.lastPrintUrl = res.print_url;
+        document.getElementById('success-invoice-name').textContent = `Invoice: ${res.invoice} · ₹ ${res.grand_total.toFixed(2)}`;
+
+        const overlay = document.getElementById('success-overlay');
+        overlay.style.display = 'flex';
+
+    } catch (e) {
+        toast(`Submission failed: ${e.message}`, 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined">print</span> F9: Submit & Print';
+}
+
+function printInvoice() {
+    if (S.lastPrintUrl) window.open(S.lastPrintUrl, '_blank');
+    newBill();
+}
+
+function newBill() {
+    S.items = [];
+    S.customer = 'Walk-In Customer';
+    S.invoiceName = null;
+    S.lastPrintUrl = null;
+    document.getElementById('cust-name').textContent = 'Walk-In Customer';
+    document.getElementById('tb-invoice').textContent = 'NEW BILL';
+    document.getElementById('pay-cash').value = 0;
+    document.getElementById('pay-upi').value  = 0;
+    document.getElementById('pay-card').value = 0;
+    document.getElementById('loyalty-input').value = 0;
+    document.getElementById('pay-credit').checked = false;
+    document.getElementById('pay-cash').disabled = false;
+    document.getElementById('pay-upi').disabled  = false;
+    document.getElementById('pay-card').disabled = false;
+    document.getElementById('success-overlay').style.display = 'none';
+    renderCart();
+    document.getElementById('barcode-input').focus();
+}
+
+// ── Credit toggle ──
+document.getElementById('pay-credit').addEventListener('change', function() {
+    const on = this.checked;
+    ['pay-cash','pay-upi','pay-card'].forEach(id => {
+        document.getElementById(id).disabled = on;
+        if (on) document.getElementById(id).value = 0;
+    });
+    updateTotals();
+});
+
+// ── Payment input listeners ──
+['pay-cash','pay-upi','pay-card','loyalty-input'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateTotals);
+});
+
+// ── Keyboard shortcuts ──
+document.addEventListener('keydown', function(e) {
+    if (e.target.tagName === 'INPUT' && !['F2','F3','F4','F5','F6','F9'].some(k => e.key === k)) return;
+
+    if (e.key === 'F2') { e.preventDefault(); openItemSearch(); }
+    else if (e.key === 'F3') { e.preventDefault(); openCustomerSearch(); }
+    else if (e.key === 'F4') { e.preventDefault(); holdBill(); }
+    else if (e.key === 'F5') { e.preventDefault(); openRecallModal(); }
+    else if (e.key === 'F6') { e.preventDefault(); document.getElementById('pay-cash').focus(); }
+    else if (e.key === 'F9') { e.preventDefault(); checkout(); }
+    else if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
+        document.getElementById('barcode-input').focus();
+    }
+});
+
+// ── Modal helpers ──
+function openModal(id) {
+    document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+    document.getElementById('barcode-input').focus();
+}
+
+// ── Fullscreen ──
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+        document.exitFullscreen();
+    }
+}
+
+// ── Toast ──
+function toast(msg, type = 'info') {
+    const icons = { success: 'check_circle', error: 'error', info: 'info' };
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.innerHTML = `<span class="material-symbols-outlined">${icons[type]||'info'}</span>${msg}`;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+}
+
+// ── Spin animation ──
+const spinStyle = document.createElement('style');
+spinStyle.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+document.head.appendChild(spinStyle);
+
+// ── Auth check on load ──
+document.getElementById('auth-pass').addEventListener('keypress', e => { if (e.key === 'Enter') doAuth(); });
+checkAuth();
+</script>
+</body>
+</html>

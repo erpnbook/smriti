@@ -119,8 +119,8 @@ class SmritiDeskPage {
                         <div class="action-name" style="margin-bottom: 2px;">Retail Billing</div>
                         <div class="action-desc" style="margin-bottom: 12px; flex: 1;">Launch checkout terminal and scan barcoded items.</div>
                         <div class="action-buttons" style="display: flex; gap: 8px; width: 100%; margin-top: auto;">
-                            <button class="btn btn-primary btn-xs btn-desk-billing-std" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px;">🖥️ Standard</button>
-                            <button class="btn btn-default btn-xs btn-desk-billing-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/app/smriti-billing')">📺 Popout</button>
+                            <button class="btn btn-primary btn-xs btn-desk-billing-std" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px;">🖥️ Open Terminal</button>
+                            <button class="btn btn-default btn-xs btn-desk-billing-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/billing')">📺 Popout</button>
                         </div>
                     </div>
 
@@ -261,7 +261,7 @@ class SmritiDeskPage {
         // Bind standard action buttons
         $('#smriti-desk-root .btn-desk-billing-std').on('click', (e) => {
             e.stopPropagation();
-            frappe.set_route('smriti-billing');
+            window.location.href = '/billing'; // Standalone terminal
         });
         $('#smriti-desk-root .btn-desk-shift-std').on('click', (e) => {
             e.stopPropagation();
