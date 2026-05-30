@@ -300,19 +300,40 @@ def import_item_master(rows_json):
 #  HELPERS
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _safe_set(doc, fieldname, value):
+    """Set a field on a Frappe doc, silently skipping if the field doesn't exist.
+    Prevents AttributeError when custom fields are missing on fresh installs.
+    """
+    try:
+        doc.set(fieldname, value)
+    except Exception:
+        pass
+
+
 def _ensure_master_value(doctype_name, value):
-    """Checks if a value exists in a Master DocType, and inserts it if not."""
+    """Checks if a value exists in a Master DocType, and inserts it if not.
+    Silently skips if the DocType itself is not installed (fresh installs).
+    """
     val_clean = str(value or "").strip()
     if not val_clean:
         return ""
-    if not frappe.db.exists(doctype_name, val_clean):
-        try:
+    try:
+        # Guard: DocType may not exist on fresh installations
+        if not frappe.db.exists("DocType", doctype_name):
+            return val_clean
+        if not frappe.db.exists(doctype_name, val_clean):
             doc = frappe.new_doc(doctype_name)
-            doc.attribute_value = val_clean
+            # Try common field names used in SMRITI master doctypes
+            for field in ("attribute_value", "name", doctype_name.lower().replace(" ", "_")):
+                try:
+                    doc.set(field, val_clean)
+                    break
+                except Exception:
+                    pass
             doc.insert(ignore_permissions=True)
             frappe.db.commit()
-        except Exception as e:
-            frappe.log_error(f"Failed to auto-create {val_clean} in {doctype_name}: {str(e)}")
+    except Exception as e:
+        frappe.log_error(f"Failed to auto-create {val_clean} in {doctype_name}: {str(e)}")
     return val_clean
 
 
@@ -336,17 +357,21 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
     item.stock_uom              = "Nos"
     item.is_stock_item          = 1
     item.has_variants           = 1
-    item.custom_is_retail_item  = 1
-    item.custom_mrp             = mrp
-    item.valuation_rate         = cost
-    item.custom_gst_percentage  = gst_pct
-    item.custom_gender          = _ensure_master_value("SMRITI Gender", gender)
-    item.custom_upper_material  = _ensure_master_value("SMRITI Upper Material", upper_material)
-    item.custom_outsole         = _ensure_master_value("SMRITI Outsole", outsole)
-    item.custom_heel_type       = _ensure_master_value("SMRITI Heel Type", heel_type)
-    item.custom_purchase_class  = _ensure_master_value("SMRITI Purchase Class", purchase_class)
-    item.custom_merchandise_category = _ensure_master_value("SMRITI Merchandise Category", merch_cat)
-    item.custom_sub_category    = _ensure_master_value("SMRITI Sub Category", sub_cat)
+
+    # Core fields — safe even on fresh installs
+    _safe_set(item, "custom_is_retail_item", 1)
+    _safe_set(item, "custom_mrp", mrp)
+    _safe_set(item, "valuation_rate", cost)
+    _safe_set(item, "custom_gst_percentage", gst_pct)
+
+    # Custom SMRITI classification fields — silently skip if field missing
+    _safe_set(item, "custom_gender",               _ensure_master_value("SMRITI Gender", gender))
+    _safe_set(item, "custom_upper_material",        _ensure_master_value("SMRITI Upper Material", upper_material))
+    _safe_set(item, "custom_outsole",               _ensure_master_value("SMRITI Outsole", outsole))
+    _safe_set(item, "custom_heel_type",             _ensure_master_value("SMRITI Heel Type", heel_type))
+    _safe_set(item, "custom_purchase_class",        _ensure_master_value("SMRITI Purchase Class", purchase_class))
+    _safe_set(item, "custom_merchandise_category",  _ensure_master_value("SMRITI Merchandise Category", merch_cat))
+    _safe_set(item, "custom_sub_category",          _ensure_master_value("SMRITI Sub Category", sub_cat))
 
     if brand:
         item.brand = brand
