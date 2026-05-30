@@ -99,8 +99,36 @@ def quick_create_customer(customer_name, mobile_no):
     cust = frappe.new_doc("Customer")
     cust.customer_name = customer_name
     cust.mobile_no = mobile_no
-    cust.customer_group = "Individual"
-    cust.territory = "All Territories"
+    
+    # Robust Customer Group auto-resolution
+    customer_group = "Individual"
+    if not frappe.db.exists("Customer Group", customer_group):
+        if frappe.db.exists("Customer Group", "All Customer Groups"):
+            customer_group = "All Customer Groups"
+        else:
+            existing = frappe.db.get_all("Customer Group", order_by="creation asc", pluck="name", limit=1)
+            if existing:
+                customer_group = existing[0]
+            else:
+                cg = frappe.new_doc("Customer Group")
+                cg.customer_group_name = "Individual"
+                cg.insert(ignore_permissions=True)
+                customer_group = cg.name
+    cust.customer_group = customer_group
+
+    # Robust Territory auto-resolution
+    territory = "All Territories"
+    if not frappe.db.exists("Territory", territory):
+        existing = frappe.db.get_all("Territory", order_by="creation asc", pluck="name", limit=1)
+        if existing:
+            territory = existing[0]
+        else:
+            t = frappe.new_doc("Territory")
+            t.territory_name = "All Territories"
+            t.insert(ignore_permissions=True)
+            territory = t.name
+    cust.territory = territory
+    
     cust.customer_type = "Individual"
     cust.insert(ignore_permissions=True)
     
@@ -122,7 +150,23 @@ def quick_create_supplier(supplier_name, mobile_no=None):
 
     supp = frappe.new_doc("Supplier")
     supp.supplier_name = supplier_name
-    supp.supplier_group = "Local"
+    
+    # Robust Supplier Group auto-resolution
+    supplier_group = "Local"
+    if not frappe.db.exists("Supplier Group", supplier_group):
+        if frappe.db.exists("Supplier Group", "All Supplier Groups"):
+            supplier_group = "All Supplier Groups"
+        else:
+            existing_groups = frappe.db.get_all("Supplier Group", order_by="creation asc", pluck="name", limit=1)
+            if existing_groups:
+                supplier_group = existing_groups[0]
+            else:
+                sg = frappe.new_doc("Supplier Group")
+                sg.supplier_group_name = "Local"
+                sg.insert(ignore_permissions=True)
+                supplier_group = sg.name
+    supp.supplier_group = supplier_group
+    
     supp.supplier_type = "Individual"
     if mobile_no:
         supp.mobile_no = mobile_no
@@ -134,6 +178,7 @@ def quick_create_supplier(supplier_name, mobile_no=None):
         "name": supp.name,
         "supplier_name": supp.supplier_name
     }
+
 
 @frappe.whitelist()
 def save_supplier_on_fly(supplier_name, supplier_group, supplier_type, name=None):
