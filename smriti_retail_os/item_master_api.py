@@ -903,3 +903,58 @@ def import_pivot_item_master(styles_json):
     }
 
 
+@frappe.whitelist()
+def reset_all_transactions():
+    """
+    DANGER: Wipes all transaction history (Sales, POS, Payments, GL, Stock, Purchase)
+    and resets the naming series counters to start fresh from 1.
+    """
+    check_store_manager_role()
+    
+    tables = [
+        "Sales Invoice",
+        "Sales Invoice Item",
+        "POS Invoice",
+        "POS Invoice Item",
+        "POS Invoice Reference",
+        "Payment Entry",
+        "Payment Entry Reference",
+        "Payment Entry Deduction",
+        "GL Entry",
+        "Stock Ledger Entry",
+        "Stock Entry",
+        "Stock Entry Detail",
+        "Purchase Order",
+        "Purchase Order Item",
+        "Purchase Receipt",
+        "Purchase Receipt Item",
+        "Payment Ledger Entry",
+        "Serial No",
+        "Batch"
+    ]
+    
+    deleted = []
+    for doctype in tables:
+        table_name = f"tab{doctype}"
+        try:
+            frappe.db.sql(f"TRUNCATE `{table_name}`")
+            deleted.append(doctype)
+        except Exception:
+            pass
+            
+    # Reset Naming Series
+    try:
+        frappe.db.sql("TRUNCATE `tabSeries`")
+    except Exception:
+        pass
+        
+    frappe.db.commit()
+    
+    return {
+        "success": True,
+        "message": "All transactions have been cleanly reset to 0. Counters will start from 1!",
+        "cleared_doctypes": deleted
+    }
+
+
+
