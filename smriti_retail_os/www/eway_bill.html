@@ -635,7 +635,7 @@ async function generateEWayBill() {
     
     try {
         toast('Connecting to GST e-Way Bill System...', 'info');
-        const res = await api('smriti_retail_os.smriti_retail_os.billing_api.generate_mock_eway_bill', {
+        const res = await api('smriti_retail_os.billing_api.generate_mock_eway_bill', {
             invoice_name: activeInvoiceDoc.name,
             vehicle_no: vehicle,
             distance: distance,

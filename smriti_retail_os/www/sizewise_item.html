@@ -731,7 +731,7 @@ async function lookupStyle(articleNo) {
     if (!articleNo.trim()) return;
     try {
         toast('Fetching style info...', 'info');
-        const res = await api('smriti_retail_os.smriti_retail_os.item_master_api.get_style_details', {
+        const res = await api('smriti_retail_os.item_master_api.get_style_details', {
             article_no: articleNo.trim()
         });
 
@@ -796,7 +796,7 @@ async function triggerDeleteVariant(variantCode, size) {
     
     try {
         toast(`Purging variant ${variantCode} from database...`, 'info');
-        const res = await api('smriti_retail_os.smriti_retail_os.item_master_api.delete_size_variant', {
+        const res = await api('smriti_retail_os.item_master_api.delete_size_variant', {
             variant_code: variantCode
         });
         
@@ -864,7 +864,7 @@ async function saveStyleMaster() {
 
     try {
         toast('Saving Style & Variant Configurations...', 'info');
-        const res = await api('smriti_retail_os.smriti_retail_os.item_master_api.create_style_with_variants', {
+        const res = await api('smriti_retail_os.item_master_api.create_style_with_variants', {
             base_details: JSON.stringify(base_details),
             sizes_config: JSON.stringify(sizes_config)
         });
@@ -1248,7 +1248,7 @@ async function executePivotImport() {
         progressBar.style.width = '20%';
         progressDetail.textContent = 'Sending to server...';
 
-        const res = await api('smriti_retail_os.smriti_retail_os.item_master_api.import_pivot_item_master', {
+        const res = await api('smriti_retail_os.item_master_api.import_pivot_item_master', {
             styles_json: JSON.stringify(stylesPayload)
         });
 
