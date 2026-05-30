@@ -76,23 +76,25 @@ def add_item_by_barcode(barcode, price_list="Standard Selling"):
 
 
 @frappe.whitelist()
-def search_customer(query):
+def search_customer(query=None):
     """
     Searches for a customer by name or mobile number.
+    Returns the first 20 active customers if query is empty.
     """
-    if not query:
-        return []
+    filters = {"disabled": 0}
+    or_filters = None
+    if query:
+        or_filters = {
+            "customer_name": ["like", f"%{query}%"],
+            "mobile_no": ["like", f"%{query}%"]
+        }
 
     res = frappe.db.get_all(
         "Customer",
-        filters={
-            "disabled": 0
-        },
-        or_filters={
-            "customer_name": ["like", f"%{query}%"],
-            "mobile_no": ["like", f"%{query}%"]
-        },
-        fields=["name", "customer_name", "mobile_no", "loyalty_program"]
+        filters=filters,
+        or_filters=or_filters,
+        fields=["name", "customer_name", "mobile_no", "loyalty_program", "customer_group", "customer_type"],
+        limit=20
     )
     
     # Map mobile_no to primary_mobile_no for frontend compatibility

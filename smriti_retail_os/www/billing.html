@@ -745,13 +745,54 @@ tbody tr:last-child td { border-bottom: none; }
 
 <!-- ── Customer Search Modal ── -->
 <div class="modal-backdrop" id="cust-modal">
-    <div class="modal">
-        <div class="modal-title">
+    <div class="modal" style="max-width: 450px;">
+        <div class="modal-title" id="cust-modal-title">
             <span class="material-symbols-outlined">person_search</span> Customer Lookup
             <button class="modal-close" onclick="closeModal('cust-modal')"><span class="material-symbols-outlined">close</span></button>
         </div>
-        <input type="text" class="modal-input" id="cust-search-input" placeholder="Name or mobile number..." autocomplete="off">
-        <div id="cust-results"></div>
+        
+        <!-- Search View -->
+        <div id="cust-search-view">
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <input type="text" class="modal-input" id="cust-search-input" placeholder="Name or mobile number..." autocomplete="off" style="margin-bottom: 0; flex: 1;">
+                <button class="btn-action primary" onclick="showCustForm()" style="padding: 0 14px; border-radius: var(--radius); border: none; background: var(--primary); color: white;">
+                    <span class="material-symbols-outlined">add</span>
+                </button>
+            </div>
+            <div id="cust-results" style="max-height: 250px; overflow-y: auto;"></div>
+        </div>
+
+        <!-- Form View (Create / Edit) -->
+        <div id="cust-form-view" style="display: none; flex-direction: column; gap: 12px;">
+            <input type="hidden" id="cust-form-id">
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 5px;">
+                <label class="form-label" style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Customer Name *</label>
+                <input type="text" class="form-input" id="cust-form-name" placeholder="Enter customer name" style="width: 100%; padding: 10px; background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text);">
+            </div>
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 5px;">
+                <label class="form-label" style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Mobile Number</label>
+                <input type="text" class="form-input" id="cust-form-mobile" placeholder="Enter mobile number" style="width: 100%; padding: 10px; background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text);">
+            </div>
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 5px;">
+                <label class="form-label" style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Customer Group *</label>
+                <select class="form-input" id="cust-form-group" style="width: 100%; padding: 10px; background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text);">
+                    <option value="Individual">Individual</option>
+                    <option value="All Customer Groups">All Customer Groups</option>
+                    <option value="Commercial">Commercial</option>
+                </select>
+            </div>
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 5px;">
+                <label class="form-label" style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Customer Type</label>
+                <select class="form-input" id="cust-form-type" style="width: 100%; padding: 10px; background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text);">
+                    <option value="Individual">Individual</option>
+                    <option value="Company">Company</option>
+                </select>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
+                <button class="topbtn" onclick="hideCustForm()">Cancel</button>
+                <button class="topbtn primary" id="btn-save-cust" onclick="saveCustOnFly()">Save Customer</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1086,13 +1127,16 @@ function selectSearchItem(idx) {
 // ── Customer Search ──
 let custTimer = null;
 function openCustomerSearch() {
+    hideCustForm();
+    document.getElementById('cust-search-input').value = '';
+    document.getElementById('cust-results').innerHTML = '';
+    searchCustomers('');
     openModal('cust-modal');
     setTimeout(() => document.getElementById('cust-search-input').focus(), 100);
 }
 document.getElementById('cust-search-input').addEventListener('input', function() {
     clearTimeout(custTimer);
     const q = this.value.trim();
-    if (!q) { document.getElementById('cust-results').innerHTML = ''; return; }
     custTimer = setTimeout(() => searchCustomers(q), 300);
 });
 
@@ -1106,9 +1150,14 @@ async function searchCustomers(q) {
             return;
         }
         el.innerHTML = custs.map((c, i) => `
-            <div class="search-result-item" onclick="selectCustomer(${i})">
-                <div class="sri-name">${c.customer_name}</div>
-                <div class="sri-sub">${c.mobile_no || c.primary_mobile_no || ''} ${c.loyalty_program ? '· ' + c.loyalty_program : ''}</div>
+            <div class="search-result-item" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border);">
+                <div onclick="selectCustomer(${i})" style="flex: 1; padding: 4px 0;">
+                    <div class="sri-name">${c.customer_name}</div>
+                    <div class="sri-sub">${c.mobile_no || c.primary_mobile_no || ''} ${c.loyalty_program ? '· ' + c.loyalty_program : ''}</div>
+                </div>
+                <button class="btn-del" style="border: 1px solid var(--border2); color: var(--primary-lt); padding: 4px 8px; margin-left: 10px; border-radius: var(--radius-sm);" onclick="event.stopPropagation(); editCustOnFly('${c.name}', '${escapeHtml(c.customer_name)}', '${escapeHtml(c.mobile_no || c.primary_mobile_no)}', '${escapeHtml(c.customer_group)}', '${escapeHtml(c.customer_type || 'Individual')}')">
+                    <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
+                </button>
             </div>
         `).join('');
         window._custResults = custs;
@@ -1125,6 +1174,104 @@ function selectCustomer(idx) {
     document.getElementById('cust-search-input').value = '';
     document.getElementById('cust-results').innerHTML = '';
     toast(`Customer: ${S.customer}`, 'info');
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function showCustForm(name = '', customer_name = '', mobile_no = '', customer_group = 'Individual', customer_type = 'Individual') {
+    document.getElementById('cust-form-id').value = name;
+    document.getElementById('cust-form-name').value = customer_name;
+    document.getElementById('cust-form-mobile').value = mobile_no;
+    document.getElementById('cust-form-group').value = customer_group;
+    document.getElementById('cust-form-type').value = customer_type;
+
+    const titleEl = document.getElementById('cust-modal-title');
+    const saveBtn = document.getElementById('btn-save-cust');
+    if (name) {
+        titleEl.innerHTML = '<span class="material-symbols-outlined">edit</span> Edit Customer';
+        saveBtn.textContent = 'Update Customer';
+    } else {
+        titleEl.innerHTML = '<span class="material-symbols-outlined">add</span> Add New Customer';
+        saveBtn.textContent = 'Save Customer';
+    }
+    
+    document.getElementById('cust-search-view').style.display = 'none';
+    document.getElementById('cust-form-view').style.display = 'flex';
+}
+
+function hideCustForm() {
+    document.getElementById('cust-modal-title').innerHTML = '<span class="material-symbols-outlined">person_search</span> Customer Lookup';
+    document.getElementById('cust-form-view').style.display = 'none';
+    document.getElementById('cust-search-view').style.display = 'block';
+}
+
+function editCustOnFly(name, customer_name, mobile_no, customer_group, customer_type) {
+    showCustForm(name, customer_name, mobile_no, customer_group, customer_type);
+}
+
+async function saveCustOnFly() {
+    const name = document.getElementById('cust-form-id').value;
+    const customer_name = document.getElementById('cust-form-name').value.trim();
+    const mobile_no = document.getElementById('cust-form-mobile').value.trim();
+    const customer_group = document.getElementById('cust-form-group').value;
+    const customer_type = document.getElementById('cust-form-type').value;
+
+    if (!customer_name) {
+        toast('Please enter customer name', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('btn-save-cust');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 1s linear infinite">progress_activity</span> Saving…';
+
+    try {
+        if (name) {
+            // Edit existing
+            await api('frappe.client.set_value', {
+                doctype: 'Customer',
+                name: name,
+                fieldname: {
+                    customer_name: customer_name,
+                    mobile_no: mobile_no,
+                    customer_group: customer_group,
+                    customer_type: customer_type
+                }
+            });
+            toast('Customer updated successfully', 'success');
+            
+            // Auto-select
+            S.customer = customer_name;
+            document.getElementById('cust-name').textContent = S.customer;
+            closeModal('cust-modal');
+        } else {
+            // Create new
+            const res = await api('frappe.client.insert', {
+                doc: {
+                    doctype: 'Customer',
+                    customer_name: customer_name,
+                    mobile_no: mobile_no,
+                    customer_group: customer_group,
+                    customer_type: customer_type
+                }
+            });
+            toast('Customer created successfully', 'success');
+            
+            // Auto-select
+            S.customer = res.customer_name || res.name;
+            document.getElementById('cust-name').textContent = S.customer;
+            closeModal('cust-modal');
+        }
+        hideCustForm();
+    } catch (e) {
+        toast('Failed to save customer: ' + e.message, 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = name ? 'Update Customer' : 'Save Customer';
 }
 
 // ── Hold Bill ──
