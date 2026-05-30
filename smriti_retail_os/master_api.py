@@ -134,3 +134,32 @@ def quick_create_supplier(supplier_name, mobile_no=None):
         "name": supp.name,
         "supplier_name": supp.supplier_name
     }
+
+@frappe.whitelist()
+def save_supplier_on_fly(supplier_name, supplier_group, supplier_type, name=None):
+    """
+    Allows creating or updating a Supplier on the fly with permissions bypassed.
+    """
+    if not supplier_name:
+        frappe.throw(_("Supplier Name is required."))
+
+    if name:
+        doc = frappe.get_doc("Supplier", name)
+        doc.supplier_name = supplier_name
+        doc.supplier_group = supplier_group
+        doc.supplier_type = supplier_type
+        doc.save(ignore_permissions=True)
+    else:
+        doc = frappe.new_doc("Supplier")
+        doc.supplier_name = supplier_name
+        doc.supplier_group = supplier_group
+        doc.supplier_type = supplier_type
+        doc.insert(ignore_permissions=True)
+
+    frappe.db.commit()
+
+    return {
+        "name": doc.name,
+        "supplier_name": doc.supplier_name
+    }
+

@@ -91,6 +91,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .sidebar-role { font-size:0.75rem; color:var(--text-muted); }
 .sidebar-logout { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:var(--radius-sm); border:none; background:transparent; color:#ef4444; font-weight:600; font-size:0.85rem; cursor:pointer; width:100%; transition:background var(--t); }
 .sidebar-logout:hover { background:rgba(239,68,68,0.1); }
+body.popout-mode .sidebar { display: none !important; }
 
 /* Main Wrapper */
 .main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
@@ -183,6 +184,11 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 </style>
 </head>
 <body>
+<script>
+    if (new URLSearchParams(window.location.search).get('popout') === 'true') {
+        document.body.classList.add('popout-mode');
+    }
+</script>
 
 <div class="bg-grid"></div>
 
@@ -290,6 +296,12 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
             </div>
 
             <div class="topbar-right">
+                <button class="topbtn" onclick="history.back()" title="Go Back">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+                <button class="topbtn" onclick="history.forward()" title="Go Forward">
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
                 <button class="topbtn" onclick="openTokenHelp()"><span class="material-symbols-outlined">help</span> Mapping Reference</button>
             </div>
         </div>
