@@ -353,6 +353,26 @@ website_route_rules = [
         # Zero Frappe chrome. Custom barcode generation & label printer.
         "from_route": "/barcode",
         "to_route": "barcode"
+    },
+    {
+        # Standalone Products Manager — served from www/products.html + www/products.py
+        "from_route": "/products",
+        "to_route": "products"
+    },
+    {
+        # Standalone Customer Directory — served from www/customers.html + www/customers.py
+        "from_route": "/customers",
+        "to_route": "customers"
+    },
+    {
+        # Standalone Supplier Registry — served from www/suppliers.html + www/suppliers.py
+        "from_route": "/suppliers",
+        "to_route": "suppliers"
+    },
+    {
+        # Standalone Billing Invoices — served from www/sales_invoices.html + www/sales_invoices.py
+        "from_route": "/sales_invoices",
+        "to_route": "sales_invoices"
     }
 ]
 

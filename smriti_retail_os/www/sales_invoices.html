@@ -1,0 +1,527 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/sales_invoices.html
+  @description: SMRITI Billing Transactions — Standalone UI (Zero Frappe chrome)
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @version: 1.0.0
+  @license: MIT
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMRITI Billing Transactions</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg:         #0a0f1e;
+    --bg2:        #0f1629;
+    --card:       #131d35;
+    --card2:      #172040;
+    --border:     rgba(255,255,255,0.07);
+    --border2:    rgba(255,255,255,0.12);
+    --primary:    #6366f1;
+    --primary-lt: #818cf8;
+    --accent:     #f59e0b;
+    --success:    #10b981;
+    --warning:    #f59e0b;
+    --danger:     #ef4444;
+    --text:       #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-sub:   #475569;
+    --radius:     12px;
+    --radius-sm:  8px;
+    --radius-lg:  16px;
+    --t:          0.2s ease;
+}
+
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+
+/* Ambient background grid */
+.bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 0;
+}
+
+#app { position:relative; z-index:1; width:100vw; height:100vh; display:flex; overflow:hidden; }
+
+/* Sidebar */
+.sidebar { width:260px; flex-shrink:0; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:10; }
+.sidebar-brand { padding:20px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border); }
+.sidebar-logo { width:32px; height:32px; background:linear-gradient(135deg,var(--primary),var(--primary-lt)); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; }
+.sidebar-logo span { font-size:20px; }
+.sidebar-title { font-family:'Outfit',sans-serif; font-weight:800; font-size:1.15rem; background:linear-gradient(135deg,#fff,var(--text-muted)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.sidebar-menu { flex:1; overflow-y:auto; padding:16px 12px; display:flex; flex-direction:column; gap:6px; }
+.sidebar-item { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:var(--radius); color:var(--text-muted); text-decoration:none; font-weight:600; font-size:0.92rem; transition:all var(--t); cursor:pointer; }
+.sidebar-item span.emoji { font-size:16px; width:20px; text-align:center; }
+.sidebar-item:hover, .sidebar-item.active { background:rgba(99,102,241,0.08); color:var(--text); }
+.sidebar-item.active { border-left:3px solid var(--primary); }
+.sidebar-footer { padding:16px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.15); }
+.sidebar-user { display:flex; align-items:center; gap:10px; }
+.sidebar-avatar { width:36px; height:36px; background:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; color:white; font-size:1.1rem; text-transform:uppercase; }
+.sidebar-info { display:flex; flex-direction:column; }
+.sidebar-name { font-size:0.85rem; font-weight:700; color:var(--text); }
+.sidebar-role { font-size:0.75rem; color:var(--text-muted); }
+.sidebar-logout { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:var(--radius-sm); border:none; background:transparent; color:#ef4444; font-weight:600; font-size:0.85rem; cursor:pointer; width:100%; transition:background var(--t); }
+.sidebar-logout:hover { background:rgba(239,68,68,0.1); }
+
+/* Main Wrapper */
+.main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+/* Topbar */
+.topbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
+.topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--text-muted); }
+.topbar-breadcrumbs span.sep { color:var(--text-sub); }
+.topbar-breadcrumbs span.active { color:var(--text); }
+
+/* Filter Bar */
+.filter-bar { padding:14px 24px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; gap:16px; align-items:center; flex-shrink:0; }
+.form-input { padding:8px 12px; background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.88rem; outline:none; transition:all var(--t); font-family:inherit; }
+.form-input:focus { border-color:var(--primary); }
+.search-input { width:320px; }
+.filter-select { width:180px; }
+
+/* Table Wrapper */
+.table-wrap { flex:1; overflow:auto; padding:16px 24px; }
+.smriti-table { width:100%; border-collapse:collapse; text-align:left; }
+.smriti-table th { padding:10px 14px; background:var(--card2); color:var(--text-muted); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1; }
+.smriti-table td { padding:12px 14px; border-bottom:1px solid var(--border); font-size:0.88rem; vertical-align:middle; cursor:pointer; }
+.smriti-table tbody tr:hover td { background:rgba(99,102,241,0.04); }
+.smriti-table tbody tr:last-child td { border-bottom:none; }
+
+.invoice-badge { font-family:monospace; font-size:0.78rem; font-weight:700; color:var(--primary-lt); background:rgba(99,102,241,0.08); padding:3px 8px; border-radius:4px; border:1px solid var(--border); }
+.status-badge { display:inline-block; padding:2px 8px; border-radius:99px; font-weight:700; font-size:0.72rem; text-transform:uppercase; }
+.status-badge.paid { background:rgba(16,185,129,0.12); color:var(--success); }
+.status-badge.unpaid { background:rgba(245,158,11,0.12); color:var(--warning); }
+.status-badge.overdue { background:rgba(239,68,68,0.12); color:var(--danger); }
+.status-badge.draft { background:rgba(255,255,255,0.04); color:var(--text-muted); }
+
+/* Slide-out Drawer */
+.drawer-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(3,7,18,0.7); backdrop-filter:blur(3px); display:flex; justify-content:flex-end; opacity:0; pointer-events:none; transition:opacity 0.25s ease; }
+.drawer-backdrop.open { opacity:1; pointer-events:all; }
+.drawer { width:100%; max-width:480px; height:100%; background:var(--bg2); border-left:1px solid var(--border2); transform:translateX(100%); transition:transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); display:flex; flex-direction:column; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
+.drawer-backdrop.open .drawer { transform:translateX(0); }
+
+.drawer-header { padding:20px; border-bottom:1px solid var(--border); display:flex; align-items:center; }
+.drawer-title { font-family:'Outfit',sans-serif; font-size:1.15rem; font-weight:800; }
+.drawer-close { margin-left:auto; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:22px; display:flex; align-items:center; }
+.drawer-close:hover { color:var(--text); }
+
+.drawer-body { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:20px; }
+
+.section-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
+.section-title { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--primary-lt); margin-bottom:12px; }
+
+.meta-row { display:flex; justify-content:between; justify-content: space-between; font-size:0.88rem; margin-bottom:8px; }
+.meta-row:last-child { margin-bottom:0; }
+.meta-label { color:var(--text-muted); }
+.meta-value { font-weight:600; color:var(--text); }
+
+.invoice-items-table { width:100%; border-collapse:collapse; text-align:left; font-size:0.82rem; }
+.invoice-items-table th { padding:6px; color:var(--text-muted); border-bottom:1px solid var(--border); font-weight:700; }
+.invoice-items-table td { padding:8px 6px; border-bottom:1px solid var(--border); }
+.invoice-items-table tr:last-child td { border-bottom:none; }
+
+.drawer-footer { padding:20px; border-top:1px solid var(--border); display:flex; gap:12px; background:rgba(0,0,0,0.15); }
+.btn-print { flex:1; padding:10px; background:var(--primary); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.88rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; }
+.btn-print:hover { background:var(--primary-lt); }
+
+/* Toast Container */
+#toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
+.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+.toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
+.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
+.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+.toast span { font-size:20px; }
+@keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+/* Print Styles */
+@media print {
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area { position: absolute; left: 0; top: 0; width: 80mm; background: white; color: black; font-family: monospace; font-size: 11px; padding: 4mm; }
+    .no-print { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+
+<div id="app">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <div class="sidebar-logo"><span class="material-symbols-outlined">receipt</span></div>
+            <div class="sidebar-title">SMRITI OS</div>
+        </div>
+        <div class="sidebar-menu">
+            <a class="sidebar-item" href="/desk">
+                <span class="emoji">🏠</span>
+                <span>Control Center</span>
+            </a>
+            <a class="sidebar-item" href="/billing">
+                <span class="emoji">💳</span>
+                <span>Retail Billing</span>
+            </a>
+            <a class="sidebar-item" href="/shift">
+                <span class="emoji">🌅</span>
+                <span>Shift Management</span>
+            </a>
+            <a class="sidebar-item" href="/inventory">
+                <span class="emoji">📦</span>
+                <span>Inventory Ops</span>
+            </a>
+            <a class="sidebar-item" href="/purchase">
+                <span class="emoji">🛒</span>
+                <span>Purchase Manager</span>
+            </a>
+            <a class="sidebar-item" href="/barcode">
+                <span class="emoji">🏷️</span>
+                <span>Barcode Printing</span>
+            </a>
+            <a class="sidebar-item" href="/products">
+                <span class="emoji">🛍️</span>
+                <span>Products Catalog</span>
+            </a>
+            <a class="sidebar-item" href="/customers">
+                <span class="emoji">👥</span>
+                <span>Customers</span>
+            </a>
+            <a class="sidebar-item" href="/suppliers">
+                <span class="emoji">🏢</span>
+                <span>Suppliers</span>
+            </a>
+            <a class="sidebar-item active" href="/sales_invoices">
+                <span class="emoji">📄</span>
+                <span>Billing Invoices</span>
+            </a>
+        </div>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar" id="sb-avatar">M</div>
+                <div class="sidebar-info">
+                    <span class="sidebar-name" id="sb-user">Manager</span>
+                    <span class="sidebar-role" id="sb-role">Store Manager</span>
+                </div>
+            </div>
+            <button class="sidebar-logout" onclick="doLogout()">
+                <span class="material-symbols-outlined" style="font-size:16px;">logout</span> Sign Out
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-breadcrumbs">
+                <span>SMRITI</span>
+                <span class="sep">/</span>
+                <span class="active">Billing Invoices Tracker</span>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <input type="text" class="form-input search-input" id="search-box" placeholder="Search by invoice no or customer name..." oninput="handleSearch(this.value)">
+            <select class="form-input filter-select" id="filter-status" onchange="applyFilters()">
+                <option value="">All Statuses</option>
+                <option value="Paid">Paid</option>
+                <option value="Unpaid">Unpaid</option>
+                <option value="Overdue">Overdue</option>
+                <option value="Draft">Draft</option>
+            </select>
+        </div>
+
+        <!-- Transactions Table -->
+        <div class="table-wrap">
+            <table class="smriti-table">
+                <thead>
+                    <tr>
+                        <th>Invoice Number</th>
+                        <th>Date & Time</th>
+                        <th>Customer</th>
+                        <th style="text-align:right;">Grand Total</th>
+                        <th style="text-align:right;">Outstanding</th>
+                        <th style="text-align:center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="invoices-tbody">
+                    <tr><td colspan="6" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading transactions...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Slide Drawer for Detail View -->
+<div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()">
+    <div class="drawer" onclick="event.stopPropagation()">
+        <div class="drawer-header">
+            <div class="drawer-title" id="drw-id">Invoice Details</div>
+            <button class="drawer-close" onclick="closeDrawer()">&times;</button>
+        </div>
+        <div class="drawer-body">
+            <!-- Summary card -->
+            <div class="section-card">
+                <div class="section-title">General Summary</div>
+                <div class="meta-row"><span class="meta-label">Date & Time</span><span class="meta-value" id="drw-date"></span></div>
+                <div class="meta-row"><span class="meta-label">Customer</span><span class="meta-value" id="drw-customer"></span></div>
+                <div class="meta-row"><span class="meta-label">Outstanding</span><span class="meta-value" id="drw-outstanding" style="color:var(--danger);"></span></div>
+                <div class="meta-row"><span class="meta-label">Status</span><span id="drw-status"></span></div>
+            </div>
+
+            <!-- Items card -->
+            <div class="section-card">
+                <div class="section-title">Items Checklist</div>
+                <table class="invoice-items-table">
+                    <thead>
+                        <tr>
+                            <th>Product Description</th>
+                            <th style="text-align:center;">Qty</th>
+                            <th style="text-align:right;">Rate</th>
+                            <th style="text-align:right;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="drw-items-tbody"></tbody>
+                </table>
+            </div>
+
+            <!-- Totals card -->
+            <div class="section-card">
+                <div class="section-title">Receipt Breakdown</div>
+                <div class="meta-row"><span class="meta-label">Net Amount</span><span class="meta-value" id="drw-net"></span></div>
+                <div class="meta-row"><span class="meta-label">Taxes (GST)</span><span class="meta-value" id="drw-tax"></span></div>
+                <div class="meta-row" style="border-top:1px solid var(--border); padding-top:8px; margin-top:8px; font-size:1.05rem;"><span class="meta-label" style="color:var(--text); font-weight:700;">Grand Total</span><span class="meta-value" id="drw-grand" style="color:var(--success); font-weight:800;"></span></div>
+            </div>
+        </div>
+        <div class="drawer-footer">
+            <button class="btn-print" onclick="printReceipt()"><span class="material-symbols-outlined">print</span> Print Receipt</button>
+        </div>
+    </div>
+</div>
+
+<!-- Receipt print target wrapper -->
+<div id="print-area" style="display:none;"></div>
+
+<div id="toast-container"></div>
+
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+let loggedUser = '{{ cashier }}';
+let masterInvoicesList = [];
+let activeInvoiceDoc = null;
+
+// REST API
+function api(method, params = {}) {
+    return fetch(`/api/method/${method}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Frappe-CSRF-Token': CSRF_TOKEN
+        },
+        body: JSON.stringify(params)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.exc) throw new Error(d._error_message || d.exc);
+        return d.message;
+    });
+}
+
+function doLogout() {
+    fetch('/api/method/logout', { credentials: 'include' })
+    .then(() => { window.location.href = '/login'; });
+}
+
+function toast(msg, type = 'success') {
+    const cont = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icon = type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info';
+    t.innerHTML = `<span class="material-symbols-outlined">${icon}</span> <span>${msg}</span>`;
+    cont.appendChild(t);
+    setTimeout(() => { t.remove(); }, 4000);
+}
+
+async function init() {
+    // Set user avatar info
+    document.getElementById('sb-user').textContent = loggedUser.split('@')[0];
+    document.getElementById('sb-avatar').textContent = loggedUser.charAt(0).toUpperCase();
+
+    await loadInvoices();
+}
+
+async function loadInvoices() {
+    try {
+        const data = await api('frappe.client.get_list', {
+            doctype: 'Sales Invoice',
+            fields: ['name', 'posting_date', 'posting_time', 'customer_name', 'grand_total', 'outstanding_amount', 'status'],
+            order_by: 'posting_date desc, posting_time desc',
+            limit_page_length: 150
+        });
+
+        masterInvoicesList = data || [];
+        renderTable(masterInvoicesList);
+    } catch(e) {
+        toast('Failed to load transactions list: ' + e.message, 'error');
+    }
+}
+
+function renderTable(list) {
+    const tbody = document.getElementById('invoices-tbody');
+    if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-sub);padding:40px 0;">No invoices tracked.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = list.map(inv => {
+        const statusCls = inv.status.toLowerCase();
+        return `
+            <tr onclick="loadInvoiceDetails('${inv.name}')">
+                <td><span class="invoice-badge">${inv.name}</span></td>
+                <td>
+                    <div style="font-weight:600;">${inv.posting_date}</div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${inv.posting_time || ''}</div>
+                </td>
+                <td style="font-weight:600; color:var(--text);">${inv.customer_name}</td>
+                <td style="text-align:right; font-weight:700; color:var(--success);">Rs. ${parseFloat(inv.grand_total).toFixed(2)}</td>
+                <td style="text-align:right; font-weight:600; color:${parseFloat(inv.outstanding_amount) > 0 ? 'var(--danger)' : 'var(--text-muted)'};">Rs. ${parseFloat(inv.outstanding_amount).toFixed(2)}</td>
+                <td style="text-align:center;">
+                    <span class="status-badge ${statusCls}">${inv.status}</span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function handleSearch(q) {
+    applyFilters();
+}
+
+function applyFilters() {
+    const q = document.getElementById('search-box').value.toLowerCase();
+    const status = document.getElementById('filter-status').value;
+
+    let filtered = masterInvoicesList;
+
+    if (q) {
+        filtered = filtered.filter(inv => 
+            inv.name.toLowerCase().includes(q) ||
+            inv.customer_name.toLowerCase().includes(q)
+        );
+    }
+    if (status) {
+        filtered = filtered.filter(inv => inv.status === status);
+    }
+
+    renderTable(filtered);
+}
+
+async function loadInvoiceDetails(invoiceId) {
+    try {
+        const doc = await api('frappe.client.get', {
+            doctype: 'Sales Invoice',
+            name: invoiceId
+        });
+
+        activeInvoiceDoc = doc;
+        
+        document.getElementById('drw-id').textContent = doc.name;
+        document.getElementById('drw-date').textContent = `${doc.posting_date} | ${doc.posting_time || ''}`;
+        document.getElementById('drw-customer').textContent = doc.customer_name;
+        document.getElementById('drw-outstanding').textContent = `Rs. ${parseFloat(doc.outstanding_amount).toFixed(2)}`;
+        
+        const statusEl = document.getElementById('drw-status');
+        statusEl.className = `status-badge ${doc.status.toLowerCase()}`;
+        statusEl.textContent = doc.status;
+
+        // Render Items table
+        const tbody = document.getElementById('drw-items-tbody');
+        tbody.innerHTML = doc.items.map(it => `
+            <tr>
+                <td>
+                    <div style="font-weight:600;color:var(--text);">${it.item_name}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">${it.item_code}</div>
+                </td>
+                <td style="text-align:center;font-weight:600;">${it.qty}</td>
+                <td style="text-align:right;">Rs. ${parseFloat(it.rate).toFixed(2)}</td>
+                <td style="text-align:right;font-weight:600;">Rs. ${parseFloat(it.amount).toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        document.getElementById('drw-net').textContent = `Rs. ${parseFloat(doc.net_total).toFixed(2)}`;
+        document.getElementById('drw-tax').textContent = `Rs. ${parseFloat(doc.total_taxes_and_charges || 0).toFixed(2)}`;
+        document.getElementById('drw-grand').textContent = `Rs. ${parseFloat(doc.grand_total).toFixed(2)}`;
+
+        // Open slide-drawer
+        document.getElementById('drawer-backdrop').classList.add('open');
+    } catch(e) {
+        toast('Failed to load transaction details: ' + e.message, 'error');
+    }
+}
+
+function closeDrawer() {
+    document.getElementById('drawer-backdrop').classList.remove('open');
+    activeInvoiceDoc = null;
+}
+
+function printReceipt() {
+    if (!activeInvoiceDoc) return;
+    const doc = activeInvoiceDoc;
+
+    let itemsHtml = doc.items.map(it => `
+        <tr>
+            <td style="padding:4px 0;">${it.item_name}<br><small>${it.item_code} (${it.qty} x ${parseFloat(it.rate).toFixed(2)})</small></td>
+            <td style="text-align:right;padding:4px 0;vertical-align:bottom;">Rs. ${parseFloat(it.amount).toFixed(2)}</td>
+        </tr>
+    `).join('');
+
+    const html = `
+        <div style="text-align:center;margin-bottom:6px;">
+            <h2 style="margin:0;font-size:16px;">SMRITI RETAIL</h2>
+            <div style="font-size:11px;">Standalone Receipt Voucher</div>
+        </div>
+        <hr style="border:none;border-top:1px dashed #000;margin:6px 0;">
+        <table style="width:100%;font-size:11px;">
+            <tr><td>Bill No:</td><td style="text-align:right;font-weight:700;">${doc.name}</td></tr>
+            <tr><td>Date:</td><td style="text-align:right;">${doc.posting_date} ${doc.posting_time || ''}</td></tr>
+            <tr><td>Customer:</td><td style="text-align:right;">${doc.customer_name}</td></tr>
+        </table>
+        <hr style="border:none;border-top:1px dashed #000;margin:6px 0;">
+        <table style="width:100%;font-size:11px;">
+            <thead>
+                <tr style="border-bottom:1px dashed #000;"><th style="text-align:left;">Item Description</th><th style="text-align:right;">Amount</th></tr>
+            </thead>
+            <tbody>${itemsHtml}</tbody>
+        </table>
+        <hr style="border:none;border-top:1px dashed #000;margin:6px 0;">
+        <table style="width:100%;font-size:11px;">
+            <tr><td>Net Total:</td><td style="text-align:right;">Rs. ${parseFloat(doc.net_total).toFixed(2)}</td></tr>
+            <tr><td>GST Taxes:</td><td style="text-align:right;">Rs. ${parseFloat(doc.total_taxes_and_charges || 0).toFixed(2)}</td></tr>
+            <tr style="font-size:13px;font-weight:800;"><td>Grand Total:</td><td style="text-align:right;">Rs. ${parseFloat(doc.grand_total).toFixed(2)}</td></tr>
+        </table>
+        <div style="text-align:center;margin-top:14px;font-size:10px;">
+            Thank you for shopping at SMRITI!
+        </div>
+    `;
+
+    const printArea = document.getElementById('print-area');
+    printArea.innerHTML = html;
+    window.print();
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
+{% endblock %}

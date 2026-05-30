@@ -595,6 +595,22 @@ function _redirect_to_smriti_home() {
             window.location.href = '/barcode';
             return;
         }
+        if (current_route === 'List/Item' || current_route === 'List/Item/List') {
+            window.location.href = '/products';
+            return;
+        }
+        if (current_route === 'List/Customer' || current_route === 'List/Customer/List') {
+            window.location.href = '/customers';
+            return;
+        }
+        if (current_route === 'List/Supplier' || current_route === 'List/Supplier/List') {
+            window.location.href = '/suppliers';
+            return;
+        }
+        if (current_route === 'List/Sales Invoice' || current_route === 'List/Sales Invoice/List') {
+            window.location.href = '/sales_invoices';
+            return;
+        }
 
         // Only redirect if the browser's active path is strictly the root Desk entry
         var is_root_path = window.location.pathname === '/app' || window.location.pathname === '/app/' || 
