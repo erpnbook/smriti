@@ -190,17 +190,11 @@ def extend_bootinfo(bootinfo):
 
     # Cashier redirect:
     if "SMRITI Cashier" in roles:
-        if frappe.db.exists("Page", "smriti-billing"):
-            bootinfo.default_route = "/app/smriti-billing"
-        else:
-            bootinfo.default_route = "/app/point-of-sale"
+        bootinfo.default_route = "/billing"
 
     # Store Manager redirect:
     elif "SMRITI Store Manager" in roles:
-        if frappe.db.exists("Page", "smriti-desk"):
-            bootinfo.default_route = "/app/smriti-desk"
-        else:
-            bootinfo.default_route = "/app"
+        bootinfo.default_route = "/desk"
 
 
 def boot_session(bootinfo):

@@ -113,8 +113,8 @@ home_page = "index"
 # Desk users are handled via bootinfo.default_route in boot.py
 role_home_page = {
     "SMRITI Cashier": "billing",          # → Standalone billing terminal at /billing
-    "SMRITI Store Manager": "smriti-desk",
-    "System Manager": "smriti-desk"
+    "SMRITI Store Manager": "desk",       # → Standalone Control Center /desk
+    "System Manager": "desk"              # → Standalone Control Center /desk
 }
 
 # Generators
@@ -329,6 +329,12 @@ website_route_rules = [
         # Zero Frappe chrome. GRN, New PO, all via REST API.
         "from_route": "/purchase",
         "to_route": "purchase"
+    },
+    {
+        # Standalone Control Center (Manager Desk) — served from www/desk.html + www/desk.py
+        # Zero Frappe chrome. Fully custom SMRITI dashboard.
+        "from_route": "/desk",
+        "to_route": "desk"
     }
 ]
 

@@ -592,8 +592,8 @@ function _redirect_to_smriti_home() {
             if (roles.includes('SMRITI Cashier')) {
                 // Redirect to standalone billing terminal (zero Frappe chrome)
                 window.location.href = '/billing';
-            } else {
-                frappe.set_route('smriti-desk');
+            } else if (roles.includes('SMRITI Store Manager') || roles.includes('System Manager')) {
+                window.location.href = '/desk';
             }
         }
     } 
@@ -603,8 +603,8 @@ function _redirect_to_smriti_home() {
         var roles = frappe.user_roles || [];
         if (roles.includes('SMRITI Cashier')) {
             window.location.href = '/billing'; // Standalone billing terminal
-        } else {
-            window.location.href = base_path + '/smriti-desk';
+        } else if (roles.includes('SMRITI Store Manager') || roles.includes('System Manager')) {
+            window.location.href = '/desk';
         }
     }
 }
