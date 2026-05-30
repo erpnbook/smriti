@@ -25,6 +25,13 @@ from smriti_retail_os.billing_api import (
 
 class TestSmritiRetailBillingAPI(unittest.TestCase):
     
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        from smriti_retail_os.setup import setup_smriti_retail_os
+        setup_smriti_retail_os()
+        frappe.db.commit()
+
     def setUp(self):
         # 1. Resolve or Create basic link dependencies for the isolated test DB
         self.uom = frappe.db.exists("UOM", "Nos") or frappe.db.get_value("UOM", {}, "name")
@@ -226,6 +233,8 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         frappe.db.delete("Item", {"item_code": "TEST-ITEM-BAR"})
         frappe.db.delete("Customer", {"customer_name": "Test Billing Customer"})
         frappe.db.delete("POS Invoice", {"customer": "Test Billing Customer"})
+        frappe.db.delete("Sales Invoice", {"customer": "Test Billing Customer"})
+        frappe.db.delete("GL Entry", {"party": "Test Billing Customer"})
         frappe.db.delete("Comment", {"reference_doctype": "POS Invoice"})
         
         # Clean up tax templates via delete_doc to ensure child tables are fully purged
@@ -337,6 +346,8 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         frappe.db.delete("Item Price", {"item_code": "TEST-ITEM-BAR"})
         frappe.db.delete("Customer", {"customer_name": "Test Billing Customer"})
         frappe.db.delete("POS Invoice", {"customer": "Test Billing Customer"})
+        frappe.db.delete("Sales Invoice", {"customer": "Test Billing Customer"})
+        frappe.db.delete("GL Entry", {"party": "Test Billing Customer"})
         frappe.db.delete("Comment", {"reference_doctype": "POS Invoice"})
         
         # Clean up test roles
@@ -515,6 +526,7 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
 
         # Clean up created Sales Invoice
         frappe.db.delete("Sales Invoice", {"name": invoice_name})
+        frappe.db.delete("GL Entry", {"voucher_no": invoice_name})
         frappe.db.commit()
 
     def test_submit_bill_on_credit(self):
@@ -560,4 +572,5 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
 
         # Clean up created Sales Invoice
         frappe.db.delete("Sales Invoice", {"name": invoice_name})
+        frappe.db.delete("GL Entry", {"voucher_no": invoice_name})
         frappe.db.commit()

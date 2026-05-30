@@ -510,3 +510,239 @@ def _upsert_item_price(item_code, price_list, rate):
         ip.currency        = "INR"
         ip.uom             = "Nos"
         ip.insert(ignore_permissions=True)
+
+
+def check_store_manager_role():
+    roles = frappe.get_roles(frappe.session.user)
+    if "SMRITI Store Manager" not in roles and "System Manager" not in roles:
+        frappe.throw(frappe._("Restricted: Requires Store Manager or System Manager role."), frappe.PermissionError)
+
+
+@frappe.whitelist()
+def generate_ean13_barcode():
+    import random
+    body = f"23{random.randint(1000000000, 9999999999)}"
+    odds = sum(int(body[i]) for i in range(0, 12, 2))
+    evens = sum(int(body[i]) for i in range(1, 12, 2))
+    total = odds + (evens * 3)
+    check_digit = (10 - (total % 10)) % 10
+    barcode = f"{body}{check_digit}"
+    
+    if frappe.db.exists("Item Barcode", {"barcode": barcode}):
+        return generate_ean13_barcode()
+    return barcode
+
+
+@frappe.whitelist()
+def get_style_details(article_no):
+    if not frappe.db.exists("Item", article_no):
+        return {"exists": False}
+        
+    doc = frappe.get_doc("Item", article_no)
+    variants = frappe.get_all("Item", filters={"variant_of": article_no}, fields=["name", "item_name", "custom_mrp", "valuation_rate"])
+    
+    sizes = []
+    color_val = ""
+    for var in variants:
+        size_val = frappe.db.get_value("Item Variant Attribute", {"parent": var.name, "attribute": "Size"}, "attribute_value") or ""
+        color_val = frappe.db.get_value("Item Variant Attribute", {"parent": var.name, "attribute": "Color"}, "attribute_value") or ""
+        barcode = frappe.db.get_value("Item Barcode", {"parent": var.name}, "barcode") or ""
+        sizes.append({
+            "variant_code": var.name,
+            "size": size_val,
+            "barcode": barcode,
+            "mrp": var.custom_mrp,
+            "cost": var.valuation_rate
+        })
+        
+    return {
+        "exists": True,
+        "description": doc.item_name,
+        "brand": doc.brand or "",
+        "item_group": doc.item_group,
+        "mrp": doc.custom_mrp or 0,
+        "cost_price": doc.valuation_rate or 0,
+        "gst_percentage": doc.custom_gst_percentage or "0",
+        "hsn_code": doc.gst_hsn_code or "",
+        "gender": doc.custom_gender or "",
+        "purchase_class": doc.custom_purchase_class or "",
+        "merchandise_category": doc.custom_merchandise_category or "",
+        "sub_category": doc.custom_sub_category or "",
+        "vendor_code": frappe.db.get_value("Item Supplier", {"parent": article_no}, "supplier_part_no") or "",
+        "color": color_val or "UNKNOWN",
+        "sizes": sizes
+    }
+
+
+@frappe.whitelist()
+def create_style_with_variants(base_details, sizes_config):
+    check_store_manager_role()
+    
+    bd = frappe.parse_json(base_details)
+    sc = frappe.parse_json(sizes_config)
+    
+    style_code = bd.get("article_no").strip()
+    item_name = bd.get("description").strip()
+    item_group = bd.get("item_group", "Products")
+    brand = bd.get("brand")
+    mrp = flt(bd.get("mrp", 0))
+    cost = flt(bd.get("cost_price", 0))
+    gst_pct = str(bd.get("gst_percentage", "0")).strip()
+    hsn_code = bd.get("hsn_code")
+    gender = bd.get("gender")
+    purchase_class = bd.get("purchase_class")
+    merch_cat = bd.get("merchandise_category")
+    sub_cat = bd.get("sub_category")
+    tax_group = bd.get("product_tax_group")
+    vendor_code = bd.get("vendor_code")
+    color = bd.get("color", "UNKNOWN").strip()
+    
+    company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+    
+    # 1. Get or create style template parent item
+    template = _get_or_create_template(
+        style_code=style_code,
+        item_name=item_name,
+        item_group=item_group,
+        brand=brand,
+        mrp=mrp,
+        cost=cost,
+        gst_pct=gst_pct,
+        hsn_code=hsn_code,
+        image_link="",
+        gender=gender,
+        upper_material="",
+        outsole="",
+        heel_type="",
+        purchase_class=purchase_class,
+        merch_cat=merch_cat,
+        sub_cat=sub_cat,
+        tax_group=tax_group,
+        vendor_code=vendor_code,
+        company=company
+    )
+    
+    # Update base fields if template already existed
+    if template.item_name != item_name or flt(template.custom_mrp) != mrp or flt(template.valuation_rate) != cost or template.custom_gst_percentage != gst_pct:
+        template.item_name = item_name
+        _safe_set(template, "custom_mrp", mrp)
+        _safe_set(template, "valuation_rate", cost)
+        _safe_set(template, "custom_gst_percentage", gst_pct)
+        if brand:
+            template.brand = brand
+        if hsn_code:
+            template.gst_hsn_code = hsn_code
+        template.save(ignore_permissions=True)
+        frappe.db.commit()
+
+    created_count = 0
+    updated_count = 0
+    results = []
+
+    # 2. Add / Update active sizes configuration
+    for s in sc:
+        size = str(s.get("size")).strip()
+        active = s.get("active")
+        barcode_mode = s.get("barcode_mode", "auto")
+        manual_barcode = str(s.get("manual_barcode", "")).strip()
+        
+        variant_code = f"{style_code}-{color}-{size}"
+        
+        if not active:
+            continue
+            
+        # Ensure standard attributes and values exist
+        _ensure_item_attribute("Size")
+        _ensure_attribute_value("Size", size)
+        _ensure_item_attribute("Color")
+        _ensure_attribute_value("Color", color)
+        
+        # Determine barcode
+        if barcode_mode == "manual":
+            if not manual_barcode:
+                frappe.throw(frappe._("Manual barcode is required for size {0}").format(size))
+            barcode = manual_barcode
+        else:
+            existing_barcode = frappe.db.get_value("Item Barcode", {"parent": variant_code}, "barcode")
+            if existing_barcode:
+                barcode = existing_barcode
+            else:
+                barcode = generate_ean13_barcode()
+
+        # Check barcode uniqueness
+        duplicate = frappe.db.get_value("Item Barcode", {"barcode": barcode, "parent": ["!=", variant_code]}, "parent")
+        if duplicate:
+            frappe.throw(frappe._("Barcode '{0}' is already registered on item '{1}'!").format(barcode, duplicate))
+            
+        # Create or update variant Item doc
+        if not frappe.db.exists("Item", variant_code):
+            var = frappe.new_doc("Item")
+            var.item_code = variant_code
+            var.item_name = f"{item_name} ({color} / {size})"
+            var.variant_of = style_code
+            var.item_group = item_group
+            var.stock_uom = "Nos"
+            var.is_stock_item = 1
+            _safe_set(var, "custom_is_retail_item", 1)
+            _safe_set(var, "custom_mrp", mrp)
+            _safe_set(var, "custom_gst_percentage", gst_pct)
+            if hsn_code:
+                var.gst_hsn_code = hsn_code
+                _safe_set(var, "gn_hsn_code", hsn_code)
+                
+            var.append("attributes", {"attribute": "Color", "attribute_value": color})
+            var.append("attributes", {"attribute": "Size", "attribute_value": size})
+            
+            _attach_tax_template(var, tax_group, gst_pct, company)
+            var.insert(ignore_permissions=True)
+            created_count += 1
+        else:
+            var = frappe.get_doc("Item", variant_code)
+            var.item_name = f"{item_name} ({color} / {size})"
+            _safe_set(var, "custom_mrp", mrp)
+            _safe_set(var, "custom_gst_percentage", gst_pct)
+            if hsn_code:
+                var.gst_hsn_code = hsn_code
+                _safe_set(var, "gn_hsn_code", hsn_code)
+            var.save(ignore_permissions=True)
+            updated_count += 1
+            
+        # Force set barcode child table row
+        frappe.db.delete("Item Barcode", {"parent": variant_code})
+        var_doc = frappe.get_doc("Item", variant_code)
+        var_doc.append("barcodes", {"barcode": barcode, "uom": "Nos"})
+        var_doc.save(ignore_permissions=True)
+        
+        # Standard Selling prices sync
+        _upsert_item_price(variant_code, "Standard Selling", mrp)
+        _upsert_item_price(variant_code, "MRP", mrp)
+        
+        results.append({
+            "size": size,
+            "variant_code": variant_code,
+            "barcode": barcode
+        })
+        
+    frappe.db.commit()
+    
+    return {
+        "success": True,
+        "created_count": created_count,
+        "updated_count": updated_count,
+        "variants": results,
+        "message": frappe._("Successfully created {0} and updated {1} size variants!").format(created_count, updated_count)
+    }
+
+
+@frappe.whitelist()
+def delete_size_variant(variant_code):
+    check_store_manager_role()
+    if not frappe.db.exists("Item", variant_code):
+        return {"success": False, "message": "Variant not found"}
+        
+    frappe.db.delete("Item Barcode", {"parent": variant_code})
+    frappe.db.delete("Item Price", {"item_code": variant_code})
+    frappe.delete_doc("Item", variant_code, ignore_missing=True, force=True)
+    frappe.db.commit()
+    return {"success": True, "message": frappe._("Size variant {0} deleted successfully.").format(variant_code)}
+

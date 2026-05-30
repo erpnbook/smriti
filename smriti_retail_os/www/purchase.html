@@ -297,7 +297,8 @@ body.popout-mode .sidebar { display: none !important; }
 
 @keyframes spin { to { transform:rotate(360deg); } }
 </style>
-</head>
+
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
 <body>
 <script>
     if (new URLSearchParams(window.location.search).get('popout') === 'true') {
@@ -323,103 +324,7 @@ body.popout-mode .sidebar { display: none !important; }
 <!-- App -->
 <div id="app">
     <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-brand">
-            <div class="sidebar-logo"><span class="material-symbols-outlined">storefront</span></div>
-            <div class="sidebar-title">SMRITI OS</div>
-        </div>
-        <div class="sidebar-menu">
-            <a class="sidebar-item" href="/desk">
-                <span class="emoji">🏠</span>
-                <span>Control Center</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/desk')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/billing">
-                <span class="emoji">💳</span>
-                <span>Retail Billing</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/billing')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/shift">
-                <span class="emoji">🌅</span>
-                <span>Shift Management</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/shift')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/inventory">
-                <span class="emoji">📦</span>
-                <span>Inventory Ops</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/inventory')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item active" href="/purchase">
-                <span class="emoji">🛒</span>
-                <span>Purchase Manager</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/purchase')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/barcode">
-                <span class="emoji">🏷️</span>
-                <span>Barcode Printing</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/barcode')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/products">
-                <span class="emoji">🛍️</span>
-                <span>Products Catalog</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/products')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/item_master">
-                <span class="emoji">📋</span>
-                <span>Item Master Import</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/item_master')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/customers">
-                <span class="emoji">👥</span>
-                <span>Customers</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/customers')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/suppliers">
-                <span class="emoji">🏢</span>
-                <span>Suppliers</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/suppliers')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/sales_invoices">
-                <span class="emoji">📄</span>
-                <span>Billing Invoices</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/sales_invoices')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-        </div>
-        <div class="sidebar-footer">
-            <div class="sidebar-user">
-                <div class="sidebar-avatar" id="sb-avatar">M</div>
-                <div class="sidebar-info">
-                    <span class="sidebar-name" id="sb-user">Manager</span>
-                    <span class="sidebar-role" id="sb-role">Store Manager</span>
-                </div>
-            </div>
-            <button class="sidebar-logout" onclick="doLogout()">
-                <span class="material-symbols-outlined" style="font-size:16px;">logout</span> Sign Out
-            </button>
-        </div>
-    </div>
+    <div id="smriti-sidebar-target" class="sidebar"></div>
 
     <!-- Main Wrapper -->
     <div class="main-wrapper">
@@ -1570,6 +1475,8 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
 });
 </script>
-</body>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+<script>SMRITI.renderFlexibleSidebar("purchase_ops");</script></body>
 </html>
 {% endblock %}

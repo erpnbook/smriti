@@ -93,7 +93,17 @@ def search_customer(query=None):
         "Customer",
         filters=filters,
         or_filters=or_filters,
-        fields=["name", "customer_name", "mobile_no", "loyalty_program", "customer_group", "customer_type"],
+        fields=[
+            "name", 
+            "customer_name", 
+            "mobile_no", 
+            "loyalty_program", 
+            "customer_group", 
+            "customer_type",
+            "custom_tax_inclusive_override",
+            "custom_address_text",
+            "custom_shipping_address_text"
+        ],
         limit=20
     )
     
@@ -183,7 +193,7 @@ def recall_bill(cashier):
 
 
 @frappe.whitelist()
-def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_name=None, remarks=None, sales_staff=None, on_credit=0):
+def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_name=None, remarks=None, sales_staff=None, on_credit=0, tax_override="Default", billing_address=None, shipping_address=None):
     """
     Creates and submits a standard POS Invoice or falls back to Sales Invoice.
     If a cashier shift is open, creates a POS Invoice.
@@ -229,6 +239,42 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
         invoice_doc.owner = cashier
         
     invoice_doc.customer = customer or "Walk-In Customer"
+    
+    # Resolve and link Billing & Shipping Addresses (Bill To and Ship To)
+    if invoice_doc.customer and invoice_doc.customer != "Walk-In Customer":
+        billing_addr_name = frappe.db.get_value(
+            "Address",
+            {
+                "links.link_doctype": "Customer",
+                "links.link_name": invoice_doc.customer,
+                "address_type": "Billing"
+            },
+            "name"
+        )
+        shipping_addr_name = frappe.db.get_value(
+            "Address",
+            {
+                "links.link_doctype": "Customer",
+                "links.link_name": invoice_doc.customer,
+                "address_type": "Shipping"
+            },
+            "name"
+        )
+        
+        if billing_addr_name:
+            invoice_doc.customer_address = billing_addr_name
+            invoice_doc.address_display = frappe.db.get_value("Address", billing_addr_name, "display")
+        if shipping_addr_name:
+            invoice_doc.shipping_address_name = shipping_addr_name
+            invoice_doc.shipping_address = frappe.db.get_value("Address", shipping_addr_name, "display")
+
+    # Resolve tax override from Customer doc if set to Default
+    resolved_tax_override = tax_override
+    if resolved_tax_override == "Default" and invoice_doc.customer and invoice_doc.customer != "Walk-In Customer" and frappe.db.exists("Customer", invoice_doc.customer):
+        cust_override = frappe.db.get_value("Customer", invoice_doc.customer, "custom_tax_inclusive_override")
+        if cust_override:
+            resolved_tax_override = cust_override
+
     invoice_doc.posting_date = nowdate()
     invoice_doc.company = company
     invoice_doc.currency = "INR"
@@ -297,10 +343,19 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
         if not item_cc:
             item_cc = frappe.db.get_value("Cost Center", {"company": company, "is_group": 0}, "name")
 
+        # Resolve rate backing out tax if override is set to Inclusive
+        rate = flt(it.get("rate"))
+        gst_pct = flt(it.get("gst_percentage") or it.get("custom_gst_percentage") or 0.0)
+        if gst_pct <= 0.0:
+            gst_pct = flt(frappe.db.get_value("Item", it.get("item_code"), "custom_gst_percentage") or 0.0)
+            
+        if resolved_tax_override == "Inclusive" and gst_pct > 0.0:
+            rate = rate / (1.0 + (gst_pct / 100.0))
+
         invoice_doc.append("items", {
             "item_code": it.get("item_code"),
             "qty": flt(it.get("qty")),
-            "rate": flt(it.get("rate")),
+            "rate": rate,
             "price_list_rate": flt(it.get("mrp")),
             "discount_percentage": flt(it.get("discount_percentage") or 0.0),
             "uom": it.get("stock_uom") or "Nos",
@@ -535,3 +590,49 @@ def validate_manager_override(pin, action_type, invoice_name=None):
             frappe.log_error(title="SMRITI Manager Password Authentication Error", message=frappe.get_traceback())
 
     return {"authorized": False, "message": _("Invalid PIN Code or unauthorized role.")}
+
+
+@frappe.whitelist()
+def generate_mock_eway_bill(invoice_name, vehicle_no=None, distance=None, mode_of_transport=None, gst_vehicle_type=None, transporter_name=None):
+    """
+    Generates a mock 12-digit E-way Bill number for the invoice to support
+    Vyapar-style prints and standalone demo generations.
+    """
+    if not invoice_name:
+        frappe.throw(_("Invoice name is required."))
+        
+    # Check if E-way bill already exists to support editing transport/vehicle details
+    existing_eway = frappe.db.get_value("Sales Invoice", invoice_name, "ewaybill")
+    if existing_eway:
+        mock_no = existing_eway
+        msg = _("E-way Bill {0} details updated successfully!").format(mock_no)
+    else:
+        import random
+        # Format: 23 + 10 random digits (e.g. 232207255170)
+        mock_no = f"23{random.randint(1000000000, 9999999999)}"
+        msg = _("E-way Bill {0} generated successfully!").format(mock_no)
+    
+    # Direct DB set to avoid draft/submitted validations on historical records
+    update_dict = {"ewaybill": mock_no}
+    if vehicle_no is not None:
+        update_dict["vehicle_no"] = vehicle_no
+    if distance is not None:
+        try:
+            update_dict["distance"] = int(distance)
+        except ValueError:
+            pass
+    if mode_of_transport is not None:
+        update_dict["mode_of_transport"] = mode_of_transport
+    if gst_vehicle_type is not None:
+        update_dict["gst_vehicle_type"] = gst_vehicle_type
+    if transporter_name is not None:
+        update_dict["transporter_name"] = transporter_name
+        
+    frappe.db.set_value("Sales Invoice", invoice_name, update_dict)
+    frappe.db.commit()
+    
+    return {
+        "ewaybill": mock_no,
+        "message": msg
+    }
+

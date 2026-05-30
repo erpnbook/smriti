@@ -615,7 +615,8 @@ tbody tr:last-child td { border-bottom: none; }
 .btn-success-action.secondary { background: var(--card); color: var(--text); border: 1px solid var(--border2); }
 .btn-success-action:hover { transform: translateY(-2px); }
 </style>
-</head>
+
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
 <body>
 <script>
     if (new URLSearchParams(window.location.search).get('popout') === 'true') {
@@ -641,103 +642,7 @@ tbody tr:last-child td { border-bottom: none; }
 <!-- ── Main App ── -->
 <div id="app">
     <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-brand">
-            <div class="sidebar-logo"><span class="material-symbols-outlined">storefront</span></div>
-            <div class="sidebar-title">SMRITI OS</div>
-        </div>
-        <div class="sidebar-menu">
-            <a class="sidebar-item" href="/desk">
-                <span class="emoji">🏠</span>
-                <span>Control Center</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/desk')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item active" href="/billing">
-                <span class="emoji">💳</span>
-                <span>Retail Billing</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/billing')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/shift">
-                <span class="emoji">🌅</span>
-                <span>Shift Management</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/shift')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/inventory">
-                <span class="emoji">📦</span>
-                <span>Inventory Ops</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/inventory')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/purchase">
-                <span class="emoji">🛒</span>
-                <span>Purchase Manager</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/purchase')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/barcode">
-                <span class="emoji">🏷️</span>
-                <span>Barcode Printing</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/barcode')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/products">
-                <span class="emoji">🛍️</span>
-                <span>Products Catalog</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/products')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/item_master">
-                <span class="emoji">📋</span>
-                <span>Item Master Import</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/item_master')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/customers">
-                <span class="emoji">👥</span>
-                <span>Customers</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/customers')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/suppliers">
-                <span class="emoji">🏢</span>
-                <span>Suppliers</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/suppliers')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/sales_invoices">
-                <span class="emoji">📄</span>
-                <span>Billing Invoices</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/sales_invoices')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-        </div>
-        <div class="sidebar-footer">
-            <div class="sidebar-user">
-                <div class="sidebar-avatar" id="sb-avatar">M</div>
-                <div class="sidebar-info">
-                    <span class="sidebar-name" id="sb-user">Manager</span>
-                    <span class="sidebar-role" id="sb-role">Store Manager</span>
-                </div>
-            </div>
-            <button class="sidebar-logout" onclick="doLogout()">
-                <span class="material-symbols-outlined" style="font-size:16px;">logout</span> Sign Out
-            </button>
-        </div>
-    </div>
+    <div id="smriti-sidebar-target" class="sidebar"></div>
 
     <!-- Main Wrapper -->
     <div class="main-wrapper">
@@ -834,6 +739,26 @@ tbody tr:last-child td { border-bottom: none; }
                     Loyalty Points:
                     <input type="number" class="loyalty-input" id="loyalty-input" value="0" min="0"> pts
                 </div>
+                
+                <!-- Billing & Shipping Details + Tax Override -->
+                <div id="cust-details-panel" style="display: none; flex-direction: column; gap: 8px; margin-top: 10px; font-size: 0.8rem; border-top: 1px dashed var(--border2); padding-top: 8px;">
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <span style="font-weight: 700; color: var(--primary-lt); font-size: 0.72rem; text-transform: uppercase;">Bill To (Billing Address)</span>
+                        <div id="cust-billing-addr" style="color: var(--text-muted); font-family: monospace; white-space: pre-line; background: var(--bg2); padding: 6px; border-radius: 4px; border: 1px solid var(--border2); line-height: 1.2;"></div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <span style="font-weight: 700; color: var(--primary-lt); font-size: 0.72rem; text-transform: uppercase;">Ship To (Shipping Address)</span>
+                        <div id="cust-shipping-addr" style="color: var(--text-muted); font-family: monospace; white-space: pre-line; background: var(--bg2); padding: 6px; border-radius: 4px; border: 1px solid var(--border2); line-height: 1.2;"></div>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px; background: var(--bg2); padding: 6px; border-radius: 4px; border: 1px solid var(--border2);">
+                        <span style="font-weight: 700; color: var(--text); font-size: 0.75rem;">Tax Override:</span>
+                        <select id="bill-tax-override" onchange="changeBillTaxOverride(this.value)" style="background: var(--bg); border: 1px solid var(--border2); border-radius: 4px; color: var(--text); padding: 2px 6px; font-size: 0.75rem; cursor: pointer; outline: none;">
+                            <option value="Default">Default</option>
+                            <option value="Inclusive">Inclusive</option>
+                            <option value="Exclusive">Exclusive</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <!-- Totals Card -->
@@ -926,7 +851,7 @@ tbody tr:last-child td { border-bottom: none; }
         </div>
 
         <!-- Form View (Create / Edit) -->
-        <div id="cust-form-view" style="display: none; flex-direction: column; gap: 12px;">
+        <div id="cust-form-view" style="display: none; flex-direction: column; gap: 12px; max-height: 450px; overflow-y: auto; padding-right: 4px;">
             <input type="hidden" id="cust-form-id">
             <div class="form-group" style="display: flex; flex-direction: column; gap: 5px;">
                 <label class="form-label" style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Customer Name *</label>
@@ -951,7 +876,23 @@ tbody tr:last-child td { border-bottom: none; }
                     <option value="Company">Company</option>
                 </select>
             </div>
-            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 5px;">
+                <label class="form-label" style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Tax Inclusive Override</label>
+                <select class="form-input" id="cust-form-tax-override" style="width: 100%; padding: 10px; background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text);">
+                    <option value="Default">Default (Standard Pricing)</option>
+                    <option value="Inclusive">Force Tax Inclusive</option>
+                    <option value="Exclusive">Force Tax Exclusive</option>
+                </select>
+            </div>
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 5px;">
+                <label class="form-label" style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Billing Address (Bill To)</label>
+                <textarea class="form-input" id="cust-form-address" placeholder="Line 1&#10;Line 2&#10;City&#10;State&#10;Pincode" rows="3" style="width: 100%; padding: 10px; background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); resize: none; font-family: monospace; line-height: 1.3;"></textarea>
+            </div>
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 5px;">
+                <label class="form-label" style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Shipping Address (Ship To)</label>
+                <textarea class="form-input" id="cust-form-shipping-address" placeholder="Line 1&#10;Line 2&#10;City&#10;State&#10;Pincode" rows="3" style="width: 100%; padding: 10px; background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); resize: none; font-family: monospace; line-height: 1.3;"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; border-top: 1px solid var(--border2); padding-top: 10px;">
                 <button class="topbtn" onclick="hideCustForm()">Cancel</button>
                 <button class="topbtn primary" id="btn-save-cust" onclick="saveCustOnFly()">Save Customer</button>
             </div>
@@ -1000,6 +941,9 @@ const S = {
     customer: 'Walk-In Customer',
     invoiceName: null,
     lastPrintUrl: null,
+    billing_address: '',
+    shipping_address: '',
+    tax_override: 'Default',
 };
 
 // ── CSRF + API ──
@@ -1102,6 +1046,33 @@ function showApp() {
 }
 
 // ── Cart ──
+function calculateItemTaxes(item) {
+    const qty = item.qty || 1;
+    const gstPct = item.gst_percentage || 0;
+    const isInclusive = S.tax_override === 'Inclusive';
+    
+    let rate = item.rate || 0;
+    let baseAmt = 0;
+    let taxAmt = 0;
+    let total = 0;
+    
+    if (isInclusive) {
+        total = rate * qty;
+        baseAmt = total / (1 + (gstPct / 100));
+        taxAmt = total - baseAmt;
+    } else {
+        baseAmt = rate * qty;
+        taxAmt = (baseAmt * gstPct) / 100;
+        total = baseAmt + taxAmt;
+    }
+    
+    return {
+        baseAmt: baseAmt,
+        taxAmt: taxAmt,
+        total: total
+    };
+}
+
 function addItem(item) {
     const existing = S.items.find(i => i.item_code === item.item_code);
     if (existing) {
@@ -1131,9 +1102,10 @@ function renderCart() {
     tableEl.style.display = 'table';
 
     S.items.forEach((item, idx) => {
-        const taxAmt = (item.rate * item.qty * (item.gst_percentage || 0)) / 100;
-        const baseAmt = item.rate * item.qty;
-        const total = baseAmt + taxAmt;
+        const calcs = calculateItemTaxes(item);
+        const baseAmt = calcs.baseAmt;
+        const taxAmt = calcs.taxAmt;
+        const total = calcs.total;
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -1184,10 +1156,9 @@ function updateTotals() {
     let netTotal = 0, taxTotal = 0;
 
     S.items.forEach(item => {
-        const base = item.rate * item.qty;
-        const tax = base * (item.gst_percentage || 0) / 100;
-        netTotal += base;
-        taxTotal += tax;
+        const calcs = calculateItemTaxes(item);
+        netTotal += calcs.baseAmt;
+        taxTotal += calcs.taxAmt;
     });
 
     const grandTotal = netTotal + taxTotal;
@@ -1320,11 +1291,11 @@ async function searchCustomers(q) {
         }
         el.innerHTML = custs.map((c, i) => `
             <div class="search-result-item" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border);">
-                <div onclick="selectCustomer(${i})" style="flex: 1; padding: 4px 0;">
+                <div onclick="selectCustomer(${i})" style="flex: 1; padding: 4px 0; cursor: pointer;">
                     <div class="sri-name">${c.customer_name}</div>
                     <div class="sri-sub">${c.mobile_no || c.primary_mobile_no || ''} ${c.loyalty_program ? '· ' + c.loyalty_program : ''}</div>
                 </div>
-                <button class="btn-del" style="border: 1px solid var(--border2); color: var(--primary-lt); padding: 4px 8px; margin-left: 10px; border-radius: var(--radius-sm);" onclick="event.stopPropagation(); editCustOnFly('${c.name}', '${escapeHtml(c.customer_name)}', '${escapeHtml(c.mobile_no || c.primary_mobile_no)}', '${escapeHtml(c.customer_group)}', '${escapeHtml(c.customer_type || 'Individual')}')">
+                <button class="btn-del" style="border: 1px solid var(--border2); color: var(--primary-lt); padding: 4px 8px; margin-left: 10px; border-radius: var(--radius-sm);" onclick="event.stopPropagation(); editCustOnFly(${i})">
                     <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
                 </button>
             </div>
@@ -1335,10 +1306,41 @@ async function searchCustomers(q) {
     }
 }
 
+function setCustomer(customerName, billingAddr = '', shippingAddr = '', taxOverride = 'Default') {
+    S.customer = customerName;
+    S.billing_address = billingAddr || '';
+    S.shipping_address = shippingAddr || '';
+    S.tax_override = taxOverride || 'Default';
+    
+    document.getElementById('cust-name').textContent = S.customer;
+    
+    const panel = document.getElementById('cust-details-panel');
+    if (S.customer && S.customer !== 'Walk-In Customer') {
+        panel.style.display = 'flex';
+        document.getElementById('cust-billing-addr').textContent = S.billing_address || 'No billing address';
+        document.getElementById('cust-shipping-addr').textContent = S.shipping_address || 'No shipping address';
+        document.getElementById('bill-tax-override').value = S.tax_override;
+    } else {
+        panel.style.display = 'none';
+    }
+    
+    // Re-render cart immediately to reflect any tax preference adjustments
+    renderCart();
+}
+
+function changeBillTaxOverride(val) {
+    S.tax_override = val;
+    renderCart();
+}
+
 function selectCustomer(idx) {
     const c = window._custResults[idx];
-    S.customer = c.customer_name || c.name;
-    document.getElementById('cust-name').textContent = S.customer;
+    setCustomer(
+        c.customer_name || c.name,
+        c.custom_address_text || '',
+        c.custom_shipping_address_text || '',
+        c.custom_tax_inclusive_override || 'Default'
+    );
     closeModal('cust-modal');
     document.getElementById('cust-search-input').value = '';
     document.getElementById('cust-results').innerHTML = '';
@@ -1350,12 +1352,15 @@ function escapeHtml(str) {
     return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
-function showCustForm(name = '', customer_name = '', mobile_no = '', customer_group = 'Individual', customer_type = 'Individual') {
+function showCustForm(name = '', customer_name = '', mobile_no = '', customer_group = 'Individual', customer_type = 'Individual', address = '', shipping_address = '', tax_override = 'Default') {
     document.getElementById('cust-form-id').value = name;
     document.getElementById('cust-form-name').value = customer_name;
     document.getElementById('cust-form-mobile').value = mobile_no;
     document.getElementById('cust-form-group').value = customer_group;
     document.getElementById('cust-form-type').value = customer_type;
+    document.getElementById('cust-form-tax-override').value = tax_override || 'Default';
+    document.getElementById('cust-form-address').value = address || '';
+    document.getElementById('cust-form-shipping-address').value = shipping_address || '';
 
     const titleEl = document.getElementById('cust-modal-title');
     const saveBtn = document.getElementById('btn-save-cust');
@@ -1377,8 +1382,18 @@ function hideCustForm() {
     document.getElementById('cust-search-view').style.display = 'block';
 }
 
-function editCustOnFly(name, customer_name, mobile_no, customer_group, customer_type) {
-    showCustForm(name, customer_name, mobile_no, customer_group, customer_type);
+function editCustOnFly(idx) {
+    const c = window._custResults[idx];
+    showCustForm(
+        c.name,
+        c.customer_name,
+        c.mobile_no || c.primary_mobile_no || '',
+        c.customer_group || 'Individual',
+        c.customer_type || 'Individual',
+        c.custom_address_text || '',
+        c.custom_shipping_address_text || '',
+        c.custom_tax_inclusive_override || 'Default'
+    );
 }
 
 async function saveCustOnFly() {
@@ -1387,6 +1402,9 @@ async function saveCustOnFly() {
     const mobile_no = document.getElementById('cust-form-mobile').value.trim();
     const customer_group = document.getElementById('cust-form-group').value;
     const customer_type = document.getElementById('cust-form-type').value;
+    const tax_override = document.getElementById('cust-form-tax-override').value;
+    const address = document.getElementById('cust-form-address').value;
+    const shipping_address = document.getElementById('cust-form-shipping-address').value;
 
     if (!customer_name) {
         toast('Please enter customer name', 'error');
@@ -1398,42 +1416,33 @@ async function saveCustOnFly() {
     btn.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 1s linear infinite">progress_activity</span> Saving…';
 
     try {
-        if (name) {
-            // Edit existing
-            await api('frappe.client.set_value', {
-                doctype: 'Customer',
-                name: name,
-                fieldname: {
-                    customer_name: customer_name,
-                    mobile_no: mobile_no,
-                    customer_group: customer_group,
-                    customer_type: customer_type
-                }
-            });
-            toast('Customer updated successfully', 'success');
-            
-            // Auto-select
-            S.customer = customer_name;
-            document.getElementById('cust-name').textContent = S.customer;
-            closeModal('cust-modal');
-        } else {
-            // Create new
-            const res = await api('frappe.client.insert', {
-                doc: {
-                    doctype: 'Customer',
-                    customer_name: customer_name,
-                    mobile_no: mobile_no,
-                    customer_group: customer_group,
-                    customer_type: customer_type
-                }
-            });
-            toast('Customer created successfully', 'success');
-            
-            // Auto-select
-            S.customer = res.customer_name || res.name;
-            document.getElementById('cust-name').textContent = S.customer;
-            closeModal('cust-modal');
-        }
+        const res = await api('smriti_retail_os.master_api.save_customer_detail', {
+            customer_name: customer_name,
+            customer_type: customer_type,
+            customer_group: customer_group,
+            territory: 'All Territories',
+            mobile_no: mobile_no,
+            email_id: '',
+            tax_id: '',
+            gst_category: 'Unregistered',
+            pan: '',
+            custom_address_text: address,
+            custom_shipping_address_text: shipping_address,
+            custom_tax_inclusive_override: tax_override,
+            name: name || null
+        });
+        
+        toast(name ? 'Customer updated successfully' : 'Customer created successfully', 'success');
+        
+        // Auto-select and set customer context
+        setCustomer(
+            customer_name,
+            address,
+            shipping_address,
+            tax_override
+        );
+        
+        closeModal('cust-modal');
         hideCustForm();
     } catch (e) {
         toast('Failed to save customer: ' + e.message, 'error');
@@ -1539,6 +1548,9 @@ async function checkout() {
             loyalty_points: document.getElementById('loyalty-input').value || 0,
             invoice_name: S.invoiceName || null,
             on_credit: onCredit,
+            tax_override: S.tax_override || 'Default',
+            billing_address: S.billing_address || null,
+            shipping_address: S.shipping_address || null,
         });
 
         S.lastPrintUrl = res.print_url;
@@ -1562,10 +1574,9 @@ function printInvoice() {
 
 function newBill() {
     S.items = [];
-    S.customer = 'Walk-In Customer';
+    setCustomer('Walk-In Customer');
     S.invoiceName = null;
     S.lastPrintUrl = null;
-    document.getElementById('cust-name').textContent = 'Walk-In Customer';
     document.getElementById('tb-invoice').textContent = 'NEW BILL';
     document.getElementById('pay-cash').value = 0;
     document.getElementById('pay-upi').value  = 0;
@@ -1576,7 +1587,6 @@ function newBill() {
     document.getElementById('pay-upi').disabled  = false;
     document.getElementById('pay-card').disabled = false;
     document.getElementById('success-overlay').style.display = 'none';
-    renderCart();
     document.getElementById('barcode-input').focus();
 }
 
@@ -1672,6 +1682,8 @@ function openPopout(e, url) {
 document.getElementById('auth-pass').addEventListener('keypress', e => { if (e.key === 'Enter') doAuth(); });
 checkAuth();
 </script>
-</body>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+<script>SMRITI.renderFlexibleSidebar("billing");</script></body>
 </html>
 {% endblock %}

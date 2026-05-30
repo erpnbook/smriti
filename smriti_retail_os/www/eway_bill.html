@@ -1,8 +1,17 @@
+/**
+ * @file: smriti_retail_os/www/eway_bill.html
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
 {% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
-  @file: smriti_retail_os/www/sales_invoices.html
-  @description: SMRITI Billing Transactions — Standalone UI (Zero Frappe chrome)
-  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @file: smriti_retail_os/www/eway_bill.html
+  @description: SMRITI E-way Bill Generation & Dashboard — Standalone UI (Zero Frappe chrome)
+  @author: Antigravity <antigravity@google.com>
   @version: 1.0.0
   @license: MIT
 -->
@@ -10,7 +19,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SMRITI Billing Transactions</title>
+<title>SMRITI E-way Bill Management</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
 <style>
@@ -106,6 +115,17 @@ body.popout-mode .sidebar { display: none !important; }
 .topbtn span { font-size:16px; }
 .topbtn:hover { border-color:var(--primary); color:var(--primary-lt); }
 
+/* KPI Stats Section */
+.kpi-section { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; padding:20px 24px 10px 24px; flex-shrink:0; }
+.kpi-card { background:linear-gradient(135deg, var(--card), var(--bg2)); border:1px solid var(--border); border-radius:var(--radius); padding:16px; position:relative; overflow:hidden; transition:transform var(--t); }
+.kpi-card:hover { transform:translateY(-2px); }
+.kpi-value { font-family:'Outfit',sans-serif; font-size:2rem; font-weight:800; line-height:1.2; margin-top:6px; }
+.kpi-title { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); }
+.kpi-glow { position:absolute; bottom:-20px; right:-20px; width:70px; height:70px; border-radius:50%; filter:blur(30px); opacity:0.15; }
+.kpi-glow.indigo { background:var(--primary); }
+.kpi-glow.emerald { background:var(--success); }
+.kpi-glow.amber { background:var(--accent); }
+
 /* Filter Bar */
 .filter-bar { padding:14px 24px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; gap:16px; align-items:center; flex-shrink:0; }
 .form-input { padding:8px 12px; background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.88rem; outline:none; transition:all var(--t); font-family:inherit; }
@@ -123,10 +143,8 @@ body.popout-mode .sidebar { display: none !important; }
 
 .invoice-badge { font-family:monospace; font-size:0.78rem; font-weight:700; color:var(--primary-lt); background:rgba(99,102,241,0.08); padding:3px 8px; border-radius:4px; border:1px solid var(--border); }
 .status-badge { display:inline-block; padding:2px 8px; border-radius:99px; font-weight:700; font-size:0.72rem; text-transform:uppercase; }
-.status-badge.paid { background:rgba(16,185,129,0.12); color:var(--success); }
-.status-badge.unpaid { background:rgba(245,158,11,0.12); color:var(--warning); }
-.status-badge.overdue { background:rgba(239,68,68,0.12); color:var(--danger); }
-.status-badge.draft { background:rgba(255,255,255,0.04); color:var(--text-muted); }
+.status-badge.generated { background:rgba(16,185,129,0.12); color:var(--success); }
+.status-badge.pending { background:rgba(245,158,11,0.12); color:var(--warning); }
 
 /* Slide-out Drawer */
 .drawer-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(3,7,18,0.7); backdrop-filter:blur(3px); display:flex; justify-content:flex-end; opacity:0; pointer-events:none; transition:opacity 0.25s ease; }
@@ -157,6 +175,8 @@ body.popout-mode .sidebar { display: none !important; }
 .drawer-footer { padding:20px; border-top:1px solid var(--border); display:flex; gap:12px; background:rgba(0,0,0,0.15); }
 .btn-print { flex:1; padding:10px; background:var(--primary); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.88rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; }
 .btn-print:hover { background:var(--primary-lt); }
+.btn-secondary { background:var(--bg); border:1px solid var(--border2); color:var(--text); }
+.btn-secondary:hover { background:var(--card); border-color:var(--text-muted); }
 
 /* Toast Container */
 #toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
@@ -166,14 +186,6 @@ body.popout-mode .sidebar { display: none !important; }
 .toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
 .toast span { font-size:20px; }
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
-
-/* Print Styles */
-@media print {
-    body * { visibility: hidden; }
-    #print-area, #print-area * { visibility: visible; }
-    #print-area { position: absolute; left: 0; top: 0; width: 80mm; background: white; color: black; font-family: monospace; font-size: 11px; padding: 4mm; }
-    .no-print { display: none !important; }
-}
 </style>
 
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
@@ -197,7 +209,7 @@ body.popout-mode .sidebar { display: none !important; }
             <div class="topbar-breadcrumbs">
                 <span>SMRITI</span>
                 <span class="sep">/</span>
-                <span class="active">Billing Invoices Tracker</span>
+                <span class="active">E-way Bill Generation</span>
             </div>
             <div class="topbar-right">
                 <button class="topbtn" onclick="history.back()" title="Go Back">
@@ -209,19 +221,36 @@ body.popout-mode .sidebar { display: none !important; }
             </div>
         </div>
 
+        <!-- KPI Stats Grid -->
+        <div class="kpi-section">
+            <div class="kpi-card">
+                <div class="kpi-title">Total Large-Value Invoices</div>
+                <div class="kpi-value" id="kpi-total">0</div>
+                <div class="kpi-glow indigo"></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Active E-way Bills</div>
+                <div class="kpi-value" style="color:var(--success);" id="kpi-active">0</div>
+                <div class="kpi-glow emerald"></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Pending Generation</div>
+                <div class="kpi-value" style="color:var(--warning);" id="kpi-pending">0</div>
+                <div class="kpi-glow amber"></div>
+            </div>
+        </div>
+
         <!-- Filter Bar -->
         <div class="filter-bar">
-            <input type="text" class="form-input search-input" id="search-box" placeholder="Search by invoice no or customer name..." oninput="handleSearch(this.value)">
+            <input type="text" class="form-input search-input" id="search-box" placeholder="Search invoice no, customer or ewaybill..." oninput="handleSearch(this.value)">
             <select class="form-input filter-select" id="filter-status" onchange="applyFilters()">
                 <option value="">All Statuses</option>
-                <option value="Paid">Paid</option>
-                <option value="Unpaid">Unpaid</option>
-                <option value="Overdue">Overdue</option>
-                <option value="Draft">Draft</option>
+                <option value="Pending">Pending Generation</option>
+                <option value="Generated">Generated</option>
             </select>
         </div>
 
-        <!-- Transactions Table -->
+        <!-- Grid Table -->
         <div class="table-wrap">
             <table class="smriti-table">
                 <thead>
@@ -230,19 +259,20 @@ body.popout-mode .sidebar { display: none !important; }
                         <th>Date & Time</th>
                         <th>Customer</th>
                         <th style="text-align:right;">Grand Total</th>
-                        <th style="text-align:right;">Outstanding</th>
+                        <th>Transport Vehicle</th>
+                        <th>E-way Bill No</th>
                         <th style="text-align:center;">Status</th>
                     </tr>
                 </thead>
-                <tbody id="invoices-tbody">
-                    <tr><td colspan="6" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading transactions...</td></tr>
+                <tbody id="eway-tbody">
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading eligible transactions...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-<!-- Slide Drawer for Detail View -->
+<!-- Details & Interactive Drawer -->
 <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()">
     <div class="drawer" onclick="event.stopPropagation()">
         <div class="drawer-header">
@@ -255,7 +285,7 @@ body.popout-mode .sidebar { display: none !important; }
                 <div class="section-title">General Summary</div>
                 <div class="meta-row"><span class="meta-label">Date & Time</span><span class="meta-value" id="drw-date"></span></div>
                 <div class="meta-row"><span class="meta-label">Customer</span><span class="meta-value" id="drw-customer"></span></div>
-                <div class="meta-row"><span class="meta-label">Outstanding</span><span class="meta-value" id="drw-outstanding" style="color:var(--danger);"></span></div>
+                <div class="meta-row"><span class="meta-label">Grand Total</span><span class="meta-value" id="drw-grand" style="color:var(--success); font-weight:800;"></span></div>
                 <div class="meta-row"><span class="meta-label">Status</span><span id="drw-status"></span></div>
             </div>
 
@@ -275,29 +305,57 @@ body.popout-mode .sidebar { display: none !important; }
                 </table>
             </div>
 
-            <!-- Totals card -->
-            <div class="section-card">
-                <div class="section-title">Receipt Breakdown</div>
-                <div class="meta-row"><span class="meta-label">Net Amount</span><span class="meta-value" id="drw-net"></span></div>
-                <div class="meta-row"><span class="meta-label">Taxes (GST)</span><span class="meta-value" id="drw-tax"></span></div>
-                <div class="meta-row" style="border-top:1px solid var(--border); padding-top:8px; margin-top:8px; font-size:1.05rem;"><span class="meta-label" style="color:var(--text); font-weight:700;">Grand Total</span><span class="meta-value" id="drw-grand" style="color:var(--success); font-weight:800;"></span></div>
-            </div>
-
-            <!-- e-Way Bill card -->
-            <div class="section-card" id="drw-eway-card" style="display:none;">
-                <div class="section-title">e-Way Bill Generation</div>
-                <div class="meta-row" id="eway-number-row" style="display:none; justify-content:space-between;">
-                    <span class="meta-label">E-way Bill No.</span>
-                    <span class="meta-value" id="eway-number-val" style="color:var(--success); font-weight:bold;"></span>
+            <!-- Dedicated E-way Bill Generation panel -->
+            <div class="section-card" id="drw-eway-action-card">
+                <div class="section-title">E-way Bill Transport Details</div>
+                
+                <!-- Display panel when generated -->
+                <div id="eway-display-panel" style="display:none;">
+                    <div class="meta-row" style="margin-bottom:12px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2); padding:10px; border-radius:6px;">
+                        <span class="meta-label" style="color:var(--success); font-weight:700;">E-way Bill Generated</span>
+                        <span class="meta-value" id="eway-number-val" style="color:var(--success); font-weight:bold; font-size:1.05rem;"></span>
+                    </div>
+                    <div class="meta-row"><span class="meta-label">Vehicle Number</span><span class="meta-value" id="eway-vehicle-val"></span></div>
+                    <div class="meta-row"><span class="meta-label">Distance (km)</span><span class="meta-value" id="eway-distance-val"></span></div>
+                    <div class="meta-row"><span class="meta-label">Mode of Transport</span><span class="meta-value" id="eway-mode-val"></span></div>
+                    <div class="meta-row"><span class="meta-label">Vehicle Type</span><span class="meta-value" id="eway-type-val"></span></div>
+                    <div class="meta-row"><span class="meta-label">Transporter</span><span class="meta-value" id="eway-transporter-val"></span></div>
+                    <button class="btn-print btn-secondary" onclick="enableEwayEditing()" style="width:100%; margin-top:12px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                        <span class="material-symbols-outlined" style="font-size:16px;">edit</span> Update Transport Details
+                    </button>
                 </div>
-                <div id="eway-form-fields">
+
+                <!-- Input form when pending -->
+                <div id="eway-form-panel">
                     <div style="margin-bottom:10px;">
-                        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Vehicle Number</label>
+                        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Vehicle Number *</label>
                         <input type="text" class="form-input" id="eway-vehicle" style="width:100%; background:var(--bg);" placeholder="e.g. MH-04-GP-1234">
                     </div>
                     <div style="margin-bottom:10px;">
-                        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Distance (in km)</label>
+                        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Distance (in km) *</label>
                         <input type="number" class="form-input" id="eway-distance" style="width:100%; background:var(--bg);" placeholder="e.g. 520">
+                    </div>
+                    <div style="margin-bottom:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div>
+                            <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Mode of Transport</label>
+                            <select class="form-input" id="eway-mode" style="width:100%; background:var(--bg);">
+                                <option value="Road">Road</option>
+                                <option value="Rail">Rail</option>
+                                <option value="Air">Air</option>
+                                <option value="Ship">Ship</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Vehicle Type</label>
+                            <select class="form-input" id="eway-type" style="width:100%; background:var(--bg);">
+                                <option value="Regular">Regular</option>
+                                <option value="Overdimensional Cargo">Overdimensional Cargo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Transporter Name</label>
+                        <input type="text" class="form-input" id="eway-transporter" style="width:100%; background:var(--bg);" placeholder="e.g. TATTLY LOGISTICS">
                     </div>
                     <button class="btn-print" id="btn-generate-eway" onclick="generateEWayBill()" style="background:var(--accent); width:100%; margin-top:8px;">
                         <span class="material-symbols-outlined">local_shipping</span> Generate e-Way Bill
@@ -305,24 +363,21 @@ body.popout-mode .sidebar { display: none !important; }
                 </div>
             </div>
         </div>
-        <div class="drawer-footer">
-            <button class="btn-print" onclick="printReceipt()"><span class="material-symbols-outlined">print</span> Print Receipt</button>
+        <div class="drawer-footer" id="drawer-footer-actions">
+            <!-- Dynamic button injected based on status -->
         </div>
     </div>
 </div>
-
-<!-- Receipt print target wrapper -->
-<div id="print-area" style="display:none;"></div>
 
 <div id="toast-container"></div>
 
 <script>
 const CSRF_TOKEN = '{{ csrf_token }}';
 let loggedUser = '{{ cashier }}';
-let masterInvoicesList = [];
+let eligibleInvoicesList = [];
 let activeInvoiceDoc = null;
 
-// REST API
+// REST API wrapper
 function api(method, params = {}) {
     return fetch(`/api/method/${method}`, {
         method: 'POST',
@@ -367,26 +422,40 @@ async function loadInvoices() {
     try {
         const data = await api('frappe.client.get_list', {
             doctype: 'Sales Invoice',
-            fields: ['name', 'posting_date', 'posting_time', 'customer_name', 'grand_total', 'outstanding_amount', 'status'],
+            fields: ['name', 'posting_date', 'posting_time', 'customer_name', 'grand_total', 'ewaybill', 'vehicle_no', 'distance', 'status'],
+            filters: [['grand_total', '>=', 50000]], // E-way bill legal threshold is ₹50,000
             order_by: 'posting_date desc, posting_time desc',
-            limit_page_length: 150
+            limit_page_length: 200
         });
 
-        masterInvoicesList = data || [];
-        renderTable(masterInvoicesList);
+        eligibleInvoicesList = data || [];
+        calculateKPIs(eligibleInvoicesList);
+        renderTable(eligibleInvoicesList);
     } catch(e) {
-        toast('Failed to load transactions list: ' + e.message, 'error');
+        toast('Failed to load eligible transactions list: ' + e.message, 'error');
     }
 }
 
+function calculateKPIs(list) {
+    const total = list.length;
+    const active = list.filter(inv => inv.ewaybill).length;
+    const pending = total - active;
+
+    document.getElementById('kpi-total').textContent = total;
+    document.getElementById('kpi-active').textContent = active;
+    document.getElementById('kpi-pending').textContent = pending;
+}
+
 function renderTable(list) {
-    const tbody = document.getElementById('invoices-tbody');
+    const tbody = document.getElementById('eway-tbody');
     if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-sub);padding:40px 0;">No invoices tracked.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-sub);padding:40px 0;">No eligible transactions requiring E-way Bills.</td></tr>';
         return;
     }
     tbody.innerHTML = list.map(inv => {
-        const statusCls = inv.status.toLowerCase();
+        const hasEway = !!inv.ewaybill;
+        const statusCls = hasEway ? 'generated' : 'pending';
+        const statusText = hasEway ? 'Generated' : 'Pending';
         return `
             <tr onclick="loadInvoiceDetails('${inv.name}')">
                 <td><span class="invoice-badge">${inv.name}</span></td>
@@ -396,9 +465,10 @@ function renderTable(list) {
                 </td>
                 <td style="font-weight:600; color:var(--text);">${inv.customer_name}</td>
                 <td style="text-align:right; font-weight:700; color:var(--success);">Rs. ${parseFloat(inv.grand_total).toFixed(2)}</td>
-                <td style="text-align:right; font-weight:600; color:${parseFloat(inv.outstanding_amount) > 0 ? 'var(--danger)' : 'var(--text-muted)'};">Rs. ${parseFloat(inv.outstanding_amount).toFixed(2)}</td>
+                <td style="font-weight:500; color:var(--text-muted);">${inv.vehicle_no || '—'}</td>
+                <td style="font-family:monospace; font-weight:700; color:${hasEway ? 'var(--success)' : 'var(--text-sub)'};">${inv.ewaybill || '—'}</td>
                 <td style="text-align:center;">
-                    <span class="status-badge ${statusCls}">${inv.status}</span>
+                    <span class="status-badge ${statusCls}">${statusText}</span>
                 </td>
             </tr>
         `;
@@ -413,16 +483,21 @@ function applyFilters() {
     const q = document.getElementById('search-box').value.toLowerCase();
     const status = document.getElementById('filter-status').value;
 
-    let filtered = masterInvoicesList;
+    let filtered = eligibleInvoicesList;
 
     if (q) {
         filtered = filtered.filter(inv => 
             inv.name.toLowerCase().includes(q) ||
-            inv.customer_name.toLowerCase().includes(q)
+            inv.customer_name.toLowerCase().includes(q) ||
+            (inv.ewaybill && inv.ewaybill.toLowerCase().includes(q))
         );
     }
     if (status) {
-        filtered = filtered.filter(inv => inv.status === status);
+        if (status === 'Generated') {
+            filtered = filtered.filter(inv => !!inv.ewaybill);
+        } else if (status === 'Pending') {
+            filtered = filtered.filter(inv => !inv.ewaybill);
+        }
     }
 
     renderTable(filtered);
@@ -440,7 +515,7 @@ async function loadInvoiceDetails(invoiceId) {
         document.getElementById('drw-id').textContent = doc.name;
         document.getElementById('drw-date').textContent = `${doc.posting_date} | ${doc.posting_time || ''}`;
         document.getElementById('drw-customer').textContent = doc.customer_name;
-        document.getElementById('drw-outstanding').textContent = `Rs. ${parseFloat(doc.outstanding_amount).toFixed(2)}`;
+        document.getElementById('drw-grand').textContent = `Rs. ${parseFloat(doc.grand_total).toFixed(2)}`;
         
         const statusEl = document.getElementById('drw-status');
         statusEl.className = `status-badge ${doc.status.toLowerCase()}`;
@@ -460,26 +535,47 @@ async function loadInvoiceDetails(invoiceId) {
             </tr>
         `).join('');
 
-        document.getElementById('drw-net').textContent = `Rs. ${parseFloat(doc.net_total).toFixed(2)}`;
-        document.getElementById('drw-tax').textContent = `Rs. ${parseFloat(doc.total_taxes_and_charges || 0).toFixed(2)}`;
-        document.getElementById('drw-grand').textContent = `Rs. ${parseFloat(doc.grand_total).toFixed(2)}`;
+        // E-way Bill details drawer state handler
+        const displayPanel = document.getElementById('eway-display-panel');
+        const formPanel = document.getElementById('eway-form-panel');
+        const footerActions = document.getElementById('drawer-footer-actions');
 
-        // e-Way Bill UI handler
-        const ewayCard = document.getElementById('drw-eway-card');
-        if (parseFloat(doc.grand_total) >= 50000) {
-            ewayCard.style.display = 'block';
-            if (doc.ewaybill) {
-                document.getElementById('eway-number-row').style.display = 'flex';
-                document.getElementById('eway-number-val').textContent = doc.ewaybill;
-                document.getElementById('eway-form-fields').style.display = 'none';
-            } else {
-                document.getElementById('eway-number-row').style.display = 'none';
-                document.getElementById('eway-form-fields').style.display = 'block';
-                document.getElementById('eway-vehicle').value = '';
-                document.getElementById('eway-distance').value = '';
-            }
+        if (doc.ewaybill) {
+            // E-way bill already generated, show display details
+            displayPanel.style.display = 'block';
+            formPanel.style.display = 'none';
+
+            document.getElementById('eway-number-val').textContent = doc.ewaybill;
+            document.getElementById('eway-vehicle-val').textContent = doc.vehicle_no || '—';
+            document.getElementById('eway-distance-val').textContent = doc.distance ? `${doc.distance} km` : '—';
+            document.getElementById('eway-mode-val').textContent = doc.mode_of_transport || 'Road';
+            document.getElementById('eway-type-val').textContent = doc.gst_vehicle_type || 'Regular';
+            document.getElementById('eway-transporter-val').textContent = doc.transporter_name || '—';
+
+            // Print tax invoice action
+            footerActions.innerHTML = `
+                <button class="btn-print" onclick="printTaxInvoice('${doc.name}')">
+                    <span class="material-symbols-outlined">print</span> Print Tax Invoice (with E-way Bill)
+                </button>
+            `;
         } else {
-            ewayCard.style.display = 'none';
+            // Pending generation, show input form
+            displayPanel.style.display = 'none';
+            formPanel.style.display = 'block';
+
+            document.getElementById('eway-vehicle').value = '';
+            document.getElementById('eway-distance').value = '';
+            document.getElementById('eway-mode').value = 'Road';
+            document.getElementById('eway-type').value = 'Regular';
+            document.getElementById('eway-transporter').value = '';
+
+            const btn = document.getElementById('btn-generate-eway');
+            btn.innerHTML = `<span class="material-symbols-outlined">local_shipping</span> Generate e-Way Bill`;
+
+            // Clean secondary footer actions
+            footerActions.innerHTML = `
+                <button class="btn-print btn-secondary" onclick="closeDrawer()">Cancel</button>
+            `;
         }
 
         // Open slide-drawer
@@ -494,58 +590,46 @@ function closeDrawer() {
     activeInvoiceDoc = null;
 }
 
-function printReceipt() {
+function enableEwayEditing() {
     if (!activeInvoiceDoc) return;
     const doc = activeInvoiceDoc;
-
-    let itemsHtml = doc.items.map(it => `
-        <tr>
-            <td style="padding:4px 0;">${it.item_name}<br><small>${it.item_code} (${it.qty} x ${parseFloat(it.rate).toFixed(2)})</small></td>
-            <td style="text-align:right;padding:4px 0;vertical-align:bottom;">Rs. ${parseFloat(it.amount).toFixed(2)}</td>
-        </tr>
-    `).join('');
-
-    const html = `
-        <div style="text-align:center;margin-bottom:6px;">
-            <h2 style="margin:0;font-size:16px;">SMRITI RETAIL</h2>
-            <div style="font-size:11px;">Standalone Receipt Voucher</div>
-        </div>
-        <hr style="border:none;border-top:1px dashed #000;margin:6px 0;">
-        <table style="width:100%;font-size:11px;">
-            <tr><td>Bill No:</td><td style="text-align:right;font-weight:700;">${doc.name}</td></tr>
-            <tr><td>Date:</td><td style="text-align:right;">${doc.posting_date} ${doc.posting_time || ''}</td></tr>
-            <tr><td>Customer:</td><td style="text-align:right;">${doc.customer_name}</td></tr>
-        </table>
-        <hr style="border:none;border-top:1px dashed #000;margin:6px 0;">
-        <table style="width:100%;font-size:11px;">
-            <thead>
-                <tr style="border-bottom:1px dashed #000;"><th style="text-align:left;">Item Description</th><th style="text-align:right;">Amount</th></tr>
-            </thead>
-            <tbody>${itemsHtml}</tbody>
-        </table>
-        <hr style="border:none;border-top:1px dashed #000;margin:6px 0;">
-        <table style="width:100%;font-size:11px;">
-            <tr><td>Net Total:</td><td style="text-align:right;">Rs. ${parseFloat(doc.net_total).toFixed(2)}</td></tr>
-            <tr><td>GST Taxes:</td><td style="text-align:right;">Rs. ${parseFloat(doc.total_taxes_and_charges || 0).toFixed(2)}</td></tr>
-            <tr style="font-size:13px;font-weight:800;"><td>Grand Total:</td><td style="text-align:right;">Rs. ${parseFloat(doc.grand_total).toFixed(2)}</td></tr>
-        </table>
-        <div style="text-align:center;margin-top:14px;font-size:10px;">
-            Thank you for shopping at SMRITI!
-        </div>
+    
+    // Toggle panels
+    document.getElementById('eway-display-panel').style.display = 'none';
+    document.getElementById('eway-form-panel').style.display = 'block';
+    
+    // Prefill form fields with current values
+    document.getElementById('eway-vehicle').value = doc.vehicle_no || '';
+    document.getElementById('eway-distance').value = doc.distance || '';
+    document.getElementById('eway-mode').value = doc.mode_of_transport || 'Road';
+    document.getElementById('eway-type').value = doc.gst_vehicle_type || 'Regular';
+    document.getElementById('eway-transporter').value = doc.transporter_name || '';
+    
+    // Customize generate button for editing mode
+    const btn = document.getElementById('btn-generate-eway');
+    btn.innerHTML = `<span class="material-symbols-outlined">save</span> Update Transport Details`;
+    
+    // Customize drawer footer to allow canceling the edit
+    const footerActions = document.getElementById('drawer-footer-actions');
+    footerActions.innerHTML = `
+        <button class="btn-print btn-secondary" onclick="loadInvoiceDetails('${doc.name}')">Cancel Edit</button>
     `;
-
-    const printArea = document.getElementById('print-area');
-    printArea.innerHTML = html;
-    window.print();
 }
 
 async function generateEWayBill() {
     if (!activeInvoiceDoc) return;
     const vehicle = document.getElementById('eway-vehicle').value.trim();
     const distance = document.getElementById('eway-distance').value.trim();
+    const mode = document.getElementById('eway-mode').value;
+    const type = document.getElementById('eway-type').value;
+    const transporter = document.getElementById('eway-transporter').value.trim();
     
     if (!vehicle) {
         toast('Vehicle Number is required!', 'error');
+        return;
+    }
+    if (!distance) {
+        toast('Distance is required!', 'error');
         return;
     }
     
@@ -554,19 +638,28 @@ async function generateEWayBill() {
         const res = await api('smriti_retail_os.smriti_retail_os.billing_api.generate_mock_eway_bill', {
             invoice_name: activeInvoiceDoc.name,
             vehicle_no: vehicle,
-            distance: distance
+            distance: distance,
+            mode_of_transport: mode,
+            gst_vehicle_type: type,
+            transporter_name: transporter
         });
         
-        toast('E-way Bill generated successfully!', 'success');
+        toast(res.message || 'E-way Bill generated successfully!', 'success');
         
-        // Reload details
+        // Reload details in drawer
         await loadInvoiceDetails(activeInvoiceDoc.name);
         
-        // Reload active table lists in background
+        // Reload dashboard lists in background
         await loadInvoices();
     } catch(e) {
         toast('Failed to generate E-way Bill: ' + e.message, 'error');
     }
+}
+
+function printTaxInvoice(invoiceId) {
+    // Open the print layout in a new tab/window matching the verified Tattly Threads Tax Invoice
+    const url = `/printview?doctype=Sales%20Invoice&name=${encodeURIComponent(invoiceId)}&format=Tattly%20Threads%20Tax%20Invoice`;
+    window.open(url, '_blank');
 }
 
 function openPopout(e, url) {
@@ -592,6 +685,6 @@ window.onload = init;
 </script>
 
 <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
-<script>SMRITI.renderFlexibleSidebar("sales_invoices");</script></body>
+<script>SMRITI.renderFlexibleSidebar("eway_bill");</script></body>
 </html>
 {% endblock %}

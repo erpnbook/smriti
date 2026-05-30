@@ -14,7 +14,20 @@ from frappe.utils import flt, cint
 from frappe import _
 
 # Helper to get state from GSTIN using India Compliance utilities
-def resolve_address_state(gstin, fallback="Karnataka"):
+def resolve_address_state(gstin, address_text="", fallback="Karnataka"):
+    if address_text:
+        states = [
+            "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
+            "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
+            "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
+            "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
+            "Uttarakhand", "West Bengal", "Delhi", "Jammu & Kashmir", "Ladakh"
+        ]
+        text_lower = address_text.lower()
+        for s in states:
+            if s.lower() in text_lower:
+                return s
+
     if not gstin or len(gstin) < 2:
         return fallback
     try:
@@ -111,52 +124,98 @@ def sync_price_list_rate(item_code, price_list, rate, uom):
 def sync_customer_address(doc, method):
     """
     Triggers on_update on Customer.
-    Auto-creates or updates standard linked Address record from custom_address_text.
+    Auto-creates or updates standard linked Address record from custom_address_text and custom_shipping_address_text.
     """
-    if not doc.custom_address_text:
-        return
+    if doc.custom_address_text:
+        address_title = f"{doc.customer_name} - Retail Billing"
+        address_lines = [line.strip() for line in doc.custom_address_text.split("\n") if line.strip()]
+        
+        address_line1 = address_lines[0] if len(address_lines) > 0 else "N/A"
+        address_line2 = ", ".join(address_lines[1:]) if len(address_lines) > 1 else ""
+        
+        # Resolve state from GSTIN or fallback
+        state = resolve_address_state(doc.tax_id or doc.get("gstin"), doc.custom_address_text)
+        
+        gstin_state = resolve_address_state(doc.tax_id or doc.get("gstin"))
+        resolved_gstin = doc.tax_id if state == gstin_state else None
 
-    address_title = f"{doc.customer_name} - Retail Billing"
-    address_lines = [line.strip() for line in doc.custom_address_text.split("\n") if line.strip()]
-    
-    address_line1 = address_lines[0] if len(address_lines) > 0 else "N/A"
-    address_line2 = ", ".join(address_lines[1:]) if len(address_lines) > 1 else ""
-    
-    # Resolve state from GSTIN or fallback
-    state = resolve_address_state(doc.tax_id or doc.get("gstin"))
+        existing_address = frappe.db.get_value(
+            "Address",
+            {
+                "links.link_doctype": "Customer",
+                "links.link_name": doc.name,
+                "address_type": "Billing"
+            },
+            "name"
+        )
 
-    existing_address = frappe.db.get_value(
-        "Address",
-        {
-            "links.link_doctype": "Customer",
-            "links.link_name": doc.name,
-            "address_type": "Billing"
-        },
-        "name"
-    )
+        if existing_address:
+            addr = frappe.get_doc("Address", existing_address)
+            addr.address_line1 = address_line1[:140]
+            addr.address_line2 = address_line2[:140] if address_line2 else None
+            addr.gstin = resolved_gstin
+            addr.state = state
+            addr.save(ignore_permissions=True)
+        else:
+            addr = frappe.new_doc("Address")
+            addr.address_title = address_title[:140]
+            addr.address_type = "Billing"
+            addr.address_line1 = address_line1[:140]
+            addr.address_line2 = address_line2[:140] if address_line2 else None
+            addr.city = "Unknown"
+            addr.country = "India"
+            addr.state = state
+            addr.gstin = resolved_gstin
+            addr.append("links", {
+                "link_doctype": "Customer",
+                "link_name": doc.name
+            })
+            addr.insert(ignore_permissions=True)
 
-    if existing_address:
-        addr = frappe.get_doc("Address", existing_address)
-        addr.address_line1 = address_line1[:140]
-        addr.address_line2 = address_line2[:140] if address_line2 else None
-        addr.gstin = doc.tax_id
-        addr.state = state
-        addr.save(ignore_permissions=True)
-    else:
-        addr = frappe.new_doc("Address")
-        addr.address_title = address_title[:140]
-        addr.address_type = "Billing"
-        addr.address_line1 = address_line1[:140]
-        addr.address_line2 = address_line2[:140] if address_line2 else None
-        addr.city = "Unknown"
-        addr.country = "India"
-        addr.state = state
-        addr.gstin = doc.tax_id
-        addr.append("links", {
-            "link_doctype": "Customer",
-            "link_name": doc.name
-        })
-        addr.insert(ignore_permissions=True)
+    if doc.get("custom_shipping_address_text"):
+        address_title = f"{doc.customer_name} - Retail Shipping"
+        address_lines = [line.strip() for line in doc.custom_shipping_address_text.split("\n") if line.strip()]
+        
+        address_line1 = address_lines[0] if len(address_lines) > 0 else "N/A"
+        address_line2 = ", ".join(address_lines[1:]) if len(address_lines) > 1 else ""
+        
+        state = resolve_address_state(doc.tax_id or doc.get("gstin"), doc.custom_shipping_address_text)
+        
+        gstin_state = resolve_address_state(doc.tax_id or doc.get("gstin"))
+        resolved_gstin = doc.tax_id if state == gstin_state else None
+
+        existing_address = frappe.db.get_value(
+            "Address",
+            {
+                "links.link_doctype": "Customer",
+                "links.link_name": doc.name,
+                "address_type": "Shipping"
+            },
+            "name"
+        )
+
+        if existing_address:
+            addr = frappe.get_doc("Address", existing_address)
+            addr.address_line1 = address_line1[:140]
+            addr.address_line2 = address_line2[:140] if address_line2 else None
+            addr.gstin = resolved_gstin
+            addr.state = state
+            addr.save(ignore_permissions=True)
+        else:
+            addr = frappe.new_doc("Address")
+            addr.address_title = address_title[:140]
+            addr.address_type = "Shipping"
+            addr.address_line1 = address_line1[:140]
+            addr.address_line2 = address_line2[:140] if address_line2 else None
+            addr.city = "Unknown"
+            addr.country = "India"
+            addr.state = state
+            addr.gstin = resolved_gstin
+            addr.append("links", {
+                "link_doctype": "Customer",
+                "link_name": doc.name
+            })
+            addr.insert(ignore_permissions=True)
 
 
 # --- Supplier Hooks ---
@@ -164,10 +223,10 @@ def sync_customer_address(doc, method):
 def sync_supplier_address_and_credit_days(doc, method):
     """
     Triggers on_update on Supplier.
-    1. Auto-creates standard linked Address from custom_address_text.
+    1. Auto-creates standard linked Address from custom_address_text and custom_shipping_address_text.
     2. Resolves custom_credit_days to a standard Payment Terms Template and links it.
     """
-    # 1. Sync Address
+    # 1. Sync Address (Billing)
     if doc.custom_address_text:
         address_title = f"{doc.supplier_name} - Retail Purchase"
         address_lines = [line.strip() for line in doc.custom_address_text.split("\n") if line.strip()]
@@ -175,7 +234,10 @@ def sync_supplier_address_and_credit_days(doc, method):
         address_line1 = address_lines[0] if len(address_lines) > 0 else "N/A"
         address_line2 = ", ".join(address_lines[1:]) if len(address_lines) > 1 else ""
         
-        state = resolve_address_state(doc.gstin or doc.tax_id)
+        state = resolve_address_state(doc.gstin or doc.tax_id, doc.custom_address_text)
+        
+        gstin_state = resolve_address_state(doc.gstin or doc.tax_id)
+        resolved_gstin = (doc.gstin or doc.tax_id) if state == gstin_state else None
 
         existing_address = frappe.db.get_value(
             "Address",
@@ -191,7 +253,7 @@ def sync_supplier_address_and_credit_days(doc, method):
             addr = frappe.get_doc("Address", existing_address)
             addr.address_line1 = address_line1[:140]
             addr.address_line2 = address_line2[:140] if address_line2 else None
-            addr.gstin = doc.gstin
+            addr.gstin = resolved_gstin
             addr.state = state
             addr.save(ignore_permissions=True)
         else:
@@ -203,7 +265,53 @@ def sync_supplier_address_and_credit_days(doc, method):
             addr.city = "Unknown"
             addr.country = "India"
             addr.state = state
-            addr.gstin = doc.gstin
+            addr.gstin = resolved_gstin
+            addr.append("links", {
+                "link_doctype": "Supplier",
+                "link_name": doc.name
+            })
+            addr.insert(ignore_permissions=True)
+
+    # 1b. Sync Address (Shipping)
+    if doc.get("custom_shipping_address_text"):
+        address_title = f"{doc.supplier_name} - Retail Supplier Shipping"
+        address_lines = [line.strip() for line in doc.custom_shipping_address_text.split("\n") if line.strip()]
+        
+        address_line1 = address_lines[0] if len(address_lines) > 0 else "N/A"
+        address_line2 = ", ".join(address_lines[1:]) if len(address_lines) > 1 else ""
+        
+        state = resolve_address_state(doc.gstin or doc.tax_id, doc.custom_shipping_address_text)
+        
+        gstin_state = resolve_address_state(doc.gstin or doc.tax_id)
+        resolved_gstin = (doc.gstin or doc.tax_id) if state == gstin_state else None
+
+        existing_address = frappe.db.get_value(
+            "Address",
+            {
+                "links.link_doctype": "Supplier",
+                "links.link_name": doc.name,
+                "address_type": "Shipping"
+            },
+            "name"
+        )
+
+        if existing_address:
+            addr = frappe.get_doc("Address", existing_address)
+            addr.address_line1 = address_line1[:140]
+            addr.address_line2 = address_line2[:140] if address_line2 else None
+            addr.gstin = resolved_gstin
+            addr.state = state
+            addr.save(ignore_permissions=True)
+        else:
+            addr = frappe.new_doc("Address")
+            addr.address_title = address_title[:140]
+            addr.address_type = "Shipping"
+            addr.address_line1 = address_line1[:140]
+            addr.address_line2 = address_line2[:140] if address_line2 else None
+            addr.city = "Unknown"
+            addr.country = "India"
+            addr.state = state
+            addr.gstin = resolved_gstin
             addr.append("links", {
                 "link_doctype": "Supplier",
                 "link_name": doc.name

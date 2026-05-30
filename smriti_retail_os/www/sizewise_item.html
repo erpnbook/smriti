@@ -1,0 +1,669 @@
+/**
+ * @file: smriti_retail_os/www/sizewise_item.html
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/sizewise_item.html
+  @description: Dedicated Standalone Sizewise Item Master CRUD Portal (Zero Frappe chrome)
+  @author: Antigravity <antigravity@google.com>
+  @version: 1.0.0
+  @license: MIT
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sizewise Item Master Wizard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg:         #0a0f1e;
+    --bg2:        #0f1629;
+    --card:       #131d35;
+    --card2:      #172040;
+    --border:     rgba(255,255,255,0.07);
+    --border2:    rgba(255,255,255,0.12);
+    --primary:    #6366f1;
+    --primary-lt: #818cf8;
+    --accent:     #f59e0b;
+    --success:    #10b981;
+    --warning:    #f59e0b;
+    --danger:     #ef4444;
+    --text:       #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-sub:   #475569;
+    --radius:     12px;
+    --radius-sm:  8px;
+    --radius-lg:  16px;
+    --t:          0.2s ease;
+}
+
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+
+/* Ambient grid */
+.bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 0;
+}
+
+#app { position:relative; z-index:1; width:100vw; height:100vh; display:flex; overflow:hidden; }
+
+/* Sidebar */
+.sidebar { width:260px; flex-shrink:0; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:10; }
+.sidebar-brand { padding:20px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border); }
+.sidebar-logo { width:32px; height:32px; background:linear-gradient(135deg,var(--primary),var(--primary-lt)); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; }
+.sidebar-logo span { font-size:20px; }
+.sidebar-title { font-family:'Outfit',sans-serif; font-weight:800; font-size:1.15rem; background:linear-gradient(135deg,#fff,var(--text-muted)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.sidebar-menu { flex:1; overflow-y:auto; padding:16px 12px; display:flex; flex-direction:column; gap:6px; }
+.sidebar-item { position:relative; display:flex; align-items:center; gap:12px; padding:11px 14px; padding-right:36px !important; border-radius:var(--radius); color:var(--text-muted); text-decoration:none; font-weight:600; font-size:0.92rem; transition:all var(--t); cursor:pointer; }
+.sidebar-item span.emoji { font-size:16px; width:20px; text-align:center; }
+.sidebar-item:hover, .sidebar-item.active { background:rgba(99,102,241,0.08); color:var(--text); }
+.sidebar-item.active { border-left:3px solid var(--primary); }
+.popout-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.2s, color 0.2s;
+    color: var(--text-muted);
+    cursor: pointer;
+    border: none;
+    background: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+}
+.sidebar-item:hover .popout-btn { opacity: 1; }
+.popout-btn:hover { color: var(--primary-lt); }
+.popout-btn span { font-size: 16px !important; }
+.sidebar-footer { padding:16px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.15); }
+.sidebar-user { display:flex; align-items:center; gap:10px; }
+.sidebar-avatar { width:36px; height:36px; background:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; color:white; font-size:1.1rem; text-transform:uppercase; }
+.sidebar-info { display:flex; flex-direction:column; }
+.sidebar-name { font-size:0.85rem; font-weight:700; color:var(--text); }
+.sidebar-role { font-size:0.75rem; color:var(--text-muted); }
+.sidebar-logout { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:var(--radius-sm); border:none; background:transparent; color:#ef4444; font-weight:600; font-size:0.85rem; cursor:pointer; width:100%; transition:background var(--t); }
+.sidebar-logout:hover { background:rgba(239,68,68,0.1); }
+body.popout-mode .sidebar { display: none !important; }
+
+/* Main Wrapper */
+.main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+/* Topbar */
+.topbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
+.topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--text-muted); }
+.topbar-breadcrumbs span.sep { color:var(--text-sub); }
+.topbar-breadcrumbs span.active { color:var(--text); }
+.topbar-right { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
+.topbtn { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:var(--radius-sm); font-size:12px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); white-space:nowrap; }
+.topbtn span { font-size:16px; }
+.topbtn:hover { border-color:var(--primary); color:var(--primary-lt); }
+
+/* Form Layout */
+.content-area { flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:20px; }
+
+.page-header-wrap { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+.page-title { font-family:'Outfit',sans-serif; font-size:1.45rem; font-weight:800; }
+.smriti-badge { font-size:0.68rem; font-weight:800; background:var(--primary); color:white; padding:2px 6px; border-radius:4px; vertical-align:middle; margin-left:6px; letter-spacing:0.5px; }
+
+.section-card { background:linear-gradient(135deg, var(--card), var(--bg2)); border:1px solid var(--border); border-radius:var(--radius); padding:20px; position:relative; overflow:hidden; }
+.section-title { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--primary-lt); margin-bottom:16px; display:flex; align-items:center; gap:6px; }
+.section-title span { font-size:16px; }
+
+/* Grid forms */
+.form-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px; }
+.form-group { display:flex; flex-direction:column; gap:6px; }
+.form-group.span-2 { grid-column: span 2; }
+.form-label { font-size:0.75rem; font-weight:600; color:var(--text-muted); }
+.form-label.required::after { content:" *"; color:var(--danger); }
+.form-input { padding:9px 12px; background:rgba(0,0,0,0.2); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.88rem; outline:none; transition:all var(--t); font-family:inherit; }
+.form-input:focus { border-color:var(--primary); box-shadow:0 0 0 2px rgba(99,102,241,0.15); }
+.form-input:disabled { background:rgba(255,255,255,0.02); color:var(--text-muted); cursor:not-allowed; }
+
+.retrieval-glowing { border-color:var(--success) !important; box-shadow:0 0 8px rgba(16,185,129,0.2) !important; }
+
+/* Size Pivot Matrix */
+.size-matrix-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:14px; margin-top:8px; }
+.size-card { background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:var(--radius); padding:12px; display:flex; flex-direction:column; gap:10px; transition:all var(--t); position:relative; }
+.size-card.active { background:rgba(99,102,241,0.04); border-color:rgba(99,102,241,0.25); }
+.size-card:hover { transform:translateY(-2px); border-color:rgba(255,255,255,0.12); }
+
+.size-header { display:flex; align-items:center; justify-content:space-between; }
+.size-label { font-family:'Outfit',sans-serif; font-size:1.15rem; font-weight:800; color:var(--text); }
+.size-active-chk { width:16px; height:16px; accent-color:var(--primary); cursor:pointer; }
+
+.size-body { display:flex; flex-direction:column; gap:6px; font-size:0.75rem; }
+.size-badge { display:inline-block; text-align:center; padding:5px; background:rgba(99,102,241,0.1); color:var(--primary-lt); font-weight:700; border-radius:4px; font-family:monospace; }
+.size-btn-delete { background:none; border:none; color:var(--danger); cursor:pointer; display:flex; align-items:center; justify-content:center; padding:4px; border-radius:4px; transition:background var(--t); margin-left:auto; }
+.size-btn-delete:hover { background:rgba(239,68,68,0.1); }
+.size-btn-delete span { font-size:16px; }
+
+/* Mode Switch Toggle CSS */
+.barcode-toggle-wrap { display:flex; align-items:center; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); font-weight:700; margin-top:4px; }
+.toggle-btn-grp { display:flex; background:rgba(0,0,0,0.3); padding:2px; border-radius:4px; border:1px solid var(--border); }
+.toggle-btn { padding:2px 6px; border-radius:3px; border:none; background:transparent; color:var(--text-muted); font-size:0.68rem; font-weight:700; cursor:pointer; }
+.toggle-btn.active { background:var(--primary); color:white; }
+
+.size-card-footer { display:flex; align-items:center; margin-top:4px; border-top:1px solid var(--border); padding-top:6px; }
+
+/* Custom Add Size Card */
+.add-size-card { border:2px dashed var(--border); display:flex; align-items:center; justify-content:center; min-height:140px; cursor:pointer; transition:all var(--t); color:var(--text-muted); border-radius:var(--radius); font-weight:600; font-size:0.88rem; flex-direction:column; gap:8px; }
+.add-size-card:hover { border-color:var(--primary); color:var(--primary-lt); background:rgba(99,102,241,0.02); }
+.add-size-card span.icon { font-size:28px; }
+
+/* Action Toolbar */
+.toolbar { display:flex; gap:12px; margin-top:8px; padding-bottom:30px; }
+.btn-save { flex:1; padding:12px; background:var(--success); border:none; border-radius:var(--radius); color:white; font-weight:700; font-size:0.95rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 14px rgba(16,185,129,0.25); }
+.btn-save:hover { background:#059669; }
+.btn-secondary { padding:12px 24px; background:var(--bg2); border:1px solid var(--border2); color:var(--text); font-weight:600; border-radius:var(--radius); cursor:pointer; transition:all var(--t); display:flex; align-items:center; gap:6px; }
+.btn-secondary:hover { background:var(--card); border-color:var(--text-muted); }
+
+/* Toast Container */
+#toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
+.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+.toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
+.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
+.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+.toast span { font-size:20px; }
+@keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+</style>
+
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
+<body>
+<script>
+    if (new URLSearchParams(window.location.search).get('popout') === 'true') {
+        document.body.classList.add('popout-mode');
+    }
+</script>
+
+<div class="bg-grid"></div>
+
+<div id="app">
+    <!-- Sidebar -->
+    <div id="smriti-sidebar-target" class="sidebar"></div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-breadcrumbs">
+                <span>SMRITI</span>
+                <span class="sep">/</span>
+                <span class="active">Sizewise Item Master CRUD</span>
+            </div>
+            <div class="topbar-right">
+                <button class="topbtn" onclick="history.back()" title="Go Back">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+                <button class="topbtn" onclick="history.forward()" title="Go Forward">
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <div class="page-header-wrap">
+                <h1 class="page-title">👟 Dedicated Sizewise Item Master <span class="smriti-badge">CRUD</span></h1>
+            </div>
+
+            <!-- Base Style Card -->
+            <div class="section-card">
+                <div class="section-title"><span class="material-symbols-outlined">style</span> 1. Base Style Template Details</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label required">Article / Style Code</label>
+                        <input type="text" class="form-input" id="style-code" placeholder="e.g. AD-SUPER-20" onchange="lookupStyle(this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Style Description</label>
+                        <input type="text" class="form-input" id="style-desc" placeholder="e.g. Superstar Classic Sneakers">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Color</label>
+                        <input type="text" class="form-input" id="style-color" placeholder="e.g. BLACK">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Brand</label>
+                        <input type="text" class="form-input" id="style-brand" placeholder="e.g. Adidas">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select class="form-input" id="style-group">
+                            <option value="Footwear">Footwear</option>
+                            <option value="Products">Products</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cost Price (₹)</label>
+                        <input type="number" class="form-input" id="style-cost" placeholder="0.00" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Planned MRP / Selling Price (₹)</label>
+                        <input type="number" class="form-input" id="style-mrp" placeholder="0.00" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">GST %</label>
+                        <select class="form-input" id="style-gst">
+                            <option value="0">0%</option>
+                            <option value="5">5%</option>
+                            <option value="12">12%</option>
+                            <option value="18" selected>18%</option>
+                            <option value="28">28%</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">HSN Code</label>
+                        <input type="text" class="form-input" id="style-hsn" placeholder="e.g. 6403" value="6403">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Gender</label>
+                        <select class="form-input" id="style-gender">
+                            <option value="UNISEX" selected>UNISEX</option>
+                            <option value="MENS">MENS</option>
+                            <option value="LADIES">LADIES</option>
+                            <option value="KIDS">KIDS</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Purchase Class</label>
+                        <select class="form-input" id="style-pclass">
+                            <option value="FW" selected>FW (Footwear)</option>
+                            <option value="ASSTED">ASSTED</option>
+                            <option value="SPORTS">SPORTS</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Vendor Code / Supplier</label>
+                        <input type="text" class="form-input" id="style-vendor" placeholder="e.g. SUP-TATTLY">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Size Configuration Grid -->
+            <div class="section-card">
+                <div class="section-title"><span class="material-symbols-outlined">grid_on</span> 2. Sizewise Pivot Grid (Active Configurations & Barcodes)</div>
+                <div class="size-matrix-grid" id="size-pivot-container">
+                    <!-- Dynamic Size Cards Injected Here -->
+                </div>
+            </div>
+
+            <!-- Toolbar Action Footer -->
+            <div class="toolbar">
+                <button class="btn-secondary" onclick="clearWizard()">🗑 Clear Form</button>
+                <button class="btn-save" onclick="saveStyleMaster()">
+                    <span class="material-symbols-outlined">save</span> Save Style & Size Variants
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+let loggedUser = '{{ cashier }}';
+
+// Track current dynamic sizes matrix
+let sizesList = ['6', '7', '8', '9', '10', '11', '12'];
+let sizesConfigData = {}; // Maps size label -> { active: boolean, barcode_mode: 'auto'|'manual', manual_barcode: string, existing: boolean, variant_code: string }
+
+function api(method, params = {}) {
+    return fetch(`/api/method/${method}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Frappe-CSRF-Token': CSRF_TOKEN
+        },
+        body: JSON.stringify(params)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.exc) throw new Error(d._error_message || d.exc);
+        return d.message;
+    });
+}
+
+function doLogout() {
+    fetch('/api/method/logout', { credentials: 'include' })
+    .then(() => { window.location.href = '/login'; });
+}
+
+function toast(msg, type = 'success') {
+    const cont = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icon = type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info';
+    t.innerHTML = `<span class="material-symbols-outlined">${icon}</span> <span>${msg}</span>`;
+    cont.appendChild(t);
+    setTimeout(() => { t.remove(); }, 4000);
+}
+
+function openPopout(e, url) {
+    e.preventDefault();
+    e.stopPropagation();
+    let popout_url = url;
+    if (popout_url.indexOf('?') === -1) {
+        popout_url += '?popout=true';
+    }
+    window.open(popout_url, "smriti-popout-window", "width=1200,height=800,resizable=yes,scrollbars=yes");
+}
+
+function init() {
+    const _sbu = document.getElementById('sb-user'); if (_sbu) _sbu.textContent = loggedUser.split('@')[0];
+    const _sba = document.getElementById('sb-avatar'); if (_sba) _sba.textContent = loggedUser.charAt(0).toUpperCase();
+
+    // Setup initial empty configuration mapping
+    sizesList.forEach(sz => {
+        sizesConfigData[sz] = { active: false, barcode_mode: 'auto', manual_barcode: '', existing: false, variant_code: '' };
+    });
+
+    renderPivotGrid();
+}
+
+function renderPivotGrid() {
+    const container = document.getElementById('size-pivot-container');
+    container.innerHTML = '';
+
+    sizesList.forEach(sz => {
+        const conf = sizesConfigData[sz] || { active: false, barcode_mode: 'auto', manual_barcode: '', existing: false, variant_code: '' };
+        const activeCls = conf.active ? 'active' : '';
+        const checkedAttr = conf.active ? 'checked' : '';
+        const autoActive = conf.barcode_mode === 'auto' ? 'active' : '';
+        const manualActive = conf.barcode_mode === 'manual' ? 'active' : '';
+        const isInputDisabled = conf.barcode_mode === 'auto' ? 'disabled' : '';
+
+        const card = document.createElement('div');
+        card.className = `size-card ${activeCls}`;
+        card.id = `size-card-${sz}`;
+
+        let barcodeDisplayHtml = '';
+        if (conf.barcode_mode === 'auto') {
+            barcodeDisplayHtml = `<div class="size-badge">🤖 AUTO-BARCODE</div>`;
+        } else {
+            barcodeDisplayHtml = `
+                <input type="text" class="form-input" style="font-family:monospace; font-size:0.75rem; padding:6px; width:100%; text-align:center; background:var(--bg);"
+                       value="${conf.manual_barcode || ''}" placeholder="Scan/Enter Barcode" ${isInputDisabled}
+                       oninput="updateManualBarcode('${sz}', this.value)">`;
+        }
+
+        // Direct delete action for existing saved variants
+        let footerHtml = '';
+        if (conf.existing) {
+            footerHtml = `
+                <div class="size-card-footer">
+                    <span style="font-size:0.68rem; color:var(--success); font-weight:700;">🟢 Active in DB</span>
+                    <button class="size-btn-delete" onclick="triggerDeleteVariant('${conf.variant_code}', '${sz}')" title="Delete Variant from Database">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                </div>`;
+        }
+
+        card.innerHTML = `
+            <div class="size-header">
+                <span class="size-label">SIZE ${sz}</span>
+                <input type="checkbox" class="size-active-chk" ${checkedAttr} onchange="toggleSizeActive('${sz}', this.checked)">
+            </div>
+            <div class="size-body">
+                <div class="barcode-toggle-wrap">
+                    <span>BARCODE</span>
+                    <div class="toggle-btn-grp">
+                        <button class="toggle-btn ${autoActive}" onclick="setSizeBarcodeMode('${sz}', 'auto')">Auto</button>
+                        <button class="toggle-btn ${manualActive}" onclick="setSizeBarcodeMode('${sz}', 'manual')">Manual</button>
+                    </div>
+                </div>
+                <div style="margin-top:6px;">${barcodeDisplayHtml}</div>
+            </div>
+            ${footerHtml}
+        `;
+        container.appendChild(card);
+    });
+
+    // Add interactive dynamic Custom Size card at the end
+    const addCard = document.createElement('div');
+    addCard.className = 'add-size-card';
+    addCard.onclick = promptCustomSize;
+    addCard.innerHTML = `
+        <span class="material-symbols-outlined icon">add_circle</span>
+        <span>Add Size Row</span>
+    `;
+    container.appendChild(addCard);
+}
+
+function toggleSizeActive(sz, val) {
+    if (!sizesConfigData[sz]) return;
+    sizesConfigData[sz].active = val;
+    const card = document.getElementById(`size-card-${sz}`);
+    if (card) {
+        if (val) card.classList.add('active');
+        else card.classList.remove('active');
+    }
+}
+
+function setSizeBarcodeMode(sz, mode) {
+    if (!sizesConfigData[sz]) return;
+    sizesConfigData[sz].barcode_mode = mode;
+    renderPivotGrid();
+}
+
+function updateManualBarcode(sz, value) {
+    if (!sizesConfigData[sz]) return;
+    sizesConfigData[sz].manual_barcode = value;
+}
+
+function promptCustomSize() {
+    const val = prompt("Enter Custom Size (e.g. 5, 13, XXL):");
+    if (!val) return;
+    const cleanSize = val.trim().toUpperCase();
+    if (sizesList.includes(cleanSize)) {
+        toast(`Size ${cleanSize} is already in the matrix!`, 'warning');
+        return;
+    }
+    sizesList.push(cleanSize);
+    sizesConfigData[cleanSize] = { active: true, barcode_mode: 'auto', manual_barcode: '', existing: false, variant_code: '' };
+    renderPivotGrid();
+}
+
+async function lookupStyle(articleNo) {
+    if (!articleNo.trim()) return;
+    try {
+        toast('Fetching style info...', 'info');
+        const res = await api('smriti_retail_os.smriti_retail_os.item_master_api.get_style_details', {
+            article_no: articleNo.trim()
+        });
+
+        const inputs = ['style-code', 'style-desc', 'style-color', 'style-brand', 'style-cost', 'style-mrp', 'style-vendor', 'style-hsn'];
+        inputs.forEach(id => document.getElementById(id).classList.remove('retrieval-glowing'));
+
+        if (res.exists) {
+            toast('Existing Style details loaded successfully!', 'success');
+            
+            // Prefill base details
+            document.getElementById('style-desc').value = res.description || '';
+            document.getElementById('style-brand').value = res.brand || '';
+            document.getElementById('style-group').value = res.item_group || 'Footwear';
+            document.getElementById('style-cost').value = res.cost_price || 0;
+            document.getElementById('style-mrp').value = res.mrp || 0;
+            document.getElementById('style-gst').value = res.gst_percentage || '18';
+            document.getElementById('style-hsn').value = res.hsn_code || '';
+            document.getElementById('style-gender').value = res.gender || 'UNISEX';
+            document.getElementById('style-pclass').value = res.purchase_class || 'FW';
+            document.getElementById('style-vendor').value = res.vendor_code || '';
+            document.getElementById('style-color').value = res.color || 'UNKNOWN';
+
+            // Glow glowing green to indicate retrieval success
+            inputs.forEach(id => document.getElementById(id).classList.add('retrieval-glowing'));
+
+            // Pre-fill active sizes configuration mapping from DB
+            sizesList = ['6', '7', '8', '9', '10', '11', '12'];
+            sizesConfigData = {};
+            sizesList.forEach(sz => {
+                sizesConfigData[sz] = { active: false, barcode_mode: 'auto', manual_barcode: '', existing: false, variant_code: '' };
+            });
+
+            if (res.sizes && res.sizes.length) {
+                res.sizes.forEach(szRow => {
+                    const szLabel = szRow.size;
+                    if (!sizesList.includes(szLabel)) {
+                        sizesList.push(szLabel);
+                    }
+                    sizesConfigData[szLabel] = {
+                        active: true,
+                        barcode_mode: 'manual',
+                        manual_barcode: szRow.barcode,
+                        existing: true,
+                        variant_code: szRow.variant_code
+                    };
+                });
+            }
+
+            renderPivotGrid();
+        } else {
+            toast('New style code entered. Wizard configured for clean creation.', 'info');
+        }
+    } catch(e) {
+        toast('Failed to query style: ' + e.message, 'error');
+    }
+}
+
+async function triggerDeleteVariant(variantCode, size) {
+    if (!confirm(`Are you absolutely sure you want to permanently delete variant "${variantCode}" (Size ${size})? This operation will remove all associated barcodes, price lists, and cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        toast(`Purging variant ${variantCode} from database...`, 'info');
+        const res = await api('smriti_retail_os.smriti_retail_os.item_master_api.delete_size_variant', {
+            variant_code: variantCode
+        });
+        
+        toast(res.message || 'Variant deleted successfully.', 'success');
+        
+        // Remove from local config
+        if (sizesConfigData[size]) {
+            sizesConfigData[size] = { active: false, barcode_mode: 'auto', manual_barcode: '', existing: false, variant_code: '' };
+        }
+        
+        renderPivotGrid();
+    } catch(e) {
+        toast('Failed to delete variant: ' + e.message, 'error');
+    }
+}
+
+async function saveStyleMaster() {
+    const article = document.getElementById('style-code').value.trim();
+    const desc = document.getElementById('style-desc').value.trim();
+    const color = document.getElementById('style-color').value.trim().toUpperCase();
+    const mrp = parseFloat(document.getElementById('style-mrp').value) || 0;
+    
+    if (!article) { toast('Article/Style Code is required!', 'error'); return; }
+    if (!desc) { toast('Style Description is required!', 'error'); return; }
+    if (!color) { toast('Color is required!', 'error'); return; }
+    if (mrp <= 0) { toast('Planned MRP must be greater than zero!', 'error'); return; }
+
+    const base_details = {
+        article_no: article,
+        description: desc,
+        color: color,
+        brand: document.getElementById('style-brand').value.trim(),
+        item_group: document.getElementById('style-group').value,
+        cost_price: parseFloat(document.getElementById('style-cost').value) || 0,
+        mrp: mrp,
+        gst_percentage: document.getElementById('style-gst').value,
+        hsn_code: document.getElementById('style-hsn').value.trim(),
+        gender: document.getElementById('style-gender').value,
+        purchase_class: document.getElementById('style-pclass').value,
+        vendor_code: document.getElementById('style-vendor').value.trim(),
+        product_tax_group: ''
+    };
+
+    // Construct configurations sizes payload
+    const sizes_config = [];
+    let hasActive = false;
+    
+    sizesList.forEach(sz => {
+        const conf = sizesConfigData[sz];
+        if (conf && conf.active) {
+            hasActive = true;
+            sizes_config.push({
+                size: sz,
+                active: true,
+                barcode_mode: conf.barcode_mode,
+                manual_barcode: conf.barcode_mode === 'manual' ? conf.manual_barcode : ''
+            });
+        }
+    });
+
+    if (!hasActive) {
+        toast('Please activate at least one Size configuration in the matrix!', 'error');
+        return;
+    }
+
+    try {
+        toast('Saving Style & Variant Configurations...', 'info');
+        const res = await api('smriti_retail_os.smriti_retail_os.item_master_api.create_style_with_variants', {
+            base_details: JSON.stringify(base_details),
+            sizes_config: JSON.stringify(sizes_config)
+        });
+
+        toast(res.message || 'Style master saved successfully!', 'success');
+        
+        // Reload details
+        await lookupStyle(article);
+    } catch(e) {
+        toast('Failed to save Style Master: ' + e.message, 'error');
+    }
+}
+
+function clearWizard() {
+    if (!confirm('Are you sure you want to clear the entire form?')) return;
+    
+    const inputs = ['style-code', 'style-desc', 'style-color', 'style-brand', 'style-vendor', 'style-hsn'];
+    inputs.forEach(id => {
+        const el = document.getElementById(id);
+        el.value = '';
+        el.classList.remove('retrieval-glowing');
+    });
+    
+    document.getElementById('style-cost').value = 0;
+    document.getElementById('style-mrp').value = 0;
+    document.getElementById('style-gst').value = '18';
+    document.getElementById('style-gender').value = 'UNISEX';
+    document.getElementById('style-pclass').value = 'FW';
+    document.getElementById('style-group').value = 'Footwear';
+
+    sizesList = ['6', '7', '8', '9', '10', '11', '12'];
+    sizesConfigData = {};
+    sizesList.forEach(sz => {
+        sizesConfigData[sz] = { active: false, barcode_mode: 'auto', manual_barcode: '', existing: false, variant_code: '' };
+    });
+
+    renderPivotGrid();
+    toast('Wizard cleared.', 'info');
+}
+
+window.onload = init;
+</script>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+<script>SMRITI.renderFlexibleSidebar("sizewise_item");</script></body>
+</html>
+{% endblock %}

@@ -150,7 +150,8 @@ body.popout-mode .sidebar { display: none !important; }
 .toast span { font-size:20px; }
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 </style>
-</head>
+
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
 <body>
 <script>
     if (new URLSearchParams(window.location.search).get('popout') === 'true') {
@@ -162,103 +163,7 @@ body.popout-mode .sidebar { display: none !important; }
 
 <div id="app">
     <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-brand">
-            <div class="sidebar-logo"><span class="material-symbols-outlined">group</span></div>
-            <div class="sidebar-title">SMRITI OS</div>
-        </div>
-        <div class="sidebar-menu">
-            <a class="sidebar-item" href="/desk">
-                <span class="emoji">🏠</span>
-                <span>Control Center</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/desk')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/billing">
-                <span class="emoji">💳</span>
-                <span>Retail Billing</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/billing')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/shift">
-                <span class="emoji">🌅</span>
-                <span>Shift Management</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/shift')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/inventory">
-                <span class="emoji">📦</span>
-                <span>Inventory Ops</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/inventory')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/purchase">
-                <span class="emoji">🛒</span>
-                <span>Purchase Manager</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/purchase')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/barcode">
-                <span class="emoji">🏷️</span>
-                <span>Barcode Printing</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/barcode')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/products">
-                <span class="emoji">🛍️</span>
-                <span>Products Catalog</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/products')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/item_master">
-                <span class="emoji">📋</span>
-                <span>Item Master Import</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/item_master')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item active" href="/customers">
-                <span class="emoji">👥</span>
-                <span>Customers</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/customers')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/suppliers">
-                <span class="emoji">🏢</span>
-                <span>Suppliers</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/suppliers')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-            <a class="sidebar-item" href="/sales_invoices">
-                <span class="emoji">📄</span>
-                <span>Billing Invoices</span>
-                <button class="popout-btn" title="Open in Popout Window" onclick="openPopout(event, '/sales_invoices')">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-        </div>
-        <div class="sidebar-footer">
-            <div class="sidebar-user">
-                <div class="sidebar-avatar" id="sb-avatar">M</div>
-                <div class="sidebar-info">
-                    <span class="sidebar-name" id="sb-user">Manager</span>
-                    <span class="sidebar-role" id="sb-role">Store Manager</span>
-                </div>
-            </div>
-            <button class="sidebar-logout" onclick="doLogout()">
-                <span class="material-symbols-outlined" style="font-size:16px;">logout</span> Sign Out
-            </button>
-        </div>
-    </div>
+    <div id="smriti-sidebar-target" class="sidebar"></div>
 
     <!-- Main Wrapper -->
     <div class="main-wrapper">
@@ -298,35 +203,156 @@ body.popout-mode .sidebar { display: none !important; }
                         <th>Mobile Number</th>
                         <th>Customer Group</th>
                         <th>Territory</th>
-                        <th style="font-family:inherit;">System Identifier</th>
+                        <th>System Identifier</th>
+                        <th style="text-align:right;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="customers-tbody">
-                    <tr><td colspan="5" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading customers...</td></tr>
+                    <tr><td colspan="6" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading customers...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-<!-- Add Customer Modal -->
-<div class="modal-backdrop" id="add-modal" onclick="closeAddCustomerModal()">
-    <div class="modal" onclick="event.stopPropagation()">
+<!-- Customer Form Modal -->
+<div class="modal-backdrop" id="customer-modal" onclick="closeCustomerModal()">
+    <div class="modal" style="max-width: 800px;" onclick="event.stopPropagation()">
         <div class="modal-header">
-            <div class="modal-title"><span class="material-symbols-outlined">person_add</span> Quick Add Customer</div>
-            <button class="modal-close" onclick="closeAddCustomerModal()">&times;</button>
+            <div class="modal-title"><span class="material-symbols-outlined">person_add</span> <span id="modal-action-title">Quick Add Customer</span></div>
+            <button class="modal-close" onclick="closeCustomerModal()">&times;</button>
         </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label class="form-label">Customer Name *</label>
-                <input type="text" class="form-input" id="add-name" placeholder="e.g. Rahul Sharma">
+        <div class="modal-body" style="max-height: 80vh; overflow-y: auto; padding-right: 6px;">
+            <input type="hidden" id="cust-name-id" value="">
+            
+            <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--primary-lt); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 12px; display:flex; align-items:center; gap:6px;">
+                <span class="material-symbols-outlined" style="font-size:16px;">contact_page</span> 1. General Profile
             </div>
-            <div class="form-group">
-                <label class="form-label">Mobile / Phone Number</label>
-                <input type="text" class="form-input" id="add-mobile" placeholder="e.g. 9876543210">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label">Customer Name *</label>
+                    <input type="text" class="form-input" id="cust-name" placeholder="e.g. Rahul Sharma">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Customer Type</label>
+                    <select class="form-input" id="cust-type">
+                        <option value="Individual">Individual</option>
+                        <option value="Company">Company</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mobile Number</label>
+                    <input type="text" class="form-input" id="cust-mobile" placeholder="e.g. 9876543210">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="cust-email" placeholder="e.g. rahul@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Customer Group</label>
+                    <select class="form-input" id="cust-group">
+                        <!-- Dynamic Options -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Territory</label>
+                    <select class="form-input" id="cust-territory">
+                        <!-- Dynamic Options -->
+                    </select>
+                </div>
             </div>
-            <button class="btn-submit" id="btn-save" onclick="saveCustomer()">
-                <span class="material-symbols-outlined">save</span> Onboard Customer
+
+            <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--primary-lt); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 12px; display:flex; align-items:center; gap:6px;">
+                <span class="material-symbols-outlined" style="font-size:16px;">payments</span> 2. Tax Compliance & Override
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label">GSTIN / Tax ID</label>
+                    <input type="text" class="form-input" id="cust-gstin" placeholder="e.g. 29AABCR1718E1ZL" onchange="autoResolveState(this.value, 'bill')">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">GST Category</label>
+                    <select class="form-input" id="cust-gst-category">
+                        <option value="Unregistered">Unregistered</option>
+                        <option value="Registered Regular" selected>Registered Regular</option>
+                        <option value="Composition">Composition</option>
+                        <option value="Overseas">Overseas</option>
+                        <option value="SEZ">SEZ</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">PAN (Tax ID)</label>
+                    <input type="text" class="form-input" id="cust-pan" placeholder="e.g. ABCDE1234F">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tax Inclusive Override</label>
+                    <select class="form-input" id="cust-tax-override">
+                        <option value="Default" selected>Default (Standard Pricing)</option>
+                        <option value="Inclusive">Force Tax Inclusive</option>
+                        <option value="Exclusive">Force Tax Exclusive</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--primary-lt); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 12px; display:flex; align-items:center; gap:6px;">
+                <span class="material-symbols-outlined" style="font-size:16px;">home</span> 3. Billing Address Details (Bill To)
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                <div class="form-group" style="grid-column: span 2;">
+                    <label class="form-label">Address Line 1</label>
+                    <input type="text" class="form-input" id="bill-line1" placeholder="e.g. Flat 402, Green Glen Layout">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Address Line 2 (Optional)</label>
+                    <input type="text" class="form-input" id="bill-line2" placeholder="e.g. Bellandur">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">City</label>
+                    <input type="text" class="form-input" id="bill-city" placeholder="e.g. Bangalore">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">State</label>
+                    <input type="text" class="form-input" id="bill-state" placeholder="e.g. Karnataka">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Pincode</label>
+                    <input type="text" class="form-input" id="bill-pincode" placeholder="e.g. 560103">
+                </div>
+            </div>
+
+            <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--primary-lt); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 12px; display:flex; align-items:center; justify-content:space-between;">
+                <span style="display:flex; align-items:center; gap:6px;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">local_shipping</span> 4. Shipping Address Details (Ship To)
+                </span>
+                <label style="font-size: 0.72rem; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+                    <input type="checkbox" id="same-as-billing" onchange="toggleSameAsBilling(this.checked)" style="accent-color:var(--primary);"> Same as Billing
+                </label>
+            </div>
+            <div id="shipping-address-section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+                <div class="form-group" style="grid-column: span 2;">
+                    <label class="form-label">Address Line 1</label>
+                    <input type="text" class="form-input" id="ship-line1" placeholder="e.g. Flat 402, Green Glen Layout">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Address Line 2 (Optional)</label>
+                    <input type="text" class="form-input" id="ship-line2" placeholder="e.g. Bellandur">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">City</label>
+                    <input type="text" class="form-input" id="ship-city" placeholder="e.g. Bangalore">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">State</label>
+                    <input type="text" class="form-input" id="ship-state" placeholder="e.g. Karnataka">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Pincode</label>
+                    <input type="text" class="form-input" id="ship-pincode" placeholder="e.g. 560103">
+                </div>
+            </div>
+
+            <button class="btn-submit" id="btn-save" onclick="saveCustomerDetail()" style="margin-top: 15px;">
+                <span class="material-symbols-outlined">save</span> Save Customer Record
             </button>
         </div>
     </div>
@@ -335,6 +361,18 @@ body.popout-mode .sidebar { display: none !important; }
 <div id="toast-container"></div>
 
 <script>
+const GST_STATE_CODES = {
+    "01": "Jammu & Kashmir", "02": "Himachal Pradesh", "03": "Punjab", "04": "Chandigarh",
+    "05": "Uttarakhand", "06": "Haryana", "07": "Delhi", "08": "Rajasthan", "09": "Uttar Pradesh",
+    "10": "Bihar", "11": "Sikkim", "12": "Arunachal Pradesh", "13": "Nagaland", "14": "Manipur",
+    "15": "Mizoram", "16": "Tripura", "17": "Meghalaya", "18": "Assam", "19": "West Bengal",
+    "20": "Jharkhand", "21": "Odisha", "22": "Chhattisgarh", "23": "Madhya Pradesh", "24": "Gujarat",
+    "26": "Dadra and Nagar Haveli and Daman and Diu", "27": "Maharashtra", "29": "Karnataka",
+    "30": "Goa", "31": "Lakshadweep", "32": "Kerala", "33": "Tamil Nadu", "34": "Puducherry",
+    "35": "Andaman & Nicobar Islands", "36": "Telangana", "37": "Andhra Pradesh", "38": "Ladakh",
+    "97": "Other Territory"
+};
+
 const CSRF_TOKEN = '{{ csrf_token }}';
 let loggedUser = '{{ cashier }}';
 let masterCustomersList = [];
@@ -373,12 +411,13 @@ function toast(msg, type = 'success') {
 }
 
 async function init() {
-    // Set user avatar info
-    document.getElementById('sb-user').textContent = loggedUser.split('@')[0];
-    document.getElementById('sb-avatar').textContent = loggedUser.charAt(0).toUpperCase();
+    // Set user avatar info (sidebar renders these dynamically — guard against null)
+    const _sbu = document.getElementById('sb-user'); if (_sbu) _sbu.textContent = loggedUser.split('@')[0];
+    const _sba = document.getElementById('sb-avatar'); if (_sba) _sba.textContent = loggedUser.charAt(0).toUpperCase();
 
     await loadCustomers();
     await loadFilterOptions();
+    await loadDropdownOptions();
 }
 
 async function loadCustomers() {
@@ -407,6 +446,7 @@ async function loadFilterOptions() {
         });
 
         const grpSel = document.getElementById('filter-group');
+        grpSel.innerHTML = '<option value="">All Groups</option>';
         groups.forEach(g => {
             const opt = document.createElement('option');
             opt.value = g.name;
@@ -418,10 +458,48 @@ async function loadFilterOptions() {
     }
 }
 
+async function loadDropdownOptions() {
+    try {
+        const groups = await api('frappe.client.get_list', {
+            doctype: 'Customer Group',
+            fields: ['name'],
+            order_by: 'name asc',
+            limit_page_length: 100
+        });
+
+        const grpSel = document.getElementById('cust-group');
+        grpSel.innerHTML = '';
+        groups.forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g.name;
+            opt.textContent = g.name;
+            grpSel.appendChild(opt);
+        });
+        
+        const territories = await api('frappe.client.get_list', {
+            doctype: 'Territory',
+            fields: ['name'],
+            order_by: 'name asc',
+            limit_page_length: 100
+        });
+
+        const terrSel = document.getElementById('cust-territory');
+        terrSel.innerHTML = '';
+        territories.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.name;
+            opt.textContent = t.name;
+            terrSel.appendChild(opt);
+        });
+    } catch(e) {
+        console.error(e);
+    }
+}
+
 function renderTable(list) {
     const tbody = document.getElementById('customers-tbody');
     if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-sub);padding:40px 0;">No customers found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-sub);padding:40px 0;">No customers found.</td></tr>';
         return;
     }
     tbody.innerHTML = list.map(c => `
@@ -433,6 +511,11 @@ function renderTable(list) {
             <td style="color:var(--text-muted);">${c.customer_group}</td>
             <td style="color:var(--text-muted);">${c.territory || 'N/A'}</td>
             <td><span class="customer-id-badge">${c.name}</span></td>
+            <td style="text-align:right;">
+                <button class="topbtn" onclick="openEditCustomerModal('${c.name}')" title="Edit Customer Details" style="padding:4px 8px;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">edit</span>
+                </button>
+            </td>
         </tr>
     `).join('');
 }
@@ -462,19 +545,123 @@ function applyFilters() {
 }
 
 function openAddCustomerModal() {
-    document.getElementById('add-modal').classList.add('open');
-    document.getElementById('add-name').focus();
+    document.getElementById('modal-action-title').textContent = "Quick Add Customer";
+    document.getElementById('cust-name-id').value = "";
+    document.getElementById('cust-name').value = "";
+    document.getElementById('cust-type').value = "Individual";
+    document.getElementById('cust-mobile').value = "";
+    document.getElementById('cust-email').value = "";
+    document.getElementById('cust-group').value = "Individual";
+    document.getElementById('cust-territory').value = "All Territories";
+    document.getElementById('cust-gstin').value = "";
+    document.getElementById('cust-gst-category').value = "Registered Regular";
+    document.getElementById('cust-pan').value = "";
+    document.getElementById('cust-tax-override').value = "Default";
+    
+    // Clear Address
+    document.getElementById('bill-line1').value = "";
+    document.getElementById('bill-line2').value = "";
+    document.getElementById('bill-city').value = "";
+    document.getElementById('bill-state').value = "";
+    document.getElementById('bill-pincode').value = "";
+    
+    document.getElementById('same-as-billing').checked = false;
+    toggleSameAsBilling(false);
+    
+    document.getElementById('ship-line1').value = "";
+    document.getElementById('ship-line2').value = "";
+    document.getElementById('ship-city').value = "";
+    document.getElementById('ship-state').value = "";
+    document.getElementById('ship-pincode').value = "";
+
+    document.getElementById('customer-modal').classList.add('open');
+    document.getElementById('cust-name').focus();
 }
 
-function closeAddCustomerModal() {
-    document.getElementById('add-modal').classList.remove('open');
-    document.getElementById('add-name').value = '';
-    document.getElementById('add-mobile').value = '';
+async function openEditCustomerModal(name) {
+    try {
+        toast('Fetching customer details...', 'info');
+        const c = await api('smriti_retail_os.master_api.get_customer_detail', { name: name });
+        
+        document.getElementById('modal-action-title').textContent = `Edit Customer: ${c.customer_name}`;
+        document.getElementById('cust-name-id').value = c.name;
+        document.getElementById('cust-name').value = c.customer_name;
+        document.getElementById('cust-type').value = c.customer_type || "Individual";
+        document.getElementById('cust-mobile').value = c.mobile_no || "";
+        document.getElementById('cust-email').value = c.email_id || "";
+        document.getElementById('cust-group').value = c.customer_group || "Individual";
+        document.getElementById('cust-territory').value = c.territory || "All Territories";
+        document.getElementById('cust-gstin').value = c.tax_id || "";
+        document.getElementById('cust-gst-category').value = c.gst_category || "Registered Regular";
+        document.getElementById('cust-pan').value = c.pan || "";
+        document.getElementById('cust-tax-override').value = c.custom_tax_inclusive_override || "Default";
+        
+        // Parse Billing Address Text
+        const billLines = (c.custom_address_text || "").split('\n');
+        document.getElementById('bill-line1').value = billLines[0] || "";
+        document.getElementById('bill-line2').value = billLines[1] || "";
+        document.getElementById('bill-city').value = billLines[2] || "";
+        document.getElementById('bill-state').value = billLines[3] || "";
+        document.getElementById('bill-pincode').value = billLines[4] || "";
+
+        // Parse Shipping Address Text
+        const shipLines = (c.custom_shipping_address_text || "").split('\n');
+        document.getElementById('ship-line1').value = shipLines[0] || "";
+        document.getElementById('ship-line2').value = shipLines[1] || "";
+        document.getElementById('ship-city').value = shipLines[2] || "";
+        document.getElementById('ship-state').value = shipLines[3] || "";
+        document.getElementById('ship-pincode').value = shipLines[4] || "";
+
+        const isSame = c.custom_address_text && c.custom_address_text === c.custom_shipping_address_text;
+        document.getElementById('same-as-billing').checked = isSame;
+        toggleSameAsBilling(isSame);
+
+        document.getElementById('customer-modal').classList.add('open');
+    } catch(e) {
+        toast('Failed to load customer: ' + e.message, 'error');
+    }
 }
 
-async function saveCustomer() {
-    const name = document.getElementById('add-name').value.trim();
-    const mobile = document.getElementById('add-mobile').value.trim();
+function closeCustomerModal() {
+    document.getElementById('customer-modal').classList.remove('open');
+}
+
+function toggleSameAsBilling(isSame) {
+    const shipSection = document.getElementById('shipping-address-section');
+    if (isSame) {
+        shipSection.style.opacity = '0.5';
+        shipSection.style.pointerEvents = 'none';
+        
+        // Sync values
+        document.getElementById('ship-line1').value = document.getElementById('bill-line1').value;
+        document.getElementById('ship-line2').value = document.getElementById('bill-line2').value;
+        document.getElementById('ship-city').value = document.getElementById('bill-city').value;
+        document.getElementById('ship-state').value = document.getElementById('bill-state').value;
+        document.getElementById('ship-pincode').value = document.getElementById('bill-pincode').value;
+    } else {
+        shipSection.style.opacity = '1';
+        shipSection.style.pointerEvents = 'all';
+    }
+}
+
+function autoResolveState(gstin, prefix) {
+    if (!gstin || gstin.trim().length < 2) return;
+    const code = gstin.trim().substring(0, 2);
+    const state = GST_STATE_CODES[code];
+    if (state) {
+        const el = document.getElementById(`${prefix}-state`);
+        if (el) {
+            el.value = state;
+            el.classList.add('retrieval-glowing');
+            setTimeout(() => { el.classList.remove('retrieval-glowing'); }, 2000);
+        }
+    }
+}
+
+async function saveCustomerDetail() {
+    const name = document.getElementById('cust-name').value.trim();
+    const mobile = document.getElementById('cust-mobile').value.trim();
+    const custId = document.getElementById('cust-name-id').value;
 
     if (!name) {
         toast('Please enter the Customer Name.', 'error');
@@ -484,14 +671,45 @@ async function saveCustomer() {
     const btn = document.getElementById('btn-save');
     btn.disabled = true;
 
+    // Construct addresses texts by separating parts with newline (auto-consumed by sync address hook)
+    const billText = [
+        document.getElementById('bill-line1').value.trim(),
+        document.getElementById('bill-line2').value.trim(),
+        document.getElementById('bill-city').value.trim(),
+        document.getElementById('bill-state').value.trim(),
+        document.getElementById('bill-pincode').value.trim()
+    ].join('\n');
+
+    let shipText = billText;
+    if (!document.getElementById('same-as-billing').checked) {
+        shipText = [
+            document.getElementById('ship-line1').value.trim(),
+            document.getElementById('ship-line2').value.trim(),
+            document.getElementById('ship-city').value.trim(),
+            document.getElementById('ship-state').value.trim(),
+            document.getElementById('ship-pincode').value.trim()
+        ].join('\n');
+    }
+
     try {
-        await api('smriti_retail_os.master_api.quick_create_customer', {
+        await api('smriti_retail_os.master_api.save_customer_detail', {
             customer_name: name,
-            mobile_no: mobile
+            customer_type: document.getElementById('cust-type').value,
+            customer_group: document.getElementById('cust-group').value,
+            territory: document.getElementById('cust-territory').value,
+            mobile_no: mobile,
+            email_id: document.getElementById('cust-email').value.trim(),
+            tax_id: document.getElementById('cust-gstin').value.trim(),
+            gst_category: document.getElementById('cust-gst-category').value,
+            pan: document.getElementById('cust-pan').value.trim().toUpperCase(),
+            custom_address_text: billText,
+            custom_shipping_address_text: shipText,
+            custom_tax_inclusive_override: document.getElementById('cust-tax-override').value,
+            name: custId || null
         });
 
-        toast('Customer onboarded successfully!', 'success');
-        closeAddCustomerModal();
+        toast('Customer record saved successfully!', 'success');
+        closeCustomerModal();
         await loadCustomers();
     } catch(e) {
         toast(e.message, 'error');
@@ -499,27 +717,10 @@ async function saveCustomer() {
     btn.disabled = false;
 }
 
-function openPopout(e, url) {
-    e.preventDefault();
-    e.stopPropagation();
-    let popout_url = url;
-    if (popout_url.indexOf('?') === -1) {
-        popout_url += '?popout=true';
-    } else if (popout_url.indexOf('popout=true') === -1) {
-        popout_url += '&popout=true';
-    }
-    const w = screen.width - 60;
-    const h = screen.height - 60;
-    const left = 30;
-    const top = 30;
-    const win = window.open(popout_url, "smriti-popout-window", `width=${w},height=${h},top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`);
-    if (win) {
-        win.focus();
-    }
-}
-
 window.onload = init;
 </script>
-</body>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+<script>SMRITI.renderFlexibleSidebar("customers");</script></body>
 </html>
 {% endblock %}

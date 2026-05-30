@@ -15,6 +15,13 @@ from frappe.utils import flt, cint
 
 class TestSmritiRetailHooks(unittest.TestCase):
     
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        from smriti_retail_os.setup import setup_smriti_retail_os
+        setup_smriti_retail_os()
+        frappe.db.commit()
+
     def setUp(self):
         # Clean up any test records
         frappe.db.delete("Item", {"item_code": "TEST-SHIRT"})
@@ -110,3 +117,55 @@ class TestSmritiRetailHooks(unittest.TestCase):
         ptt = frappe.get_doc("Payment Terms Template", "Credit Term - 45 Days")
         self.assertEqual(len(ptt.terms), 1)
         self.assertEqual(ptt.terms[0].credit_days, 45)
+
+    def test_rich_customer_supplier_crud(self):
+        """
+        Tests SMRITI Customer and Supplier rich compliance details, billing & shipping
+        address sync triggers, and tax inclusive overrides.
+        """
+        # 1. Customer Rich CRUD
+        cust = frappe.new_doc("Customer")
+        cust.customer_name = "Test Rajesh Kumar"
+        cust.customer_type = "Company"
+        cust.tax_id = "27AAXFT2508H1ZR" # Maharashtra GSTIN
+        cust.custom_address_text = "Billing Street 1\nUmerkhadi\nMumbai\nMaharashtra\n400003"
+        cust.custom_shipping_address_text = "Shipping Street 1\nPeenya\nBangalore\nKarnataka\n560058"
+        cust.custom_tax_inclusive_override = "Inclusive"
+        cust.insert(ignore_permissions=True)
+
+        # Check billing address
+        bill_addr = frappe.db.get_value("Address", {"links.link_name": cust.name, "address_type": "Billing"}, "name")
+        self.assertIsNotNone(bill_addr)
+        b_addr = frappe.get_doc("Address", bill_addr)
+        self.assertEqual(b_addr.address_line1, "Billing Street 1")
+        self.assertEqual(b_addr.state, "Maharashtra")
+
+        # Check shipping address
+        ship_addr = frappe.db.get_value("Address", {"links.link_name": cust.name, "address_type": "Shipping"}, "name")
+        self.assertIsNotNone(ship_addr)
+        s_addr = frappe.get_doc("Address", ship_addr)
+        self.assertEqual(s_addr.address_line1, "Shipping Street 1")
+        self.assertEqual(s_addr.state, "Karnataka") # Resolved from shipping text if state hook is active
+
+        # Check tax override
+        self.assertEqual(cust.custom_tax_inclusive_override, "Inclusive")
+
+        # 2. Supplier Rich CRUD
+        supp = frappe.new_doc("Supplier")
+        supp.supplier_name = "Test ABC Wholesalers"
+        supp.supplier_group = self.supplier_group
+        supp.gstin = "27AAXFT2508H1ZR"
+        supp.custom_address_text = "Supplier Bill 1\nMumbai\nMaharashtra\n400003"
+        supp.custom_shipping_address_text = "Supplier Ship 1\nBangalore\nKarnataka\n560058"
+        supp.custom_credit_days = 60
+        supp.insert(ignore_permissions=True)
+
+        # Check billing and shipping addresses linked to supplier
+        s_bill = frappe.db.get_value("Address", {"links.link_name": supp.name, "address_type": "Billing"}, "name")
+        s_ship = frappe.db.get_value("Address", {"links.link_name": supp.name, "address_type": "Shipping"}, "name")
+        self.assertIsNotNone(s_bill)
+        self.assertIsNotNone(s_ship)
+
+        # Check payment terms template link
+        supp_reload = frappe.get_doc("Supplier", supp.name)
+        self.assertEqual(supp_reload.payment_terms, "Credit Term - 60 Days")

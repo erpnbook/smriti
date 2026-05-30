@@ -378,6 +378,16 @@ website_route_rules = [
         # Standalone Item Master Import — served from www/item_master.html + www/item_master.py
         "from_route": "/item_master",
         "to_route": "item_master"
+    },
+    {
+        # Standalone E-way Bill Management — served from www/eway_bill.html + www/eway_bill.py
+        "from_route": "/eway_bill",
+        "to_route": "eway_bill"
+    },
+    {
+        # Standalone Dedicated Sizewise Item Master CRUD — served from www/sizewise_item.html + www/sizewise_item.py
+        "from_route": "/sizewise_item",
+        "to_route": "sizewise_item"
     }
 ]
 

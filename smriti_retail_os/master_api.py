@@ -220,3 +220,142 @@ def save_supplier_on_fly(supplier_name, supplier_group, supplier_type, name=None
         "supplier_name": doc.supplier_name
     }
 
+
+@frappe.whitelist()
+def get_customer_detail(name):
+    """
+    Retrieves all details for a Customer, including dynamic custom fields.
+    """
+    if not frappe.db.exists("Customer", name):
+        frappe.throw(_("Customer {0} not found.").format(name))
+    
+    doc = frappe.get_doc("Customer", name)
+    return {
+        "name": doc.name,
+        "customer_name": doc.customer_name,
+        "customer_type": doc.customer_type,
+        "customer_group": doc.customer_group,
+        "territory": doc.territory,
+        "mobile_no": doc.mobile_no,
+        "email_id": doc.email_id,
+        "tax_id": doc.tax_id,
+        "gst_category": doc.gst_category,
+        "pan": doc.pan,
+        "custom_address_text": doc.get("custom_address_text") or "",
+        "custom_shipping_address_text": doc.get("custom_shipping_address_text") or "",
+        "custom_tax_inclusive_override": doc.get("custom_tax_inclusive_override") or "Default"
+    }
+
+
+@frappe.whitelist()
+def get_supplier_detail(name):
+    """
+    Retrieves all details for a Supplier, including dynamic custom fields.
+    """
+    if not frappe.db.exists("Supplier", name):
+        frappe.throw(_("Supplier {0} not found.").format(name))
+    
+    doc = frappe.get_doc("Supplier", name)
+    return {
+        "name": doc.name,
+        "supplier_name": doc.supplier_name,
+        "supplier_type": doc.supplier_type,
+        "supplier_group": doc.supplier_group,
+        "mobile_no": doc.mobile_no,
+        "email_id": doc.email_id,
+        "gstin": doc.gstin,
+        "gst_category": doc.gst_category,
+        "pan": doc.pan,
+        "custom_credit_days": doc.get("custom_credit_days") or 0,
+        "custom_address_text": doc.get("custom_address_text") or "",
+        "custom_shipping_address_text": doc.get("custom_shipping_address_text") or ""
+    }
+
+
+@frappe.whitelist()
+def save_customer_detail(customer_name, customer_type, customer_group, territory, mobile_no, email_id, tax_id, gst_category, pan, custom_address_text, custom_shipping_address_text=None, custom_tax_inclusive_override="Default", name=None):
+    """
+    Saves or updates a Customer with complete operational and India compliance fields.
+    """
+    if not customer_name:
+        frappe.throw(_("Customer Name is required."))
+
+    if name:
+        doc = frappe.get_doc("Customer", name)
+    else:
+        doc = frappe.new_doc("Customer")
+
+    doc.customer_name = customer_name
+    doc.customer_type = customer_type
+    doc.customer_group = customer_group or "Individual"
+    doc.territory = territory or "All Territories"
+    doc.mobile_no = mobile_no
+    doc.email_id = email_id
+    doc.tax_id = tax_id
+    doc.gst_category = gst_category
+    doc.pan = pan
+    doc.custom_address_text = custom_address_text
+    doc.custom_shipping_address_text = custom_shipping_address_text
+    doc.custom_tax_inclusive_override = custom_tax_inclusive_override
+
+    # Defensive group and territory check for fresh installs
+    if not frappe.db.exists("Customer Group", doc.customer_group):
+        cg = frappe.new_doc("Customer Group")
+        cg.customer_group_name = doc.customer_group
+        cg.insert(ignore_permissions=True)
+
+    if not frappe.db.exists("Territory", doc.territory):
+        t = frappe.new_doc("Territory")
+        t.territory_name = doc.territory
+        t.insert(ignore_permissions=True)
+
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    return {
+        "name": doc.name,
+        "customer_name": doc.customer_name,
+        "mobile_no": doc.mobile_no
+    }
+
+
+@frappe.whitelist()
+def save_supplier_detail(supplier_name, supplier_type, supplier_group, mobile_no, email_id, gstin, gst_category, pan, custom_credit_days, custom_address_text, custom_shipping_address_text=None, name=None):
+    """
+    Saves or updates a Supplier with complete operational and India compliance fields.
+    """
+    if not supplier_name:
+        frappe.throw(_("Supplier Name is required."))
+
+    if name:
+        doc = frappe.get_doc("Supplier", name)
+    else:
+        doc = frappe.new_doc("Supplier")
+
+    doc.supplier_name = supplier_name
+    doc.supplier_type = supplier_type
+    doc.supplier_group = supplier_group or "Local"
+    doc.mobile_no = mobile_no
+    doc.email_id = email_id
+    doc.gstin = gstin
+    doc.gst_category = gst_category
+    doc.pan = pan
+    doc.custom_credit_days = cint(custom_credit_days)
+    doc.custom_address_text = custom_address_text
+    doc.custom_shipping_address_text = custom_shipping_address_text
+
+    # Defensive group check for fresh installs
+    if not frappe.db.exists("Supplier Group", doc.supplier_group):
+        sg = frappe.new_doc("Supplier Group")
+        sg.supplier_group_name = doc.supplier_group
+        sg.insert(ignore_permissions=True)
+
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    return {
+        "name": doc.name,
+        "supplier_name": doc.supplier_name,
+        "mobile_no": doc.mobile_no
+    }
+

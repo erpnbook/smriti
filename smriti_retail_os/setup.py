@@ -367,10 +367,26 @@ def setup_smriti_retail_os():
                 "module": "SMRITI Retail OS"
             },
             {
+                "fieldname": "custom_shipping_address_text",
+                "label": "Shipping Address Text",
+                "fieldtype": "Small Text",
+                "insert_after": "custom_address_text",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_tax_inclusive_override",
+                "label": "Tax Inclusive Override",
+                "fieldtype": "Select",
+                "options": "Default\nInclusive\nExclusive",
+                "default": "Default",
+                "insert_after": "custom_shipping_address_text",
+                "module": "SMRITI Retail OS"
+            },
+            {
                 "fieldname": "custom_birthday",
                 "label": "Birthday",
                 "fieldtype": "Date",
-                "insert_after": "custom_address_text",
+                "insert_after": "custom_tax_inclusive_override",
                 "module": "SMRITI Retail OS"
             },
             {
@@ -390,10 +406,17 @@ def setup_smriti_retail_os():
                 "module": "SMRITI Retail OS"
             },
             {
+                "fieldname": "custom_shipping_address_text",
+                "label": "Shipping Address Text",
+                "fieldtype": "Small Text",
+                "insert_after": "custom_address_text",
+                "module": "SMRITI Retail OS"
+            },
+            {
                 "fieldname": "custom_credit_days",
                 "label": "Credit Days",
                 "fieldtype": "Int",
-                "insert_after": "custom_address_text",
+                "insert_after": "custom_shipping_address_text",
                 "module": "SMRITI Retail OS"
             }
         ]
@@ -818,4 +841,51 @@ def after_install():
     # Sync branding assets into the shared sites/assets volume
     from smriti_retail_os.sync_assets import sync_assets
     sync_assets()
+
+
+def patch_tattly_threads_tax_invoice():
+    """
+    Patches the custom 'Tattly Threads Tax Invoice' Print Format in the database.
+    Injects E-way Bill and Vehicle Number rendering inside the Invoice Details header block.
+    """
+    import frappe
+    print("[SMRITI] Patching custom Print Format 'Tattly Threads Tax Invoice'...")
+    if not frappe.db.exists("Print Format", "Tattly Threads Tax Invoice"):
+        print("[SMRITI] Error: Print Format 'Tattly Threads Tax Invoice' does not exist!")
+        return
+        
+    pf = frappe.get_doc("Print Format", "Tattly Threads Tax Invoice")
+    
+    target = """                    <tr>
+                        <td class="bold" style="padding: 2px 0;">Place of Supply:</td>
+                        <td style="padding: 2px 0;">37-Andhra Pradesh</td>
+                    </tr>"""
+                    
+    replacement = """                    <tr>
+                        <td class="bold" style="padding: 2px 0;">Place of Supply:</td>
+                        <td style="padding: 2px 0;">37-Andhra Pradesh</td>
+                    </tr>
+                    {% if doc.ewaybill %}
+                    <tr>
+                        <td class="bold" style="padding: 2px 0;">E-Way Bill No.:</td>
+                        <td style="padding: 2px 0; color: #2e7d32; font-weight: bold;">{{ doc.ewaybill }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if doc.vehicle_no %}
+                    <tr>
+                        <td class="bold" style="padding: 2px 0;">Vehicle No.:</td>
+                        <td style="padding: 2px 0; text-transform: uppercase;">{{ doc.vehicle_no }}</td>
+                    </tr>
+                    {% endif %}"""
+                    
+    if target in pf.html:
+        pf.html = pf.html.replace(target, replacement)
+        pf.save(ignore_permissions=True)
+        frappe.db.commit()
+        print("[SMRITI] Success! Print Format 'Tattly Threads Tax Invoice' updated in database.")
+    elif "{% if doc.ewaybill %}" in pf.html:
+        print("[SMRITI] Print Format is already patched and up to date.")
+    else:
+        print("[SMRITI] Error: Place of supply target layout block not found in Print Format HTML!")
+
 
