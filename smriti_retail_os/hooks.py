@@ -335,6 +335,12 @@ website_route_rules = [
         # Zero Frappe chrome. Fully custom SMRITI dashboard.
         "from_route": "/desk",
         "to_route": "desk"
+    },
+    {
+        # Standalone Inventory Operations — served from www/inventory.html + www/inventory.py
+        # Zero Frappe chrome. Custom stock transfer & adjustment.
+        "from_route": "/inventory",
+        "to_route": "inventory"
     }
 ]
 

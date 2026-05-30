@@ -583,6 +583,11 @@ function _redirect_to_smriti_home() {
 
     // 1. If we are in the Desk (SPA)
     if (is_desk_env) {
+        if (current_route === 'smriti-inventory') {
+            window.location.href = '/inventory';
+            return;
+        }
+
         // Only redirect if the browser's active path is strictly the root Desk entry
         var is_root_path = window.location.pathname === '/app' || window.location.pathname === '/app/' || 
                            window.location.pathname === '/desk' || window.location.pathname === '/desk/';

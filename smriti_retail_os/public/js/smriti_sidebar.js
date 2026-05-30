@@ -23,7 +23,7 @@ SMRITI.renderSidebar = function(active_page) {
         {id:"shift",      icon:"🌅", label:"Shift Management",
          url:"/app/smriti-shift"},
         {id:"inventory",  icon:"📦", label:"Inventory",
-         url:"/app/smriti-inventory"},
+         url:"/inventory"},
         {id:"products",   icon:"🛍️", label:"Products",
          url:"/app/item"},
         {id:"barcode",    icon:"🏷️",  label:"Barcode Printing",

@@ -1,0 +1,919 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/inventory.html
+  @description: SMRITI Inventory Operations — Standalone UI (Zero Frappe chrome)
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @version: 1.0.0 (Standalone)
+  @license: MIT
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMRITI Inventory Operations</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg:         #0a0f1e;
+    --bg2:        #0f1629;
+    --card:       #131d35;
+    --card2:      #172040;
+    --border:     rgba(255,255,255,0.07);
+    --border2:    rgba(255,255,255,0.12);
+    --primary:    #6366f1;
+    --primary-lt: #818cf8;
+    --accent:     #f59e0b;
+    --success:    #10b981;
+    --warning:    #f59e0b;
+    --danger:     #ef4444;
+    --text:       #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-sub:   #475569;
+    --radius:     12px;
+    --radius-sm:  8px;
+    --radius-lg:  16px;
+    --t:          0.2s ease;
+}
+
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+
+/* Ambient background */
+.bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 0;
+}
+
+/* App Shell */
+#app { position:relative; z-index:1; width:100vw; height:100vh; display:flex; overflow:hidden; }
+
+/* Sidebar */
+.sidebar { width:260px; flex-shrink:0; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:10; }
+.sidebar-brand { padding:20px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border); }
+.sidebar-logo { width:32px; height:32px; background:linear-gradient(135deg,var(--primary),var(--primary-lt)); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; }
+.sidebar-logo span { font-size:20px; }
+.sidebar-title { font-family:'Outfit',sans-serif; font-weight:800; font-size:1.15rem; background:linear-gradient(135deg,#fff,var(--text-muted)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.sidebar-menu { flex:1; overflow-y:auto; padding:16px 12px; display:flex; flex-direction:column; gap:6px; }
+.sidebar-item { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:var(--radius); color:var(--text-muted); text-decoration:none; font-weight:600; font-size:0.92rem; transition:all var(--t); cursor:pointer; }
+.sidebar-item span.emoji { font-size:16px; width:20px; text-align:center; }
+.sidebar-item:hover, .sidebar-item.active { background:rgba(99,102,241,0.08); color:var(--text); }
+.sidebar-item.active { border-left:3px solid var(--primary); }
+.sidebar-footer { padding:16px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.15); }
+.sidebar-user { display:flex; align-items:center; gap:10px; }
+.sidebar-avatar { width:36px; height:36px; background:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; color:white; font-size:1.1rem; text-transform:uppercase; }
+.sidebar-info { display:flex; flex-direction:column; }
+.sidebar-name { font-size:0.85rem; font-weight:700; color:var(--text); }
+.sidebar-role { font-size:0.75rem; color:var(--text-muted); }
+.sidebar-logout { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:var(--radius-sm); border:none; background:transparent; color:#ef4444; font-weight:600; font-size:0.85rem; cursor:pointer; width:100%; transition:background var(--t); }
+.sidebar-logout:hover { background:rgba(239,68,68,0.1); }
+
+/* Main Wrapper */
+.main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+/* Topbar */
+.topbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
+.topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--text-muted); }
+.topbar-breadcrumbs span.sep { color:var(--text-sub); }
+.topbar-breadcrumbs span.active { color:var(--text); }
+.topbar-tabs { display:flex; gap:4px; margin-left:24px; }
+.tab-btn { padding:6px 14px; border-radius:var(--radius-sm); font-size:12px; font-weight:700; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); display:flex; align-items:center; gap:5px; }
+.tab-btn span { font-size:16px; }
+.tab-btn.active { background:var(--primary); border-color:var(--primary); color:white; box-shadow:0 4px 12px rgba(99,102,241,0.3); }
+.tab-btn:hover:not(.active) { border-color:var(--primary-lt); color:var(--primary-lt); }
+.topbar-right { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
+.topbtn { display:inline-flex; align-items:center; gap:4px; padding:5px 11px; border-radius:var(--radius-sm); font-size:11px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); white-space:nowrap; }
+.topbtn span { font-size:15px; }
+.topbtn:hover { border-color:var(--primary); color:var(--primary-lt); }
+
+/* Main Content Panel */
+.content-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; min-height:0; }
+
+/* Tab Views */
+.tab-view { display:none; flex:1; flex-direction:column; overflow:hidden; min-height:0; }
+.tab-view.active { display:flex; }
+
+/* Stock Ledger Tab styling */
+.filter-bar { padding:14px 24px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; gap:16px; align-items:center; flex-shrink:0; }
+.form-input { padding:8px 12px; background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.88rem; outline:none; transition:all var(--t); font-family:inherit; }
+.form-input:focus { border-color:var(--primary); }
+.search-input { width:280px; }
+.wh-select { width:220px; }
+.ledger-wrap { flex:1; overflow:auto; padding:16px 24px; }
+.smriti-table { width:100%; border-collapse:collapse; text-align:left; }
+.smriti-table th { padding:10px 14px; background:var(--card2); color:var(--text-muted); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1; }
+.smriti-table td { padding:12px 14px; border-bottom:1px solid var(--border); font-size:0.88rem; vertical-align:middle; }
+.smriti-table tbody tr:hover td { background:rgba(99,102,241,0.04); }
+.smriti-table tbody tr:last-child td { border-bottom:none; }
+.qty-badge { display:inline-block; padding:3px 8px; border-radius:99px; font-weight:700; font-size:0.82rem; }
+.qty-badge.positive { background:rgba(16,185,129,0.12); color:var(--success); }
+.qty-badge.zero { background:rgba(255,255,255,0.04); color:var(--text-sub); }
+.qty-badge.negative { background:rgba(239,68,68,0.12); color:var(--danger); }
+.item-code { font-size:0.75rem; color:var(--text-sub); margin-top:2px; }
+
+/* Dynamic Operation Panel (Transfers / Adjustments / Reconciliation) */
+.split-layout { flex:1; display:flex; overflow:hidden; min-height:0; }
+.left-form { width:320px; flex-shrink:0; border-right:1px solid var(--border); background:var(--bg2); display:flex; flex-direction:column; overflow:hidden; }
+.right-table { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.panel-section { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:12px; }
+.panel-section-title { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--primary-lt); display:flex; align-items:center; gap:6px; }
+.panel-section-title span { font-size:18px; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-label { font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+.btn-submit { width:100%; padding:11px; background:linear-gradient(135deg,var(--accent),#d97706); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.92rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 12px rgba(245,158,11,0.2); }
+.btn-submit:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(245,158,11,0.35); }
+.btn-submit:disabled { opacity:0.4; cursor:not-allowed; transform:none !important; }
+
+/* Transfer Table cells */
+.grn-input { padding:5px 8px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-weight:600; font-size:0.88rem; text-align:right; outline:none; transition:all var(--t); width:90px; }
+.grn-input:focus { border-color:var(--primary); }
+.btn-del-row { padding:8px; border-radius:var(--radius-sm); background:none; border:1px solid rgba(239,68,68,0.2); color:var(--danger); cursor:pointer; transition:all var(--t); display:inline-flex; align-items:center; justify-content:center; }
+.btn-del-row:hover { background:rgba(239,68,68,0.1); }
+.btn-del-row span { font-size:18px; }
+.batch-badge { display:inline-block; padding:2px 7px; border-radius:99px; font-size:0.72rem; font-weight:700; background:rgba(99,102,241,0.15); color:var(--primary-lt); }
+
+/* Placeholder */
+.placeholder-panel { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-sub); gap:12px; }
+.placeholder-panel span.icon { font-size:56px; opacity:0.25; }
+.placeholder-panel h3 { font-size:1rem; font-weight:600; color:var(--text-muted); }
+.placeholder-panel p { font-size:0.85rem; text-align:center; max-width:320px; line-height:1.6; }
+
+/* Modal Search */
+.modal-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(3,7,18,0.85); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+.modal-backdrop.open { opacity:1; pointer-events:all; }
+.modal { background:var(--card2); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px; width:100%; max-width:480px; transform:translateY(20px); transition:transform 0.2s; }
+.modal-backdrop.open .modal { transform:translateY(0); }
+.modal-title { font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:800; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+.modal-title span { color:var(--primary-lt); font-size:22px; }
+.modal-close { margin-left:auto; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:22px; display:flex; align-items:center; }
+.modal-input { width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.9rem; outline:none; margin-bottom:10px; }
+.result-item { padding:10px 14px; border-radius:var(--radius-sm); cursor:pointer; transition:background var(--t); border-bottom:1px solid var(--border); }
+.result-item:hover { background:rgba(99,102,241,0.08); }
+.ri-name { font-weight:600; font-size:0.88rem; }
+.ri-sub { font-size:0.75rem; color:var(--text-muted); margin-top:2px; }
+
+/* Toast Container */
+#toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
+.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+.toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
+.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
+.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+.toast span { font-size:20px; }
+@keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+
+<div id="app">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <div class="sidebar-logo"><span class="material-symbols-outlined">storefront</span></div>
+            <div class="sidebar-title">SMRITI OS</div>
+        </div>
+        <div class="sidebar-menu">
+            <a class="sidebar-item" href="/desk">
+                <span class="emoji">🏠</span>
+                <span>Control Center</span>
+            </a>
+            <a class="sidebar-item" href="/billing">
+                <span class="emoji">💳</span>
+                <span>Retail Billing</span>
+            </a>
+            <a class="sidebar-item" href="/app/smriti-shift">
+                <span class="emoji">🌅</span>
+                <span>Shift Management</span>
+            </a>
+            <a class="sidebar-item active" href="/inventory">
+                <span class="emoji">📦</span>
+                <span>Inventory Ops</span>
+            </a>
+            <a class="sidebar-item" href="/purchase">
+                <span class="emoji">🛒</span>
+                <span>Purchase Manager</span>
+            </a>
+            <a class="sidebar-item" href="/app/smriti-barcode">
+                <span class="emoji">🏷️</span>
+                <span>Barcode Printing</span>
+            </a>
+            <a class="sidebar-item" href="/app/customer">
+                <span class="emoji">👥</span>
+                <span>Customers</span>
+            </a>
+            <a class="sidebar-item" href="/app/supplier">
+                <span class="emoji">🏢</span>
+                <span>Suppliers</span>
+            </a>
+            <a class="sidebar-item" href="/app/smriti-reports">
+                <span class="emoji">📊</span>
+                <span>Reports</span>
+            </a>
+            <a class="sidebar-item" href="/app/smriti-backup">
+                <span class="emoji">🔄</span>
+                <span>Backup Center</span>
+            </a>
+        </div>
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar" id="sb-avatar">M</div>
+                <div class="sidebar-info">
+                    <span class="sidebar-name" id="sb-user">Manager</span>
+                    <span class="sidebar-role" id="sb-role">Store Manager</span>
+                </div>
+            </div>
+            <button class="sidebar-logout" onclick="doLogout()">
+                <span class="material-symbols-outlined" style="font-size:16px;">logout</span> Sign Out
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-breadcrumbs">
+                <span>SMRITI</span>
+                <span class="sep">/</span>
+                <span class="active">Inventory Operations</span>
+            </div>
+
+            <!-- Tab Buttons -->
+            <div class="topbar-tabs">
+                <button class="tab-btn active" id="tab-ledger" onclick="switchTab('ledger')">
+                    <span class="material-symbols-outlined">inventory_2</span> Stock Summary
+                </button>
+                <button class="tab-btn" id="tab-transfer" onclick="switchTab('transfer')">
+                    <span class="material-symbols-outlined">move_up</span> Material Transfer
+                </button>
+                <button class="tab-btn" id="tab-adjust" onclick="switchTab('adjust')">
+                    <span class="material-symbols-outlined">tune</span> Stock Adjustment
+                </button>
+                <button class="tab-btn" id="tab-audit" onclick="switchTab('audit')">
+                    <span class="material-symbols-outlined">fact_check</span> Physical Audit
+                </button>
+            </div>
+
+            <div class="topbar-right">
+                <button class="topbtn" onclick="refreshInventory()"><span class="material-symbols-outlined">refresh</span> Refresh</button>
+            </div>
+        </div>
+
+        <!-- Content Panel -->
+        <div class="content-panel">
+
+            <!-- Tab: Stock Summary -->
+            <div class="tab-view active" id="view-ledger">
+                <div class="filter-bar">
+                    <input type="text" class="form-input search-input" id="ledger-search" placeholder="Search by name, barcode, or code..." oninput="filterLedger(this.value)">
+                    <select class="form-input wh-select" id="ledger-wh" onchange="loadLedger(this.value)">
+                        <option value="">All Warehouses</option>
+                    </select>
+                </div>
+                <div class="ledger-wrap">
+                    <table class="smriti-table">
+                        <thead>
+                            <tr>
+                                <th>Item details</th>
+                                <th>Brand</th>
+                                <th>Warehouse</th>
+                                <th style="text-align:right;">Available stock</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledger-tbody">
+                            <tr><td colspan="4" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading stock data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Material Transfer -->
+            <div class="tab-view" id="view-transfer">
+                <div class="split-layout">
+                    <div class="left-form">
+                        <div class="panel-section">
+                            <div class="panel-section-title"><span class="material-symbols-outlined">warehouse</span> Warehouses</div>
+                            <div class="form-group">
+                                <label class="form-label">Source Warehouse *</label>
+                                <select class="form-input" id="trf-from-wh"></select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Target Warehouse *</label>
+                                <select class="form-input" id="trf-to-wh"></select>
+                            </div>
+                        </div>
+                        <div class="panel-section">
+                            <div class="panel-section-title"><span class="material-symbols-outlined">barcode_scanner</span> Scan Barcode</div>
+                            <input type="text" class="form-input" id="trf-barcode" placeholder="Scan or enter barcode to add row..." onkeypress="handleTrfScan(event)">
+                        </div>
+                        <div class="panel-section" style="margin-top:auto;">
+                            <button class="btn-submit" id="btn-submit-trf" onclick="submitTransfer()">
+                                <span class="material-symbols-outlined">send</span> Submit Transfer
+                            </button>
+                        </div>
+                    </div>
+                    <div class="right-table">
+                        <div class="placeholder-panel" id="trf-placeholder">
+                            <span class="material-symbols-outlined icon">barcode_scanner</span>
+                            <h3>Scan Items to Transfer</h3>
+                            <p>Select source/target warehouses and scan item barcodes to append them to the transfer list.</p>
+                        </div>
+                        <div class="grn-items-wrap" id="trf-wrap" style="display:none; flex:1; overflow:auto; padding:16px;">
+                            <table class="smriti-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th style="text-align:right;">Avail Qty</th>
+                                        <th style="text-align:center;">Transfer Qty</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="trf-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Stock Adjustment -->
+            <div class="tab-view" id="view-adjust">
+                <div class="split-layout">
+                    <div class="left-form">
+                        <div class="panel-section">
+                            <div class="panel-section-title"><span class="material-symbols-outlined">info</span> Details</div>
+                            <div class="form-group">
+                                <label class="form-label">Warehouse *</label>
+                                <select class="form-input" id="adj-wh"></select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Reason *</label>
+                                <select class="form-input" id="adj-reason">
+                                    <option value="Stock Surplus">Stock Surplus (Receipt)</option>
+                                    <option value="Damage">Damage (Issue)</option>
+                                    <option value="Expiry">Expiry (Issue)</option>
+                                    <option value="Theft / Lost">Theft / Lost (Issue)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="panel-section">
+                            <div class="panel-section-title"><span class="material-symbols-outlined">barcode_scanner</span> Scan Barcode</div>
+                            <input type="text" class="form-input" id="adj-barcode" placeholder="Scan or enter barcode..." onkeypress="handleAdjScan(event)">
+                        </div>
+                        <div class="panel-section" style="margin-top:auto;">
+                            <button class="btn-submit" id="btn-submit-adj" onclick="submitAdjustment()">
+                                <span class="material-symbols-outlined">check_circle</span> Submit Adjustment
+                            </button>
+                        </div>
+                    </div>
+                    <div class="right-table">
+                        <div class="placeholder-panel" id="adj-placeholder">
+                            <span class="material-symbols-outlined icon">tune</span>
+                            <h3>Adjust Store Stock</h3>
+                            <p>Pick the warehouse and adjustment reason, and scan items to record a Surplus (Receipt) or Damaged/Expired (Issue).</p>
+                        </div>
+                        <div class="grn-items-wrap" id="adj-wrap" style="display:none; flex:1; overflow:auto; padding:16px;">
+                            <table class="smriti-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th style="text-align:right;">Avail Qty</th>
+                                        <th style="text-align:center;">Adjusted Qty</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adj-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Physical Audit -->
+            <div class="tab-view" id="view-audit">
+                <div class="split-layout">
+                    <div class="left-form">
+                        <div class="panel-section">
+                            <div class="panel-section-title"><span class="material-symbols-outlined">warehouse</span> Audit Details</div>
+                            <div class="form-group">
+                                <label class="form-label">Audit Warehouse *</label>
+                                <select class="form-input" id="aud-wh"></select>
+                            </div>
+                        </div>
+                        <div class="panel-section">
+                            <div class="panel-section-title"><span class="material-symbols-outlined">barcode_scanner</span> Scan Barcode</div>
+                            <input type="text" class="form-input" id="aud-barcode" placeholder="Scan barcode..." onkeypress="handleAudScan(event)">
+                        </div>
+                        <div class="panel-section" style="margin-top:auto;">
+                            <button class="btn-submit" id="btn-submit-aud" onclick="submitAudit()">
+                                <span class="material-symbols-outlined">fact_check</span> Post Reconciliation
+                            </button>
+                        </div>
+                    </div>
+                    <div class="right-table">
+                        <div class="placeholder-panel" id="aud-placeholder">
+                            <span class="material-symbols-outlined icon">fact_check</span>
+                            <h3>Physical Stock Reconciliation</h3>
+                            <p>Align the digital ledger with real shelf counts. Scan shelf items and input their physical count. Post Reconciliation to adjust ledger stock automatically.</p>
+                        </div>
+                        <div class="grn-items-wrap" id="aud-wrap" style="display:none; flex:1; overflow:auto; padding:16px;">
+                            <table class="smriti-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th style="text-align:right;">Ledger Qty</th>
+                                        <th style="text-align:center;">Physical Shelf Count</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="aud-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+let loggedUser = '{{ cashier }}';
+let ledgerData = [];
+
+const state = {
+    trfRows: [],
+    adjRows: [],
+    audRows: []
+};
+
+// REST API
+function api(method, params = {}) {
+    return fetch(`/api/method/${method}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Frappe-CSRF-Token': CSRF_TOKEN
+        },
+        body: JSON.stringify(params)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.exc) throw new Error(d._error_message || d.exc);
+        return d.message;
+    });
+}
+
+function doLogout() {
+    fetch('/api/method/logout', { credentials: 'include' })
+    .then(() => { window.location.href = '/login'; });
+}
+
+function toast(msg, type = 'success') {
+    const cont = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icon = type === 'success' ? 'check_circle' : 'error';
+    t.innerHTML = `<span class="material-symbols-outlined">${icon}</span> <span>${msg}</span>`;
+    cont.appendChild(t);
+    setTimeout(() => { t.remove(); }, 4000);
+}
+
+// Tab Switching
+function switchTab(id) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+    document.getElementById(`tab-${id}`).classList.add('active');
+    document.getElementById(`view-${id}`).classList.add('active');
+}
+
+// Refresh triggers
+function refreshInventory() {
+    loadLedger(document.getElementById('ledger-wh').value);
+    toast('Stock Ledger refreshed', 'info');
+}
+
+// Load Warehouses & Ledger Stock
+async function init() {
+    // Set user info
+    document.getElementById('sb-user').textContent = loggedUser.split('@')[0];
+    document.getElementById('sb-avatar').textContent = loggedUser.charAt(0).toUpperCase();
+
+    try {
+        const whs = await api('frappe.client.get_list', {
+            doctype: 'Warehouse',
+            filters: { is_group: 0 },
+            fields: ['name', 'warehouse_name'],
+            limit_page_length: 50
+        });
+
+        // Populate selects
+        const selects = ['ledger-wh', 'trf-from-wh', 'trf-to-wh', 'adj-wh', 'aud-wh'];
+        selects.forEach(sid => {
+            const el = document.getElementById(sid);
+            if (!el) return;
+            whs.forEach(wh => {
+                const opt = document.createElement('option');
+                opt.value = wh.name;
+                opt.textContent = wh.name;
+                if (sid === 'ledger-wh' && wh.name.includes('Stores')) opt.selected = true;
+                if (sid === 'trf-from-wh' && wh.name.includes('Stores')) opt.selected = true;
+                if (sid === 'trf-to-wh' && wh.name.includes('Counter')) opt.selected = true;
+                if (sid === 'adj-wh' && wh.name.includes('Stores')) opt.selected = true;
+                if (sid === 'aud-wh' && wh.name.includes('Stores')) opt.selected = true;
+                el.appendChild(opt);
+            });
+        });
+
+        loadLedger(document.getElementById('ledger-wh').value);
+    } catch(e) {
+        console.error(e);
+        toast('Failed to initialize warehouses', 'error');
+    }
+}
+
+async function loadLedger(wh = '') {
+    try {
+        const data = await api('smriti_retail_os.inventory_api.get_stock_summary', { warehouse: wh || null });
+        ledgerData = data || [];
+        renderLedger(ledgerData);
+    } catch(e) {
+        toast('Failed to load stock summary', 'error');
+    }
+}
+
+function renderLedger(list) {
+    const tbody = document.getElementById('ledger-tbody');
+    if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-sub);padding:40px 0;">No stock items found in this warehouse.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = list.map(b => {
+        const qty = parseFloat(b.actual_qty || 0);
+        const qcls = qty > 0 ? 'positive' : qty < 0 ? 'negative' : 'zero';
+        return `
+            <tr>
+                <td>
+                    <div style="font-weight:600;">${b.item_name}</div>
+                    <div class="item-code">${b.item_code}</div>
+                </td>
+                <td style="color:var(--text-muted);">${b.brand || 'N/A'}</td>
+                <td style="font-size:0.8rem;color:var(--text-muted);">${b.warehouse.split(' - ')[0]}</td>
+                <td style="text-align:right;">
+                    <span class="qty-badge ${qcls}">${qty.toFixed(2)} ${b.stock_uom}</span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function filterLedger(q) {
+    const f = ledgerData.filter(b => 
+        b.item_name.toLowerCase().includes(q.toLowerCase()) ||
+        b.item_code.toLowerCase().includes(q.toLowerCase()) ||
+        (b.brand || '').toLowerCase().includes(q.toLowerCase())
+    );
+    renderLedger(f);
+}
+
+// Barcode Scanning / Adding Row Helpers
+async function scanItem(barcode, wh) {
+    try {
+        const item = await api('smriti_retail_os.inventory_api.scan_item_for_inventory', { barcode, warehouse: wh });
+        if (!item) {
+            toast('Item not found for this barcode', 'error');
+            return null;
+        }
+        return item;
+    } catch(e) {
+        toast('Scanning failed: ' + e.message, 'error');
+        return null;
+    }
+}
+
+// Transfer scan
+async function handleTrfScan(e) {
+    if (e.key !== 'Enter') return;
+    const barcode = e.target.value.trim();
+    if (!barcode) return;
+    e.target.value = '';
+
+    const wh = document.getElementById('trf-from-wh').value;
+    const item = await scanItem(barcode, wh);
+    if (!item) return;
+
+    // Check if row already exists
+    const idx = state.trfRows.findIndex(r => r && r.item_code === item.item_code);
+    if (idx !== -1) {
+        const input = document.getElementById(`trf-qty-${idx}`);
+        input.value = parseFloat(input.value) + 1;
+        toast('Quantity incremented', 'info');
+        return;
+    }
+
+    const nIdx = state.trfRows.length;
+    state.trfRows.push(item);
+    renderTrfRows();
+}
+
+function renderTrfRows() {
+    const trfPlaceholder = document.getElementById('trf-placeholder');
+    const trfWrap = document.getElementById('trf-wrap');
+    const tbody = document.getElementById('trf-tbody');
+
+    const activeRows = state.trfRows.filter(r => r !== null);
+    if (!activeRows.length) {
+        trfPlaceholder.style.display = 'flex';
+        trfWrap.style.display = 'none';
+        return;
+    }
+
+    trfPlaceholder.style.display = 'none';
+    trfWrap.style.display = 'flex';
+
+    tbody.innerHTML = state.trfRows.map((r, i) => {
+        if (!r) return '';
+        return `
+            <tr id="trf-row-${i}">
+                <td>
+                    <div style="font-weight:600;">${r.item_name}</div>
+                    <div class="item-code">${r.item_code}</div>
+                    ${r.has_batch_no ? '<span class="batch-badge">Batch Tracked</span>' : ''}
+                </td>
+                <td style="text-align:right;font-weight:600;color:var(--text-muted);">${r.available_qty.toFixed(2)}</td>
+                <td style="text-align:center;">
+                    <input type="number" class="grn-input" id="trf-qty-${i}" value="1" min="0.001" step="0.001" style="width:100px;">
+                </td>
+                <td style="text-align:right;">
+                    <button class="btn-del-row" onclick="removeTrfRow(${i})">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function removeTrfRow(i) {
+    state.trfRows[i] = null;
+    renderTrfRows();
+}
+
+async function submitTransfer() {
+    const from_wh = document.getElementById('trf-from-wh').value;
+    const to_wh = document.getElementById('trf-to-wh').value;
+    if (from_wh === to_wh) {
+        toast('Source and Target warehouses cannot be same', 'error');
+        return;
+    }
+
+    const items = [];
+    state.trfRows.forEach((r, i) => {
+        if (!r) return;
+        const qty = parseFloat(document.getElementById(`trf-qty-${i}`).value) || 0;
+        if (qty > 0) {
+            items.push({ item_code: r.item_code, qty, stock_uom: r.stock_uom });
+        }
+    });
+
+    if (!items.length) {
+        toast('Please scan and add items with quantity > 0', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('btn-submit-trf');
+    btn.disabled = true;
+
+    try {
+        const res = await api('smriti_retail_os.inventory_api.create_stock_transfer', {
+            from_warehouse: from_wh,
+            to_warehouse: to_wh,
+            items: JSON.stringify(items)
+        });
+        toast('Material Transfer submitted successfully!', 'success');
+        state.trfRows = [];
+        renderTrfRows();
+        loadLedger(document.getElementById('ledger-wh').value);
+    } catch(e) {
+        toast('Transfer failed: ' + e.message, 'error');
+    }
+    btn.disabled = false;
+}
+
+// Adjustment scan
+async function handleAdjScan(e) {
+    if (e.key !== 'Enter') return;
+    const barcode = e.target.value.trim();
+    if (!barcode) return;
+    e.target.value = '';
+
+    const wh = document.getElementById('adj-wh').value;
+    const item = await scanItem(barcode, wh);
+    if (!item) return;
+
+    const idx = state.adjRows.findIndex(r => r && r.item_code === item.item_code);
+    if (idx !== -1) {
+        const input = document.getElementById(`adj-qty-${idx}`);
+        input.value = parseFloat(input.value) + 1;
+        toast('Quantity incremented', 'info');
+        return;
+    }
+
+    const nIdx = state.adjRows.length;
+    state.adjRows.push(item);
+    renderAdjRows();
+}
+
+function renderAdjRows() {
+    const placeholder = document.getElementById('adj-placeholder');
+    const wrap = document.getElementById('adj-wrap');
+    const tbody = document.getElementById('adj-tbody');
+
+    const activeRows = state.adjRows.filter(r => r !== null);
+    if (!activeRows.length) {
+        placeholder.style.display = 'flex';
+        wrap.style.display = 'none';
+        return;
+    }
+
+    placeholder.style.display = 'none';
+    wrap.style.display = 'flex';
+
+    tbody.innerHTML = state.adjRows.map((r, i) => {
+        if (!r) return '';
+        return `
+            <tr id="adj-row-${i}">
+                <td>
+                    <div style="font-weight:600;">${r.item_name}</div>
+                    <div class="item-code">${r.item_code}</div>
+                </td>
+                <td style="text-align:right;font-weight:600;color:var(--text-muted);">${r.available_qty.toFixed(2)}</td>
+                <td style="text-align:center;">
+                    <input type="number" class="grn-input" id="adj-qty-${i}" value="1" min="0.001" step="0.001" style="width:100px;">
+                </td>
+                <td style="text-align:right;">
+                    <button class="btn-del-row" onclick="removeAdjRow(${i})">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function removeAdjRow(i) {
+    state.adjRows[i] = null;
+    renderAdjRows();
+}
+
+async function submitAdjustment() {
+    const wh = document.getElementById('adj-wh').value;
+    const reason = document.getElementById('adj-reason').value;
+
+    const items = [];
+    state.adjRows.forEach((r, i) => {
+        if (!r) return;
+        const qty = parseFloat(document.getElementById(`adj-qty-${i}`).value) || 0;
+        if (qty > 0) {
+            items.push({ item_code: r.item_code, qty, warehouse: wh, stock_uom: r.stock_uom });
+        }
+    });
+
+    if (!items.length) {
+        toast('Please scan and add items with quantity > 0', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('btn-submit-adj');
+    btn.disabled = true;
+
+    try {
+        await api('smriti_retail_os.inventory_api.create_stock_adjustment', {
+            items: JSON.stringify(items),
+            reason: reason
+        });
+        toast('Stock Adjustment posted successfully!', 'success');
+        state.adjRows = [];
+        renderAdjRows();
+        loadLedger(document.getElementById('ledger-wh').value);
+    } catch(e) {
+        toast('Adjustment failed: ' + e.message, 'error');
+    }
+    btn.disabled = false;
+}
+
+// Physical Audit Scan
+async function handleAudScan(e) {
+    if (e.key !== 'Enter') return;
+    const barcode = e.target.value.trim();
+    if (!barcode) return;
+    e.target.value = '';
+
+    const wh = document.getElementById('aud-wh').value;
+    const item = await scanItem(barcode, wh);
+    if (!item) return;
+
+    const idx = state.audRows.findIndex(r => r && r.item_code === item.item_code);
+    if (idx !== -1) {
+        const input = document.getElementById(`aud-qty-${idx}`);
+        input.value = parseFloat(input.value) + 1;
+        toast('Quantity incremented', 'info');
+        return;
+    }
+
+    const nIdx = state.audRows.length;
+    state.audRows.push(item);
+    renderAudRows();
+}
+
+function renderAudRows() {
+    const placeholder = document.getElementById('aud-placeholder');
+    const wrap = document.getElementById('aud-wrap');
+    const tbody = document.getElementById('aud-tbody');
+
+    const activeRows = state.audRows.filter(r => r !== null);
+    if (!activeRows.length) {
+        placeholder.style.display = 'flex';
+        wrap.style.display = 'none';
+        return;
+    }
+
+    placeholder.style.display = 'none';
+    wrap.style.display = 'flex';
+
+    tbody.innerHTML = state.audRows.map((r, i) => {
+        if (!r) return '';
+        return `
+            <tr id="aud-row-${i}">
+                <td>
+                    <div style="font-weight:600;">${r.item_name}</div>
+                    <div class="item-code">${r.item_code}</div>
+                </td>
+                <td style="text-align:right;font-weight:600;color:var(--text-muted);">${r.available_qty.toFixed(2)}</td>
+                <td style="text-align:center;">
+                    <input type="number" class="grn-input" id="aud-qty-${i}" value="${r.available_qty}" min="0" step="0.001" style="width:100px;">
+                </td>
+                <td style="text-align:right;">
+                    <button class="btn-del-row" onclick="removeAudRow(${i})">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function removeAudRow(i) {
+    state.audRows[i] = null;
+    renderAudRows();
+}
+
+async function submitAudit() {
+    const wh = document.getElementById('aud-wh').value;
+
+    const items = [];
+    state.audRows.forEach((r, i) => {
+        if (!r) return;
+        const qty = parseFloat(document.getElementById(`aud-qty-${i}`).value);
+        if (qty >= 0) {
+            items.push({ item_code: r.item_code, qty, warehouse: wh });
+        }
+    });
+
+    if (!items.length) {
+        toast('Add at least one item to reconcile', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('btn-submit-aud');
+    btn.disabled = true;
+
+    try {
+        await api('smriti_retail_os.inventory_api.create_stock_audit', {
+            items: JSON.stringify(items)
+        });
+        toast('Stock Reconciliation posted successfully!', 'success');
+        state.audRows = [];
+        renderAudRows();
+        loadLedger(document.getElementById('ledger-wh').value);
+    } catch(e) {
+        toast('Audit post failed: ' + e.message, 'error');
+    }
+    btn.disabled = false;
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
+{% endblock %}
