@@ -12,7 +12,7 @@
   @file: smriti_retail_os/www/sizewise_item.html
   @description: Dedicated Standalone Sizewise Item Master CRUD Portal (Zero Frappe chrome)
   @author: Antigravity <antigravity@google.com>
-  @version: 1.0.0
+  @version: 2.0.0
   @license: MIT
 -->
 <html lang="en">
@@ -180,8 +180,148 @@ body.popout-mode .sidebar { display: none !important; }
 .toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
 .toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
 .toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+.toast.warning { background:#78350f; border:1px solid rgba(245,158,11,0.3); }
 .toast span { font-size:20px; }
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+/* ══════════════════════════════════════════════════════════════
+   TAB SYSTEM — Manual / Paste
+   ══════════════════════════════════════════════════════════════ */
+.sim-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 20px; background: var(--card); border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; }
+.sim-tab {
+    flex: 1; padding: 14px 20px; font-size: 0.92rem; font-weight: 700; color: var(--text-muted);
+    cursor: pointer; border-bottom: 3px solid transparent; transition: all var(--t);
+    user-select: none; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: transparent;
+}
+.sim-tab:hover { color: var(--text); background: rgba(255,255,255,0.02); }
+.sim-tab.active { color: var(--primary-lt); border-bottom-color: var(--primary-lt); background: rgba(99,102,241,0.05); }
+.sim-tab .tab-icon { font-size: 20px; }
+.sim-tab .tab-badge { font-size: 0.65rem; padding: 2px 7px; border-radius: 10px; background: var(--primary); color: white; font-weight: 800; }
+.sim-panel { display: none; }
+.sim-panel.active { display: block; }
+
+/* ══════════════════════════════════════════════════════════════
+   PASTE ZONE — Premium Cyberpunk Styling
+   ══════════════════════════════════════════════════════════════ */
+.sim-paste-zone {
+    background: linear-gradient(135deg, rgba(99,102,241,0.03), rgba(245,158,11,0.02));
+    border: 2px dashed rgba(99,102,241,0.3);
+    border-radius: var(--radius-lg);
+    padding: 40px 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    outline: none;
+    overflow: hidden;
+}
+.sim-paste-zone::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--primary), var(--accent), var(--primary));
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.sim-paste-zone:hover::before, .sim-paste-zone.active::before { opacity: 0.15; }
+.sim-paste-zone:hover, .sim-paste-zone.active {
+    border-color: var(--primary);
+    background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(245,158,11,0.04));
+    transform: translateY(-1px);
+    box-shadow: 0 8px 32px rgba(99,102,241,0.15);
+}
+.sim-paste-zone .pz-icon { font-size: 3rem; margin-bottom: 10px; display: block; }
+.sim-paste-zone .pz-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 6px; font-family: 'Outfit', sans-serif; }
+.sim-paste-zone .pz-sub { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+.sim-paste-zone .pz-hint { font-size: 0.75rem; color: var(--primary-lt); margin-top: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.sim-paste-zone .pz-hint .material-symbols-outlined { font-size: 16px; }
+#sim-paste-capture { position: absolute; opacity: 0; width: 1px; height: 1px; overflow: hidden; pointer-events: none; }
+
+/* Paste zone scan animation */
+.sim-paste-zone.scanning .pz-icon { animation: pulse-icon 1s ease infinite; }
+@keyframes pulse-icon { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.15); opacity: 0.7; } }
+
+/* ══════════════════════════════════════════════════════════════
+   PREVIEW STATS BAR
+   ══════════════════════════════════════════════════════════════ */
+.sim-stats-bar {
+    display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0;
+}
+.sim-stat-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px; font-size: 0.8rem; font-weight: 600;
+}
+.sim-stat-chip .chip-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.sim-stat-chip .chip-dot.green { background: var(--success); }
+.sim-stat-chip .chip-dot.amber { background: var(--warning); }
+.sim-stat-chip .chip-dot.red { background: var(--danger); }
+.sim-stat-chip .chip-dot.blue { background: var(--primary); }
+.sim-stat-chip .chip-val { font-weight: 800; color: var(--text); }
+
+/* ══════════════════════════════════════════════════════════════
+   SPREADSHEET PREVIEW GRID
+   ══════════════════════════════════════════════════════════════ */
+.sim-grid-wrapper {
+    overflow: auto; max-height: 460px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: rgba(0,0,0,0.15); box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.sim-grid { border-collapse: collapse; width: 100%; font-size: 0.82rem; }
+.sim-grid thead tr { background: #131d35; position: sticky; top: 0; z-index: 10; }
+.sim-grid thead th {
+    padding: 12px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 2px solid var(--border);
+    border-right: 1px solid var(--border); text-align: left; white-space: nowrap;
+}
+.sim-grid thead th.size-col { color: var(--accent); background: rgba(245,158,11,0.05); text-align: center; }
+.sim-grid tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+.sim-grid tbody tr:hover { background: rgba(255,255,255,0.02); }
+.sim-grid tbody tr.row-error { background: rgba(239,68,68,0.04); }
+.sim-grid td { padding: 10px 12px; border-right: 1px solid var(--border); vertical-align: middle; white-space: nowrap; }
+.sim-grid td.size-cell { text-align: center; font-weight: 700; }
+.sim-grid td.size-cell.active-size { color: var(--success); background: rgba(16,185,129,0.05); }
+.sim-grid td.size-cell.inactive-size { color: var(--text-sub); }
+.sim-badge-size { background: rgba(245,158,11,0.1); color: var(--accent); font-weight: 700; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-right: 4px; display: inline-block; }
+.row-status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+.row-status-badge.valid { background: rgba(16,185,129,0.1); color: var(--success); }
+.row-status-badge.error { background: rgba(239,68,68,0.1); color: var(--danger); }
+
+/* ══════════════════════════════════════════════════════════════
+   PROGRESS BAR
+   ══════════════════════════════════════════════════════════════ */
+.sim-progress-panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; margin-top: 16px; display: none; }
+.sim-progress-panel.active { display: block; }
+.sim-progress-bar-wrap { background: rgba(255,255,255,0.06); border-radius: 20px; height: 10px; margin: 10px 0; overflow: hidden; }
+.sim-progress-bar { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--primary), var(--success)); transition: width 0.4s ease; width: 0%; }
+.sim-progress-label { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
+.sim-progress-detail { font-size: 0.78rem; color: var(--text-sub); margin-top: 4px; }
+
+/* Import toolbar */
+.sim-import-toolbar { display: flex; gap: 12px; margin-top: 16px; align-items: center; }
+.btn-import {
+    padding: 12px 28px; background: linear-gradient(135deg, var(--primary), #4f46e5);
+    border: none; border-radius: var(--radius); color: white; font-weight: 700; font-size: 0.95rem;
+    cursor: pointer; transition: all var(--t); display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 4px 14px rgba(99,102,241,0.3);
+}
+.btn-import:hover { background: linear-gradient(135deg, #4f46e5, #4338ca); transform: translateY(-1px); }
+.btn-import:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-clear-paste { padding: 12px 20px; background: transparent; border: 1px solid var(--border2); border-radius: var(--radius); color: var(--text-muted); font-weight: 600; cursor: pointer; transition: all var(--t); display: flex; align-items: center; gap: 6px; }
+.btn-clear-paste:hover { background: rgba(255,255,255,0.03); border-color: var(--danger); color: var(--danger); }
+
+/* Column mapping callout */
+.sim-column-map { background: rgba(99,102,241,0.04); border: 1px solid rgba(99,102,241,0.15); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 16px; }
+.sim-column-map-title { font-size: 0.78rem; font-weight: 700; color: var(--primary-lt); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.sim-column-map-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.sim-col-tag { display: inline-flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 0.72rem; font-weight: 600; }
+.sim-col-tag .col-from { color: var(--accent); }
+.sim-col-tag .col-arrow { color: var(--text-sub); }
+.sim-col-tag .col-to { color: var(--success); }
+
 </style>
 
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
@@ -223,94 +363,178 @@ body.popout-mode .sidebar { display: none !important; }
                 <h1 class="page-title">👟 Dedicated Sizewise Item Master <span class="smriti-badge">CRUD</span></h1>
             </div>
 
-            <!-- Base Style Card -->
-            <div class="section-card">
-                <div class="section-title"><span class="material-symbols-outlined">style</span> 1. Base Style Template Details</div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label required">Article / Style Code</label>
-                        <input type="text" class="form-input" id="style-code" placeholder="e.g. AD-SUPER-20" onchange="lookupStyle(this.value)">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label required">Style Description</label>
-                        <input type="text" class="form-input" id="style-desc" placeholder="e.g. Superstar Classic Sneakers">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label required">Color</label>
-                        <input type="text" class="form-input" id="style-color" placeholder="e.g. BLACK">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Brand</label>
-                        <input type="text" class="form-input" id="style-brand" placeholder="e.g. Adidas">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Category</label>
-                        <select class="form-input" id="style-group">
-                            <option value="Footwear">Footwear</option>
-                            <option value="Products">Products</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Cost Price (₹)</label>
-                        <input type="number" class="form-input" id="style-cost" placeholder="0.00" value="0">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label required">Planned MRP / Selling Price (₹)</label>
-                        <input type="number" class="form-input" id="style-mrp" placeholder="0.00" value="0">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">GST %</label>
-                        <select class="form-input" id="style-gst">
-                            <option value="0">0%</option>
-                            <option value="5">5%</option>
-                            <option value="12">12%</option>
-                            <option value="18" selected>18%</option>
-                            <option value="28">28%</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">HSN Code</label>
-                        <input type="text" class="form-input" id="style-hsn" placeholder="e.g. 6403" value="6403">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Gender</label>
-                        <select class="form-input" id="style-gender">
-                            <option value="UNISEX" selected>UNISEX</option>
-                            <option value="MENS">MENS</option>
-                            <option value="LADIES">LADIES</option>
-                            <option value="KIDS">KIDS</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Purchase Class</label>
-                        <select class="form-input" id="style-pclass">
-                            <option value="FW" selected>FW (Footwear)</option>
-                            <option value="ASSTED">ASSTED</option>
-                            <option value="SPORTS">SPORTS</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Vendor Code / Supplier</label>
-                        <input type="text" class="form-input" id="style-vendor" placeholder="e.g. SUP-TATTLY">
-                    </div>
+            <!-- ═══════════════════════════════════════════════════════
+                 TAB SWITCHER
+                 ═══════════════════════════════════════════════════════ -->
+            <div class="sim-tabs">
+                <div class="sim-tab active" data-tab="manual" onclick="switchTab('manual')">
+                    <span class="material-symbols-outlined tab-icon">edit_note</span>
+                    Style Creator (Manual)
+                </div>
+                <div class="sim-tab" data-tab="paste" onclick="switchTab('paste')">
+                    <span class="material-symbols-outlined tab-icon">content_paste_go</span>
+                    Paste Size Matrix (Excel)
+                    <span class="tab-badge">NEW</span>
                 </div>
             </div>
 
-            <!-- Size Configuration Grid -->
-            <div class="section-card">
-                <div class="section-title"><span class="material-symbols-outlined">grid_on</span> 2. Sizewise Pivot Grid (Active Configurations & Barcodes)</div>
-                <div class="size-matrix-grid" id="size-pivot-container">
-                    <!-- Dynamic Size Cards Injected Here -->
+            <!-- ═══════════════════════════════════════════════════════
+                 TAB 1: MANUAL STYLE CREATOR (existing)
+                 ═══════════════════════════════════════════════════════ -->
+            <div class="sim-panel active" id="panel-manual">
+                <!-- Base Style Card -->
+                <div class="section-card">
+                    <div class="section-title"><span class="material-symbols-outlined">style</span> 1. Base Style Template Details</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label required">Article / Style Code</label>
+                            <input type="text" class="form-input" id="style-code" placeholder="e.g. AD-SUPER-20" onchange="lookupStyle(this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">Style Description</label>
+                            <input type="text" class="form-input" id="style-desc" placeholder="e.g. Superstar Classic Sneakers">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">Color</label>
+                            <input type="text" class="form-input" id="style-color" placeholder="e.g. BLACK">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Brand</label>
+                            <input type="text" class="form-input" id="style-brand" placeholder="e.g. Adidas">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <select class="form-input" id="style-group">
+                                <option value="Footwear">Footwear</option>
+                                <option value="Products">Products</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cost Price (₹)</label>
+                            <input type="number" class="form-input" id="style-cost" placeholder="0.00" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">Planned MRP / Selling Price (₹)</label>
+                            <input type="number" class="form-input" id="style-mrp" placeholder="0.00" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">GST %</label>
+                            <select class="form-input" id="style-gst">
+                                <option value="0">0%</option>
+                                <option value="5">5%</option>
+                                <option value="12">12%</option>
+                                <option value="18" selected>18%</option>
+                                <option value="28">28%</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">HSN Code</label>
+                            <input type="text" class="form-input" id="style-hsn" placeholder="e.g. 6403" value="6403">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Gender</label>
+                            <select class="form-input" id="style-gender">
+                                <option value="UNISEX" selected>UNISEX</option>
+                                <option value="MENS">MENS</option>
+                                <option value="LADIES">LADIES</option>
+                                <option value="KIDS">KIDS</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Purchase Class</label>
+                            <select class="form-input" id="style-pclass">
+                                <option value="FW" selected>FW (Footwear)</option>
+                                <option value="ASSTED">ASSTED</option>
+                                <option value="SPORTS">SPORTS</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Vendor Code / Supplier</label>
+                            <input type="text" class="form-input" id="style-vendor" placeholder="e.g. SUP-TATTLY">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Size Configuration Grid -->
+                <div class="section-card" style="margin-top:20px;">
+                    <div class="section-title"><span class="material-symbols-outlined">grid_on</span> 2. Sizewise Pivot Grid (Active Configurations & Barcodes)</div>
+                    <div class="size-matrix-grid" id="size-pivot-container">
+                        <!-- Dynamic Size Cards Injected Here -->
+                    </div>
+                </div>
+
+                <!-- Toolbar Action Footer -->
+                <div class="toolbar">
+                    <button class="btn-secondary" onclick="clearWizard()">🗑 Clear Form</button>
+                    <button class="btn-save" onclick="saveStyleMaster()">
+                        <span class="material-symbols-outlined">save</span> Save Style & Size Variants
+                    </button>
                 </div>
             </div>
 
-            <!-- Toolbar Action Footer -->
-            <div class="toolbar">
-                <button class="btn-secondary" onclick="clearWizard()">🗑 Clear Form</button>
-                <button class="btn-save" onclick="saveStyleMaster()">
-                    <span class="material-symbols-outlined">save</span> Save Style & Size Variants
-                </button>
+            <!-- ═══════════════════════════════════════════════════════
+                 TAB 2: PASTE SIZE MATRIX (NEW)
+                 ═══════════════════════════════════════════════════════ -->
+            <div class="sim-panel" id="panel-paste">
+                <!-- Paste Zone -->
+                <div class="sim-paste-zone" id="paste-zone" tabindex="0"
+                     onclick="focusPasteCapture()"
+                     ondragover="event.preventDefault(); this.classList.add('active');"
+                     ondragleave="this.classList.remove('active');">
+                    <span class="pz-icon">📋</span>
+                    <div class="pz-title">Paste Your Excel / Google Sheets Size Matrix Here</div>
+                    <div class="pz-sub">
+                        Select rows in Excel → Copy (Ctrl+C) → Click here → Paste (Ctrl+V)<br>
+                        Supports multi-row, multi-color pivot matrices with automatic column detection.
+                    </div>
+                    <div class="pz-hint">
+                        <span class="material-symbols-outlined">info</span>
+                        Expected columns: ARTICLE, COLOR, CATEGORY, DESCRIPTION, sizes (36–42, S/M/L/XL), MRP
+                    </div>
+                    <textarea id="sim-paste-capture" onpaste="handlePaste(event)"></textarea>
+                </div>
+
+                <!-- Column Mapping Display (hidden until paste) -->
+                <div id="paste-column-map" class="sim-column-map" style="display:none;">
+                    <div class="sim-column-map-title">
+                        <span class="material-symbols-outlined">swap_horiz</span> Auto-Detected Column Mapping
+                    </div>
+                    <div class="sim-column-map-list" id="paste-col-map-list"></div>
+                </div>
+
+                <!-- Stats Bar (hidden until paste) -->
+                <div id="paste-stats-bar" class="sim-stats-bar" style="display:none;"></div>
+
+                <!-- Preview Grid (hidden until paste) -->
+                <div id="paste-grid-wrapper" class="sim-grid-wrapper" style="display:none;">
+                    <table class="sim-grid" id="paste-grid">
+                        <thead><tr id="paste-grid-head"></tr></thead>
+                        <tbody id="paste-grid-body"></tbody>
+                    </table>
+                </div>
+
+                <!-- Progress Panel (hidden until import) -->
+                <div id="paste-progress-panel" class="sim-progress-panel">
+                    <div class="sim-progress-label" id="paste-progress-label">Importing styles...</div>
+                    <div class="sim-progress-bar-wrap">
+                        <div class="sim-progress-bar" id="paste-progress-bar"></div>
+                    </div>
+                    <div class="sim-progress-detail" id="paste-progress-detail"></div>
+                </div>
+
+                <!-- Import Toolbar (hidden until paste) -->
+                <div id="paste-import-toolbar" class="sim-import-toolbar" style="display:none;">
+                    <button class="btn-import" id="btn-do-import" onclick="executePivotImport()" disabled>
+                        <span class="material-symbols-outlined">cloud_upload</span> Import All Styles & Variants
+                    </button>
+                    <button class="btn-clear-paste" onclick="clearPastePanel()">
+                        <span class="material-symbols-outlined">delete_sweep</span> Clear & Re-Paste
+                    </button>
+                    <div style="margin-left:auto; font-size:0.78rem; color:var(--text-muted);" id="paste-summary-text"></div>
+                </div>
             </div>
+            <!-- END panels -->
+
         </div>
     </div>
 </div>
@@ -321,9 +545,9 @@ body.popout-mode .sidebar { display: none !important; }
 const CSRF_TOKEN = '{{ csrf_token }}';
 let loggedUser = '{{ cashier }}';
 
-// Track current dynamic sizes matrix
-let sizesList = ['6', '7', '8', '9', '10', '11', '12'];
-let sizesConfigData = {}; // Maps size label -> { active: boolean, barcode_mode: 'auto'|'manual', manual_barcode: string, existing: boolean, variant_code: string }
+// ═══════════════════════════════════════════════════════════════════════════
+//  SHARED UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════
 
 function api(method, params = {}) {
     return fetch(`/api/method/${method}`, {
@@ -351,10 +575,10 @@ function toast(msg, type = 'success') {
     const cont = document.getElementById('toast-container');
     const t = document.createElement('div');
     t.className = `toast ${type}`;
-    const icon = type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info';
+    const icon = type === 'success' ? 'check_circle' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info';
     t.innerHTML = `<span class="material-symbols-outlined">${icon}</span> <span>${msg}</span>`;
     cont.appendChild(t);
-    setTimeout(() => { t.remove(); }, 4000);
+    setTimeout(() => { t.remove(); }, 4500);
 }
 
 function openPopout(e, url) {
@@ -366,6 +590,27 @@ function openPopout(e, url) {
     }
     window.open(popout_url, "smriti-popout-window", "width=1200,height=800,resizable=yes,scrollbars=yes");
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  TAB SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════
+
+function switchTab(tabName) {
+    document.querySelectorAll('.sim-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.sim-panel').forEach(p => p.classList.remove('active'));
+    const tab = document.querySelector(`.sim-tab[data-tab="${tabName}"]`);
+    const panel = document.getElementById(`panel-${tabName}`);
+    if (tab) tab.classList.add('active');
+    if (panel) panel.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  TAB 1: MANUAL STYLE CREATOR (existing code)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Track current dynamic sizes matrix
+let sizesList = ['6', '7', '8', '9', '10', '11', '12'];
+let sizesConfigData = {}; // Maps size label -> { active: boolean, barcode_mode: 'auto'|'manual', manual_barcode: string, existing: boolean, variant_code: string }
 
 function init() {
     const _sbu = document.getElementById('sb-user'); if (_sbu) _sbu.textContent = loggedUser.split('@')[0];
@@ -659,6 +904,388 @@ function clearWizard() {
     renderPivotGrid();
     toast('Wizard cleared.', 'info');
 }
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  TAB 2: PASTE SIZE MATRIX (Excel Import)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── Column name aliases for intelligent auto-detection ───────────────────
+const COL_ALIASES = {
+    article:     ['ARTICLE', 'STYLE', 'STYLE CODE', 'ARTICLE NO', 'ARTICLE CODE', 'ART', 'ART NO', 'PRODUCT STYLE CODE'],
+    color:       ['COLOR', 'COLOUR', 'CLR'],
+    category:    ['CATOGARY', 'CATEGORY', 'CAT', 'DEPT', 'DEPARTMENT'],
+    description: ['SUB - CATO', 'SUB-CATO', 'SUB CATO', 'DESCRIPTION', 'SUB-CATEGORY', 'SUB CATEGORY', 'DESC', 'ITEM DESCRIPTION', 'ITEM NAME'],
+    mrp:         ['MRP', 'PLANNED MRP', 'SELLING PRICE', 'RATE', 'PRICE'],
+    total_qty:   ['TTL QTY', 'TOTAL QTY', 'TOTAL', 'TTL', 'QTY'],
+};
+
+// Known size patterns — numeric sizes OR named sizes
+const SIZE_PATTERNS = /^(\d{1,3}(\.\d)?|XXS|XS|S|M|L|XL|XXL|XXXL|2XL|3XL|4XL|5XL|FREE|F|UK\d+|EU\d+|US\d+)$/i;
+
+let pastedData = {
+    headers: [],          // raw header strings
+    sizeColumns: [],      // indices that are size columns
+    mappedColumns: {},    // { article: idx, color: idx, category: idx, description: idx, mrp: idx }
+    rows: [],             // raw row arrays
+    parsedStyles: [],     // structured styles for import
+};
+
+function focusPasteCapture() {
+    const textarea = document.getElementById('sim-paste-capture');
+    textarea.focus();
+    document.getElementById('paste-zone').classList.add('active');
+}
+
+function handlePaste(e) {
+    e.preventDefault();
+    const clipText = (e.clipboardData || window.clipboardData).getData('text');
+    if (!clipText || !clipText.trim()) {
+        toast('Nothing pasted. Please copy cells from Excel first.', 'warning');
+        return;
+    }
+
+    // Add scanning animation
+    const zone = document.getElementById('paste-zone');
+    zone.classList.add('scanning');
+    setTimeout(() => zone.classList.remove('scanning'), 1500);
+
+    parseTSV(clipText.trim());
+}
+
+function parseTSV(raw) {
+    const lines = raw.split('\n').map(l => l.replace(/\r$/, ''));
+    if (lines.length < 2) {
+        toast('Need at least a header row and one data row.', 'error');
+        return;
+    }
+
+    // Parse header
+    const headers = lines[0].split('\t').map(h => h.trim());
+    pastedData.headers = headers;
+
+    // ─── Intelligent Column Detection ─────────────────────────────────
+    pastedData.mappedColumns = {};
+    pastedData.sizeColumns = [];
+
+    headers.forEach((hdr, idx) => {
+        const upper = hdr.toUpperCase().trim();
+
+        // Check against known aliases
+        let matched = false;
+        for (const [key, aliases] of Object.entries(COL_ALIASES)) {
+            if (aliases.includes(upper)) {
+                pastedData.mappedColumns[key] = idx;
+                matched = true;
+                break;
+            }
+        }
+
+        // If not matched to a known column, test for size pattern
+        if (!matched && SIZE_PATTERNS.test(upper)) {
+            pastedData.sizeColumns.push(idx);
+        }
+    });
+
+    // Parse data rows
+    pastedData.rows = [];
+    for (let i = 1; i < lines.length; i++) {
+        const cells = lines[i].split('\t').map(c => c.trim());
+        if (cells.length < 2 || cells.every(c => !c)) continue; // skip blank rows
+        pastedData.rows.push(cells);
+    }
+
+    if (pastedData.rows.length === 0) {
+        toast('No data rows found after header. Check your selection.', 'error');
+        return;
+    }
+
+    if (pastedData.sizeColumns.length === 0) {
+        toast('No size columns detected! Headers should contain numeric sizes (36, 37...) or named sizes (S, M, L...)', 'warning');
+    }
+
+    // Build structured styles
+    buildParsedStyles();
+
+    // Render
+    renderColumnMap();
+    renderStatsBar();
+    renderPreviewGrid();
+
+    // Show controls
+    document.getElementById('paste-column-map').style.display = 'block';
+    document.getElementById('paste-stats-bar').style.display = 'flex';
+    document.getElementById('paste-grid-wrapper').style.display = 'block';
+    document.getElementById('paste-import-toolbar').style.display = 'flex';
+
+    // Enable import button if we have valid data
+    const btn = document.getElementById('btn-do-import');
+    btn.disabled = pastedData.parsedStyles.length === 0;
+
+    toast(`Parsed ${pastedData.rows.length} rows with ${pastedData.sizeColumns.length} size columns detected.`, 'success');
+}
+
+function buildParsedStyles() {
+    const mc = pastedData.mappedColumns;
+    const sc = pastedData.sizeColumns;
+    const headers = pastedData.headers;
+
+    pastedData.parsedStyles = [];
+
+    pastedData.rows.forEach((cells, rowIdx) => {
+        const article  = (mc.article !== undefined ? cells[mc.article] : '').trim();
+        const color    = (mc.color !== undefined ? cells[mc.color] : 'UNKNOWN').trim().toUpperCase();
+        const category = (mc.category !== undefined ? cells[mc.category] : '').trim();
+        const desc     = (mc.description !== undefined ? cells[mc.description] : '').trim();
+        const mrpStr   = (mc.mrp !== undefined ? cells[mc.mrp] : '0').trim();
+        const mrp      = parseFloat(mrpStr.replace(/[^0-9.]/g, '')) || 0;
+
+        if (!article) return; // skip rows without article
+
+        // Build size configuration from size columns
+        const sizesConfig = [];
+        sc.forEach(colIdx => {
+            const sizeLabel = headers[colIdx].trim();
+            const rawQty = (cells[colIdx] || '0').trim();
+            const qty = parseInt(rawQty, 10) || 0;
+            if (qty > 0) {
+                sizesConfig.push({
+                    size: sizeLabel,
+                    active: true,
+                    qty: qty,
+                });
+            }
+        });
+
+        pastedData.parsedStyles.push({
+            rowIdx: rowIdx,
+            base_details: {
+                article_no: article,
+                description: desc || category || article,
+                color: color,
+                brand: '',
+                item_group: category || 'Products',
+                cost_price: 0,
+                mrp: mrp,
+                gst_percentage: '18',
+                hsn_code: '',
+                gender: 'UNISEX',
+                purchase_class: 'FW',
+                vendor_code: '',
+                product_tax_group: '',
+                merchandise_category: category,
+                sub_category: desc,
+            },
+            sizes_config: sizesConfig,
+            activeSizeCount: sizesConfig.length,
+            totalQty: sizesConfig.reduce((s, z) => s + z.qty, 0),
+            isValid: !!article && mrp > 0 && sizesConfig.length > 0,
+        });
+    });
+}
+
+function renderColumnMap() {
+    const list = document.getElementById('paste-col-map-list');
+    list.innerHTML = '';
+    const mc = pastedData.mappedColumns;
+    const headers = pastedData.headers;
+
+    // Mapped columns
+    const keyLabels = {
+        article: '📦 Article/Style',
+        color: '🎨 Color',
+        category: '📁 Category',
+        description: '📝 Description',
+        mrp: '💰 MRP',
+        total_qty: '📊 Total Qty',
+    };
+
+    for (const [key, idx] of Object.entries(mc)) {
+        const tag = document.createElement('div');
+        tag.className = 'sim-col-tag';
+        tag.innerHTML = `<span class="col-from">${headers[idx]}</span> <span class="col-arrow">→</span> <span class="col-to">${keyLabels[key] || key}</span>`;
+        list.appendChild(tag);
+    }
+
+    // Size columns
+    pastedData.sizeColumns.forEach(idx => {
+        const tag = document.createElement('div');
+        tag.className = 'sim-col-tag';
+        tag.innerHTML = `<span class="col-from">${headers[idx]}</span> <span class="col-arrow">→</span> <span class="col-to">📏 Size ${headers[idx]}</span>`;
+        list.appendChild(tag);
+    });
+}
+
+function renderStatsBar() {
+    const bar = document.getElementById('paste-stats-bar');
+    const validCount = pastedData.parsedStyles.filter(s => s.isValid).length;
+    const invalidCount = pastedData.parsedStyles.filter(s => !s.isValid).length;
+    const totalSizes = pastedData.parsedStyles.reduce((s, p) => s + p.activeSizeCount, 0);
+    const totalQty = pastedData.parsedStyles.reduce((s, p) => s + p.totalQty, 0);
+
+    bar.innerHTML = `
+        <div class="sim-stat-chip"><span class="chip-dot blue"></span> Total Rows <span class="chip-val">${pastedData.rows.length}</span></div>
+        <div class="sim-stat-chip"><span class="chip-dot green"></span> Valid Styles <span class="chip-val">${validCount}</span></div>
+        ${invalidCount > 0 ? `<div class="sim-stat-chip"><span class="chip-dot red"></span> Invalid <span class="chip-val">${invalidCount}</span></div>` : ''}
+        <div class="sim-stat-chip"><span class="chip-dot amber"></span> Size Variants <span class="chip-val">${totalSizes}</span></div>
+        <div class="sim-stat-chip"><span class="chip-dot amber"></span> Total Qty <span class="chip-val">${totalQty}</span></div>
+    `;
+
+    // Update summary text
+    document.getElementById('paste-summary-text').textContent = `${validCount} styles × ${pastedData.sizeColumns.length} size columns → ${totalSizes} variants to create`;
+}
+
+function renderPreviewGrid() {
+    const headers = pastedData.headers;
+    const sc = pastedData.sizeColumns;
+
+    // Header row
+    const headRow = document.getElementById('paste-grid-head');
+    headRow.innerHTML = '<th>#</th><th>Status</th>';
+    headers.forEach((hdr, idx) => {
+        const isSizeCol = sc.includes(idx);
+        headRow.innerHTML += `<th class="${isSizeCol ? 'size-col' : ''}">${hdr}</th>`;
+    });
+    headRow.innerHTML += '<th class="size-col">Active Sizes</th>';
+
+    // Body rows
+    const tbody = document.getElementById('paste-grid-body');
+    tbody.innerHTML = '';
+
+    pastedData.rows.forEach((cells, rowIdx) => {
+        const style = pastedData.parsedStyles.find(s => s.rowIdx === rowIdx);
+        const isValid = style ? style.isValid : false;
+        const tr = document.createElement('tr');
+        if (!isValid) tr.classList.add('row-error');
+
+        // Row number
+        let html = `<td style="color:var(--text-sub); font-weight:700; text-align:center;">${rowIdx + 1}</td>`;
+
+        // Status badge
+        if (isValid) {
+            html += `<td><span class="row-status-badge valid">✓ Valid</span></td>`;
+        } else {
+            const reasons = [];
+            if (style) {
+                if (!style.base_details.article_no) reasons.push('No Article');
+                if (style.base_details.mrp <= 0) reasons.push('No MRP');
+                if (style.activeSizeCount === 0) reasons.push('No sizes');
+            }
+            html += `<td><span class="row-status-badge error">✗ ${reasons.join(', ') || 'Invalid'}</span></td>`;
+        }
+
+        // Data cells
+        headers.forEach((hdr, idx) => {
+            const val = cells[idx] || '';
+            const isSizeCol = sc.includes(idx);
+            if (isSizeCol) {
+                const qty = parseInt(val, 10) || 0;
+                const activeClass = qty > 0 ? 'active-size' : 'inactive-size';
+                html += `<td class="size-cell ${activeClass}">${qty > 0 ? qty : '—'}</td>`;
+            } else {
+                html += `<td>${val}</td>`;
+            }
+        });
+
+        // Active sizes summary
+        if (style) {
+            const badges = style.sizes_config.map(s => `<span class="sim-badge-size">${s.size}</span>`).join('');
+            html += `<td>${badges || '<span style="color:var(--text-sub);">None</span>'}</td>`;
+        } else {
+            html += `<td>—</td>`;
+        }
+
+        tr.innerHTML = html;
+        tbody.appendChild(tr);
+    });
+}
+
+function clearPastePanel() {
+    pastedData = { headers: [], sizeColumns: [], mappedColumns: {}, rows: [], parsedStyles: [] };
+    document.getElementById('paste-column-map').style.display = 'none';
+    document.getElementById('paste-stats-bar').style.display = 'none';
+    document.getElementById('paste-grid-wrapper').style.display = 'none';
+    document.getElementById('paste-import-toolbar').style.display = 'none';
+    document.getElementById('paste-progress-panel').classList.remove('active');
+    document.getElementById('paste-grid-head').innerHTML = '';
+    document.getElementById('paste-grid-body').innerHTML = '';
+    document.getElementById('paste-zone').classList.remove('active', 'scanning');
+    document.getElementById('sim-paste-capture').value = '';
+    toast('Paste panel cleared. Ready for new data.', 'info');
+}
+
+async function executePivotImport() {
+    const validStyles = pastedData.parsedStyles.filter(s => s.isValid);
+    if (validStyles.length === 0) {
+        toast('No valid styles to import!', 'error');
+        return;
+    }
+
+    if (!confirm(`This will import ${validStyles.length} style(s) and create size variant items with auto-generated EAN-13 barcodes.\n\nProceed?`)) {
+        return;
+    }
+
+    const btn = document.getElementById('btn-do-import');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined">hourglass_top</span> Importing...';
+
+    const progressPanel = document.getElementById('paste-progress-panel');
+    const progressBar = document.getElementById('paste-progress-bar');
+    const progressLabel = document.getElementById('paste-progress-label');
+    const progressDetail = document.getElementById('paste-progress-detail');
+    progressPanel.classList.add('active');
+    progressBar.style.width = '0%';
+    progressLabel.textContent = `Importing ${validStyles.length} styles...`;
+    progressDetail.textContent = 'Preparing payload...';
+
+    try {
+        // Build payload for backend
+        const stylesPayload = validStyles.map(s => ({
+            base_details: s.base_details,
+            sizes_config: s.sizes_config,
+        }));
+
+        progressBar.style.width = '20%';
+        progressDetail.textContent = 'Sending to server...';
+
+        const res = await api('smriti_retail_os.smriti_retail_os.item_master_api.import_pivot_item_master', {
+            styles_json: JSON.stringify(stylesPayload)
+        });
+
+        progressBar.style.width = '100%';
+        progressBar.style.background = 'linear-gradient(90deg, var(--success), #34d399)';
+
+        const createdCount = res.created_count || 0;
+        const updatedCount = res.updated_count || 0;
+        const errorsCount = (res.errors || []).length;
+
+        progressLabel.textContent = '✅ Import Complete!';
+        progressDetail.textContent = `Created: ${createdCount} variants | Updated: ${updatedCount} | Errors: ${errorsCount}`;
+
+        if (errorsCount > 0) {
+            toast(`Import completed with ${errorsCount} error(s). Check below for details.`, 'warning');
+            console.warn('Import errors:', res.errors);
+        } else {
+            toast(`Successfully imported ${createdCount} new variant(s) and updated ${updatedCount}!`, 'success');
+        }
+
+        btn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Import Complete';
+
+    } catch(e) {
+        progressBar.style.width = '100%';
+        progressBar.style.background = 'linear-gradient(90deg, var(--danger), #f87171)';
+        progressLabel.textContent = '❌ Import Failed';
+        progressDetail.textContent = e.message;
+        toast('Import failed: ' + e.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined">cloud_upload</span> Retry Import';
+    }
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════════════════
 
 window.onload = init;
 </script>

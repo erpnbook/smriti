@@ -746,3 +746,160 @@ def delete_size_variant(variant_code):
     frappe.db.commit()
     return {"success": True, "message": frappe._("Size variant {0} deleted successfully.").format(variant_code)}
 
+
+@frappe.whitelist()
+def import_pivot_item_master(styles_json):
+    """
+    Saves a batch of Style Templates and their dynamic Size variant items.
+    """
+    check_store_manager_role()
+    styles = frappe.parse_json(styles_json)
+    
+    created_count = 0
+    updated_count = 0
+    errors = []
+    
+    companies = frappe.get_all("Company", limit=1)
+    company = (
+        frappe.defaults.get_user_default("company") or
+        (companies[0].name if companies else None)
+    )
+
+    for idx, s in enumerate(styles):
+        try:
+            bd = s.get("base_details")
+            sc = s.get("sizes_config")
+            
+            style_code = bd.get("article_no").strip()
+            item_name = bd.get("description").strip()
+            item_group = bd.get("item_group", "Products").strip() or "Products"
+            brand = bd.get("brand")
+            mrp = flt(bd.get("mrp", 0))
+            cost = flt(bd.get("cost_price", 0))
+            gst_pct = str(bd.get("gst_percentage", "18")).strip()
+            hsn_code = bd.get("hsn_code")
+            gender = bd.get("gender", "UNISEX")
+            purchase_class = bd.get("purchase_class", "FW")
+            merch_cat = bd.get("merchandise_category")
+            sub_cat = bd.get("sub_category")
+            tax_group = bd.get("product_tax_group")
+            vendor_code = bd.get("vendor_code")
+            color = bd.get("color", "UNKNOWN").strip().upper()
+            
+            # Ensure Item Group exists
+            if not frappe.db.exists("Item Group", item_group):
+                item_group = "Products"
+            if not frappe.db.exists("Item Group", item_group):
+                existing_group = frappe.db.get_all("Item Group", pluck="name", limit=1)
+                item_group = existing_group[0] if existing_group else "Products"
+
+            # Ensure attributes and values exist
+            _ensure_item_attribute("Color")
+            _ensure_attribute_value("Color", color)
+            
+            # Create template parent item if it doesn't exist
+            template = _get_or_create_template(
+                style_code=style_code,
+                item_name=item_name,
+                item_group=item_group,
+                brand=brand,
+                mrp=mrp,
+                cost=cost,
+                gst_pct=gst_pct,
+                hsn_code=hsn_code,
+                image_link="",
+                gender=gender,
+                upper_material="",
+                outsole="",
+                heel_type="",
+                purchase_class=purchase_class,
+                merch_cat=merch_cat,
+                sub_cat=sub_cat,
+                tax_group=tax_group,
+                vendor_code=vendor_code,
+                company=company
+            )
+            
+            # Update base fields if template already existed
+            if template.item_name != item_name or flt(template.custom_mrp) != mrp or template.custom_gst_percentage != gst_pct:
+                template.item_name = item_name
+                _safe_set(template, "custom_mrp", mrp)
+                _safe_set(template, "custom_gst_percentage", gst_pct)
+                template.save(ignore_permissions=True)
+
+            # Process variant sizes
+            for sz_info in sc:
+                size = str(sz_info.get("size")).strip()
+                active = sz_info.get("active")
+                
+                if not active:
+                    continue
+                    
+                _ensure_item_attribute("Size")
+                _ensure_attribute_value("Size", size)
+                
+                variant_code = f"{style_code}-{color}-{size}"
+                
+                # Check for existing barcode, or generate mock
+                existing_barcode = frappe.db.get_value("Item Barcode", {"parent": variant_code}, "barcode")
+                if existing_barcode:
+                    barcode = existing_barcode
+                else:
+                    barcode = generate_ean13_barcode()
+                    
+                if not frappe.db.exists("Item", variant_code):
+                    var = frappe.new_doc("Item")
+                    var.item_code = variant_code
+                    var.item_name = f"{item_name} ({color} / {size})"
+                    var.variant_of = style_code
+                    var.item_group = item_group
+                    var.stock_uom = "Nos"
+                    var.is_stock_item = 1
+                    _safe_set(var, "custom_is_retail_item", 1)
+                    _safe_set(var, "custom_mrp", mrp)
+                    _safe_set(var, "custom_gst_percentage", gst_pct)
+                    if hsn_code:
+                        var.gst_hsn_code = hsn_code
+                        _safe_set(var, "gn_hsn_code", hsn_code)
+                    
+                    var.append("attributes", {"attribute": "Color", "attribute_value": color})
+                    var.append("attributes", {"attribute": "Size", "attribute_value": size})
+                    
+                    _attach_tax_template(var, tax_group, gst_pct, company)
+                    var.insert(ignore_permissions=True)
+                    created_count += 1
+                else:
+                    var = frappe.get_doc("Item", variant_code)
+                    var.item_name = f"{item_name} ({color} / {size})"
+                    _safe_set(var, "custom_mrp", mrp)
+                    _safe_set(var, "custom_gst_percentage", gst_pct)
+                    var.save(ignore_permissions=True)
+                    updated_count += 1
+                    
+                # Link Barcode
+                frappe.db.delete("Item Barcode", {"parent": variant_code})
+                var_doc = frappe.get_doc("Item", variant_code)
+                var_doc.append("barcodes", {"barcode": barcode, "uom": "Nos"})
+                var_doc.save(ignore_permissions=True)
+                
+                # Link Prices
+                _upsert_item_price(variant_code, "Standard Selling", mrp)
+                _upsert_item_price(variant_code, "MRP", mrp)
+                
+        except Exception as e:
+            errors.append({
+                "row_idx": idx + 1,
+                "article_no": s.get("base_details", {}).get("article_no", ""),
+                "error": str(e)
+            })
+            
+    frappe.db.commit()
+    
+    return {
+        "success": True,
+        "created_count": created_count,
+        "updated_count": updated_count,
+        "errors": errors
+    }
+
+

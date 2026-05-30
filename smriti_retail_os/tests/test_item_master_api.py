@@ -23,7 +23,8 @@ from smriti_retail_os.item_master_api import (
     generate_ean13_barcode,
     get_style_details,
     create_style_with_variants,
-    delete_size_variant
+    delete_size_variant,
+    import_pivot_item_master,
 )
 
 class TestSmritiRetailItemMasterAPI(unittest.TestCase):
@@ -197,3 +198,213 @@ class TestSmritiRetailItemMasterAPI(unittest.TestCase):
         self.assertFalse(frappe.db.exists("Item", v11_code))
         self.assertFalse(frappe.db.exists("Item Barcode", {"parent": v11_code}))
         self.assertFalse(frappe.db.exists("Item Price", {"item_code": v11_code}))
+
+
+class TestPivotMatrixImport(unittest.TestCase):
+    """
+    Unit tests for the Excel/Google Sheets paste-based pivot matrix import.
+    Simulates multi-row paste (ARTICLE / COLOR / CATEGORY / size columns / MRP)
+    and verifies that parent templates + child variant items are created cleanly.
+    """
+
+    PIVOT_STYLE_1 = "20016"
+    PIVOT_STYLE_2 = "20017"
+    COLORS = ["BLACK", "BEIGE"]
+
+    def setUp(self):
+        """Resolve test dependencies and ensure clean state."""
+        self.company = (
+            frappe.db.exists("Company", "_Test Company") or
+            frappe.db.get_value("Company", {}, "name")
+        )
+        if not self.company:
+            comp = frappe.new_doc("Company")
+            comp.company_name = "_Test Company"
+            comp.country = "India"
+            comp.default_currency = "INR"
+            comp.insert(ignore_permissions=True)
+            self.company = comp.name
+
+        frappe.defaults.set_user_default("company", self.company, frappe.session.user)
+
+        # Grant store manager role if not already present
+        if not frappe.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):
+            r = frappe.new_doc("Has Role")
+            r.parent = frappe.session.user
+            r.parenttype = "User"
+            r.parentfield = "roles"
+            r.role = "SMRITI Store Manager"
+            r.insert(ignore_permissions=True)
+
+        frappe.db.commit()
+        self._cleanup()
+
+    def tearDown(self):
+        self._cleanup()
+        frappe.db.delete("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"})
+        frappe.db.commit()
+
+    def _cleanup(self):
+        """Remove all test items created by the pivot import tests."""
+        for style in [self.PIVOT_STYLE_1, self.PIVOT_STYLE_2]:
+            variants = frappe.db.get_all("Item", filters={"variant_of": style}, pluck="name")
+            for var in variants:
+                frappe.db.delete("Item Barcode", {"parent": var})
+                frappe.db.delete("Item Price", {"item_code": var})
+                frappe.delete_doc("Item", var, ignore_missing=True, force=True)
+            if frappe.db.exists("Item", style):
+                frappe.delete_doc("Item", style, ignore_missing=True, force=True)
+        frappe.db.delete("GST HSN Code", {"hsn_code": "640311"})
+        frappe.db.commit()
+
+    def _build_pivot_payload(self, styles):
+        """
+        Build styles_json payload mimicking the parsed output of the frontend TSV parser.
+        Each element contains base_details + sizes_config.
+        """
+        return frappe.as_json(styles)
+
+    # ──────────────────────────────────────────────────────────────────────
+    def test_pivot_import_basic_two_rows(self):
+        """
+        Simulates pasting two rows from Excel:
+          ARTICLE | COLOR  | CATOGARY | SUB-CATO    | 37 | 38 | 39 | 40 | 41 | 42 | MRP
+          20016   | BLACK  | SANDAL   | LASTIC PATTA|  0 |  9 |  9 |  9 |  9 |  9 | 1899
+          20016   | BEIGE  | SANDAL   | LASTIC PATTA|  0 |  9 |  9 |  9 |  9 |  9 | 1899
+        Expects: 1 parent template (20016) + 10 size variants (5 per color).
+        """
+        styles = [
+            {
+                "base_details": {
+                    "article_no": self.PIVOT_STYLE_1,
+                    "description": "LASTIC PATTA",
+                    "color": "BLACK",
+                    "brand": "",
+                    "item_group": "SANDAL",
+                    "cost_price": 0,
+                    "mrp": 1899,
+                    "gst_percentage": "18",
+                    "hsn_code": "640311",
+                    "gender": "UNISEX",
+                    "purchase_class": "FW",
+                    "vendor_code": "",
+                    "product_tax_group": "",
+                    "merchandise_category": "SANDAL",
+                    "sub_category": "LASTIC PATTA",
+                },
+                "sizes_config": [
+                    {"size": "38", "active": True, "qty": 9},
+                    {"size": "39", "active": True, "qty": 9},
+                    {"size": "40", "active": True, "qty": 9},
+                    {"size": "41", "active": True, "qty": 9},
+                    {"size": "42", "active": True, "qty": 9},
+                ]
+            },
+            {
+                "base_details": {
+                    "article_no": self.PIVOT_STYLE_1,
+                    "description": "LASTIC PATTA",
+                    "color": "BEIGE",
+                    "brand": "",
+                    "item_group": "SANDAL",
+                    "cost_price": 0,
+                    "mrp": 1899,
+                    "gst_percentage": "18",
+                    "hsn_code": "640311",
+                    "gender": "UNISEX",
+                    "purchase_class": "FW",
+                    "vendor_code": "",
+                    "product_tax_group": "",
+                    "merchandise_category": "SANDAL",
+                    "sub_category": "LASTIC PATTA",
+                },
+                "sizes_config": [
+                    {"size": "38", "active": True, "qty": 9},
+                    {"size": "39", "active": True, "qty": 9},
+                    {"size": "40", "active": True, "qty": 9},
+                    {"size": "41", "active": True, "qty": 9},
+                    {"size": "42", "active": True, "qty": 9},
+                ]
+            },
+        ]
+
+        res = import_pivot_item_master(self._build_pivot_payload(styles))
+
+        self.assertTrue(res["success"], msg=f"Import failed: {res.get('errors', [])}")
+        self.assertEqual(len(res.get("errors", [])), 0, msg=f"Unexpected errors: {res.get('errors', [])}")
+
+        # Parent template 20016 must exist with has_variants = 1
+        self.assertTrue(frappe.db.exists("Item", self.PIVOT_STYLE_1))
+        parent = frappe.get_doc("Item", self.PIVOT_STYLE_1)
+        self.assertEqual(parent.has_variants, 1)
+
+        # 10 variant items total (5 sizes × 2 colors)
+        variants = frappe.db.get_all("Item", filters={"variant_of": self.PIVOT_STYLE_1}, pluck="name")
+        self.assertEqual(len(variants), 10, msg=f"Expected 10 variants, got {len(variants)}: {variants}")
+
+        # Spot-check specific variants
+        for color in ["BLACK", "BEIGE"]:
+            for size in ["38", "39", "40", "41", "42"]:
+                vc = f"{self.PIVOT_STYLE_1}-{color}-{size}"
+                self.assertTrue(frappe.db.exists("Item", vc), msg=f"Missing variant: {vc}")
+                # Each variant must have exactly one EAN-13 barcode
+                barcode = frappe.db.get_value("Item Barcode", {"parent": vc}, "barcode")
+                self.assertIsNotNone(barcode, msg=f"No barcode for {vc}")
+                self.assertEqual(len(barcode), 13, msg=f"Barcode for {vc} is not 13 digits: {barcode}")
+                # MRP price list entry must exist
+                price = frappe.db.get_value(
+                    "Item Price",
+                    {"item_code": vc, "price_list": "Standard Selling"},
+                    "price_list_rate"
+                )
+                self.assertIsNotNone(price, msg=f"No Standard Selling price for {vc}")
+                self.assertAlmostEqual(float(price), 1899.0, places=1, msg=f"Wrong MRP for {vc}")
+
+    # ──────────────────────────────────────────────────────────────────────
+    def test_pivot_import_idempotent(self):
+        """
+        Importing the same pivot payload twice should not create duplicate variants
+        and should not raise errors — it updates existing items instead.
+        """
+        styles = [
+            {
+                "base_details": {
+                    "article_no": self.PIVOT_STYLE_2,
+                    "description": "Test Sandal Style",
+                    "color": "RED",
+                    "brand": "",
+                    "item_group": "Products",
+                    "cost_price": 0,
+                    "mrp": 999,
+                    "gst_percentage": "18",
+                    "hsn_code": "640311",
+                    "gender": "UNISEX",
+                    "purchase_class": "FW",
+                    "vendor_code": "",
+                    "product_tax_group": "",
+                    "merchandise_category": "",
+                    "sub_category": "",
+                },
+                "sizes_config": [
+                    {"size": "40", "active": True, "qty": 5},
+                    {"size": "41", "active": True, "qty": 5},
+                ]
+            }
+        ]
+
+        # First import — creates 2 variants
+        res1 = import_pivot_item_master(self._build_pivot_payload(styles))
+        self.assertTrue(res1["success"])
+        self.assertEqual(len(res1.get("errors", [])), 0)
+        variants_after_first = frappe.db.get_all("Item", filters={"variant_of": self.PIVOT_STYLE_2}, pluck="name")
+        self.assertEqual(len(variants_after_first), 2)
+
+        # Second import — same payload; must not create duplicates
+        res2 = import_pivot_item_master(self._build_pivot_payload(styles))
+        self.assertTrue(res2["success"])
+        self.assertEqual(len(res2.get("errors", [])), 0)
+        variants_after_second = frappe.db.get_all("Item", filters={"variant_of": self.PIVOT_STYLE_2}, pluck="name")
+        self.assertEqual(
+            len(variants_after_second), 2,
+            msg=f"Idempotency failed — got {len(variants_after_second)} variants on second run"
+        )
