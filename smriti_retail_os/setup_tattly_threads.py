@@ -14,7 +14,7 @@ import openpyxl
 import os
 
 def parse_excel_setup():
-    file_path = "/home/frappe/frappe-bench/company/SMRITiRetailOS_TATTLY_THREADS_Setup.xlsx"
+    file_path = "/home/frappe/frappe-bench/company/SMRITiRetailOS_Templates_TATTLY_THREADS.xlsx"
     if not os.path.exists(file_path):
         print(f"ERROR: Excel setup file not found at {file_path}")
         return None
@@ -24,36 +24,36 @@ def parse_excel_setup():
     
     data = {}
     
-    # ── 1. Company Profile ────────────────────────────────────────────────────
-    sheet1 = wb["1. Company Profile"]
+    # ── 1. Company Master (Col 1 for key, Col 3 for value) ────────────────────
+    sheet1 = wb["1. Company Master"]
     for row in sheet1.iter_rows(values_only=True):
-        if len(row) >= 2 and row[0]:
+        if len(row) >= 3 and row[0]:
             field = str(row[0]).strip().replace("*", "").strip().lower()
-            val = str(row[1]).strip() if row[1] is not None else ""
+            val = str(row[2]).strip() if row[2] is not None else ""
             if field == "company name": data["company_name"] = val
-            elif field == "mailing name": data["mailing_name"] = val
+            elif field == "abbr": data["abbr"] = val
             elif field == "company pan": data["pan"] = val
-            elif field == "phone number": data["phone_no"] = val
-            elif field == "email address": data["email"] = val
+            elif field == "phone": data["phone_no"] = val
+            elif field == "email": data["email"] = val
             elif field == "address line 1": data["address_line1"] = val
             elif field == "address line 2": data["address_line2"] = val
             elif field == "city": data["city"] = val
             elif field == "pin code": data["pincode"] = val
             elif field == "state": data["state"] = val
-            elif field == "state code": data["state_code"] = val
             elif field == "country": data["country"] = val
             
-    # ── 2. GST Configuration ──────────────────────────────────────────────────
+    # ── 2. GST Configuration (Col 1 for key, Col 3 for value) ─────────────────
     sheet2 = wb["2. GST Configuration"]
     for row in sheet2.iter_rows(values_only=True):
-        if len(row) >= 2 and row[0]:
+        if len(row) >= 3 and row[0]:
             field = str(row[0]).strip().replace("*", "").strip().lower()
-            val = str(row[1]).strip() if row[1] is not None else ""
+            val = str(row[2]).strip() if row[2] is not None else ""
             if field == "gstin / uin": data["gstin"] = val
+            elif field == "state code": data["state_code"] = val
             
-    # ── 3. Bank Account ───────────────────────────────────────────────────────
-    sheet3 = wb["3. Bank Account"]
-    for row in sheet3.iter_rows(values_only=True):
+    # ── 4. Bank Account Ledger (Col 1 for key, Col 2 for value) ───────────────
+    sheet4 = wb["4. Bank Account Ledger"]
+    for row in sheet4.iter_rows(values_only=True):
         if len(row) >= 2 and row[0]:
             field = str(row[0]).strip().replace("*", "").strip().lower()
             val = str(row[1]).strip() if row[1] is not None else ""
@@ -88,7 +88,7 @@ def run():
         return
         
     company_name = info.get("company_name", "TATTLY THREADS")
-    abbr = "TT"
+    abbr = info.get("abbr", "TT")
     
     print(f"Retrieved Company Name: '{company_name}' from Excel.")
     
