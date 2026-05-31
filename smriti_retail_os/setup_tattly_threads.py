@@ -93,6 +93,24 @@ def run():
     print(f"Retrieved Company Name: '{company_name}' from Excel.")
     
     # 2. Upsert Company
+    logo_filename = "tattly_threads_logo.png"
+    src_logo = os.path.join("/home/frappe/frappe-bench/company", logo_filename)
+    company_logo_path = None
+    if os.path.exists(src_logo):
+        try:
+            import shutil
+            dest_dir = frappe.get_site_path("public", "files")
+            if not os.path.exists(dest_dir):
+                os.makedirs(dest_dir, exist_ok=True)
+            dest_logo = os.path.join(dest_dir, logo_filename)
+            shutil.copy(src_logo, dest_logo)
+            # Ensure permissions are correct
+            os.chmod(dest_logo, 0o644)
+            company_logo_path = f"/files/{logo_filename}"
+            print(f"Successfully copied company logo to {dest_logo}")
+        except Exception as e:
+            print(f"Error copying company logo: {e}")
+
     if not frappe.db.exists("Company", company_name):
         co = frappe.new_doc("Company")
         co.company_name = company_name
@@ -105,6 +123,8 @@ def run():
         co.tax_id = info.get("gstin")
         co.gstin = info.get("gstin")
         co.domain = "Retail"
+        if company_logo_path:
+            co.company_logo = company_logo_path
         co.insert(ignore_permissions=True)
         frappe.db.commit()
         print(f"SUCCESS: Created Company '{company_name}'!")
@@ -115,6 +135,8 @@ def run():
         co.pan = info.get("pan")
         co.tax_id = info.get("gstin")
         co.gstin = info.get("gstin")
+        if company_logo_path:
+            co.company_logo = company_logo_path
         co.save(ignore_permissions=True)
         frappe.db.commit()
         print(f"SUCCESS: Updated Company '{company_name}' details!")
@@ -246,4 +268,25 @@ def run():
                 frappe.db.commit()
                 print(f"Bank Account '{existing_ba}' successfully updated to match Excel changes!")
         
+    # 6. Update Website Settings & Navbar Settings with the logo
+    if company_logo_path:
+        try:
+            ws = frappe.get_doc("Website Settings")
+            ws.app_logo = company_logo_path
+            ws.banner_image = company_logo_path
+            ws.save(ignore_permissions=True)
+            frappe.db.commit()
+            print("Successfully updated Website Settings with company logo.")
+        except Exception as e:
+            print(f"Error updating Website Settings: {e}")
+
+        try:
+            ns = frappe.get_doc("Navbar Settings")
+            ns.app_logo = company_logo_path
+            ns.save(ignore_permissions=True)
+            frappe.db.commit()
+            print("Successfully updated Navbar Settings with company logo.")
+        except Exception as e:
+            print(f"Error updating Navbar Settings: {e}")
+
     print("Tattly Threads Dynamic Programmatic Setup finished successfully!")
