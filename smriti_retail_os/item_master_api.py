@@ -366,6 +366,20 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
         b.brand = brand
         b.insert(ignore_permissions=True)
 
+    # Ensure Item Group exists
+    if not item_group or not frappe.db.exists("Item Group", item_group):
+        item_group = "Products"
+    if not frappe.db.exists("Item Group", item_group):
+        existing_group = frappe.db.get_all("Item Group", pluck="name", limit=1)
+        if existing_group:
+            item_group = existing_group[0]
+        else:
+            ig = frappe.new_doc("Item Group")
+            ig.item_group_name = "Products"
+            ig.is_group = 0
+            ig.insert(ignore_permissions=True)
+            item_group = "Products"
+
     item = frappe.new_doc("Item")
     item.item_code              = style_code
     item.item_name              = item_name
@@ -405,6 +419,8 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
         item.image = image_link
 
     # Variant attribute definitions on template
+    _ensure_item_attribute("Color")
+    _ensure_item_attribute("Size")
     item.append("attributes", {"attribute": "Color"})
     item.append("attributes", {"attribute": "Size"})
 
@@ -680,7 +696,7 @@ def create_style_with_variants(base_details, sizes_config):
             var.item_code = variant_code
             var.item_name = f"{item_name} ({color} / {size})"
             var.variant_of = style_code
-            var.item_group = item_group
+            var.item_group = template.item_group
             var.stock_uom = "Nos"
             var.is_stock_item = 1
             _safe_set(var, "custom_is_retail_item", 1)
@@ -852,7 +868,7 @@ def import_pivot_item_master(styles_json):
                     var.item_code = variant_code
                     var.item_name = f"{item_name} ({color} / {size})"
                     var.variant_of = style_code
-                    var.item_group = item_group
+                    var.item_group = template.item_group
                     var.stock_uom = "Nos"
                     var.is_stock_item = 1
                     _safe_set(var, "custom_is_retail_item", 1)

@@ -61,7 +61,8 @@ app_include_css = [
 app_include_js = [
     "/assets/smriti_retail_os/js/smriti_sidebar.js",
     "/assets/smriti_retail_os/js/smriti_reports.js",
-    "/assets/smriti_retail_os/js/main.js"
+    "/assets/smriti_retail_os/js/main.js",
+    "/assets/smriti_retail_os/js/smriti_payload_bridge.js"
 ]
 
 # website page context override for whitelabel branding
@@ -69,7 +70,10 @@ update_website_context = ["smriti_retail_os.website_context.get_context"]
 
 # include js, css files in header of web template
 web_include_css = "/assets/smriti_retail_os/css/smriti_branding.css"
-web_include_js = "/assets/smriti_retail_os/js/main.js"
+web_include_js = [
+    "/assets/smriti_retail_os/js/main.js",
+    "/assets/smriti_retail_os/js/smriti_payload_bridge.js"
+]
 
 # include custom scss in every website theme (without file extension ".scss")
 # website_theme_scss = "smriti_retail_os/public/scss/website"
