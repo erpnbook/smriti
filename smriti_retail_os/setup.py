@@ -13,6 +13,68 @@ import frappe
 import json
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
+def create_smriti_company_settings_doctype():
+    """Creates the SMRITI Company Settings custom DocType for per-company retail configuration."""
+    if frappe.db.exists("DocType", "SMRITI Company Settings"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Company Settings"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.autoname = "field:company"
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 1
+        doc.issingle = 0
+
+        fields = [
+            {"fieldname": "company", "fieldtype": "Link", "options": "Company", "label": "Company", "reqd": 1, "unique": 1, "in_list_view": 1},
+            {"fieldname": "sb_store", "fieldtype": "Section Break", "label": "Store Identity"},
+            {"fieldname": "store_trade_name", "fieldtype": "Data", "label": "Store Trade Name", "in_list_view": 1},
+            {"fieldname": "store_logo_url", "fieldtype": "Data", "label": "Store Logo URL"},
+            {"fieldname": "cb_store", "fieldtype": "Column Break"},
+            {"fieldname": "brand_color", "fieldtype": "Color", "label": "Brand Color", "default": "#1a73e8"},
+            {"fieldname": "receipt_footer_text", "fieldtype": "Small Text", "label": "Receipt Footer Text", "default": "Thank you for shopping with us!"},
+            {"fieldname": "invoice_series_prefix", "fieldtype": "Data", "label": "Invoice Series Prefix", "default": "SINV-"},
+            {"fieldname": "sb_defaults", "fieldtype": "Section Break", "label": "Operational Defaults"},
+            {"fieldname": "default_warehouse", "fieldtype": "Link", "options": "Warehouse", "label": "Default Warehouse"},
+            {"fieldname": "default_pos_profile", "fieldtype": "Link", "options": "POS Profile", "label": "Default POS Profile"},
+            {"fieldname": "cb_defaults", "fieldtype": "Column Break"},
+            {"fieldname": "default_walk_in_customer", "fieldtype": "Link", "options": "Customer", "label": "Default Walk-in Customer"},
+            {"fieldname": "default_intrastate_tax_template", "fieldtype": "Link", "options": "Sales Taxes and Charges Template", "label": "Default Intrastate Tax Template"},
+            {"fieldname": "default_interstate_tax_template", "fieldtype": "Link", "options": "Sales Taxes and Charges Template", "label": "Default Interstate Tax Template"},
+            {"fieldname": "sb_loyalty", "fieldtype": "Section Break", "label": "Loyalty Program"},
+            {"fieldname": "loyalty_enabled", "fieldtype": "Check", "label": "Enable Loyalty Program", "default": "0"},
+            {"fieldname": "loyalty_points_per_rupee", "fieldtype": "Float", "label": "Points per Rupee", "default": "1.0"},
+            {"fieldname": "sb_advanced", "fieldtype": "Section Break", "label": "Advanced Configuration", "collapsible": 1},
+            {"fieldname": "size_groups_json", "fieldtype": "Long Text", "label": "Size Groups JSON", "hidden": 1},
+            {"fieldname": "destinationwise_taxes_json", "fieldtype": "Long Text", "label": "Destinationwise Taxes JSON", "hidden": 1},
+            {"fieldname": "backup_settings_json", "fieldtype": "Long Text", "label": "Backup Settings JSON", "hidden": 1},
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {
+            "role": "System Manager",
+            "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+        })
+        doc.append("permissions", {
+            "role": "SMRITI Store Manager",
+            "read": 1, "write": 1, "create": 1, "delete": 0, "share": 0
+        })
+        doc.append("permissions", {
+            "role": "SMRITI Cashier",
+            "read": 1, "write": 0, "create": 0, "delete": 0, "share": 0
+        })
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print(f"[SMRITI] Created SMRITI Company Settings DocType")
+    except Exception as e:
+        frappe.log_error(f"Error creating SMRITI Company Settings DocType: {str(e)}")
+
+
 def create_master_doctypes():
     masters = [
         ("SMRITI Heel Type", "Heel Type"),
@@ -198,7 +260,10 @@ def setup_smriti_retail_os():
     Initializes custom fields, roles, and workspaces for standard DocTypes
     to extend ERPNext for SMRITI Retail OS.
     """
-    # 0. Provision dynamic attribute Master DocTypes + preserve existing database entries
+    # 0. Provision SMRITI Company Settings DocType
+    create_smriti_company_settings_doctype()
+
+    # 0b. Provision dynamic attribute Master DocTypes + preserve existing database entries
     create_master_doctypes()
     backup_and_seed_existing_data()
     seed_master_doctypes()
@@ -430,6 +495,33 @@ def setup_smriti_retail_os():
                 "no_copy": 1,
                 "module": "SMRITI Retail OS"
             }
+        ],
+        "Company": [
+            {
+                "fieldname": "custom_smriti_store_type",
+                "label": "SMRITI Store Type",
+                "fieldtype": "Select",
+                "options": "\nRetail\nB2B Distributor\nWholesale",
+                "insert_after": "company_name",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_smriti_gstin_state",
+                "label": "SMRITI GSTIN State Code",
+                "fieldtype": "Data",
+                "insert_after": "custom_smriti_store_type",
+                "read_only": 1,
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_smriti_settings_configured",
+                "label": "SMRITI Settings Configured",
+                "fieldtype": "Check",
+                "insert_after": "custom_smriti_gstin_state",
+                "read_only": 1,
+                "default": "0",
+                "module": "SMRITI Retail OS"
+            }
         ]
     }
 
@@ -548,6 +640,20 @@ def setup_smriti_retail_os():
             "link_type": "Page",
             "link_to": "smriti-reports",
             "label_for_links": "Visual sales, stock, and outstanding analytics."
+        },
+
+        # Card 4: Settings & Configuration
+        {
+            "label": "Settings & Configuration",
+            "type": "Card Break",
+            "icon": "settings"
+        },
+        {
+            "label": "Company Settings",
+            "type": "Link",
+            "link_type": "Page",
+            "link_to": "configure",
+            "label_for_links": "Configure store identity, defaults, loyalty, and tax mappings."
         }
     ]
 

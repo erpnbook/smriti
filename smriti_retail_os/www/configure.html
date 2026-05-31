@@ -394,16 +394,160 @@
 
     <!-- Tabs -->
     <div class="tab-strip" role="tablist">
-      <button class="tab-btn active" id="tab-tax-btn"   role="tab" onclick="switchTab('tax')">🏷️ Item Tax  <span class="tcount" id="cnt-tax">…</span></button>
-      <button class="tab-btn"        id="tab-sg-btn"    role="tab" onclick="switchTab('sg')"> 📐 Size Groups <span class="tcount" id="cnt-sg">…</span></button>
-      <button class="tab-btn"        id="tab-state-btn" role="tab" onclick="switchTab('state')">🗺️ State Tax  <span class="tcount" id="cnt-state">…</span></button>
-      <button class="tab-btn"        id="tab-brand-btn" role="tab" onclick="switchTab('brand')">🏷️ Brands  <span class="tcount" id="cnt-brand">…</span></button>
+      <button class="tab-btn active" id="tab-company-btn" role="tab" onclick="switchTab('company')">🏢 Company Settings</button>
+      <button class="tab-btn"        id="tab-tax-btn"     role="tab" onclick="switchTab('tax')">🏷️ Item Tax  <span class="tcount" id="cnt-tax">…</span></button>
+      <button class="tab-btn"        id="tab-sg-btn"      role="tab" onclick="switchTab('sg')"> 📐 Size Groups <span class="tcount" id="cnt-sg">…</span></button>
+      <button class="tab-btn"        id="tab-state-btn"   role="tab" onclick="switchTab('state')">🗺️ State Tax  <span class="tcount" id="cnt-state">…</span></button>
+      <button class="tab-btn"        id="tab-brand-btn"   role="tab" onclick="switchTab('brand')">🏷️ Brands  <span class="tcount" id="cnt-brand">…</span></button>
     </div>
 
     <div class="tab-content">
 
+      <!-- ══════ TAB 0: Company Settings ══════ -->
+      <div class="tab-panel active" id="tab-company" role="tabpanel">
+        <div class="config-card">
+          <div class="config-card-header">
+            <div>
+              <div class="config-card-title">🏢 Company Retail Settings</div>
+              <div class="config-card-sub">Manage store identity, operational defaults, loyalty programs, and brand themes.</div>
+            </div>
+          </div>
+          
+          <div class="grid-2 mb-8">
+            <div>
+              <label class="lbl">Select Company to Configure</label>
+              <select id="cfg-company-select" onchange="onCompanyChange(this.value)">
+                {% for c in companies %}
+                  <option value="{{ c.name }}" {% if c.name == company %}selected{% endif %}>{{ c.company_name or c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="lbl">SMRITI Store Type</label>
+              <select id="cfg-custom-store-type">
+                <option value="">-- Select Store Type --</option>
+                <option value="Retail">Retail</option>
+                <option value="B2B Distributor">B2B Distributor</option>
+                <option value="Wholesale">Wholesale</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid-2 mt-12">
+             <div>
+               <label class="lbl">SMRITI GSTIN State Code (read-only)</label>
+               <input type="text" id="cfg-gstin-state" readonly placeholder="Calculated from Company GSTIN"/>
+             </div>
+             <div style="display:flex; align-items:center; gap:10px; margin-top:20px;">
+               <input type="checkbox" id="cfg-settings-configured" disabled style="width: 20px; height: 20px; cursor: not-allowed;"/>
+               <label class="lbl" for="cfg-settings-configured" style="margin-bottom:0; cursor: not-allowed;">SMRITI Settings Configured (read-only)</label>
+             </div>
+          </div>
+
+          <hr style="border-color:var(--border);margin:20px 0;"/>
+
+          <!-- Form Fields -->
+          <div class="grid-2">
+            <div>
+              <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:12px;color:var(--accent-2)">Store Identity</h3>
+              <div class="mb-8">
+                <label class="lbl">Store Trade Name (Receipt Title)</label>
+                <input type="text" id="cfg-store-trade-name" placeholder="e.g. Tattly Threads Store"/>
+              </div>
+              <div class="mb-8">
+                <label class="lbl">Store Logo URL</label>
+                <input type="text" id="cfg-store-logo-url" placeholder="e.g. /files/logo.png"/>
+              </div>
+              <div class="mb-8">
+                <label class="lbl">Brand Color</label>
+                <div style="display:flex; gap:8px;">
+                  <input type="color" id="cfg-brand-color" value="#1a73e8" style="width:50px;height:38px;padding:0;border:none;background:transparent;cursor:pointer;"/>
+                  <input type="text" id="cfg-brand-color-hex" value="#1a73e8" placeholder="#1a73e8" style="flex:1;"/>
+                </div>
+              </div>
+              <div class="mb-8">
+                <label class="lbl">Invoice Series Prefix</label>
+                <input type="text" id="cfg-invoice-series-prefix" placeholder="e.g. SINV-"/>
+              </div>
+              <div class="mb-8">
+                <label class="lbl">Receipt Footer Text</label>
+                <textarea id="cfg-receipt-footer-text" rows="3" placeholder="Thank you for shopping with us!"></textarea>
+              </div>
+            </div>
+
+            <div>
+              <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:12px;color:var(--accent-2)">Operational Defaults</h3>
+              <div class="mb-8">
+                <label class="lbl">Default Warehouse</label>
+                <select id="cfg-default-warehouse">
+                  <option value="">-- Select Warehouse --</option>
+                  {% for w in warehouses %}
+                    <option value="{{ w.name }}">{{ w.warehouse_name or w.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="mb-8">
+                <label class="lbl">Default POS Profile</label>
+                <select id="cfg-default-pos-profile">
+                  <option value="">-- Select POS Profile --</option>
+                  {% for p in pos_profiles %}
+                    <option value="{{ p.name }}">{{ p.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="mb-8">
+                <label class="lbl">Default Walk-in Customer</label>
+                <select id="cfg-default-walk-in-customer">
+                  <option value="">-- Select Customer --</option>
+                  {% for cust in customers %}
+                    <option value="{{ cust.name }}">{{ cust.customer_name }} ({{ cust.name }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="mb-8">
+                <label class="lbl">Default Intrastate Tax Template</label>
+                <select id="cfg-default-intrastate-tax-template">
+                  <option value="">-- Select Tax Template --</option>
+                  {% for t in tax_templates %}
+                    <option value="{{ t.name }}">{{ t.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="mb-8">
+                <label class="lbl">Default Interstate Tax Template</label>
+                <select id="cfg-default-interstate-tax-template">
+                  <option value="">-- Select Tax Template --</option>
+                  {% for t in tax_templates %}
+                    <option value="{{ t.name }}">{{ t.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <hr style="border-color:var(--border);margin:20px 0;"/>
+
+          <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:12px;color:var(--accent-2)">Loyalty Program</h3>
+          <div class="grid-2">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <input type="checkbox" id="cfg-loyalty-enabled" style="width:20px;height:20px;cursor:pointer;"/>
+              <label class="lbl" for="cfg-loyalty-enabled" style="margin-bottom:0;cursor:pointer;">Enable Loyalty Program</label>
+            </div>
+            <div>
+              <label class="lbl">Loyalty Points per Rupee</label>
+              <input type="number" id="cfg-loyalty-points-per-rupee" placeholder="1.0" step="0.01" min="0"/>
+            </div>
+          </div>
+
+          <div class="flex-row-end mt-16">
+            <button class="btn btn-secondary" onclick="loadCompanySettings()">↺ Reset</button>
+            <button class="btn btn-primary" onclick="saveCompanySettings()">💾 Save Company Settings</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ══════ TAB 1: Item Tax Templates ══════ -->
-      <div class="tab-panel active" id="tab-tax" role="tabpanel">
+      <div class="tab-panel" id="tab-tax" role="tabpanel">
         <div class="config-card">
           <div class="config-card-header">
             <div>
@@ -576,7 +720,7 @@ function toast(msg, type = 'info', dur = 3500) {
 }
 
 // ─── Tab Switching ────────────────────────────────────────────────────────────
-const TABS = ['tax', 'sg', 'state', 'brand'];
+const TABS = ['company', 'tax', 'sg', 'state', 'brand'];
 function switchTab(id) {
   TABS.forEach(t => {
     document.getElementById('tab-' + t).classList.toggle('active', t === id);
@@ -590,6 +734,117 @@ function initTopBar() {
     .catch(() => null);
   const company = '{{ company }}';
   if (company) document.getElementById('topbar-company').textContent = company;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// TAB 0 — COMPANY SETTINGS
+// ════════════════════════════════════════════════════════════════════════════
+let currentCompanySettings = {};
+
+function onCompanyChange(company) {
+  loadCompanySettings(company);
+}
+
+function loadCompanySettings(company = null) {
+  if (!company) {
+    company = document.getElementById('cfg-company-select').value;
+  }
+  if (!company) return;
+
+  Promise.all([
+    API.call('smriti_retail_os.company_api.get_company_settings', { company: company }),
+    API.call('frappe.client.get_value', { doctype: 'Company', filters: { name: company }, fieldname: ['custom_smriti_store_type', 'custom_smriti_gstin_state', 'custom_smriti_settings_configured'] }),
+    API.call('frappe.client.get_list', { doctype: 'Warehouse', filters: { company: company, is_group: 0, disabled: 0 }, fields: ['name', 'warehouse_name'], limit: 1000 }),
+    API.call('frappe.client.get_list', { doctype: 'POS Profile', filters: { company: company, disabled: 0 }, fields: ['name'], limit: 1000 }),
+    API.call('frappe.client.get_list', { doctype: 'Sales Taxes and Charges Template', filters: { company: company }, fields: ['name'], limit: 1000 })
+  ]).then(([settings, companyInfo, warehouses, posProfiles, taxTemplates]) => {
+    currentCompanySettings = settings || {};
+    
+    const info = companyInfo || {};
+    document.getElementById('cfg-custom-store-type').value = info.custom_smriti_store_type || '';
+    document.getElementById('cfg-gstin-state').value = info.custom_smriti_gstin_state || '';
+    document.getElementById('cfg-settings-configured').checked = !!parseInt(info.custom_smriti_settings_configured);
+
+    updateDropdown('cfg-default-warehouse', warehouses, 'name', 'warehouse_name', '-- Select Warehouse --');
+    updateDropdown('cfg-default-pos-profile', posProfiles, 'name', 'name', '-- Select POS Profile --');
+    updateDropdown('cfg-default-intrastate-tax-template', taxTemplates, 'name', 'name', '-- Select Tax Template --');
+    updateDropdown('cfg-default-interstate-tax-template', taxTemplates, 'name', 'name', '-- Select Tax Template --');
+
+    document.getElementById('cfg-store-trade-name').value = settings.store_trade_name || '';
+    document.getElementById('cfg-store-logo-url').value = settings.store_logo_url || '';
+    
+    const brandColor = settings.brand_color || '#1a73e8';
+    document.getElementById('cfg-brand-color').value = brandColor;
+    document.getElementById('cfg-brand-color-hex').value = brandColor;
+    
+    document.getElementById('cfg-invoice-series-prefix').value = settings.invoice_series_prefix || '';
+    document.getElementById('cfg-receipt-footer-text').value = settings.receipt_footer_text || '';
+    
+    document.getElementById('cfg-default-warehouse').value = settings.default_warehouse || '';
+    document.getElementById('cfg-default-pos-profile').value = settings.default_pos_profile || '';
+    document.getElementById('cfg-default-walk-in-customer').value = settings.default_walk_in_customer || '';
+    document.getElementById('cfg-default-intrastate-tax-template').value = settings.default_intrastate_tax_template || '';
+    document.getElementById('cfg-default-interstate-tax-template').value = settings.default_interstate_tax_template || '';
+    
+    document.getElementById('cfg-loyalty-enabled').checked = !!parseInt(settings.loyalty_enabled);
+    document.getElementById('cfg-loyalty-points-per-rupee').value = settings.loyalty_points_per_rupee || '1.0';
+  }).catch(e => {
+    toast('Error loading company settings: ' + (e.message || e), 'error');
+  });
+}
+
+function updateDropdown(elementId, items, valueField, labelField, placeholder) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  
+  let html = `<option value="">${placeholder}</option>`;
+  (items || []).forEach(item => {
+    const val = item[valueField];
+    const lbl = item[labelField] || val;
+    html += `<option value="${esc(val)}">${esc(lbl)}</option>`;
+  });
+  el.innerHTML = html;
+}
+
+function saveCompanySettings() {
+  const company = document.getElementById('cfg-company-select').value;
+  if (!company) {
+    toast('Please select a company first.', 'error');
+    return;
+  }
+  
+  const storeType = document.getElementById('cfg-custom-store-type').value;
+  const settings = {
+    store_trade_name: document.getElementById('cfg-store-trade-name').value.trim(),
+    store_logo_url: document.getElementById('cfg-store-logo-url').value.trim(),
+    brand_color: document.getElementById('cfg-brand-color-hex').value.trim(),
+    invoice_series_prefix: document.getElementById('cfg-invoice-series-prefix').value.trim(),
+    receipt_footer_text: document.getElementById('cfg-receipt-footer-text').value,
+    default_warehouse: document.getElementById('cfg-default-warehouse').value,
+    default_pos_profile: document.getElementById('cfg-default-pos-profile').value,
+    default_walk_in_customer: document.getElementById('cfg-default-walk-in-customer').value,
+    default_intrastate_tax_template: document.getElementById('cfg-default-intrastate-tax-template').value,
+    default_interstate_tax_template: document.getElementById('cfg-default-interstate-tax-template').value,
+    loyalty_enabled: document.getElementById('cfg-loyalty-enabled').checked ? 1 : 0,
+    loyalty_points_per_rupee: parseFloat(document.getElementById('cfg-loyalty-points-per-rupee').value) || 1.0,
+  };
+  
+  API.call('frappe.client.set_value', {
+    doctype: 'Company',
+    name: company,
+    fieldname: 'custom_smriti_store_type',
+    value: storeType
+  }).then(() => {
+    return API.call('smriti_retail_os.company_api.save_company_settings', {
+      company: company,
+      settings: JSON.stringify(settings)
+    });
+  }).then(() => {
+    toast('✅ Company settings saved successfully!', 'success');
+    loadCompanySettings(company);
+  }).catch(e => {
+    toast('Failed to save settings: ' + (e.message || e), 'error');
+  });
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -925,10 +1180,25 @@ function esc(s) {
 // ─── Bootstrap ───────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   initTopBar();
+  loadCompanySettings();
   loadTaxTemplates();
   loadSizeGroups();
   loadStateTax();
   loadBrands();
+
+  // Sync color picker with hex input
+  const colorPicker = document.getElementById('cfg-brand-color');
+  const colorHex = document.getElementById('cfg-brand-color-hex');
+  if (colorPicker && colorHex) {
+    colorPicker.addEventListener('input', (e) => {
+      colorHex.value = e.target.value;
+    });
+    colorHex.addEventListener('input', (e) => {
+      if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+        colorPicker.value = e.target.value;
+      }
+    });
+  }
 });
 </script>
 </body>

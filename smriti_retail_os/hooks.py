@@ -215,8 +215,13 @@ doc_events = {
     },
     "Sales Invoice": {
         "before_validate": "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
+    },
+    "Company": {
+        "after_insert": "smriti_retail_os.company_api.ensure_company_settings",
+        "on_update": "smriti_retail_os.company_api.ensure_company_settings"
     }
 }
+
 
 # Scheduled Tasks
 # ---------------
