@@ -338,69 +338,219 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     top:-200px; right:-200px; pointer-events:none; z-index:0;
 }
 
-/* ── Print Styles ─────────────────────────────────────────── */
+/* ── Print Layout Styles ─────────────────────────────────── */
+#print-layout {
+    display: none;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    color: #111;
+    background: #fff;
+    padding: 0;
+    margin: 0;
+}
+
 @media print {
-    .bg-grid, .bg-glow, #smriti-sidebar-target, .topbar,
-    .action-bar, .page-title-bar .action-bar,
-    .btn, #toast-container, .drawer-overlay, .modal-backdrop,
-    .panel-header .btn, #size-config-panel,
-    .rm-row, .item-table th:last-child, .item-table td:last-child { display:none !important; }
-    body { background:#fff !important; color:#111 !important; font-size:10pt; }
-    .page-content { padding:8mm !important; }
-    .panel { border:1px solid #ccc !important; box-shadow:none !important; background:#fff !important; break-inside:avoid; margin-bottom:10px !important; }
-    .panel-header { background:#f4f4f4 !important; border-bottom: 1px solid #ccc !important; padding:8px 12px !important; }
-    .panel-title, .panel-title .material-symbols-outlined, .form-label,
-    .panel-header, .company-meta, .total-row .lbl,
-    .hsn-table th { color:#111 !important; }
-    .company-name-big, .panel-title, .total-row .lbl { color:#111 !important; }
+    /* Hide the entire interactive App container */
+    #app { display: none !important; }
     
-    /* Input & Control styling overrides for beautiful plain print rendering */
-    .form-control, .cell-input, .size-input {
-        background: transparent !important;
-        border: none !important;
-        color: #000 !important;
-        padding: 2px 0 !important;
-        box-shadow: none !important;
-        outline: none !important;
-        appearance: none !important;
-        -moz-appearance: none !important;
-        -webkit-appearance: none !important;
-        pointer-events: none !important;
-    }
-    select.cell-input {
-        background-image: none !important;
-    }
-    
-    .size-input {
-        text-align: center !important;
+    /* Show the clean printable layout container */
+    #print-layout {
+        display: block !important;
         width: 100% !important;
+        box-sizing: border-box !important;
     }
-
-    .company-card { background:#f9f9f9 !important; border:1px solid #ccc !important; }
-    .gstin-badge { background:#e8e8e8 !important; color:#111 !important; border-color:#ccc !important; }
-    .item-table th, .item-table td { background:#fff !important; color:#111 !important; border:1px solid #eee !important; padding:4px 6px !important; }
-    .item-table th.size-col { background:#f9f9f9 !important; }
-    .amount-words { background:#f9f9f9 !important; color:#111 !important; border-color:#ccc !important; }
-    .totals-block { background:#f9fafb !important; border:1px solid #ddd !important; }
-    .total-row.grand .val { color:#000 !important; font-weight:800 !important; }
-    .sig-box { border:1px solid #ccc !important; }
-    #print-invoice-header { display:block !important; }
-    .main-wrapper { margin:0 !important; }
+    
+    /* Ensure page breaks are handled gracefully */
+    body { background: #fff !important; color: #000 !important; }
 }
 
-/* ── Print Header (hidden on screen, shown when printing) ── */
-#print-invoice-header {
-    display:none;
-    border-bottom: 2px solid #333; padding-bottom:12px; margin-bottom:16px;
+/* ── Print Layout Sub-styles ── */
+#print-layout .p-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #800810;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
 }
-#print-invoice-header .co-name { font-size:18pt; font-weight:900; }
-#print-invoice-header .co-meta { font-size:9pt; color:#555; margin-top:4px; }
-#print-invoice-header .inv-header-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:12px; }
-#print-invoice-header .inv-box { border:1px solid #ccc; padding:10px; border-radius:4px; font-size:9pt; }
-#print-invoice-header .inv-box strong { display:block; margin-bottom:4px; font-size:10pt; }
-
-@media print {
-    #print-invoice-header { display:block; }
+#print-layout .p-company-info h1 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 20pt;
+    font-weight: 800;
+    color: #800810;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+#print-layout .p-company-info p {
+    font-size: 8.5pt;
+    color: #333;
+    line-height: 1.4;
+}
+#print-layout .p-company-logo img {
+    max-height: 64px;
+    object-fit: contain;
+}
+#print-layout .p-title-box {
+    text-align: center;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14pt;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: #800810;
+    text-transform: uppercase;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 6px;
+    margin-bottom: 12px;
+}
+#print-layout .p-details-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1.15fr 0.7fr;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+#print-layout .p-details-col {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 10px;
+    font-size: 8.5pt;
+    line-height: 1.45;
+}
+#print-layout .p-col-title {
+    display: block;
+    font-weight: 700;
+    font-size: 8pt;
+    color: #800810;
+    text-transform: uppercase;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 3px;
+    margin-bottom: 5px;
+}
+#print-layout .p-details-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+#print-layout .p-details-table td {
+    padding: 1.5px 0;
+    font-size: 8.5pt;
+}
+#print-layout .p-details-table td:first-child {
+    font-weight: 600;
+    color: #555;
+    width: 90px;
+}
+#print-layout .p-item-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8pt;
+    margin-bottom: 14px;
+}
+#print-layout .p-item-table th, 
+#print-layout .p-item-table td {
+    border: 1px solid #ccc;
+    padding: 4px 6px;
+    text-align: center;
+}
+#print-layout .p-item-table th {
+    background: #f4f4f4;
+    font-weight: 700;
+    color: #111;
+    font-size: 7.5pt;
+    text-transform: uppercase;
+}
+#print-layout .p-item-table td.text-left, 
+#print-layout .p-item-table th.text-left {
+    text-align: left;
+}
+#print-layout .p-item-table td.text-right, 
+#print-layout .p-item-table th.text-right {
+    text-align: right;
+}
+#print-layout .bold {
+    font-weight: bold;
+}
+#print-layout .p-summary-grid {
+    display: grid;
+    grid-template-columns: 1.35fr 0.65fr;
+    gap: 16px;
+    margin-bottom: 16px;
+    break-inside: avoid;
+}
+#print-layout .p-summary-left > div {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    font-size: 8pt;
+    line-height: 1.4;
+}
+#print-layout .p-summary-left .bold {
+    display: block;
+    font-size: 8pt;
+    color: #800810;
+    text-transform: uppercase;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 2px;
+    margin-bottom: 4px;
+}
+#print-layout .p-totals-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+#print-layout .p-totals-table td {
+    padding: 5px 8px;
+    border-bottom: 1px solid #eee;
+}
+#print-layout .p-totals-table tr:last-child td {
+    border-bottom: none;
+}
+#print-layout .p-totals-table td:first-child {
+    color: #555;
+}
+#print-layout .p-totals-table td:last-child {
+    text-align: right;
+    font-weight: 600;
+}
+#print-layout .p-totals-table tr.grand-total-row {
+    background: rgba(128, 8, 16, 0.05);
+}
+#print-layout .p-totals-table tr.grand-total-row td {
+    font-size: 10pt;
+    font-weight: 800;
+    color: #800810;
+    border-top: 1.5px solid #800810;
+    border-bottom: 1.5px solid #800810;
+}
+#print-layout .p-footer-grid {
+    display: grid;
+    grid-template-columns: 1.25fr 0.75fr;
+    gap: 16px;
+    margin-top: 10px;
+    break-inside: avoid;
+}
+#print-layout .p-upi-box {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 8pt;
+}
+#print-layout .p-upi-box strong {
+    color: #800810;
+    display: block;
+    margin-bottom: 4px;
+}
+#print-layout .p-bank-info {
+    line-height: 1.4;
+}
+#print-layout .p-signature-box {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 95px;
 }
 
 /* ── Excel Paste & OCR Styles ──────────────────────────────── */
@@ -499,29 +649,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
         <!-- Page Content -->
         <div class="page-content">
 
-            <!-- Print Header (shows only during print) -->
-            <div id="print-invoice-header">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                    <div>
-                        <div class="co-name" id="ph-company-name">SMRITI RETAIL</div>
-                        <div class="co-meta" id="ph-company-addr">Loading…</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div style="font-size:14pt;font-weight:900;color:#4338ca;">TAX INVOICE</div>
-                        <div style="font-size:9pt;margin-top:4px;" id="ph-inv-no-date"></div>
-                    </div>
-                </div>
-                <div class="inv-header-grid">
-                    <div class="inv-box">
-                        <strong>Billed To:</strong>
-                        <div id="ph-buyer-info"></div>
-                    </div>
-                    <div class="inv-box">
-                        <strong>Invoice Details:</strong>
-                        <div id="ph-inv-details"></div>
-                    </div>
-                </div>
-            </div>
+
 
             <!-- Page Title & Actions -->
             <div class="page-title-bar">
@@ -847,6 +975,108 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
         </div><!-- /page-content -->
     </div><!-- /main-wrapper -->
 </div><!-- /app -->
+
+<!-- ── Dedicated Print Layout (shown only during browser print) ── -->
+<div id="print-layout">
+    <!-- Header: Company Info and Logo -->
+    <div class="p-header">
+        <div class="p-company-info">
+            <h1 id="p-company-name">TATTLY THREADS</h1>
+            <p id="p-company-meta"></p>
+        </div>
+        <div class="p-company-logo">
+            <img src="" alt="Company Logo" id="p-logo-img">
+        </div>
+    </div>
+    
+    <!-- Title -->
+    <div class="p-title-box">
+        Tax Invoice
+    </div>
+    
+    <!-- 3-Column Grid: Bill To, Ship To, Invoice Details -->
+    <div class="p-details-grid">
+        <div class="p-details-col">
+            <span class="p-col-title">Bill To</span>
+            <div id="p-bill-to"></div>
+        </div>
+        <div class="p-details-col">
+            <span class="p-col-title">Ship To</span>
+            <div id="p-ship-to"></div>
+        </div>
+        <div class="p-details-col">
+            <span class="p-col-title">Invoice Details</span>
+            <table class="p-details-table">
+                <tr><td>Invoice No.:</td><td id="p-inv-no" class="bold"></td></tr>
+                <tr><td>Date:</td><td id="p-inv-date"></td></tr>
+                <tr><td>Place of Supply:</td><td id="p-place-supply"></td></tr>
+                <tr><td>E-way Bill No.:</td><td id="p-eway-bill"></td></tr>
+                <tr><td>Vehicle No.:</td><td id="p-vehicle-no"></td></tr>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Item Table -->
+    <table class="p-item-table" id="p-item-table">
+        <thead></thead>
+        <tbody></tbody>
+        <tfoot></tfoot>
+    </table>
+    
+    <!-- Summary Grid: Words/Terms on Left, Totals on Right -->
+    <div class="p-summary-grid">
+        <div class="p-summary-left">
+            <div class="p-words-box">
+                <span class="bold">Invoice Amount In Words</span>
+                <p id="p-words"></p>
+            </div>
+            <div class="p-terms-box">
+                <span class="bold">Terms And Conditions</span>
+                <p id="p-terms"></p>
+            </div>
+            <div class="p-payto-box">
+                <span class="bold">Pay To:</span>
+                <p id="p-payto"></p>
+            </div>
+        </div>
+        <div class="p-summary-right">
+            <table class="p-totals-table">
+                <tr><td>Sub Total:</td><td id="p-subtotal"></td></tr>
+                <tr><td>Discount:</td><td>₹0.00</td></tr>
+                <tr id="p-cgst-row"><td>CGST:</td><td id="p-cgst"></td></tr>
+                <tr id="p-sgst-row"><td>SGST:</td><td id="p-sgst"></td></tr>
+                <tr id="p-igst-row"><td>IGST:</td><td id="p-igst"></td></tr>
+                <tr><td>Round off:</td><td id="p-roundoff"></td></tr>
+                <tr class="grand-total-row"><td>Total:</td><td id="p-grand-total"></td></tr>
+                <tr><td>Received:</td><td>₹0.00</td></tr>
+                <tr><td>Balance:</td><td id="p-balance"></td></tr>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Footer Signatures and UPI -->
+    <div class="p-footer-grid">
+        <div class="p-upi-box" id="p-qr-container">
+            <div style="display:flex; gap:16px; align-items:center;">
+                <div style="text-align:center;">
+                    <img id="p-qr-img" src="" style="width: 100px; height: 100px; border: 1px solid #ccc; padding: 4px; border-radius: 4px;" alt="Scan to Pay">
+                    <span style="font-size:7.5pt; display:block; text-align:center; margin-top:4px; font-weight:bold; color:#2e7d32;">UPI Scan to Pay</span>
+                </div>
+                <div class="p-bank-info">
+                    <strong>Bank Account Details</strong>
+                    <div id="p-bank-text"></div>
+                </div>
+            </div>
+        </div>
+        <div class="p-signature-box">
+            <div style="text-align:right; font-size:9pt;" class="bold">For TATTLY THREADS</div>
+            <div class="signature-image-container" style="text-align:center; margin: 4px 0;">
+                <img src="/files/tattly_threads_signature.png" alt="Signature" id="p-sig-img" style="max-height: 40px; display: none;">
+            </div>
+            <div style="text-align:right; font-size:8.5pt; border-top:1px dashed #ccc; padding-top:4px; margin-top: auto;">Authorized Signatory</div>
+        </div>
+    </div>
+</div>
 
 <!-- ── Invoice History Drawer ──────────────────────────────── -->
 <div class="drawer-overlay" id="inv-drawer">
@@ -2192,12 +2422,201 @@ function updatePrintHeader(grand = 0) {
     const bAddr   = document.getElementById('buyer-addr').value  || '—';
     const pos     = document.getElementById('place-of-supply').value || '—';
 
-    document.getElementById('ph-inv-no-date').innerHTML =
-        `Invoice No: <strong>${invNo}</strong><br>Date: ${invDate}`;
-    document.getElementById('ph-buyer-info').innerHTML =
-        `<strong>${buyer}</strong><br>GSTIN: ${bGSTIN}<br>${bAddr}`;
-    document.getElementById('ph-inv-details').innerHTML =
-        `Place of Supply: ${pos}<br>Tax Type: ${state.taxType === 'intrastate' ? 'CGST + SGST' : 'IGST'}<br>Grand Total: ₹${parseFloat(grand||0).toLocaleString('en-IN',{minimumFractionDigits:2})}`;
+    // Backwards compatibility if old elements are accessed
+    const phNoDate = document.getElementById('ph-inv-no-date');
+    if (phNoDate) phNoDate.innerHTML = `Invoice No: <strong>${invNo}</strong><br>Date: ${invDate}`;
+    const phBuyer = document.getElementById('ph-buyer-info');
+    if (phBuyer) phBuyer.innerHTML = `<strong>${buyer}</strong><br>GSTIN: ${bGSTIN}<br>${bAddr}`;
+    const phDetails = document.getElementById('ph-inv-details');
+    if (phDetails) phDetails.innerHTML = `Place of Supply: ${pos}<br>Tax Type: ${state.taxType === 'intrastate' ? 'CGST + SGST' : 'IGST'}<br>Grand Total: ₹${parseFloat(grand||0).toLocaleString('en-IN',{minimumFractionDigits:2})}`;
+
+    // Update new dedicated print layout
+    try {
+        populatePrintLayout(grand);
+    } catch(e) {
+        console.error("Error populating print layout:", e);
+    }
+}
+
+function populatePrintLayout(grand = 0) {
+    const c = state.companyInfo || {};
+    const cAddr = c.address || {};
+    
+    // 1. Company Info
+    document.getElementById('p-company-name').textContent = c.company_name || 'TATTLY THREADS';
+    let metaLines = [];
+    if (cAddr.line1) metaLines.push(cAddr.line1);
+    if (cAddr.line2) metaLines.push(cAddr.line2);
+    if (cAddr.city || cAddr.state) metaLines.push([cAddr.city, cAddr.state, cAddr.pincode].filter(Boolean).join(', '));
+    if (c.phone) metaLines.push('Phone: ' + c.phone);
+    if (c.email) metaLines.push('Email: ' + c.email);
+    if (c.gstin) metaLines.push('GSTIN: ' + c.gstin);
+    if (c.state_code) metaLines.push('State: ' + c.state_code + (cAddr.state ? ' - ' + cAddr.state : ''));
+    document.getElementById('p-company-meta').innerHTML = metaLines.join('<br>');
+    
+    // Logo
+    const logoImg = document.getElementById('p-logo-img');
+    if (c.company_logo) {
+        logoImg.src = c.company_logo;
+        logoImg.style.display = 'block';
+    } else {
+        logoImg.style.display = 'none';
+    }
+    
+    // 2. Bill To & Ship To
+    const buyer = document.getElementById('cust-search').value || '—';
+    const bGSTIN = document.getElementById('buyer-gstin').value || '—';
+    const bAddr = document.getElementById('buyer-addr').value || '—';
+    const pos = document.getElementById('place-of-supply').value || '—';
+    
+    document.getElementById('p-bill-to').innerHTML = `<strong>${buyer}</strong><br>GSTIN: ${bGSTIN}<br>${bAddr}<br>State: ${pos}`;
+    
+    const shipTo = document.getElementById('ship-to').value || '';
+    if (shipTo) {
+        document.getElementById('p-ship-to').innerHTML = `<strong>${buyer}</strong><br>${shipTo}<br>State: ${pos}`;
+    } else {
+        document.getElementById('p-ship-to').innerHTML = `<strong>${buyer}</strong><br>${bAddr}<br>State: ${pos}`;
+    }
+    
+    // 3. Invoice Details
+    const invNo = document.getElementById('inv-number').value || '—';
+    const invDate = document.getElementById('inv-date').value || '—';
+    const eway = document.getElementById('eway-bill').value || '';
+    const vehicle = document.getElementById('vehicle-no').value || '';
+    
+    document.getElementById('p-inv-no').textContent = invNo;
+    document.getElementById('p-inv-date').textContent = invDate;
+    document.getElementById('p-place-supply').textContent = pos;
+    document.getElementById('p-eway-bill').textContent = eway || '—';
+    document.getElementById('p-vehicle-no').textContent = vehicle || '—';
+    
+    // 4. Summary & Words
+    document.getElementById('p-words').textContent = numberToWords(grand);
+    document.getElementById('p-terms').innerHTML = (document.getElementById('terms').value || '—').replace(/\n/g, '<br>');
+    
+    // Bank Pay To & QR Code
+    const bankName = document.getElementById('bank-name').value || '';
+    const bankAc = document.getElementById('bank-acno').value || '';
+    const bankIFSC = document.getElementById('bank-ifsc').value || '';
+    const bankBranch = document.getElementById('bank-branch').value || '';
+    
+    if (bankName || bankAc) {
+        document.getElementById('p-payto').innerHTML = `Bank Name: <strong>${bankName}</strong><br>Account No.: <strong>${bankAc}</strong><br>IFSC: <strong>${bankIFSC}</strong><br>Branch: ${bankBranch}`;
+        document.getElementById('p-bank-text').innerHTML = `Bank Account No.: ${bankAc}<br>Bank IFSC code: ${bankIFSC}<br>Account Holder's Name: ${c.company_name || 'TATTLY THREADS'}`;
+        
+        // UPI QR Code
+        const upiId = c.phone ? `${c.phone}@upi` : "9604990390@upi";
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=${c.company_name || 'TATTLY THREADS'}&am=${grand}&cu=INR`)}`;
+        document.getElementById('p-qr-img').src = qrUrl;
+        document.getElementById('p-qr-container').style.display = 'block';
+    } else {
+        document.getElementById('p-payto').textContent = '—';
+        document.getElementById('p-bank-text').textContent = 'Bank details not configured';
+        document.getElementById('p-qr-container').style.display = 'none';
+    }
+    
+    // 5. Totals
+    let totalTaxable = 0, totalTax = 0, totalQty = 0;
+    state.rows.forEach(row => {
+        const qty = state.sizeColumns.reduce((s, sz) => s + (parseFloat(row.sizes[sz]) || 0), 0);
+        const rate = parseFloat(row.rate) || 0;
+        const gstPct = parseFloat(row.gst_pct) || 0;
+        totalQty += qty;
+        totalTaxable += qty * rate;
+        totalTax += qty * rate * gstPct / 100;
+    });
+    const roundoff = grand - (totalTaxable + totalTax);
+    
+    document.getElementById('p-subtotal').textContent = fmtINR(totalTaxable);
+    document.getElementById('p-roundoff').textContent = fmtINR(roundoff);
+    document.getElementById('p-grand-total').textContent = fmtINR(grand);
+    document.getElementById('p-balance').textContent = fmtINR(grand);
+    
+    if (state.taxType === 'intrastate') {
+        const half = totalTax / 2;
+        document.getElementById('p-cgst').textContent = fmtINR(half);
+        document.getElementById('p-sgst').textContent = fmtINR(half);
+        document.getElementById('p-cgst-row').style.display = '';
+        document.getElementById('p-sgst-row').style.display = '';
+        document.getElementById('p-igst-row').style.display = 'none';
+    } else {
+        document.getElementById('p-igst').textContent = fmtINR(totalTax);
+        document.getElementById('p-cgst-row').style.display = 'none';
+        document.getElementById('p-sgst-row').style.display = 'none';
+        document.getElementById('p-igst-row').style.display = '';
+    }
+    
+    // 6. Item Table Population
+    const pTable = document.getElementById('p-item-table');
+    const sizes = state.sizeColumns;
+    
+    // Header
+    let headHtml = `<tr>
+        <th>#</th>
+        <th class="text-left">Item Name</th>
+        <th>HSN/SAC</th>
+        <th>MRP</th>
+        ${sizes.map(s => `<th>${s}</th>`).join('')}
+        <th>Quantity</th>
+        <th>Unit</th>
+        <th>Price/Unit</th>
+        <th>Discount</th>
+        <th>GST</th>
+        <th>Amount</th>
+    </tr>`;
+    
+    // Body
+    let bodyHtml = '';
+    let validRowIndex = 1;
+    state.rows.forEach(row => {
+        const qty = sizes.reduce((s, sz) => s + (parseFloat(row.sizes[sz]) || 0), 0);
+        if (qty <= 0) return;
+        
+        const rate = parseFloat(row.rate) || 0;
+        const mrp = parseFloat(row.mrp) || 0;
+        const gstPct = parseFloat(row.gst_pct) || 0;
+        const hsn = row.hsn_code || '';
+        const amt = qty * rate;
+        
+        bodyHtml += `<tr>
+            <td>${validRowIndex++}</td>
+            <td class="text-left"><strong>${row.article}</strong><br><small>${row.color} | ${row.category} | ${row.sub_category}</small></td>
+            <td>${hsn}</td>
+            <td>${mrp.toFixed(2)}</td>
+            ${sizes.map(s => `<td>${parseInt(row.sizes[s]) || ''}</td>`).join('')}
+            <td class="bold">${qty}</td>
+            <td>Prs</td>
+            <td>${rate.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+            <td>—</td>
+            <td>${gstPct}%</td>
+            <td class="bold">${amt.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+        </tr>`;
+    });
+    
+    // Footer totals row
+    let footHtml = `<tr>
+        <td colspan="4" class="bold text-right" style="text-transform:uppercase;">Total</td>
+        ${sizes.map(s => {
+            const szQty = state.rows.reduce((sum, r) => sum + (parseInt(r.sizes[s]) || 0), 0);
+            return `<td class="bold">${szQty || ''}</td>`;
+        }).join('')}
+        <td class="bold">${totalQty}</td>
+        <td class="bold">Prs</td>
+        <td></td>
+        <td></td>
+        <td class="bold">₹${totalTax.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+        <td class="bold">₹${totalTaxable.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+    </tr>`;
+    
+    pTable.querySelector('thead').innerHTML = headHtml;
+    pTable.querySelector('tbody').innerHTML = bodyHtml;
+    
+    let tfoot = pTable.querySelector('tfoot');
+    if (!tfoot) {
+        tfoot = document.createElement('tfoot');
+        pTable.appendChild(tfoot);
+    }
+    tfoot.innerHTML = footHtml;
 }
 
 

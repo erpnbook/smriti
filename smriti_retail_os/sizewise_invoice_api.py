@@ -70,6 +70,7 @@ def get_company_details():
         "website":          company.website or "",
         "country":          company.country or "India",
         "default_currency": company.default_currency or "INR",
+        "company_logo":     company.company_logo or "",
         "address":          address_data,
         "bank":             bank_data,
         "state_code":       gstin[:2] if len(gstin) >= 2 else "",
