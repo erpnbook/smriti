@@ -689,12 +689,14 @@
 <div class="toast-wrap" id="toast-wrap"></div>
 
 <script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+
 // ─── Frappe API helper ────────────────────────────────────────────────────────
 const API = {
   call(method, args = {}) {
     return fetch('/api/method/' + method, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': CSRF_TOKEN },
       body: JSON.stringify(args)
     })
     .then(r => r.json())
@@ -704,10 +706,6 @@ const API = {
     });
   }
 };
-
-function getCsrf() {
-  return (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
-}
 
 // ─── Toast ───────────────────────────────────────────────────────────────────
 function toast(msg, type = 'info', dur = 3500) {
@@ -730,8 +728,16 @@ function switchTab(id) {
 
 // ─── TOP BAR INFO ────────────────────────────────────────────────────────────
 function initTopBar() {
-  API.call('frappe.client.get_value', { doctype: 'User', filters: { name: frappe?.session?.user }, fieldname: ['full_name'] })
-    .catch(() => null);
+  const username = '{{ frappe.session.user if frappe and frappe.session else "Guest" }}';
+  if (username && username !== 'Guest') {
+    API.call('frappe.client.get_value', { doctype: 'User', filters: { name: username }, fieldname: ['full_name'] })
+      .then(r => {
+        if (r && r.full_name) {
+          document.getElementById('topbar-user-name').textContent = r.full_name;
+        }
+      })
+      .catch(() => null);
+  }
   const company = '{{ company }}';
   if (company) document.getElementById('topbar-company').textContent = company;
 }
