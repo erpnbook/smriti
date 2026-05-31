@@ -588,7 +588,7 @@ function switchTab(id) {
 function initTopBar() {
   API.call('frappe.client.get_value', { doctype: 'User', filters: { name: frappe?.session?.user }, fieldname: ['full_name'] })
     .catch(() => null);
-  const company = '{{ context.company }}';
+  const company = '{{ company }}';
   if (company) document.getElementById('topbar-company').textContent = company;
 }
 
