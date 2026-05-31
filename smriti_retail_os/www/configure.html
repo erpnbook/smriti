@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/configure.html
+  @description: SMRITI Master Configuration Portal — Tax, Size Groups, State Tax, Brands
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @date: 2026-05-31
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>SMRITI Config Portal</title>
+  <meta name="description" content="SMRITI Retail OS — Master Configuration Portal for Tax, Size Groups, State Tax Rules and Brand management."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    /* ────────── Design Tokens ────────── */
+    :root {
+      --bg-base:     #09090f;
+      --bg-surface:  #111122;
+      --bg-card:     #161628;
+      --bg-input:    #1c1c34;
+      --border:      #2a2a4a;
+      --border-glow: #5b5bff44;
+      --accent:      #6366f1;
+      --accent-glow: #6366f180;
+      --accent-2:    #a78bfa;
+      --success:     #22c55e;
+      --warning:     #f59e0b;
+      --danger:      #ef4444;
+      --text-1:      #f0f0ff;
+      --text-2:      #a0a0c0;
+      --text-3:      #60607a;
+      --radius:      10px;
+      --radius-lg:   16px;
+      --shadow:      0 4px 24px #00000060;
+      --font-mono:   'JetBrains Mono', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 15px; scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-base);
+      color: var(--text-1);
+      min-height: 100vh;
+    }
+
+    /* ────────── Layout Shell ────────── */
+    .shell { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .sidebar-brand {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar-brand .logo-icon {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .sidebar-brand .brand-name {
+      font-weight: 700; font-size: 1rem; letter-spacing: .5px;
+      color: var(--text-1);
+    }
+    .sidebar-brand .brand-sub {
+      font-size: .68rem; color: var(--text-3); letter-spacing: 1px; text-transform: uppercase;
+    }
+    .sidebar-nav {
+      padding: 14px 10px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .sidebar-nav .nav-label {
+      font-size: .65rem; color: var(--text-3); text-transform: uppercase;
+      letter-spacing: 1.5px; padding: 6px 8px 4px; margin-bottom: 4px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: 8px; cursor: pointer;
+      color: var(--text-2); font-size: .88rem; font-weight: 500;
+      transition: all .18s;
+      text-decoration: none;
+      margin-bottom: 2px;
+    }
+    .nav-item:hover { background: var(--bg-card); color: var(--text-1); }
+    .nav-item.active {
+      background: linear-gradient(90deg, #6366f125, transparent);
+      color: var(--accent-2);
+      border-left: 3px solid var(--accent);
+    }
+    .nav-item .ni-icon { font-size: 16px; width: 20px; text-align: center; }
+    .sidebar-footer {
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      font-size: .75rem; color: var(--text-3);
+    }
+    .sidebar-footer a { color: var(--accent-2); text-decoration: none; }
+
+    /* ── Main Content ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .topbar-title { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .topbar-title .badge {
+      font-size: .65rem; background: var(--accent); color: #fff;
+      padding: 2px 7px; border-radius: 20px; font-weight: 600;
+      letter-spacing: .5px; text-transform: uppercase;
+    }
+    .topbar-user { font-size: .8rem; color: var(--text-2); display: flex; align-items: center; gap: 8px; }
+
+    /* ── Tabs ── */
+    .tab-strip {
+      display: flex;
+      gap: 4px;
+      padding: 20px 28px 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-surface);
+    }
+    .tab-btn {
+      padding: 9px 20px;
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      background: transparent;
+      color: var(--text-2);
+      font-size: .88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .18s;
+      display: flex; align-items: center; gap: 7px;
+      position: relative; bottom: -1px;
+    }
+    .tab-btn:hover { color: var(--text-1); background: var(--bg-card); }
+    .tab-btn.active {
+      background: var(--bg-base);
+      color: var(--accent-2);
+      border-color: var(--border);
+      border-bottom-color: var(--bg-base);
+      font-weight: 600;
+    }
+    .tab-btn .tcount {
+      background: var(--bg-input); border-radius: 12px;
+      padding: 1px 6px; font-size: .7rem; color: var(--text-3);
+    }
+
+    /* ── Tab Panels ── */
+    .tab-content { padding: 28px; flex: 1; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Section Card ── */
+    .config-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      margin-bottom: 20px;
+    }
+    .config-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .config-card-title {
+      font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 8px;
+    }
+    .config-card-sub { font-size: .8rem; color: var(--text-3); margin-top: 3px; }
+
+    /* ── Form Inputs ── */
+    label.lbl { display: block; font-size: .8rem; color: var(--text-2); margin-bottom: 5px; font-weight: 500; }
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-1);
+      font-size: .9rem;
+      padding: 9px 13px;
+      outline: none;
+      transition: border-color .18s, box-shadow .18s;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    select option { background: var(--bg-card); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 18px; border-radius: var(--radius);
+      font-size: .88rem; font-weight: 600; cursor: pointer;
+      border: none; transition: all .2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #818cf8);
+      color: #fff;
+      box-shadow: 0 2px 12px var(--accent-glow);
+    }
+    .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-secondary {
+      background: var(--bg-input); color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent-2); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { filter: brightness(1.1); }
+    .btn-sm { padding: 5px 12px; font-size: .8rem; }
+    .btn-icon { width: 32px; height: 32px; padding: 0; justify-content: center; border-radius: 8px; }
+
+    /* ── Grid helpers ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+    .flex-row { display: flex; align-items: center; gap: 10px; }
+    .flex-row-end { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+    .flex-row-between { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .mt-4 { margin-top: 4px; }
+    .mt-8 { margin-top: 8px; }
+    .mt-12 { margin-top: 12px; }
+    .mt-16 { margin-top: 16px; }
+    .mb-8 { margin-bottom: 8px; }
+
+    /* ── Tag Chip ── */
+    .tag-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 20px; padding: 3px 10px;
+      font-size: .78rem; color: var(--text-2);
+    }
+    .tag-chip .remove { cursor: pointer; color: var(--text-3); font-size: .9rem; line-height: 1; }
+    .tag-chip .remove:hover { color: var(--danger); }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; min-height: 32px; }
+
+    /* ── Data Table ── */
+    .data-table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+    .data-table th {
+      text-align: left; padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-3); font-weight: 600; font-size: .75rem;
+      text-transform: uppercase; letter-spacing: .8px;
+    }
+    .data-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: var(--bg-surface); }
+
+    /* ── Toast ── */
+    .toast-wrap {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .toast {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px 18px;
+      font-size: .86rem; display: flex; align-items: center; gap: 10px;
+      box-shadow: var(--shadow); animation: slideUp .25s ease;
+      max-width: 340px;
+    }
+    .toast.success { border-left: 3px solid var(--success); }
+    .toast.error   { border-left: 3px solid var(--danger); }
+    .toast.info    { border-left: 3px solid var(--accent); }
+    @keyframes slideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center; padding: 36px 20px; color: var(--text-3);
+    }
+    .empty-state .es-icon { font-size: 36px; margin-bottom: 10px; }
+    .empty-state p { font-size: .9rem; }
+
+    /* ── Size Group Builder ── */
+    .sg-card {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px;
+      transition: border-color .18s;
+    }
+    .sg-card:hover { border-color: var(--accent); }
+    .sg-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .sg-card-header input { flex: 1; }
+
+    /* ── State Map Row ── */
+    .state-row {
+      display: grid; grid-template-columns: 80px 1fr 1fr auto;
+      gap: 10px; align-items: end; margin-bottom: 10px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 860px) {
+      .sidebar { display: none; }
+      .tab-strip { overflow-x: auto; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .state-row { grid-template-columns: 1fr 1fr; }
+      .tab-content { padding: 14px; }
+    }
+
+    /* ── Highlight badge ── */
+    .hl-tag {
+      font-size: .68rem; background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 20px; padding: 1px 8px; color: var(--text-3); font-family: var(--font-mono);
+    }
+    .hl-green  { background: #22c55e18; border-color: #22c55e40; color: var(--success); }
+    .hl-purple { background: #6366f118; border-color: #6366f140; color: var(--accent-2); }
+    .hl-amber  { background: #f59e0b18; border-color: #f59e0b40; color: var(--warning); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo-icon">⚙️</div>
+      <div>
+        <div class="brand-name">SMRITI</div>
+        <div class="brand-sub">Config Portal</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Navigation</div>
+      <a href="/smriti_home" class="nav-item"><span class="ni-icon">🏠</span> Dashboard</a>
+      <a href="/sizewise_invoice" class="nav-item"><span class="ni-icon">🧾</span> Tax Invoice</a>
+      <a href="/sizewise_item" class="nav-item"><span class="ni-icon">👟</span> Item Master</a>
+      <div class="nav-label mt-12">Administration</div>
+      <a href="/configure" class="nav-item active"><span class="ni-icon">⚙️</span> Configuration</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div>SMRITI Retail OS</div>
+      <div style="margin-top:3px;"><a href="/app">Open ERPNext ↗</a></div>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">
+        ⚙️ Master Configuration
+        <span class="badge">Manager Only</span>
+      </div>
+      <div class="topbar-user">
+        <span id="topbar-company" style="color:var(--accent-2);font-weight:600;"></span>
+        <span id="topbar-user-name" style="color:var(--text-2);"></span>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-strip" role="tablist">
+      <button class="tab-btn active" id="tab-tax-btn"   role="tab" onclick="switchTab('tax')">🏷️ Item Tax  <span class="tcount" id="cnt-tax">…</span></button>
+      <button class="tab-btn"        id="tab-sg-btn"    role="tab" onclick="switchTab('sg')"> 📐 Size Groups <span class="tcount" id="cnt-sg">…</span></button>
+      <button class="tab-btn"        id="tab-state-btn" role="tab" onclick="switchTab('state')">🗺️ State Tax  <span class="tcount" id="cnt-state">…</span></button>
+      <button class="tab-btn"        id="tab-brand-btn" role="tab" onclick="switchTab('brand')">🏷️ Brands  <span class="tcount" id="cnt-brand">…</span></button>
+    </div>
+
+    <div class="tab-content">
+
+      <!-- ══════ TAB 1: Item Tax Templates ══════ -->
+      <div class="tab-panel active" id="tab-tax" role="tabpanel">
+        <div class="config-card">
+          <div class="config-card-header">
+            <div>
+              <div class="config-card-title">🏷️ Item Tax Templates</div>
+              <div class="config-card-sub">GST tax rate definitions applied to each line item on the invoice.</div>
+            </div>
+            <button class="btn btn-primary" id="btn-new-tax" onclick="openTaxDialog()">＋ New Template</button>
+          </div>
+          <div id="tax-loading" style="text-align:center;padding:24px;"><div class="spinner"></div></div>
+          <table class="data-table" id="tax-table" style="display:none;">
+            <thead>
+              <tr>
+                <th>Template Name</th>
+                <th>Company</th>
+                <th>GST %</th>
+                <th>Accounts</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tax-tbody"></tbody>
+          </table>
+          <div class="empty-state" id="tax-empty" style="display:none;">
+            <div class="es-icon">🏷️</div>
+            <p>No tax templates found. Create your first GST template above.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════ TAB 2: Size Groups ══════ -->
+      <div class="tab-panel" id="tab-sg" role="tabpanel">
+        <div class="config-card">
+          <div class="config-card-header">
+            <div>
+              <div class="config-card-title">📐 Size Group Presets</div>
+              <div class="config-card-sub">Named size lists that appear as quick-fill presets in the footwear/garment matrix.</div>
+            </div>
+            <button class="btn btn-primary" onclick="addSizeGroup()">＋ Add Group</button>
+          </div>
+          <div id="sg-list"></div>
+          <div class="flex-row-end mt-16">
+            <button class="btn btn-secondary" onclick="loadSizeGroups()">↺ Reset</button>
+            <button class="btn btn-primary" onclick="saveSizeGroups()">💾 Save All Groups</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════ TAB 3: State Tax Mapping ══════ -->
+      <div class="tab-panel" id="tab-state" role="tabpanel">
+        <div class="config-card">
+          <div class="config-card-header">
+            <div>
+              <div class="config-card-title">🗺️ Destination-wise Tax Rules</div>
+              <div class="config-card-sub">Maps supplier state codes to intrastate (CGST+SGST) or interstate (IGST) tax routing.</div>
+            </div>
+            <button class="btn btn-primary" onclick="addStateRow()">＋ Add State</button>
+          </div>
+          <div id="state-list"></div>
+          <div class="flex-row-end mt-16">
+            <button class="btn btn-secondary" onclick="loadStateTax()">↺ Reset</button>
+            <button class="btn btn-primary" onclick="saveStateTax()">💾 Save Mappings</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════ TAB 4: Brand Management ══════ -->
+      <div class="tab-panel" id="tab-brand" role="tabpanel">
+        <div class="config-card">
+          <div class="config-card-header">
+            <div>
+              <div class="config-card-title">🏷️ Brand Directory</div>
+              <div class="config-card-sub">All brands that can be assigned to items. Deleting is blocked if items are linked.</div>
+            </div>
+          </div>
+          <div class="grid-2 mb-8">
+            <div>
+              <label class="lbl">New Brand Name *</label>
+              <input type="text" id="brand-name-inp" placeholder="e.g. Nike, Bata, SMRITI OWN"/>
+            </div>
+            <div>
+              <label class="lbl">Description (optional)</label>
+              <input type="text" id="brand-desc-inp" placeholder="Short description of the brand"/>
+            </div>
+          </div>
+          <div class="flex-row-end">
+            <button class="btn btn-primary" onclick="createBrand()">＋ Create Brand</button>
+          </div>
+          <hr style="border-color:var(--border);margin:20px 0;"/>
+          <div id="brand-loading" style="text-align:center;padding:16px;"><div class="spinner"></div></div>
+          <table class="data-table" id="brand-table" style="display:none;">
+            <thead>
+              <tr><th>Brand Name</th><th>Description</th><th></th></tr>
+            </thead>
+            <tbody id="brand-tbody"></tbody>
+          </table>
+          <div class="empty-state" id="brand-empty" style="display:none;">
+            <div class="es-icon">🏷️</div>
+            <p>No brands found. Add your first brand above.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-content -->
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- ── New Tax Template Dialog ── -->
+<div id="tax-dialog-overlay" style="display:none;position:fixed;inset:0;background:#00000088;z-index:1000;display:none;align-items:center;justify-content:center;">
+  <div id="tax-dialog" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);width:min(560px,95vw);padding:24px;box-shadow:var(--shadow);">
+    <div class="flex-row-between" style="margin-bottom:18px;">
+      <h2 style="font-size:1rem;font-weight:600;">🏷️ New Item Tax Template</h2>
+      <button class="btn btn-secondary btn-sm" onclick="closeTaxDialog()">✕ Close</button>
+    </div>
+    <div class="grid-2" style="margin-bottom:12px;">
+      <div>
+        <label class="lbl">Template Title *</label>
+        <input type="text" id="tpl-title" placeholder="e.g. GST 12% Footwear"/>
+      </div>
+      <div>
+        <label class="lbl">GST Rate % *</label>
+        <input type="number" id="tpl-gst" placeholder="12" min="0" max="100" step="0.5"/>
+      </div>
+    </div>
+    <label class="lbl">Tax Account Lines</label>
+    <div id="tpl-accounts">
+      <!-- dynamic rows injected here -->
+    </div>
+    <div class="flex-row mt-8">
+      <button class="btn btn-secondary btn-sm" onclick="addTaxAccountRow()">＋ Add Account Row</button>
+    </div>
+    <div id="tpl-account-loading" style="display:none;font-size:.8rem;color:var(--text-3);margin-top:6px;">Loading accounts…</div>
+    <div class="flex-row-end" style="margin-top:18px;">
+      <button class="btn btn-secondary" onclick="closeTaxDialog()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitTaxTemplate()">Create Template</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast Container ── -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+// ─── Frappe API helper ────────────────────────────────────────────────────────
+const API = {
+  call(method, args = {}) {
+    return fetch('/api/method/' + method, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': getCsrf() },
+      body: JSON.stringify(args)
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.exc_type) throw new Error(data._server_messages || data.exc_type);
+      return data.message !== undefined ? data.message : data;
+    });
+  }
+};
+
+function getCsrf() {
+  return (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
+}
+
+// ─── Toast ───────────────────────────────────────────────────────────────────
+function toast(msg, type = 'info', dur = 3500) {
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(() => el.remove(), dur);
+}
+
+// ─── Tab Switching ────────────────────────────────────────────────────────────
+const TABS = ['tax', 'sg', 'state', 'brand'];
+function switchTab(id) {
+  TABS.forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === id);
+    document.getElementById('tab-' + t + '-btn').classList.toggle('active', t === id);
+  });
+}
+
+// ─── TOP BAR INFO ────────────────────────────────────────────────────────────
+function initTopBar() {
+  API.call('frappe.client.get_value', { doctype: 'User', filters: { name: frappe?.session?.user }, fieldname: ['full_name'] })
+    .catch(() => null);
+  const company = '{{ context.company }}';
+  if (company) document.getElementById('topbar-company').textContent = company;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// TAB 1 — ITEM TAX TEMPLATES
+// ════════════════════════════════════════════════════════════════════════════
+let taxAccounts = [];
+
+function loadTaxTemplates() {
+  document.getElementById('tax-loading').style.display = 'block';
+  document.getElementById('tax-table').style.display = 'none';
+  document.getElementById('tax-empty').style.display = 'none';
+
+  API.call('smriti_retail_os.master_api.get_item_tax_templates')
+    .then(templates => {
+      document.getElementById('tax-loading').style.display = 'none';
+      document.getElementById('cnt-tax').textContent = templates.length;
+      if (!templates.length) {
+        document.getElementById('tax-empty').style.display = 'block';
+        return;
+      }
+      const tbody = document.getElementById('tax-tbody');
+      tbody.innerHTML = templates.map(t => `
+        <tr>
+          <td><span style="font-weight:600;color:var(--accent-2)">${t.title || t.name}</span></td>
+          <td><span class="hl-tag">${t.company || '-'}</span></td>
+          <td><span class="hl-tag hl-green">${t.gst_rate || 0}%</span></td>
+          <td>${(t.taxes || []).map(x => `<span class="hl-tag hl-purple">${x.tax_rate}%</span>`).join(' ')}</td>
+          <td><a href="/app/item-tax-template/${encodeURIComponent(t.name)}" target="_blank" class="btn btn-secondary btn-sm">Edit ↗</a></td>
+        </tr>`).join('');
+      document.getElementById('tax-table').style.display = 'table';
+    })
+    .catch(e => {
+      document.getElementById('tax-loading').style.display = 'none';
+      toast('Failed to load tax templates: ' + e.message, 'error');
+    });
+}
+
+function loadTaxAccounts() {
+  document.getElementById('tpl-account-loading').style.display = 'block';
+  return API.call('smriti_retail_os.master_api.get_tax_accounts')
+    .then(accs => {
+      taxAccounts = accs || [];
+      document.getElementById('tpl-account-loading').style.display = 'none';
+      if (document.querySelectorAll('#tpl-accounts .tpl-row').length === 0) {
+        addTaxAccountRow();
+        addTaxAccountRow();
+      }
+    })
+    .catch(() => { document.getElementById('tpl-account-loading').style.display = 'none'; });
+}
+
+function accountOptions() {
+  return taxAccounts.map(a => `<option value="${a.name}">${a.account_name}</option>`).join('');
+}
+
+function addTaxAccountRow() {
+  const row = document.createElement('div');
+  row.className = 'tpl-row flex-row mt-4';
+  row.style.marginBottom = '6px';
+  row.innerHTML = `
+    <select style="flex:1;">${accountOptions()}</select>
+    <input type="number" placeholder="Rate %" step="0.5" min="0" max="100" style="width:100px;">
+    <button class="btn btn-secondary btn-icon" onclick="this.parentElement.remove()">✕</button>`;
+  document.getElementById('tpl-accounts').appendChild(row);
+}
+
+function openTaxDialog() {
+  const overlay = document.getElementById('tax-dialog-overlay');
+  overlay.style.display = 'flex';
+  document.getElementById('tpl-title').value = '';
+  document.getElementById('tpl-gst').value = '';
+  document.getElementById('tpl-accounts').innerHTML = '';
+  loadTaxAccounts();
+}
+
+function closeTaxDialog() {
+  document.getElementById('tax-dialog-overlay').style.display = 'none';
+}
+
+function submitTaxTemplate() {
+  const title = document.getElementById('tpl-title').value.trim();
+  const gst   = parseFloat(document.getElementById('tpl-gst').value) || 0;
+  if (!title) { toast('Template title is required.', 'error'); return; }
+  if (!gst)   { toast('GST rate is required.', 'error'); return; }
+
+  const rows = document.querySelectorAll('#tpl-accounts .tpl-row');
+  const taxes = Array.from(rows).map(row => ({
+    tax_type: row.querySelector('select').value,
+    tax_rate: parseFloat(row.querySelector('input').value) || 0
+  })).filter(r => r.tax_type && r.tax_rate > 0);
+
+  if (!taxes.length) { toast('Add at least one tax account row.', 'error'); return; }
+
+  API.call('smriti_retail_os.master_api.create_item_tax_template', { title, gst_rate: gst, taxes: JSON.stringify(taxes) })
+    .then(res => {
+      toast(`✅ Created: ${res.title}`, 'success');
+      closeTaxDialog();
+      loadTaxTemplates();
+    })
+    .catch(e => toast(e.message, 'error'));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// TAB 2 — SIZE GROUPS
+// ════════════════════════════════════════════════════════════════════════════
+let sizeGroups = [];
+
+function loadSizeGroups() {
+  API.call('smriti_retail_os.master_api.get_size_groups')
+    .then(groups => {
+      sizeGroups = groups || [];
+      document.getElementById('cnt-sg').textContent = sizeGroups.length;
+      renderSizeGroups();
+    })
+    .catch(e => toast('Error loading size groups: ' + e.message, 'error'));
+}
+
+function renderSizeGroups() {
+  const list = document.getElementById('sg-list');
+  if (!sizeGroups.length) {
+    list.innerHTML = `<div class="empty-state"><div class="es-icon">📐</div><p>No size groups yet. Click 'Add Group'.</p></div>`;
+    return;
+  }
+  list.innerHTML = sizeGroups.map((g, i) => `
+    <div class="sg-card" data-idx="${i}">
+      <div class="sg-card-header">
+        <div style="font-size:.7rem;color:var(--text-3);font-family:var(--font-mono);min-width:70px;">ID</div>
+        <input type="text" value="${esc(g.id)}" placeholder="id (no spaces)" oninput="sgField(${i},'id',this.value)" style="width:120px;flex:none;"/>
+        <div style="font-size:.7rem;color:var(--text-3);font-family:var(--font-mono);min-width:50px;">Label</div>
+        <input type="text" value="${esc(g.label)}" placeholder="Display label" oninput="sgField(${i},'label',this.value)" style="flex:1;"/>
+        <button class="btn btn-danger btn-sm" onclick="removeSizeGroup(${i})">🗑 Remove</button>
+      </div>
+      <div>
+        <label class="lbl" style="margin-bottom:6px;">Sizes (type and press Enter)</label>
+        <div class="tag-list" id="sg-tags-${i}"></div>
+        <div class="flex-row mt-8">
+          <input type="text" id="sg-input-${i}" placeholder="Add size…" style="width:130px;" onkeydown="sgAddSize(event,${i})"/>
+          <button class="btn btn-secondary btn-sm" onclick="sgAddSize({key:'Enter'},${i})">＋ Add</button>
+        </div>
+      </div>
+    </div>`).join('');
+
+  sizeGroups.forEach((g, i) => renderSizeTags(i));
+}
+
+function renderSizeTags(idx) {
+  const g = sizeGroups[idx];
+  const el = document.getElementById(`sg-tags-${idx}`);
+  if (!el) return;
+  el.innerHTML = (g.sizes || []).map((s, si) =>
+    `<span class="tag-chip">${esc(s)}<span class="remove" onclick="sgRemoveSize(${idx},${si})">×</span></span>`
+  ).join('');
+}
+
+function sgField(idx, key, val) { sizeGroups[idx][key] = val; }
+
+function sgAddSize(e, idx) {
+  if (e.key !== 'Enter') return;
+  const inp = document.getElementById(`sg-input-${idx}`);
+  const val = inp.value.trim();
+  if (!val) return;
+  sizeGroups[idx].sizes = sizeGroups[idx].sizes || [];
+  if (!sizeGroups[idx].sizes.includes(val)) {
+    sizeGroups[idx].sizes.push(val);
+    renderSizeTags(idx);
+  }
+  inp.value = '';
+}
+
+function sgRemoveSize(idx, si) {
+  sizeGroups[idx].sizes.splice(si, 1);
+  renderSizeTags(idx);
+}
+
+function addSizeGroup() {
+  sizeGroups.push({ id: 'group_' + Date.now(), label: 'New Group', sizes: [] });
+  renderSizeGroups();
+  document.getElementById('cnt-sg').textContent = sizeGroups.length;
+  // scroll to new
+  document.getElementById(`sg-tags-${sizeGroups.length - 1}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function removeSizeGroup(idx) {
+  if (!confirm(`Remove size group "${sizeGroups[idx].label}"?`)) return;
+  sizeGroups.splice(idx, 1);
+  document.getElementById('cnt-sg').textContent = sizeGroups.length;
+  renderSizeGroups();
+}
+
+function saveSizeGroups() {
+  // Validate
+  for (const g of sizeGroups) {
+    if (!g.id.trim() || !g.label.trim()) { toast('All groups must have an ID and label.', 'error'); return; }
+    if (!g.sizes || !g.sizes.length)    { toast(`Group "${g.label}" has no sizes.`, 'error'); return; }
+  }
+  API.call('smriti_retail_os.master_api.save_size_groups', { size_groups: JSON.stringify(sizeGroups) })
+    .then(res => {
+      toast(`✅ Saved ${res.count} size group(s).`, 'success');
+      document.getElementById('cnt-sg').textContent = res.count;
+    })
+    .catch(e => toast(e.message, 'error'));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// TAB 3 — STATE TAX MAPPINGS
+// ════════════════════════════════════════════════════════════════════════════
+let stateMappings = [];
+
+function loadStateTax() {
+  API.call('smriti_retail_os.master_api.get_destinationwise_taxes')
+    .then(data => {
+      stateMappings = data || [];
+      document.getElementById('cnt-state').textContent = stateMappings.length;
+      renderStateMappings();
+    })
+    .catch(e => toast('Error loading state mappings: ' + e.message, 'error'));
+}
+
+function renderStateMappings() {
+  const list = document.getElementById('state-list');
+  if (!stateMappings.length) {
+    list.innerHTML = `<div class="empty-state"><div class="es-icon">🗺️</div><p>No mappings yet.</p></div>`;
+    return;
+  }
+  list.innerHTML = stateMappings.map((m, i) => `
+    <div class="state-row">
+      <div>
+        <label class="lbl">Code</label>
+        <input type="text" value="${esc(m.state_code)}" placeholder="27" maxlength="4" oninput="stateField(${i},'state_code',this.value)"/>
+      </div>
+      <div>
+        <label class="lbl">State Name</label>
+        <input type="text" value="${esc(m.state_name)}" placeholder="Maharashtra" oninput="stateField(${i},'state_name',this.value)"/>
+      </div>
+      <div>
+        <label class="lbl">Tax Type</label>
+        <select onchange="stateField(${i},'tax_type',this.value)">
+          <option value="intrastate" ${m.tax_type === 'intrastate' ? 'selected' : ''}>Intrastate (CGST+SGST)</option>
+          <option value="interstate"  ${m.tax_type === 'interstate'  ? 'selected' : ''}>Interstate (IGST)</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:1px;">
+        <button class="btn btn-danger btn-sm" onclick="removeStateRow(${i})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function stateField(i, key, val) { stateMappings[i][key] = val; }
+
+function addStateRow() {
+  stateMappings.push({ state_code: '', state_name: '', tax_type: 'intrastate' });
+  renderStateMappings();
+  document.getElementById('cnt-state').textContent = stateMappings.length;
+}
+
+function removeStateRow(i) {
+  stateMappings.splice(i, 1);
+  document.getElementById('cnt-state').textContent = stateMappings.length;
+  renderStateMappings();
+}
+
+function saveStateTax() {
+  for (const m of stateMappings) {
+    if (!m.state_code.trim() || !m.state_name.trim()) {
+      toast('All rows must have a state code and state name.', 'error');
+      return;
+    }
+  }
+  API.call('smriti_retail_os.master_api.save_destinationwise_taxes', { mappings: JSON.stringify(stateMappings) })
+    .then(res => toast(`✅ Saved ${res.count} state mapping(s).`, 'success'))
+    .catch(e => toast(e.message, 'error'));
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// TAB 4 — BRANDS
+// ════════════════════════════════════════════════════════════════════════════
+function loadBrands() {
+  document.getElementById('brand-loading').style.display = 'block';
+  document.getElementById('brand-table').style.display = 'none';
+  document.getElementById('brand-empty').style.display = 'none';
+
+  API.call('smriti_retail_os.master_api.get_brands')
+    .then(brands => {
+      document.getElementById('brand-loading').style.display = 'none';
+      document.getElementById('cnt-brand').textContent = brands.length;
+      if (!brands.length) {
+        document.getElementById('brand-empty').style.display = 'block';
+        return;
+      }
+      const tbody = document.getElementById('brand-tbody');
+      tbody.innerHTML = brands.map(b => `
+        <tr>
+          <td><span style="font-weight:600;color:var(--accent-2)">${esc(b.brand)}</span></td>
+          <td style="color:var(--text-2)">${esc(b.brand_description || '—')}</td>
+          <td>
+            <button class="btn btn-danger btn-sm" onclick="deleteBrand('${esc(b.brand)}')">🗑 Delete</button>
+          </td>
+        </tr>`).join('');
+      document.getElementById('brand-table').style.display = 'table';
+    })
+    .catch(e => {
+      document.getElementById('brand-loading').style.display = 'none';
+      toast('Failed to load brands: ' + e.message, 'error');
+    });
+}
+
+function createBrand() {
+  const name = document.getElementById('brand-name-inp').value.trim();
+  const desc = document.getElementById('brand-desc-inp').value.trim();
+  if (!name) { toast('Brand name is required.', 'error'); return; }
+  API.call('smriti_retail_os.master_api.create_brand', { brand_name: name, brand_description: desc })
+    .then(() => {
+      toast(`✅ Brand "${name}" created.`, 'success');
+      document.getElementById('brand-name-inp').value = '';
+      document.getElementById('brand-desc-inp').value = '';
+      loadBrands();
+    })
+    .catch(e => toast(e.message, 'error'));
+}
+
+function deleteBrand(name) {
+  if (!confirm(`Delete brand "${name}"? This cannot be undone.`)) return;
+  API.call('smriti_retail_os.master_api.delete_brand', { brand_name: name })
+    .then(() => { toast(`🗑 Brand "${name}" deleted.`, 'success'); loadBrands(); })
+    .catch(e => toast(e.message, 'error'));
+}
+
+// ─── Escape helper ───────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Bootstrap ───────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initTopBar();
+  loadTaxTemplates();
+  loadSizeGroups();
+  loadStateTax();
+  loadBrands();
+});
+</script>
+</body>
+</html>

@@ -457,7 +457,15 @@ body.popout-mode .sidebar { display: none !important; }
 
                 <!-- Size Configuration Grid -->
                 <div class="section-card" style="margin-top:20px;">
-                    <div class="section-title"><span class="material-symbols-outlined">grid_on</span> 2. Sizewise Pivot Grid (Active Configurations & Barcodes)</div>
+                    <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                        <span><span class="material-symbols-outlined">grid_on</span> 2. Sizewise Pivot Grid (Active Configurations & Barcodes)</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <label class="form-label" style="margin-bottom:0; font-size:0.75rem;">Size Group:</label>
+                            <select class="form-input" id="size-group-selector" style="padding:4px 8px; font-size:0.8rem; background:rgba(0,0,0,0.4); border-color:var(--border);" onchange="changeSizeGroup(this.value)">
+                                <option value="">Custom / Manual</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="size-matrix-grid" id="size-pivot-container">
                         <!-- Dynamic Size Cards Injected Here -->
                     </div>
@@ -611,6 +619,47 @@ function switchTab(tabName) {
 // Track current dynamic sizes matrix
 let sizesList = ['6', '7', '8', '9', '10', '11', '12'];
 let sizesConfigData = {}; // Maps size label -> { active: boolean, barcode_mode: 'auto'|'manual', manual_barcode: string, existing: boolean, variant_code: string }
+let dynamicSizeGroups = [];
+
+async function loadDynamicSizeGroups() {
+    try {
+        const groups = await api('smriti_retail_os.master_api.get_size_groups');
+        dynamicSizeGroups = groups || [];
+        const selector = document.getElementById('size-group-selector');
+        if (selector) {
+            selector.innerHTML = '<option value="">Custom / Manual</option>' + 
+                dynamicSizeGroups.map(g => `<option value="${g.id}">${g.label}</option>`).join('');
+            
+            // Set first group as default if available
+            if (dynamicSizeGroups.length > 0) {
+                selector.value = dynamicSizeGroups[0].id;
+                changeSizeGroup(dynamicSizeGroups[0].id);
+            }
+        }
+    } catch(e) {
+        console.error("Failed to load dynamic size groups:", e);
+    }
+}
+
+function changeSizeGroup(groupId) {
+    if (!groupId) return;
+    const group = dynamicSizeGroups.find(g => g.id === groupId);
+    if (!group) return;
+    
+    // Check if there are active configurations that will be lost
+    const activeCount = Object.values(sizesConfigData).filter(c => c.active).length;
+    if (activeCount > 0 && !confirm(`Changing size group will clear active variants and manual barcodes. Proceed?`)) {
+        // revert select value (not critical for preset override)
+        return; 
+    }
+    
+    sizesList = [...group.sizes];
+    sizesConfigData = {};
+    sizesList.forEach(sz => {
+        sizesConfigData[sz] = { active: false, barcode_mode: 'auto', manual_barcode: '', existing: false, variant_code: '' };
+    });
+    renderPivotGrid();
+}
 
 function init() {
     const _sbu = document.getElementById('sb-user'); if (_sbu) _sbu.textContent = loggedUser.split('@')[0];
@@ -622,6 +671,7 @@ function init() {
     });
 
     renderPivotGrid();
+    loadDynamicSizeGroups();
 }
 
 function renderPivotGrid() {
@@ -758,7 +808,9 @@ async function lookupStyle(articleNo) {
             inputs.forEach(id => document.getElementById(id).classList.add('retrieval-glowing'));
 
             // Pre-fill active sizes configuration mapping from DB
-            sizesList = ['6', '7', '8', '9', '10', '11', '12'];
+            const currentGrpId = document.getElementById('size-group-selector')?.value;
+            const currentGrp = dynamicSizeGroups.find(g => g.id === currentGrpId);
+            sizesList = currentGrp ? [...currentGrp.sizes] : ['6', '7', '8', '9', '10', '11', '12'];
             sizesConfigData = {};
             sizesList.forEach(sz => {
                 sizesConfigData[sz] = { active: false, barcode_mode: 'auto', manual_barcode: '', existing: false, variant_code: '' };
@@ -895,7 +947,9 @@ function clearWizard() {
     document.getElementById('style-pclass').value = 'FW';
     document.getElementById('style-group').value = 'Footwear';
 
-    sizesList = ['6', '7', '8', '9', '10', '11', '12'];
+    const currentGrpId = document.getElementById('size-group-selector')?.value;
+    const currentGrp = dynamicSizeGroups.find(g => g.id === currentGrpId);
+    sizesList = currentGrp ? [...currentGrp.sizes] : ['6', '7', '8', '9', '10', '11', '12'];
     sizesConfigData = {};
     sizesList.forEach(sz => {
         sizesConfigData[sz] = { active: false, barcode_mode: 'auto', manual_barcode: '', existing: false, variant_code: '' };

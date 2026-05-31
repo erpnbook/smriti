@@ -179,6 +179,13 @@ def extend_bootinfo(bootinfo):
     """
     Main bootinfo extension hook registered in hooks.py.
     Applies branding for ALL users, then handles role-based routing.
+
+    NOTE ON PORT ROUTING:
+    - Port 8080: Standard ERPNext Desk. No forced redirection for managers.
+                 They land on the ERPNext home workspace as normal.
+    - Port 9000: SMRITI Retail POS. Nginx root block redirects / → /billing.
+                 Only Cashiers who access port 8080 are redirected to /billing
+                 via bootinfo.default_route below (they have no desk access anyway).
     """
 
     # ── Always apply branding ──────────────────────────────────────────────────
@@ -188,14 +195,16 @@ def extend_bootinfo(bootinfo):
     user = frappe.session.user
     roles = frappe.get_roles(user)
 
-    # Cashier redirect:
+    # Cashier redirect: Cashiers have no ERPNext desk access,
+    # so redirect them to the standalone billing terminal on either port.
     if "SMRITI Cashier" in roles:
         bootinfo.default_route = "/billing"
 
-    # Store Manager redirect:
-    elif "SMRITI Store Manager" in roles:
-        bootinfo.default_route = "/desk"
+    # Store Managers and System Managers: let ERPNext desk handle routing normally.
+    # On port 8080 they land on the standard ERPNext workspace.
+    # On port 9000, Nginx redirects root → /billing regardless.
 
 
 def boot_session(bootinfo):
     extend_bootinfo(bootinfo)
+

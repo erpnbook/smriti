@@ -359,3 +359,207 @@ def save_supplier_detail(supplier_name, supplier_type, supplier_group, mobile_no
         "mobile_no": doc.mobile_no
     }
 
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Configuration Portal APIs
+# ──────────────────────────────────────────────────────────────────────────────
+
+_DEFAULT_SIZE_GROUPS = [
+    {"id": "footwear", "label": "Footwear (Adult)",  "sizes": ["36","37","38","39","40","41","42"]},
+    {"id": "garment",  "label": "Garment (Standard)","sizes": ["XS","S","M","L","XL","XXL","3XL"]},
+    {"id": "kids",     "label": "Kids Footwear",      "sizes": ["18","20","22","24","26","28","30"]},
+]
+
+_DEFAULT_STATE_TAX_MAP = [
+    {"state_code": "27", "state_name": "Maharashtra", "tax_type": "intrastate"},
+    {"state_code": "29", "state_name": "Karnataka",   "tax_type": "interstate"},
+]
+
+
+def _check_config_permission():
+    """Only SMRITI Store Manager and System Manager can edit configurations."""
+    if frappe.session.user == "Administrator":
+        return
+    roles = frappe.get_roles(frappe.session.user)
+    if not ({"SMRITI Store Manager", "System Manager"} & set(roles)):
+        frappe.throw(
+            _("Access Denied: Only Store Managers and System Managers can edit master configurations."),
+            frappe.PermissionError
+        )
+
+
+# ── Size Groups ──────────────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_size_groups():
+    """Returns configured size groups for footwear/garment matrix presets."""
+    raw = frappe.db.get_default("smriti_size_groups")
+    if raw:
+        try:
+            return frappe.parse_json(raw)
+        except Exception:
+            pass
+    return _DEFAULT_SIZE_GROUPS
+
+
+@frappe.whitelist()
+def save_size_groups(size_groups):
+    """Saves named size groups to global defaults."""
+    _check_config_permission()
+    data = frappe.parse_json(size_groups) if isinstance(size_groups, str) else size_groups
+    frappe.db.set_default("smriti_size_groups", frappe.as_json(data))
+    frappe.db.commit()
+    return {"success": True, "count": len(data)}
+
+
+# ── Destinationwise (State) Tax Mappings ────────────────────────────────────
+
+@frappe.whitelist()
+def get_destinationwise_taxes():
+    """Returns state-code to tax-type mappings for automatic invoice routing."""
+    raw = frappe.db.get_default("smriti_destinationwise_taxes")
+    if raw:
+        try:
+            return frappe.parse_json(raw)
+        except Exception:
+            pass
+    return _DEFAULT_STATE_TAX_MAP
+
+
+@frappe.whitelist()
+def save_destinationwise_taxes(mappings):
+    """Saves state→tax type mappings to global defaults."""
+    _check_config_permission()
+    data = frappe.parse_json(mappings) if isinstance(mappings, str) else mappings
+    frappe.db.set_default("smriti_destinationwise_taxes", frappe.as_json(data))
+    frappe.db.commit()
+    return {"success": True, "count": len(data)}
+
+
+# ── Item Tax Templates ───────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_item_tax_templates():
+    """Returns all Item Tax Templates with their tax account details."""
+    company = (
+        frappe.defaults.get_user_default("company")
+        or frappe.db.get_value("Company", {}, "name")
+    )
+    templates = frappe.get_all(
+        "Item Tax Template",
+        filters={"company": company} if company else {},
+        fields=["name", "title", "company", "gst_rate", "gst_treatment"],
+        order_by="creation asc"
+    )
+    for t in templates:
+        t["taxes"] = frappe.get_all(
+            "Item Tax Template Detail",
+            filters={"parent": t["name"]},
+            fields=["tax_type", "tax_rate"],
+            order_by="idx asc"
+        )
+    return templates
+
+
+@frappe.whitelist()
+def create_item_tax_template(title, gst_rate, taxes):
+    """
+    Creates a new Item Tax Template.
+
+    taxes: list of {tax_type: account_name, tax_rate: float}
+    """
+    _check_config_permission()
+    gst_rate = flt(gst_rate)
+    taxes_data = frappe.parse_json(taxes) if isinstance(taxes, str) else taxes
+    company = (
+        frappe.defaults.get_user_default("company")
+        or frappe.db.get_value("Company", {}, "name")
+    )
+
+    # Check if already exists
+    full_title = f"{title} - {company}"
+    existing = frappe.db.get_value("Item Tax Template", {"title": full_title, "company": company}, "name")
+    if existing:
+        frappe.throw(_(f"Item Tax Template '{full_title}' already exists. Edit it directly in ERPNext."))
+
+    doc = frappe.new_doc("Item Tax Template")
+    doc.title = full_title
+    doc.company = company
+    doc.gst_rate = gst_rate
+    doc.gst_treatment = "Taxable"
+    for row in taxes_data:
+        if row.get("tax_type") and frappe.db.exists("Account", row["tax_type"]):
+            doc.append("taxes", {
+                "tax_type": row["tax_type"],
+                "tax_rate": flt(row.get("tax_rate", 0))
+            })
+
+    doc.insert(ignore_permissions=True)
+    frappe.db.commit()
+    return {"name": doc.name, "title": doc.title}
+
+
+# ── Brand Management ─────────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_brands():
+    """Returns all Brands registered in ERPNext."""
+    brands = frappe.get_all(
+        "Brand",
+        fields=["name", "brand", "brand_description", "image"],
+        order_by="brand asc"
+    )
+    return brands
+
+
+@frappe.whitelist()
+def create_brand(brand_name, brand_description=None):
+    """Creates a new Brand document in ERPNext."""
+    _check_config_permission()
+    brand_name = (brand_name or "").strip()
+    if not brand_name:
+        frappe.throw(_("Brand name is required."))
+
+    if frappe.db.exists("Brand", brand_name):
+        frappe.throw(_(f"Brand '{brand_name}' already exists."))
+
+    doc = frappe.new_doc("Brand")
+    doc.brand = brand_name
+    if brand_description:
+        doc.brand_description = brand_description
+    doc.insert(ignore_permissions=True)
+    frappe.db.commit()
+    return {"name": doc.name, "brand": doc.brand}
+
+
+@frappe.whitelist()
+def delete_brand(brand_name):
+    """Deletes a Brand document. Fails if items are linked to it."""
+    _check_config_permission()
+    if not frappe.db.exists("Brand", brand_name):
+        frappe.throw(_(f"Brand '{brand_name}' not found."))
+    linked = frappe.db.count("Item", {"brand": brand_name})
+    if linked:
+        frappe.throw(_(f"Cannot delete brand '{brand_name}': {linked} item(s) are linked to it."))
+    frappe.delete_doc("Brand", brand_name, ignore_permissions=True)
+    frappe.db.commit()
+    return {"success": True}
+
+
+# ── Tax Accounts (for template builder) ─────────────────────────────────────
+
+@frappe.whitelist()
+def get_tax_accounts():
+    """Returns CGST, SGST, IGST tax accounts for the default company."""
+    company = (
+        frappe.defaults.get_user_default("company")
+        or frappe.db.get_value("Company", {}, "name")
+    )
+    accounts = frappe.get_all(
+        "Account",
+        filters={"company": company, "account_type": "Tax", "is_group": 0},
+        fields=["name", "account_name"],
+        order_by="account_name asc"
+    )
+    return accounts

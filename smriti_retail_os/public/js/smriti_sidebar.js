@@ -51,6 +51,8 @@ SMRITI.renderSidebar = function(active_page) {
              url:"/app/smriti-loyalty"},
             {id:"backup", icon:"🔄", label:"Backup & Restore",
              url:"/app/smriti-backup"},
+            {id:"configure", icon:"⚙️", label:"Config Portal",
+             url:"/configure"},
             {id:"desk",    icon:"🏠", label:"Control Center",
              url:"/app/smriti-desk"}
         ] : [])

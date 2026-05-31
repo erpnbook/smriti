@@ -419,6 +419,17 @@ def setup_smriti_retail_os():
                 "insert_after": "custom_shipping_address_text",
                 "module": "SMRITI Retail OS"
             }
+        ],
+        "Sales Invoice": [
+            {
+                "fieldname": "custom_sizewise_json",
+                "label": "Sizewise Matrix JSON",
+                "fieldtype": "Long Text",
+                "insert_after": "remarks",
+                "hidden": 1,
+                "no_copy": 1,
+                "module": "SMRITI Retail OS"
+            }
         ]
     }
 

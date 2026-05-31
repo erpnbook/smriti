@@ -105,16 +105,17 @@ doctype_js = {
 # Home Pages
 # ----------
 
-# application home page (will override Website Settings)
-home_page = "index"
+# application home page — use Frappe default (login screen)
+# Port 9000 Nginx block handles the SMRITI POS redirect to /billing
+home_page = "login"
 
 # website user home page (by Role)
-# Note: role_home_page is for non-desk/website users.
-# Desk users are handled via bootinfo.default_route in boot.py
+# Desk users (System Manager, Store Manager) land on ERPNext /app on port 8080.
+# Cashiers land on SMRITI Billing terminal. Port 9000 root redirects to /billing via Nginx.
 role_home_page = {
     "SMRITI Cashier": "billing",          # → Standalone billing terminal at /billing
-    "SMRITI Store Manager": "desk",       # → Standalone Control Center /desk
-    "System Manager": "desk"              # → Standalone Control Center /desk
+    "SMRITI Store Manager": "app",        # → ERPNext Desk on port 8080
+    "System Manager": "app"               # → ERPNext Desk on port 8080
 }
 
 # Generators

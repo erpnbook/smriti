@@ -46,6 +46,7 @@ SMRITI.sidebarSchema = [
         items: [
             { id: 'billing', label: '├─ POS Billing', url: '/billing' },
             { id: 'sales_invoices', label: '├─ Billing Invoices', url: '/sales_invoices' },
+            { id: 'sizewise_invoice', label: '├─ Sizewise Tax Invoice', url: '/sizewise_invoice' },
             { id: 'sales_return', label: '├─ Sales Return', url: '#' },
             { id: 'delivery_challan', label: '└─ Delivery Challan', url: '#' }
         ]
@@ -114,6 +115,7 @@ SMRITI.sidebarSchema = [
         label: 'Administration',
         items: [
             { id: 'shift', label: '├─ Shifts / Register', url: '/shift' },
+            { id: 'configure', label: '├─ Config Portal', url: '/configure' },
             { id: 'backup', label: '└─ Backup & Restore', url: '#' }
         ]
     },
