@@ -1089,6 +1089,8 @@ const COL_ALIASES = {
     description: ['SUB - CATO', 'SUB-CATO', 'SUB CATO', 'DESCRIPTION', 'SUB-CATEGORY', 'SUB CATEGORY', 'DESC', 'ITEM DESCRIPTION', 'ITEM NAME'],
     mrp:         ['MRP', 'PLANNED MRP', 'SELLING PRICE', 'RATE', 'PRICE'],
     total_qty:   ['TTL QTY', 'TOTAL QTY', 'TOTAL', 'TTL', 'QTY'],
+    hsn:         ['HSN', 'HSN CODE', 'HSN/SAC', 'HSN_CODE', 'GST HSN CODE'],
+    gst:         ['GST', 'GST %', 'GST PERCENT', 'GST PERCENTAGE', 'PRODUCT TAX', 'TAX', 'TAX %'],
 };
 
 // Known size patterns — numeric sizes OR named sizes
@@ -1224,6 +1226,12 @@ function buildParsedStyles() {
         const mrpStr   = (mc.mrp !== undefined ? cells[mc.mrp] : '0').trim();
         const mrp      = parseFloat(mrpStr.replace(/[^0-9.]/g, '')) || 0;
 
+        const hsn      = (mc.hsn !== undefined ? cells[mc.hsn] : '').trim();
+        
+        // Safely parse GST percentage (supporting floats, 0%, and string values)
+        const parsedGst = (mc.gst !== undefined ? parseFloat(cells[mc.gst]) : 18);
+        const gst      = String(isNaN(parsedGst) ? 18 : parsedGst);
+
         if (!article) return; // skip rows without article
 
         // Build size configuration from size columns
@@ -1251,8 +1259,8 @@ function buildParsedStyles() {
                 item_group: category || 'Products',
                 cost_price: 0,
                 mrp: mrp,
-                gst_percentage: '18',
-                hsn_code: '',
+                gst_percentage: gst || '18',
+                hsn_code: hsn,
                 gender: 'UNISEX',
                 purchase_class: 'FW',
                 vendor_code: '',
@@ -1282,6 +1290,8 @@ function renderColumnMap() {
         description: '📝 Description',
         mrp: '💰 MRP',
         total_qty: '📊 Total Qty',
+        hsn: '🏷️ HSN Code',
+        gst: '📈 GST %',
     };
 
     for (const [key, idx] of Object.entries(mc)) {

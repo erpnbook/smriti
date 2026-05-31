@@ -265,9 +265,11 @@ def import_item_master(rows_json):
                 _safe_set(variant, "custom_gst_percentage", gst_pct)
                 if image_link:
                     variant.image = image_link
-                if hsn_code:
-                    variant.gst_hsn_code = hsn_code
-                    _safe_set(variant, "gn_hsn_code", hsn_code)
+                resolved_hsn = _resolve_hsn_code(hsn_code)
+                if resolved_hsn:
+                    _ensure_hsn_code(resolved_hsn)
+                    variant.gst_hsn_code = resolved_hsn
+                    _safe_set(variant, "gn_hsn_code", resolved_hsn)
 
                 variant.append("attributes", {"attribute": "Color", "attribute_value": color})
                 variant.append("attributes", {"attribute": "Size",  "attribute_value": str(size)})
@@ -324,6 +326,55 @@ def _safe_set(doc, fieldname, value):
         doc.set(fieldname, value)
     except Exception:
         pass
+
+
+def _ensure_hsn_code(hsn_code):
+    """Create GST HSN Code record if it doesn't exist yet."""
+    if not hsn_code:
+        return
+    hsn_str = str(hsn_code).strip()
+    if not hsn_str:
+        return
+    try:
+        if not frappe.db.exists("GST HSN Code", hsn_str):
+            hsn_doc = frappe.new_doc("GST HSN Code")
+            hsn_doc.name = hsn_str
+            hsn_doc.hsn_code = hsn_str
+            hsn_doc.description = "Auto-created HSN"
+            hsn_doc.insert(ignore_permissions=True)
+            frappe.db.commit()
+    except Exception as e:
+        frappe.log_error(f"HSN auto-create failed for {hsn_str}: {e}")
+
+
+def _resolve_hsn_code(hsn_code):
+    """Clean, truncate to 6 digits, and determine if it can be safely set based on GST validation settings.
+    Returns the resolved HSN string, or None if it should be skipped.
+    """
+    if not hsn_code:
+        return None
+    hsn_str = str(hsn_code).strip()
+    if not hsn_str:
+        return None
+
+    # Take the first 6 digits if the pasted HSN code is longer
+    if len(hsn_str) > 6:
+        hsn_str = hsn_str[:6]
+
+    try:
+        # Check if validation is enabled in GST Settings
+        validate_hsn_code = frappe.db.get_single_value("GST Settings", "validate_hsn_code")
+        if not validate_hsn_code:
+            return hsn_str  # validation is OFF: safe to set any HSN code length
+
+        # Validation is ON: only set if length is exactly 6 digits
+        if len(hsn_str) == 6:
+            return hsn_str
+
+        return None  # Skip setting to avoid ERPNext/India Compliance validation crash
+    except Exception:
+        # Fallback: if GST Settings is missing/fails, allow setting the processed HSN
+        return hsn_str
 
 
 def _ensure_master_value(doctype_name, value):
@@ -409,16 +460,11 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
 
     if brand:
         item.brand = brand
-    if hsn_code:
-        if not frappe.db.exists("GST HSN Code", hsn_code):
-            hsn_doc = frappe.new_doc("GST HSN Code")
-            hsn_doc.name = hsn_code
-            hsn_doc.hsn_code = hsn_code
-            hsn_doc.description = "Auto-created HSN"
-            hsn_doc.insert(ignore_permissions=True)
-            frappe.db.commit()
-        item.gst_hsn_code = hsn_code
-        _safe_set(item, "gn_hsn_code", hsn_code)
+    resolved_hsn = _resolve_hsn_code(hsn_code)
+    if resolved_hsn:
+        _ensure_hsn_code(resolved_hsn)
+        item.gst_hsn_code = resolved_hsn
+        _safe_set(item, "gn_hsn_code", resolved_hsn)
     if image_link:
         item.image = image_link
 
@@ -653,8 +699,10 @@ def create_style_with_variants(base_details, sizes_config):
         _safe_set(template, "custom_gst_percentage", gst_pct)
         if brand:
             template.brand = brand
-        if hsn_code:
-            template.gst_hsn_code = hsn_code
+        resolved_hsn = _resolve_hsn_code(hsn_code)
+        if resolved_hsn:
+            _ensure_hsn_code(resolved_hsn)
+            template.gst_hsn_code = resolved_hsn
         template.save(ignore_permissions=True)
         frappe.db.commit()
 
@@ -709,9 +757,11 @@ def create_style_with_variants(base_details, sizes_config):
             _safe_set(var, "custom_is_retail_item", 1)
             _safe_set(var, "custom_mrp", mrp)
             _safe_set(var, "custom_gst_percentage", gst_pct)
-            if hsn_code:
-                var.gst_hsn_code = hsn_code
-                _safe_set(var, "gn_hsn_code", hsn_code)
+            resolved_hsn = _resolve_hsn_code(hsn_code)
+            if resolved_hsn:
+                _ensure_hsn_code(resolved_hsn)
+                var.gst_hsn_code = resolved_hsn
+                _safe_set(var, "gn_hsn_code", resolved_hsn)
                 
             var.append("attributes", {"attribute": "Color", "attribute_value": color})
             var.append("attributes", {"attribute": "Size", "attribute_value": size})
@@ -724,9 +774,11 @@ def create_style_with_variants(base_details, sizes_config):
             var.item_name = f"{item_name} ({color} / {size})"
             _safe_set(var, "custom_mrp", mrp)
             _safe_set(var, "custom_gst_percentage", gst_pct)
-            if hsn_code:
-                var.gst_hsn_code = hsn_code
-                _safe_set(var, "gn_hsn_code", hsn_code)
+            resolved_hsn = _resolve_hsn_code(hsn_code)
+            if resolved_hsn:
+                _ensure_hsn_code(resolved_hsn)
+                var.gst_hsn_code = resolved_hsn
+                _safe_set(var, "gn_hsn_code", resolved_hsn)
             var.save(ignore_permissions=True)
             updated_count += 1
             
@@ -928,6 +980,10 @@ def import_pivot_item_master(styles_json):
                 template.item_name = item_name
                 _safe_set(template, "custom_mrp", mrp)
                 _safe_set(template, "custom_gst_percentage", gst_pct)
+                resolved_hsn = _resolve_hsn_code(hsn_code)
+                if resolved_hsn:
+                    _ensure_hsn_code(resolved_hsn)
+                    template.gst_hsn_code = resolved_hsn
                 template.save(ignore_permissions=True)
 
             # Process variant sizes
@@ -961,9 +1017,11 @@ def import_pivot_item_master(styles_json):
                     _safe_set(var, "custom_is_retail_item", 1)
                     _safe_set(var, "custom_mrp", mrp)
                     _safe_set(var, "custom_gst_percentage", gst_pct)
-                    if hsn_code:
-                        var.gst_hsn_code = hsn_code
-                        _safe_set(var, "gn_hsn_code", hsn_code)
+                    resolved_hsn = _resolve_hsn_code(hsn_code)
+                    if resolved_hsn:
+                        _ensure_hsn_code(resolved_hsn)
+                        var.gst_hsn_code = resolved_hsn
+                        _safe_set(var, "gn_hsn_code", resolved_hsn)
                     
                     var.append("attributes", {"attribute": "Color", "attribute_value": color})
                     var.append("attributes", {"attribute": "Size", "attribute_value": size})
@@ -976,6 +1034,11 @@ def import_pivot_item_master(styles_json):
                     var.item_name = f"{item_name} ({color} / {size})"
                     _safe_set(var, "custom_mrp", mrp)
                     _safe_set(var, "custom_gst_percentage", gst_pct)
+                    resolved_hsn = _resolve_hsn_code(hsn_code)
+                    if resolved_hsn:
+                        _ensure_hsn_code(resolved_hsn)
+                        var.gst_hsn_code = resolved_hsn
+                        _safe_set(var, "gn_hsn_code", resolved_hsn)
                     var.save(ignore_permissions=True)
                     updated_count += 1
                     
