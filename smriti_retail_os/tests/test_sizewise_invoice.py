@@ -17,7 +17,8 @@ from smriti_retail_os.sizewise_invoice_api import (
     submit_sizewise_invoice,
     get_sizewise_invoice,
     list_sizewise_invoices,
-    cancel_sizewise_invoice
+    cancel_sizewise_invoice,
+    get_item_details_by_article
 )
 
 class TestSizewiseInvoiceAPI(unittest.TestCase):
@@ -71,14 +72,14 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
             "18% GST", 18.0, [(self.igst_account, 18.0)]
         )
 
-        # Create valid GST HSN Code record for India Compliance enforcement
-        self.hsn_code = frappe.db.exists("GST HSN Code", "998311") or frappe.db.get_value("GST HSN Code", {}, "name")
-        if not self.hsn_code:
-            hsn = frappe.new_doc("GST HSN Code")
-            hsn.hsn_code = "998311"
-            hsn.description = "Test Services"
-            hsn.insert(ignore_permissions=True)
-            self.hsn_code = hsn.name
+        # Create valid GST HSN Code records for India Compliance enforcement
+        for hsn_code, hsn_desc in [("998311", "Test Services"), ("640399", "Footwear - Other")]:
+            if not frappe.db.exists("GST HSN Code", hsn_code):
+                hsn = frappe.new_doc("GST HSN Code")
+                hsn.hsn_code = hsn_code
+                hsn.description = hsn_desc
+                hsn.insert(ignore_permissions=True)
+        self.hsn_code = "640399"
 
         # Set user default company
         frappe.defaults.set_user_default("company", self.company, frappe.session.user)
@@ -187,7 +188,7 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
                     "mrp": 1000.0,
                     "rate": 800.0,
                     "gst_pct": 12.0,
-                    "hsn_code": "6403",
+                    "hsn_code": "640399",
                     "item_code": "TEST-ART-BLACK"
                 }
             ]
@@ -246,7 +247,7 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
                     "mrp": 1000.0,
                     "rate": 900.0,
                     "gst_pct": 18.0,
-                    "hsn_code": "6403",
+                    "hsn_code": "640399",
                     "item_code": "TEST-ART-18-BLACK"
                 }
             ]
@@ -286,7 +287,7 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
                     "mrp": 1000.0,
                     "rate": 800.0,
                     "gst_pct": 12.0,
-                    "hsn_code": "6403",
+                    "hsn_code": "640399",
                     "item_code": "TEST-ART-BLACK"
                 }
             ]
@@ -305,6 +306,21 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         self.assertEqual(loaded.get("rows")[0].get("article"), "TEST-ART")
         self.assertEqual(loaded.get("rows")[0].get("sizes").get("36"), 2)
         self.assertEqual(loaded.get("rows")[0].get("sizes").get("37"), 3)
+
+    def test_get_item_details_by_article(self):
+        """Tests that get_item_details_by_article works cleanly for exact, fuzzy, and variant matching."""
+        # 1. Exact match on parent item
+        res = get_item_details_by_article("TEST-ART-BLACK")
+        self.assertEqual(res.get("article"), "TEST-ART-BLACK")
+        self.assertEqual(res.get("gst_pct"), 12.0)
+        
+        # 2. Fuzzy match
+        res_fuzzy = get_item_details_by_article("TEST-ART")
+        self.assertIsNotNone(res_fuzzy.get("article"))
+        self.assertIn("TEST-ART", res_fuzzy.get("article"))
+        
+        # 3. Blank check
+        self.assertEqual(get_item_details_by_article(""), {})
 
     def test_security_guards_anonymous_rejection(self):
         """Tests that non-billing users and Guest sessions are rejected with a PermissionError."""

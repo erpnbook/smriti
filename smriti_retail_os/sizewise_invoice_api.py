@@ -153,6 +153,84 @@ def search_items(query=""):
 
 
 @frappe.whitelist()
+def get_item_details_by_article(article, color=""):
+    """
+    Looks up an article and optional color in the Item Master.
+    Returns:
+    {
+        "article": "20016",
+        "color": "BLACK",
+        "category": "SANDAL",
+        "sub_category": "LASTIC PATTA",
+        "brand": "SMRITI",
+        "hsn_code": "64041990",
+        "mrp": 1899,
+        "rate": 1610.17,
+        "gst_pct": 18
+    }
+    """
+    if not article:
+        return {}
+
+    # Try parent item first
+    parent = frappe.db.get_value(
+        "Item",
+        article,
+        ["name", "item_name", "item_group", "brand", "gst_hsn_code", "custom_sub_category", "custom_mrp", "custom_gst_percentage", "valuation_rate"],
+        as_dict=True
+    )
+
+    if not parent:
+        # Fuzzy match by article name or code
+        candidate = frappe.db.get_value(
+            "Item",
+            {"item_code": ["like", f"%{article}%"], "disabled": 0},
+            ["name", "item_name", "item_group", "brand", "gst_hsn_code", "custom_sub_category", "custom_mrp", "custom_gst_percentage", "valuation_rate"],
+            as_dict=True
+        )
+        if candidate:
+            parent = candidate
+
+    if not parent:
+        return {}
+
+    res = {
+        "article": parent.name,
+        "color": color,
+        "category": parent.item_group or "",
+        "sub_category": parent.custom_sub_category or "",
+        "brand": parent.brand or "",
+        "hsn_code": parent.gst_hsn_code or "",
+        "mrp": flt(parent.custom_mrp or parent.valuation_rate or 0),
+        "gst_pct": flt(parent.custom_gst_percentage or 12),
+        "rate": 0
+    }
+
+    # Try to find a variant matching the color to get precise pricing/attributes
+    if color:
+        variant = frappe.db.get_value(
+            "Item",
+            {"variant_of": parent.name, "item_code": ["like", f"%{color}%"], "disabled": 0},
+            ["name", "custom_mrp", "custom_gst_percentage", "gst_hsn_code"],
+            as_dict=True
+        )
+        if variant:
+            if variant.custom_mrp:
+                res["mrp"] = flt(variant.custom_mrp)
+            if variant.custom_gst_percentage:
+                res["gst_pct"] = flt(variant.custom_gst_percentage)
+            if variant.gst_hsn_code:
+                res["hsn_code"] = variant.gst_hsn_code
+
+    # Auto-calculate tax-exclusive Rate from MRP and GST% if MRP exists
+    if res["mrp"] > 0:
+        res["rate"] = flt(res["mrp"] / (1 + (res["gst_pct"] / 100.0)), 2)
+
+    return res
+
+
+
+@frappe.whitelist()
 def get_states_list():
     """Returns list of Indian states with GST state codes."""
     return [

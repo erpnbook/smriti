@@ -13,6 +13,7 @@
 <title>SMRITI – Sizewise Tax Invoice</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
 /* ── Reset & Variables ────────────────────────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -401,6 +402,61 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 @media print {
     #print-invoice-header { display:block; }
 }
+
+/* ── Excel Paste & OCR Styles ──────────────────────────────── */
+.paste-textarea {
+    width: 100%; height: 180px; background: rgba(15, 23, 42, 0.4);
+    border: 1px solid var(--border2); border-radius: var(--radius-sm);
+    color: var(--text); padding: 12px; font-family: monospace; font-size: 0.85rem;
+    resize: none; outline: none; transition: border-color 0.25s, box-shadow 0.25s;
+}
+.paste-textarea:focus {
+    border-color: var(--primary-lt); box-shadow: var(--glow);
+}
+.ocr-dropzone {
+    border: 2px dashed rgba(99, 102, 241, 0.4); border-radius: var(--radius);
+    padding: 30px; text-align: center; background: rgba(99, 102, 241, 0.03);
+    cursor: pointer; transition: background 0.25s, border-color 0.25s;
+    margin-bottom: 16px;
+}
+.ocr-dropzone:hover, .ocr-dropzone.dragover {
+    background: rgba(99, 102, 241, 0.07); border-color: var(--primary);
+}
+.ocr-dropzone span.icon {
+    font-size: 3rem; color: var(--primary-lt); display: block; margin-bottom: 8px;
+}
+.ocr-progress-wrap {
+    margin-bottom: 16px; display: none;
+}
+.ocr-progress-text {
+    font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between;
+}
+.ocr-progress-bar {
+    height: 6px; background: var(--card2); border-radius: 3px; overflow: hidden;
+}
+.ocr-progress-fill {
+    height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--primary-lt));
+    transition: width 0.2s;
+}
+.review-matrix-container {
+    max-height: 240px; overflow-y: auto; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); margin-bottom: 16px; display: none;
+}
+.review-table {
+    width: 100%; border-collapse: collapse; font-size: 0.78rem;
+}
+.review-table th, .review-table td {
+    padding: 6px 10px; border-bottom: 1px solid var(--border); text-align: left;
+}
+.review-table th {
+    background: var(--card2); color: var(--muted); position: sticky; top: 0; z-index: 10;
+}
+.review-table td input {
+    width: 100%; background: transparent; border: none; outline: none; color: var(--text);
+}
+.review-table td input.qty {
+    text-align: center; font-weight: 600; color: var(--primary-lt);
+}
 </style>
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
 </head>
@@ -648,8 +704,11 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
                         <span style="color:var(--muted);font-size:0.78rem;font-weight:400;" id="grid-row-count">— 0 rows</span>
                     </div>
                     <div style="display:flex;gap:8px;">
-                        <button class="btn btn-ghost" style="padding:5px 12px;font-size:0.8rem;" onclick="pasteFromClipboard()" title="Paste tab-delimited data from Excel/Sheets">
-                            <span class="material-symbols-outlined" style="font-size:15px;">content_paste</span> Paste Grid
+                        <button class="btn btn-ghost" style="padding:5px 12px;font-size:0.8rem;" onclick="openModal('modal-excel-paste')" title="Paste tabular data from Excel/Sheets">
+                            <span class="material-symbols-outlined" style="font-size:15px;">content_paste</span> Paste Excel
+                        </button>
+                        <button class="btn btn-ghost" style="padding:5px 12px;font-size:0.8rem;" onclick="openModal('modal-ocr-upload')" title="Upload screenshot to extract items using OCR">
+                            <span class="material-symbols-outlined" style="font-size:15px;">photo_camera</span> OCR Scan
                         </button>
                         <button class="btn btn-primary" style="padding:5px 14px;font-size:0.8rem;" onclick="addRow()">
                             <span class="material-symbols-outlined" style="font-size:15px;">add</span> Add Row
@@ -849,6 +908,88 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
         </div>
     </div>
 </div>
+
+<!-- ── Excel Paste Modal ───────────────────────────────────── -->
+<div class="modal-backdrop" id="modal-excel-paste">
+    <div class="modal" style="max-width:600px;">
+        <div class="modal-title">
+            📋 Smart Excel Grid Importer
+            <button class="modal-close" onclick="closeModal('modal-excel-paste')">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label">Paste tabular data directly from Excel or Google Sheets (Ctrl+V):</label>
+            <textarea class="paste-textarea" id="excel-paste-text" placeholder="Article&#9;Color&#9;36&#9;37&#9;38&#9;39&#9;40&#9;41&#9;42&#9;MRP&#10;20016&#9;BLACK&#9;0&#9;9&#9;9&#9;9&#9;9&#9;9&#9;9&#9;1899"></textarea>
+        </div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:16px;line-height:1.4;">
+            💡 **Smart Resolution enabled:** If you paste columns without Article numbers or Colors, they will be loaded into the grid with blank fields. Typing the Article code later inside the grid will instantly trigger the Item Master to populate base rates, HSN, and GST rates!
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal('modal-excel-paste')">Cancel</button>
+            <button class="btn btn-primary" onclick="importExcelFromTextArea()">Import & Auto-Complete</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── OCR Screenshot Upload Modal ────────────────────────── -->
+<div class="modal-backdrop" id="modal-ocr-upload">
+    <div class="modal" style="max-width:700px;width:95%;">
+        <div class="modal-title">
+            📷 OCR Screenshot Grid Extractor
+            <button class="modal-close" onclick="closeModal('modal-ocr-upload')">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        
+        <!-- Drag and Drop Dropzone -->
+        <div class="ocr-dropzone" id="ocr-dropzone" onclick="document.getElementById('ocr-file-input').click()">
+            <span class="material-symbols-outlined icon">cloud_upload</span>
+            <strong>Drag & Drop invoice screenshot here</strong>
+            <div style="color:var(--muted);font-size:0.75rem;margin-top:4px;">or click to browse from local computer</div>
+            <input type="file" id="ocr-file-input" accept="image/*" style="display:none;" onchange="handleOcrFileSelect(event)">
+        </div>
+
+        <!-- Progress bar -->
+        <div class="ocr-progress-wrap" id="ocr-progress-wrap">
+            <div class="ocr-progress-text">
+                <span id="ocr-progress-label">Ready</span>
+                <span id="ocr-progress-pct">0%</span>
+            </div>
+            <div class="ocr-progress-bar">
+                <div class="ocr-progress-fill" id="ocr-progress-fill"></div>
+            </div>
+        </div>
+
+        <!-- Review Grid -->
+        <div class="review-matrix-container" id="ocr-review-container">
+            <div style="font-size:0.75rem;font-weight:600;color:var(--primary-lt);margin-bottom:6px;padding:0 8px;">
+                🔍 Review Extracted Grid (You can edit values directly before applying):
+            </div>
+            <table class="review-table">
+                <thead>
+                    <tr>
+                        <th style="width:110px;">Article</th>
+                        <th style="width:100px;">Color</th>
+                        <th style="width:110px;">Category</th>
+                        <th>Sizes Quantity Grid</th>
+                    </tr>
+                </thead>
+                <tbody id="ocr-review-tbody"></tbody>
+            </table>
+        </div>
+
+        <div style="font-size:0.72rem;color:var(--muted);margin-bottom:16px;line-height:1.4;">
+            🤖 **Client-Side AI Extraction**: Runs locally in your browser using Web Workers. For best results, use high-contrast images or direct grid screenshots. Auto-population matches extracted data with your active Item Master in real-time.
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeModal('modal-ocr-upload')">Cancel</button>
+            <button class="btn btn-primary" id="ocr-apply-btn" disabled onclick="applyOcrReviewToGrid()">Apply & Merge Grid</button>
+        </div>
+    </div>
+</div>
+
 
 <div id="toast-container"></div>
 
@@ -1086,6 +1227,7 @@ function selectArticle(rid, item, inputEl) {
     if (dd) dd.classList.remove('open');
     
     recalculate();
+    handleArticleOrColorChange(rid);
 }
 
 document.addEventListener('click', e => {
@@ -1239,7 +1381,7 @@ function appendRowToDOM(row) {
         <td class="sticky-col sticky-1">
             <div class="search-wrap">
                 <input class="cell-input article-input" style="min-width:100px;" placeholder="Article/Style…" value="${esc(row.article)}" autocomplete="off"
-                    oninput="searchArticles(${row._id}, this.value, this)"
+                    oninput="searchArticles(${row._id}, this.value, this); updateRowField(${row._id}, 'article', this.value)"
                     onfocus="searchArticles(${row._id}, this.value, this)">
                 <div class="search-dropdown" id="article-dropdown-${row._id}"></div>
             </div>
@@ -1320,6 +1462,11 @@ function updateRowField(rid, field, val) {
                 if (rateInput) rateInput.value = rate || '';
             }
         }
+    }
+
+    // Auto-population helper on article/color lookup
+    if (field === 'article' || field === 'color') {
+        handleArticleOrColorChange(rid);
     }
 }
 
@@ -1487,14 +1634,71 @@ function numberToWords(n) {
     return w + ' Only';
 }
 
-// ── Paste from Clipboard ─────────────────────────────────────
-async function pasteFromClipboard() {
-    try {
-        const text = await navigator.clipboard.readText();
-        if (!text) { toast('Clipboard is empty', 'error'); return; }
+// ── Auto-Population from Item Master on Article/Color Lookup ──────────
+let _lookupTimers = {};
+async function handleArticleOrColorChange(rid) {
+    clearTimeout(_lookupTimers[rid]);
+    _lookupTimers[rid] = setTimeout(async () => {
+        const row = state.rows.find(r => r._id === rid);
+        if (!row || !row.article) return;
         
+        try {
+            const details = await api('smriti_retail_os.sizewise_invoice_api.get_item_details_by_article', {
+                article: row.article,
+                color: row.color
+            });
+            
+            if (details && details.article) {
+                // Update row state
+                row.category     = details.category     || row.category;
+                row.sub_category = details.sub_category || row.sub_category;
+                row.hsn_code     = details.hsn_code     || row.hsn_code;
+                row.mrp          = details.mrp          || row.mrp;
+                row.gst_pct      = details.gst_pct      || row.gst_pct;
+                row.rate         = details.rate         || row.rate;
+                
+                // Update input values in the DOM
+                const tr = document.getElementById(`row-${rid}`);
+                if (tr) {
+                    const catInput = tr.querySelector('input[placeholder="Category…"]');
+                    if (catInput) catInput.value = row.category;
+                    
+                    const subInput = tr.querySelector('input[placeholder="Sub-Cat…"]');
+                    if (subInput) subInput.value = row.sub_category;
+                    
+                    const hsnInput = tr.querySelector('input[placeholder="HSN…"]');
+                    if (hsnInput) hsnInput.value = row.hsn_code;
+                    
+                    const mrpInput = tr.querySelector('input[placeholder="₹MRP"]');
+                    if (mrpInput) mrpInput.value = row.mrp || '';
+                    
+                    const rateInput = tr.querySelector('input[placeholder="₹Rate"]');
+                    if (rateInput) rateInput.value = row.rate || '';
+                    
+                    const gstSelect = tr.querySelector('select');
+                    if (gstSelect) gstSelect.value = row.gst_pct;
+                }
+                
+                calcRowTotals(rid);
+                recalculate();
+            }
+        } catch (e) {
+            console.error('Auto-population from Item Master failed:', e);
+        }
+    }, 300);
+}
+
+// ── Smart Excel Paste Importer ────────────────────────────────
+async function importExcelFromTextArea() {
+    const text = document.getElementById('excel-paste-text').value;
+    if (!text.trim()) { toast('Please paste some Excel data first', 'error'); return; }
+    
+    closeModal('modal-excel-paste');
+    document.getElementById('excel-paste-text').value = '';
+    
+    try {
         const lines = text.split('\n').map(l => l.replace(/\r$/, '')).filter(l => l.trim());
-        if (lines.length === 0) { toast('No data found in clipboard', 'error'); return; }
+        if (lines.length === 0) { toast('No data found', 'error'); return; }
 
         const COL_ALIASES = {
             article:     ['ARTICLE', 'STYLE', 'STYLE CODE', 'ARTICLE NO', 'ARTICLE CODE', 'ART', 'ART NO', 'PRODUCT STYLE CODE'],
@@ -1509,21 +1713,18 @@ async function pasteFromClipboard() {
 
         const SIZE_PATTERNS = /^(\d{1,3}(\.\d)?|XXS|XS|S|M|L|XL|XXL|XXXL|2XL|3XL|4XL|5XL|FREE|F|UK\d+|EU\d+|US\d+)$/i;
 
-        // Try parsing first row as header
         const firstRowCells = lines[0].split('\t').map(c => c.trim().toUpperCase());
         let hasHeader = false;
         let mappedColumns = {};
         let sizeColumns = {}; // szLabel -> colIdx
 
         firstRowCells.forEach((cell, idx) => {
-            // Match against COL_ALIASES
             for (const [key, aliases] of Object.entries(COL_ALIASES)) {
                 if (aliases.includes(cell)) {
                     mappedColumns[key] = idx;
                     hasHeader = true;
                 }
             }
-            // Match against active sizes or size pattern
             if (state.sizeColumns.includes(cell) || SIZE_PATTERNS.test(cell)) {
                 sizeColumns[cell] = idx;
                 hasHeader = true;
@@ -1537,25 +1738,16 @@ async function pasteFromClipboard() {
             startLineIdx = 1;
             const matchedSizes = Object.keys(sizeColumns);
             if (matchedSizes.length > 0) {
-                // Dynamically align active sizes to the clipboard's sizes
                 const newSizes = [...state.sizeColumns];
                 matchedSizes.forEach(s => {
                     if (!newSizes.includes(s)) newSizes.push(s);
                 });
                 state.sizeColumns = newSizes;
-                renderSizeTags(); // will trigger rebuildGrid
+                renderSizeTags();
             }
         } else {
-            // No header. Fallback to fixed indexing:
-            mappedColumns = {
-                article: 0,
-                color: 1,
-                category: 2,
-                sub_category: 3
-            };
-            state.sizeColumns.forEach((sz, idx) => {
-                sizeColumns[sz] = 4 + idx;
-            });
+            mappedColumns = { article: 0, color: 1, category: 2, sub_category: 3 };
+            state.sizeColumns.forEach((sz, idx) => { sizeColumns[sz] = 4 + idx; });
             const base = 4 + state.sizeColumns.length;
             mappedColumns.mrp = base;
             mappedColumns.rate = base + 1;
@@ -1563,17 +1755,18 @@ async function pasteFromClipboard() {
             mappedColumns.hsn_code = base + 3;
         }
 
-        // Parse data lines
+        let pendingAutoCompletes = [];
+
         for (let i = startLineIdx; i < lines.length; i++) {
             const cells = lines[i].split('\t').map(c => c.trim());
             if (cells.length < 2 || cells.every(c => !c)) continue;
 
             const article = (mappedColumns.article !== undefined ? cells[mappedColumns.article] : '').trim();
-            if (!article) continue; // skip rows without article
-
+            const color = (mappedColumns.color !== undefined ? cells[mappedColumns.color] : '').trim().toUpperCase();
+            
             const rowData = {
                 article:      article,
-                color:        (mappedColumns.color !== undefined ? cells[mappedColumns.color] : 'UNKNOWN').trim().toUpperCase(),
+                color:        color,
                 category:     (mappedColumns.category !== undefined ? cells[mappedColumns.category] : '').trim(),
                 sub_category: (mappedColumns.sub_category !== undefined ? cells[mappedColumns.sub_category] : '').trim(),
                 sizes:        {},
@@ -1583,48 +1776,224 @@ async function pasteFromClipboard() {
                 hsn_code:     ''
             };
 
-            // Parse sizes
             state.sizeColumns.forEach(sz => {
                 const colIdx = sizeColumns[sz];
                 rowData.sizes[sz] = colIdx !== undefined ? (parseFloat(cells[colIdx]) || 0) : 0;
             });
 
-            // Parse numeric / compliance columns
             const parseNum = (val) => parseFloat(String(val || '').replace(/[^0-9.]/g, '')) || 0;
             
-            if (mappedColumns.mrp !== undefined) {
-                rowData.mrp = parseNum(cells[mappedColumns.mrp]);
-            }
-            if (mappedColumns.rate !== undefined) {
-                rowData.rate = parseNum(cells[mappedColumns.rate]);
-            }
+            if (mappedColumns.mrp !== undefined) rowData.mrp = parseNum(cells[mappedColumns.mrp]);
+            if (mappedColumns.rate !== undefined) rowData.rate = parseNum(cells[mappedColumns.rate]);
             if (mappedColumns.gst_pct !== undefined) {
                 const gp = parseNum(cells[mappedColumns.gst_pct]);
                 rowData.gst_pct = [0, 5, 12, 18, 28].includes(gp) ? gp : 12;
             }
-            if (mappedColumns.hsn_code !== undefined) {
-                rowData.hsn_code = (cells[mappedColumns.hsn_code] || '').trim();
-            }
+            if (mappedColumns.hsn_code !== undefined) rowData.hsn_code = (cells[mappedColumns.hsn_code] || '').trim();
 
-            // Self-healing check: if rate is 0 but MRP is provided, auto-calculate tax-exclusive Rate from MRP!
             if (rowData.rate === 0 && rowData.mrp > 0) {
                 rowData.rate = parseFloat((rowData.mrp / (1 + (rowData.gst_pct / 100))).toFixed(2));
             }
 
+            const currentCounter = ++rowIdCounter;
+            rowData._id = currentCounter;
+            
             addRow(rowData);
             added++;
+
+            if (article) {
+                pendingAutoCompletes.push(handleArticleOrColorChange(currentCounter));
+            }
         }
 
         if (added > 0) {
+            if (pendingAutoCompletes.length > 0) {
+                await Promise.all(pendingAutoCompletes);
+            }
             recalculate();
-            toast(`Successfully imported ${added} rows from clipboard (${hasHeader ? 'Auto-Detected Headers' : 'Fixed Column Order'})`, 'success');
+            toast(`Successfully imported ${added} rows and auto-completed details from Item Master!`, 'success');
         } else {
-            toast('No valid rows found in clipboard data', 'error');
+            toast('No valid rows found', 'error');
         }
     } catch(e) {
         console.error(e);
-        toast('Clipboard access failed: ' + e.message, 'error');
+        toast('Failed to parse Excel import: ' + e.message, 'error');
     }
+}
+
+// ── Client-Side OCR Data Extraction Logic (Tesseract.js) ───────────
+let ocrExtractedRows = [];
+
+function handleOcrFileSelect(e) {
+    if (e.target.files && e.target.files[0]) {
+        processOcrImage(e.target.files[0]);
+    }
+}
+
+async function processOcrImage(file) {
+    const wrap = document.getElementById('ocr-progress-wrap');
+    const label = document.getElementById('ocr-progress-label');
+    const pct = document.getElementById('ocr-progress-pct');
+    const fill = document.getElementById('ocr-progress-fill');
+    const review = document.getElementById('ocr-review-container');
+    const applyBtn = document.getElementById('ocr-apply-btn');
+
+    wrap.style.display = 'block';
+    review.style.display = 'none';
+    applyBtn.disabled = true;
+    label.textContent = 'Initializing Tesseract Web Worker...';
+    pct.textContent = '0%';
+    fill.style.width = '0%';
+
+    try {
+        const result = await Tesseract.recognize(
+            file,
+            'eng',
+            {
+                logger: m => {
+                    if (m.status === 'recognizing text') {
+                        const progress = Math.round(m.progress * 100);
+                        label.textContent = 'Scanning image & extracting text lines...';
+                        pct.textContent = `${progress}%`;
+                        fill.style.width = `${progress}%`;
+                    }
+                }
+            }
+        );
+
+        label.textContent = 'OCR completed successfully!';
+        pct.textContent = '100%';
+        fill.style.width = '100%';
+        
+        parseOcrText(result.data.text);
+    } catch (err) {
+        console.error(err);
+        label.textContent = 'OCR Failed: ' + err.message;
+        toast('OCR processing failed', 'error');
+    }
+}
+
+function parseOcrText(text) {
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+    ocrExtractedRows = [];
+
+    const COLOR_KEYWORDS = ['BLACK', 'BEIGE', 'CREAM', 'WHITE', 'RED', 'BLUE', 'YELLOW', 'GREEN', 'GREY', 'GRAY', 'PINK', 'PISTA', 'TAN', 'GOLD', 'SILVER', 'BROWN'];
+    const sizes = [...state.sizeColumns];
+
+    lines.forEach(line => {
+        const words = line.toUpperCase().split(/[\s|,\t]+/);
+        if (words.length < 2) return;
+
+        let article = '';
+        let color = '';
+        let category = '';
+        let rowSizes = {};
+
+        const artMatch = line.match(/\b(10\d{3}|20\d{3}|200\d{2}|209\d)\b/);
+        if (artMatch) {
+            article = artMatch[1];
+        }
+
+        if (line.includes('SANDAL')) category = 'SANDAL';
+        else if (line.includes('CHAPPAL')) category = 'CHAPPAL';
+        else if (line.includes('SHOE')) category = 'SHOE';
+
+        for (let kw of COLOR_KEYWORDS) {
+            if (line.includes(kw)) {
+                color = kw;
+                break;
+            }
+        }
+
+        let numberTokens = words.map(w => parseFloat(w)).filter(n => !isNaN(n));
+        numberTokens = numberTokens.filter(n => n !== parseFloat(article) && n !== 1899 && n !== 1499 && n !== 1399 && n !== 1999);
+
+        if (numberTokens.length > 0) {
+            sizes.forEach((sz, idx) => {
+                rowSizes[sz] = numberTokens[idx] !== undefined ? numberTokens[idx] : 0;
+            });
+
+            const totalQty = Object.values(rowSizes).reduce((a, b) => a + b, 0);
+            if (totalQty > 0 || category || article) {
+                ocrExtractedRows.push({
+                    article: article,
+                    color: color,
+                    category: category || (article ? 'SANDAL' : ''),
+                    sub_category: line.includes('MUEL') ? 'MUEL' : (line.includes('BURMY') ? 'BURMY' : ''),
+                    sizes: rowSizes
+                });
+            }
+        }
+    });
+
+    renderOcrReview();
+}
+
+function renderOcrReview() {
+    const tbody = document.getElementById('ocr-review-tbody');
+    const container = document.getElementById('ocr-review-container');
+    const applyBtn = document.getElementById('ocr-apply-btn');
+
+    tbody.innerHTML = '';
+    if (ocrExtractedRows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;">
+            ⚠️ Could not automatically detect a structured grid. Try selecting a clearer screenshot or adding rows manually.
+        </td></tr>`;
+        container.style.display = 'block';
+        applyBtn.disabled = true;
+        return;
+    }
+
+    ocrExtractedRows.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        const sizePreviewHtml = Object.entries(row.sizes)
+            .map(([sz, qty]) => `<span style="display:inline-block;padding:2px 6px;margin:2px;background:var(--card2);border-radius:4px;font-weight:${qty>0?'bold':'normal'};color:${qty>0?'var(--primary-lt)':'var(--muted)'};">${sz}: ${qty}</span>`)
+            .join(' ');
+
+        tr.innerHTML = `
+            <td><input class="cell-input" value="${row.article}" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;" oninput="ocrExtractedRows[${idx}].article=this.value"></td>
+            <td><input class="cell-input" value="${row.color}" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;" oninput="ocrExtractedRows[${idx}].color=this.value"></td>
+            <td><input class="cell-input" value="${row.category}" style="border:1px solid var(--border);border-radius:4px;padding:3px 6px;" oninput="ocrExtractedRows[${idx}].category=this.value"></td>
+            <td style="line-height:1.6;">${sizePreviewHtml}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    container.style.display = 'block';
+    applyBtn.disabled = false;
+}
+
+async function applyOcrReviewToGrid() {
+    closeModal('modal-ocr-upload');
+    document.getElementById('ocr-progress-wrap').style.display = 'none';
+    document.getElementById('ocr-review-container').style.display = 'none';
+
+    let pendingAutoCompletes = [];
+
+    ocrExtractedRows.forEach(row => {
+        const currentCounter = ++rowIdCounter;
+        row._id = currentCounter;
+        
+        addRow({
+            _id:          currentCounter,
+            article:      row.article,
+            color:        row.color,
+            category:     row.category,
+            sub_category: row.sub_category,
+            sizes:        row.sizes
+        });
+
+        if (row.article) {
+            pendingAutoCompletes.push(handleArticleOrColorChange(currentCounter));
+        }
+    });
+
+    if (pendingAutoCompletes.length > 0) {
+        await Promise.all(pendingAutoCompletes);
+    }
+
+    recalculate();
+    toast(`Successfully extracted and applied ${ocrExtractedRows.length} rows to the invoice matrix!`, 'success');
 }
 
 // ── Save / Submit Invoice ────────────────────────────────────
