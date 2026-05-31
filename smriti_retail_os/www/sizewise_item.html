@@ -322,6 +322,106 @@ body.popout-mode .sidebar { display: none !important; }
 .sim-col-tag .col-arrow { color: var(--text-sub); }
 .sim-col-tag .col-to { color: var(--success); }
 
+/* ══════════════════════════════════════════════════════════════
+   PRE-IMPORT VERIFICATION PANEL
+   ══════════════════════════════════════════════════════════════ */
+.sim-verify-panel {
+    background: linear-gradient(135deg, rgba(245,158,11,0.04), rgba(99,102,241,0.03));
+    border: 1px solid rgba(245,158,11,0.22);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin: 16px 0;
+    animation: verify-slide-in 0.3s ease;
+}
+@keyframes verify-slide-in { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+
+.sim-verify-header {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.88rem; font-weight: 700; color: var(--accent);
+    margin-bottom: 18px; padding-bottom: 12px;
+    border-bottom: 1px solid rgba(245,158,11,0.12);
+}
+.sim-verify-header .material-symbols-outlined { font-size: 20px; }
+.verify-badge-new  { padding: 2px 10px; border-radius: 10px; font-size: 0.68rem; font-weight: 800; background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3); color: var(--accent); margin-left: auto; }
+.verify-badge-ok   { padding: 2px 10px; border-radius: 10px; font-size: 0.68rem; font-weight: 800; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.25); color: var(--success); margin-left: auto; }
+
+.verify-loading { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.85rem; padding: 12px 0; }
+.verify-spinner { width: 18px; height: 18px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.verify-section { margin-bottom: 18px; }
+.verify-section:last-child { margin-bottom: 0; }
+.verify-section-title {
+    font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+}
+.verify-section-title .material-symbols-outlined { font-size: 14px; }
+
+.verify-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 10px 14px; background: rgba(0,0,0,0.18);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    margin-bottom: 8px; transition: border-color 0.2s;
+}
+.verify-row:hover { border-color: var(--border2); }
+.verify-row.state-exists  { border-left: 3px solid var(--success); }
+.verify-row.state-new     { border-left: 3px solid var(--accent); }
+.verify-row.state-corrected { border-left: 3px solid var(--primary-lt); }
+
+.verify-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink:0; margin-top: 5px; transition: background 0.2s; }
+.verify-dot.dot-exists    { background: var(--success); box-shadow: 0 0 6px rgba(16,185,129,0.4); }
+.verify-dot.dot-new       { background: var(--accent);  box-shadow: 0 0 6px rgba(245,158,11,0.4); }
+.verify-dot.dot-corrected { background: var(--primary-lt); box-shadow: 0 0 6px rgba(129,140,248,0.4); }
+
+.verify-value-col { min-width: 110px; }
+.verify-orig-value { font-weight: 800; font-size: 0.88rem; color: var(--text); font-family: monospace; }
+.verify-status-label { font-size: 0.7rem; margin-top: 3px; font-weight: 600; }
+.verify-status-label.lbl-new       { color: var(--accent); }
+.verify-status-label.lbl-exists    { color: var(--success); }
+.verify-status-label.lbl-corrected { color: var(--primary-lt); }
+
+.verify-input-col { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+.verify-input-wrap { display: flex; align-items: center; gap: 8px; }
+.verify-correction-input {
+    flex: 1; padding: 7px 12px;
+    background: rgba(0,0,0,0.25); border: 1px solid var(--border2);
+    border-radius: var(--radius-sm); color: var(--text); font-size: 0.85rem;
+    font-family: inherit; outline: none; transition: all 0.2s;
+}
+.verify-correction-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,102,241,0.12); }
+.verify-correction-input.input-corrected { border-color: var(--primary-lt); }
+
+.verify-suggestions { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.verify-suggest-label { font-size: 0.65rem; color: var(--text-sub); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.verify-suggest-chip {
+    padding: 3px 9px; border-radius: 12px; font-size: 0.72rem; font-weight: 600;
+    border: 1px solid var(--border); background: rgba(255,255,255,0.02);
+    color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+}
+.verify-suggest-chip:hover { border-color: var(--primary); color: var(--primary-lt); background: rgba(99,102,241,0.07); }
+
+.verify-ok-banner {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 18px; background: rgba(16,185,129,0.06);
+    border: 1px solid rgba(16,185,129,0.2); border-radius: var(--radius-sm);
+    color: var(--success); font-weight: 700; font-size: 0.88rem;
+}
+.verify-ok-banner .material-symbols-outlined { font-size: 20px; }
+
+.verify-confirm-row { display: flex; align-items: center; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(245,158,11,0.1); }
+.btn-verify-confirm {
+    padding: 10px 24px;
+    background: linear-gradient(135deg, var(--accent), #d97706);
+    border: none; border-radius: var(--radius); color: white;
+    font-weight: 700; font-size: 0.88rem; cursor: pointer;
+    display: flex; align-items: center; gap: 7px; transition: all 0.2s;
+    box-shadow: 0 4px 14px rgba(245,158,11,0.25);
+}
+.btn-verify-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(245,158,11,0.35); }
+.btn-verify-confirm:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.verify-hint { font-size: 0.75rem; color: var(--text-muted); }
+
 </style>
 
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
@@ -519,6 +619,23 @@ body.popout-mode .sidebar { display: none !important; }
                         <thead><tr id="paste-grid-head"></tr></thead>
                         <tbody id="paste-grid-body"></tbody>
                     </table>
+                </div>
+
+                <!-- ═══════════════════════════════════════════════════════
+                     PRE-IMPORT VERIFICATION PANEL (hidden until paste)
+                     ═══════════════════════════════════════════════════════ -->
+                <div id="paste-verify-panel" class="sim-verify-panel" style="display:none;">
+                    <div class="sim-verify-header">
+                        <span class="material-symbols-outlined">fact_check</span>
+                        Pre-Import Verification
+                        <span id="verify-badge" class="verify-badge-new">Checking...</span>
+                    </div>
+                    <div id="verify-body">
+                        <div class="verify-loading">
+                            <div class="verify-spinner"></div>
+                            Verifying values against database...
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Progress Panel (hidden until import) -->
@@ -1072,11 +1189,24 @@ function parseTSV(raw) {
     document.getElementById('paste-grid-wrapper').style.display = 'block';
     document.getElementById('paste-import-toolbar').style.display = 'flex';
 
-    // Enable import button if we have valid data
+    // Keep import DISABLED until verification passes
     const btn = document.getElementById('btn-do-import');
-    btn.disabled = pastedData.parsedStyles.length === 0;
+    btn.disabled = true;
 
-    toast(`Parsed ${pastedData.rows.length} rows with ${pastedData.sizeColumns.length} size columns detected.`, 'success');
+    toast(`Parsed ${pastedData.rows.length} rows · ${pastedData.sizeColumns.length} size columns. Verifying values...`, 'info');
+
+    // Show verify panel with spinner and run async verification
+    const verifyPanel = document.getElementById('paste-verify-panel');
+    verifyPanel.style.display = 'block';
+    document.getElementById('verify-body').innerHTML = `
+        <div class="verify-loading">
+            <div class="verify-spinner"></div>
+            Checking categories, colors and sub-categories against database...
+        </div>`;
+    document.getElementById('verify-badge').className = 'verify-badge-new';
+    document.getElementById('verify-badge').textContent = 'Checking...';
+
+    runVerification();
 }
 
 function buildParsedStyles() {
@@ -1254,12 +1384,255 @@ function renderPreviewGrid() {
     });
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+//  PRE-IMPORT VERIFICATION — on-the-fly insert with spell correction
+// ═══════════════════════════════════════════════════════════════════════════
+
+let verificationCorrections = {}; // { 'cat:SANDAL': 'Footwear', 'clr:PISTA': 'PISTA', 'sub:MUEL': 'MUEL' }
+let verificationPassed = false;
+
+async function runVerification() {
+    const validStyles = pastedData.parsedStyles.filter(s => s.isValid);
+    if (validStyles.length === 0) {
+        document.getElementById('paste-verify-panel').style.display = 'none';
+        return;
+    }
+    verificationPassed = false;
+    verificationCorrections = {};
+
+    try {
+        const payload = validStyles.map(s => ({ base_details: s.base_details, sizes_config: s.sizes_config }));
+        const res = await api('smriti_retail_os.item_master_api.validate_pivot_values', {
+            styles_json: JSON.stringify(payload)
+        });
+        renderVerificationPanel(res);
+    } catch(e) {
+        // If API fails, allow import anyway (don't block)
+        document.getElementById('verify-body').innerHTML =
+            `<div style="color:var(--warning); font-size:0.82rem;">⚠️ Verification check failed (${e.message}). You can still proceed with import.</div>`;
+        document.getElementById('verify-badge').textContent = 'Skipped';
+        _unlockImport();
+    }
+}
+
+function renderVerificationPanel(res) {
+    const newCats    = res.new_categories  || [];
+    const newColors  = res.new_colors      || [];
+    const newSubs    = res.new_sub_cats    || [];
+    const existCats  = res.existing_categories || [];
+    const existClrs  = res.existing_colors     || [];
+    const existSubs  = res.existing_sub_cats   || [];
+    const badge      = document.getElementById('verify-badge');
+    const body       = document.getElementById('verify-body');
+
+    const totalNew = newCats.length + newColors.length + newSubs.length;
+
+    if (!res.has_issues) {
+        badge.className   = 'verify-badge-ok';
+        badge.textContent = 'All verified ✓';
+        body.innerHTML    = `
+            <div class="verify-ok-banner">
+                <span class="material-symbols-outlined">check_circle</span>
+                All categories, colors and sub-categories exist in the database. Ready to import!
+            </div>`;
+        verificationPassed = true;
+        _unlockImport();
+        return;
+    }
+
+    badge.className   = 'verify-badge-new';
+    badge.textContent = `${totalNew} new value${totalNew > 1 ? 's' : ''} — review required`;
+
+    // Build section HTML
+    let html = '';
+
+    if (newCats.length > 0) {
+        html += _buildVerifySection(
+            'folder', `Item Categories (${newCats.length} new — will be created as Item Groups)`,
+            newCats, 'cat', existCats
+        );
+    }
+    if (newColors.length > 0) {
+        html += _buildVerifySection(
+            'palette', `Colors (${newColors.length} new — will be added to Color attribute)`,
+            newColors, 'clr', existClrs
+        );
+    }
+    if (newSubs.length > 0) {
+        html += _buildVerifySection(
+            'label', `Sub-Categories (${newSubs.length} new — will be auto-created)`,
+            newSubs, 'sub', existSubs
+        );
+    }
+
+    // Confirm button row
+    html += `
+        <div class="verify-confirm-row">
+            <button class="btn-verify-confirm" id="btn-verify-confirm" onclick="confirmAndApplyVerification()">
+                <span class="material-symbols-outlined">check_circle</span>
+                Confirm &amp; Enable Import
+            </button>
+            <span class="verify-hint">New values will be created automatically. Correct spellings above if needed.</span>
+        </div>`;
+
+    body.innerHTML = html;
+
+    // Pre-populate corrections map with original values (default = create as-is)
+    [...newCats, ...newColors, ...newSubs].forEach(item => {
+        const prefix = newCats.includes(item) ? 'cat' : newColors.includes(item) ? 'clr' : 'sub';
+        verificationCorrections[`${prefix}:${item.value}`] = item.value;
+    });
+}
+
+function _buildVerifySection(icon, title, items, prefix, existingList) {
+    const rows = items.map(item => {
+        const key = `${prefix}:${item.value}`;
+        const safeKey = key.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const suggestions = (item.suggestions && item.suggestions.length > 0)
+            ? item.suggestions : existingList.slice(0, 8);
+        const chipHtml = suggestions.length > 0
+            ? `<div class="verify-suggestions">
+                <span class="verify-suggest-label">Existing:</span>
+                ${suggestions.slice(0, 8).map(s =>
+                    `<button class="verify-suggest-chip" onclick="applyVerifySuggestion('${key}','${s.replace(/'/g,"\\'")}')"
+                             title="Use '${s}' instead">${s}</button>`
+                ).join('')}
+               </div>`
+            : '';
+        return `
+            <div class="verify-row state-new" id="vrow_${safeKey}">
+                <div class="verify-dot dot-new" id="vdot_${safeKey}"></div>
+                <div class="verify-value-col">
+                    <div class="verify-orig-value">${item.value}</div>
+                    <div class="verify-status-label lbl-new" id="vstatus_${safeKey}">🆕 Will be created</div>
+                </div>
+                <div class="verify-input-col">
+                    <div class="verify-input-wrap">
+                        <input class="verify-correction-input"
+                               id="vinput_${safeKey}"
+                               value="${item.value}"
+                               placeholder="Correct spelling or leave as-is to create new..."
+                               oninput="onVerifyInput('${key}', this.value)">
+                    </div>
+                    ${chipHtml}
+                </div>
+            </div>`;
+    }).join('');
+    return `
+        <div class="verify-section">
+            <div class="verify-section-title">
+                <span class="material-symbols-outlined">${icon}</span>
+                ${title}
+            </div>
+            ${rows}
+        </div>`;
+}
+
+function onVerifyInput(key, rawValue) {
+    const value = rawValue.trim();
+    verificationCorrections[key] = value || key.split(':')[1];
+    const safeKey = key.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const original = key.split(':').slice(1).join(':');
+    const dot    = document.getElementById('vdot_' + safeKey);
+    const status = document.getElementById('vstatus_' + safeKey);
+    const row    = document.getElementById('vrow_' + safeKey);
+    const input  = document.getElementById('vinput_' + safeKey);
+    if (!dot) return;
+
+    if (!value || value.toUpperCase() === original.toUpperCase()) {
+        dot.className    = 'verify-dot dot-new';
+        status.className = 'verify-status-label lbl-new';
+        status.textContent = '🆕 Will be created';
+        row.className    = 'verify-row state-new';
+        input.classList.remove('input-corrected');
+        verificationCorrections[key] = original;
+    } else {
+        dot.className    = 'verify-dot dot-corrected';
+        status.className = 'verify-status-label lbl-corrected';
+        status.textContent = `✏️ Will use: "${value}"`;
+        row.className    = 'verify-row state-corrected';
+        input.classList.add('input-corrected');
+        verificationCorrections[key] = value;
+    }
+}
+
+function applyVerifySuggestion(key, suggestion) {
+    const safeKey = key.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const input = document.getElementById('vinput_' + safeKey);
+    if (input) {
+        input.value = suggestion;
+        onVerifyInput(key, suggestion);
+    }
+}
+
+function confirmAndApplyVerification() {
+    // Collect final values from all inputs (in case user typed without triggering oninput)
+    document.querySelectorAll('.verify-correction-input').forEach(inp => {
+        const safeKey = inp.id.replace('vinput_', '');
+        // Reverse-map safeKey back to original key by scanning verificationCorrections
+        // Safe: just read the current value and update
+        const currentVal = inp.value.trim();
+        if (currentVal) {
+            // Find the matching key (safeKey was built by replacing non-alnum with _)
+            for (const k of Object.keys(verificationCorrections)) {
+                if (k.replace(/[^a-zA-Z0-9_-]/g, '_') === safeKey) {
+                    verificationCorrections[k] = currentVal;
+                    break;
+                }
+            }
+        }
+    });
+
+    // Apply corrections to pastedData.parsedStyles
+    pastedData.parsedStyles.forEach(s => {
+        if (!s.base_details) return;
+        const catKey = 'cat:' + s.base_details.item_group;
+        const clrKey = 'clr:' + s.base_details.color;
+        const subKey = 'sub:' + s.base_details.sub_category;
+        if (verificationCorrections[catKey]) s.base_details.item_group   = verificationCorrections[catKey];
+        if (verificationCorrections[clrKey]) {
+            s.base_details.color = verificationCorrections[clrKey].toUpperCase();
+            // Also update sizes_config color if present
+            s.sizes_config.forEach(sz => {
+                if (!sz.color) sz.color = s.base_details.color;
+            });
+        }
+        if (verificationCorrections[subKey]) s.base_details.sub_category = verificationCorrections[subKey];
+    });
+
+    // Re-render stats with corrected data
+    renderStatsBar();
+
+    // Show confirmed banner
+    const confirmRow = document.querySelector('.verify-confirm-row');
+    if (confirmRow) {
+        confirmRow.innerHTML = `
+            <div class="verify-ok-banner" style="flex:1;">
+                <span class="material-symbols-outlined">check_circle</span>
+                Verification confirmed! Corrections applied — Import is now enabled.
+            </div>`;
+    }
+
+    verificationPassed = true;
+    _unlockImport();
+    toast('Verification confirmed! Click Import to proceed.', 'success');
+}
+
+function _unlockImport() {
+    const btn = document.getElementById('btn-do-import');
+    const validCount = pastedData.parsedStyles.filter(s => s.isValid).length;
+    if (btn) btn.disabled = validCount === 0;
+}
+
 function clearPastePanel() {
     pastedData = { headers: [], sizeColumns: [], mappedColumns: {}, rows: [], parsedStyles: [] };
+    verificationCorrections = {};
+    verificationPassed = false;
     document.getElementById('paste-column-map').style.display = 'none';
     document.getElementById('paste-stats-bar').style.display = 'none';
     document.getElementById('paste-grid-wrapper').style.display = 'none';
     document.getElementById('paste-import-toolbar').style.display = 'none';
+    document.getElementById('paste-verify-panel').style.display = 'none';
     document.getElementById('paste-progress-panel').classList.remove('active');
     document.getElementById('paste-grid-head').innerHTML = '';
     document.getElementById('paste-grid-body').innerHTML = '';
@@ -1272,6 +1645,12 @@ async function executePivotImport() {
     const validStyles = pastedData.parsedStyles.filter(s => s.isValid);
     if (validStyles.length === 0) {
         toast('No valid styles to import!', 'error');
+        return;
+    }
+
+    if (!verificationPassed) {
+        toast('Please complete verification before importing.', 'warning');
+        document.getElementById('paste-verify-panel').scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
 
@@ -1317,8 +1696,22 @@ async function executePivotImport() {
         progressDetail.textContent = `Created: ${createdCount} variants | Updated: ${updatedCount} | Errors: ${errorsCount}`;
 
         if (errorsCount > 0) {
-            toast(`Import completed with ${errorsCount} error(s). Check below for details.`, 'warning');
-            console.warn('Import errors:', res.errors);
+            toast(`Import completed with ${errorsCount} error(s). Check console for details.`, 'warning');
+            console.group(`❌ Import Errors (${errorsCount} rows failed):`);
+            (res.errors || []).forEach(err => {
+                console.error(`Row ${err.row_idx} | Article: ${err.article_no} | Error: ${err.error}`);
+                if (err.detail) console.warn(err.detail);
+            });
+            console.groupEnd();
+
+            // Show error list below progress bar
+            const detail = document.getElementById('paste-progress-detail');
+            const errorList = (res.errors || []).map(e =>
+                `<div style="color:var(--danger); font-size:0.75rem; margin-top:4px;">
+                    ✗ Row ${e.row_idx} | <b>${e.article_no || '?'}</b>: ${e.error}
+                 </div>`
+            ).join('');
+            detail.innerHTML = `<div>${createdCount} created, ${updatedCount} updated, <span style="color:var(--danger)">${errorsCount} failed</span></div>${errorList}`;
         } else {
             toast(`Successfully imported ${createdCount} new variant(s) and updated ${updatedCount}!`, 'success');
         }

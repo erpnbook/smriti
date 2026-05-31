@@ -367,18 +367,22 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
         b.insert(ignore_permissions=True)
 
     # Ensure Item Group exists
+    print(f"[DEBUG] _get_or_create_template: item_group before={item_group}, exists={bool(frappe.db.exists('Item Group', item_group or ''))}")
     if not item_group or not frappe.db.exists("Item Group", item_group):
         item_group = "Products"
     if not frappe.db.exists("Item Group", item_group):
         existing_group = frappe.db.get_all("Item Group", pluck="name", limit=1)
         if existing_group:
             item_group = existing_group[0]
+            print(f"[DEBUG] Item Group fallback to={item_group}")
         else:
             ig = frappe.new_doc("Item Group")
             ig.item_group_name = "Products"
             ig.is_group = 0
             ig.insert(ignore_permissions=True)
             item_group = "Products"
+            print(f"[DEBUG] Item Group 'Products' created. exists after={bool(frappe.db.exists('Item Group', 'Products'))}")
+
 
     item = frappe.new_doc("Item")
     item.item_code              = style_code
@@ -446,10 +450,13 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
 
 def _ensure_item_attribute(attribute_name):
     """Create Item Attribute doctype record if it doesn't exist yet."""
+    print(f"[DEBUG] _ensure_item_attribute({attribute_name}) - exists before: {bool(frappe.db.exists('Item Attribute', attribute_name))}")
     if not frappe.db.exists("Item Attribute", attribute_name):
         attr = frappe.new_doc("Item Attribute")
         attr.attribute_name = attribute_name
         attr.insert(ignore_permissions=True)
+        print(f"[DEBUG] _ensure_item_attribute({attribute_name}) - inserted. name={attr.name}. exists after: {bool(frappe.db.exists('Item Attribute', attribute_name))}")
+
 
 
 def _ensure_attribute_value(attribute, value):
@@ -764,6 +771,86 @@ def delete_size_variant(variant_code):
 
 
 @frappe.whitelist()
+def validate_pivot_values(styles_json):
+    """
+    Pre-import verification: checks all unique category, color, and sub-category
+    values from the pasted data against the database.
+    Returns new values (not yet in DB) with suggestions from existing records.
+    """
+    styles = frappe.parse_json(styles_json)
+
+    # ── Collect unique values from payload ────────────────────────────────
+    categories   = set()
+    colors       = set()
+    sub_cats     = set()
+
+    for s in styles:
+        bd = s.get("base_details", {})
+        cat   = (bd.get("item_group") or "").strip()
+        color = (bd.get("color") or "").strip().upper()
+        sub   = (bd.get("sub_category") or "").strip()
+        if cat:   categories.add(cat)
+        if color: colors.add(color)
+        if sub:   sub_cats.add(sub)
+
+    # ── Item Groups ────────────────────────────────────────────────────────
+    all_groups = frappe.db.get_all(
+        "Item Group", fields=["name", "is_group"], order_by="name"
+    )
+    existing_group_names = {g.name for g in all_groups}
+    leaf_groups = [g.name for g in all_groups if not g.is_group]
+
+    new_categories = []
+    for cat in sorted(categories):
+        if cat not in existing_group_names:
+            new_categories.append({"value": cat, "suggestions": leaf_groups[:8]})
+
+    # ── Colors (Item Attribute Values) ─────────────────────────────────────
+    existing_colors = []
+    if frappe.db.exists("Item Attribute", "Color"):
+        existing_colors = frappe.db.get_all(
+            "Item Attribute Value",
+            filters={"parent": "Color"},
+            pluck="attribute_value",
+            order_by="attribute_value"
+        )
+    existing_colors_upper = {c.upper() for c in existing_colors}
+
+    new_colors = []
+    for color in sorted(colors):
+        if color.upper() not in existing_colors_upper:
+            new_colors.append({"value": color, "suggestions": existing_colors[:10]})
+
+    # ── Sub-Categories (SMRITI Sub Category if doctype exists) ─────────────
+    existing_sub_cats = []
+    new_sub_cats = []
+    if frappe.db.exists("DocType", "SMRITI Sub Category"):
+        try:
+            existing_sub_cats = frappe.db.get_all(
+                "SMRITI Sub Category", pluck="name", order_by="name"
+            )
+            existing_sub_upper = {s.upper() for s in existing_sub_cats}
+            for sub in sorted(sub_cats):
+                if sub.upper() not in existing_sub_upper:
+                    new_sub_cats.append({
+                        "value": sub,
+                        "suggestions": existing_sub_cats[:8]
+                    })
+        except Exception:
+            pass
+
+    return {
+        "new_categories":    new_categories,
+        "new_colors":        new_colors,
+        "new_sub_cats":      new_sub_cats,
+        "existing_categories": leaf_groups,
+        "existing_colors":   existing_colors,
+        "existing_sub_cats": existing_sub_cats,
+        "has_issues": bool(new_categories or new_colors or new_sub_cats),
+    }
+
+
+@frappe.whitelist()
 def import_pivot_item_master(styles_json):
     """
     Saves a batch of Style Templates and their dynamic Size variant items.
@@ -903,11 +990,17 @@ def import_pivot_item_master(styles_json):
                 _upsert_item_price(variant_code, "MRP", mrp)
                 
         except Exception as e:
+            import traceback
             errors.append({
                 "row_idx": idx + 1,
                 "article_no": s.get("base_details", {}).get("article_no", ""),
-                "error": str(e)
+                "error": str(e),
+                "detail": traceback.format_exc()
             })
+            frappe.log_error(
+                title=f"SMRITI Pivot Import — Row {idx + 1}: {s.get('base_details', {}).get('article_no', '')}",
+                message=traceback.format_exc()
+            )
             
     frappe.db.commit()
     
