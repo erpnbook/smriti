@@ -44,6 +44,9 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         # Ensure the test company has a valid GSTIN
         frappe.db.set_value("Company", self.company, "gstin", "27AAXFT2508H1ZR") # Maharashtra GSTIN (state code 27)
 
+        # Ensure the test company has a valid registered company address
+        self._ensure_company_address(self.company)
+
         # Resolve standard CGST, SGST, IGST accounts of the test company
         def _find_account(name_pattern):
             return frappe.db.get_value(
@@ -108,12 +111,35 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         self.original_user = frappe.session.user
         frappe.set_user("Administrator")
 
+    def _ensure_company_address(self, company_name):
+        addr_name = f"{company_name}-Registered-Test"
+        if not frappe.db.exists("Address", addr_name):
+            addr = frappe.new_doc("Address")
+            addr.address_title = company_name
+            addr.address_type = "Office"
+            addr.address_line1 = "Test Street"
+            addr.city = "Mumbai"
+            addr.state = "Maharashtra"
+            addr.pincode = "400001"
+            addr.country = "India"
+            addr.is_primary_address = 1
+            addr.is_shipping_address = 1
+            addr.is_your_company_address = 1
+            addr.gstin = "27AAXFT2508H1ZR"
+            addr.append("links", {"link_doctype": "Company", "link_name": company_name})
+            addr.insert(ignore_permissions=True)
+            frappe.db.commit()
+            return addr.name
+        return addr_name
+
     def tearDown(self):
         frappe.set_user(self.original_user)
         # Clean up database
         frappe.db.delete("Sales Invoice", {"remarks": ["like", "%_sizewise_matrix%"]})
         frappe.db.delete("Customer", {"name": ["like", "Test B2B%"]})
         frappe.db.delete("Item", {"item_code": ["like", "TEST-ART%"]})
+        frappe.db.delete("Address", {"name": ["like", "%-Registered-Test%"]})
+        frappe.db.delete("Dynamic Link", {"link_name": ["like", "%_Test Company%"]})
         frappe.db.commit()
 
     def _ensure_test_account(self, account_name):
@@ -227,6 +253,65 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         tax_accounts = [t.account_head for t in si_submitted.taxes]
         self.assertIn(self.cgst_account, tax_accounts)
         self.assertIn(self.sgst_account, tax_accounts)
+
+    def test_save_and_submit_sizewise_invoice_with_discount(self):
+        """Tests draft save and submission with discount_percentage applied to line items."""
+        payload = {
+            "invoice_name": None,
+            "invoice_date": "2026-05-31",
+            "customer": self.customer_intra,
+            "place_of_supply": "27-Maharashtra",
+            "tax_type": "intrastate",
+            "size_columns": ["36", "37"],
+            "rows": [
+                {
+                    "article": "TEST-ART",
+                    "color": "BLACK",
+                    "category": "SANDAL",
+                    "sub_category": "LASTIC PATTA",
+                    "sizes": {"36": 2, "37": 3},
+                    "mrp": 1000.0,
+                    "rate": 800.0,
+                    "discount_percentage": 35.0, # 35% discount
+                    "gst_pct": 12.0,
+                    "hsn_code": "640399",
+                    "item_code": "TEST-ART-BLACK"
+                }
+            ]
+        }
+
+        # 1. Save draft
+        res = save_sizewise_invoice(payload)
+        self.assertIsNotNone(res.get("name"))
+
+        # 2. Check draft invoice exists in DB
+        si = frappe.get_doc("Sales Invoice", res.get("name"))
+        self.assertEqual(si.docstatus, 0)
+        self.assertEqual(len(si.items), 2)
+
+        # Check discount_percentage is correctly saved
+        for item in si.items:
+            self.assertEqual(flt(item.discount_percentage), 35.0)
+
+        # 3. Submit invoice
+        submit_sizewise_invoice(res.get("name"))
+
+        # Re-fetch submitted invoice and verify totals/taxes calculated by ERPNext
+        si_submitted = frappe.get_doc("Sales Invoice", res.get("name"))
+        self.assertEqual(si_submitted.docstatus, 1)
+
+        # Net total should be: 5 units * 800.0 * (1 - 0.35) = 5 * 520 = 2600.0
+        self.assertEqual(flt(si_submitted.net_total), 2600.0)
+        # Grand total should be: 2600 + 12% GST = 2600 * 1.12 = 2912.0
+        self.assertEqual(flt(si_submitted.grand_total), 2912.0)
+
+        # Verify tax table aggregation (CGST + SGST)
+        self.assertEqual(len(si_submitted.taxes), 2)
+        for tax in si_submitted.taxes:
+            if tax.account_head == self.cgst_account:
+                self.assertEqual(flt(tax.tax_amount), 156.0) # 2600 * 6% = 156.0
+            elif tax.account_head == self.sgst_account:
+                self.assertEqual(flt(tax.tax_amount), 156.0) # 2600 * 6% = 156.0
 
     def test_create_sizewise_invoice_interstate(self):
         """Tests standard draft save and submission under interstate rules (IGST)."""

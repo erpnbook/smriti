@@ -358,6 +358,46 @@ def save_sizewise_invoice(payload):
     si.update_stock    = 0
     si.is_pos          = 0
 
+    # Auto-resolve Company Address (Required by India Compliance)
+    if not si.company_address:
+        addr = frappe.get_all(
+            "Address",
+            filters=[
+                ["Dynamic Link", "link_doctype", "=", "Company"],
+                ["Dynamic Link", "link_name", "=", company],
+                ["Address", "is_your_company_address", "=", 1]
+            ],
+            order_by="is_primary_address desc",
+            limit=1
+        )
+        if addr:
+            si.company_address = addr[0].name
+        else:
+            addr = frappe.get_all(
+                "Address",
+                filters=[
+                    ["Dynamic Link", "link_doctype", "=", "Company"],
+                    ["Dynamic Link", "link_name", "=", company]
+                ],
+                limit=1
+            )
+            if addr:
+                si.company_address = addr[0].name
+
+    # Auto-resolve Customer Address
+    if not si.customer_address:
+        cust_addr = frappe.get_all(
+            "Address",
+            filters=[
+                ["Dynamic Link", "link_doctype", "=", "Customer"],
+                ["Dynamic Link", "link_name", "=", customer]
+            ],
+            order_by="is_primary_address desc",
+            limit=1
+        )
+        if cust_addr:
+            si.customer_address = cust_addr[0].name
+
     # Persist full matrix as JSON in custom_sizewise_json, set human-readable remarks
     matrix_snapshot = {
         "_sizewise_matrix": True,
@@ -397,6 +437,7 @@ def save_sizewise_invoice(payload):
         gst_pct      = flt(row.get("gst_pct") or 0)
         hsn_code     = row.get("hsn_code") or ""
         item_code    = row.get("item_code") or ""
+        discount_percentage = flt(row.get("discount_percentage") or 0)
 
         # Prepare item-wise tax rate mapping
         item_tax_dict = {}
@@ -422,7 +463,9 @@ def save_sizewise_invoice(payload):
                 "item_name":   f"{article} {color} {size}",
                 "description": f"Article: {article} | Color: {color} | Category: {category} | Sub: {sub_category} | Size: {size} | MRP: ₹{mrp}",
                 "qty":         qty,
-                "rate":        rate,
+                "price_list_rate": rate,
+                "discount_percentage": discount_percentage,
+                "rate":        rate * (1 - discount_percentage / 100.0),
                 "uom":         "Nos",
                 "gst_hsn_code": hsn_code,
                 "item_tax_rate": json.dumps(item_tax_dict) if item_tax_dict else "{}"

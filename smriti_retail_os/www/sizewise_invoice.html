@@ -1565,6 +1565,7 @@ function renderGridHeader() {
         <th style="min-width:55px;text-align:center;">TTL QTY</th>
         <th style="min-width:80px;">MRP (₹)</th>
         <th style="min-width:90px;">Rate/Unit</th>
+        <th style="min-width:70px;">Disc%</th>
         <th style="min-width:60px;">GST%</th>
         <th style="min-width:90px;">HSN Code</th>
         <th style="min-width:100px;">Row Amount</th>
@@ -1587,6 +1588,7 @@ function addRow(data = {}) {
         sizes:        {},
         mrp:          data.mrp          || '',
         rate:         data.rate         || '',
+        discount_percentage: data.discount_percentage || 0,
         gst_pct:      data.gst_pct      || 12,
         hsn_code:     data.hsn_code     || '',
         item_code:    data.item_code    || '',
@@ -1636,6 +1638,8 @@ function appendRowToDOM(row) {
             oninput="updateRowField(${row._id},'mrp',this.value);recalculate()"></td>
         <td><input class="cell-input" type="number" min="0" style="min-width:80px;" placeholder="₹Rate" value="${row.rate || ''}"
             oninput="updateRowField(${row._id},'rate',this.value);recalculate()"></td>
+        <td><input class="cell-input" type="number" min="0" max="100" step="0.01" style="min-width:65px;" placeholder="Disc%" value="${row.discount_percentage || ''}"
+            oninput="updateRowField(${row._id},'discount_percentage',this.value);recalculate()"></td>
         <td>
             <select class="cell-input" style="min-width:60px;" onchange="updateRowField(${row._id},'gst_pct',this.value);recalculate()">
                 ${[0,5,12,18,28].map(g => `<option value="${g}" ${g==row.gst_pct?'selected':''}>${g}%</option>`).join('')}
@@ -1698,6 +1702,9 @@ function updateRowField(rid, field, val) {
     if (field === 'article' || field === 'color') {
         handleArticleOrColorChange(rid);
     }
+
+    // Recalculate row totals in the DOM dynamically
+    calcRowTotals(rid);
 }
 
 function updateSize(rid, sz, val, el) {
@@ -1716,7 +1723,8 @@ function calcRowTotals(rid) {
     if (!row) return;
     const ttl = state.sizeColumns.reduce((s, sz) => s + (parseFloat(row.sizes[sz]) || 0), 0);
     const rate = parseFloat(row.rate) || 0;
-    const amt  = ttl * rate;
+    const disc = parseFloat(row.discount_percentage) || 0;
+    const amt  = ttl * rate * (1 - disc / 100);
     const ttlEl = document.getElementById(`ttl-${rid}`);
     const amtEl = document.getElementById(`amt-${rid}`);
     if (ttlEl) ttlEl.textContent = ttl;
@@ -1754,9 +1762,10 @@ function recalculate() {
     state.rows.forEach(row => {
         const qty = state.sizeColumns.reduce((s, sz) => s + (parseFloat(row.sizes[sz]) || 0), 0);
         const rate    = parseFloat(row.rate)    || 0;
+        const disc    = parseFloat(row.discount_percentage) || 0;
         const gstPct  = parseFloat(row.gst_pct) || 0;
         const hsn     = row.hsn_code || 'N/A';
-        const taxable = qty * rate;
+        const taxable = qty * rate * (1 - disc / 100);
         const tax     = taxable * gstPct / 100;
 
         totalQty     += qty;
@@ -1937,6 +1946,7 @@ async function importExcelFromTextArea() {
             sub_category:['SUB-CATEGORY', 'SUB CATEGORY', 'SUB - CATO', 'SUB-CATO', 'SUB CATO', 'DESCRIPTION', 'DESC', 'ITEM DESCRIPTION', 'ITEM NAME'],
             mrp:         ['MRP', 'PLANNED MRP'],
             rate:        ['RATE', 'UNIT RATE', 'SELLING PRICE', 'PRICE', 'TAXABLE RATE', 'TAXABLE VALUE'],
+            discount:    ['DISCOUNT', 'DISC', 'DISCOUNT%', 'DISCOUNT PCT', 'DISC %', 'DISC%', 'LINE DISCOUNT', 'DISCOUNT_PERCENTAGE'],
             gst_pct:     ['GST%', 'GST', 'TAX%', 'GST PCT', 'GST PERCENTAGE', 'TAX RATE'],
             hsn_code:    ['HSN CODE', 'HSN', 'HSN/SAC', 'HSN_CODE']
         };
@@ -2002,6 +2012,7 @@ async function importExcelFromTextArea() {
                 sizes:        {},
                 mrp:          0,
                 rate:         0,
+                discount_percentage: 0,
                 gst_pct:      12,
                 hsn_code:     ''
             };
@@ -2015,6 +2026,7 @@ async function importExcelFromTextArea() {
             
             if (mappedColumns.mrp !== undefined) rowData.mrp = parseNum(cells[mappedColumns.mrp]);
             if (mappedColumns.rate !== undefined) rowData.rate = parseNum(cells[mappedColumns.rate]);
+            if (mappedColumns.discount !== undefined) rowData.discount_percentage = parseNum(cells[mappedColumns.discount]);
             if (mappedColumns.gst_pct !== undefined) {
                 const gp = parseNum(cells[mappedColumns.gst_pct]);
                 rowData.gst_pct = [0, 5, 12, 18, 28].includes(gp) ? gp : 12;
@@ -2520,10 +2532,13 @@ function populatePrintLayout(grand = 0) {
     state.rows.forEach(row => {
         const qty = state.sizeColumns.reduce((s, sz) => s + (parseFloat(row.sizes[sz]) || 0), 0);
         const rate = parseFloat(row.rate) || 0;
+        const disc = parseFloat(row.discount_percentage) || 0;
         const gstPct = parseFloat(row.gst_pct) || 0;
         totalQty += qty;
-        totalTaxable += qty * rate;
-        totalTax += qty * rate * gstPct / 100;
+        
+        const lineTaxable = qty * rate * (1 - disc / 100);
+        totalTaxable += lineTaxable;
+        totalTax += lineTaxable * gstPct / 100;
     });
     const roundoff = grand - (totalTaxable + totalTax);
     
@@ -2574,9 +2589,10 @@ function populatePrintLayout(grand = 0) {
         
         const rate = parseFloat(row.rate) || 0;
         const mrp = parseFloat(row.mrp) || 0;
+        const disc = parseFloat(row.discount_percentage) || 0;
         const gstPct = parseFloat(row.gst_pct) || 0;
         const hsn = row.hsn_code || '';
-        const amt = qty * rate;
+        const amt = qty * rate * (1 - disc / 100);
         
         bodyHtml += `<tr>
             <td>${validRowIndex++}</td>
@@ -2587,7 +2603,7 @@ function populatePrintLayout(grand = 0) {
             <td class="bold">${qty}</td>
             <td>Prs</td>
             <td>${rate.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
-            <td>—</td>
+            <td>${disc > 0 ? disc.toFixed(2) + '%' : '—'}</td>
             <td>${gstPct}%</td>
             <td class="bold">${amt.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
         </tr>`;
