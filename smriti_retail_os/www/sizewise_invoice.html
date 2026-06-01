@@ -14,10 +14,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 /* ── Reset & Variables ────────────────────────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 :root {
+    color-scheme: only light;
     --bg:         #070d1a;
     --bg2:        #0c1526;
     --card:       #111d35;
@@ -193,20 +195,36 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .size-tag .rm:hover { color: var(--danger); }
 
 /* ── Item Grid Table ─────────────────────────────────────── */
-.grid-wrap { overflow-x:auto; border-radius:var(--radius-sm); }
-.item-table {
-    width:100%; border-collapse:collapse; font-size:0.82rem;
-    white-space: nowrap;
+
+/* Grid container: fixed 600px height, both axes scrollable, sticky header support */
+.grid-wrap {
+    height: 600px;          /* Fixed professional height — never shrinks */
+    min-height: 600px;
+    overflow-x: auto;
+    overflow-y: auto;
+    border-radius: var(--radius-sm);
+    /* CRITICAL: do NOT set overflow:hidden anywhere on this element or parents */
+    position: relative;     /* stacking context baseline only — children can escape via portal */
 }
+
+.item-table {
+    width: 100%; border-collapse: collapse; font-size: 0.82rem;
+    white-space: nowrap;
+    /* Table grows with rows but grid-wrap clips & scrolls it */
+}
+
+/* Sticky header — stays visible during vertical scroll */
 .item-table thead tr { background: rgba(99,102,241,0.12); }
+.item-table thead { position: sticky; top: 0; z-index: 10; }
 .item-table th {
     padding: 9px 10px; text-align:left; font-size:0.75rem; font-weight:700;
     color: var(--muted); text-transform:uppercase; letter-spacing:0.04em;
     border-bottom: 1px solid var(--border); white-space:nowrap;
+    background: #0d1829;    /* Solid bg so header doesn't bleed through when scrolling */
 }
-.item-table th.size-col { background: rgba(245,158,11,0.06); min-width:54px; text-align:center; }
-.item-table th.sticky-col { position:sticky; background: rgba(10,15,30,0.95); z-index:2; }
-.item-table th.sticky-0 { left:0;   min-width:40px; }
+.item-table th.size-col { background: #0e1830; min-width:54px; text-align:center; }
+.item-table th.sticky-col { position:sticky; z-index: 12; background: #0a1020; }
+.item-table th.sticky-0 { left:0;    min-width:40px; }
 .item-table th.sticky-1 { left:40px; min-width:110px; }
 .item-table th.sticky-2 { left:150px; min-width:90px; }
 .item-table th.sticky-3 { left:240px; min-width:100px; }
@@ -215,7 +233,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .item-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
 .item-table tbody tr:hover { background: rgba(255,255,255,0.025); }
 .item-table td { padding: 5px 6px; vertical-align:middle; }
-.item-table td.sticky-col { position:sticky; background: var(--card); z-index:1; }
+.item-table td.sticky-col { position:sticky; background: var(--card); z-index: 4; }
 .item-table td.sticky-0 { left:0; }
 .item-table td.sticky-1 { left:40px; }
 .item-table td.sticky-2 { left:150px; }
@@ -239,6 +257,34 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 }
 .size-input:focus { border-color: var(--accent); box-shadow:0 0 0 2px rgba(245,158,11,0.15); }
 .size-input.has-qty { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.3); }
+
+/* ── Floating Article Dropdown Portal ───────────────────────
+   Appended to <body>, positioned via JS (getBoundingClientRect).
+   Uses position:fixed + very high z-index so it escapes ALL
+   overflow:hidden / overflow:auto / stacking context boundaries.
+   This prevents clipping by .grid-wrap, .panel, .panel-body, and
+   every other card including GST Summary, Invoice Totals, etc.
+── */
+#grid-article-portal {
+    position: fixed;
+    z-index: 99999;          /* Above topbar (100), modals (300), everything */
+    background: var(--card2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    max-height: 220px;
+    overflow-y: auto;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    display: none;
+    min-width: 220px;
+    pointer-events: auto;
+}
+#grid-article-portal.open { display: block; }
+#grid-article-portal .search-item {
+    padding: 8px 12px; cursor: pointer; font-size: 0.82rem;
+    border-bottom: 1px solid var(--border); transition: background 0.15s;
+}
+#grid-article-portal .search-item:hover { background: rgba(99,102,241,0.18); }
+#grid-article-portal .search-item small { color: var(--muted); display: block; font-size: 0.75rem; }
 
 .row-ttl  { color: var(--success); font-weight:700; min-width:50px; }
 .row-amt  { color: var(--accent);  font-weight:700; min-width:90px; text-align:right; padding-right:12px; }
@@ -349,18 +395,58 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 }
 
 @media print {
-    /* Hide the entire interactive App container */
-    #app { display: none !important; }
+    @page {
+        size: A4 portrait;
+        margin: 10mm;
+    }
     
-    /* Show the clean printable layout container */
+    /* Hide all modals, backdrop overlays, and drawers during print */
+    .modal-backdrop, .drawer-overlay, .modal, .drawer {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+    }
+    
+    /* Force browser rendering engine to strictly use the light scheme to bypass Auto Dark Mode bugs */
+    html, body {
+        background: #fff !important;
+        color: #000 !important;
+        color-scheme: light !important;
+    }
+    
+    /* Reset and override all backgrounds, colors, and filters inside the print layout */
+    #print-layout, #print-layout * {
+        color-scheme: light !important;
+        background: transparent !important;
+        color: #000 !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+        filter: none !important;
+        -webkit-filter: none !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+    }
+    
     #print-layout {
+        background: #fff !important;
         display: block !important;
         width: 100% !important;
         box-sizing: border-box !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
     }
     
-    /* Ensure page breaks are handled gracefully */
-    body { background: #fff !important; color: #000 !important; }
+    /* Keep premium maroon accent colors for branded headings and total values */
+    #print-layout .p-company-info h1,
+    #print-layout .p-title-box,
+    #print-layout .p-col-title,
+    #print-layout .p-summary-left .bold,
+    #print-layout .p-totals-table tr.grand-total-row td,
+    #print-layout .p-upi-box strong {
+        color: #800810 !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+    }
+    
+    /* Hide the entire interactive dark Cyberpunk app container */
+    #app { display: none !important; }
 }
 
 /* ── Print Layout Sub-styles ── */
@@ -403,7 +489,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 }
 #print-layout .p-details-grid {
     display: grid;
-    grid-template-columns: 1.15fr 1.15fr 0.7fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 12px;
     margin-bottom: 14px;
 }
@@ -643,6 +729,9 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
                 <button class="topbtn" onclick="window.print()">
                     <span class="material-symbols-outlined">print</span> Print
                 </button>
+                <button class="topbtn" onclick="exportInvoiceToPDF()" title="Export as PDF" style="color:var(--accent);">
+                    <span class="material-symbols-outlined">picture_as_pdf</span> PDF
+                </button>
             </div>
         </div>
 
@@ -669,6 +758,9 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
                     </button>
                     <button class="btn btn-primary" onclick="window.print()">
                         <span class="material-symbols-outlined">print</span> Print Invoice
+                    </button>
+                    <button class="btn" onclick="exportInvoiceToPDF()" id="btn-pdf" style="background:#e11d48; color:white;">
+                        <span class="material-symbols-outlined">picture_as_pdf</span> Export PDF
                     </button>
                 </div>
             </div>
@@ -796,7 +888,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
                     <div class="form-group" style="margin-top:14px;">
                         <label class="form-label">Terms & Conditions</label>
                         <textarea id="terms" class="form-control" rows="2"
-                            placeholder="e.g. Goods once sold will not be taken back. Subject to local jurisdiction.">Goods once sold will not be taken back. All disputes subject to local jurisdiction. Payment due within 30 days of invoice date. Goods remain property of seller until full payment is received.</textarea>
+                            placeholder="e.g. Subject to local jurisdiction.">All disputes subject to local jurisdiction. Payment due within 30 days of invoice date. Goods remain property of seller until full payment is received.</textarea>
                     </div>
                 </div>
             </div>
@@ -843,8 +935,8 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
                         </button>
                     </div>
                 </div>
-                <div class="panel-body" style="padding:12px;">
-                    <div class="grid-wrap">
+                <div class="panel-body" style="padding:12px; overflow:visible;">
+                    <div class="grid-wrap" id="grid-wrap">
                         <table class="item-table" id="item-table">
                             <thead id="grid-thead"></thead>
                             <tbody id="grid-tbody"></tbody>
@@ -1010,6 +1102,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
                 <tr><td>Invoice No.:</td><td id="p-inv-no" class="bold"></td></tr>
                 <tr><td>Date:</td><td id="p-inv-date"></td></tr>
                 <tr><td>Place of Supply:</td><td id="p-place-supply"></td></tr>
+                <tr><td>Transport Mode:</td><td id="p-trans-mode"></td></tr>
                 <tr><td>E-way Bill No.:</td><td id="p-eway-bill"></td></tr>
                 <tr><td>Vehicle No.:</td><td id="p-vehicle-no"></td></tr>
             </table>
@@ -1022,6 +1115,28 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
         <tbody></tbody>
         <tfoot></tfoot>
     </table>
+    
+    <!-- HSN Tax Summary Table (GST Compliant) -->
+    <div style="break-inside: avoid; margin-bottom: 14px;">
+        <span class="p-col-title" style="margin-bottom: 6px;">Tax HSN Summary</span>
+        <table class="p-item-table" id="p-hsn-table" style="margin-bottom:0;">
+            <thead>
+                <tr>
+                    <th>HSN</th>
+                    <th>Taxable Value</th>
+                    <th id="p-hsn-cgst-hdr">CGST Rate</th>
+                    <th id="p-hsn-cgst-amt-hdr">CGST Amount</th>
+                    <th id="p-hsn-sgst-hdr">SGST Rate</th>
+                    <th id="p-hsn-sgst-amt-hdr">SGST Amount</th>
+                    <th id="p-hsn-igst-hdr">IGST Rate</th>
+                    <th id="p-hsn-igst-amt-hdr">IGST Amount</th>
+                    <th>Total Tax</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot></tfoot>
+        </table>
+    </div>
     
     <!-- Summary Grid: Words/Terms on Left, Totals on Right -->
     <div class="p-summary-grid">
@@ -1056,22 +1171,23 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
     
     <!-- Footer Signatures and UPI -->
     <div class="p-footer-grid">
-        <div class="p-upi-box" id="p-qr-container">
-            <div style="display:flex; gap:16px; align-items:center;">
-                <div style="text-align:center;">
-                    <img id="p-qr-img" src="" style="width: 100px; height: 100px; border: 1px solid #ccc; padding: 4px; border-radius: 4px;" alt="Scan to Pay">
+        <div class="p-upi-box" id="p-qr-container" style="border: 1px solid #ddd; border-radius: 4px; padding: 10px;">
+            <div style="display:flex; gap:20px; align-items:flex-start;">
+                <div style="text-align:center; flex-shrink:0;">
+                    <img id="p-qr-img" src="" style="width: 90px; height: 90px; border: 1px solid #ccc; padding: 4px; border-radius: 4px;" alt="Scan to Pay">
                     <span style="font-size:7.5pt; display:block; text-align:center; margin-top:4px; font-weight:bold; color:#2e7d32;">UPI Scan to Pay</span>
                 </div>
-                <div class="p-bank-info">
-                    <strong>Bank Account Details</strong>
-                    <div id="p-bank-text"></div>
+                <div class="p-bank-info" style="font-size:8pt; line-height:1.45; text-align:left;">
+                    <strong style="color:#800810; display:block; margin-bottom:4px; font-size:8.5pt; text-transform:uppercase;">Pay To:</strong>
+                    <div id="p-bank-name-branch" style="font-weight:600; margin-bottom:8px; color:#111;"></div>
+                    <div id="p-bank-details-block" style="color:#333;"></div>
                 </div>
             </div>
         </div>
         <div class="p-signature-box">
-            <div style="text-align:right; font-size:9pt;" class="bold">For TATTLY THREADS</div>
-            <div class="signature-image-container" style="text-align:center; margin: 4px 0;">
-                <img src="/files/tattly_threads_signature.png" alt="Signature" id="p-sig-img" style="max-height: 40px; display: none;">
+            <div style="text-align:right; font-size:9pt;" class="bold">For: TATTLY THREADS</div>
+            <div class="signature-image-container" style="text-align:center; margin: 4px 0; min-height: 40px; display: flex; align-items: center; justify-content: center;">
+                <img src="/files/tattly_threads_signature.png" alt="Signature" id="p-sig-img" style="max-height: 45px; object-fit: contain;">
             </div>
             <div style="text-align:right; font-size:8.5pt; border-top:1px dashed #ccc; padding-top:4px; margin-top: auto;">Authorized Signatory</div>
         </div>
@@ -1395,29 +1511,77 @@ async function selectCustomer(name, displayName) {
 }
 
 let _articleTimer = null;
+/* ── Article Search Dropdown — Body Portal Implementation ────────────────
+   The dropdown is a single #grid-article-portal div appended to <body>.
+   It is positioned using position:fixed based on the input's
+   getBoundingClientRect(), so it escapes all overflow:auto/.hidden parents
+   (including .grid-wrap, .panel, .panel-body) and always renders on top.
+   Active row ID is tracked in _articlePortalRid so selectArticle() can close it.
+── */
+let _articlePortalRid = null;
+
+function _getOrCreateArticlePortal() {
+    let portal = document.getElementById('grid-article-portal');
+    if (!portal) {
+        portal = document.createElement('div');
+        portal.id = 'grid-article-portal';
+        document.body.appendChild(portal);
+    }
+    return portal;
+}
+
+function _positionArticlePortal(inputEl) {
+    const portal = _getOrCreateArticlePortal();
+    const rect = inputEl.getBoundingClientRect();
+    // Default: open below the input
+    let top = rect.bottom + 4;
+    const portalHeight = Math.min(220, window.innerHeight - rect.bottom - 8);
+    // If not enough space below, open above
+    if (portalHeight < 80 && rect.top > 220) {
+        top = rect.top - Math.min(220, rect.top - 8) - 4;
+    }
+    portal.style.top    = top + 'px';
+    portal.style.left   = rect.left + 'px';
+    portal.style.width  = Math.max(rect.width, 240) + 'px';
+    portal.style.maxHeight = Math.min(220, window.innerHeight - top - 8) + 'px';
+}
+
 async function searchArticles(rid, q, inputEl) {
     clearTimeout(_articleTimer);
-    const dd = document.getElementById(`article-dropdown-${rid}`);
-    if (!dd) return;
-    if (!q) { dd.classList.remove('open'); return; }
+    const portal = _getOrCreateArticlePortal();
+    if (!q) {
+        portal.classList.remove('open');
+        _articlePortalRid = null;
+        return;
+    }
+    _articlePortalRid = rid;
+    _positionArticlePortal(inputEl);
     _articleTimer = setTimeout(async () => {
         try {
             const results = await api('smriti_retail_os.sizewise_invoice_api.search_items', { query: q });
-            dd.innerHTML = '';
+            portal.innerHTML = '';
             if (!results.length) {
-                dd.innerHTML = '<div class="search-item" style="color:var(--muted);padding:6px 10px;font-size:0.75rem;">No items found</div>';
+                const noRes = document.createElement('div');
+                noRes.className = 'search-item';
+                noRes.style.color = 'var(--muted)';
+                noRes.style.fontSize = '0.75rem';
+                noRes.textContent = 'No items found';
+                portal.appendChild(noRes);
             } else {
                 results.forEach(item => {
                     const d = document.createElement('div');
                     d.className = 'search-item';
-                    d.style.padding = '6px 10px';
-                    d.style.fontSize = '0.75rem';
-                    d.innerHTML = `<strong>${esc(item.name)}</strong> <small>${esc(item.item_name)}</small>`;
-                    d.onclick = () => selectArticle(rid, item, inputEl);
-                    dd.appendChild(d);
+                    d.innerHTML = `<strong>${esc(item.name)}</strong> <small>${esc(item.item_name || '')}</small>`;
+                    d.onmousedown = (e) => {
+                        // Use mousedown so it fires before the input's blur
+                        e.preventDefault();
+                        selectArticle(rid, item, inputEl);
+                    };
+                    portal.appendChild(d);
                 });
             }
-            dd.classList.add('open');
+            _positionArticlePortal(inputEl);
+            portal.classList.add('open');
         } catch(e) { console.error(e); }
     }, 250);
 }
@@ -1453,17 +1617,45 @@ function selectArticle(rid, item, inputEl) {
         if (gstSelect) gstSelect.value = row.gst_pct;
     }
     
-    const dd = document.getElementById(`article-dropdown-${rid}`);
-    if (dd) dd.classList.remove('open');
+    // Close the portal dropdown
+    const portal = document.getElementById('grid-article-portal');
+    if (portal) portal.classList.remove('open');
+    _articlePortalRid = null;
     
     recalculate();
     handleArticleOrColorChange(rid);
 }
 
 document.addEventListener('click', e => {
+    // Close customer search dropdown
     if (!e.target.closest('.search-wrap')) {
-        document.getElementById('cust-dropdown').classList.remove('open');
-        document.querySelectorAll('.search-dropdown').forEach(dd => dd.classList.remove('open'));
+        const custDd = document.getElementById('cust-dropdown');
+        if (custDd) custDd.classList.remove('open');
+    }
+    // Close article portal if clicking outside the portal and outside any article input
+    const portal = document.getElementById('grid-article-portal');
+    if (portal && !e.target.closest('#grid-article-portal') && !e.target.closest('.article-input')) {
+        portal.classList.remove('open');
+        _articlePortalRid = null;
+    }
+});
+
+// Reposition portal on scroll of the grid so it tracks the input
+document.addEventListener('DOMContentLoaded', () => {
+    const gridWrap = document.getElementById('grid-wrap');
+    if (gridWrap) {
+        gridWrap.addEventListener('scroll', () => {
+            const portal = document.getElementById('grid-article-portal');
+            if (portal && portal.classList.contains('open') && _articlePortalRid !== null) {
+                const activeInput = document.querySelector(`#row-${_articlePortalRid} .article-input`);
+                if (activeInput) {
+                    _positionArticlePortal(activeInput);
+                } else {
+                    portal.classList.remove('open');
+                    _articlePortalRid = null;
+                }
+            }
+        });
     }
 });
 
@@ -1611,12 +1803,10 @@ function appendRowToDOM(row) {
     tr.innerHTML = `
         <td class="sticky-col sticky-0" style="color:var(--muted);font-size:0.78rem;padding:4px 6px;">${rowIdx}</td>
         <td class="sticky-col sticky-1">
-            <div class="search-wrap">
-                <input class="cell-input article-input" style="min-width:100px;" placeholder="Article/Style…" value="${esc(row.article)}" autocomplete="off"
-                    oninput="searchArticles(${row._id}, this.value, this); updateRowField(${row._id}, 'article', this.value)"
-                    onfocus="searchArticles(${row._id}, this.value, this)">
-                <div class="search-dropdown" id="article-dropdown-${row._id}"></div>
-            </div>
+            <input class="cell-input article-input" style="min-width:100px;" placeholder="Article/Style…" value="${esc(row.article)}" autocomplete="off"
+                oninput="searchArticles(${row._id}, this.value, this); updateRowField(${row._id}, 'article', this.value)"
+                onfocus="searchArticles(${row._id}, this.value, this)"
+                onblur="setTimeout(()=>{ const p=document.getElementById('grid-article-portal'); if(p && !p.matches(':hover')){p.classList.remove('open');} }, 180)">
         </td>
         <td class="sticky-col sticky-2"><input class="cell-input" style="min-width:80px;" placeholder="Color…" value="${esc(row.color)}"
             oninput="updateRowField(${row._id},'color',this.value)"></td>
@@ -1875,56 +2065,66 @@ function numberToWords(n) {
 
 // ── Auto-Population from Item Master on Article/Color Lookup ──────────
 let _lookupTimers = {};
-async function handleArticleOrColorChange(rid) {
+function handleArticleOrColorChange(rid, debounce = true) {
+    if (!debounce) {
+        return executeLookup(rid);
+    }
     clearTimeout(_lookupTimers[rid]);
-    _lookupTimers[rid] = setTimeout(async () => {
-        const row = state.rows.find(r => r._id === rid);
-        if (!row || !row.article) return;
+    return new Promise((resolve) => {
+        _lookupTimers[rid] = setTimeout(async () => {
+            await executeLookup(rid);
+            resolve();
+        }, 300);
+    });
+}
+
+async function executeLookup(rid) {
+    const row = state.rows.find(r => r._id === rid);
+    if (!row || !row.article) return;
+    
+    try {
+        const details = await api('smriti_retail_os.sizewise_invoice_api.get_item_details_by_article', {
+            article: row.article,
+            color: row.color
+        });
         
-        try {
-            const details = await api('smriti_retail_os.sizewise_invoice_api.get_item_details_by_article', {
-                article: row.article,
-                color: row.color
-            });
+        if (details && details.article) {
+            // Update row state
+            row.category     = details.category     || row.category;
+            row.sub_category = details.sub_category || row.sub_category;
+            row.hsn_code     = details.hsn_code     || row.hsn_code;
+            row.mrp          = details.mrp          || row.mrp;
+            row.gst_pct      = details.gst_pct      || row.gst_pct;
+            row.rate         = details.rate         || row.rate;
             
-            if (details && details.article) {
-                // Update row state
-                row.category     = details.category     || row.category;
-                row.sub_category = details.sub_category || row.sub_category;
-                row.hsn_code     = details.hsn_code     || row.hsn_code;
-                row.mrp          = details.mrp          || row.mrp;
-                row.gst_pct      = details.gst_pct      || row.gst_pct;
-                row.rate         = details.rate         || row.rate;
+            // Update input values in the DOM
+            const tr = document.getElementById(`row-${rid}`);
+            if (tr) {
+                const catInput = tr.querySelector('input[placeholder="Category…"]');
+                if (catInput) catInput.value = row.category;
                 
-                // Update input values in the DOM
-                const tr = document.getElementById(`row-${rid}`);
-                if (tr) {
-                    const catInput = tr.querySelector('input[placeholder="Category…"]');
-                    if (catInput) catInput.value = row.category;
-                    
-                    const subInput = tr.querySelector('input[placeholder="Sub-Cat…"]');
-                    if (subInput) subInput.value = row.sub_category;
-                    
-                    const hsnInput = tr.querySelector('input[placeholder="HSN…"]');
-                    if (hsnInput) hsnInput.value = row.hsn_code;
-                    
-                    const mrpInput = tr.querySelector('input[placeholder="₹MRP"]');
-                    if (mrpInput) mrpInput.value = row.mrp || '';
-                    
-                    const rateInput = tr.querySelector('input[placeholder="₹Rate"]');
-                    if (rateInput) rateInput.value = row.rate || '';
-                    
-                    const gstSelect = tr.querySelector('select');
-                    if (gstSelect) gstSelect.value = row.gst_pct;
-                }
+                const subInput = tr.querySelector('input[placeholder="Sub-Cat…"]');
+                if (subInput) subInput.value = row.sub_category;
                 
-                calcRowTotals(rid);
-                recalculate();
+                const hsnInput = tr.querySelector('input[placeholder="HSN…"]');
+                if (hsnInput) hsnInput.value = row.hsn_code;
+                
+                const mrpInput = tr.querySelector('input[placeholder="₹MRP"]');
+                if (mrpInput) mrpInput.value = row.mrp || '';
+                
+                const rateInput = tr.querySelector('input[placeholder="₹Rate"]');
+                if (rateInput) rateInput.value = row.rate || '';
+                
+                const gstSelect = tr.querySelector('select');
+                if (gstSelect) gstSelect.value = row.gst_pct;
             }
-        } catch (e) {
-            console.error('Auto-population from Item Master failed:', e);
+            
+            calcRowTotals(rid);
+            recalculate();
         }
-    }, 300);
+    } catch (e) {
+        console.error('Auto-population from Item Master failed:', e);
+    }
 }
 
 // ── Smart Excel Paste Importer ────────────────────────────────
@@ -2044,7 +2244,7 @@ async function importExcelFromTextArea() {
             added++;
 
             if (article) {
-                pendingAutoCompletes.push(handleArticleOrColorChange(currentCounter));
+                pendingAutoCompletes.push(handleArticleOrColorChange(currentCounter, false));
             }
         }
 
@@ -2226,7 +2426,7 @@ async function applyOcrReviewToGrid() {
         });
 
         if (row.article) {
-            pendingAutoCompletes.push(handleArticleOrColorChange(currentCounter));
+            pendingAutoCompletes.push(handleArticleOrColorChange(currentCounter, false));
         }
     });
 
@@ -2274,6 +2474,7 @@ async function saveInvoice(andSubmit = false) {
         state.docstatus = 0;
         document.getElementById('inv-number').value = result.name;
         document.getElementById('inv-status-badge').innerHTML = `<span class="status-badge status-draft">Draft</span>`;
+        history.replaceState({}, '', `?invoice=${result.name}`);
         toast(`Invoice ${result.name} saved!`, 'success');
 
         if (andSubmit) {
@@ -2376,7 +2577,7 @@ async function loadInvoice(name) {
             document.getElementById('buyer-gstin').value  = c.gstin || '';
             document.getElementById('buyer-mobile').value = c.mobile_no || '';
             const a = c.address || {};
-            document.getElementById('buyer-addr').value  = [a.line1, a.city, a.state].filter(Boolean).join(', ');
+            document.getElementById('buyer-addr').value  = [a.line1, a.line2, a.city, a.state, a.pincode].filter(Boolean).join(', ');
         } catch(_) {}
 
         // Load rows into grid
@@ -2463,6 +2664,7 @@ function populatePrintLayout(grand = 0) {
     if (c.phone) metaLines.push('Phone: ' + c.phone);
     if (c.email) metaLines.push('Email: ' + c.email);
     if (c.gstin) metaLines.push('GSTIN: ' + c.gstin);
+    if (c.pan) metaLines.push('PAN: ' + c.pan);
     if (c.state_code) metaLines.push('State: ' + c.state_code + (cAddr.state ? ' - ' + cAddr.state : ''));
     document.getElementById('p-company-meta').innerHTML = metaLines.join('<br>');
     
@@ -2481,24 +2683,43 @@ function populatePrintLayout(grand = 0) {
     const bAddr = document.getElementById('buyer-addr').value || '—';
     const pos = document.getElementById('place-of-supply').value || '—';
     
-    document.getElementById('p-bill-to').innerHTML = `<strong>${buyer}</strong><br>GSTIN: ${bGSTIN}<br>${bAddr}<br>State: ${pos}`;
+    let stateName = '—';
+    if (pos && pos !== '—') {
+        const parts = pos.split('-');
+        stateName = (parts.length > 1 ? parts[1] : parts[0]).toUpperCase();
+    }
+    
+    const cPAN = (bGSTIN && bGSTIN.length === 15) ? bGSTIN.substring(2, 12) : '—';
+    document.getElementById('p-bill-to').innerHTML = `<strong>${buyer}</strong><br>GSTIN: ${bGSTIN}<br>PAN: ${cPAN}<br>${bAddr}<br>State: ${stateName}`;
     
     const shipTo = document.getElementById('ship-to').value || '';
     if (shipTo) {
-        document.getElementById('p-ship-to').innerHTML = `<strong>${buyer}</strong><br>${shipTo}<br>State: ${pos}`;
+        document.getElementById('p-ship-to').innerHTML = `<strong>${buyer}</strong><br>PAN: ${cPAN}<br>${shipTo}<br>State: ${stateName}`;
     } else {
-        document.getElementById('p-ship-to').innerHTML = `<strong>${buyer}</strong><br>${bAddr}<br>State: ${pos}`;
+        document.getElementById('p-ship-to').innerHTML = `<strong>${buyer}</strong><br>PAN: ${cPAN}<br>${bAddr}<br>State: ${stateName}`;
     }
     
     // 3. Invoice Details
     const invNo = document.getElementById('inv-number').value || '—';
     const invDate = document.getElementById('inv-date').value || '—';
+    const transMode = document.getElementById('transport-mode').value || '—';
     const eway = document.getElementById('eway-bill').value || '';
     const vehicle = document.getElementById('vehicle-no').value || '';
     
+    let formattedDate = '—';
+    if (invDate && invDate !== '—') {
+        const parts = invDate.split('-');
+        if (parts.length === 3) {
+            formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        } else {
+            formattedDate = invDate;
+        }
+    }
+    
     document.getElementById('p-inv-no').textContent = invNo;
-    document.getElementById('p-inv-date').textContent = invDate;
-    document.getElementById('p-place-supply').textContent = pos;
+    document.getElementById('p-inv-date').textContent = formattedDate;
+    document.getElementById('p-place-supply').textContent = pos.toUpperCase();
+    document.getElementById('p-trans-mode').textContent = transMode;
     document.getElementById('p-eway-bill').textContent = eway || '—';
     document.getElementById('p-vehicle-no').textContent = vehicle || '—';
     
@@ -2513,8 +2734,19 @@ function populatePrintLayout(grand = 0) {
     const bankBranch = document.getElementById('bank-branch').value || '';
     
     if (bankName || bankAc) {
-        document.getElementById('p-payto').innerHTML = `Bank Name: <strong>${bankName}</strong><br>Account No.: <strong>${bankAc}</strong><br>IFSC: <strong>${bankIFSC}</strong><br>Branch: ${bankBranch}`;
-        document.getElementById('p-bank-text').innerHTML = `Bank Account No.: ${bankAc}<br>Bank IFSC code: ${bankIFSC}<br>Account Holder's Name: ${c.company_name || 'TATTLY THREADS'}`;
+        const branchStr = bankBranch ? bankBranch.toUpperCase() : 'WARDHMAN NAGAR NAGPUR';
+        document.getElementById('p-bank-name-branch').innerHTML = `Bank Name: ${bankName.toUpperCase()},<br>${branchStr}`;
+        
+        document.getElementById('p-bank-details-block').innerHTML = `
+            <br>
+            Bank Account No.: ${bankAc}<br>
+            Bank IFSC code: ${bankIFSC}<br>
+            Account Holder's Name: ${(c.company_name || 'TATTLY THREADS').toUpperCase()}
+        `;
+        
+        if (document.getElementById('p-payto')) {
+            document.getElementById('p-payto').innerHTML = `Bank Name: <strong>${bankName}</strong><br>Account No.: <strong>${bankAc}</strong><br>IFSC: <strong>${bankIFSC}</strong>`;
+        }
         
         // UPI QR Code
         const upiId = c.phone ? `${c.phone}@upi` : "9604990390@upi";
@@ -2522,8 +2754,8 @@ function populatePrintLayout(grand = 0) {
         document.getElementById('p-qr-img').src = qrUrl;
         document.getElementById('p-qr-container').style.display = 'block';
     } else {
-        document.getElementById('p-payto').textContent = '—';
-        document.getElementById('p-bank-text').textContent = 'Bank details not configured';
+        document.getElementById('p-bank-name-branch').textContent = 'Bank details not configured';
+        document.getElementById('p-bank-details-block').textContent = '';
         document.getElementById('p-qr-container').style.display = 'none';
     }
     
@@ -2569,13 +2801,12 @@ function populatePrintLayout(grand = 0) {
     let headHtml = `<tr>
         <th>#</th>
         <th class="text-left">Item Name</th>
-        <th>HSN/SAC</th>
+        <th>HSN</th>
         <th>MRP</th>
         ${sizes.map(s => `<th>${s}</th>`).join('')}
-        <th>Quantity</th>
-        <th>Unit</th>
+        <th>Qty</th>
         <th>Price/Unit</th>
-        <th>Discount</th>
+        <th>Disc</th>
         <th>GST</th>
         <th>Amount</th>
     </tr>`;
@@ -2592,16 +2823,16 @@ function populatePrintLayout(grand = 0) {
         const disc = parseFloat(row.discount_percentage) || 0;
         const gstPct = parseFloat(row.gst_pct) || 0;
         const hsn = row.hsn_code || '';
+        const hsn4 = hsn.substring(0, 4);
         const amt = qty * rate * (1 - disc / 100);
         
         bodyHtml += `<tr>
             <td>${validRowIndex++}</td>
-            <td class="text-left"><strong>${row.article}</strong><br><small>${row.color} | ${row.category} | ${row.sub_category}</small></td>
-            <td>${hsn}</td>
+            <td class="text-left"><strong>${row.article} - ${(row.color || '').toUpperCase()}</strong></td>
+            <td>${hsn4}</td>
             <td>${mrp.toFixed(2)}</td>
             ${sizes.map(s => `<td>${parseInt(row.sizes[s]) || ''}</td>`).join('')}
-            <td class="bold">${qty}</td>
-            <td>Prs</td>
+            <td class="bold">${qty} Prs</td>
             <td>${rate.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
             <td>${disc > 0 ? disc.toFixed(2) + '%' : '—'}</td>
             <td>${gstPct}%</td>
@@ -2616,8 +2847,7 @@ function populatePrintLayout(grand = 0) {
             const szQty = state.rows.reduce((sum, r) => sum + (parseInt(r.sizes[s]) || 0), 0);
             return `<td class="bold">${szQty || ''}</td>`;
         }).join('')}
-        <td class="bold">${totalQty}</td>
-        <td class="bold">Prs</td>
+        <td class="bold">${totalQty} Prs</td>
         <td></td>
         <td></td>
         <td class="bold">₹${totalTax.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
@@ -2633,6 +2863,81 @@ function populatePrintLayout(grand = 0) {
         pTable.appendChild(tfoot);
     }
     tfoot.innerHTML = footHtml;
+
+    // 7. HSN Summary Table Population
+    const hsnMap = {};
+    state.rows.forEach(row => {
+        const qty = sizes.reduce((s, sz) => s + (parseFloat(row.sizes[sz]) || 0), 0);
+        if (qty <= 0) return;
+        const rate = parseFloat(row.rate) || 0;
+        const disc = parseFloat(row.discount_percentage) || 0;
+        const gstPct = parseFloat(row.gst_pct) || 0;
+        const hsn = (row.hsn_code || 'N/A').substring(0, 4);
+        const lineTaxable = qty * rate * (1 - disc / 100);
+        const lineTax = lineTaxable * gstPct / 100;
+        
+        const key = `${hsn}|${gstPct}`;
+        if (!hsnMap[key]) hsnMap[key] = { hsn, gstPct, taxable: 0, tax: 0 };
+        hsnMap[key].taxable += lineTaxable;
+        hsnMap[key].tax += lineTax;
+    });
+
+    const isIntra = state.taxType === 'intrastate';
+    
+    // Toggle table headers
+    document.getElementById('p-hsn-cgst-hdr').style.display = isIntra ? '' : 'none';
+    document.getElementById('p-hsn-cgst-amt-hdr').style.display = isIntra ? '' : 'none';
+    document.getElementById('p-hsn-sgst-hdr').style.display = isIntra ? '' : 'none';
+    document.getElementById('p-hsn-sgst-amt-hdr').style.display = isIntra ? '' : 'none';
+    document.getElementById('p-hsn-igst-hdr').style.display = isIntra ? 'none' : '';
+    document.getElementById('p-hsn-igst-amt-hdr').style.display = isIntra ? 'none' : '';
+    
+    let hsnBody = '';
+    let hsnTotalTaxable = 0, hsnTotalTax = 0;
+    
+    Object.values(hsnMap).forEach(m => {
+        hsnTotalTaxable += m.taxable;
+        hsnTotalTax += m.tax;
+        
+        hsnBody += `<tr>
+            <td class="bold">${m.hsn}</td>
+            <td class="text-right">₹${m.taxable.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+            ${isIntra ? `
+                <td>${(m.gstPct/2).toFixed(1)}%</td>
+                <td class="text-right">₹${(m.tax/2).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                <td>${(m.gstPct/2).toFixed(1)}%</td>
+                <td class="text-right">₹${(m.tax/2).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+            ` : `
+                <td>${m.gstPct.toFixed(1)}%</td>
+                <td class="text-right">₹${m.tax.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+            `}
+            <td class="bold text-right">₹${m.tax.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+        </tr>`;
+    });
+    
+    let hsnFoot = `<tr>
+        <td class="bold">Total</td>
+        <td class="bold text-right">₹${hsnTotalTaxable.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+        ${isIntra ? `
+            <td></td>
+            <td class="bold text-right">₹${(hsnTotalTax/2).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+            <td></td>
+            <td class="bold text-right">₹${(hsnTotalTax/2).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+        ` : `
+            <td></td>
+            <td class="bold text-right">₹${hsnTotalTax.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+        `}
+        <td class="bold text-right">₹${hsnTotalTax.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+    </tr>`;
+    
+    document.getElementById('p-hsn-table').querySelector('tbody').innerHTML = hsnBody;
+    
+    let hsnTfoot = document.getElementById('p-hsn-table').querySelector('tfoot');
+    if (!hsnTfoot) {
+        hsnTfoot = document.createElement('tfoot');
+        document.getElementById('p-hsn-table').appendChild(hsnTfoot);
+    }
+    hsnTfoot.innerHTML = hsnFoot;
 }
 
 
@@ -2694,6 +2999,59 @@ async function init() {
     const st = document.createElement('style');
     st.textContent = '@keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }';
     document.head.appendChild(st);
+}
+
+function exportInvoiceToPDF() {
+    const element = document.getElementById('print-layout');
+    if (!element) {
+        toast('Print layout not found', 'error');
+        return;
+    }
+    
+    // Temporarily make print layout visible for the PDF generator
+    const originalDisplay = element.style.display;
+    element.style.display = 'block';
+    element.style.width = '210mm'; // Standard A4 width
+    element.style.padding = '10mm';
+    element.style.background = '#ffffff';
+    
+    // Force native system fonts for rendering
+    element.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+    
+    const invNo = document.getElementById('inv-number').value || 'Invoice';
+    
+    const opt = {
+        margin:       0,
+        filename:     `${invNo}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { 
+            scale: 2, 
+            useCORS: true,
+            logging: false,
+            letterRendering: true
+        },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    toast('Generating PDF…', 'info');
+    
+    html2pdf().set(opt).from(element).save().then(() => {
+        // Restore original state
+        element.style.display = originalDisplay;
+        element.style.width = '';
+        element.style.padding = '';
+        element.style.background = '';
+        element.style.fontFamily = '';
+        toast('PDF exported successfully!', 'success');
+    }).catch(err => {
+        console.error("PDF generation error:", err);
+        element.style.display = originalDisplay;
+        element.style.width = '';
+        element.style.padding = '';
+        element.style.background = '';
+        element.style.fontFamily = '';
+        toast('Failed to export PDF: ' + err.message, 'error');
+    });
 }
 
 window.onload = init;

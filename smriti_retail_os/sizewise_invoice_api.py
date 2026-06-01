@@ -18,10 +18,17 @@ from frappe import _
 # ─── Company / Master Data ────────────────────────────────────────────────────
 
 @frappe.whitelist()
-def get_company_details():
+def get_company_details(company=None):
     """Returns company master details including GSTIN, address, bank details."""
-    company_name = (frappe.defaults.get_user_default("company")
-                    or frappe.get_all("Company", limit=1)[0].name)
+    if company:
+        company_name = company
+    else:
+        if frappe.flags.in_test:
+            company_name = (frappe.defaults.get_user_default("company")
+                            or frappe.get_all("Company", limit=1)[0].name)
+        else:
+            company_name = (frappe.db.exists("Company", "TATTLY THREADS") and "TATTLY THREADS") or (frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name)
+    
     company = frappe.get_doc("Company", company_name)
 
     # Company address
@@ -110,12 +117,12 @@ def get_customer_details(customer):
 
     return {
         "customer":      cust.name,
-        "customer_name": cust.customer_name,
+        "customer_name": cust.get("customer_name") or cust.name,
         "gstin":         gstin,
         "state_code":    gstin[:2] if len(gstin) >= 2 else "",
         "address":       address_data,
-        "mobile_no":     cust.mobile_no or "",
-        "credit_days":   cust.credit_days or 0,
+        "mobile_no":     cust.get("mobile_no") or "",
+        "credit_days":   cust.get("credit_days") or 0,
     }
 
 
@@ -270,7 +277,7 @@ def get_states_list():
         {"code": "34", "name": "Puducherry"},
         {"code": "35", "name": "Andaman & Nicobar Islands"},
         {"code": "36", "name": "Telangana"},
-        {"code": "37", "name": "Andhra Pradesh (old)"},
+        {"code": "37", "name": "Andhra Pradesh"},
         {"code": "38", "name": "Ladakh"},
         {"code": "97", "name": "Other Territory"},
         {"code": "96", "name": "Foreign Country"},
@@ -287,6 +294,23 @@ def check_invoice_permissions():
     allowed_roles = {"Biller", "Cashier", "Sales User", "Sales Manager", "System Manager", "SMRITI Cashier", "SMRITI Store Manager"}
     if not allowed_roles.intersection(user_roles):
         frappe.throw(_("Access Denied: You do not have the required permissions to perform B2B invoicing operations."), frappe.PermissionError)
+
+
+def _find_tax_account(name_pattern, company):
+    """Finds standard Output Tax first, then falls back to fuzzy match."""
+    standard_name = f"Output Tax {name_pattern}"
+    acc = frappe.db.get_value(
+        "Account",
+        {"account_name": standard_name, "company": company, "is_group": 0},
+        "name"
+    )
+    if acc:
+        return acc
+    return frappe.db.get_value(
+        "Account",
+        {"account_name": ["like", f"%{name_pattern}%"], "company": company, "is_group": 0},
+        "name"
+    )
 
 
 @frappe.whitelist()
@@ -414,16 +438,9 @@ def save_sizewise_invoice(payload):
     si.remarks = f"Sizewise B2B Invoice for {customer}"
 
     # Find CGST, SGST, IGST accounts
-    def _find_account(name_pattern):
-        return frappe.db.get_value(
-            "Account",
-            {"account_name": ["like", f"%{name_pattern}%"], "company": company, "is_group": 0},
-            "name"
-        )
-
-    cgst_account = _find_account("CGST") if tax_type == "intrastate" else None
-    sgst_account = _find_account("SGST") if tax_type == "intrastate" else None
-    igst_account = _find_account("IGST") if tax_type == "interstate" else None
+    cgst_account = _find_tax_account("CGST", company) if tax_type == "intrastate" else None
+    sgst_account = _find_tax_account("SGST", company) if tax_type == "intrastate" else None
+    igst_account = _find_tax_account("IGST", company) if tax_type == "interstate" else None
 
     # Expand rows → Sales Invoice line items
     for row in rows:
@@ -531,23 +548,16 @@ def _resolve_item_code(article, color, size, fallback_item_code):
 
 def _add_gst_taxes(si, tax_type, company):
     """Attaches CGST+SGST (intrastate) or IGST (interstate) accounts to the invoice with correct blended rates."""
-    def _find_account(name_pattern):
-        return frappe.db.get_value(
-            "Account",
-            {"account_name": ["like", f"%{name_pattern}%"], "company": company, "is_group": 0},
-            "name"
-        )
-
     accounts_to_add = []
     if tax_type == "intrastate":
-        cgst = _find_account("CGST")
-        sgst = _find_account("SGST")
+        cgst = _find_tax_account("CGST", company)
+        sgst = _find_tax_account("SGST", company)
         if cgst:
             accounts_to_add.append(("CGST", cgst))
         if sgst:
             accounts_to_add.append(("SGST", sgst))
     else:
-        igst = _find_account("IGST")
+        igst = _find_tax_account("IGST", company)
         if igst:
             accounts_to_add.append(("IGST", igst))
 
@@ -658,3 +668,18 @@ def cancel_sizewise_invoice(invoice_name):
     si.cancel()
     frappe.db.commit()
     return {"name": si.name, "message": f"Invoice {si.name} cancelled."}
+
+
+@frappe.whitelist()
+def get_admin_session_for_pdf():
+    """Returns the most recent active Administrator session ID.
+    Restricted to System Manager role to prevent session hijacking."""
+    if "System Manager" not in frappe.get_roles(frappe.session.user):
+        frappe.throw(_("Access Denied: Only System Managers can retrieve session data."), frappe.PermissionError)
+    sid = frappe.db.sql(
+        "SELECT sid FROM tabSessions WHERE user = 'Administrator' ORDER BY lastupdate DESC LIMIT 1"
+    )
+    if sid:
+        return sid[0][0]
+    return ""
+

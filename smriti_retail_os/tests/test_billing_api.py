@@ -49,7 +49,7 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
             ig.insert(ignore_permissions=True)
             self.item_group = ig.name
 
-        self.company = frappe.db.exists("Company", "_Test Company") or frappe.db.get_value("Company", {}, "name")
+        self.company = frappe.db.exists("Company", "_Test Company")
         if not self.company:
             # Create Transit Warehouse Type if missing to support default warehouse creation on Company insert
             if not frappe.db.exists("Warehouse Type", "Transit"):
@@ -64,6 +64,27 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
             comp.default_currency = "INR"
             comp.insert(ignore_permissions=True)
             self.company = comp.name
+
+        # Ensure the test company has a valid GSTIN and registered company address (Required for India Compliance)
+        frappe.db.set_value("Company", self.company, "gstin", "27AAXFT2508H1ZR")
+        
+        addr_name = f"{self.company}-Registered-Test"
+        if not frappe.db.exists("Address", addr_name):
+            addr = frappe.new_doc("Address")
+            addr.address_title = self.company
+            addr.address_type = "Office"
+            addr.address_line1 = "Test Street"
+            addr.city = "Mumbai"
+            addr.state = "Maharashtra"
+            addr.pincode = "400001"
+            addr.country = "India"
+            addr.is_primary_address = 1
+            addr.is_shipping_address = 1
+            addr.is_your_company_address = 1
+            addr.gstin = "27AAXFT2508H1ZR"
+            addr.append("links", {"link_doctype": "Company", "link_name": self.company})
+            addr.insert(ignore_permissions=True)
+            frappe.db.commit()
 
         # Create valid GST HSN Code record for India Compliance
         self.hsn_code = frappe.db.exists("GST HSN Code", "998311") or frappe.db.get_value("GST HSN Code", {}, "name")

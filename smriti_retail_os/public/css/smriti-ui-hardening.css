@@ -1,0 +1,408 @@
+/**
+ * @file smriti-ui-hardening.css
+ * @description SMRITI Retail OS — Global UI Hardening & Enterprise Grid Standards
+ *              Applies to ALL modules: Billing, Purchase, Inventory, CRM, Reports,
+ *              Dashboard, Item Master, Sizewise Invoice, Administration, and all future modules.
+ *
+ * @author Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @version 1.0.0
+ * @license MIT — Copyright (c) 2026 AITDL NETWORK & ERPNbook.com
+ *
+ * ═══════════════════════════════════════════════════════════════════
+ * DESIGN PRINCIPLES
+ * ═══════════════════════════════════════════════════════════════════
+ *
+ * RULE 1 — Z-INDEX HIERARCHY (never deviate)
+ *   Content:          1
+ *   Cards / Panels:   10
+ *   Sticky Headers:   100
+ *   Topbar / Navbar:  200
+ *   Dropdowns:        5000
+ *   Modals:           10000
+ *   Notifications:    15000
+ *   Dev Overlays:     99999
+ *
+ * RULE 2 — GRID HEIGHT STANDARDS
+ *   .smriti-grid-sm:  400px  (narrow lists, reference pickers)
+ *   .smriti-grid-md:  600px  (standard data-entry grids)
+ *   .smriti-grid-lg:  800px  (large reporting/reconciliation tables)
+ *   NEVER use auto-height or content-dependent height on data grids.
+ *
+ * RULE 3 — OVERFLOW DOCTRINE
+ *   Scroll containers:       overflow-x: auto; overflow-y: auto;
+ *   Layout wrappers:         overflow: visible (default — do NOT set hidden)
+ *   Exception — full-screen app shells can use overflow:hidden on body/html
+ *   but NEVER on intermediate layout divs that contain interactive widgets.
+ *
+ * RULE 4 — DROPDOWN PORTAL PATTERN
+ *   All in-grid dropdowns must use the #smriti-dropdown-portal element
+ *   (appended once to <body>) positioned via getBoundingClientRect() with
+ *   position:fixed. This guarantees they escape ALL overflow:hidden ancestors.
+ *
+ * ═══════════════════════════════════════════════════════════════════
+ */
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 1 — Z-INDEX CUSTOM PROPERTIES
+   ═══════════════════════════════════════════════════════════════════ */
+:root {
+  --z-content:       1;
+  --z-card:          10;
+  --z-sticky:        100;
+  --z-topbar:        200;
+  --z-dropdown:      5000;
+  --z-modal:         10000;
+  --z-notification:  15000;
+  --z-devtools:      99999;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 2 — GLOBAL GRID CONTAINERS
+   Fixed heights, both-axis scrolling, sticky headers.
+   Apply via class on the scroll wrapper element.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Small grid — narrow lists, lookup tables, reference pickers */
+.smriti-grid-sm {
+  height: 400px;
+  min-height: 400px;
+  overflow-x: auto;
+  overflow-y: auto;
+  border-radius: 8px;
+  position: relative;
+  /* Do NOT add overflow:hidden — dropdowns must escape */
+}
+
+/* Standard grid — default data-entry (billing, purchase lines, pivot) */
+.smriti-grid-md {
+  height: 600px;
+  min-height: 600px;
+  overflow-x: auto;
+  overflow-y: auto;
+  border-radius: 8px;
+  position: relative;
+}
+
+/* Large grid — reporting, reconciliation, large datasets */
+.smriti-grid-lg {
+  height: 800px;
+  min-height: 800px;
+  overflow-x: auto;
+  overflow-y: auto;
+  border-radius: 8px;
+  position: relative;
+}
+
+/* Backward-compat alias: .sim-grid-wrapper (item_master.html, sizewise_item.html) */
+/* Override the dynamic max-height with a fixed standard height */
+.sim-grid-wrapper {
+  height: 600px !important;
+  min-height: 600px !important;
+  max-height: none !important;   /* Remove the calc(100vh - 350px) */
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  position: relative !important;
+}
+
+/* Sticky thead — works inside any .smriti-grid-* or .sim-grid-wrapper */
+.smriti-grid-sm  thead,
+.smriti-grid-md  thead,
+.smriti-grid-lg  thead,
+.sim-grid-wrapper thead {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 3 — GLOBAL DROPDOWN PORTAL
+   A single floating div appended to <body> by smriti-ui-hardening.js.
+   Uses position:fixed + z-index:var(--z-dropdown) so it escapes
+   ALL overflow:auto / overflow:hidden ancestors.
+   ═══════════════════════════════════════════════════════════════════ */
+#smriti-dropdown-portal {
+  position: fixed;
+  z-index: var(--z-dropdown);
+  background: var(--card2, #172040);
+  border: 1px solid var(--border2, rgba(255,255,255,0.13));
+  border-radius: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.65);
+  display: none;
+  min-width: 200px;
+  pointer-events: auto;
+  /* Thin scrollbar inside portal */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+#smriti-dropdown-portal.open {
+  display: block;
+}
+#smriti-dropdown-portal .s-portal-item {
+  padding: 9px 14px;
+  cursor: pointer;
+  font-size: 0.84rem;
+  border-bottom: 1px solid var(--border, rgba(255,255,255,0.07));
+  transition: background 0.12s;
+  color: var(--text, #e2e8f0);
+  line-height: 1.4;
+}
+#smriti-dropdown-portal .s-portal-item:last-child {
+  border-bottom: none;
+}
+#smriti-dropdown-portal .s-portal-item:hover,
+#smriti-dropdown-portal .s-portal-item.highlighted {
+  background: rgba(99,102,241,0.18);
+  color: var(--primary-lt, #818cf8);
+}
+#smriti-dropdown-portal .s-portal-item small {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--text-muted, #94a3b8);
+  margin-top: 1px;
+}
+#smriti-dropdown-portal .s-portal-empty {
+  padding: 10px 14px;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* Light-mode portal variant (for pages using smriti_theme.css / light palette) */
+.smriti-light-mode #smriti-dropdown-portal,
+body:not([data-theme="dark"]):not(.dark-mode) #smriti-dropdown-portal {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 32px rgba(15,23,42,0.16);
+}
+.smriti-light-mode #smriti-dropdown-portal .s-portal-item,
+body:not([data-theme="dark"]):not(.dark-mode) #smriti-dropdown-portal .s-portal-item {
+  color: #0f172a;
+  border-color: #e2e8f0;
+}
+.smriti-light-mode #smriti-dropdown-portal .s-portal-item:hover,
+body:not([data-theme="dark"]):not(.dark-mode) #smriti-dropdown-portal .s-portal-item:hover {
+  background: #f1f5f9;
+  color: #6941c6;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 4 — CUSTOMER / SUPPLIER SEARCH DROPDOWNS
+   Fix the .search-dropdown class used across all modules.
+   Must render with z-index:var(--z-dropdown) and not be clipped.
+   ═══════════════════════════════════════════════════════════════════ */
+.search-dropdown {
+  z-index: var(--z-dropdown) !important;  /* Override per-module z-index:50 */
+}
+
+/* The customer search wrap needs overflow:visible so dropdown escapes */
+.search-wrap {
+  position: relative;
+  overflow: visible !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 5 — PANEL / CARD OVERFLOW FIXES
+   Panels that wrap grids must NOT have overflow:hidden.
+   The .panel-body that holds a grid must be overflow:visible.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* The .form-section in smriti_theme.css has overflow:hidden — override */
+.form-section {
+  overflow: visible !important;
+}
+
+/* Any panel-body holding a grid must allow dropdown popup escape */
+.panel-body.has-grid,
+.panel-body.grid-panel {
+  overflow: visible !important;
+  padding: 12px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 6 — SELECT2 / AWESOMECOMPLETE / FRAPPE LINK FIELD FIXES
+   Ensure Frappe's own lookup popups render above everything.
+   ═══════════════════════════════════════════════════════════════════ */
+.awesomplete > ul,
+.frappe-link-value-popover,
+.frappe-autocomplete-dropdown,
+.search-results-popover,
+.dropdown-list,
+.select2-dropdown,
+.select2-container--open .select2-dropdown {
+  z-index: var(--z-dropdown) !important;
+}
+
+/* Date pickers should also be above modals */
+.datepicker,
+.bootstrap-datetimepicker-widget,
+.ui-datepicker,
+.flatpickr-calendar {
+  z-index: var(--z-modal) !important;
+}
+
+/* Context menus */
+.context-menu-list,
+.smriti-ctx-menu {
+  z-index: var(--z-dropdown) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 7 — MODAL Z-INDEX ENFORCEMENT
+   Frappe modals + custom modals must sit above dropdowns.
+   ═══════════════════════════════════════════════════════════════════ */
+.modal-backdrop,
+.modal-overlay,
+.modal { z-index: var(--z-modal) !important; }
+
+.modal-dialog,
+.modal-content { z-index: calc(var(--z-modal) + 1) !important; }
+
+/* In-modal dropdowns still need to render above modal backdrop */
+.modal .search-dropdown,
+.modal .awesomplete > ul,
+.modal .frappe-link-value-popover,
+.modal .select2-dropdown {
+  z-index: calc(var(--z-modal) + 100) !important;
+}
+
+/* Toast / notification stack */
+#toast-container,
+.smriti-toast-stack,
+.frappe-toast-stack {
+  z-index: var(--z-notification) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 8 — TOPBAR / STICKY ELEMENTS
+   ═══════════════════════════════════════════════════════════════════ */
+.topbar,
+.navbar,
+.page-head,
+.sticky-topbar {
+  z-index: var(--z-topbar) !important;
+}
+
+/* Sidebar must stay below topbar but above content */
+.sidebar,
+#smriti-sidebar {
+  z-index: calc(var(--z-topbar) - 10) !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 9 — SCROLLBAR POLISH (cross-browser thin scrollbars)
+   ═══════════════════════════════════════════════════════════════════ */
+.smriti-grid-sm,
+.smriti-grid-md,
+.smriti-grid-lg,
+.sim-grid-wrapper,
+.grid-wrap,
+#smriti-dropdown-portal {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.14) transparent;
+}
+
+.smriti-grid-sm::-webkit-scrollbar,
+.smriti-grid-md::-webkit-scrollbar,
+.smriti-grid-lg::-webkit-scrollbar,
+.sim-grid-wrapper::-webkit-scrollbar,
+.grid-wrap::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.smriti-grid-sm::-webkit-scrollbar-track,
+.smriti-grid-md::-webkit-scrollbar-track,
+.smriti-grid-lg::-webkit-scrollbar-track,
+.sim-grid-wrapper::-webkit-scrollbar-track,
+.grid-wrap::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.smriti-grid-sm::-webkit-scrollbar-thumb,
+.smriti-grid-md::-webkit-scrollbar-thumb,
+.smriti-grid-lg::-webkit-scrollbar-thumb,
+.sim-grid-wrapper::-webkit-scrollbar-thumb,
+.grid-wrap::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.14);
+  border-radius: 4px;
+}
+
+.smriti-grid-sm::-webkit-scrollbar-thumb:hover,
+.smriti-grid-md::-webkit-scrollbar-thumb:hover,
+.smriti-grid-lg::-webkit-scrollbar-thumb:hover,
+.sim-grid-wrapper::-webkit-scrollbar-thumb:hover,
+.grid-wrap::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.26);
+}
+
+/* Corner square where x and y scrollbars meet */
+.smriti-grid-sm::-webkit-scrollbar-corner,
+.smriti-grid-md::-webkit-scrollbar-corner,
+.smriti-grid-lg::-webkit-scrollbar-corner,
+.sim-grid-wrapper::-webkit-scrollbar-corner,
+.grid-wrap::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 10 — BILLING MODULE GRID
+   .billing-table / purchase table area fixes
+   ═══════════════════════════════════════════════════════════════════ */
+.purchase-table-wrap,
+.billing-table-wrap,
+.grn-table-wrap {
+  height: 600px;
+  min-height: 600px;
+  overflow-x: auto;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Make sure the billing item list doesn't clip autocomplete */
+.billing-item-list,
+.item-search-results {
+  z-index: var(--z-dropdown) !important;
+  position: fixed !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 11 — RESPONSIVE LAYOUT SAFETY
+   Prevents horizontal page overflow on small viewports.
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .smriti-grid-sm,
+  .smriti-grid-md,
+  .smriti-grid-lg,
+  .sim-grid-wrapper,
+  .grid-wrap,
+  .purchase-table-wrap,
+  .billing-table-wrap {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 12 — PRINT SAFETY
+   All interactive overlays must be hidden when printing.
+   ═══════════════════════════════════════════════════════════════════ */
+@media print {
+  #smriti-dropdown-portal,
+  #grid-article-portal,
+  .search-dropdown,
+  #toast-container {
+    display: none !important;
+  }
+}

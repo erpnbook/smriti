@@ -171,7 +171,7 @@ body.popout-mode .sidebar { display: none !important; }
 @media print {
     body * { visibility: hidden; }
     #print-area, #print-area * { visibility: visible; }
-    #print-area { position: absolute; left: 0; top: 0; width: 80mm; background: white; color: black; font-family: monospace; font-size: 11px; padding: 4mm; }
+    #print-area { display: block !important; position: absolute; left: 0; top: 0; width: 80mm; background: white; color: black; font-family: monospace; font-size: 11px; padding: 4mm; }
     .no-print { display: none !important; }
 }
 </style>
@@ -305,8 +305,13 @@ body.popout-mode .sidebar { display: none !important; }
                 </div>
             </div>
         </div>
-        <div class="drawer-footer">
-            <button class="btn-print" onclick="printReceipt()"><span class="material-symbols-outlined">print</span> Print Receipt</button>
+        <div class="drawer-footer" style="display:flex; flex-direction:column; gap:8px;">
+            <button class="btn-print" id="btn-print-b2b" style="display:none; background:var(--success);" onclick="printB2BInvoice()">
+                <span class="material-symbols-outlined">receipt_long</span> Print B2B Invoice
+            </button>
+            <button class="btn-print" onclick="printReceipt()">
+                <span class="material-symbols-outlined">print</span> Print POS Receipt
+            </button>
         </div>
     </div>
 </div>
@@ -482,11 +487,23 @@ async function loadInvoiceDetails(invoiceId) {
             ewayCard.style.display = 'none';
         }
 
+        // Determine if it is a B2B Sizewise Invoice
+        const isB2B = doc.custom_sizewise_json || (doc.remarks && doc.remarks.includes('_sizewise_matrix'));
+        const btnB2B = document.getElementById('btn-print-b2b');
+        if (btnB2B) {
+            btnB2B.style.display = isB2B ? 'flex' : 'none';
+        }
+
         // Open slide-drawer
         document.getElementById('drawer-backdrop').classList.add('open');
     } catch(e) {
         toast('Failed to load transaction details: ' + e.message, 'error');
     }
+}
+
+function printB2BInvoice() {
+    if (!activeInvoiceDoc) return;
+    window.open(`/sizewise_invoice?invoice=${activeInvoiceDoc.name}`, '_blank');
 }
 
 function closeDrawer() {

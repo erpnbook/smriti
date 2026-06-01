@@ -31,7 +31,7 @@ class TestSmritiRetailItemMasterAPI(unittest.TestCase):
 
     def setUp(self):
         # 1. Resolve basic test dependencies
-        self.company = frappe.db.exists("Company", "_Test Company") or frappe.db.get_value("Company", {}, "name")
+        self.company = frappe.db.exists("Company", "_Test Company")
         if not self.company:
             comp = frappe.new_doc("Company")
             comp.company_name = "_Test Company"
@@ -213,10 +213,7 @@ class TestPivotMatrixImport(unittest.TestCase):
 
     def setUp(self):
         """Resolve test dependencies and ensure clean state."""
-        self.company = (
-            frappe.db.exists("Company", "_Test Company") or
-            frappe.db.get_value("Company", {}, "name")
-        )
+        self.company = frappe.db.exists("Company", "_Test Company")
         if not self.company:
             comp = frappe.new_doc("Company")
             comp.company_name = "_Test Company"

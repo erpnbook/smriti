@@ -31,8 +31,9 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         frappe.db.commit()
 
     def setUp(self):
+        self._clean_up_test_records()
         # Establish standard testing parameters
-        self.company = frappe.db.exists("Company", "_Test Company") or frappe.db.get_value("Company", {}, "name")
+        self.company = frappe.db.exists("Company", "_Test Company")
         if not self.company:
             comp = frappe.new_doc("Company")
             comp.company_name = "_Test Company"
@@ -49,6 +50,14 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
 
         # Resolve standard CGST, SGST, IGST accounts of the test company
         def _find_account(name_pattern):
+            standard_name = f"Output Tax {name_pattern}"
+            acc = frappe.db.get_value(
+                "Account",
+                {"account_name": standard_name, "company": self.company, "is_group": 0},
+                "name"
+            )
+            if acc:
+                return acc
             return frappe.db.get_value(
                 "Account",
                 {"account_name": ["like", f"%{name_pattern}%"], "company": self.company, "is_group": 0},
@@ -87,12 +96,7 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         # Set user default company
         frappe.defaults.set_user_default("company", self.company, frappe.session.user)
 
-        # Clean up any test transactions
-        frappe.db.delete("Sales Taxes and Charges Template")
-        frappe.db.delete("Sales Invoice", {"remarks": ["like", "%_sizewise_matrix%"]})
-        frappe.db.delete("Customer", {"name": ["like", "Test B2B%"]})
-        frappe.db.delete("Item", {"item_code": ["like", "TEST-ART%"]})
-        frappe.db.commit()
+
 
         # Create test items (variants)
         self._ensure_test_item("TEST-ART-BLACK-36", 12)
@@ -104,7 +108,7 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         self._ensure_test_item("TEST-ART-18-BLACK", 18)
 
         # Create B2B customers
-        self.customer_intra = self._ensure_test_customer("Test B2B Customer Intra", "27AAXFT2508H1ZR") # MH (Intrastate)
+        self.customer_intra = self._ensure_test_customer("Test B2B Customer Intra", "27AAQCA8719H1Z6") # MH (Intrastate)
         self.customer_inter = self._ensure_test_customer("Test B2B Customer Inter", "29AABCR1718E1ZL") # KA (Interstate)
 
         # Set standard session user to Administrator to pass permission guards
@@ -135,7 +139,13 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
     def tearDown(self):
         frappe.set_user(self.original_user)
         # Clean up database
-        frappe.db.delete("Sales Invoice", {"remarks": ["like", "%_sizewise_matrix%"]})
+        self._clean_up_test_records()
+
+    def _clean_up_test_records(self):
+        frappe.db.delete("Sales Taxes and Charges Template")
+        frappe.db.sql("DELETE FROM `tabSales Invoice Item` WHERE parent IN (SELECT name FROM `tabSales Invoice` WHERE customer IN ('Test B2B Customer Intra', 'Test B2B Customer Inter'))")
+        frappe.db.sql("DELETE FROM `tabSales Taxes and Charges` WHERE parent IN (SELECT name FROM `tabSales Invoice` WHERE customer IN ('Test B2B Customer Intra', 'Test B2B Customer Inter'))")
+        frappe.db.sql("DELETE FROM `tabSales Invoice` WHERE customer IN ('Test B2B Customer Intra', 'Test B2B Customer Inter')")
         frappe.db.delete("Customer", {"name": ["like", "Test B2B%"]})
         frappe.db.delete("Item", {"item_code": ["like", "TEST-ART%"]})
         frappe.db.delete("Address", {"name": ["like", "%-Registered-Test%"]})
@@ -188,12 +198,40 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
             item.insert(ignore_permissions=True)
 
     def _ensure_test_customer(self, customer_name, gstin):
-        cust = frappe.new_doc("Customer")
-        cust.customer_name = customer_name
-        cust.customer_type = "Company"
-        cust.tax_id = gstin
-        cust.insert(ignore_permissions=True)
-        return cust.name
+        cust_name = frappe.db.exists("Customer", customer_name)
+        if not cust_name:
+            cust = frappe.new_doc("Customer")
+            cust.customer_name = customer_name
+            cust.customer_type = "Company"
+            cust.tax_id = gstin
+            cust.insert(ignore_permissions=True)
+            cust_name = cust.name
+            
+        state_map = {
+            "27": "Maharashtra",
+            "29": "Karnataka"
+        }
+        state_code = gstin[:2]
+        state_name = state_map.get(state_code, "Maharashtra")
+        
+        addr_name = f"{customer_name}-Billing-Test"
+        if not frappe.db.exists("Address", addr_name):
+            addr = frappe.new_doc("Address")
+            addr.address_title = customer_name
+            addr.address_type = "Billing"
+            addr.address_line1 = "Test Customer Street"
+            addr.city = "Mumbai" if state_code == "27" else "Bangalore"
+            addr.state = state_name
+            addr.pincode = "400001" if state_code == "27" else "560001"
+            addr.country = "India"
+            addr.is_primary_address = 1
+            addr.is_shipping_address = 1
+            addr.gstin = gstin
+            addr.append("links", {"link_doctype": "Customer", "link_name": cust_name})
+            addr.insert(ignore_permissions=True)
+            frappe.db.commit()
+            
+        return cust_name
 
     def test_save_and_submit_sizewise_invoice_intrastate(self):
         """Tests standard draft save and submission under intrastate rules (CGST+SGST)."""

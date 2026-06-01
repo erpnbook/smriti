@@ -42,7 +42,7 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
             self.item_group = ig.name
 
         # Resolve Company
-        self.company = frappe.db.exists("Company", "_Test Company") or frappe.db.get_value("Company", {}, "name")
+        self.company = frappe.db.exists("Company", "_Test Company")
         if not self.company:
             comp = frappe.new_doc("Company")
             comp.company_name = "_Test Company"
@@ -50,6 +50,30 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
             comp.default_currency = "INR"
             comp.insert(ignore_permissions=True)
             self.company = comp.name
+
+        # Ensure the test company has a valid GSTIN and registered company address (Required for India Compliance)
+        frappe.db.set_value("Company", self.company, "gstin", "27AAXFT2508H1ZR")
+        
+        addr_name = f"{self.company}-Registered-Test"
+        if not frappe.db.exists("Address", addr_name):
+            addr = frappe.new_doc("Address")
+            addr.address_title = self.company
+            addr.address_type = "Office"
+            addr.address_line1 = "Test Street"
+            addr.city = "Mumbai"
+            addr.state = "Maharashtra"
+            addr.pincode = "400001"
+            addr.country = "India"
+            addr.is_primary_address = 1
+            addr.is_shipping_address = 1
+            addr.is_your_company_address = 1
+            addr.gstin = "27AAXFT2508H1ZR"
+            addr.append("links", {"link_doctype": "Company", "link_name": self.company})
+            addr.insert(ignore_permissions=True)
+            frappe.db.commit()
+
+        # Set user default company to align all backend API company lookups to _Test Company
+        frappe.defaults.set_user_default("company", self.company, frappe.session.user)
 
         # Resolve Warehouse
         self.warehouse = frappe.db.get_value("Warehouse", {"company": self.company}, "name")
