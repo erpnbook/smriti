@@ -138,6 +138,9 @@ def run_setup_wizard(setup_data):
             co.save(ignore_permissions=True)
             log(f"Company '{company_name}' details updated.")
 
+        # Normalize company_name to exact database primary key representation
+        company_name = co.name
+
         # Set default company globally
         frappe.defaults.set_global_default("company", company_name)
         frappe.defaults.set_user_default("company", company_name, "Administrator")
@@ -429,11 +432,16 @@ def run_setup_wizard(setup_data):
                 doc.insert(ignore_permissions=True)
                 log(f"Created Mode of Payment: {mop}")
             
-            # Map accounts in Mode of Payment
+            # Map accounts in Mode of Payment (Defensively guard against duplicate entries)
             mop_doc = frappe.get_doc("Mode of Payment", mop)
+            existing_companies = [acc.company for acc in mop_doc.accounts]
+            log(f"[DEBUG] POS Profile Setup: Mode of Payment: {mop}")
+            log(f"[DEBUG] Existing companies mapped to {mop}: {existing_companies}")
+            log(f"[DEBUG] Company being appended: {company_name}")
+            
             has_mapping = False
             for acc in mop_doc.accounts:
-                if acc.company == company_name:
+                if str(acc.company).strip().upper() == str(company_name).strip().upper():
                     has_mapping = True
                     break
             
@@ -444,8 +452,23 @@ def run_setup_wizard(setup_data):
                         "company": company_name,
                         "default_account": ledger
                     })
-                    mop_doc.save(ignore_permissions=True)
-                    log(f"Mapped {ledger} to Mode of Payment {mop}")
+                    log(f"[DEBUG] Appended {company_name} to Mode of Payment {mop}")
+            
+            # Defensive deduplication check to satisfy ERPNext validation
+            seen_companies = set()
+            unique_accounts = []
+            for acc in mop_doc.accounts:
+                comp_key = str(acc.company).strip().upper()
+                if comp_key not in seen_companies:
+                    seen_companies.add(comp_key)
+                    unique_accounts.append(acc)
+            
+            mop_doc.accounts = unique_accounts
+            final_companies = [acc.company for acc in mop_doc.accounts]
+            log(f"[DEBUG] Final company list before saving Mode of Payment {mop}: {final_companies}")
+            
+            mop_doc.save(ignore_permissions=True)
+            log(f"Mapped {mop} to Company {company_name} successfully.")
 
         # Fetch or create Cost Center for POS
         cost_center = f"Main - {company_abbr}"
@@ -513,7 +536,52 @@ def run_setup_wizard(setup_data):
             pos_profile_id = pp.name
         else:
             pos_profile_id = pos_profile_name
-            log(f"POS Profile '{pos_profile_name}' already exists.")
+            log(f"POS Profile '{pos_profile_name}' already exists. Updating settings defensively...")
+            pp = frappe.get_doc("POS Profile", pos_profile_name)
+            pp.company = company_name
+            pp.warehouse = warehouse_id
+            pp.customer = customer_id
+            pp.currency = currency
+            if write_off_account:
+                pp.write_off_account = write_off_account
+            if cost_center:
+                pp.write_off_cost_center = cost_center
+                
+            # Defensively update payments mapping to avoid duplicates
+            payment_mappings = []
+            if cash_ledger:
+                payment_mappings.append(("Cash", cash_ledger, 1))
+            if bank_ledger:
+                payment_mappings.append(("Bank", bank_ledger, 0))
+                payment_mappings.append(("UPI", bank_ledger, 0))
+                
+            for mop, ledger, is_default in payment_mappings:
+                has_pay = False
+                for pay in pp.payments:
+                    if pay.mode_of_payment == mop:
+                        pay.default_ledger = ledger
+                        if is_default:
+                            pay.default = 1
+                        has_pay = True
+                        break
+                if not has_pay:
+                    pp.append("payments", {
+                        "mode_of_payment": mop,
+                        "default_ledger": ledger,
+                        "default": is_default
+                    })
+            
+            # Deduplicate payments table before saving
+            seen_mops = set()
+            unique_payments = []
+            for p in pp.payments:
+                if p.mode_of_payment not in seen_mops:
+                    seen_mops.add(p.mode_of_payment)
+                    unique_payments.append(p)
+            pp.payments = unique_payments
+            
+            pp.save(ignore_permissions=True)
+            log(f"POS Profile '{pos_profile_name}' updated successfully.")
 
         # 8. Seed Footwear attributes and custom fields if requested
         if setup_data.get("seed_attributes", True):
