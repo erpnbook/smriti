@@ -55,7 +55,7 @@ def _run_sync():
                 os.unlink(dst)
             elif os.path.isdir(dst):
                 shutil.rmtree(dst, ignore_errors=True)
-            shutil.copytree(src, dst, symlinks=False, dirs_exist_ok=True)
+            shutil.copytree(src, dst, symlinks=False, dirs_exist_ok=True, ignore_dangling_symlinks=True)
             print(f"  - Copied {subdir}/")
 
     # ── Step 3: Copy each app's assets from bench/assets/<app>/ ──
@@ -85,6 +85,7 @@ def _run_sync():
         shutil.copytree(
             src_dir, dst_dir,
             symlinks=False,
+            ignore_dangling_symlinks=True,
             ignore=shutil.ignore_patterns(
                 "node_modules", "*.pyc", "__pycache__", ".git", ".github"
             ),

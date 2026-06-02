@@ -1,0 +1,15 @@
+# -*- coding: utf-8 -*-
+#
+# @file: smriti_retail_os/check_groups.py
+# @description: Handles user login, registration, and JWT token generation.
+# @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+# @date: 2026-05-28
+# @version: 1.0.0
+# @license: MIT
+# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+#
+import frappe
+frappe.init(site='smriti_retail')
+frappe.connect()
+print('C-Groups:', frappe.get_all('Customer Group', pluck='name'))
+print('Territories:', frappe.get_all('Territory', pluck='name'))

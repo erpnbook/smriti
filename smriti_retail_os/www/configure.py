@@ -24,6 +24,7 @@ def get_context(context):
 
     context.no_cache = 1
     context.title = "SMRITI Config Portal"
+    context.csrf_token = frappe.sessions.get_csrf_token()
     
     active_company = get_active_company()
     context.company = active_company or ""

@@ -325,6 +325,10 @@ override_whitelisted_methods = {
 # Login page override + Billing terminal standalone route
 website_route_rules = [
     {
+        "from_route": "/setup-wizard",
+        "to_route": "setup_wizard"
+    },
+    {
         "from_route": "/login",
         "to_route": "login"
     },
