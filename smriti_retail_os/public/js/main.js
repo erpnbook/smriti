@@ -620,9 +620,14 @@ function _redirect_to_smriti_home() {
             var roles = frappe.user_roles || [];
             if (roles.includes('SMRITI Cashier')) {
                 // Redirect to standalone billing terminal (zero Frappe chrome)
-                window.location.href = '/billing';
+                if (window.location.pathname !== '/billing') {
+                    window.location.href = '/billing';
+                }
             } else if (roles.includes('SMRITI Store Manager') || roles.includes('System Manager')) {
-                window.location.href = '/desk';
+                // IMPORTANT: Only redirect if we aren't already on the /desk route
+                if (window.location.pathname !== '/desk') {
+                    window.location.href = '/desk';
+                }
             }
         }
     } 
