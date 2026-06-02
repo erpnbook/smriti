@@ -339,8 +339,10 @@ def _get_open_shift(cashier, pos_profile):
 def _validate_manager_pin(pin, action_type, reference_name=None):
     """
     Validates manager password and logs override as a Comment.
+    Checks custom_smriti_pin first, then falls back to primary password.
     Mirrors billing_api.validate_manager_override logic.
     """
+    from frappe.utils.password import check_password as check_smriti_pin
     import frappe.auth
 
     managers = frappe.db.get_all(
@@ -352,21 +354,36 @@ def _validate_manager_pin(pin, action_type, reference_name=None):
     for mgr in set(managers):
         if not frappe.db.get_value("User", mgr, "enabled"):
             continue
+        
+        authenticated = False
         try:
-            frappe.auth.check_password(mgr, pin)
-            roles = frappe.get_roles(mgr)
-            if "SMRITI Store Manager" in roles or "System Manager" in roles:
-                if reference_name:
-                    frappe.get_doc({
-                        "doctype": "Comment",
-                        "comment_type": "Comment",
-                        "reference_doctype": "POS Opening Entry",
-                        "reference_name": reference_name,
-                        "content": f"Manager Override approved by {mgr} for: {action_type}",
-                        "comment_email": frappe.session.user,
-                        "comment_by": frappe.session.user
-                    }).insert(ignore_permissions=True)
-                return {"authorized": True, "manager": mgr}
+            # 1. Try SMRITI Dedicated PIN first
+            if frappe.db.get_value("User", mgr, "custom_smriti_pin"):
+                try:
+                    check_smriti_pin(mgr, pin, fieldname="custom_smriti_pin")
+                    authenticated = True
+                except frappe.AuthenticationError:
+                    pass
+            
+            # 2. Fallback to primary password
+            if not authenticated:
+                frappe.auth.check_password(mgr, pin)
+                authenticated = True
+
+            if authenticated:
+                roles = frappe.get_roles(mgr)
+                if "SMRITI Store Manager" in roles or "System Manager" in roles:
+                    if reference_name:
+                        frappe.get_doc({
+                            "doctype": "Comment",
+                            "comment_type": "Comment",
+                            "reference_doctype": "POS Opening Entry",
+                            "reference_name": reference_name,
+                            "content": f"Manager Override approved by {mgr} for: {action_type}",
+                            "comment_email": frappe.session.user,
+                            "comment_by": frappe.session.user
+                        }).insert(ignore_permissions=True)
+                    return {"authorized": True, "manager": mgr}
         except frappe.AuthenticationError:
             pass
         except Exception:

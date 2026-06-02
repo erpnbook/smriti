@@ -164,23 +164,29 @@ def take_backup_now(backup_type="Database Only"):
         
         # 1. Run retention cleanups
         _cleanup_old_backups()
-        
-        # 2. Handle Email backup if enabled
+
+        # 2. Handle Cloud Sync (Rclone) - CLD-01
+        cloud_res = None
+        if db_path:
+            cloud_res = rclone_sync(db_path)
+
+        # 3. Handle Email notification (Scalable) - CLD-01
         settings = get_settings()
         email_sent = False
         email_error = None
-        
-        if settings.get("enable_email_backup") and settings.get("email_recipient") and db_path:
+
+        if settings.get("email_recipient"):
             try:
-                _email_backup(db_path, settings)
+                _email_backup(db_path, settings, cloud_status=cloud_res)
                 email_sent = True
             except Exception as ex:
                 email_error = str(ex)
-                
+
         return {
             "status": "success",
-            "message": "Backup completed successfully.",
+            "message": "Backup and sync completed.",
             "file": os.path.basename(db_path) if db_path else "",
+            "cloud_sync": cloud_res,
             "email_sent": email_sent,
             "email_error": email_error
         }
@@ -314,16 +320,16 @@ def _cleanup_old_backups():
     settings = get_settings()
     if not settings.get("enable_local_backup"):
         return
-        
+
     retention_days = int(settings.get("local_retention_days", 30))
     backups_dir = os.path.join(get_site_path(), "private", "backups")
     if not os.path.exists(backups_dir):
         return
-        
+
     import time
     now = time.time()
     cutoff = now - (retention_days * 86400)
-    
+
     files = glob.glob(os.path.join(backups_dir, "*"))
     cleaned = 0
     for f in files:
@@ -332,35 +338,83 @@ def _cleanup_old_backups():
             if mtime < cutoff:
                 os.remove(f)
                 cleaned += 1
-                
+
     if cleaned:
         print(f"[SMRITI Backup] Cleaned up {cleaned} expired backup files older than {retention_days} days.")
 
 
-def _email_backup(file_path, settings):
+def rclone_sync(file_path):
+    """
+    CLD-01: Syncs backup to cloud storage using rclone.
+    Credentials fetched from SMRITI Company Settings.
+    """
+    company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+    if not frappe.db.exists("SMRITI Company Settings", company):
+        return {"status": "skipped", "message": "Settings not configured."}
+
+    settings = frappe.get_doc("SMRITI Company Settings", company)
+    if not settings.get("cloud_backup_enabled"):
+        return {"status": "skipped", "message": "Cloud backup disabled in settings."}
+
+    # Dynamic rclone config via environment variables (Secure)
+    env = os.environ.copy()
+    env["RCLONE_CONFIG_SMRITI_TYPE"] = "s3"
+    env["RCLONE_CONFIG_SMRITI_PROVIDER"] = "Other" # Generic S3
+    env["RCLONE_CONFIG_SMRITI_ACCESS_KEY_ID"] = settings.get("s3_access_key") or ""
+    env["RCLONE_CONFIG_SMRITI_SECRET_ACCESS_KEY"] = settings.get_password("s3_secret_key") or ""
+    env["RCLONE_CONFIG_SMRITI_REGION"] = settings.get("s3_region") or "ap-south-1"
+
+    bucket = settings.get("s3_bucket") or "smriti-backups"
+    remote_path = f"smriti:{bucket}/{os.path.basename(file_path)}"
+
+    try:
+        # Atomic rclone copy
+        subprocess.run(["rclone", "copyto", file_path, remote_path], env=env, check=True, capture_output=True)
+        return {"status": "success", "message": f"Synced to {remote_path}"}
+    except Exception as e:
+        msg = str(e)
+        if hasattr(e, 'stderr'): msg = e.stderr
+        frappe.log_error("SMRITI Rclone Error", msg)
+        return {"status": "failed", "message": msg}
+
+
+def _email_backup(file_path, settings, cloud_status=None):
+    """
+    CLD-01: Send scalable notification instead of heavy attachments.
+    """
     recipient = settings.get("email_recipient")
     host = settings.get("smtp_host")
     port = int(settings.get("smtp_port", 587))
     user = settings.get("smtp_user")
     pwd = settings.get("smtp_password")
     use_tls = settings.get("use_tls", 1)
-    
+
     if not recipient or not host or not user or not pwd:
-        raise ValueError("SMTP SMTP configurations are incomplete.")
-        
-    msg = MIMEMultipart()
-    msg['Subject'] = f"SMRITI Retail OS Auto-Backup - {os.path.basename(file_path)}"
+        return # Silently skip if not configured
+
+    from email.mime.text import MIMEText
+
+    filename = os.path.basename(file_path)
+    subject = f"SMRITI Backup Notification - {filename}"
+
+    body = f"""
+SMRITI Retail OS - Automated Backup Report
+------------------------------------------
+Date: {frappe.utils.now()}
+File: {filename}
+Size: {_format_size(os.path.getsize(file_path))}
+
+Cloud Sync Status:
+{json.dumps(cloud_status, indent=2) if cloud_status else "Not Attempted"}
+
+Note: Large backup files are no longer attached to this email to ensure reliability.
+Please retrieve backups from your configured Cloud Storage or the local SMRITI Recovery Layer.
+"""
+    msg = MIMEText(body)
+    msg['Subject'] = subject
     msg['From'] = user
     msg['To'] = recipient
-    
-    # Attach backup file
-    with open(file_path, "rb") as attachment:
-        part = MIMEBase("application", "octet-stream")
-        part.set_payload(attachment.read())
-        encoders.encode_base64(part)
-        part.add_header("Content-Disposition", f"attachment; filename={os.path.basename(file_path)}")
-        msg.attach(part)
-        
+
     # Send
     smtp = smtplib.SMTP(host, port)
     if use_tls:
@@ -368,7 +422,6 @@ def _email_backup(file_path, settings):
     smtp.login(user, pwd)
     smtp.sendmail(user, recipient, msg.as_string())
     smtp.quit()
-
 
 def _format_size(size_bytes):
     if size_bytes < 1024:

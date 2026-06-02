@@ -48,6 +48,14 @@ def create_smriti_company_settings_doctype():
             {"fieldname": "sb_loyalty", "fieldtype": "Section Break", "label": "Loyalty Program"},
             {"fieldname": "loyalty_enabled", "fieldtype": "Check", "label": "Enable Loyalty Program", "default": "0"},
             {"fieldname": "loyalty_points_per_rupee", "fieldtype": "Float", "label": "Points per Rupee", "default": "1.0"},
+            {"fieldname": "sb_cloud_backup", "fieldtype": "Section Break", "label": "Cloud Backup (S3/Rclone)"},
+            {"fieldname": "cloud_backup_enabled", "fieldtype": "Check", "label": "Enable Cloud Backup", "default": "0"},
+            {"fieldname": "cloud_provider", "fieldtype": "Select", "label": "Cloud Provider", "options": "\nAWS S3\nGoogle Cloud Storage\nAzure Blob\nDigitalOcean Spaces"},
+            {"fieldname": "s3_bucket", "fieldtype": "Data", "label": "S3 Bucket Name"},
+            {"fieldname": "cb_cloud", "fieldtype": "Column Break"},
+            {"fieldname": "s3_access_key", "fieldtype": "Data", "label": "S3 Access Key"},
+            {"fieldname": "s3_secret_key", "fieldtype": "Password", "label": "S3 Secret Key"},
+            {"fieldname": "s3_region", "fieldtype": "Data", "label": "S3 Region", "default": "ap-south-1"},
             {"fieldname": "sb_advanced", "fieldtype": "Section Break", "label": "Advanced Configuration", "collapsible": 1},
             {"fieldname": "size_groups_json", "fieldtype": "Long Text", "label": "Size Groups JSON", "hidden": 1},
             {"fieldname": "destinationwise_taxes_json", "fieldtype": "Long Text", "label": "Destinationwise Taxes JSON", "hidden": 1},
@@ -325,6 +333,13 @@ def setup_smriti_retail_os():
                 "insert_after": "role_profile_name",
                 "default": "1",
                 "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_smriti_pin",
+                "label": "SMRITI POS PIN",
+                "fieldtype": "Password",
+                "insert_after": "custom_is_smriti_user",
+                "module": "SMRITI Retail OS"
             }
         ],
         "POS Invoice": [
@@ -352,6 +367,15 @@ def setup_smriti_retail_os():
                 "fieldtype": "Datetime",
                 "insert_after": "custom_held_by",
                 "read_only": 1,
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_billing_session_id",
+                "label": "Billing Session ID",
+                "fieldtype": "Data",
+                "insert_after": "custom_hold_time",
+                "read_only": 1,
+                "unique": 1,
                 "module": "SMRITI Retail OS"
             }
         ],
@@ -541,6 +565,15 @@ def setup_smriti_retail_os():
                 "hidden": 1,
                 "no_copy": 1,
                 "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_billing_session_id",
+                "label": "Billing Session ID",
+                "fieldtype": "Data",
+                "insert_after": "custom_sizewise_json",
+                "read_only": 1,
+                "unique": 1,
+                "module": "SMRITI Retail OS"
             }
         ],
         "Company": [
@@ -583,9 +616,6 @@ def setup_smriti_retail_os():
                 frappe.db.set_value("Custom Field", custom_field_name, "module", "SMRITI Retail OS")
 
     # 2. Role Provisioning
-    # Clean up custom SMRITI PIN from User DocType if it exists
-    if frappe.db.exists("Custom Field", "User-custom_smriti_pin"):
-        frappe.delete_doc("Custom Field", "User-custom_smriti_pin", ignore_permissions=True)
 
     for role_name in ["SMRITI Cashier", "SMRITI Store Manager"]:
         if not frappe.db.exists("Role", role_name):
@@ -851,6 +881,9 @@ def setup_smriti_retail_os():
 
     # 6. Hide all non-retail modules system-wide by default
     hide_non_retail_modules()
+    
+    # 7. Provision default Admin (Business Owner) account
+    create_default_admin_account()
 
     frappe.db.commit()
 
@@ -1051,5 +1084,26 @@ def patch_tattly_threads_tax_invoice():
         print("[SMRITI] Print Format is already patched and up to date.")
     else:
         print("[SMRITI] Error: Place of supply target layout block not found in Print Format HTML!")
+
+
+def create_default_admin_account():
+    """Creates the default Admin (Business Owner) account if it does not exist."""
+    email = "admin@smriti.io"
+    if not frappe.db.exists("User", email):
+        try:
+            doc = frappe.new_doc("User")
+            doc.email = email
+            doc.first_name = "Admin"
+            doc.username = "Admin"
+            doc.send_welcome_email = 0
+            # Set the secure default password for Admin (Business Owner)
+            doc.new_password = "AdminPassword123!"
+            doc.append("roles", {"role": "SMRITI Store Manager"})
+            doc.insert(ignore_permissions=True)
+            frappe.db.commit()
+            print("[SMRITI] Created default Admin (Business Owner) account: admin@smriti.io")
+        except Exception as e:
+            frappe.log_error(f"Error creating default Admin account: {str(e)}", "SMRITI Setup Error")
+
 
 

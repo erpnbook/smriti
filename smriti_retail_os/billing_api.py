@@ -193,13 +193,25 @@ def recall_bill(cashier):
 
 
 @frappe.whitelist()
-def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_name=None, remarks=None, sales_staff=None, on_credit=0, tax_override="Default", billing_address=None, shipping_address=None):
+def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_name=None, remarks=None, sales_staff=None, on_credit=0, tax_override="Default", billing_address=None, shipping_address=None, billing_session_id=None):
     """
     Creates and submits a standard POS Invoice or falls back to Sales Invoice.
-    If a cashier shift is open, creates a POS Invoice.
-    If no cashier shift is open, creates a standard Sales Invoice directly, bypassing shift checks.
-    Automatically maps India Compliance taxes, loyalty redemption, and payment rows.
+    Uses billing_session_id for idempotency to prevent double-billing.
     """
+    # 0. Idempotency Check
+    if billing_session_id:
+        existing = frappe.db.get_value("POS Invoice", {"custom_billing_session_id": billing_session_id}, ["name", "grand_total"], as_dict=True)
+        if not existing:
+            existing = frappe.db.get_value("Sales Invoice", {"custom_billing_session_id": billing_session_id}, ["name", "grand_total"], as_dict=True)
+        
+        if existing:
+            dt = "POS Invoice" if frappe.db.exists("POS Invoice", existing.name) else "Sales Invoice"
+            return {
+                "invoice": existing.name,
+                "grand_total": flt(existing.grand_total),
+                "print_url": f"/api/method/frappe.utils.print_format.download_pdf?doctype={dt}&name={existing.name}&format=Standard",
+                "idempotent": True
+            }
     if not items:
         frappe.throw(_("Cannot submit an empty bill."))
 
@@ -239,6 +251,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
         invoice_doc.owner = cashier
         
     invoice_doc.customer = customer or "Walk-In Customer"
+    invoice_doc.custom_billing_session_id = billing_session_id
     
     # Resolve and link Billing & Shipping Addresses (Bill To and Ship To)
     if invoice_doc.customer and invoice_doc.customer != "Walk-In Customer":
@@ -395,24 +408,17 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     
     invoice_doc.submit()
     
-    if doctype == "Sales Invoice":
-        # Create a Payment Entry to reconcile the fallback credit invoice (making it fully paid)
-        from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
-        total_paid = sum(flt(p.get("amount")) for p in payments_list)
-        if total_paid > 0:
-            pe = get_payment_entry(doctype, invoice_doc.name)
-            if payments_list:
-                first_p = payments_list[0]
-                pe.mode_of_payment = first_p.get("mode_of_payment")
-                pe.paid_to = frappe.db.get_value(
-                    "Mode of Payment Account",
-                    {"parent": pe.mode_of_payment, "company": company},
-                    "default_account"
-                ) or pe.paid_to
-            pe.flags.ignore_permissions = True
-            pe.insert(ignore_permissions=True)
-            pe.submit()
-            
+    # REL-02: Move non-critical post-billing tasks to background workers
+    # This prevents UI blocking and DB lock contention
+    frappe.enqueue(
+        "smriti_retail_os.smriti_retail_os.billing_api.process_post_billing_tasks",
+        invoice_name=invoice_doc.name,
+        doctype=doctype,
+        payments_list=payments_list,
+        company=company,
+        now=False
+    )
+    
     frappe.db.commit()
     
     # 5. Return success details with standard printing URL
@@ -423,6 +429,33 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
         "grand_total": flt(invoice_doc.grand_total),
         "print_url": print_url
     }
+
+def process_post_billing_tasks(invoice_name, doctype, payments_list, company):
+    """
+    Background worker to handle non-critical billing tasks:
+    1. Reconcile Payment Entries for Sales Invoices.
+    """
+    if doctype == "Sales Invoice":
+        from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+        total_paid = sum(flt(p.get("amount")) for p in payments_list)
+        if total_paid > 0:
+            try:
+                pe = get_payment_entry(doctype, invoice_name)
+                if payments_list:
+                    first_p = payments_list[0]
+                    pe.mode_of_payment = first_p.get("mode_of_payment")
+                    pe.paid_to = frappe.db.get_value(
+                        "Mode of Payment Account",
+                        {"parent": pe.mode_of_payment, "company": company},
+                        "default_account"
+                    ) or pe.paid_to
+                pe.flags.ignore_permissions = True
+                pe.insert(ignore_permissions=True)
+                pe.submit()
+                frappe.db.commit()
+                frappe.logger().info(f"[SMRITI] Background Payment Entry created for {invoice_name}")
+            except Exception as e:
+                frappe.log_error(f"Post-Billing Payment Entry Error for {invoice_name}: {str(e)}")
 
 
 @frappe.whitelist()
@@ -539,12 +572,13 @@ def load_held_invoice(invoice_name):
 @frappe.whitelist()
 def validate_manager_override(pin, action_type, invoice_name=None):
     """
-    Validates entered PIN against users with SMRITI Store Manager or System Manager role,
-    and logs the approved action in a standard Comment on the target document or system logs.
+    Validates entered PIN against users with SMRITI Store Manager or System Manager role.
+    Checks custom_smriti_pin first, then falls back to primary login password.
     """
     if not pin:
         return {"authorized": False, "message": _("PIN is required.")}
 
+    from frappe.utils.password import check_password as check_smriti_pin
     import frappe.auth
 
     # Find users with manager roles
@@ -558,39 +592,51 @@ def validate_manager_override(pin, action_type, invoice_name=None):
         # Only active users
         if not frappe.db.get_value("User", mgr, "enabled"):
             continue
+
+        authenticated = False
         try:
-            # Use frappe.auth.check_password to authenticate the manager's password
-            frappe.auth.check_password(mgr, pin)
-            
-            # Verify manager role after auth
-            roles = frappe.get_roles(mgr)
-            if "SMRITI Store Manager" in roles or "System Manager" in roles:
-                # Log override action using standard Comment
-                if invoice_name:
-                    frappe.get_doc({
-                        "doctype": "Comment",
-                        "comment_type": "Comment",
-                        "reference_doctype": "POS Invoice",
-                        "reference_name": invoice_name,
-                        "content": f"Manager Override approved by {mgr} for action: {action_type}",
-                        "comment_email": frappe.session.user,
-                        "comment_by": frappe.session.user
-                    }).insert(ignore_permissions=True)
-                else:
-                    # Generic Comment / Log
-                    frappe.logger().info(f"SMRITI: Manager Override approved by {mgr} for action: {action_type}")
-                
-                return {
-                    "authorized": True,
-                    "manager": mgr
-                }
+            # 1. Try SMRITI Dedicated PIN first
+            if frappe.db.get_value("User", mgr, "custom_smriti_pin"):
+                try:
+                    check_smriti_pin(mgr, pin, fieldname="custom_smriti_pin")
+                    authenticated = True
+                except frappe.AuthenticationError:
+                    pass
+
+            # 2. Fallback to primary password
+            if not authenticated:
+                frappe.auth.check_password(mgr, pin)
+                authenticated = True
+
+            if authenticated:
+                # Verify manager role after auth
+                roles = frappe.get_roles(mgr)
+                if "SMRITI Store Manager" in roles or "System Manager" in roles:
+                    # Log override action using standard Comment
+                    if invoice_name:
+                        frappe.get_doc({
+                            "doctype": "Comment",
+                            "comment_type": "Comment",
+                            "reference_doctype": "POS Invoice",
+                            "reference_name": invoice_name,
+                            "content": f"Manager Override approved by {mgr} for action: {action_type}",
+                            "comment_email": frappe.session.user,
+                            "comment_by": frappe.session.user
+                        }).insert(ignore_permissions=True)
+                    else:
+                        # Generic Comment / Log
+                        frappe.logger().info(f"SMRITI: Manager Override approved by {mgr} for action: {action_type}")
+
+                    return {
+                        "authorized": True,
+                        "manager": mgr
+                    }
         except frappe.AuthenticationError:
             pass
         except Exception as e:
             frappe.log_error(title="SMRITI Manager Password Authentication Error", message=frappe.get_traceback())
 
     return {"authorized": False, "message": _("Invalid PIN Code or unauthorized role.")}
-
 
 @frappe.whitelist()
 def generate_mock_eway_bill(invoice_name, vehicle_no=None, distance=None, mode_of_transport=None, gst_vehicle_type=None, transporter_name=None):

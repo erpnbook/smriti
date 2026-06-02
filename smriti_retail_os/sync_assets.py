@@ -31,11 +31,20 @@ def sync_assets():
 
 
 def _run_sync():
-    print("[SMRITI] Starting hard-sync of assets into sites/assets (shared volume)...")
+    print("[SMRITI] Starting atomic hard-sync of assets into sites/assets (shared volume)...")
 
+    import subprocess
     bench_path       = os.environ.get("BENCH_PATH", "/home/frappe/frappe-bench")
     sites_assets_dir = os.path.join(bench_path, "sites", "assets")
     bench_assets_dir = os.path.join(bench_path, "assets")
+
+    # Check for rsync availability
+    has_rsync = False
+    try:
+        subprocess.run(["rsync", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        has_rsync = True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        print("[SMRITI] Warning: rsync not found. Falling back to non-atomic sync.")
 
     # Apps whose assets must be present in the shared volume
     apps = ["frappe", "erpnext", "india_compliance", "smriti_retail_os"]
@@ -51,12 +60,17 @@ def _run_sync():
         src = os.path.join(bench_assets_dir, subdir)
         dst = os.path.join(sites_assets_dir, subdir)
         if os.path.exists(src):
-            if os.path.islink(dst):
-                os.unlink(dst)
-            elif os.path.isdir(dst):
-                shutil.rmtree(dst, ignore_errors=True)
-            shutil.copytree(src, dst, symlinks=False, dirs_exist_ok=True, ignore_dangling_symlinks=True)
-            print(f"  - Copied {subdir}/")
+            if has_rsync:
+                # Add trailing slash to src to copy contents
+                subprocess.run(["rsync", "-a", "--delay-updates", src + "/", dst], check=True)
+                print(f"  - Atomic sync: {subdir}/")
+            else:
+                if os.path.islink(dst):
+                    os.unlink(dst)
+                elif os.path.isdir(dst):
+                    shutil.rmtree(dst, ignore_errors=True)
+                shutil.copytree(src, dst, symlinks=False, dirs_exist_ok=True, ignore_dangling_symlinks=True)
+                print(f"  - Copied {subdir}/")
 
     # ── Step 3: Copy each app's assets from bench/assets/<app>/ ──
     for app in apps:
@@ -75,22 +89,33 @@ def _run_sync():
             print(f"  - Source for {app} not found, skipping.")
             continue
 
-        # Remove stale destination
-        if os.path.islink(dst_dir):
-            os.unlink(dst_dir)
-        elif os.path.isdir(dst_dir):
-            shutil.rmtree(dst_dir, ignore_errors=True)
+        if has_rsync:
+            # Atomic sync using rsync --delay-updates (prevents partial file availability)
+            # This ensures Nginx always sees either the old file or the new file, never a missing one.
+            subprocess.run([
+                "rsync", "-a", "--delay-updates", 
+                "--exclude", "node_modules", "--exclude", "*.pyc", "--exclude", "__pycache__",
+                "--exclude", ".git", "--exclude", ".github",
+                src_dir + "/", dst_dir
+            ], check=True)
+            print(f"    Done (Atomic): {app}")
+        else:
+            # Remove stale destination
+            if os.path.islink(dst_dir):
+                os.unlink(dst_dir)
+            elif os.path.isdir(dst_dir):
+                shutil.rmtree(dst_dir, ignore_errors=True)
 
-        print(f"  - Copying {app} assets from {src_dir}...")
-        shutil.copytree(
-            src_dir, dst_dir,
-            symlinks=False,
-            ignore_dangling_symlinks=True,
-            ignore=shutil.ignore_patterns(
-                "node_modules", "*.pyc", "__pycache__", ".git", ".github"
-            ),
-        )
-        print(f"    Done: {app}")
+            print(f"  - Copying {app} assets from {src_dir}...")
+            shutil.copytree(
+                src_dir, dst_dir,
+                symlinks=False,
+                ignore_dangling_symlinks=True,
+                ignore=shutil.ignore_patterns(
+                    "node_modules", "*.pyc", "__pycache__", ".git", ".github"
+                ),
+            )
+            print(f"    Done: {app}")
 
     # ── Step 4: Build assets.json by merging bench manifest + auto-discovery ──
     _build_assets_json(sites_assets_dir, bench_assets_dir, apps)
