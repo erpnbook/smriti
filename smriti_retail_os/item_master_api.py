@@ -146,6 +146,9 @@ def import_item_master(rows_json):
     """
     rows = frappe.parse_json(rows_json)
 
+    # Ensure hardcoded standard UOM 'Nos' exists in the database
+    _ensure_uom("Nos")
+
     created = 0
     skipped_duplicates = []
     failed = []
@@ -326,6 +329,23 @@ def _safe_set(doc, fieldname, value):
         doc.set(fieldname, value)
     except Exception:
         pass
+
+
+def _ensure_uom(uom_name):
+    """Creates a UOM record if it doesn't exist."""
+    if not uom_name:
+        return
+    uom_clean = str(uom_name).strip()
+    if not uom_clean:
+        return
+    try:
+        if not frappe.db.exists("UOM", uom_clean):
+            doc = frappe.new_doc("UOM")
+            doc.uom_name = uom_clean
+            doc.insert(ignore_permissions=True)
+            frappe.db.commit()
+    except Exception as e:
+        frappe.log_error(f"Failed to auto-create UOM {uom_clean}: {str(e)}")
 
 
 def _ensure_hsn_code(hsn_code):
@@ -646,6 +666,9 @@ def get_style_details(article_no):
 @frappe.whitelist()
 def create_style_with_variants(base_details, sizes_config):
     check_store_manager_role()
+    
+    # Ensure hardcoded standard UOM 'Nos' exists in the database
+    _ensure_uom("Nos")
     
     bd = frappe.parse_json(base_details)
     sc = frappe.parse_json(sizes_config)

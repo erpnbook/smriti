@@ -155,6 +155,158 @@ def save_company_settings(company=None, settings=None):
     return doc.as_dict()
 
 
+@frappe.whitelist()
+def get_store_address(company=None):
+    """
+    Return standard Company Address details in a flat dict.
+    Treats ERPNext standard Address DocType as Single Source of Truth.
+    """
+    if not company:
+        company = get_active_company()
+    if not company:
+        return {}
+        
+    address_name = f"{company}-Registered"
+    if not frappe.db.exists("Address", address_name):
+        # Search links
+        res = frappe.db.sql("""
+            SELECT parent FROM `tabAddress Link` 
+            WHERE link_doctype='Company' AND link_name=%s
+        """, (company,))
+        if res:
+            address_name = res[0][0]
+        else:
+            # Return empty default
+            return {
+                "address_title": company,
+                "address_line1": "",
+                "address_line2": "",
+                "city": "",
+                "state": "",
+                "country": "India",
+                "pincode": "",
+                "gstin": "",
+                "gst_state": "",
+                "gst_state_number": "",
+                "landmark": "",
+                "latitude": None,
+                "longitude": None
+            }
+            
+    addr = frappe.get_doc("Address", address_name)
+    return {
+        "address_title": addr.address_title,
+        "address_line1": addr.address_line1,
+        "address_line2": addr.address_line2,
+        "city": addr.city,
+        "state": addr.state,
+        "country": addr.country or "India",
+        "pincode": addr.pincode,
+        "gstin": addr.gstin,
+        "gst_state": addr.gst_state,
+        "gst_state_number": addr.gst_state_number,
+        "landmark": addr.landmark,
+        "latitude": addr.latitude,
+        "longitude": addr.longitude
+    }
+
+
+@frappe.whitelist()
+def save_store_address(company=None, address_data=None):
+    """
+    Saves/Updates the standard Company Address linked to the Company.
+    Restricted to SMRITI Store Manager and System Manager.
+    """
+    _check_manager_permission()
+    
+    if not company:
+        company = get_active_company()
+    if not company:
+        frappe.throw(_("No company specified."))
+        
+    if isinstance(address_data, str):
+        address_data = json.loads(address_data)
+        
+    if not address_data:
+        address_data = {}
+        
+    # Mandatory validation
+    mandatory = {
+        "address_title": "Store Name",
+        "address_line1": "Address Line 1",
+        "city": "City",
+        "state": "State",
+        "country": "Country",
+        "pincode": "Pincode / ZIP Code"
+    }
+    for field, label in mandatory.items():
+        if not address_data.get(field) or str(address_data.get(field)).strip() == "":
+            frappe.throw(_("{0} is mandatory.").format(label))
+            
+    address_name = f"{company}-Registered"
+    
+    existing_addr = None
+    if frappe.db.exists("Address", address_name):
+        existing_addr = address_name
+    else:
+        res = frappe.db.sql("""
+            SELECT parent FROM `tabAddress Link` 
+            WHERE link_doctype='Company' AND link_name=%s
+        """, (company,))
+        if res:
+            existing_addr = res[0][0]
+            
+    if existing_addr:
+        addr = frappe.get_doc("Address", existing_addr)
+    else:
+        addr = frappe.new_doc("Address")
+        addr.address_title = address_data.get("address_title") or company
+        addr.address_type = "Office"
+        addr.is_primary_address = 1
+        addr.is_shipping_address = 1
+        addr.is_your_company_address = 1
+        addr.append("links", {"link_doctype": "Company", "link_name": company})
+        
+    # Note: Change logging is automatically handled globally by the standard Address DocType event hook!
+    addr.address_title = address_data.get("address_title")
+    addr.address_line1 = address_data.get("address_line1")
+    addr.address_line2 = address_data.get("address_line2")
+    addr.city = address_data.get("city")
+    addr.state = address_data.get("state")
+    addr.country = address_data.get("country") or "India"
+    addr.pincode = address_data.get("pincode")
+    addr.landmark = address_data.get("landmark")
+    
+    # Try parsing Lat/Lng safely
+    try:
+        lat = address_data.get("latitude")
+        addr.latitude = flt(lat) if lat is not None and str(lat).strip() != "" else None
+    except Exception:
+        addr.latitude = None
+    try:
+        lng = address_data.get("longitude")
+        addr.longitude = flt(lng) if lng is not None and str(lng).strip() != "" else None
+    except Exception:
+        addr.longitude = None
+        
+    gstin = frappe.db.get_value("Company", company, "gstin")
+    if gstin:
+        addr.gstin = gstin
+        addr.gst_category = "Registered"
+    else:
+        addr.gst_category = "Unregistered"
+        
+    addr.gst_state = address_data.get("state")
+    addr.gst_state_number = address_data.get("gst_state_number")
+    
+    addr.save(ignore_permissions=True)
+    frappe.db.commit()
+    return {
+        "success": True,
+        "message": "Store primary address updated successfully!"
+    }
+
+
 def ensure_company_settings(doc, method=None):
     """
     Frappe doc_event hook — fires on Company after_insert and on_update.

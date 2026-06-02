@@ -16,6 +16,7 @@ from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 def create_smriti_company_settings_doctype():
     """Creates the SMRITI Company Settings custom DocType for per-company retail configuration."""
     if frappe.db.exists("DocType", "SMRITI Company Settings"):
+        # If exists, we can still ensure standard fields exist if necessary, but keep it clean
         return
     try:
         doc = frappe.new_doc("DocType")
@@ -73,6 +74,49 @@ def create_smriti_company_settings_doctype():
         print(f"[SMRITI] Created SMRITI Company Settings DocType")
     except Exception as e:
         frappe.log_error(f"Error creating SMRITI Company Settings DocType: {str(e)}")
+
+
+def create_audit_log_doctype():
+    """Creates the SMRITI Address Audit Log custom DocType for store address change tracking."""
+    if frappe.db.exists("DocType", "SMRITI Address Audit Log"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Address Audit Log"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.autoname = "autoincrement"
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 0
+        doc.issingle = 0
+
+        fields = [
+            {"fieldname": "changed_by", "fieldtype": "Link", "options": "User", "label": "Changed By", "in_list_view": 1},
+            {"fieldname": "changed_at", "fieldtype": "Datetime", "label": "Changed At", "in_list_view": 1},
+            {"fieldname": "field_name", "fieldtype": "Data", "label": "Field Name", "in_list_view": 1},
+            {"fieldname": "old_value", "fieldtype": "Small Text", "label": "Old Value"},
+            {"fieldname": "new_value", "fieldtype": "Small Text", "label": "New Value"},
+            {"fieldname": "company", "fieldtype": "Link", "options": "Company", "label": "Company", "in_list_view": 1},
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {
+            "role": "System Manager",
+            "read": 1, "write": 0, "create": 0, "delete": 0, "share": 0
+        })
+        doc.append("permissions", {
+            "role": "SMRITI Store Manager",
+            "read": 1, "write": 0, "create": 0, "delete": 0, "share": 0
+        })
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print(f"[SMRITI] Created SMRITI Address Audit Log DocType")
+    except Exception as e:
+        frappe.log_error(f"Error creating SMRITI Address Audit Log DocType: {str(e)}")
+
 
 
 def create_master_doctypes():
@@ -262,6 +306,9 @@ def setup_smriti_retail_os():
     """
     # 0. Provision SMRITI Company Settings DocType
     create_smriti_company_settings_doctype()
+
+    # 0a. Provision SMRITI Address Audit Log DocType
+    create_audit_log_doctype()
 
     # 0b. Provision dynamic attribute Master DocTypes + preserve existing database entries
     create_master_doctypes()

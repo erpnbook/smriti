@@ -223,6 +223,9 @@ doc_events = {
     "Company": {
         "after_insert": "smriti_retail_os.company_api.ensure_company_settings",
         "on_update": "smriti_retail_os.company_api.ensure_company_settings"
+    },
+    "Address": {
+        "on_update": "smriti_retail_os.hooks_logic.after_address_save"
     }
 }
 

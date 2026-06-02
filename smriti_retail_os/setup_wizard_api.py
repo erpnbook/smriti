@@ -144,15 +144,29 @@ def run_setup_wizard(setup_data):
         frappe.db.commit()
 
         # Create/Update Registered Office Address
+        store_trade_name = setup_data.get("store_trade_name") or company_name
         address_name = f"{company_name}-Registered"
         if not frappe.db.exists("Address", address_name):
             addr = frappe.new_doc("Address")
-            addr.address_title = company_name
+            addr.address_title = store_trade_name
             addr.address_type = "Office"
-            addr.address_line1 = "Primary Store Location"
-            addr.city = "Mumbai"
+            addr.address_line1 = setup_data.get("store_address_line1") or "Primary Store Location"
+            addr.address_line2 = setup_data.get("store_address_line2")
+            addr.city = setup_data.get("store_city") or "Mumbai"
             addr.state = state
             addr.country = country
+            addr.pincode = setup_data.get("store_pincode")
+            addr.landmark = setup_data.get("store_landmark")
+            try:
+                lat = setup_data.get("store_latitude")
+                addr.latitude = flt(lat) if lat is not None and str(lat).strip() != "" else None
+            except Exception:
+                addr.latitude = None
+            try:
+                lng = setup_data.get("store_longitude")
+                addr.longitude = flt(lng) if lng is not None and str(lng).strip() != "" else None
+            except Exception:
+                addr.longitude = None
             addr.is_primary_address = 1
             addr.is_shipping_address = 1
             addr.is_your_company_address = 1
@@ -162,16 +176,33 @@ def run_setup_wizard(setup_data):
             addr.gst_category = "Registered" if gstin else "Unregistered"
             addr.append("links", {"link_doctype": "Company", "link_name": company_name})
             addr.insert(ignore_permissions=True)
-            log("Company Office Address created and linked.")
+            log("Company Office Address created and linked using user-provided details.")
         else:
             addr = frappe.get_doc("Address", address_name)
+            addr.address_title = store_trade_name
+            addr.address_line1 = setup_data.get("store_address_line1") or "Primary Store Location"
+            addr.address_line2 = setup_data.get("store_address_line2")
+            addr.city = setup_data.get("store_city") or "Mumbai"
             addr.state = state
+            addr.country = country
+            addr.pincode = setup_data.get("store_pincode")
+            addr.landmark = setup_data.get("store_landmark")
+            try:
+                lat = setup_data.get("store_latitude")
+                addr.latitude = flt(lat) if lat is not None and str(lat).strip() != "" else None
+            except Exception:
+                addr.latitude = None
+            try:
+                lng = setup_data.get("store_longitude")
+                addr.longitude = flt(lng) if lng is not None and str(lng).strip() != "" else None
+            except Exception:
+                addr.longitude = None
             addr.gstin = gstin
             addr.gst_state = state
             addr.gst_state_number = state_code
             addr.gst_category = "Registered" if gstin else "Unregistered"
             addr.save(ignore_permissions=True)
-            log("Company Office Address updated.")
+            log("Company Office Address updated with user-provided details.")
         
         # 3. Create default Warehouse
         warehouse_name = setup_data.get("default_warehouse_name", "Main Store")
@@ -494,10 +525,31 @@ def run_setup_wizard(setup_data):
         # 9. Create SMRITI Company Settings
         log("Saving SMRITI Company Settings...")
         settings_name = company_name
+        
+        # Determine address values
+        store_trade_name = setup_data.get("store_trade_name") or company_name
+        store_address_line1 = setup_data.get("store_address_line1")
+        store_address_line2 = setup_data.get("store_address_line2")
+        store_area_locality = setup_data.get("store_area_locality")
+        store_city = setup_data.get("store_city")
+        store_pincode = setup_data.get("store_pincode")
+        store_landmark = setup_data.get("store_landmark")
+        
+        try:
+            lat = setup_data.get("store_latitude")
+            store_latitude = flt(lat) if lat is not None and str(lat).strip() != "" else None
+        except Exception:
+            store_latitude = None
+        try:
+            lng = setup_data.get("store_longitude")
+            store_longitude = flt(lng) if lng is not None and str(lng).strip() != "" else None
+        except Exception:
+            store_longitude = None
+
         if not frappe.db.exists("SMRITI Company Settings", settings_name):
             scs = frappe.new_doc("SMRITI Company Settings")
             scs.company = company_name
-            scs.store_trade_name = company_name
+            scs.store_trade_name = store_trade_name
             scs.brand_color = "#1a73e8"
             scs.invoice_series_prefix = f"SINV-{company_abbr}-"
             scs.receipt_footer_text = "Thank you for shopping with us!"
@@ -508,6 +560,7 @@ def run_setup_wizard(setup_data):
                 scs.default_intrastate_tax_template = default_intra_tpl
             if default_inter_tpl:
                 scs.default_interstate_tax_template = default_inter_tpl
+            
             scs.insert(ignore_permissions=True)
             log("SMRITI Company Settings initialized.")
         else:
@@ -519,6 +572,9 @@ def run_setup_wizard(setup_data):
                 scs.default_intrastate_tax_template = default_intra_tpl
             if default_inter_tpl:
                 scs.default_interstate_tax_template = default_inter_tpl
+                
+            scs.store_trade_name = store_trade_name
+            
             scs.save(ignore_permissions=True)
             log("SMRITI Company Settings updated.")
 

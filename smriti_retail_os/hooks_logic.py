@@ -391,8 +391,18 @@ def validate_and_reconcile_retail_invoice(doc, method):
             if needed_qty > 0:
                 # Log stock adjustment start
                 frappe.logger().info(f"SMRITI Auto-Reconciliation: Item {item.item_code} requires {needed_qty} qty in warehouse {item.warehouse}. Creating auto-material receipt.")
-                
                 try:
+                    # Ensure Stock Entry Type "Material Receipt" exists (e.g. for testing environments or fresh installations)
+                    if not frappe.db.exists("Stock Entry Type", "Material Receipt"):
+                        try:
+                            se_type = frappe.new_doc("Stock Entry Type")
+                            se_type.name = "Material Receipt"
+                            se_type.purpose = "Material Receipt"
+                            se_type.insert(ignore_permissions=True)
+                            frappe.db.commit()
+                        except Exception as se_type_ex:
+                            frappe.log_error("SMRITI Auto-Create Stock Entry Type Failure", str(se_type_ex))
+
                     # Create automatic Material Receipt Stock Entry
                     se = frappe.new_doc("Stock Entry")
                     se.purpose = "Material Receipt"
@@ -411,12 +421,6 @@ def validate_and_reconcile_retail_invoice(doc, method):
                     se.insert(ignore_permissions=True)
                     se.submit()
                     
-                    # Force update actual stock in Bin immediately
-                    frappe.db.sql(
-                        "UPDATE `tabBin` SET actual_qty = actual_qty + %s WHERE item_code=%s AND warehouse=%s",
-                        (needed_qty, item.item_code, item.warehouse)
-                    )
-                    
                     # Log override action in document timeline comments
                     frappe.get_doc({
                         "doctype": "Comment",
@@ -432,3 +436,47 @@ def validate_and_reconcile_retail_invoice(doc, method):
                         title="SMRITI Auto-Reconciliation Failure",
                         message=f"Failed to reconcile item {item.item_code} in warehouse {item.warehouse}: {str(stock_ex)}"
                     )
+
+
+def after_address_save(doc, method=None):
+    """Frappe Address on_update doc_event hook to write changes to SMRITI Address Audit Log."""
+    # Check if this Address is linked to a Company
+    company_link = None
+    for link in doc.get("links") or []:
+        if link.link_doctype == "Company":
+            company_link = link.link_name
+            break
+            
+    if not company_link:
+        return
+        
+    meta = frappe.get_meta("Address")
+    address_fields = [
+        "address_title", "address_line1", "address_line2",
+        "city", "state", "country", "pincode",
+        "gstin", "gst_state", "gst_state_number",
+        "landmark", "latitude", "longitude"
+    ]
+    valid_fields = [f for f in address_fields if meta.has_field(f)]
+    
+    for field in valid_fields:
+        old_val = doc.get_db_value(field)
+        new_val = doc.get(field)
+        
+        # Normalize to string
+        old_str = str(old_val or "").strip()
+        new_str = str(new_val or "").strip()
+        
+        if old_str != new_str:
+            try:
+                # Write to SMRITI Address Audit Log
+                log_doc = frappe.new_doc("SMRITI Address Audit Log")
+                log_doc.changed_by = frappe.session.user
+                log_doc.changed_at = frappe.utils.now_datetime()
+                log_doc.field_name = field
+                log_doc.old_value = old_str
+                log_doc.new_value = new_str
+                log_doc.company = company_link
+                log_doc.insert(ignore_permissions=True)
+            except Exception as audit_ex:
+                frappe.log_error(f"Error logging address audit trail: {str(audit_ex)}")

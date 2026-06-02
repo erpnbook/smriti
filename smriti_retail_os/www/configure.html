@@ -526,6 +526,65 @@
           </div>
 
           <hr style="border-color:var(--border);margin:20px 0;"/>
+          <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:12px;color:var(--accent-2)">Store Primary Address</h3>
+          <div class="grid-2">
+            <div>
+              <div class="mb-8">
+                <label class="lbl">Address Line 1 *</label>
+                <input type="text" id="cfg-store-address-line1" placeholder="e.g. Ground Floor, Building 10"/>
+              </div>
+              <div class="mb-8">
+                <label class="lbl">Address Line 2</label>
+                <input type="text" id="cfg-store-address-line2" placeholder="e.g. Near Main Market"/>
+              </div>
+              <div class="mb-8">
+                <label class="lbl">Area / Locality</label>
+                <input type="text" id="cfg-store-area-locality" placeholder="e.g. Andheri West"/>
+              </div>
+              <div class="grid-2 mb-8">
+                <div>
+                  <label class="lbl">City *</label>
+                  <input type="text" id="cfg-store-city" placeholder="e.g. Mumbai"/>
+                </div>
+                <div>
+                  <label class="lbl">Pincode *</label>
+                  <input type="text" id="cfg-store-pincode" placeholder="e.g. 400001"/>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="grid-2 mb-8">
+                <div>
+                  <label class="lbl">State *</label>
+                  <input type="text" id="cfg-store-state" placeholder="e.g. Maharashtra"/>
+                </div>
+                <div>
+                  <label class="lbl">GST State Code</label>
+                  <input type="text" id="cfg-store-gst-state-code" placeholder="e.g. 27" maxlength="2"/>
+                </div>
+              </div>
+              <div class="mb-8">
+                <label class="lbl">Country *</label>
+                <input type="text" id="cfg-store-country" value="India" placeholder="e.g. India"/>
+              </div>
+              <div class="mb-8">
+                <label class="lbl">Landmark (Optional)</label>
+                <input type="text" id="cfg-store-landmark" placeholder="e.g. Opposite Metro Station"/>
+              </div>
+              <div class="grid-2 mb-8">
+                <div>
+                  <label class="lbl">Latitude (Optional)</label>
+                  <input type="number" id="cfg-store-latitude" placeholder="e.g. 19.0760" step="any"/>
+                </div>
+                <div>
+                  <label class="lbl">Longitude (Optional)</label>
+                  <input type="number" id="cfg-store-longitude" placeholder="e.g. 72.8777" step="any"/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr style="border-color:var(--border);margin:20px 0;"/>
 
           <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:12px;color:var(--accent-2)">Loyalty Program</h3>
           <div class="grid-2">
@@ -762,8 +821,9 @@ function loadCompanySettings(company = null) {
     API.call('frappe.client.get_value', { doctype: 'Company', filters: { name: company }, fieldname: ['custom_smriti_store_type', 'custom_smriti_gstin_state', 'custom_smriti_settings_configured'] }),
     API.call('frappe.client.get_list', { doctype: 'Warehouse', filters: { company: company, is_group: 0, disabled: 0 }, fields: ['name', 'warehouse_name'], limit: 1000 }),
     API.call('frappe.client.get_list', { doctype: 'POS Profile', filters: { company: company, disabled: 0 }, fields: ['name'], limit: 1000 }),
-    API.call('frappe.client.get_list', { doctype: 'Sales Taxes and Charges Template', filters: { company: company }, fields: ['name'], limit: 1000 })
-  ]).then(([settings, companyInfo, warehouses, posProfiles, taxTemplates]) => {
+    API.call('frappe.client.get_list', { doctype: 'Sales Taxes and Charges Template', filters: { company: company }, fields: ['name'], limit: 1000 }),
+    API.call('smriti_retail_os.company_api.get_store_address', { company: company })
+  ]).then(([settings, companyInfo, warehouses, posProfiles, taxTemplates, address]) => {
     currentCompanySettings = settings || {};
     
     const info = companyInfo || {};
@@ -794,6 +854,20 @@ function loadCompanySettings(company = null) {
     
     document.getElementById('cfg-loyalty-enabled').checked = !!parseInt(settings.loyalty_enabled);
     document.getElementById('cfg-loyalty-points-per-rupee').value = settings.loyalty_points_per_rupee || '1.0';
+    
+    // Bind Store Primary Address Details
+    const addr = address || {};
+    document.getElementById('cfg-store-address-line1').value = addr.address_line1 || '';
+    document.getElementById('cfg-store-address-line2').value = addr.address_line2 || '';
+    document.getElementById('cfg-store-area-locality').value = '';
+    document.getElementById('cfg-store-city').value = addr.city || '';
+    document.getElementById('cfg-store-state').value = addr.state || '';
+    document.getElementById('cfg-store-country').value = addr.country || 'India';
+    document.getElementById('cfg-store-pincode').value = addr.pincode || '';
+    document.getElementById('cfg-store-gst-state-code').value = addr.gst_state_number || '';
+    document.getElementById('cfg-store-landmark').value = addr.landmark || '';
+    document.getElementById('cfg-store-latitude').value = addr.latitude || '';
+    document.getElementById('cfg-store-longitude').value = addr.longitude || '';
   }).catch(e => {
     toast('Error loading company settings: ' + (e.message || e), 'error');
   });
@@ -820,8 +894,42 @@ function saveCompanySettings() {
   }
   
   const storeType = document.getElementById('cfg-custom-store-type').value;
+  
+  // Mandatory store address fields validations
+  const storeTradeName = document.getElementById('cfg-store-trade-name').value.trim();
+  const storeAddressLine1 = document.getElementById('cfg-store-address-line1').value.trim();
+  const storeCity = document.getElementById('cfg-store-city').value.trim();
+  const storeState = document.getElementById('cfg-store-state').value.trim();
+  const storeCountry = document.getElementById('cfg-store-country').value.trim();
+  const storePincode = document.getElementById('cfg-store-pincode').value.trim();
+
+  if (!storeTradeName) {
+    toast('Store Trade Name is mandatory.', 'error');
+    return;
+  }
+  if (!storeAddressLine1) {
+    toast('Address Line 1 is mandatory.', 'error');
+    return;
+  }
+  if (!storeCity) {
+    toast('City is mandatory.', 'error');
+    return;
+  }
+  if (!storeState) {
+    toast('State is mandatory.', 'error');
+    return;
+  }
+  if (!storeCountry) {
+    toast('Country is mandatory.', 'error');
+    return;
+  }
+  if (!storePincode) {
+    toast('Pincode is mandatory.', 'error');
+    return;
+  }
+
   const settings = {
-    store_trade_name: document.getElementById('cfg-store-trade-name').value.trim(),
+    store_trade_name: storeTradeName,
     store_logo_url: document.getElementById('cfg-store-logo-url').value.trim(),
     brand_color: document.getElementById('cfg-brand-color-hex').value.trim(),
     invoice_series_prefix: document.getElementById('cfg-invoice-series-prefix').value.trim(),
@@ -832,7 +940,21 @@ function saveCompanySettings() {
     default_intrastate_tax_template: document.getElementById('cfg-default-intrastate-tax-template').value,
     default_interstate_tax_template: document.getElementById('cfg-default-interstate-tax-template').value,
     loyalty_enabled: document.getElementById('cfg-loyalty-enabled').checked ? 1 : 0,
-    loyalty_points_per_rupee: parseFloat(document.getElementById('cfg-loyalty-points-per-rupee').value) || 1.0,
+    loyalty_points_per_rupee: parseFloat(document.getElementById('cfg-loyalty-points-per-rupee').value) || 1.0
+  };
+
+  const addressData = {
+    address_title: storeTradeName,
+    address_line1: storeAddressLine1,
+    address_line2: document.getElementById('cfg-store-address-line2').value.trim(),
+    city: storeCity,
+    state: storeState,
+    country: storeCountry,
+    pincode: storePincode,
+    gst_state_number: document.getElementById('cfg-store-gst-state-code').value.trim(),
+    landmark: document.getElementById('cfg-store-landmark').value.trim(),
+    latitude: document.getElementById('cfg-store-latitude').value.trim() !== "" ? parseFloat(document.getElementById('cfg-store-latitude').value) : null,
+    longitude: document.getElementById('cfg-store-longitude').value.trim() !== "" ? parseFloat(document.getElementById('cfg-store-longitude').value) : null
   };
   
   API.call('frappe.client.set_value', {
@@ -846,7 +968,12 @@ function saveCompanySettings() {
       settings: JSON.stringify(settings)
     });
   }).then(() => {
-    toast('✅ Company settings saved successfully!', 'success');
+    return API.call('smriti_retail_os.company_api.save_store_address', {
+      company: company,
+      address_data: JSON.stringify(addressData)
+    });
+  }).then(() => {
+    toast('✅ Company settings and store address saved successfully!', 'success');
     loadCompanySettings(company);
   }).catch(e => {
     toast('Failed to save settings: ' + (e.message || e), 'error');

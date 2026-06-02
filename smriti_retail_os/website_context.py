@@ -27,6 +27,24 @@ def get_context(context):
     {{ app_name }}, {{ brand_html }}, {{ favicon }} references
     render with SMRITI values — no JS patching needed on web pages.
     """
+    import frappe
+
+    # Ensure CSRF token is generated and persisted in session database during GET request
+    if frappe.session.user != "Guest" and getattr(frappe.local, "session", None) and getattr(frappe.local, "session_obj", None):
+        if not frappe.local.session.data.get("csrf_token"):
+            frappe.local.session.data.csrf_token = frappe.generate_hash()
+        
+        # Save session in database/cache by temporarily disabling read_only
+        original_read_only = frappe.flags.read_only
+        frappe.flags.read_only = False
+        try:
+            frappe.local.session_obj.update(force=True)
+            frappe.db.commit()
+        except Exception:
+            pass
+        finally:
+            frappe.flags.read_only = original_read_only
+
     context.update(
         {
             "app_name":   _BRAND_NAME,
@@ -39,6 +57,7 @@ def get_context(context):
             "top_bar_brand":    _BRAND_NAME,
             "meta_description": "SMRITI Retail OS — Smarter Retail, Built for India.",
             "meta_title":       _BRAND_NAME,
+            "csrf_token":       frappe.local.session.data.csrf_token if (getattr(frappe.local, "session", None) and frappe.local.session.data.get("csrf_token")) else "",
         }
     )
     return context
