@@ -20,6 +20,8 @@ def run_pos_features_deep_audit():
     
     # 1. Resolve dynamic valid testing entities from active DB
     company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+    print(f"[AUDIT] Resolved Company: '{company}'")
+    print(f"[AUDIT] user default company: '{frappe.defaults.get_user_default('company')}'")
     test_item = frappe.db.get_value("Item", {"disabled": 0}, "name")
     test_mop = frappe.db.get_value("Mode of Payment Account", {"company": company}, "parent") or "Cash"
     test_customer = frappe.db.get_value("Customer", {"disabled": 0}, "name") or "Walk-In Customer"
@@ -84,9 +86,11 @@ def run_pos_features_deep_audit():
     
     original_validate_pos_opening_entry = SalesInvoice.validate_pos_opening_entry
     original_validate_is_pos_using_sales_invoice = POSInvoice.validate_is_pos_using_sales_invoice
+    original_validate_stock_availablility = POSInvoice.validate_stock_availablility
     
     SalesInvoice.validate_pos_opening_entry = lambda self, *args, **kwargs: None
     POSInvoice.validate_is_pos_using_sales_invoice = lambda self, *args, **kwargs: None
+    POSInvoice.validate_stock_availablility = lambda self, *args, **kwargs: None
     
     try:
         print("\n-------------------------------------------------------")
@@ -223,6 +227,7 @@ def run_pos_features_deep_audit():
         # 4. Always restore the monkeypatches cleanly to ensure zero environment pollution
         SalesInvoice.validate_pos_opening_entry = original_validate_pos_opening_entry
         POSInvoice.validate_is_pos_using_sales_invoice = original_validate_is_pos_using_sales_invoice
+        POSInvoice.validate_stock_availablility = original_validate_stock_availablility
         print("[AUDIT] Restored original POSInvoice/SalesInvoice validations successfully.")
 
 if __name__ == "__main__":

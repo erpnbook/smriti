@@ -116,6 +116,7 @@ SMRITI.sidebarSchema = [
         items: [
             { id: 'shift', label: '├─ Shifts / Register', url: '/shift' },
             { id: 'configure', label: '├─ Config Portal', url: '/configure' },
+            { id: 'security', label: '├─ Security & Workflows', url: '/security' },
             { id: 'backup', label: '└─ Backup & Restore', url: '#' }
         ]
     },
@@ -182,8 +183,11 @@ SMRITI.renderFlexibleSidebar = function(activePageId) {
     // 4. Generate Scrollable Menu Items
     let menuHtml = '<div class="sidebar-menu">';
     
+    const isAdminAccount = loggedUser === 'Admin' || loggedUser === 'admin@smriti.io';
+    
     SMRITI.sidebarSchema.forEach(block => {
         if (block.type === 'link') {
+            if (isAdminAccount && block.id === 'security') return;
             const activeCls = block.id === activePageId ? 'active' : '';
             menuHtml += `
                 <a class="sidebar-item ${activeCls}" href="${block.url}">
@@ -203,6 +207,7 @@ SMRITI.renderFlexibleSidebar = function(activePageId) {
             let subItemsHtml = '';
             
             block.items.forEach(sub => {
+                if (isAdminAccount && sub.id === 'security') return;
                 const subActiveCls = sub.id === activePageId ? 'active' : '';
                 if (sub.id === activePageId) isSubActive = true;
                 subItemsHtml += `

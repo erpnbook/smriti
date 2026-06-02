@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/platform_center.html
+  @description: SMRITI Platform Center — Technical Administration, Site Health, Backups, Repairs
+                Implements role-based access:
+                  - Administrator: Full access to all 7 modules
+                  - Admin (Business Owner): System Health + Backup Center (with Restore) only
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @date: 2026-06-02
+  @version: 2.0.0
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>SMRITI Platform Center</title>
+  <meta name="description" content="SMRITI Retail OS — Dedicated Technical Administration, System Health, Diagnostics and Recovery Center."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    /* ────────── Design Tokens ────────── */
+    :root {
+      --bg-base:     #080810;
+      --bg-surface:  #0e0f1e;
+      --bg-card:     #13152d;
+      --bg-input:    #1a1c3b;
+      --border:      #2b2e5a;
+      --border-glow: #7c3aed35;
+      --accent:      #8b5cf6;
+      --accent-glow: #8b5cf660;
+      --accent-cyan:  #06b6d4;
+      --success:     #10b981;
+      --warning:     #f59e0b;
+      --danger:      #ef4444;
+      --text-1:      #f3f4f6;
+      --text-2:      #9ca3af;
+      --text-3:      #4b5563;
+      --radius:      12px;
+      --radius-lg:   20px;
+      --shadow:      0 8px 32px 0 rgba(0, 0, 0, 0.6);
+      --font-mono:   'JetBrains Mono', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 15px; scroll-behavior: smooth; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-base);
+      color: var(--text-1);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ────────── Layout Shell ────────── */
+    .shell { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      z-index: 100;
+    }
+    .sidebar-brand {
+      padding: 24px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .sidebar-brand .logo-icon {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-cyan));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+    .sidebar-brand .brand-name {
+      font-weight: 700; font-size: 1.1rem; letter-spacing: .5px;
+      color: var(--text-1);
+      background: linear-gradient(to right, #fff, var(--accent-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .sidebar-brand .brand-sub {
+      font-size: .68rem; color: var(--accent-cyan); letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600;
+    }
+    .sidebar-nav {
+      padding: 16px 12px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .sidebar-nav .nav-label {
+      font-size: .65rem; color: var(--text-3); text-transform: uppercase;
+      letter-spacing: 2px; padding: 8px 12px 6px; margin-bottom: 4px;
+      font-weight: 700;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 16px; border-radius: var(--radius); cursor: pointer;
+      color: var(--text-2); font-size: .92rem; font-weight: 500;
+      transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+      text-decoration: none;
+      margin-bottom: 4px;
+      border: 1px solid transparent;
+    }
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-1);
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+    .nav-item.active {
+      background: linear-gradient(90deg, rgba(139, 92, 246, 0.15), rgba(6, 182, 212, 0.03));
+      color: #fff;
+      border-color: rgba(139, 92, 246, 0.3);
+      border-left: 4px solid var(--accent);
+      font-weight: 600;
+      box-shadow: inset 0 0 12px rgba(139, 92, 246, 0.08);
+    }
+    .nav-item .ni-icon { font-size: 18px; width: 22px; text-align: center; }
+    
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      font-size: .8rem; color: var(--text-3);
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .sidebar-footer a { color: var(--accent-cyan); text-decoration: none; transition: color .2s; }
+    .sidebar-footer a:hover { color: #fff; }
+
+    /* ── Main Content ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 90;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .topbar-title { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 12px; }
+    .topbar-title .badge {
+      font-size: .65rem; padding: 3px 8px; border-radius: 20px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+    }
+    .badge-admin {
+      background: var(--danger); color: #fff;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+    }
+    .badge-owner {
+      background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #fff;
+      box-shadow: 0 2px 8px rgba(6, 182, 212, 0.4);
+    }
+    .topbar-user { font-size: .88rem; color: var(--text-2); display: flex; align-items: center; gap: 10px; }
+
+    /* ── Tab Panels ── */
+    .tab-content { padding: 32px; flex: 1; display: flex; flex-direction: column; gap: 24px; }
+    .tab-panel { display: none; animation: fadeIn .3s ease; }
+    .tab-panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    /* ── Section Card ── */
+    .config-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .config-card::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+      background: linear-gradient(to bottom, var(--accent), var(--accent-cyan));
+    }
+    .config-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 16px;
+    }
+    .config-card-title {
+      font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 10px;
+      color: #fff;
+    }
+    .config-card-sub { font-size: .85rem; color: var(--text-2); margin-top: 4px; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: var(--radius);
+      font-size: .9rem; font-weight: 600; cursor: pointer;
+      border: 1px solid transparent; transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+    }
+    .btn-primary:hover {
+      filter: brightness(1.1);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(139, 92, 246, 0.45);
+    }
+    .btn-primary:active { transform: translateY(0); }
+    
+    .btn-secondary {
+      background: var(--bg-input); color: var(--text-2);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      border-color: var(--accent); color: #fff;
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger), #dc2626); color: #fff;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+    }
+    .btn-danger:hover {
+      filter: brightness(1.1); transform: translateY(-2px);
+    }
+    .btn-sm { padding: 6px 14px; font-size: .8rem; border-radius: 8px; }
+    .btn:disabled {
+      opacity: 0.4; cursor: not-allowed; pointer-events: none;
+    }
+
+    /* ── Grid helpers ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .flex-row { display: flex; align-items: center; gap: 12px; }
+    .flex-row-end { display: flex; align-items: center; justify-content: flex-end; gap: 12px; }
+    .flex-row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    
+    /* ── Health Badge Indicators ── */
+    .health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .health-card {
+      background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .health-card:hover { border-color: rgba(139, 92, 246, 0.3); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .health-label { font-size: .78rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-2); font-weight: 600; }
+    .health-value { font-size: 1.3rem; font-weight: 700; color: #fff; }
+    .health-status { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 600; }
+    
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .dot-green { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
+    .dot-amber { background-color: var(--warning); box-shadow: 0 0 8px var(--warning); }
+    .dot-red { background-color: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
+    /* ── Terminal Console ── */
+    .console-panel {
+      background: #040409;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: .85rem;
+      color: #38bdf8;
+      max-height: 250px;
+      overflow-y: auto;
+      margin-top: 16px;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);
+      position: relative;
+    }
+    .console-panel::before {
+      content: 'TERMINAL LOGS'; position: absolute; top: 4px; right: 12px;
+      font-size: .65rem; color: var(--text-3); font-weight: 700; letter-spacing: 1px;
+    }
+    .console-line { margin-bottom: 4px; line-height: 1.4; word-break: break-all; white-space: pre-wrap; }
+    .console-line.system { color: #a855f7; }
+    .console-line.success { color: var(--success); }
+    .console-line.error { color: var(--danger); }
+    .console-line.input { color: #f59e0b; }
+
+    /* ── Data Table ── */
+    .data-table { width: 100%; border-collapse: collapse; font-size: .9rem; text-align: left; }
+    .data-table th {
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      color: var(--accent-cyan); font-weight: 600; font-size: .78rem;
+      text-transform: uppercase; letter-spacing: 1px;
+      background: rgba(255, 255, 255, 0.01);
+    }
+    .data-table td {
+      padding: 14px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: middle; color: var(--text-2);
+    }
+    .data-table tr:hover td { background: rgba(255, 255, 255, 0.02); color: #fff; }
+    .data-table tr:last-child td { border-bottom: none; }
+
+    /* ── Toast ── */
+    .toast-wrap {
+      position: fixed; bottom: 24px; right: 24px; z-index: 10000;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .toast {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 20px;
+      font-size: .9rem; display: flex; align-items: center; gap: 12px;
+      box-shadow: var(--shadow); animation: slideUp .25s ease;
+      max-width: 360px;
+      color: var(--text-1);
+    }
+    .toast.success { border-left: 4px solid var(--success); }
+    .toast.error   { border-left: 4px solid var(--danger); }
+    .toast.info    { border-left: 4px solid var(--accent); }
+    @keyframes slideUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.1); border-top-color: var(--accent-cyan);
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Modal Overlay ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 9000;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      animation: fadeIn .2s ease;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      width: 560px;
+      max-width: 94vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+      position: relative;
+    }
+    .modal-box::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+      background: linear-gradient(90deg, var(--danger), var(--warning), var(--danger));
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
+    .modal-title {
+      font-size: 1.25rem; font-weight: 700; color: #fff;
+      margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+    }
+    .modal-sub { font-size: .85rem; color: var(--text-2); margin-bottom: 20px; }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none; color: var(--text-3); font-size: 1.4rem;
+      cursor: pointer; transition: color .2s;
+    }
+    .modal-close:hover { color: #fff; }
+
+    /* ── Form Inputs ── */
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block; font-size: .8rem; color: var(--text-2);
+      text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%; padding: 10px 14px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: var(--radius); color: #fff;
+      font-family: var(--font-mono); font-size: .9rem;
+      outline: none; transition: border-color .2s;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: var(--text-3); }
+
+    /* ── Restore Summary Card ── */
+    .restore-summary {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .restore-summary-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .restore-summary-row:last-child { border-bottom: none; }
+    .restore-summary-label { font-size: .78rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-2); font-weight: 600; }
+    .restore-summary-value { font-family: var(--font-mono); font-size: .9rem; color: #fff; font-weight: 600; }
+
+    /* ── Completion Report ── */
+    .completion-report {
+      background: rgba(16, 185, 129, 0.06);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-top: 16px;
+    }
+    .completion-report.failed {
+      background: rgba(239, 68, 68, 0.06);
+      border-color: rgba(239, 68, 68, 0.25);
+    }
+    .completion-title {
+      font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;
+      margin-bottom: 12px;
+    }
+    .completion-row {
+      display: flex; justify-content: space-between;
+      padding: 6px 0; font-size: .88rem;
+    }
+    .completion-row .cr-label { color: var(--text-2); }
+    .completion-row .cr-value { color: #fff; font-weight: 600; font-family: var(--font-mono); font-size: .85rem; }
+
+    /* ── Stepper Progress ── */
+    .restore-stepper { display: flex; gap: 8px; margin-bottom: 20px; }
+    .step-dot {
+      width: 32px; height: 4px; border-radius: 2px;
+      background: var(--border); transition: background .3s;
+    }
+    .step-dot.active { background: var(--accent); }
+    .step-dot.done { background: var(--success); }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .tab-content { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo-icon">🛠️</div>
+      <div>
+        <div class="brand-name">Platform Center</div>
+        <div class="brand-sub">SMRITI OS</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Core Modules</div>
+      <a onclick="switchTab('health')" id="nav-health-btn" class="nav-item active"><span class="ni-icon">🌡️</span> System Health</a>
+      <a onclick="switchTab('backup')" id="nav-backup-btn" class="nav-item"><span class="ni-icon">💾</span> Backup Center</a>
+      {% if not is_admin_account %}
+      <!-- Administrator-only modules -->
+      <a onclick="switchTab('migrate')" id="nav-migrate-btn" class="nav-item"><span class="ni-icon">🔄</span> Migration Center</a>
+      <a onclick="switchTab('diagnose')" id="nav-diagnose-btn" class="nav-item"><span class="ni-icon">🐞</span> Diagnostics Center</a>
+      <a onclick="switchTab('repair')" id="nav-repair-btn" class="nav-item"><span class="ni-icon">🔧</span> Repair Center</a>
+      <a onclick="switchTab('deploy')" id="nav-deploy-btn" class="nav-item"><span class="ni-icon">🚀</span> Deployment Center</a>
+      <a onclick="switchTab('recover')" id="nav-recover-btn" class="nav-item"><span class="ni-icon">🛡️</span> Recovery Center</a>
+      {% endif %}
+    </nav>
+    <div class="sidebar-footer">
+      {% if is_admin_account %}
+      <div>Business Owner Portal</div>
+      {% else %}
+      <div>Administrator Portal</div>
+      {% endif %}
+      <div style="margin-top:4px;"><a href="/app">Back to ERPNext Desk ↗</a></div>
+    </div>
+  </aside>
+
+  <!-- ── Main Content Area ── -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">
+        🛠️ Technical Administration Portal
+        {% if is_admin_account %}
+        <span class="badge badge-owner">Business Owner</span>
+        {% else %}
+        <span class="badge badge-admin">Platform Administrator</span>
+        {% endif %}
+      </div>
+      <div class="topbar-user">
+        <span>Active User:</span>
+        <span style="color:var(--accent-cyan); font-weight:700;">{{ current_user }}</span>
+      </div>
+    </div>
+
+    <div class="tab-content">
+
+      <!-- ════════ Tab 1: System Health ════════ -->
+      <div class="tab-panel active" id="tab-health">
+        <div class="config-card">
+          <div class="config-card-header">
+            <div>
+              <div class="config-card-title">🌡️ System Health Dashboard</div>
+              <div class="config-card-sub">Real-time indicators of site connectivity, database structure, and service health.</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="fetchHealthData(true)">↺ Refresh</button>
+          </div>
+
+          <div class="health-grid" id="health-grid-content">
+            <!-- Dynamic health indicators loaded here -->
+            <div style="text-align:center; padding:32px; grid-column: 1 / -1;"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <div class="config-card">
+          <div class="config-card-title" style="margin-bottom:12px;">📈 Last Patch Applied (Migration Status)</div>
+          <table class="data-table" id="patch-table">
+            <thead>
+              <tr>
+                <th>Applied Patch</th>
+                <th>Execution Time</th>
+              </tr>
+            </thead>
+            <tbody id="patch-tbody">
+              <tr><td colspan="2" style="text-align:center;"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ════════ Tab 2: Backup Center ════════ -->
+      <div class="tab-panel" id="tab-backup">
+        <div class="config-card">
+          <div class="config-card-header">
+            <div>
+              <div class="config-card-title">💾 Backup Operations</div>
+              <div class="config-card-sub">Generate full backups or download database exports directly.</div>
+            </div>
+          </div>
+
+          <div class="grid-3" style="margin-bottom:24px;">
+            <div class="health-card" style="align-items: center; justify-content: center; min-height: 140px;">
+              <button class="btn btn-primary" onclick="runBackup('all')" style="width: 100%; justify-content: center;">💾 Run Full Backup</button>
+              <div class="health-label" style="margin-top: 8px;">Database & Uploaded Files</div>
+            </div>
+            <div class="health-card" style="align-items: center; justify-content: center; min-height: 140px;">
+              <button class="btn btn-secondary" onclick="runBackup('database')" style="width: 100%; justify-content: center;">🗄️ Backup Database Only</button>
+              <div class="health-label" style="margin-top: 8px;">Synchronous SQL Export</div>
+            </div>
+            <div class="health-card" style="align-items: center; justify-content: center; min-height: 140px;">
+              <button class="btn btn-secondary" onclick="runBackup('files')" style="width: 100%; justify-content: center;">📂 Backup Files Only</button>
+              <div class="health-label" style="margin-top: 8px;">Private/Public Uploads</div>
+            </div>
+          </div>
+
+          <div class="config-card-title" style="margin-bottom:12px;">📁 Available Backups (History)</div>
+          <table class="data-table" id="backup-table">
+            <thead>
+              <tr>
+                <th>Backup File</th>
+                <th>Size</th>
+                <th>Created At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="backup-tbody">
+              <tr><td colspan="4" style="text-align:center;"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {% if not is_admin_account %}
+      <!-- ════════ Tab 3: Migration Center (Administrator Only) ════════ -->
+      <div class="tab-panel" id="tab-migrate">
+        <div class="config-card">
+          <div class="config-card-header">
+            <div>
+              <div class="config-card-title">🔄 Migration & Cache Operations</div>
+              <div class="config-card-sub">Keep custom schemas synchronized, rebuild cache buffers, and clear static files.</div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="health-card" style="gap:12px;">
+              <div class="config-card-title" style="font-size:1rem; margin-bottom: 0;">🚀 Run Bench Migrate</div>
+              <div class="health-label">Runs DB migration in a long-queue task to align all schemas, sync fixtures, and rebuild workspaces.</div>
+              <button class="btn btn-primary" onclick="runMigrateAction('run_migrate')">Run Migrate</button>
+            </div>
+            <div class="health-card" style="gap:12px;">
+              <div class="config-card-title" style="font-size:1rem; margin-bottom: 0;">🧹 Refresh Metadata Cache</div>
+              <div class="health-label">Clears system global cache, doc configs, and website assets mapping. Use after manual DB updates.</div>
+              <div class="flex-row">
+                <button class="btn btn-secondary" onclick="runMigrateAction('clear_cache')" style="flex:1; justify-content:center;">Clear Cache</button>
+                <button class="btn btn-secondary" onclick="runMigrateAction('clear_website_cache')" style="flex:1; justify-content:center;">Clear Website Cache</button>
+              </div>
+            </div>
+            <div class="health-card" style="gap:12px;">
+              <div class="config-card-title" style="font-size:1rem; margin-bottom: 0;">🔍 Rebuild Search Indices</div>
+              <div class="health-label">Cleans and recalculates full-text search databases for products, customers, and transactions.</div>
+              <button class="btn btn-secondary" onclick="runMigrateAction('rebuild_search')">Rebuild Search Index</button>
+            </div>
+            <div class="health-card" style="gap:12px;">
+              <div class="config-card-title" style="font-size:1rem; margin-bottom: 0;">📥 Force Reload DocTypes</div>
+              <div class="health-label">Re-provisions SMRITI Retail OS modules, custom roles, custom fields, and print layouts.</div>
+              <button class="btn btn-secondary" onclick="runMigrateAction('reload_doctypes')">Reload SMRITI DocTypes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ Tab 4: Diagnostics Center (Administrator Only) ════════ -->
+      <div class="tab-panel" id="tab-diagnose">
+        <div class="config-card">
+          <div class="config-card-header">
+            <div>
+              <div class="config-card-title">🐞 Diagnostics & Logs Console</div>
+              <div class="config-card-sub">Audit error logs, RQ background workers, scheduler activity, and active connections.</div>
+            </div>
+            <div class="flex-row">
+              <select id="log-selector" onchange="fetchDiagnostics(this.value)" style="background:var(--bg-input); border:1px solid var(--border); color:#fff; padding:6px 12px; border-radius:var(--radius); outline:none;">
+                <option value="error">Error Logs</option>
+                <option value="failed_jobs">Failed RQ Jobs</option>
+                <option value="jobs">Active Background Jobs</option>
+              </select>
+            </div>
+          </div>
+
+          <table class="data-table" id="diag-table">
+            <thead id="diag-thead">
+              <tr>
+                <th>Created</th>
+                <th>Method / Job</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="diag-tbody">
+              <tr><td colspan="3" style="text-align:center;"><div class="spinner"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ════════ Tab 5: Repair Center (Administrator Only) ════════ -->
+      <div class="tab-panel" id="tab-repair">
+        <div class="config-card">
+          <div class="config-card-header">
+            <div>
+              <div class="config-card-title">🔧 Operational Repair Tools</div>
+              <div class="config-card-sub">Execute self-healing operations to align missing master records, configuration structures, and database keys.</div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="health-card" style="gap:12px;">
+              <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:#fff;">🧹 Purge Stale Child Tables</div>
+              <div class="health-label">Scans and removes child records (like stale Mode of Payment accounts) referencing non-existent company IDs.</div>
+              <button class="btn btn-secondary" onclick="runRepairTool('fix_broken_links')">Fix Broken Links</button>
+            </div>
+            <div class="health-card" style="gap:12px;">
+              <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:#fff;">🔑 Rebuild Role Permissions</div>
+              <div class="health-label">Re-provisions access guidelines, desk permissions, and custom views for Cashier and Store Manager profiles.</div>
+              <button class="btn btn-secondary" onclick="runRepairTool('rebuild_permissions')">Rebuild Permissions</button>
+            </div>
+            <div class="health-card" style="gap:12px;">
+              <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:#fff;">👟 Verify Footwear Attribute Seeding</div>
+              <div class="health-label">Checks and ensures standard masters (Gender, Heel Type, Outsole, Upper Material) are properly populated.</div>
+              <button class="btn btn-secondary" onclick="runRepairTool('verify_master')">Verify Master Data</button>
+            </div>
+            <div class="health-card" style="gap:12px;">
+              <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:#fff;">🗂️ Check Company & GST Setup</div>
+              <div class="health-label">Verifies that GST templates, default cost centers, and primary address links exist and are valid.</div>
+              <div class="flex-row">
+                <button class="btn btn-secondary" onclick="runRepairTool('verify_company')" style="flex:1; justify-content:center;">Verify Company Settings</button>
+                <button class="btn btn-secondary" onclick="runRepairTool('verify_gst')" style="flex:1; justify-content:center;">Verify GST Config</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ Tab 6: Deployment Center (Administrator Only) ════════ -->
+      <div class="tab-panel" id="tab-deploy">
+        <div class="config-card">
+          <div class="config-card-header">
+            <div>
+              <div class="config-card-title">🚀 Deployment & Setup Audits</div>
+              <div class="config-card-sub">Verify installation flags, configuration files, and setup completion status.</div>
+            </div>
+          </div>
+
+          <div class="health-grid">
+            <div class="health-card">
+              <span class="health-label">Setup Wizard Configured</span>
+              <span class="health-value" id="deploy-wizard-status">Checking…</span>
+            </div>
+            <div class="health-card">
+              <span class="health-label">GST Tax Structures Mapped</span>
+              <span class="health-value" id="deploy-gst-status">Checking…</span>
+            </div>
+            <div class="health-card">
+              <span class="health-label">POS Mode of Payments Map</span>
+              <span class="health-value" id="deploy-payments-status">Checking…</span>
+            </div>
+          </div>
+
+          <div class="flex-row mt-16">
+            <button class="btn btn-primary" onclick="verifyDeployment()">Verify Deployment Parameters</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ Tab 7: Recovery Center (Administrator Only) ════════ -->
+      <div class="tab-panel" id="tab-recover">
+        <div class="config-card" style="border-color: var(--danger);">
+          <div class="config-card-header">
+            <div>
+              <div class="config-card-title" style="color:var(--danger)">🛡️ Emergency Recovery Center</div>
+              <div class="config-card-sub" style="color:var(--text-2)">Perform site lockouts, toggle maintenance windows, and view safe recovery guidelines.</div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="health-card" style="border-color: rgba(239, 68, 68, 0.2);">
+              <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:var(--danger)">🔒 Emergency Maintenance Mode</div>
+              <div class="health-label">Puts the site into maintenance lock, rejecting all HTTP requests with a 503 code. Only Administrator CLI can toggle off.</div>
+              <div class="flex-row" style="margin-top: 10px;">
+                <button class="btn btn-danger btn-sm" onclick="toggleMaintenance(1)">Enable Maintenance Mode</button>
+                <button class="btn btn-secondary btn-sm" onclick="toggleMaintenance(0)">Disable</button>
+              </div>
+            </div>
+            <div class="health-card" style="border-color: rgba(255, 255, 255, 0.08);">
+              <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:#fff;">📋 Restore Guidelines</div>
+              <div class="health-label">To restore a database backup in docker, run the following inside the terminal:</div>
+              <div style="background:#000; padding:10px; border-radius:6px; font-family:var(--font-mono); font-size:.75rem; color:#10b981; line-height:1.4;">
+                docker exec -it smriti_retail_os-backend-1 bench --site smriti_retail restore [backup_filepath]
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Real-time Console Terminal Log -->
+      <div class="console-panel" id="terminal-logs">
+        <div class="console-line system">[SMRITI] Technical administration terminal initialized.</div>
+        {% if is_admin_account %}
+        <div class="console-line system">Admin (Business Owner): Session verified. Restricted access mode active.</div>
+        {% else %}
+        <div class="console-line system">Administrator: Session verified. Full platform access enabled.</div>
+        {% endif %}
+      </div>
+
+    </div><!-- /tab-content -->
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- ── Toast Container ── -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════════
+     RESTORE BACKUP MODAL — Used by both Admin + Administrator
+     Implements all 6 safeguards:
+       1. Automatic pre-restore backup
+       2. Restore summary display (name, date, size, target)
+       3. Explicit typing confirmation: RESTORE MY BUSINESS
+       4. Password re-authentication
+       5. Audit log entry (Activity Log)
+       6. Completion report after restore
+     ══════════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="restore-modal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeRestoreModal()">&times;</button>
+
+    <!-- ── Step 1: Restore Summary ── -->
+    <div id="restore-step-summary">
+      <div class="modal-title">🛡️ Restore Backup</div>
+      <div class="modal-sub">Review the backup details before proceeding. A full system backup will be created automatically before restore.</div>
+
+      <div class="restore-stepper">
+        <div class="step-dot active" id="sdot-1"></div>
+        <div class="step-dot" id="sdot-2"></div>
+        <div class="step-dot" id="sdot-3"></div>
+        <div class="step-dot" id="sdot-4"></div>
+      </div>
+
+      <div class="restore-summary" id="restore-summary-content">
+        <div style="text-align:center; padding:16px;"><div class="spinner"></div></div>
+      </div>
+
+      <div style="background:rgba(245, 158, 11, 0.08); border:1px solid rgba(245, 158, 11, 0.25); border-radius:var(--radius); padding:14px; margin-bottom:16px;">
+        <div style="font-size:.85rem; color:var(--warning); font-weight:600; display:flex; align-items:center; gap:8px;">
+          ⚠️ Warning
+        </div>
+        <div style="font-size:.82rem; color:var(--text-2); margin-top:6px; line-height:1.5;">
+          Restoring a backup will <strong style="color:#fff;">replace all current data</strong> with the selected backup snapshot.
+          A safety backup of the current system will be created automatically before proceeding.
+        </div>
+      </div>
+
+      <div class="flex-row-end">
+        <button class="btn btn-secondary" onclick="closeRestoreModal()">Cancel</button>
+        <button class="btn btn-danger" id="restore-proceed-btn" onclick="restoreStep2()" disabled>Proceed to Confirmation →</button>
+      </div>
+    </div>
+
+    <!-- ── Step 2: Typing Confirmation ── -->
+    <div id="restore-step-confirm" style="display:none;">
+      <div class="modal-title">✍️ Confirmation Required</div>
+      <div class="modal-sub">To confirm you understand this action, type the exact phrase below.</div>
+
+      <div class="restore-stepper">
+        <div class="step-dot done" id="sdot2-1"></div>
+        <div class="step-dot active" id="sdot2-2"></div>
+        <div class="step-dot" id="sdot2-3"></div>
+        <div class="step-dot" id="sdot2-4"></div>
+      </div>
+
+      <div style="background:rgba(239, 68, 68, 0.06); border:1px solid rgba(239, 68, 68, 0.2); border-radius:var(--radius); padding:16px; margin-bottom:20px; text-align:center;">
+        <div style="font-size:.75rem; color:var(--text-2); text-transform:uppercase; letter-spacing:2px; font-weight:600; margin-bottom:8px;">Type this exactly</div>
+        <div style="font-size:1.4rem; font-weight:800; color:var(--danger); letter-spacing:2px; font-family:var(--font-mono);">RESTORE MY BUSINESS</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Confirmation Phrase</label>
+        <input type="text" class="form-input" id="restore-confirm-input" placeholder="Type: RESTORE MY BUSINESS" autocomplete="off" oninput="validateConfirmInput()"/>
+      </div>
+
+      <div class="flex-row-end">
+        <button class="btn btn-secondary" onclick="restoreGoBack(1)">← Back</button>
+        <button class="btn btn-danger" id="restore-auth-btn" onclick="restoreStep3()" disabled>Authenticate →</button>
+      </div>
+    </div>
+
+    <!-- ── Step 3: Password Re-Authentication ── -->
+    <div id="restore-step-password" style="display:none;">
+      <div class="modal-title">🔐 Re-Authentication</div>
+      <div class="modal-sub">Enter your account password to authorize this restore operation.</div>
+
+      <div class="restore-stepper">
+        <div class="step-dot done"></div>
+        <div class="step-dot done"></div>
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="restore-password-input" placeholder="Enter your password" autocomplete="current-password"/>
+      </div>
+
+      <div id="restore-error-msg" style="display:none; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); border-radius:var(--radius); padding:10px; margin-bottom:14px; color:var(--danger); font-size:.85rem;"></div>
+
+      <div class="flex-row-end">
+        <button class="btn btn-secondary" onclick="restoreGoBack(2)">← Back</button>
+        <button class="btn btn-danger" id="restore-execute-btn" onclick="executeRestore()">
+          🛡️ Execute Restore
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Step 4: Progress + Completion Report ── -->
+    <div id="restore-step-result" style="display:none;">
+      <div class="restore-stepper">
+        <div class="step-dot done"></div>
+        <div class="step-dot done"></div>
+        <div class="step-dot done"></div>
+        <div class="step-dot active"></div>
+      </div>
+
+      <div id="restore-progress-area" style="text-align:center; padding:32px;">
+        <div class="spinner" style="width:36px; height:36px; border-width:3px; margin:0 auto 16px;"></div>
+        <div style="font-size:1.1rem; font-weight:700; color:#fff; margin-bottom:6px;">Restoring Your Business Data…</div>
+        <div style="font-size:.85rem; color:var(--text-2);">Creating safety backup and then restoring selected snapshot. Please do not close this window.</div>
+      </div>
+
+      <div id="restore-completion-area" style="display:none;"></div>
+
+      <div id="restore-result-actions" style="display:none; margin-top:16px;" class="flex-row-end">
+        <button class="btn btn-secondary" onclick="closeRestoreModal()">Close</button>
+        <button class="btn btn-primary" onclick="window.location.reload()">🔄 Reload Page</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════════
+     DATABASE REPAIR SAFETY WIZARD MODAL — Used by Administrator
+     Prompts with dry-run records, confirmation, and automatic backup.
+     ══════════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="repair-modal">
+  <div class="modal-box" style="width:600px; max-width:94vw;">
+    <button class="modal-close" onclick="closeRepairModal()">&times;</button>
+    <div class="modal-title">🔧 Database Repair Safety Wizard</div>
+    <div class="modal-sub">Stale records detected that will be safely purged from your database.</div>
+    
+    <div id="repair-dry-run-results" style="margin-bottom:20px;">
+      <div style="text-align:center; padding:16px;"><div class="spinner"></div></div>
+    </div>
+    
+    <div style="background:rgba(239, 68, 68, 0.08); border:1px solid rgba(239, 68, 68, 0.25); border-radius:var(--radius); padding:14px; margin-bottom:16px;">
+      <div style="font-size:.85rem; color:var(--danger); font-weight:600; display:flex; align-items:center; gap:8px;">
+        ⚠️ Safety Backup Active
+      </div>
+      <div style="font-size:.82rem; color:var(--text-2); margin-top:4px; line-height:1.5;">
+        To ensure absolute production safety, executing this repair will automatically trigger a database backup first.
+      </div>
+    </div>
+    
+    <div class="flex-row-end">
+      <button class="btn btn-secondary" onclick="closeRepairModal()">Cancel</button>
+      <button class="btn btn-danger" id="repair-execute-btn" onclick="executeRepairWithBackup()">Proceed with Backup & Purge →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+const IS_ADMIN_ACCOUNT = {{ 'true' if is_admin_account else 'false' }};
+const CURRENT_USER = '{{ current_user }}';
+
+// ─── REST Client ─────────────────────────────────────────────────────────────
+const API = {
+  call(method, args = {}) {
+    return fetch('/api/method/' + method, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': CSRF_TOKEN },
+      body: JSON.stringify(args)
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.exc_type) {
+        let msg = data.exc_type;
+        try {
+          if (data._server_messages) {
+            const parsed = JSON.parse(data._server_messages);
+            msg = parsed.map(m => { try { return JSON.parse(m).message || m; } catch(e) { return m; } }).join('\n');
+          }
+        } catch(e) {}
+        throw new Error(msg);
+      }
+      return data.message !== undefined ? data.message : data;
+    });
+  }
+};
+
+// ─── Logger ───────────────────────────────────────────────────────────────────
+function log(msg, type = 'info') {
+  const panel = document.getElementById('terminal-logs');
+  const line = document.createElement('div');
+  line.className = `console-line ${type}`;
+  line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  panel.appendChild(line);
+  panel.scrollTop = panel.scrollHeight;
+}
+
+// ─── Toast Alerts ─────────────────────────────────────────────────────────────
+function toast(msg, type = 'info', dur = 4000) {
+  const icons = { success: '🟢', error: '🔴', info: '🔵' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(() => el.remove(), dur);
+}
+
+// ─── Tab Switching ────────────────────────────────────────────────────────────
+const TABS = IS_ADMIN_ACCOUNT
+  ? ['health', 'backup']
+  : ['health', 'backup', 'migrate', 'diagnose', 'repair', 'deploy', 'recover'];
+
+function switchTab(id) {
+  TABS.forEach(t => {
+    const tabEl = document.getElementById('tab-' + t);
+    const navEl = document.getElementById('nav-' + t + '-btn');
+    if (tabEl) tabEl.classList.toggle('active', t === id);
+    if (navEl) navEl.classList.toggle('active', t === id);
+  });
+  
+  // Specific Tab Loaders
+  if (id === 'health') fetchHealthData();
+  if (id === 'backup') fetchBackupHistory();
+  if (id === 'diagnose') {
+    const sel = document.getElementById('log-selector');
+    if (sel) fetchDiagnostics(sel.value);
+  }
+  if (id === 'deploy') verifyDeployment();
+}
+
+// ─── System Health Operations ────────────────────────────────────────────────
+function fetchHealthData(forceRefresh = false) {
+  if (forceRefresh) log('Refreshing health database metrics...', 'input');
+  
+  API.call('smriti_retail_os.platform_api.get_system_health')
+    .then(data => {
+      const g = data.site_status;
+      const db = data.db_status;
+      const sc = data.scheduler_status;
+      const rd = data.redis_status;
+      
+      const grid = document.getElementById('health-grid-content');
+      grid.innerHTML = `
+        <div class="health-card">
+          <span class="health-label">💻 Site Status</span>
+          <span class="health-value">${g.site_name}</span>
+          <div class="health-status">
+            <span class="status-dot dot-green"></span>
+            <span>Online (v${g.frappe_version})</span>
+          </div>
+        </div>
+        <div class="health-card">
+          <span class="health-label">🗄️ Database Status</span>
+          <span class="health-value">${db.db_type} (${db.db_host})</span>
+          <div class="health-status">
+            <span class="status-dot dot-green"></span>
+            <span>Version: ${db.db_version || 'N/A'} | Tables: ${db.table_count}</span>
+          </div>
+        </div>
+        <div class="health-card">
+          <span class="health-label">📅 Scheduler</span>
+          <span class="health-value">${sc.active ? 'Active' : 'Inactive'}</span>
+          <div class="health-status">
+            <span class="status-dot ${sc.active ? 'dot-green' : 'dot-red'}"></span>
+            <span>Last Run: ${sc.last_event}</span>
+          </div>
+        </div>
+        <div class="health-card">
+          <span class="health-label">⚡ Redis Server</span>
+          <span class="health-value">${rd.uptime_in_days} Days Uptime</span>
+          <div class="health-status">
+            <span class="status-dot dot-green"></span>
+            <span>Memory: ${rd.used_memory_human} | Redis v${rd.redis_version}</span>
+          </div>
+        </div>
+      `;
+      
+      // Load Patches
+      const patchTbody = document.getElementById('patch-tbody');
+      if (data.migration_status.last_patches && data.migration_status.last_patches.length > 0) {
+        patchTbody.innerHTML = data.migration_status.last_patches.map(p => `
+          <tr>
+            <td style="font-family:var(--font-mono); font-size:.85rem; color:#fff;">${p.patch}</td>
+            <td>${p.creation}</td>
+          </tr>
+        `).join('');
+      } else {
+        patchTbody.innerHTML = `<tr><td colspan="2" style="text-align:center;">No recent patches executed.</td></tr>`;
+      }
+      
+      if (forceRefresh) log('Health metrics loaded successfully.', 'success');
+    })
+    .catch(err => {
+      log('Failed to fetch system health: ' + err.message, 'error');
+    });
+}
+
+// ─── Backup Operations ───────────────────────────────────────────────────────
+function fetchBackupHistory() {
+  API.call('smriti_retail_os.platform_api.get_backup_history')
+    .then(backups => {
+      const tbody = document.getElementById('backup-tbody');
+      if (backups.length > 0) {
+        tbody.innerHTML = backups.map(b => {
+          const sizeMB = (b.size_bytes / (1024 * 1024)).toFixed(2);
+          const isDatabase = b.filename.includes('-database');
+          return `
+          <tr>
+            <td style="font-family:var(--font-mono); font-size:.85rem; color:#fff;">${b.filename}</td>
+            <td>${sizeMB} MB</td>
+            <td>${b.modified}</td>
+            <td style="text-align:right;">
+              <div class="flex-row-end">
+                <a href="/private/backups/${b.filename}" class="btn btn-secondary btn-sm" download style="text-decoration:none;">⬇ Download</a>
+                ${isDatabase ? `<button class="btn btn-danger btn-sm" onclick="openRestoreModal('${b.filename}')">🛡️ Restore</button>` : ''}
+              </div>
+            </td>
+          </tr>
+        `}).join('');
+      } else {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No backups found.</td></tr>`;
+      }
+    })
+    .catch(err => {
+      log('Failed to list backups: ' + err.message, 'error');
+    });
+}
+
+function runBackup(type) {
+  log(`Initiating database backup (Type: ${type}). Please wait...`, 'input');
+  toast('Starting database backup creation...', 'info');
+  
+  API.call('smriti_retail_os.platform_api.trigger_backup', { backup_type: type })
+    .then(res => {
+      if (res.success) {
+        log(`SUCCESS: Backup created successfully! DB Path: ${res.data.backup_path_db || 'N/A'}`, 'success');
+        toast('Backup completed successfully!', 'success');
+        fetchBackupHistory();
+      } else {
+        log(`CRITICAL BACKUP FAILURE: ${res.error}`, 'error');
+        toast('Backup creation failed.', 'error');
+      }
+    })
+    .catch(err => {
+      log('Backup failed: ' + err.message, 'error');
+      toast('Backup failed.', 'error');
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RESTORE BACKUP MODAL — Full Safeguard Implementation
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let restoreFileName = '';
+let restoreSummaryData = null;
+
+function openRestoreModal(fileName) {
+  restoreFileName = fileName;
+  restoreSummaryData = null;
+
+  // Reset all steps to initial
+  document.getElementById('restore-step-summary').style.display = 'block';
+  document.getElementById('restore-step-confirm').style.display = 'none';
+  document.getElementById('restore-step-password').style.display = 'none';
+  document.getElementById('restore-step-result').style.display = 'none';
+  document.getElementById('restore-proceed-btn').disabled = true;
+  document.getElementById('restore-confirm-input').value = '';
+  document.getElementById('restore-password-input').value = '';
+  document.getElementById('restore-error-msg').style.display = 'none';
+  document.getElementById('restore-progress-area').style.display = 'block';
+  document.getElementById('restore-completion-area').style.display = 'none';
+  document.getElementById('restore-result-actions').style.display = 'none';
+
+  // Show modal
+  document.getElementById('restore-modal').classList.remove('hidden');
+
+  // Fetch backup summary
+  document.getElementById('restore-summary-content').innerHTML = '<div style="text-align:center; padding:16px;"><div class="spinner"></div></div>';
+
+  log(`Opening restore modal for: ${fileName}`, 'input');
+
+  API.call('smriti_retail_os.platform_api.get_backup_summary', { file_name: fileName })
+    .then(summary => {
+      restoreSummaryData = summary;
+      document.getElementById('restore-summary-content').innerHTML = `
+        <div class="restore-summary-row">
+          <span class="restore-summary-label">📄 Backup Name</span>
+          <span class="restore-summary-value">${summary.filename}</span>
+        </div>
+        <div class="restore-summary-row">
+          <span class="restore-summary-label">📅 Backup Date</span>
+          <span class="restore-summary-value">${summary.date}</span>
+        </div>
+        <div class="restore-summary-row">
+          <span class="restore-summary-label">📦 Backup Size</span>
+          <span class="restore-summary-value">${summary.size_formatted}</span>
+        </div>
+        <div class="restore-summary-row">
+          <span class="restore-summary-label">🎯 Restore Target</span>
+          <span class="restore-summary-value">${summary.target_site}</span>
+        </div>
+      `;
+      document.getElementById('restore-proceed-btn').disabled = false;
+      log(`Backup summary loaded: ${summary.filename} (${summary.size_formatted})`, 'success');
+    })
+    .catch(err => {
+      document.getElementById('restore-summary-content').innerHTML = `
+        <div style="text-align:center; color:var(--danger); padding:16px;">
+          Failed to load backup summary: ${err.message}
+        </div>
+      `;
+      log('Failed to fetch backup summary: ' + err.message, 'error');
+    });
+}
+
+function closeRestoreModal() {
+  document.getElementById('restore-modal').classList.add('hidden');
+  restoreFileName = '';
+  restoreSummaryData = null;
+}
+
+function restoreStep2() {
+  document.getElementById('restore-step-summary').style.display = 'none';
+  document.getElementById('restore-step-confirm').style.display = 'block';
+  document.getElementById('restore-confirm-input').value = '';
+  document.getElementById('restore-auth-btn').disabled = true;
+  // Focus the input
+  setTimeout(() => document.getElementById('restore-confirm-input').focus(), 100);
+}
+
+function restoreStep3() {
+  document.getElementById('restore-step-confirm').style.display = 'none';
+  document.getElementById('restore-step-password').style.display = 'block';
+  document.getElementById('restore-password-input').value = '';
+  document.getElementById('restore-error-msg').style.display = 'none';
+  setTimeout(() => document.getElementById('restore-password-input').focus(), 100);
+}
+
+function restoreGoBack(fromStep) {
+  if (fromStep === 1) {
+    document.getElementById('restore-step-confirm').style.display = 'none';
+    document.getElementById('restore-step-summary').style.display = 'block';
+  } else if (fromStep === 2) {
+    document.getElementById('restore-step-password').style.display = 'none';
+    document.getElementById('restore-step-confirm').style.display = 'block';
+  }
+}
+
+function validateConfirmInput() {
+  const val = document.getElementById('restore-confirm-input').value.trim();
+  document.getElementById('restore-auth-btn').disabled = (val !== 'RESTORE MY BUSINESS');
+}
+
+function executeRestore() {
+  const password = document.getElementById('restore-password-input').value;
+  if (!password) {
+    document.getElementById('restore-error-msg').textContent = 'Please enter your password.';
+    document.getElementById('restore-error-msg').style.display = 'block';
+    return;
+  }
+
+  // Move to step 4 (progress)
+  document.getElementById('restore-step-password').style.display = 'none';
+  document.getElementById('restore-step-result').style.display = 'block';
+  document.getElementById('restore-progress-area').style.display = 'block';
+  document.getElementById('restore-completion-area').style.display = 'none';
+  document.getElementById('restore-result-actions').style.display = 'none';
+
+  log(`🛡️ EXECUTING RESTORE: ${restoreFileName} — Creating pre-restore backup and restoring...`, 'input');
+  toast('Restore in progress… Please wait.', 'info', 10000);
+
+  const restoreStart = new Date();
+
+  API.call('smriti_retail_os.platform_api.execute_restore', {
+    file_name: restoreFileName,
+    confirm_text: 'RESTORE MY BUSINESS',
+    password: password
+  })
+  .then(res => {
+    document.getElementById('restore-progress-area').style.display = 'none';
+    document.getElementById('restore-result-actions').style.display = 'flex';
+
+    const elapsed = ((new Date() - restoreStart) / 1000).toFixed(1);
+    const completionArea = document.getElementById('restore-completion-area');
+    completionArea.style.display = 'block';
+
+    if (res.success) {
+      completionArea.innerHTML = `
+        <div class="completion-report">
+          <div class="completion-title" style="color:var(--success);">✅ Restore Completed Successfully</div>
+          <div class="completion-row">
+            <span class="cr-label">Restored Backup</span>
+            <span class="cr-value">${restoreFileName}</span>
+          </div>
+          <div class="completion-row">
+            <span class="cr-label">Pre-Restore Safety Backup</span>
+            <span class="cr-value">${res.pre_backup || 'Created'}</span>
+          </div>
+          <div class="completion-row">
+            <span class="cr-label">Performed By</span>
+            <span class="cr-value">${CURRENT_USER}</span>
+          </div>
+          <div class="completion-row">
+            <span class="cr-label">Completion Time</span>
+            <span class="cr-value">${new Date().toLocaleString()}</span>
+          </div>
+          <div class="completion-row">
+            <span class="cr-label">Duration</span>
+            <span class="cr-value">${elapsed}s</span>
+          </div>
+          <div class="completion-row">
+            <span class="cr-label">Status</span>
+            <span class="cr-value" style="color:var(--success);">SUCCESS</span>
+          </div>
+          <div class="completion-row">
+            <span class="cr-label">Audit Log</span>
+            <span class="cr-value" style="color:var(--accent-cyan);">Activity Log entry created</span>
+          </div>
+        </div>
+        <div style="margin-top:12px; font-size:.82rem; color:var(--text-2); line-height:1.5;">
+          ⚠️ The database has been replaced. Please <strong style="color:#fff;">reload the page</strong> or <strong style="color:#fff;">log in again</strong> to use the restored system.
+        </div>
+      `;
+      log(`✅ RESTORE SUCCESS: ${restoreFileName} restored in ${elapsed}s. Pre-backup: ${res.pre_backup}`, 'success');
+      toast('Restore completed successfully!', 'success', 8000);
+    } else {
+      completionArea.innerHTML = `
+        <div class="completion-report failed">
+          <div class="completion-title" style="color:var(--danger);">❌ Restore Failed</div>
+          <div class="completion-row">
+            <span class="cr-label">Attempted Backup</span>
+            <span class="cr-value">${restoreFileName}</span>
+          </div>
+          <div class="completion-row">
+            <span class="cr-label">Performed By</span>
+            <span class="cr-value">${CURRENT_USER}</span>
+          </div>
+          <div class="completion-row">
+            <span class="cr-label">Time</span>
+            <span class="cr-value">${new Date().toLocaleString()}</span>
+          </div>
+          <div class="completion-row">
+            <span class="cr-label">Status</span>
+            <span class="cr-value" style="color:var(--danger);">FAILED</span>
+          </div>
+          <div class="completion-row">
+            <span class="cr-label">Error</span>
+            <span class="cr-value" style="color:var(--danger); word-break:break-all; font-size:.78rem;">${res.error || 'Unknown error'}</span>
+          </div>
+          <div class="completion-row">
+            <span class="cr-label">Audit Log</span>
+            <span class="cr-value" style="color:var(--accent-cyan);">Activity Log entry created</span>
+          </div>
+        </div>
+        <div style="margin-top:12px; font-size:.82rem; color:var(--text-2); line-height:1.5;">
+          Your original data is intact. A pre-restore backup was created before the attempt. Check the Activity Log for details.
+        </div>
+      `;
+      log(`❌ RESTORE FAILED: ${res.error}`, 'error');
+      toast('Restore failed. See completion report.', 'error', 8000);
+    }
+  })
+  .catch(err => {
+    document.getElementById('restore-progress-area').style.display = 'none';
+    document.getElementById('restore-result-actions').style.display = 'flex';
+
+    const completionArea = document.getElementById('restore-completion-area');
+    completionArea.style.display = 'block';
+    completionArea.innerHTML = `
+      <div class="completion-report failed">
+        <div class="completion-title" style="color:var(--danger);">❌ Restore Error</div>
+        <div class="completion-row">
+          <span class="cr-label">Error</span>
+          <span class="cr-value" style="color:var(--danger); word-break:break-all;">${err.message}</span>
+        </div>
+      </div>
+    `;
+    log('Restore operation error: ' + err.message, 'error');
+    toast('Restore failed.', 'error');
+  });
+}
+
+// ─── Migration Actions (Administrator only) ──────────────────────────────────
+function runMigrateAction(action) {
+  log(`Invoking migration action: '${action}'...`, 'input');
+  toast('Running migration operation...', 'info');
+  
+  API.call('smriti_retail_os.platform_api.run_migration_action', { action: action })
+    .then(res => {
+      if (res.success) {
+        res.logs.forEach(l => log(l, 'success'));
+        toast('Operation complete.', 'success');
+      } else {
+        log(`Action '${action}' failed: ${res.error}`, 'error');
+        toast('Operation failed.', 'error');
+      }
+    })
+    .catch(err => {
+      log(`Operation failed: ${err.message}`, 'error');
+      toast('Operation failed.', 'error');
+    });
+}
+
+// ─── Diagnostics Logs Loader (Administrator only) ────────────────────────────
+function fetchDiagnostics(logType) {
+  log(`Fetching diagnostics: ${logType}...`, 'input');
+  
+  API.call('smriti_retail_os.platform_api.get_diagnostics', { log_type: logType })
+    .then(logs => {
+      const tbody = document.getElementById('diag-tbody');
+      const thead = document.getElementById('diag-thead');
+      
+      if (logType === 'jobs') {
+        thead.innerHTML = `<tr><th>Job ID</th><th>Queue</th><th>Job Name</th><th>Status</th></tr>`;
+        if (logs.length > 0) {
+          tbody.innerHTML = logs.map(j => `
+            <tr>
+              <td style="font-family:var(--font-mono); font-size:.8rem; color:var(--accent-cyan);">${j.id}</td>
+              <td><span style="background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px; font-size:.8rem;">${j.queue}</span></td>
+              <td style="color:#fff; font-weight:600;">${j.name}</td>
+              <td><span style="color:#10b981; font-weight:700;">${j.status}</span></td>
+            </tr>
+          `).join('');
+        } else {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">No active background RQ jobs.</td></tr>`;
+        }
+      } else {
+        thead.innerHTML = `<tr><th>Created At</th><th>Method/Context</th><th>Error Message</th></tr>`;
+        if (logs.length > 0) {
+          tbody.innerHTML = logs.map(l => `
+            <tr>
+              <td style="white-space:nowrap;">${l.creation}</td>
+              <td style="font-family:var(--font-mono); font-size:.8rem; color:#fff; font-weight:600;">${l.method || 'N/A'}</td>
+              <td style="font-family:var(--font-mono); font-size:.8rem; color:var(--danger); white-space:pre-wrap; max-width:400px; overflow-x:auto;">${l.error || ''}</td>
+            </tr>
+          `).join('');
+        } else {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">No matching error logs found in database.</td></tr>`;
+        }
+      }
+      log(`Loaded ${logs.length} diagnostic logs.`, 'success');
+    })
+    .catch(err => {
+      log('Diagnostics load failed: ' + err.message, 'error');
+    });
+}
+
+// ─── Repair Operations (Administrator only) ──────────────────────────────────
+let currentRepairTool = '';
+
+function runRepairTool(tool) {
+  if (tool === 'fix_broken_links') {
+    log('Running dry run check for stale links...', 'input');
+    toast('Analyzing stale references...', 'info');
+    document.getElementById('repair-dry-run-results').innerHTML = '<div style="text-align:center; padding:16px;"><div class="spinner"></div></div>';
+    document.getElementById('repair-execute-btn').disabled = true;
+    document.getElementById('repair-modal').classList.remove('hidden');
+    
+    API.call('smriti_retail_os.platform_api.run_repair', { tool: tool, dry_run: 1 })
+      .then(res => {
+        if (res.success) {
+          currentRepairTool = tool;
+          showRepairModal(res.records);
+        } else {
+          log(`Dry run failed: ${res.error}`, 'error');
+          toast('Dry run failed.', 'error');
+          closeRepairModal();
+        }
+      })
+      .catch(err => {
+        log(`Dry run error: ${err.message}`, 'error');
+        toast('Dry run failed.', 'error');
+        closeRepairModal();
+      });
+  } else {
+    log(`Executing self-healing check: '${tool}'...`, 'input');
+    toast('Running repair procedure...', 'info');
+    
+    API.call('smriti_retail_os.platform_api.run_repair', { tool: tool, dry_run: 0 })
+      .then(res => {
+        if (res.success) {
+          res.logs.forEach(l => log(l, 'success'));
+          toast('Repair complete!', 'success');
+        } else {
+          log(`CRITICAL PROCEDURE FAILURE: ${res.error}`, 'error');
+          toast('Repair process failed.', 'error');
+        }
+      })
+      .catch(err => {
+        log(`Operation failed: ${err.message}`, 'error');
+        toast('Operation failed.', 'error');
+      });
+  }
+}
+
+function showRepairModal(records) {
+  const container = document.getElementById('repair-dry-run-results');
+  if (records.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:16px; color:var(--success); font-weight:600; font-size:.95rem;">
+        ✅ No stale links found! Database is fully consistent.
+      </div>
+    `;
+    document.getElementById('repair-execute-btn').disabled = true;
+    log('Dry Run: No stale child table links found.', 'success');
+  } else {
+    let rowsHtml = records.map(r => `
+      <tr>
+        <td style="font-family:var(--font-mono); font-size:.8rem; color:#fff;">${r.name}</td>
+        <td>Row #${r.idx} in <strong>${r.parent}</strong></td>
+        <td><span style="color:var(--danger);">${r.company}</span></td>
+      </tr>
+    `).join('');
+    
+    container.innerHTML = `
+      <div style="max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius); margin-top:10px; box-shadow:inset 0 2px 8px rgba(0,0,0,0.5);">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Record ID</th>
+              <th>Parent Document Context</th>
+              <th>Stale Company</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </div>
+      <div style="font-size:.8rem; color:var(--text-2); margin-top:10px; text-align:right;">
+        Found <strong>${records.length}</strong> stale record(s) to purge.
+      </div>
+    `;
+    document.getElementById('repair-execute-btn').disabled = false;
+    log(`Dry Run: Found ${records.length} stale links.`, 'warning');
+  }
+}
+
+function closeRepairModal() {
+  document.getElementById('repair-modal').classList.add('hidden');
+  currentRepairTool = '';
+}
+
+function executeRepairWithBackup() {
+  const btn = document.getElementById('repair-execute-btn');
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner" style="width:14px; height:14px; margin-right:6px;"></span> Backing up & executing…`;
+  
+  log('Repair Step 1/2: Running database safety backup...', 'input');
+  toast('Generating database safety backup...', 'info');
+  
+  API.call('smriti_retail_os.platform_api.trigger_backup', { backup_type: 'database' })
+    .then(res => {
+      if (res.success) {
+        log(`Safety backup created: ${res.data.backup_path_db ? res.data.backup_path_db.split('/').pop() : 'database-backup.sql.gz'}`, 'success');
+        log('Repair Step 2/2: Executing database purge...', 'input');
+        toast('Executing database links cleanup...', 'info');
+        
+        return API.call('smriti_retail_os.platform_api.run_repair', { tool: currentRepairTool, dry_run: 0 });
+      } else {
+        throw new Error('Backup failed: ' + res.error);
+      }
+    })
+    .then(res => {
+      if (res.success) {
+        res.logs.forEach(l => log(l, 'success'));
+        toast('Repair executed successfully!', 'success');
+      } else {
+        log(`Repair failed: ${res.error}`, 'error');
+        toast('Repair execution failed.', 'error');
+      }
+      closeRepairModal();
+    })
+    .catch(err => {
+      log(`Repair execution aborted: ${err.message}`, 'error');
+      toast('Repair operation aborted.', 'error');
+      closeRepairModal();
+    });
+}
+
+// ─── Deployment Auditing (Administrator only) ────────────────────────────────
+function verifyDeployment() {
+  log('Starting deployment validation audit...', 'input');
+  
+  API.call('frappe.client.get_all', { doctype: 'Company', limit: 1 })
+    .then(companies => {
+      const wizardStatus = document.getElementById('deploy-wizard-status');
+      if (companies.length > 0) {
+        wizardStatus.textContent = 'Configured (Active)';
+        wizardStatus.style.color = 'var(--success)';
+        log('Audit: Company master exists. Setup wizard configured.', 'success');
+      } else {
+        wizardStatus.textContent = 'Pending (Empty)';
+        wizardStatus.style.color = 'var(--danger)';
+        log('Audit: WARNING! No company found. Setup wizard is pending.', 'warning');
+      }
+    });
+
+  API.call('frappe.client.get_all', { doctype: 'Sales Taxes and Charges Template', limit: 1 })
+    .then(tax => {
+      const gstStatus = document.getElementById('deploy-gst-status');
+      if (tax.length > 0) {
+        gstStatus.textContent = 'Mapped (OK)';
+        gstStatus.style.color = 'var(--success)';
+        log('Audit: GST sales tax templates verified.', 'success');
+      } else {
+        gstStatus.textContent = 'Missing';
+        gstStatus.style.color = 'var(--danger)';
+        log('Audit: WARNING! No GST tax templates mapped.', 'warning');
+      }
+    });
+
+  API.call('frappe.client.get_all', { doctype: 'Mode of Payment', limit: 1 })
+    .then(mop => {
+      const paymentsStatus = document.getElementById('deploy-payments-status');
+      if (mop.length > 0) {
+        paymentsStatus.textContent = 'Synced (OK)';
+        paymentsStatus.style.color = 'var(--success)';
+        log('Audit: Mode of Payments synced and verified.', 'success');
+      } else {
+        paymentsStatus.textContent = 'Error';
+        paymentsStatus.style.color = 'var(--danger)';
+        log('Audit: CRITICAL! Mode of payments missing.', 'error');
+      }
+    });
+}
+
+// ─── Emergency Operations (Administrator only) ──────────────────────────────
+function toggleMaintenance(enable) {
+  const label = enable ? 'Enable' : 'Disable';
+  log(`Attempting to ${label} site maintenance mode lock...`, 'input');
+  
+  API.call('smriti_retail_os.platform_api.toggle_maintenance_mode', { enable: enable })
+    .then(res => {
+      if (res.success) {
+        log(res.message, 'success');
+        toast(res.message, 'success');
+      } else {
+        log(`Failed: ${res.error}`, 'error');
+        toast('Action failed.', 'error');
+      }
+    })
+    .catch(err => {
+      log('Action failed: ' + err.message, 'error');
+    });
+}
+
+// ─── Initial Page Load ────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  fetchHealthData();
+  log(`Platform Center loaded. User: ${CURRENT_USER}, Mode: ${IS_ADMIN_ACCOUNT ? 'Business Owner (Restricted)' : 'Full Administrator'}`, 'system');
+});
+</script>
+</body>
+</html>

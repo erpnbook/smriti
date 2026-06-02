@@ -16,6 +16,7 @@ window.SMRITI = window.SMRITI || {};
 
 SMRITI.renderSidebar = function(active_page) {
     const is_manager = frappe.user.has_role("SMRITI Store Manager");
+    const is_admin_account = frappe.session.user === "Admin" || frappe.session.user === "admin@smriti.io";
 
     const nav_items = [
         {id:"billing",    icon:"💳", label:"Billing",
@@ -53,8 +54,16 @@ SMRITI.renderSidebar = function(active_page) {
              url:"/app/smriti-backup"},
             {id:"configure", icon:"⚙️", label:"Config Portal",
              url:"/configure"},
+            ...(!is_admin_account ? [
+                {id:"security", icon:"🔒", label:"Security & Workflows",
+                 url:"/security"}
+            ] : []),
             {id:"desk",    icon:"🏠", label:"Control Center",
              url:"/app/smriti-desk"}
+        ] : []),
+        ...((frappe.session.user === "Administrator" || frappe.session.user === "Admin") ? [
+            {id:"platform_center", icon:"🛠️", label:"Platform Center",
+             url:"/platform_center"}
         ] : [])
     ];
 

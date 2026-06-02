@@ -405,6 +405,17 @@ website_route_rules = [
         # Standalone Dedicated Sizewise Item Master CRUD — served from www/sizewise_item.html + www/sizewise_item.py
         "from_route": "/sizewise_item",
         "to_route": "sizewise_item"
+    },
+    {
+        # Standalone Security & Workflow Center — served from www/security.html + www/security.py
+        # Zero Frappe chrome. Custom security, permissions & workflows.
+        "from_route": "/security",
+        "to_route": "security"
+    },
+    {
+        # Standalone Platform Center (Technical Admin Portal) — served from www/platform_center.html + www/platform_center.py
+        "from_route": "/platform_center",
+        "to_route": "platform_center"
     }
 ]
 
