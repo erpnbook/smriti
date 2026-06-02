@@ -579,6 +579,15 @@ function _redirect_to_smriti_home() {
     } catch (e) {}
 
     var normalized_path = window.location.pathname.replace(/\/$/, "");
+
+    // If there is no company in the system, force user to Setup Wizard
+    if (window.frappe && frappe.boot && frappe.boot.has_company === false) {
+        if (normalized_path !== '/setup-wizard') {
+            window.location.href = '/setup-wizard';
+            return;
+        }
+    }
+
     var is_desk_env = normalized_path.startsWith('/app') || normalized_path.startsWith('/desk');
 
     // 1. If we are in the Desk (SPA)

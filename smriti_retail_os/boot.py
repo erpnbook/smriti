@@ -191,6 +191,13 @@ def extend_bootinfo(bootinfo):
     # ── Always apply branding ──────────────────────────────────────────────────
     _apply_branding(bootinfo)
 
+    # ── Check if any company exists in the system ──────────────────────────────
+    try:
+        companies = frappe.get_all("Company", limit=1)
+        bootinfo.has_company = len(companies) > 0
+    except Exception:
+        bootinfo.has_company = True
+
     # ── Role-based routing ─────────────────────────────────────────────────────
     user = frappe.session.user
     roles = frappe.get_roles(user)

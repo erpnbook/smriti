@@ -29,6 +29,21 @@ def get_context(context):
     """
     import frappe
 
+    # Redirect to setup wizard if no company exists in the database
+    current_path = frappe.local.request.path if (hasattr(frappe.local, "request") and frappe.local.request) else ""
+    if current_path:
+        normalized_path = current_path.rstrip("/").lower()
+        if normalized_path not in ["/setup-wizard", "/login"] and not normalized_path.startswith("/assets/") and not normalized_path.startswith("/api/"):
+            try:
+                companies = frappe.get_all("Company", limit=1)
+                if not companies:
+                    frappe.local.flags.redirect_location = "/setup-wizard"
+                    raise frappe.Redirect
+            except frappe.Redirect:
+                raise
+            except Exception:
+                pass
+
     # Ensure CSRF token is generated and persisted in session database during GET request
     if frappe.session.user != "Guest" and getattr(frappe.local, "session", None) and getattr(frappe.local, "session_obj", None):
         if not frappe.local.session.data.get("csrf_token"):
