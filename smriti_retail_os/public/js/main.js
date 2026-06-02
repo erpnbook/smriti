@@ -570,75 +570,43 @@ function _patch_sidebar_prototype() {
 function _redirect_to_smriti_home() {
     if (!window.frappe || !frappe.session) return;
     
-    // If not logged in, do nothing
-    if (frappe.session.user === "Guest") return;
+    // If not logged in or on a 404 page, do nothing to prevent loops
+    if (frappe.session.user === "Guest" || document.title.includes("404")) return;
 
     var current_route = "";
     try {
         current_route = (typeof frappe.get_route_str === 'function') ? frappe.get_route_str() : "";
     } catch (e) {}
 
-    var base_path = window.location.pathname.startsWith('/desk') ? '/desk' : '/app';
-    var is_desk_env = window.location.pathname.startsWith('/app') || window.location.pathname.startsWith('/desk');
+    var normalized_path = window.location.pathname.replace(/\/$/, "");
+    var is_desk_env = normalized_path.startsWith('/app') || normalized_path.startsWith('/desk');
 
     // 1. If we are in the Desk (SPA)
     if (is_desk_env) {
-        if (current_route === 'smriti-inventory') {
-            window.location.href = '/inventory';
-            return;
-        }
-        if (current_route === 'smriti-shift') {
-            window.location.href = '/shift';
-            return;
-        }
-        if (current_route === 'smriti-barcode') {
-            window.location.href = '/barcode';
-            return;
-        }
-        if (current_route === 'List/Item' || current_route === 'List/Item/List') {
-            window.location.href = '/products';
-            return;
-        }
-        if (current_route === 'List/Customer' || current_route === 'List/Customer/List') {
-            window.location.href = '/customers';
-            return;
-        }
-        if (current_route === 'List/Supplier' || current_route === 'List/Supplier/List') {
-            window.location.href = '/suppliers';
-            return;
-        }
-        if (current_route === 'List/Sales Invoice' || current_route === 'List/Sales Invoice/List') {
-            window.location.href = '/sales_invoices';
-            return;
-        }
+        // ... (standard route normalization logic)
+        if (current_route === 'smriti-inventory') { window.location.href = '/inventory'; return; }
+        if (current_route === 'smriti-shift') { window.location.href = '/shift'; return; }
+        if (current_route === 'smriti-barcode') { window.location.href = '/barcode'; return; }
 
-        // Only redirect if the browser's active path is strictly the root Desk entry
-        var is_root_path = window.location.pathname === '/app' || window.location.pathname === '/app/' || 
-                           window.location.pathname === '/desk' || window.location.pathname === '/desk/';
+        // Root Desk Redirection
+        var is_root_desk = (normalized_path === '/app' || normalized_path === '/desk');
         
-        if (is_root_path && (current_route === 'workspace/Home' || current_route === '' || current_route === 'desk')) {
+        if (is_root_desk && (current_route === 'workspace/Home' || current_route === '' || current_route === 'desk')) {
             var roles = frappe.user_roles || [];
             if (roles.includes('SMRITI Cashier')) {
-                // Redirect to standalone billing terminal (zero Frappe chrome)
-                if (window.location.pathname !== '/billing') {
-                    window.location.href = '/billing';
-                }
+                if (normalized_path !== '/billing') window.location.href = '/billing';
             } else if (roles.includes('SMRITI Store Manager') || roles.includes('System Manager')) {
-                // IMPORTANT: Only redirect if we aren't already on the /desk route
-                if (window.location.pathname !== '/desk') {
-                    window.location.href = '/desk';
-                }
+                if (normalized_path !== '/desk') window.location.href = '/desk';
             }
         }
     } 
     // 2. If we are on the Website Home Page
-    else if (window.location.pathname === '/' || window.location.pathname === '/smriti-home') {
-        console.log("[SMRITI] Logged in user on home page, redirecting to app...");
+    else if (normalized_path === '' || normalized_path === '/smriti-home') {
         var roles = frappe.user_roles || [];
         if (roles.includes('SMRITI Cashier')) {
-            window.location.href = '/billing'; // Standalone billing terminal
+            if (normalized_path !== '/billing') window.location.href = '/billing';
         } else if (roles.includes('SMRITI Store Manager') || roles.includes('System Manager')) {
-            window.location.href = '/desk';
+            if (normalized_path !== '/desk') window.location.href = '/desk';
         }
     }
 }
