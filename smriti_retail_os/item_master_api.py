@@ -168,6 +168,9 @@ def import_item_master(rows_json):
         try:
             # ── Parse row ─────────────────────────────────────────────────
             barcode         = str(row.get("BARCODE NO", "")).strip()
+            # Guard: Excel blank cells come through as 'nan' or 'None'
+            if barcode.lower() in ("", "nan", "none", "null", "0"):
+                barcode = ""
             style_code      = str(row.get("PRODUCT STYLE CODE", "")).strip()
             item_name       = str(row.get("ITEM DESCRIPTION", "")).strip()
             color           = str(row.get("COLOR", "")).strip()
@@ -190,28 +193,40 @@ def import_item_master(rows_json):
             tax_group       = str(row.get("Product Tax Group", "")).strip()
 
             # ── Hard duplicate barcode check ───────────────────────────────
-            if barcode in batch_barcodes:
-                skipped_duplicates.append({
-                    "row": idx + 1,
-                    "barcode": barcode,
-                    "reason": "Duplicate barcode within import batch"
-                })
-                continue
+            variant_code_early = f"{str(row.get('PRODUCT STYLE CODE', '')).strip()}-{str(row.get('COLOR', '')).strip()}-{str(row.get('SIZE', '')).strip()}"
 
-            existing_on_system = frappe.db.get_value(
-                "Item Barcode", {"barcode": barcode}, "parent"
-            )
-            collides_with_item = frappe.db.exists("Item", barcode)
-            if existing_on_system or collides_with_item:
-                ref_name = existing_on_system or barcode
-                skipped_duplicates.append({
-                    "row": idx + 1,
-                    "barcode": barcode,
-                    "reason": f"Barcode already exists on system as item code or barcode '{ref_name}'"
-                })
-                continue
+            if barcode:
+                if barcode in batch_barcodes:
+                    skipped_duplicates.append({
+                        "row": idx + 1,
+                        "barcode": barcode,
+                        "reason": "Duplicate barcode within import batch"
+                    })
+                    continue
 
-            batch_barcodes.add(barcode)
+                existing_on_system = frappe.db.get_value(
+                    "Item Barcode", {"barcode": barcode}, "parent"
+                )
+                # Allow re-import: if barcode already belongs to THIS exact variant, it's fine
+                if existing_on_system and existing_on_system != variant_code_early:
+                    skipped_duplicates.append({
+                        "row": idx + 1,
+                        "barcode": barcode,
+                        "reason": f"Barcode '{barcode}' already assigned to item '{existing_on_system}'"
+                    })
+                    continue
+
+                # Prevent barcode from colliding with a DIFFERENT item's item_code
+                collides_with_item = frappe.db.exists("Item", barcode)
+                if collides_with_item and barcode != variant_code_early:
+                    skipped_duplicates.append({
+                        "row": idx + 1,
+                        "barcode": barcode,
+                        "reason": f"Barcode '{barcode}' collides with existing item_code"
+                    })
+                    continue
+
+                batch_barcodes.add(barcode)
 
             # ── Ensure Item Group exists ───────────────────────────────────
             if not frappe.db.exists("Item Group", item_group):
@@ -288,37 +303,49 @@ def import_item_master(rows_json):
 
             # ── Attach barcode to variant (enforcing single primary, preserving secondary barcodes) ──
             var_doc = frappe.get_doc("Item", variant_code)
-            secondaries = [b for b in var_doc.barcodes if not b.custom_is_primary]
-            
-            var_doc.barcodes = []
-            var_doc.append("barcodes", {
-                "barcode": barcode,
-                "uom": "Nos",
-                "custom_is_primary": 1
-            })
-            for sec in secondaries:
-                if sec.barcode != barcode:
-                    var_doc.append("barcodes", {
-                        "barcode": sec.barcode,
-                        "uom": sec.uom or "Nos",
-                        "custom_is_primary": 0
-                    })
-                    
-            # Parse and append any new secondary barcodes from sheet row
-            secondary_str = str(row.get("SECONDARY BARCODES", "") or "").strip()
-            if secondary_str:
-                sec_barcodes = [b.strip() for b in secondary_str.split(",") if b.strip()]
-                current_barcodes = {b.barcode for b in var_doc.barcodes}
-                for sb in sec_barcodes:
-                    if sb not in current_barcodes:
-                        dup_parent = frappe.db.get_value("Item Barcode", {"barcode": sb, "parent": ["!=", variant_code]}, "parent")
-                        collides_with_item = frappe.db.exists("Item", sb) and sb != variant_code
-                        if not dup_parent and not collides_with_item:
-                            var_doc.append("barcodes", {
-                                "barcode": sb,
-                                "uom": "Nos",
-                                "custom_is_primary": 0
-                            })
+
+            if barcode:
+                # Separate existing barcodes: keep secondaries, replace primary
+                # Use int() comparison so None/0/False all treated as non-primary safely
+                secondaries = [
+                    b for b in var_doc.barcodes
+                    if not int(b.get("custom_is_primary") or 0)
+                ]
+
+                var_doc.barcodes = []
+                var_doc.append("barcodes", {
+                    "barcode": barcode,
+                    "uom": "Nos",
+                    "custom_is_primary": 1
+                })
+                for sec in secondaries:
+                    if sec.barcode and sec.barcode != barcode:
+                        var_doc.append("barcodes", {
+                            "barcode": sec.barcode,
+                            "uom": sec.uom or "Nos",
+                            "custom_is_primary": 0
+                        })
+
+                # Parse and append any new secondary barcodes from sheet row
+                secondary_str = str(row.get("SECONDARY BARCODES", "") or "").strip()
+                if secondary_str and secondary_str.lower() not in ("nan", "none", "null"):
+                    sec_barcodes = [b.strip() for b in secondary_str.split(",") if b.strip()]
+                    current_barcodes = {b.barcode for b in var_doc.barcodes}
+                    for sb in sec_barcodes:
+                        if sb and sb not in current_barcodes:
+                            dup_parent = frappe.db.get_value(
+                                "Item Barcode",
+                                {"barcode": sb, "parent": ["!=", variant_code]},
+                                "parent"
+                            )
+                            sb_collides = frappe.db.exists("Item", sb) and sb != variant_code
+                            if not dup_parent and not sb_collides:
+                                var_doc.append("barcodes", {
+                                    "barcode": sb,
+                                    "uom": "Nos",
+                                    "custom_is_primary": 0
+                                })
+
             var_doc.save(ignore_permissions=True)
 
             # ── Create prices (Standard Selling = MRP, MRP list = MRP) ─────
