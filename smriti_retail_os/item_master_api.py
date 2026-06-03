@@ -59,18 +59,19 @@ def validate_import_rows(rows_json):
 
         # ── Required field checks ──────────────────────────────────────────
         for col in REQUIRED_COLS:
-            if not str(row.get(col, "")).strip():
+            val_cleaned = _clean_str(row.get(col, ""))
+            if not val_cleaned:
                 errors.append(f"'{col}' is required")
 
-        barcode = str(row.get("BARCODE NO", "")).strip()
-        # Guard: Excel blank cells arrive as 'nan' or 'None'
-        if barcode.lower() in ("", "nan", "none", "null", "0"):
+        barcode = _clean_str(row.get("BARCODE NO", ""))
+        # Guard: Excel blank cells arrive as 'nan' or 'None' or '0'
+        if barcode.lower() in ("", "0"):
             barcode = ""
 
         # Compute variant_code early to allow re-import of same barcode on same item
-        _style  = str(row.get("PRODUCT STYLE CODE", "")).strip()
-        _color  = str(row.get("COLOR", "")).strip()
-        _size   = str(row.get("SIZE", "")).strip()
+        _style  = _clean_str(row.get("PRODUCT STYLE CODE", ""))
+        _color  = _clean_str(row.get("COLOR", ""))
+        _size   = _clean_str(row.get("SIZE", ""))
         variant_code_early = f"{_style}-{_color}-{_size}" if _style and _color and _size else ""
 
         # ── Intra-sheet duplicate barcode → HARD ERROR ─────────────────────
@@ -100,16 +101,16 @@ def validate_import_rows(rows_json):
                         )
 
         # ── GST % validation ───────────────────────────────────────────────
-        gst_raw = str(row.get("PRODUCT TAX", "0") or "0").strip()
+        gst_raw = _clean_str(row.get("PRODUCT TAX", "0"))
         try:
-            gst_val = int(float(gst_raw))
+            gst_val = int(float(gst_raw or "0"))
             if gst_val not in VALID_GST:
                 errors.append(f"GST '{gst_raw}%' is not valid — allowed: 0, 5, 12, 18, 28")
         except ValueError:
             errors.append(f"GST '{gst_raw}' is not a number")
 
         # ── Vendor / Supplier soft check (warning only) ────────────────────
-        vendor = str(row.get("VENDOR CODE", "")).strip()
+        vendor = _clean_str(row.get("VENDOR CODE", ""))
         if vendor:
             supplier_exists = (
                 frappe.db.exists("Supplier", vendor) or
@@ -119,7 +120,7 @@ def validate_import_rows(rows_json):
                 warnings.append(f"Supplier '{vendor}' not found in system — link will be skipped")
 
         # ── Brand soft check ───────────────────────────────────────────────
-        brand = str(row.get("BRAND NAME", "")).strip()
+        brand = _clean_str(row.get("BRAND NAME", ""))
         if brand and not frappe.db.exists("Brand", brand):
             warnings.append(f"Brand '{brand}' not found — will be auto-created")
 
@@ -134,7 +135,7 @@ def validate_import_rows(rows_json):
             ("HEELS", "SMRITI Heel Type", "Heel Type")
         ]
         for row_key, doctype_name, label in attr_checks:
-            val = str(row.get(row_key, "")).strip()
+            val = _clean_str(row.get(row_key, ""))
             if val:
                 # Guard: DocType may not exist on fresh installs
                 try:
@@ -182,33 +183,36 @@ def import_item_master(rows_json):
     for idx, row in enumerate(rows):
         try:
             # ── Parse row ─────────────────────────────────────────────────
-            barcode         = str(row.get("BARCODE NO", "")).strip()
-            # Guard: Excel blank cells come through as 'nan' or 'None'
-            if barcode.lower() in ("", "nan", "none", "null", "0"):
+            barcode         = _clean_str(row.get("BARCODE NO", ""))
+            # Guard: Excel blank cells come through as 'nan' or 'None' or '0'
+            if barcode.lower() in ("", "0"):
                 barcode = ""
-            style_code      = str(row.get("PRODUCT STYLE CODE", "")).strip()
-            item_name       = str(row.get("ITEM DESCRIPTION", "")).strip()
-            color           = str(row.get("COLOR", "")).strip()
-            size            = str(row.get("SIZE", "")).strip()
-            brand           = str(row.get("BRAND NAME", "")).strip()
+            style_code      = _clean_str(row.get("PRODUCT STYLE CODE", ""))
+            item_name       = _clean_str(row.get("ITEM DESCRIPTION", ""))
+            color           = _clean_str(row.get("COLOR", ""))
+            size            = _clean_str(row.get("SIZE", ""))
+            brand           = _clean_str(row.get("BRAND NAME", ""))
             mrp             = flt(row.get("PLANNED MRP", 0))
             cost            = flt(row.get("COST PRICE", 0))
-            gst_pct         = str(int(float(str(row.get("PRODUCT TAX", "0") or "0")))).strip()
-            hsn_code        = str(row.get("HSN CODE", "")).strip()
-            image_link      = str(row.get("IMAGE LINK", "")).strip()
-            item_group      = str(row.get("DEPARTMENT", "Products")).strip() or "Products"
-            vendor_code     = str(row.get("VENDOR CODE", "")).strip()
-            gender          = str(row.get("GENDER", "")).strip().upper()
-            upper_material  = str(row.get("UPPER MATERIAL", "")).strip()
-            outsole         = str(row.get("OUTSOLE", "")).strip()
-            heel_type       = str(row.get("HEELS", "")).strip()
-            purchase_class  = str(row.get("PURCHASE CLASS", "")).strip()
-            merch_cat       = str(row.get("MERCHANDISE CATEGORY", "")).strip()
-            sub_cat         = str(row.get("Sub category", "")).strip()
-            tax_group       = str(row.get("Product Tax Group", "")).strip()
+            
+            gst_raw         = _clean_str(row.get("PRODUCT TAX", "0"))
+            gst_pct         = str(int(float(gst_raw or "0"))).strip() if gst_raw else "0"
+            
+            hsn_code        = _clean_str(row.get("HSN CODE", ""))
+            image_link      = _clean_str(row.get("IMAGE LINK", ""))
+            item_group      = _clean_str(row.get("DEPARTMENT", "Products")) or "Products"
+            vendor_code     = _clean_str(row.get("VENDOR CODE", ""))
+            gender          = _clean_str(row.get("GENDER", "")).upper()
+            upper_material  = _clean_str(row.get("UPPER MATERIAL", ""))
+            outsole         = _clean_str(row.get("OUTSOLE", ""))
+            heel_type       = _clean_str(row.get("HEELS", ""))
+            purchase_class  = _clean_str(row.get("PURCHASE CLASS", ""))
+            merch_cat       = _clean_str(row.get("MERCHANDISE CATEGORY", ""))
+            sub_cat         = _clean_str(row.get("Sub category", ""))
+            tax_group       = _clean_str(row.get("Product Tax Group", ""))
 
             # ── Hard duplicate barcode check ───────────────────────────────
-            variant_code_early = f"{str(row.get('PRODUCT STYLE CODE', '')).strip()}-{str(row.get('COLOR', '')).strip()}-{str(row.get('SIZE', '')).strip()}"
+            variant_code_early = f"{style_code}-{color}-{size}" if style_code and color and size else ""
 
             if barcode:
                 if barcode in batch_barcodes:
@@ -393,6 +397,16 @@ def import_item_master(rows_json):
 # ─────────────────────────────────────────────────────────────────────────────
 #  HELPERS
 # ─────────────────────────────────────────────────────────────────────────────
+
+def _clean_str(val):
+    """Clean a string value from import: strip whitespace, remove wrapping/stray quotes, and handle nulls."""
+    s = str(val or "").strip()
+    if s.startswith('"') and s.endswith('"') and len(s) >= 2:
+        s = s[1:-1].strip()
+    if s in ('"', 'nan', 'None', 'none', 'null', 'Null'):
+        return ""
+    return s
+
 
 def _safe_set(doc, fieldname, value):
     """Set a field on a Frappe doc, silently skipping if the field doesn't exist.
