@@ -1,17 +1,62 @@
 {
-  "short_name": "SMRITI OS",
   "name": "SMRITI Retail OS",
-  "description": "Retail Experience Layer for High-performance Store Operations",
+  "short_name": "SMRITI",
+  "description": "Complete Retail Management System by AITDL Network",
+  "start_url": "/desk",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0f766e",
+  "background_color": "#0f172a",
   "icons": [
     {
       "src": "/assets/smriti_retail_os/images/logo.svg",
       "type": "image/svg+xml",
-      "sizes": "512x512"
+      "sizes": "any",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/smriti_retail_os/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/smriti_retail_os/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": "/login",
-  "background_color": "#0b0f19",
-  "theme_color": "#e94560",
-  "display": "standalone",
-  "orientation": "portrait"
+  "shortcuts": [
+    {
+      "name": "POS Billing",
+      "short_name": "Billing",
+      "url": "/billing",
+      "description": "Open POS Terminal",
+      "icons": [{ "src": "/assets/smriti_retail_os/images/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Item Master",
+      "short_name": "Items",
+      "url": "/sizewise_item",
+      "description": "Manage Products",
+      "icons": [{ "src": "/assets/smriti_retail_os/images/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Sizewise Invoice",
+      "short_name": "B2B Invoice",
+      "url": "/sizewise_invoice",
+      "description": "B2B Tax Invoice",
+      "icons": [{ "src": "/assets/smriti_retail_os/images/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Purchase Manager",
+      "short_name": "Purchase",
+      "url": "/purchase",
+      "description": "Purchase Orders & GRN",
+      "icons": [{ "src": "/assets/smriti_retail_os/images/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [],
+  "categories": ["business", "finance", "productivity"]
 }

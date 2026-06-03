@@ -1,0 +1,331 @@
+/**
+ * @file: smriti_retail_os/www/offline.html
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMRITI Retail OS — Offline</title>
+    <meta name="description" content="SMRITI Retail OS is running in offline mode.">
+    <link rel="icon" href="/assets/smriti_retail_os/images/logo.svg" type="image/svg+xml">
+    <link rel="manifest" href="/assets/smriti_retail_os/manifest.json">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        /* Animated background blobs */
+        .bg-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.12;
+            pointer-events: none;
+            animation: float 8s ease-in-out infinite;
+        }
+        .bg-blob-1 { width: 500px; height: 500px; background: #0f766e; top: -10%; left: -10%; animation-delay: 0s; }
+        .bg-blob-2 { width: 400px; height: 400px; background: #1e40af; bottom: -10%; right: -10%; animation-delay: -4s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50%       { transform: translate(20px, -20px) scale(1.05); }
+        }
+
+        /* Card */
+        .offline-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 52px 44px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Antenna icon with signal animation */
+        .offline-icon-wrap {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 28px;
+        }
+        .offline-icon-circle {
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            background: rgba(15, 118, 110, 0.15);
+            border: 1px solid rgba(15, 118, 110, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            animation: pulse-icon 2s ease-in-out infinite;
+        }
+        @keyframes pulse-icon {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(15, 118, 110, 0.3); }
+            50%       { box-shadow: 0 0 0 16px rgba(15, 118, 110, 0); }
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 0.95rem;
+            color: #94a3b8;
+            line-height: 1.65;
+            margin-bottom: 32px;
+        }
+
+        /* Status pills */
+        .status-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+        .status-pill .dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: blink 1.5s ease infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.3; }
+        }
+
+        /* Pending badge */
+        #pending-badge {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 0.85rem;
+            color: #fbbf24;
+            margin-bottom: 24px;
+            justify-content: center;
+        }
+
+        /* Buttons */
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #0f766e, #0d9488);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 16px rgba(15,118,110,0.3);
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(15,118,110,0.4); }
+        .btn-secondary {
+            background: rgba(255,255,255,0.06);
+            color: #94a3b8;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 22px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.15s;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+        /* Capabilities grid */
+        .capabilities {
+            margin-top: 36px;
+            padding-top: 28px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        .capabilities h3 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+            margin-bottom: 14px;
+        }
+        .cap-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .cap-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        /* Footer */
+        .card-footer {
+            margin-top: 28px;
+            font-size: 0.75rem;
+            color: #475569;
+        }
+        .brand { color: #0f766e; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <!-- Background blobs -->
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+
+    <div class="offline-card">
+
+        <!-- Icon -->
+        <div class="offline-icon-wrap">
+            <div class="offline-icon-circle">📡</div>
+        </div>
+
+        <!-- Heading -->
+        <h1>You're Offline</h1>
+        <p class="subtitle">
+            SMRITI Retail OS is running in offline mode.<br>
+            Your data is safe and will sync automatically when connection is restored.
+        </p>
+
+        <!-- Status pills -->
+        <div class="status-row">
+            <div class="status-pill">
+                <span class="dot"></span>
+                IndexedDB Active
+            </div>
+            <div class="status-pill" id="items-pill">
+                📦 Items Cached
+            </div>
+        </div>
+
+        <!-- Pending invoices badge -->
+        <div id="pending-badge">
+            ⏳ <span id="pending-count-text">0 invoice(s)</span> pending sync — will auto-sync when online
+        </div>
+
+        <!-- Action buttons -->
+        <div class="btn-row">
+            <button class="btn-primary" onclick="window.location.reload()">🔄 Retry Connection</button>
+            <button class="btn-secondary" onclick="history.back()">← Go Back</button>
+        </div>
+
+        <!-- Offline capabilities -->
+        <div class="capabilities">
+            <h3>Available Offline</h3>
+            <div class="cap-grid">
+                <div class="cap-item">🧾 View cached invoices</div>
+                <div class="cap-item">🔍 Search cached items</div>
+                <div class="cap-item">👤 Lookup customers</div>
+                <div class="cap-item">📋 Queue new bills</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="card-footer">
+            <span class="brand">SMRITI Retail OS</span> — Powered by Frappe &amp; ERPNext
+        </div>
+
+    </div>
+
+    <script>
+        // Show pending invoice count from IndexedDB
+        (async () => {
+            try {
+                const req = indexedDB.open('SmritiRetailOS', 1);
+                req.onsuccess = e => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('pending_invoices')) return;
+
+                    const tx       = db.transaction('pending_invoices', 'readonly');
+                    const countReq = tx.objectStore('pending_invoices').count();
+                    countReq.onsuccess = () => {
+                        const count = countReq.result;
+                        if (count > 0) {
+                            const badge = document.getElementById('pending-badge');
+                            badge.style.display = 'flex';
+                            document.getElementById('pending-count-text').textContent =
+                                `${count} invoice${count > 1 ? 's' : ''} pending sync`;
+                        }
+                    };
+
+                    // Also show items cache count
+                    if (db.objectStoreNames.contains('items_cache')) {
+                        const itx      = db.transaction('items_cache', 'readonly');
+                        const itemsReq = itx.objectStore('items_cache').count();
+                        itemsReq.onsuccess = () => {
+                            const pill = document.getElementById('items-pill');
+                            if (itemsReq.result > 0) {
+                                pill.textContent = `📦 ${itemsReq.result} Items Cached`;
+                            } else {
+                                pill.textContent = '📦 No Item Cache';
+                                pill.style.opacity = '0.4';
+                            }
+                        };
+                    }
+                };
+            } catch (err) {
+                console.warn('[SMRITI Offline] Could not read IndexedDB:', err);
+            }
+        })();
+
+        // Auto-reload when connection restores
+        window.addEventListener('online', () => {
+            document.querySelector('h1').textContent    = '🟢 Back Online!';
+            document.querySelector('.subtitle').textContent = 'Connection restored. Reloading SMRITI…';
+            setTimeout(() => window.location.reload(), 1500);
+        });
+    </script>
+
+</body>
+</html>

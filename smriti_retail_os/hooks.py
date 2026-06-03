@@ -62,7 +62,10 @@ app_include_js = [
     "/assets/smriti_retail_os/js/smriti_sidebar.js",
     "/assets/smriti_retail_os/js/smriti_reports.js",
     "/assets/smriti_retail_os/js/main.js",
-    "/assets/smriti_retail_os/js/smriti_payload_bridge.js"
+    "/assets/smriti_retail_os/js/smriti_payload_bridge.js",
+    # PWA — Service Worker registration, install prompt, offline detection
+    "/assets/smriti_retail_os/js/smriti_offline_store.js",
+    "/assets/smriti_retail_os/js/smriti_pwa.js",
 ]
 
 # website page context override for whitelabel branding
@@ -72,7 +75,10 @@ update_website_context = ["smriti_retail_os.website_context.get_context"]
 web_include_css = "/assets/smriti_retail_os/css/smriti_branding.css"
 web_include_js = [
     "/assets/smriti_retail_os/js/main.js",
-    "/assets/smriti_retail_os/js/smriti_payload_bridge.js"
+    "/assets/smriti_retail_os/js/smriti_payload_bridge.js",
+    # PWA — load on every SMRITI web page
+    "/assets/smriti_retail_os/js/smriti_offline_store.js",
+    "/assets/smriti_retail_os/js/smriti_pwa.js",
 ]
 
 # include custom scss in every website theme (without file extension ".scss")
@@ -327,6 +333,17 @@ override_whitelisted_methods = {
 
 # Login page override + Billing terminal standalone route
 website_route_rules = [
+    {
+        # PWA Service Worker — must be served from root for full-scope control
+        # sw.js lives in public/js/ but is exposed at /sw.js
+        "from_route": "/sw.js",
+        "to_route": "sw"
+    },
+    {
+        # PWA offline fallback page — served at /offline
+        "from_route": "/offline",
+        "to_route": "offline"
+    },
     {
         "from_route": "/setup-wizard",
         "to_route": "setup_wizard"

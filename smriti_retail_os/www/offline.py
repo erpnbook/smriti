@@ -1,0 +1,21 @@
+# -*- coding: utf-8 -*-
+#
+# @file: smriti_retail_os/www/offline.py
+# @description: Handles user login, registration, and JWT token generation.
+# @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+# @date: 2026-05-28
+# @version: 1.0.0
+# @license: MIT
+# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+#
+"""
+www/offline.py — Offline fallback page context.
+Served at /offline by Frappe's www system.
+No authentication required — must be publicly accessible.
+"""
+no_cache = 1
+no_sitemap = 1
+
+def get_context(context):
+    context.no_cache = 1
+    context.title = "SMRITI — Offline"
