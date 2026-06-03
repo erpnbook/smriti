@@ -250,14 +250,29 @@ def get_customer_detail(name):
 @frappe.whitelist()
 def get_supplier_detail(name):
     """
-    Retrieves all details for a Supplier, including dynamic custom fields.
+    Retrieves all details for a Supplier, including standard and advanced fields.
     """
     if not frappe.db.exists("Supplier", name):
         frappe.throw(_("Supplier {0} not found.").format(name))
     
     doc = frappe.get_doc("Supplier", name)
+    
+    # Resolve Contact Person
+    contact_person = None
+    contact_link = frappe.db.get_value("Dynamic Link", {"link_doctype": "Supplier", "link_name": doc.name, "parenttype": "Contact"}, "parent")
+    if contact_link:
+        contact_person = frappe.db.get_value("Contact", contact_link, "first_name")
+
+    # Resolve Status
+    status = "Active"
+    if doc.disabled:
+        status = "Disabled"
+    elif doc.on_hold:
+        status = "On Hold"
+
     return {
         "name": doc.name,
+        "naming_series": doc.naming_series,
         "supplier_name": doc.supplier_name,
         "supplier_type": doc.supplier_type,
         "supplier_group": doc.supplier_group,
@@ -268,7 +283,140 @@ def get_supplier_detail(name):
         "pan": doc.pan,
         "custom_credit_days": doc.get("custom_credit_days") or 0,
         "custom_address_text": doc.get("custom_address_text") or "",
-        "custom_shipping_address_text": doc.get("custom_shipping_address_text") or ""
+        "custom_shipping_address_text": doc.get("custom_shipping_address_text") or "",
+        "contact_person": contact_person,
+        "status": status,
+        
+        # Advanced fields
+        "default_currency": doc.default_currency,
+        "default_bank_account": doc.default_bank_account,
+        "default_price_list": doc.default_price_list,
+        "payment_terms": doc.payment_terms,
+        "is_internal_supplier": doc.is_internal_supplier,
+        "represents_company": doc.represents_company,
+        "is_transporter": doc.is_transporter,
+        "allow_purchase_invoice_creation_without_purchase_order": doc.allow_purchase_invoice_creation_without_purchase_order,
+        "allow_purchase_invoice_creation_without_purchase_receipt": doc.allow_purchase_invoice_creation_without_purchase_receipt,
+        "is_frozen": doc.is_frozen,
+        "hold_type": doc.hold_type,
+        "release_date": doc.release_date,
+        "warn_rfqs": doc.warn_rfqs,
+        "prevent_rfqs": doc.prevent_rfqs,
+        "warn_pos": doc.warn_pos,
+        "prevent_pos": doc.prevent_pos,
+        "website": doc.website,
+        "language": doc.language,
+        "supplier_details": doc.supplier_details
+    }
+
+
+@frappe.whitelist()
+def save_supplier_detail(**kwargs):
+    """
+    Saves or updates a Supplier with complete operational, India compliance, and advanced fields.
+    """
+    supplier_name = kwargs.get("supplier_name")
+    if not supplier_name:
+        frappe.throw(_("Supplier Name is required."))
+
+    name = kwargs.get("name")
+    if name:
+        doc = frappe.get_doc("Supplier", name)
+    else:
+        doc = frappe.new_doc("Supplier")
+
+    # Basic fields
+    if kwargs.get("naming_series"):
+        doc.naming_series = kwargs.get("naming_series")
+    doc.supplier_name = supplier_name
+    doc.supplier_type = kwargs.get("supplier_type") or "Company"
+    doc.supplier_group = kwargs.get("supplier_group") or "Local"
+    doc.mobile_no = kwargs.get("mobile_no")
+    doc.email_id = kwargs.get("email_id")
+    doc.gstin = kwargs.get("gstin")
+    doc.gst_category = kwargs.get("gst_category") or "Registered Regular"
+    doc.pan = kwargs.get("pan")
+    doc.custom_credit_days = cint(kwargs.get("custom_credit_days") or 0)
+    doc.custom_address_text = kwargs.get("custom_address_text")
+    doc.custom_shipping_address_text = kwargs.get("custom_shipping_address_text")
+
+    # Status mapping
+    status = kwargs.get("status") or "Active"
+    if status == "Disabled":
+        doc.disabled = 1
+        doc.on_hold = 0
+    elif status == "On Hold":
+        doc.disabled = 0
+        doc.on_hold = 1
+        doc.hold_type = kwargs.get("hold_type") or "All"
+        doc.release_date = kwargs.get("release_date")
+    else:
+        doc.disabled = 0
+        doc.on_hold = 0
+        doc.hold_type = None
+        doc.release_date = None
+
+    # Advanced fields
+    doc.default_currency = kwargs.get("default_currency")
+    doc.default_bank_account = kwargs.get("default_bank_account")
+    doc.default_price_list = kwargs.get("default_price_list")
+    doc.payment_terms = kwargs.get("payment_terms")
+    doc.is_internal_supplier = cint(kwargs.get("is_internal_supplier") or 0)
+    doc.represents_company = kwargs.get("represents_company")
+    doc.is_transporter = cint(kwargs.get("is_transporter") or 0)
+    doc.allow_purchase_invoice_creation_without_purchase_order = cint(kwargs.get("allow_purchase_invoice_creation_without_purchase_order") or 0)
+    doc.allow_purchase_invoice_creation_without_purchase_receipt = cint(kwargs.get("allow_purchase_invoice_creation_without_purchase_receipt") or 0)
+    doc.is_frozen = cint(kwargs.get("is_frozen") or 0)
+    if status != "On Hold" and kwargs.get("hold_type"):
+        doc.hold_type = kwargs.get("hold_type")
+        doc.release_date = kwargs.get("release_date")
+    doc.warn_rfqs = cint(kwargs.get("warn_rfqs") or 0)
+    doc.prevent_rfqs = cint(kwargs.get("prevent_rfqs") or 0)
+    doc.warn_pos = cint(kwargs.get("warn_pos") or 0)
+    doc.prevent_pos = cint(kwargs.get("prevent_pos") or 0)
+    doc.website = kwargs.get("website")
+    doc.language = kwargs.get("language")
+    doc.supplier_details = kwargs.get("supplier_details")
+
+    # Defensive group check for fresh installs
+    if not frappe.db.exists("Supplier Group", doc.supplier_group):
+        sg = frappe.new_doc("Supplier Group")
+        sg.supplier_group_name = doc.supplier_group
+        sg.insert(ignore_permissions=True)
+
+    doc.save(ignore_permissions=True)
+
+    # Contact Person processing
+    contact_person = kwargs.get("contact_person")
+    if contact_person:
+        contact_link = frappe.db.get_value("Dynamic Link", {"link_doctype": "Supplier", "link_name": doc.name, "parenttype": "Contact"}, "parent")
+        if contact_link:
+            contact = frappe.get_doc("Contact", contact_link)
+            contact.first_name = contact_person
+            if doc.mobile_no:
+                contact.mobile_no = doc.mobile_no
+            if doc.email_id:
+                contact.email_id = doc.email_id
+            contact.save(ignore_permissions=True)
+        else:
+            contact = frappe.new_doc("Contact")
+            contact.first_name = contact_person
+            if doc.mobile_no:
+                contact.mobile_no = doc.mobile_no
+            if doc.email_id:
+                contact.email_id = doc.email_id
+            contact.append("links", {
+                "link_doctype": "Supplier",
+                "link_name": doc.name
+            })
+            contact.insert(ignore_permissions=True)
+
+    frappe.db.commit()
+
+    return {
+        "name": doc.name,
+        "supplier_name": doc.supplier_name,
+        "mobile_no": doc.mobile_no
     }
 
 
@@ -315,47 +463,6 @@ def save_customer_detail(customer_name, customer_type, customer_group, territory
     return {
         "name": doc.name,
         "customer_name": doc.customer_name,
-        "mobile_no": doc.mobile_no
-    }
-
-
-@frappe.whitelist()
-def save_supplier_detail(supplier_name, supplier_type, supplier_group, mobile_no, email_id, gstin, gst_category, pan, custom_credit_days, custom_address_text, custom_shipping_address_text=None, name=None):
-    """
-    Saves or updates a Supplier with complete operational and India compliance fields.
-    """
-    if not supplier_name:
-        frappe.throw(_("Supplier Name is required."))
-
-    if name:
-        doc = frappe.get_doc("Supplier", name)
-    else:
-        doc = frappe.new_doc("Supplier")
-
-    doc.supplier_name = supplier_name
-    doc.supplier_type = supplier_type
-    doc.supplier_group = supplier_group or "Local"
-    doc.mobile_no = mobile_no
-    doc.email_id = email_id
-    doc.gstin = gstin
-    doc.gst_category = gst_category
-    doc.pan = pan
-    doc.custom_credit_days = cint(custom_credit_days)
-    doc.custom_address_text = custom_address_text
-    doc.custom_shipping_address_text = custom_shipping_address_text
-
-    # Defensive group check for fresh installs
-    if not frappe.db.exists("Supplier Group", doc.supplier_group):
-        sg = frappe.new_doc("Supplier Group")
-        sg.supplier_group_name = doc.supplier_group
-        sg.insert(ignore_permissions=True)
-
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
-
-    return {
-        "name": doc.name,
-        "supplier_name": doc.supplier_name,
         "mobile_no": doc.mobile_no
     }
 

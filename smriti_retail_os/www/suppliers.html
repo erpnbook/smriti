@@ -225,11 +225,16 @@ body.popout-mode .sidebar { display: none !important; }
         </div>
         <div class="modal-body" style="max-height: 80vh; overflow-y: auto; padding-right: 6px;">
             <input type="hidden" id="supp-name-id" value="">
-            
-            <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--primary-lt); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 12px; display:flex; align-items:center; gap:6px;">
-                <span class="material-symbols-outlined" style="font-size:16px;">contact_page</span> 1. General Profile
+                        <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--primary-lt); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 12px; display:flex; align-items:center; gap:6px;">
+                <span class="material-symbols-outlined" style="font-size:16px;">contact_page</span> 1. General Profile (Basic Details)
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label">Naming Series</label>
+                    <select class="form-input" id="supp-naming-series">
+                        <!-- Loaded dynamically -->
+                    </select>
+                </div>
                 <div class="form-group">
                     <label class="form-label">Supplier Name *</label>
                     <input type="text" class="form-input" id="supp-name" placeholder="e.g. Acme Footwears Ltd">
@@ -242,6 +247,18 @@ body.popout-mode .sidebar { display: none !important; }
                     </select>
                 </div>
                 <div class="form-group">
+                    <label class="form-label">Contact Person</label>
+                    <input type="text" class="form-input" id="supp-contact-person" placeholder="e.g. John Doe">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-input" id="supp-status" onchange="handleStatusChange(this.value)">
+                        <option value="Active" selected>Active</option>
+                        <option value="Disabled">Disabled</option>
+                        <option value="On Hold">On Hold</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label class="form-label">Mobile Number</label>
                     <input type="text" class="form-input" id="supp-mobile" placeholder="e.g. 9876543210">
                 </div>
@@ -249,22 +266,6 @@ body.popout-mode .sidebar { display: none !important; }
                     <label class="form-label">Email Address</label>
                     <input type="email" class="form-input" id="supp-email" placeholder="e.g. sales@acme.com">
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Supplier Group</label>
-                    <select class="form-input" id="supp-group">
-                        <!-- Dynamic Options -->
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Credit Days (Payment Terms)</label>
-                    <input type="number" class="form-input" id="supp-credit-days" placeholder="e.g. 30" value="0">
-                </div>
-            </div>
-
-            <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--primary-lt); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 12px; display:flex; align-items:center; gap:6px;">
-                <span class="material-symbols-outlined" style="font-size:16px;">payments</span> 2. Tax Compliance Details
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
                 <div class="form-group">
                     <label class="form-label">GSTIN</label>
                     <input type="text" class="form-input" id="supp-gstin" placeholder="e.g. 29AABCR1718E1ZL" onchange="autoResolveState(this.value, 'bill')">
@@ -279,14 +280,14 @@ body.popout-mode .sidebar { display: none !important; }
                         <option value="SEZ">SEZ</option>
                     </select>
                 </div>
-                <div class="form-group" style="grid-column: span 2;">
+                <div class="form-group">
                     <label class="form-label">PAN (Tax ID)</label>
                     <input type="text" class="form-input" id="supp-pan" placeholder="e.g. ABCDE1234F">
                 </div>
             </div>
 
             <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--primary-lt); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 12px; display:flex; align-items:center; gap:6px;">
-                <span class="material-symbols-outlined" style="font-size:16px;">home</span> 3. Billing Address Details (Bill To)
+                <span class="material-symbols-outlined" style="font-size:16px;">home</span> 2. Address Details (Bill To)
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
                 <div class="form-group" style="grid-column: span 2;">
@@ -313,7 +314,7 @@ body.popout-mode .sidebar { display: none !important; }
 
             <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--primary-lt); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 12px; display:flex; align-items:center; justify-content:space-between;">
                 <span style="display:flex; align-items:center; gap:6px;">
-                    <span class="material-symbols-outlined" style="font-size:16px;">local_shipping</span> 4. Shipping Address Details (Ship To)
+                    <span class="material-symbols-outlined" style="font-size:16px;">local_shipping</span> 3. Shipping Address Details (Ship To)
                 </span>
                 <label style="font-size: 0.72rem; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
                     <input type="checkbox" id="same-as-billing" onchange="toggleSameAsBilling(this.checked)" style="accent-color:var(--primary);"> Same as Billing
@@ -339,6 +340,148 @@ body.popout-mode .sidebar { display: none !important; }
                 <div class="form-group">
                     <label class="form-label">Pincode</label>
                     <input type="text" class="form-input" id="ship-pincode" placeholder="e.g. 560058">
+                </div>
+            </div>
+
+            <!-- Advanced Details Toggle -->
+            <div class="advanced-toggle" onclick="toggleAdvancedDetails()" style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--primary-lt); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 12px 0; margin: 20px 0 12px 0; display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none;">
+                <span style="display:flex; align-items:center; gap:6px;">
+                    <span class="material-symbols-outlined" style="font-size:18px;">settings_applications</span> Advanced Details (Optional)
+                </span>
+                <span class="material-symbols-outlined" id="advanced-chevron">expand_more</span>
+            </div>
+
+            <!-- Advanced Section -->
+            <div id="advanced-section" style="display: none; flex-direction: column; gap: 14px;">
+                <!-- Section 1: Pricing & Defaults -->
+                <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 8px; display:flex; align-items:center; gap:6px;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">account_balance</span> 1. Pricing & Defaults
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <div class="form-group">
+                        <label class="form-label">Supplier Group</label>
+                        <select class="form-input" id="supp-group">
+                            <!-- Dynamic Options -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Credit Days</label>
+                        <input type="number" class="form-input" id="supp-credit-days" placeholder="e.g. 30" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Payment Terms Template</label>
+                        <select class="form-input" id="supp-payment-terms">
+                            <option value="">No Template</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Default Currency</label>
+                        <select class="form-input" id="supp-currency">
+                            <option value="">Default (INR)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Default Price List</label>
+                        <select class="form-input" id="supp-price-list">
+                            <option value="">Default (Standard Buying)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Company Bank Account</label>
+                        <select class="form-input" id="supp-bank-account">
+                            <option value="">Select Bank Account</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Section 2: Internal & Logistics -->
+                <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 8px; display:flex; align-items:center; gap:6px;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">local_shipping</span> 2. Internal & Logistics Settings
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; align-items: center;">
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                        <input type="checkbox" id="supp-is-internal-supplier" onchange="toggleInternalSupplier(this.checked)" style="accent-color:var(--primary); width:16px; height:16px;"> Is Internal Supplier
+                    </label>
+                    <div class="form-group" id="represents-company-group" style="display: none;">
+                        <label class="form-label">Represents Company</label>
+                        <select class="form-input" id="supp-represents-company">
+                            <option value="">Select Company</option>
+                        </select>
+                    </div>
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem; grid-column: 1;">
+                        <input type="checkbox" id="supp-is-transporter" style="accent-color:var(--primary); width:16px; height:16px;"> Is Transporter
+                    </label>
+                </div>
+
+                <!-- Section 3: Compliance & Hold Settings -->
+                <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 8px; display:flex; align-items:center; gap:6px;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">gavel</span> 3. Purchase Controls & Holds
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                        <input type="checkbox" id="supp-allow-invoice-no-po" style="accent-color:var(--primary); width:16px; height:16px;"> Allow Invoice without PO
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                        <input type="checkbox" id="supp-allow-invoice-no-receipt" style="accent-color:var(--primary); width:16px; height:16px;"> Allow Invoice without Receipt
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                        <input type="checkbox" id="supp-is-frozen" style="accent-color:var(--primary); width:16px; height:16px;"> Is Frozen
+                    </label>
+                    
+                    <div class="form-group" style="grid-column: 1 / span 2; display: none; grid-template-columns: 1fr 1fr; gap: 12px;" id="hold-settings-group">
+                        <div class="form-group">
+                            <label class="form-label">Hold Type</label>
+                            <select class="form-input" id="supp-hold-type">
+                                <option value="All">All</option>
+                                <option value="Invoices">Invoices</option>
+                                <option value="Payments">Payments</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Release Date</label>
+                            <input type="date" class="form-input" id="supp-release-date">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Warning Settings -->
+                <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 8px; display:flex; align-items:center; gap:6px;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">report_problem</span> 4. Warnings & Prevent Rules
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                        <input type="checkbox" id="supp-warn-rfqs" style="accent-color:var(--primary); width:16px; height:16px;"> Warn RFQs
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                        <input type="checkbox" id="supp-prevent-rfqs" style="accent-color:var(--primary); width:16px; height:16px;"> Prevent RFQs
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                        <input type="checkbox" id="supp-warn-pos" style="accent-color:var(--primary); width:16px; height:16px;"> Warn POs
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                        <input type="checkbox" id="supp-prevent-pos" style="accent-color:var(--primary); width:16px; height:16px;"> Prevent POs
+                    </label>
+                </div>
+
+                <!-- Section 5: Metadata & Descriptions -->
+                <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 8px; display:flex; align-items:center; gap:6px;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">info</span> 5. Extra Metadata
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <div class="form-group">
+                        <label class="form-label">Website</label>
+                        <input type="text" class="form-input" id="supp-website" placeholder="e.g. www.acme.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Language</label>
+                        <select class="form-input" id="supp-language">
+                            <option value="">Default (English)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label class="form-label">Supplier Details / Description</label>
+                        <textarea class="form-input" id="supp-details" rows="3" placeholder="Enter supplier profile description..."></textarea>
+                    </div>
                 </div>
             </div>
 
@@ -400,7 +543,6 @@ function toast(msg, type = 'success') {
     cont.appendChild(t);
     setTimeout(() => { t.remove(); }, 4000);
 }
-
 async function init() {
     // Set user avatar info (sidebar renders these dynamically — guard against null)
     const _sbu = document.getElementById('sb-user'); if (_sbu) _sbu.textContent = loggedUser.split('@')[0];
@@ -451,6 +593,7 @@ async function loadFilterOptions() {
 
 async function loadDropdownOptions() {
     try {
+        // Load Supplier Group options
         const groups = await api('frappe.client.get_list', {
             doctype: 'Supplier Group',
             fields: ['name'],
@@ -466,8 +609,137 @@ async function loadDropdownOptions() {
             opt.textContent = g.name;
             grpSel.appendChild(opt);
         });
+
+        // Load Naming Series
+        let seriesOptions = ['SUP-.YYYY.-'];
+        try {
+            const res = await api('frappe.client.get_value', {
+                doctype: 'DocField',
+                filters: { parent: 'Supplier', fieldname: 'naming_series' },
+                fieldname: 'options'
+            });
+            if (res && res.options) {
+                seriesOptions = res.options.split('\n').map(x => x.trim()).filter(x => x);
+            }
+        } catch (e) {
+            console.warn('Failed to load naming series:', e);
+        }
+        const seriesSel = document.getElementById('supp-naming-series');
+        seriesSel.innerHTML = '';
+        seriesOptions.forEach(optVal => {
+            const opt = document.createElement('option');
+            opt.value = optVal;
+            opt.textContent = optVal;
+            seriesSel.appendChild(opt);
+        });
+
+        // Load Payment Terms Templates
+        try {
+            const terms = await api('frappe.client.get_list', {
+                doctype: 'Payment Terms Template',
+                fields: ['name'],
+                limit_page_length: 100
+            });
+            const termSel = document.getElementById('supp-payment-terms');
+            termSel.innerHTML = '<option value="">No Template</option>';
+            terms.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.name;
+                opt.textContent = t.name;
+                termSel.appendChild(opt);
+            });
+        } catch (e) { console.error('Failed to load payment terms:', e); }
+
+        // Load Currencies
+        try {
+            const currencies = await api('frappe.client.get_list', {
+                doctype: 'Currency',
+                fields: ['name'],
+                filters: { enabled: 1 },
+                limit_page_length: 250
+            });
+            const currSel = document.getElementById('supp-currency');
+            currSel.innerHTML = '<option value="">Default (INR)</option>';
+            currencies.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.name;
+                opt.textContent = c.name;
+                currSel.appendChild(opt);
+            });
+        } catch (e) { console.error('Failed to load currencies:', e); }
+
+        // Load Price Lists (Buying, enabled)
+        try {
+            const priceLists = await api('frappe.client.get_list', {
+                doctype: 'Price List',
+                fields: ['name'],
+                filters: { buying: 1, enabled: 1 },
+                limit_page_length: 100
+            });
+            const plSel = document.getElementById('supp-price-list');
+            plSel.innerHTML = '<option value="">Default (Standard Buying)</option>';
+            priceLists.forEach(pl => {
+                const opt = document.createElement('option');
+                opt.value = pl.name;
+                opt.textContent = pl.name;
+                plSel.appendChild(opt);
+            });
+        } catch (e) { console.error('Failed to load price lists:', e); }
+
+        // Load Bank Accounts
+        try {
+            const bankAccounts = await api('frappe.client.get_list', {
+                doctype: 'Bank Account',
+                fields: ['name'],
+                limit_page_length: 100
+            });
+            const bankSel = document.getElementById('supp-bank-account');
+            bankSel.innerHTML = '<option value="">Select Bank Account</option>';
+            bankAccounts.forEach(ba => {
+                const opt = document.createElement('option');
+                opt.value = ba.name;
+                opt.textContent = ba.name;
+                bankSel.appendChild(opt);
+            });
+        } catch (e) { console.error('Failed to load bank accounts:', e); }
+
+        // Load Companies
+        try {
+            const companies = await api('frappe.client.get_list', {
+                doctype: 'Company',
+                fields: ['name'],
+                limit_page_length: 50
+            });
+            const compSel = document.getElementById('supp-represents-company');
+            compSel.innerHTML = '<option value="">Select Company</option>';
+            companies.forEach(co => {
+                const opt = document.createElement('option');
+                opt.value = co.name;
+                opt.textContent = co.name;
+                compSel.appendChild(opt);
+            });
+        } catch (e) { console.error('Failed to load companies:', e); }
+
+        // Load Languages
+        try {
+            const languages = await api('frappe.client.get_list', {
+                doctype: 'Language',
+                fields: ['name'],
+                filters: { enabled: 1 },
+                limit_page_length: 200
+            });
+            const langSel = document.getElementById('supp-language');
+            langSel.innerHTML = '<option value="">Default (English)</option>';
+            languages.forEach(l => {
+                const opt = document.createElement('option');
+                opt.value = l.name;
+                opt.textContent = l.name;
+                langSel.appendChild(opt);
+            });
+        } catch (e) { console.error('Failed to load languages:', e); }
+
     } catch(e) {
-        console.error(e);
+        toast('Error loading options: ' + e.message, 'error');
     }
 }
 
@@ -519,6 +791,39 @@ function applyFilters() {
     renderTable(filtered);
 }
 
+function toggleAdvancedDetails() {
+    const section = document.getElementById('advanced-section');
+    const chevron = document.getElementById('advanced-chevron');
+    if (section.style.display === 'none') {
+        section.style.display = 'flex';
+        chevron.textContent = 'expand_less';
+    } else {
+        section.style.display = 'none';
+        chevron.textContent = 'expand_more';
+    }
+}
+
+function toggleInternalSupplier(checked) {
+    const group = document.getElementById('represents-company-group');
+    if (checked) {
+        group.style.display = 'flex';
+    } else {
+        group.style.display = 'none';
+        document.getElementById('supp-represents-company').value = "";
+    }
+}
+
+function handleStatusChange(status) {
+    const holdGroup = document.getElementById('hold-settings-group');
+    if (status === 'On Hold') {
+        holdGroup.style.display = 'grid';
+    } else {
+        holdGroup.style.display = 'none';
+        document.getElementById('supp-hold-type').value = "All";
+        document.getElementById('supp-release-date').value = "";
+    }
+}
+
 function openAddSupplierModal() {
     document.getElementById('modal-action-title').textContent = "Quick Add Supplier";
     document.getElementById('supp-name-id').value = "";
@@ -547,6 +852,42 @@ function openAddSupplierModal() {
     document.getElementById('ship-city').value = "";
     document.getElementById('ship-state').value = "";
     document.getElementById('ship-pincode').value = "";
+
+    // Reset advanced and new basic details
+    document.getElementById('supp-naming-series').value = document.getElementById('supp-naming-series').options[0]?.value || "";
+    document.getElementById('supp-contact-person').value = "";
+    document.getElementById('supp-status').value = "Active";
+    handleStatusChange("Active");
+    
+    document.getElementById('supp-payment-terms').value = "";
+    document.getElementById('supp-currency').value = "";
+    document.getElementById('supp-price-list').value = "";
+    document.getElementById('supp-bank-account').value = "";
+    
+    document.getElementById('supp-is-internal-supplier').checked = false;
+    toggleInternalSupplier(false);
+    document.getElementById('supp-represents-company').value = "";
+    document.getElementById('supp-is-transporter').checked = false;
+    
+    document.getElementById('supp-allow-invoice-no-po').checked = false;
+    document.getElementById('supp-allow-invoice-no-receipt').checked = false;
+    document.getElementById('supp-is-frozen').checked = false;
+    document.getElementById('supp-hold-type').value = "All";
+    document.getElementById('supp-release-date').value = "";
+    
+    document.getElementById('supp-warn-rfqs').checked = false;
+    document.getElementById('supp-prevent-rfqs').checked = false;
+    document.getElementById('supp-warn-pos').checked = false;
+    document.getElementById('supp-prevent-pos').checked = false;
+    
+    document.getElementById('supp-website').value = "";
+    document.getElementById('supp-language').value = "";
+    document.getElementById('supp-details').value = "";
+
+    // Collapse Advanced section
+    const advancedSec = document.getElementById('advanced-section');
+    advancedSec.style.display = 'none';
+    document.getElementById('advanced-chevron').textContent = 'expand_more';
 
     document.getElementById('supplier-modal').classList.add('open');
     document.getElementById('supp-name').focus();
@@ -588,6 +929,42 @@ async function openEditSupplierModal(name) {
         const isSame = s.custom_address_text && s.custom_address_text === s.custom_shipping_address_text;
         document.getElementById('same-as-billing').checked = isSame;
         toggleSameAsBilling(isSame);
+
+        // Edit advanced and new basic details
+        document.getElementById('supp-naming-series').value = s.naming_series || "";
+        document.getElementById('supp-contact-person').value = s.contact_person || "";
+        document.getElementById('supp-status').value = s.status || "Active";
+        handleStatusChange(s.status || "Active");
+        
+        document.getElementById('supp-payment-terms').value = s.payment_terms || "";
+        document.getElementById('supp-currency').value = s.default_currency || "";
+        document.getElementById('supp-price-list').value = s.default_price_list || "";
+        document.getElementById('supp-bank-account').value = s.default_bank_account || "";
+        
+        document.getElementById('supp-is-internal-supplier').checked = !!s.is_internal_supplier;
+        toggleInternalSupplier(!!s.is_internal_supplier);
+        document.getElementById('supp-represents-company').value = s.represents_company || "";
+        document.getElementById('supp-is-transporter').checked = !!s.is_transporter;
+        
+        document.getElementById('supp-allow-invoice-no-po').checked = !!s.allow_purchase_invoice_creation_without_purchase_order;
+        document.getElementById('supp-allow-invoice-no-receipt').checked = !!s.allow_purchase_invoice_creation_without_purchase_receipt;
+        document.getElementById('supp-is-frozen').checked = !!s.is_frozen;
+        document.getElementById('supp-hold-type').value = s.hold_type || "All";
+        document.getElementById('supp-release-date').value = s.release_date || "";
+        
+        document.getElementById('supp-warn-rfqs').checked = !!s.warn_rfqs;
+        document.getElementById('supp-prevent-rfqs').checked = !!s.prevent_rfqs;
+        document.getElementById('supp-warn-pos').checked = !!s.warn_pos;
+        document.getElementById('supp-prevent-pos').checked = !!s.prevent_pos;
+        
+        document.getElementById('supp-website').value = s.website || "";
+        document.getElementById('supp-language').value = s.language || "";
+        document.getElementById('supp-details').value = s.supplier_details || "";
+
+        // Collapse Advanced section on open
+        const advancedSec = document.getElementById('advanced-section');
+        advancedSec.style.display = 'none';
+        document.getElementById('advanced-chevron').textContent = 'expand_more';
 
         document.getElementById('supplier-modal').classList.add('open');
     } catch(e) {
@@ -667,8 +1044,11 @@ async function saveSupplierDetail() {
     try {
         await api('smriti_retail_os.master_api.save_supplier_detail', {
             supplier_name: name,
+            naming_series: document.getElementById('supp-naming-series').value,
             supplier_type: document.getElementById('supp-type').value,
             supplier_group: document.getElementById('supp-group').value,
+            contact_person: document.getElementById('supp-contact-person').value.trim(),
+            status: document.getElementById('supp-status').value,
             mobile_no: mobile,
             email_id: document.getElementById('supp-email').value.trim(),
             gstin: document.getElementById('supp-gstin').value.trim(),
@@ -677,6 +1057,28 @@ async function saveSupplierDetail() {
             custom_credit_days: document.getElementById('supp-credit-days').value,
             custom_address_text: billText,
             custom_shipping_address_text: shipText,
+            
+            // Advanced fields
+            default_currency: document.getElementById('supp-currency').value,
+            default_bank_account: document.getElementById('supp-bank-account').value,
+            default_price_list: document.getElementById('supp-price-list').value,
+            payment_terms: document.getElementById('supp-payment-terms').value,
+            is_internal_supplier: document.getElementById('supp-is-internal-supplier').checked ? 1 : 0,
+            represents_company: document.getElementById('supp-represents-company').value,
+            is_transporter: document.getElementById('supp-is-transporter').checked ? 1 : 0,
+            allow_purchase_invoice_creation_without_purchase_order: document.getElementById('supp-allow-invoice-no-po').checked ? 1 : 0,
+            allow_purchase_invoice_creation_without_purchase_receipt: document.getElementById('supp-allow-invoice-no-receipt').checked ? 1 : 0,
+            is_frozen: document.getElementById('supp-is-frozen').checked ? 1 : 0,
+            hold_type: document.getElementById('supp-hold-type').value,
+            release_date: document.getElementById('supp-release-date').value,
+            warn_rfqs: document.getElementById('supp-warn-rfqs').checked ? 1 : 0,
+            prevent_rfqs: document.getElementById('supp-prevent-rfqs').checked ? 1 : 0,
+            warn_pos: document.getElementById('supp-warn-pos').checked ? 1 : 0,
+            prevent_pos: document.getElementById('supp-prevent-pos').checked ? 1 : 0,
+            website: document.getElementById('supp-website').value.trim(),
+            language: document.getElementById('supp-language').value,
+            supplier_details: document.getElementById('supp-details').value.trim(),
+            
             name: suppId || null
         });
 
