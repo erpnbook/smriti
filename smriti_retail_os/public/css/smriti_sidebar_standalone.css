@@ -124,7 +124,6 @@
     align-items: center;
     gap: 12px;
     padding: 9px 12px;
-    padding-right: 34px !important;
     border-radius: var(--radius-sm);
     color: var(--text-muted);
     text-decoration: none;
@@ -147,24 +146,34 @@
     border-left: 3px solid var(--primary);
 }
 
-.sidebar-item .popout-btn {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    opacity: 0;
-    transition: opacity 0.2s, color 0.2s;
-    color: var(--text-muted);
-    cursor: pointer;
-    border: none;
+/* ── Popout Button on Sidebar Items ── */
+.sidebar-popout-btn {
+    display: none;
     background: none;
+    border: none;
+    color: var(--text-muted, #888);
+    cursor: pointer;
+    font-size: 0.72rem;
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-left: auto;
+    opacity: 0.5;
+    transition: opacity 0.15s, background 0.15s;
+    flex-shrink: 0;
+}
+.sidebar-item:hover .sidebar-popout-btn,
+.sidebar-sub-item:hover .sidebar-popout-btn {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    padding: 2px;
 }
-.sidebar-item:hover .popout-btn { opacity: 1; }
-.popout-btn:hover { color: var(--primary-lt); }
+.sidebar-popout-btn:hover {
+    opacity: 1;
+    background: var(--border, rgba(255,255,255,0.1));
+    color: var(--primary, #0ea5e9);
+}
+.sidebar.collapsed .sidebar-popout-btn {
+    display: none !important;
+}
 
 /* Accordion Folders */
 .sidebar-category {
@@ -408,3 +417,40 @@ body.popout-mode .smriti-sidebar,
 body.popout-mode #smriti-sidebar-target.sidebar {
     display: none !important;
 }
+
+/* ── Popout Floating Toolbar ── */
+.popout-toolbar {
+    display: none;
+    position: fixed;
+    top: 10px;
+    right: 14px;
+    z-index: 99999;
+    align-items: center;
+    gap: 4px;
+    background: var(--surface, #1e293b);
+    border: 1px solid var(--border, rgba(255,255,255,0.1));
+    border-radius: 10px;
+    padding: 4px 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+body.popout-mode .popout-toolbar {
+    display: flex;
+}
+.popout-toolbar button {
+    background: none;
+    border: none;
+    color: var(--text, #e2e8f0);
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+.popout-toolbar button:hover {
+    background: var(--border, rgba(255,255,255,0.1));
+}
+

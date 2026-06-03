@@ -194,9 +194,9 @@ SMRITI.renderFlexibleSidebar = function(activePageId) {
                 <a class="sidebar-item ${activeCls}" href="${block.url}">
                     <span class="emoji">${block.emoji}</span>
                     <span>${block.label}</span>
-                    <button class="popout-btn" title="Open in Popout Window" onclick="SMRITI.triggerPopout(event, '${block.url}')">
-                        <span class="material-symbols-outlined" style="font-size:16px;">open_in_new</span>
-                    </button>
+                    <button class="sidebar-popout-btn"
+                        onclick="event.preventDefault();event.stopPropagation();openPopout('${block.url}')"
+                        title="Open in new window">↗</button>
                 </a>
             `;
         } else if (block.type === 'category') {
@@ -213,7 +213,10 @@ SMRITI.renderFlexibleSidebar = function(activePageId) {
                 if (sub.id === activePageId) isSubActive = true;
                 subItemsHtml += `
                     <a class="sidebar-sub-item ${subActiveCls}" href="${sub.url}">
-                        ${sub.label}
+                        <span>${sub.label}</span>
+                        <button class="sidebar-popout-btn"
+                            onclick="event.preventDefault();event.stopPropagation();openPopout('${sub.url}')"
+                            title="Open in new window">↗</button>
                     </a>
                 `;
             });
@@ -295,16 +298,52 @@ SMRITI.toggleSidebarCollapse = function() {
 };
 
 // ── Popout click handler helper ─────────────────────────────────────
+function openPopout(url) {
+    const w = 1400, h = 900;
+    const left = Math.round((screen.width - w) / 2);
+    const top  = Math.round((screen.height - h) / 2);
+    window.open(
+        url + (url.includes('?') ? '&' : '?') + 'popout=true',
+        '_blank',
+        `width=${w},height=${h},left=${left},top=${top},toolbar=no,menubar=no,location=no,status=no,scrollbars=yes,resizable=yes`
+    );
+}
+
+function _initPopoutMode() {
+    if (!new URLSearchParams(window.location.search).get('popout')) return;
+    document.body.classList.add('popout-mode');
+    const toolbar = document.createElement('div');
+    toolbar.className = 'popout-toolbar';
+    toolbar.innerHTML = `
+        <span style="font-size:0.75rem;opacity:0.5;padding:0 4px;">SMRITI</span>
+        <button onclick="_popoutFitWidth()" title="Fit to width">⛶ Fit Width</button>
+        <button onclick="_popoutFullscreen()" id="popout-fs-btn">⤢ Fullscreen</button>
+        <button onclick="window.close()" style="color:var(--danger)">✕ Close</button>
+    `;
+    document.body.appendChild(toolbar);
+}
+
+function _popoutFitWidth() {
+    const main = document.querySelector('.main-content, main, .content, .page-content');
+    if (main) { main.style.maxWidth = '100%'; main.style.padding = '8px'; }
+    document.querySelectorAll('table').forEach(t => t.style.width = '100%');
+}
+
+function _popoutFullscreen() {
+    const btn = document.getElementById('popout-fs-btn');
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+        btn.textContent = '⤡ Exit Fullscreen';
+    } else {
+        document.exitFullscreen();
+        btn.textContent = '⤢ Fullscreen';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', _initPopoutMode);
+
 SMRITI.triggerPopout = function(e, url) {
     e.preventDefault();
     e.stopPropagation();
-    
-    let popout_url = url;
-    if (popout_url.indexOf('?') === -1) {
-        popout_url += '?popout=true';
-    } else if (popout_url.indexOf('popout=true') === -1) {
-        popout_url += '&popout=true';
-    }
-    
-    window.open(popout_url, "smriti-popout-window", "width=1200,height=800,resizable=yes,scrollbars=yes");
+    openPopout(url);
 };
