@@ -32,6 +32,7 @@ SMRITI.sidebarSchema = [
         emoji: '📦',
         label: 'Masters',
         items: [
+            { id: 'products', label: '├─ Products Catalog', url: '/products' },
             { id: 'item_master', label: '├─ Item Master', url: '/item_master' },
             { id: 'sizewise_item', label: '├─ Sizewise Creator', url: '/sizewise_item' },
             { id: 'customers', label: '├─ Customers', url: '/customers' },
