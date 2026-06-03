@@ -258,6 +258,61 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .size-input:focus { border-color: var(--accent); box-shadow:0 0 0 2px rgba(245,158,11,0.15); }
 .size-input.has-qty { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.3); }
 
+/* ── Barcode Scan Bar ────────────────────────────────────── */
+.scan-bar-wrap {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    background: rgba(16,185,129,0.04);
+    border-bottom: 1px solid rgba(16,185,129,0.12);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.scan-bar-icon {
+    color: var(--success); font-size: 20px; flex-shrink: 0;
+    animation: scan-pulse 2s ease-in-out infinite;
+}
+@keyframes scan-pulse {
+    0%,100% { opacity: 1; } 50% { opacity: 0.45; }
+}
+.scan-bar-input {
+    flex: 1; background: var(--bg2);
+    border: 1.5px solid rgba(16,185,129,0.35);
+    color: var(--text); border-radius: var(--radius-sm);
+    padding: 8px 14px; font-size: 0.9rem;
+    font-family: 'Inter', monospace; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    letter-spacing: 0.04em;
+}
+.scan-bar-input::placeholder { color: rgba(255,255,255,0.3); letter-spacing: 0; }
+.scan-bar-input:focus {
+    border-color: var(--success);
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.18);
+}
+.scan-bar-input.scan-flash {
+    animation: scan-flash-anim 0.35s ease-out;
+}
+@keyframes scan-flash-anim {
+    0%   { background: rgba(16,185,129,0.28); }
+    100% { background: var(--bg2); }
+}
+.scan-bar-input.scan-error-flash {
+    animation: scan-error-anim 0.35s ease-out;
+}
+@keyframes scan-error-anim {
+    0%   { background: rgba(239,68,68,0.28); }
+    100% { background: var(--bg2); }
+}
+#scan-status-label {
+    font-size: 0.78rem; font-weight: 500;
+    min-width: 200px; white-space: nowrap; transition: color 0.2s;
+}
+.scan-status-success { color: var(--success); }
+.scan-status-danger  { color: var(--danger); }
+.scan-status-muted   { color: var(--muted); }
+.scan-hint {
+    font-size: 0.72rem; color: var(--muted);
+    flex-shrink: 0; white-space: nowrap;
+}
+
 /* ── Floating Article Dropdown Portal ───────────────────────
    Appended to <body>, positioned via JS (getBoundingClientRect).
    Uses position:fixed + very high z-index so it escapes ALL
@@ -935,7 +990,24 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
                         </button>
                     </div>
                 </div>
-                <div class="panel-body" style="padding:12px; overflow:visible;">
+                <div class="panel-body" style="padding:0; overflow:visible;">
+                    <!-- ── Barcode Scan Bar ───────────────────────────── -->
+                    <div class="scan-bar-wrap" id="scan-bar-wrap">
+                        <span class="scan-bar-icon material-symbols-outlined">barcode_scanner</span>
+                        <input
+                            type="text"
+                            id="scan-bar-input"
+                            class="scan-bar-input"
+                            placeholder="🔍 Scan or type barcode… (press Enter)"
+                            autocomplete="off"
+                            spellcheck="false"
+                            inputmode="none"
+                        >
+                        <span id="scan-status-label" class="scan-status-muted"></span>
+                        <span class="scan-hint">USB / BT scanner supported</span>
+                    </div>
+                    <!-- ── Item Grid ──────────────────────────────────── -->
+                    <div style="padding:12px; overflow:visible;">
                     <div class="grid-wrap" id="grid-wrap">
                         <table class="item-table" id="item-table">
                             <thead id="grid-thead"></thead>
@@ -952,9 +1024,10 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
                         <span style="color:var(--muted);font-size:0.8rem;align-self:center;">
                             💡 Tip: You can paste data directly from Excel or Google Sheets using the "Paste Grid" button.
                         </span>
-                    </div>
-                </div>
-            </div>
+                    </div><!-- /.bottom-buttons -->
+                    </div><!-- /.inner-grid-padding -->
+                </div><!-- /.panel-body -->
+            </div><!-- /.panel -->
 
             <!-- ── Panel 5: GST Tax Summary ───────────────────── -->
             <div class="panel">
@@ -1934,6 +2007,206 @@ function removeRow(rid) {
     updateRowCount();
     recalculate();
 }
+
+
+// ══════════════════════════════════════════════════════════════
+// ── BARCODE SCAN FEATURE ──────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+
+// Buffer for keyboard-wedge HID scanners (fire chars rapidly → Enter)
+let _scanBuffer = '';
+let _scanBufTimer = null;
+const SCAN_DEBOUNCE_MS = 80; // HID scanners complete in < 80ms per char
+
+/**
+ * Show feedback label beside the scan bar.
+ * type: 'success' | 'danger' | 'muted'
+ */
+function showScanStatus(msg, type = 'muted') {
+    const el = document.getElementById('scan-status-label');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = `scan-status-${type}`;
+    clearTimeout(el._clearTimer);
+    el._clearTimer = setTimeout(() => {
+        el.textContent = '';
+        el.className = 'scan-status-muted';
+    }, 5000);
+}
+
+/**
+ * Flash the scan bar input — green on success, red on error.
+ */
+function flashScanBar(success = true) {
+    const inp = document.getElementById('scan-bar-input');
+    if (!inp) return;
+    const cls = success ? 'scan-flash' : 'scan-error-flash';
+    inp.classList.remove('scan-flash', 'scan-error-flash');
+    void inp.offsetWidth; // force reflow to restart animation
+    inp.classList.add(cls);
+    setTimeout(() => inp.classList.remove(cls), 400);
+}
+
+/**
+ * Core: resolve barcode via API and apply to grid.
+ */
+async function processBarcode(barcode) {
+    barcode = (barcode || '').trim();
+    if (barcode.length < 2) return;
+
+    showScanStatus('⏳ Resolving…', 'muted');
+
+    let result;
+    try {
+        result = await api('smriti_retail_os.sizewise_invoice_api.resolve_barcode', { barcode });
+    } catch (err) {
+        flashScanBar(false);
+        showScanStatus(`❌ API error`, 'danger');
+        toast(`Barcode resolve error: ${err.message || err}`, 'error');
+        return;
+    }
+
+    if (!result || result.error) {
+        flashScanBar(false);
+        const errMsg = result ? result.error : 'Not found';
+        showScanStatus(`❌ ${errMsg}: ${barcode}`, 'danger');
+        toast(`Barcode not found: ${barcode}`, 'error');
+        return;
+    }
+
+    flashScanBar(true);
+    applyScanToGrid(result);
+}
+
+/**
+ * Apply a resolved barcode result to the sizewise grid.
+ * Finds or creates the Article+Color row, then increments size qty.
+ */
+function applyScanToGrid(result) {
+    const article      = (result.article      || '').trim();
+    const color        = (result.color        || '').trim();
+    const size         = result.size ? String(result.size).trim() : null;
+    const mrp          = parseFloat(result.mrp)      || 0;
+    const rate         = parseFloat(result.rate)     || 0;
+    const gst_pct      = parseFloat(result.gst_pct)  || 12;
+    const hsn_code     = result.hsn_code     || '';
+    const category     = result.category     || '';
+    const sub_category = result.sub_category || '';
+
+    // 1. Find existing row for this article + color (case-insensitive)
+    let row = state.rows.find(r =>
+        r.article.trim().toUpperCase() === article.toUpperCase() &&
+        r.color.trim().toUpperCase()   === color.toUpperCase()
+    );
+
+    // 2. Create new row if not found
+    if (!row) {
+        addRow({ article, color, category, sub_category, mrp, rate, gst_pct, hsn_code });
+        row = state.rows[state.rows.length - 1];
+        // Scroll grid to bottom so user sees the new row
+        const gw = document.getElementById('grid-wrap');
+        if (gw) gw.scrollTop = gw.scrollHeight;
+    }
+
+    // 3. Auto-add size column if not present
+    if (size && !state.sizeColumns.includes(size)) {
+        state.sizeColumns.push(size);
+        renderGridHeader();
+        renderGridBody();
+        // Re-acquire row reference after full re-render
+        row = state.rows.find(r =>
+            r.article.trim().toUpperCase() === article.toUpperCase() &&
+            r.color.trim().toUpperCase()   === color.toUpperCase()
+        );
+    }
+
+    // 4. Increment qty for this size
+    if (size && row) {
+        const prevQty = parseFloat(row.sizes[size]) || 0;
+        const newQty  = prevQty + 1;
+        row.sizes[size] = newQty;
+
+        // Update the DOM input cell for this size column
+        const rowEl   = document.getElementById(`row-${row._id}`);
+        if (rowEl) {
+            const sizeIdx   = state.sizeColumns.indexOf(size);
+            const sizeInputs = rowEl.querySelectorAll('.size-input');
+            if (sizeInputs[sizeIdx]) {
+                sizeInputs[sizeIdx].value = newQty;
+                sizeInputs[sizeIdx].classList.add('has-qty');
+                // Brief highlight animation on the cell
+                sizeInputs[sizeIdx].style.boxShadow = '0 0 0 3px rgba(16,185,129,0.4)';
+                setTimeout(() => {
+                    if (sizeInputs[sizeIdx]) sizeInputs[sizeIdx].style.boxShadow = '';
+                }, 800);
+            }
+        }
+
+        calcRowTotals(row._id);
+        recalculate();
+
+        const label = `${article} ${color} Sz:${size}`;
+        showScanStatus(`✅ ${label} → Qty ${newQty}`, 'success');
+        toast(`${label} → Qty ${newQty}`, 'success');
+    } else if (!size && row) {
+        // Barcode resolved to a template/non-size item
+        showScanStatus(`⚠ No size detected — row created: ${article} ${color}`, 'danger');
+        toast(`No size attribute for: ${result.item_code}`, 'error');
+    }
+}
+
+// ── Scan Bar Input: Enter key handler ─────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    const scanInput = document.getElementById('scan-bar-input');
+    if (!scanInput) return;
+
+    scanInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const val = scanInput.value.trim();
+            if (val) {
+                processBarcode(val);
+                scanInput.value = '';
+            }
+        }
+    });
+
+    // Clicking outside scan bar removes focus gracefully
+    scanInput.addEventListener('blur', () => {
+        // Re-focus after short delay if nothing else was clicked
+        // (helps with HID scanners that lose focus)
+    });
+});
+
+// ── Global keyboard-wedge listener (HID USB / Bluetooth scanners) ──
+// Most HID scanners work as a keyboard: fire chars very fast + Enter.
+// This listener captures barcode characters when NO input is focused.
+(function initHIDScanListener() {
+    document.addEventListener('keydown', (e) => {
+        const active = document.activeElement;
+        const tag    = active ? active.tagName.toUpperCase() : '';
+
+        // If user is typing in any input/textarea/select, don't intercept
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return;
+        // If a modal is open, don't intercept
+        if (document.querySelector('.modal.open')) return;
+
+        if (e.key === 'Enter') {
+            if (_scanBuffer.length >= 3) {
+                processBarcode(_scanBuffer.trim());
+            }
+            _scanBuffer = '';
+            clearTimeout(_scanBufTimer);
+        } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            _scanBuffer += e.key;
+            clearTimeout(_scanBufTimer);
+            // Auto-flush if scanner takes too long (safety net)
+            _scanBufTimer = setTimeout(() => { _scanBuffer = ''; }, 600);
+        }
+    });
+})();
+
+// ── END BARCODE SCAN FEATURE ──────────────────────────────────
 
 function clearGrid() {
     if (!state.rows.length || confirm('Clear all rows?')) {

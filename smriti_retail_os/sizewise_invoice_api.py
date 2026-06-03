@@ -161,6 +161,86 @@ def search_items(query=""):
 
 
 @frappe.whitelist()
+def resolve_barcode(barcode):
+    """
+    Resolves a barcode to full item variant details for the Sizewise Invoice scan feature.
+
+    Resolution order:
+      1. Item Barcode child table (EAN-13, vendor barcodes, internal barcodes)
+      2. Direct Item.name match (item_code used as barcode)
+
+    Returns dict with article, color, size, mrp, rate, gst_pct, hsn_code, category,
+    sub_category — or {"error": "...", "barcode": "..."} if not found.
+    """
+    if not barcode:
+        return {"error": "Empty barcode", "barcode": ""}
+
+    barcode = str(barcode).strip()
+
+    # ── 1. Look up Item Barcode child table ───────────────────────────
+    item_code = frappe.db.get_value(
+        "Item Barcode",
+        {"barcode": barcode},
+        "parent"
+    )
+
+    # ── 2. Fallback: direct item_code match ───────────────────────────
+    if not item_code:
+        if frappe.db.exists("Item", barcode):
+            item_code = barcode
+
+    if not item_code:
+        return {"error": "Barcode not found", "barcode": barcode}
+
+    # ── 3. Load item document ─────────────────────────────────────────
+    item = frappe.get_doc("Item", item_code)
+
+    article      = item.variant_of or item.name
+    color        = ""
+    size         = None
+    category     = item.item_group or ""
+    sub_category = item.get("custom_sub_category") or ""
+    hsn_code     = item.gst_hsn_code or ""
+    mrp          = flt(item.get("custom_mrp") or item.valuation_rate or 0)
+    gst_pct      = flt(item.get("custom_gst_percentage") or 12)
+
+    # ── 4. Extract Color and Size from variant attributes ─────────────
+    if item.variant_of:
+        for attr in (item.attributes or []):
+            attr_name  = (attr.attribute or "").strip().upper()
+            attr_value = (attr.attribute_value or "").strip()
+            if attr_name in ("COLOUR", "COLOR"):
+                color = attr_value
+            elif attr_name == "SIZE":
+                size = attr_value
+
+    # ── 5. Fallback: parse article-color-size from item_code ──────────
+    if item.variant_of and (not color or not size):
+        # e.g. "TESTSTYLE-BLACK-38"  →  parts = ["TESTSTYLE", "BLACK", "38"]
+        parts = item_code.replace(article, "", 1).lstrip("-").split("-")
+        if not color and len(parts) >= 1:
+            color = parts[0]
+        if not size and len(parts) >= 2:
+            size = parts[-1]
+
+    # ── 6. Calculate tax-exclusive Rate from MRP + GST% ───────────────
+    rate = flt(mrp / (1 + (gst_pct / 100.0)), 2) if mrp > 0 else 0.0
+
+    return {
+        "item_code":    item_code,
+        "article":      article,
+        "color":        color,
+        "size":         size,
+        "mrp":          mrp,
+        "rate":         rate,
+        "gst_pct":      gst_pct,
+        "hsn_code":     hsn_code,
+        "category":     category,
+        "sub_category": sub_category,
+    }
+
+
+@frappe.whitelist()
 def get_item_details_by_article(article, color=""):
     """
     Looks up an article and optional color in the Item Master.
