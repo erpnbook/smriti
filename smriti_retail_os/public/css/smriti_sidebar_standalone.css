@@ -402,3 +402,9 @@
     width: auto !important;
     padding: 6px 10px !important;
 }
+
+/* ── 3. Popout Window — Hide Sidebar ─────────────────────────────────── */
+body.popout-mode .smriti-sidebar,
+body.popout-mode #smriti-sidebar-target.sidebar {
+    display: none !important;
+}
