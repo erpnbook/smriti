@@ -172,6 +172,9 @@ def resolve_barcode(barcode):
     Returns dict with article, color, size, mrp, rate, gst_pct, hsn_code, category,
     sub_category — or {"error": "...", "barcode": "..."} if not found.
     """
+    # Enforce read permission for Item
+    frappe.has_permission("Item", "read", throw=True)
+
     if not barcode:
         return {"error": "Empty barcode", "barcode": ""}
 
@@ -196,25 +199,35 @@ def resolve_barcode(barcode):
     item = frappe.get_doc("Item", item_code)
 
     article      = item.variant_of or item.name
-    color        = ""
-    size         = None
     category     = item.item_group or ""
-    sub_category = item.get("custom_sub_category") or ""
-    hsn_code     = item.gst_hsn_code or ""
-    mrp          = flt(item.get("custom_mrp") or item.valuation_rate or 0)
-    gst_pct      = flt(item.get("custom_gst_percentage") or 12)
+    
+    # ── 4. Retrieve values with parent template fallback ──────────────
+    mrp = flt(item.get("custom_mrp"))
+    if not mrp and item.variant_of:
+        mrp = flt(frappe.db.get_value("Item", item.variant_of, "custom_mrp"))
+    if not mrp:
+        mrp = flt(item.valuation_rate or item.standard_rate or 0)
 
-    # ── 4. Extract Color and Size from variant attributes ─────────────
-    if item.variant_of:
-        for attr in (item.attributes or []):
-            attr_name  = (attr.attribute or "").strip().upper()
-            attr_value = (attr.attribute_value or "").strip()
-            if attr_name in ("COLOUR", "COLOR"):
-                color = attr_value
-            elif attr_name == "SIZE":
-                size = attr_value
+    gst_pct = flt(item.get("custom_gst_percentage"))
+    if not gst_pct and item.variant_of:
+        gst_pct = flt(frappe.db.get_value("Item", item.variant_of, "custom_gst_percentage"))
+    if not gst_pct:
+        gst_pct = 12.0
 
-    # ── 5. Fallback: parse article-color-size from item_code ──────────
+    hsn_code = item.gst_hsn_code
+    if not hsn_code and item.variant_of:
+        hsn_code = frappe.db.get_value("Item", item.variant_of, "gst_hsn_code")
+
+    sub_category = item.get("custom_sub_category")
+    if not sub_category and item.variant_of:
+        sub_category = frappe.db.get_value("Item", item.variant_of, "custom_sub_category")
+
+    # ── 5. Extract Color and Size from attributes ─────────────────────
+    attributes = {a.attribute.strip().upper(): a.attribute_value for a in item.attributes if a.attribute_value}
+    color = attributes.get("COLOR") or attributes.get("COLOUR") or ""
+    size = attributes.get("SIZE") or ""
+
+    # ── 6. Fallback: parse article-color-size from item_code ──────────
     if item.variant_of and (not color or not size):
         # e.g. "TESTSTYLE-BLACK-38"  →  parts = ["TESTSTYLE", "BLACK", "38"]
         parts = item_code.replace(article, "", 1).lstrip("-").split("-")
@@ -223,7 +236,7 @@ def resolve_barcode(barcode):
         if not size and len(parts) >= 2:
             size = parts[-1]
 
-    # ── 6. Calculate tax-exclusive Rate from MRP + GST% ───────────────
+    # ── 7. Calculate tax-exclusive Rate from MRP + GST% ───────────────
     rate = flt(mrp / (1 + (gst_pct / 100.0)), 2) if mrp > 0 else 0.0
 
     return {
@@ -234,9 +247,9 @@ def resolve_barcode(barcode):
         "mrp":          mrp,
         "rate":         rate,
         "gst_pct":      gst_pct,
-        "hsn_code":     hsn_code,
+        "hsn_code":     hsn_code or "",
         "category":     category,
-        "sub_category": sub_category,
+        "sub_category": sub_category or "",
     }
 
 
