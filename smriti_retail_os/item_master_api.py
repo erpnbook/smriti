@@ -441,33 +441,42 @@ def _ensure_hsn_code(hsn_code):
 
 
 def _resolve_hsn_code(hsn_code):
-    """Clean, truncate to 6 digits, and determine if it can be safely set based on GST validation settings.
-    Returns the resolved HSN string, or None if it should be skipped.
+    """Clean, format/pad to correct length, and determine if it can be safely set based on GST validation settings.
+    If the HSN code is empty, invalid, or non-numeric, fallbacks to the standard footwear default '641590'.
+    Also ensures the resolved HSN code is created in the database.
     """
-    if not hsn_code:
-        return None
-    hsn_str = str(hsn_code).strip()
-    if not hsn_str:
-        return None
+    import re
+    # Extract only digits from the input HSN code
+    hsn_digits = ""
+    if hsn_code:
+        hsn_digits = "".join(re.findall(r"\d+", str(hsn_code)))
 
-    # Take the first 6 digits if the pasted HSN code is longer
-    if len(hsn_str) > 6:
-        hsn_str = hsn_str[:6]
+    # Fallback if empty or invalid
+    if not hsn_digits:
+        hsn_digits = "641590"
 
+    # Format length according to valid HSN length settings or default to (6, 8)
     try:
-        # Check if validation is enabled in GST Settings
-        validate_hsn_code = frappe.db.get_single_value("GST Settings", "validate_hsn_code")
-        if not validate_hsn_code:
-            return hsn_str  # validation is OFF: safe to set any HSN code length
-
-        # Validation is ON: only set if length is exactly 6 digits
-        if len(hsn_str) == 6:
-            return hsn_str
-
-        return None  # Skip setting to avoid ERPNext/India Compliance validation crash
+        from india_compliance.gst_india.utils import get_hsn_settings
+        validate_enabled, valid_lengths = get_hsn_settings()
     except Exception:
-        # Fallback: if GST Settings is missing/fails, allow setting the processed HSN
-        return hsn_str
+        validate_enabled = True
+        valid_lengths = (6, 8)
+
+    if validate_enabled:
+        # Standard rules for padding/truncating to conform to valid_lengths (usually 6 or 8)
+        length = len(hsn_digits)
+        if length < 6:
+            hsn_digits = hsn_digits.ljust(6, "0")
+        elif length == 7:
+            hsn_digits = hsn_digits.ljust(8, "0")
+        elif length > 8:
+            hsn_digits = hsn_digits[:8]
+    
+    # Auto-create in database if missing
+    _ensure_hsn_code(hsn_digits)
+
+    return hsn_digits
 
 
 def _ensure_master_value(doctype_name, value):
