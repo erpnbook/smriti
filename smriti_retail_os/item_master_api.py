@@ -63,6 +63,15 @@ def validate_import_rows(rows_json):
                 errors.append(f"'{col}' is required")
 
         barcode = str(row.get("BARCODE NO", "")).strip()
+        # Guard: Excel blank cells arrive as 'nan' or 'None'
+        if barcode.lower() in ("", "nan", "none", "null", "0"):
+            barcode = ""
+
+        # Compute variant_code early to allow re-import of same barcode on same item
+        _style  = str(row.get("PRODUCT STYLE CODE", "")).strip()
+        _color  = str(row.get("COLOR", "")).strip()
+        _size   = str(row.get("SIZE", "")).strip()
+        variant_code_early = f"{_style}-{_color}-{_size}" if _style and _color and _size else ""
 
         # ── Intra-sheet duplicate barcode → HARD ERROR ─────────────────────
         if barcode:
@@ -73,16 +82,22 @@ def validate_import_rows(rows_json):
             else:
                 seen_barcodes[barcode] = idx
 
-                # ── System duplicate barcode → HARD ERROR ─────────────────
+                # ── System duplicate barcode check ─────────────────────────
                 existing_item = frappe.db.get_value(
                     "Item Barcode", {"barcode": barcode}, "parent"
                 )
-                collides_with_item = frappe.db.exists("Item", barcode)
-                if existing_item or collides_with_item:
-                    ref_name = existing_item or barcode
+                # Allow re-import: barcode already belongs to THIS exact variant → OK
+                if existing_item and existing_item != variant_code_early:
                     errors.append(
-                        f"Barcode already exists on system as item code or barcode '{ref_name}' — barcodes must be unique"
+                        f"Barcode '{barcode}' already assigned to item '{existing_item}' — barcodes must be unique"
                     )
+                elif not existing_item:
+                    # Check barcode collision with item_code namespace
+                    collides_with_item = frappe.db.exists("Item", barcode)
+                    if collides_with_item and barcode != variant_code_early:
+                        errors.append(
+                            f"Barcode '{barcode}' collides with existing item_code — cannot use item_code as barcode"
+                        )
 
         # ── GST % validation ───────────────────────────────────────────────
         gst_raw = str(row.get("PRODUCT TAX", "0") or "0").strip()
