@@ -109,15 +109,19 @@ def validate_import_rows(rows_json):
         except ValueError:
             errors.append(f"GST '{gst_raw}' is not a number")
 
-        # ── Vendor / Supplier soft check (warning only) ────────────────────
+        # ── Vendor / Supplier hard check ───────────────────────────────────
         vendor = _clean_str(row.get("VENDOR CODE", ""))
-        if vendor:
-            supplier_exists = (
-                frappe.db.exists("Supplier", vendor) or
-                frappe.db.get_value("Supplier", {"supplier_name": vendor}, "name")
+        if vendor and str(vendor).strip() not in ("", "nan", "None", "N/A"):
+            vendor_clean = str(vendor).strip()
+            supplier_exists = frappe.db.exists(
+                "Supplier",
+                {"custom_vendor_code": vendor_clean}
             )
             if not supplier_exists:
-                warnings.append(f"Supplier '{vendor}' not found in system — link will be skipped")
+                errors.append(
+                    f"Vendor Code '{vendor_clean}' not found in Supplier Master. "
+                    f"Please create a Supplier with Vendor Code '{vendor_clean}' before importing items."
+                )
 
         # ── Brand soft check ───────────────────────────────────────────────
         brand = _clean_str(row.get("BRAND NAME", ""))
@@ -210,6 +214,9 @@ def import_item_master(rows_json):
             merch_cat       = _clean_str(row.get("MERCHANDISE CATEGORY", ""))
             sub_cat         = _clean_str(row.get("Sub category", ""))
             tax_group       = _clean_str(row.get("Product Tax Group", ""))
+
+            # ── Vendor Code Validation ─────────────────────────────────────
+            _validate_vendor_code(vendor_code)
 
             # ── Hard duplicate barcode check ───────────────────────────────
             variant_code_early = f"{style_code}-{color}-{size}" if style_code and color and size else ""
@@ -397,6 +404,24 @@ def import_item_master(rows_json):
 # ─────────────────────────────────────────────────────────────────────────────
 #  HELPERS
 # ─────────────────────────────────────────────────────────────────────────────
+
+def _validate_vendor_code(vendor_code):
+    if not vendor_code or str(vendor_code).strip() in ("", "nan", "None", "N/A"):
+        return  # vendor code empty hai — optional, skip
+    
+    vendor_code = str(vendor_code).strip()
+    
+    exists = frappe.db.exists(
+        "Supplier",
+        {"custom_vendor_code": vendor_code}
+    )
+    if not exists:
+        frappe.throw(
+            f"Vendor Code '{vendor_code}' not found in Supplier Master. "
+            f"Please create a Supplier with Vendor Code '{vendor_code}' before importing items.",
+            title="Vendor Code Not Found"
+        )
+
 
 def _clean_str(val):
     """Clean a string value from import: strip whitespace, remove wrapping/stray quotes, and handle nulls."""
@@ -594,10 +619,12 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
     item.insert(ignore_permissions=True)
 
     # Link supplier via custom field (supplier_items child needs POS profile / default config)
+    supplier_name = None
     if vendor_code:
-        supplier_name = (
-            frappe.db.get_value("Supplier", vendor_code, "name") or
-            frappe.db.get_value("Supplier", {"supplier_name": vendor_code}, "name")
+        supplier_name = frappe.db.get_value(
+            "Supplier",
+            {"custom_vendor_code": str(vendor_code).strip()},
+            "name"
         )
         if supplier_name:
             item_doc = frappe.get_doc("Item", style_code)
@@ -783,6 +810,7 @@ def create_style_with_variants(base_details, sizes_config):
     sub_cat = bd.get("sub_category")
     tax_group = bd.get("product_tax_group")
     vendor_code = bd.get("vendor_code")
+    _validate_vendor_code(vendor_code)
     color = bd.get("color", "UNKNOWN").strip()
     
     company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
@@ -1078,6 +1106,7 @@ def import_pivot_item_master(styles_json):
             sub_cat = bd.get("sub_category")
             tax_group = bd.get("product_tax_group")
             vendor_code = bd.get("vendor_code")
+            _validate_vendor_code(vendor_code)
             color = bd.get("color", "UNKNOWN").strip().upper()
             
             # Ensure Item Group exists

@@ -446,6 +446,7 @@ class TestBarcodeHardening(unittest.TestCase):
         frappe.db.delete("Item Price", {"item_code": self.test_variant_code})
         frappe.delete_doc("Item", self.test_variant_code, ignore_missing=True, force=True)
         frappe.delete_doc("Item", "TST-HARDEN", ignore_missing=True, force=True)
+        frappe.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-1"})
         frappe.db.commit()
 
     def test_manual_barcode_validation(self):
@@ -561,3 +562,77 @@ class TestBarcodeHardening(unittest.TestCase):
         missing = get_items_missing_barcodes()
         missing_codes = [m["item_code"] for m in missing]
         self.assertIn(self.test_variant_code, missing_codes)
+
+    def test_vendor_code_validation(self):
+        """
+        Verify that vendor code validation blocks Item save/import if vendor code
+        is not registered in Supplier Master.
+        """
+        from smriti_retail_os.item_master_api import validate_import_rows, import_item_master
+        
+        base_details = {
+            "article_no": "TST-HARDEN",
+            "description": "Test Vendor Code Item",
+            "color": "BLK",
+            "brand": "Nike",
+            "item_group": "Products",
+            "cost_price": 1000,
+            "mrp": 2000,
+            "gst_percentage": "18",
+            "hsn_code": "640311",
+            "gender": "UNISEX",
+            "purchase_class": "FW",
+            "vendor_code": "VND-TEST-1",
+            "product_tax_group": ""
+        }
+        sizes_config = [
+            { "size": "8", "active": True, "barcode_mode": "manual", "manual_barcode": "9998887776665" }
+        ]
+        
+        # 1. Verification of validate_import_rows (dry-run)
+        row = {
+            "BARCODE NO": "9998887776665",
+            "PRODUCT STYLE CODE": "TST-HARDEN",
+            "ITEM DESCRIPTION": "Test Vendor Code Item",
+            "COLOR": "BLK",
+            "SIZE": "8",
+            "PLANNED MRP": "2000",
+            "VENDOR CODE": "VND-TEST-1"
+        }
+        res_validate = validate_import_rows(frappe.as_json([row]))
+        self.assertEqual(res_validate[0]["status"], "error")
+        self.assertTrue(any("Vendor Code 'VND-TEST-1' not found" in e for e in res_validate[0]["errors"]))
+
+        # 2. Verification of create_style_with_variants (single save)
+        with self.assertRaises(frappe.ValidationError) as exc:
+            create_style_with_variants(frappe.as_json(base_details), frappe.as_json(sizes_config))
+        self.assertIn("Vendor Code 'VND-TEST-1' not found", str(exc.exception))
+
+        # 3. Verification of import_item_master (bulk save)
+        res_import = import_item_master(frappe.as_json([row]))
+        self.assertEqual(res_import["created"], 0)
+        self.assertEqual(len(res_import["failed"]), 1)
+        self.assertIn("Vendor Code 'VND-TEST-1' not found", res_import["failed"][0]["error"])
+
+        # 4. Now create Supplier with custom_vendor_code="VND-TEST-1"
+        supp_group = frappe.db.get_value("Supplier Group", {}, "name")
+        if not supp_group:
+            supp_group = "All Supplier Groups"
+            sg = frappe.new_doc("Supplier Group")
+            sg.supplier_group_name = supp_group
+            sg.insert(ignore_permissions=True)
+
+        supp = frappe.new_doc("Supplier")
+        supp.supplier_name = "Test Validation Supplier"
+        supp.supplier_group = supp_group
+        supp.custom_vendor_code = "VND-TEST-1"
+        supp.insert(ignore_permissions=True)
+        frappe.db.commit()
+
+        # 5. Verify validations pass with valid vendor_code
+        res_validate_ok = validate_import_rows(frappe.as_json([row]))
+        self.assertEqual(res_validate_ok[0]["status"], "valid")
+
+        res_create_ok = create_style_with_variants(frappe.as_json(base_details), frappe.as_json(sizes_config))
+        self.assertTrue(res_create_ok["success"])
+

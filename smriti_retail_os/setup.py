@@ -554,6 +554,14 @@ def setup_smriti_retail_os():
                 "fieldtype": "Int",
                 "insert_after": "custom_shipping_address_text",
                 "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_vendor_code",
+                "label": "Vendor Code",
+                "fieldtype": "Data",
+                "insert_after": "custom_credit_days",
+                "unique": 1,
+                "module": "SMRITI Retail OS"
             }
         ],
         "Sales Invoice": [
