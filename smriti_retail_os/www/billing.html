@@ -698,6 +698,10 @@ tbody tr:last-child td { border-bottom: none; }
                 <button class="btn-camera" onclick="openItemSearch()" title="F2: Search Items">
                     <span class="material-symbols-outlined">search</span> F2 Search
                 </button>
+                <button class="btn-camera" style="background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.25);color:#fbbf24;" onclick="triggerPdtUpload()" title="Import from PDT / CSV / Excel barcode file">
+                    <span class="material-symbols-outlined" style="font-size:18px;">upload_file</span> Import PDT
+                </button>
+                <input type="file" id="pdt-file-input" accept=".csv,.tsv,.xlsx,.txt" style="display:none;" onchange="handlePdtUpload(this)">
             </div>
 
             <!-- Cart Table -->
@@ -921,6 +925,81 @@ tbody tr:last-child td { border-bottom: none; }
             <span class="material-symbols-outlined" style="vertical-align:middle;font-size:18px;margin-right:4px;">print</span>Print
         </button>
         <button class="btn-success-action secondary" onclick="newBill()">New Bill</button>
+    </div>
+</div>
+
+<!-- ── PDT Column Mapping Modal ──────────────────────────────── -->
+<div class="modal-backdrop" id="modal-pdt-mapping">
+    <div class="modal" style="max-width:560px;">
+        <div class="modal-title">
+            <span class="material-symbols-outlined" style="font-size:20px;color:#fbbf24;">table_view</span>
+            PDT Column Mapping
+            <button class="modal-close" onclick="closeModal('modal-pdt-mapping')">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:14px;line-height:1.5;">
+            Map your file's columns to the required fields. Only <strong style="color:var(--text);">Barcode</strong> is mandatory. Others will fall back to Item Master.
+        </div>
+        <div id="pdt-column-form" style="display:flex;flex-direction:column;gap:10px;">
+            <!-- Rows injected by JS -->
+        </div>
+        <div style="margin-top:10px;font-size:0.72rem;color:var(--muted);">📂 File: <span id="pdt-file-name" style="color:var(--text);"></span></div>
+        <div class="modal-actions" style="margin-top:16px;">
+            <button class="btn btn-ghost" onclick="closeModal('modal-pdt-mapping')">Cancel</button>
+            <button class="btn btn-primary" id="pdt-preview-btn" onclick="previewPdtImport()" disabled>
+                <span class="material-symbols-outlined" style="font-size:15px;">preview</span> Preview Import
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ── PDT Preview Modal ─────────────────────────────────────── -->
+<div class="modal-backdrop" id="modal-pdt-preview">
+    <div class="modal" style="max-width:900px;width:97%;">
+        <div class="modal-title">
+            <span class="material-symbols-outlined" style="font-size:20px;color:#10b981;">fact_check</span>
+            PDT Import Preview
+            <button class="modal-close" onclick="closeModal('modal-pdt-preview')">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">
+            <span style="color:#818cf8;">†</span> = from PDT file &nbsp;|&nbsp;
+            <span style="color:#fbbf24;">★</span> = from Item Master &nbsp;|&nbsp;
+            <span style="color:#6ee7b7;">○</span> = default &nbsp;|&nbsp;
+            <span style="color:#ef4444;">❌</span> = barcode not found
+        </div>
+        <div style="overflow-x:auto;max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);">
+            <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+                <thead>
+                    <tr style="background:var(--card2);position:sticky;top:0;">
+                        <th style="padding:8px 10px;text-align:left;white-space:nowrap;">#</th>
+                        <th style="padding:8px 10px;text-align:left;white-space:nowrap;">Barcode</th>
+                        <th style="padding:8px 10px;text-align:left;white-space:nowrap;">Article</th>
+                        <th style="padding:8px 10px;text-align:left;white-space:nowrap;">Color</th>
+                        <th style="padding:8px 10px;text-align:left;white-space:nowrap;">Size</th>
+                        <th style="padding:8px 10px;text-align:right;white-space:nowrap;">MRP</th>
+                        <th style="padding:8px 10px;text-align:right;white-space:nowrap;">Disc%</th>
+                        <th style="padding:8px 10px;text-align:right;white-space:nowrap;">GST%</th>
+                        <th style="padding:8px 10px;text-align:right;white-space:nowrap;">Qty</th>
+                        <th style="padding:8px 10px;text-align:left;white-space:nowrap;">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="pdt-preview-tbody"></tbody>
+            </table>
+        </div>
+        <div style="margin-top:10px;font-size:0.75rem;color:var(--muted);">
+            Total: <strong id="pdt-preview-count" style="color:var(--text);">0</strong> rows &nbsp;|&nbsp;
+            Valid: <strong id="pdt-preview-valid" style="color:#10b981;">0</strong> &nbsp;|&nbsp;
+            Errors: <strong id="pdt-preview-errors" style="color:#ef4444;">0</strong>
+        </div>
+        <div class="modal-actions" style="margin-top:16px;">
+            <button class="btn btn-ghost" onclick="closeModal('modal-pdt-preview')">← Back to Mapping</button>
+            <button class="btn btn-primary" id="pdt-confirm-btn" onclick="confirmPdtImport()">
+                <span class="material-symbols-outlined" style="font-size:15px;">check_circle</span> Confirm & Merge Grid
+            </button>
+        </div>
     </div>
 </div>
 
@@ -1665,6 +1744,252 @@ function openPopout(e, url) {
     if (win) {
         win.focus();
     }
+}
+
+
+/** State for current PDT import session */
+let pdtState = {
+    fileContent: null,   // base64 encoded file content
+    fileType: null,      // 'csv' | 'tsv' | 'xlsx'
+    fileName: null,
+    allHeaders: [],      // all columns detected in file
+    mapping: {},         // { barcode: 'BARCODE NO', price: 'MRP', ... }
+    previewRows: [],     // resolved rows from backend
+};
+
+/** Triggers the hidden file input */
+function triggerPdtUpload() {
+    const input = document.getElementById('pdt-file-input');
+    input.value = ''; // reset so same file can be re-selected
+    input.click();
+}
+
+/** Reads file, calls backend to detect columns, opens mapping modal */
+async function handlePdtUpload(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+
+    // File size check (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        toast('PDT file too large. Maximum 5MB allowed.', 'error');
+        return;
+    }
+
+    // Detect file type
+    const ext = file.name.split('.').pop().toLowerCase();
+    const typeMap = { csv: 'csv', tsv: 'tsv', txt: 'tsv', xlsx: 'xlsx' };
+    const fileType = typeMap[ext] || 'csv';
+
+    pdtState.fileName = file.name;
+    pdtState.fileType = fileType;
+
+    // Read file as base64
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const base64 = e.target.result.split(',')[1]; // strip data: prefix
+        pdtState.fileContent = base64;
+
+        try {
+            toast('Detecting columns…', 'info');
+            const result = await api(
+                'smriti_retail_os.sizewise_invoice_api.get_pdt_column_map',
+                { file_content: base64, file_type: fileType }
+            );
+
+            pdtState.allHeaders = result.headers || [];
+            pdtState.mapping    = result.mapping  || {};
+
+            renderPdtMappingForm();
+            document.getElementById('pdt-file-name').textContent = file.name;
+            closeModal('modal-pdt-preview');
+            openModal('modal-pdt-mapping');
+        } catch (err) {
+            toast('Failed to read PDT file: ' + (err.message || err), 'error');
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+/** Renders the column-mapping dropdowns inside the mapping modal */
+function renderPdtMappingForm() {
+    const FIELD_LABELS = [
+        { key: 'barcode',  label: '🔖 Barcode',    required: true },
+        { key: 'price',    label: '💰 Price / MRP', required: false },
+        { key: 'discount', label: '🏷 Discount %',  required: false },
+        { key: 'qty',      label: '📦 Quantity',    required: false },
+        { key: 'tax',      label: '📊 GST %',       required: false },
+    ];
+
+    const container = document.getElementById('pdt-column-form');
+    container.innerHTML = '';
+
+    FIELD_LABELS.forEach(({ key, label, required }) => {
+        const currentVal = pdtState.mapping[key] || '';
+        const options = pdtState.allHeaders.map(h =>
+            `<option value="${h}" ${h === currentVal ? 'selected' : ''}>${h}</option>`
+        ).join('');
+
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:12px;';
+        row.innerHTML = `
+            <label style="min-width:130px;font-size:0.82rem;font-weight:500;">
+                ${label}${required ? ' <span style="color:#ef4444;">*</span>' : ''}
+            </label>
+            <select id="pdt-map-${key}" style="flex:1;background:var(--card2);border:1px solid var(--border2);color:var(--text);border-radius:var(--radius-sm);padding:6px 10px;font-size:0.82rem;" onchange="onPdtMappingChange()">
+                <option value="">— Not mapped (use Item Master) —</option>
+                ${options}
+            </select>
+        `;
+        container.appendChild(row);
+    });
+
+    onPdtMappingChange(); // initial validation
+}
+
+/** Enable/disable Preview button based on whether Barcode is mapped */
+function onPdtMappingChange() {
+    const barcodeVal = document.getElementById('pdt-map-barcode')?.value || '';
+    const previewBtn = document.getElementById('pdt-preview-btn');
+    if (previewBtn) previewBtn.disabled = !barcodeVal;
+}
+
+/** Gathers mapping, calls backend preview API, renders preview table */
+async function previewPdtImport() {
+    // Gather current mapping from selects
+    const keys = ['barcode', 'price', 'discount', 'qty', 'tax'];
+    const mapping = {};
+    keys.forEach(k => {
+        const el = document.getElementById(`pdt-map-${k}`);
+        if (el && el.value) mapping[k] = el.value;
+    });
+    pdtState.mapping = mapping;
+
+    if (!mapping.barcode) {
+        toast('Barcode column must be mapped before preview.', 'error');
+        return;
+    }
+
+    try {
+        const previewBtn = document.getElementById('pdt-preview-btn');
+        if (previewBtn) { previewBtn.disabled = true; previewBtn.textContent = 'Loading…'; }
+
+        const rows = await api(
+            'smriti_retail_os.sizewise_invoice_api.preview_pdt_import',
+            {
+                file_content: pdtState.fileContent,
+                file_type:    pdtState.fileType,
+                mapping:      mapping,
+            }
+        );
+
+        pdtState.previewRows = rows || [];
+        renderPdtPreviewTable(pdtState.previewRows);
+        closeModal('modal-pdt-mapping');
+        openModal('modal-pdt-preview');
+    } catch (err) {
+        toast('Preview failed: ' + (err.message || err), 'error');
+    } finally {
+        const previewBtn = document.getElementById('pdt-preview-btn');
+        if (previewBtn) { previewBtn.disabled = false; previewBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:15px;">preview</span> Preview Import'; }
+    }
+}
+
+/** Renders resolved rows into the preview table */
+function renderPdtPreviewTable(rows) {
+    const tbody = document.getElementById('pdt-preview-tbody');
+    const srcIcon = { pdt: '†', item_master: '★', default: '○', not_found: '?' };
+    const srcColor = { pdt: '#818cf8', item_master: '#fbbf24', default: '#6ee7b7', not_found: '#9ca3af' };
+
+    let validCount = 0, errorCount = 0;
+
+    tbody.innerHTML = rows.map((row, i) => {
+        const hasError = !!row.error;
+        if (hasError) errorCount++; else validCount++;
+
+        const fmt = (val, src) => {
+            const icon = srcIcon[src] || '';
+            const color = srcColor[src] || 'inherit';
+            const numVal = (val !== null && val !== undefined) ? Number(val).toFixed(2) : '—';
+            return `${numVal} <span style="color:${color};font-size:0.7rem;">${icon}</span>`;
+        };
+
+        const statusCell = hasError
+            ? `<span style="color:#ef4444;font-size:0.72rem;">❌ ${row.error}</span>`
+            : `<span style="color:#10b981;font-size:0.72rem;">✓ OK</span>`;
+
+        return `<tr style="border-bottom:1px solid var(--border);${hasError ? 'opacity:0.6;' : ''}">
+            <td style="padding:6px 10px;color:var(--muted);">${i + 1}</td>
+            <td style="padding:6px 10px;font-family:monospace;font-size:0.75rem;">${row.barcode}</td>
+            <td style="padding:6px 10px;">${row.article || '—'}</td>
+            <td style="padding:6px 10px;">${row.color || '—'}</td>
+            <td style="padding:6px 10px;">${row.size || '—'}</td>
+            <td style="padding:6px 10px;text-align:right;">${fmt(row.price, row._price_source)}</td>
+            <td style="padding:6px 10px;text-align:right;">${fmt(row.discount, row._discount_source)}</td>
+            <td style="padding:6px 10px;text-align:right;">${fmt(row.tax, row._tax_source)}</td>
+            <td style="padding:6px 10px;text-align:right;font-weight:600;">${fmt(row.qty, row._qty_source)}</td>
+            <td style="padding:6px 10px;">${statusCell}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('pdt-preview-count').textContent  = rows.length;
+    document.getElementById('pdt-preview-valid').textContent  = validCount;
+    document.getElementById('pdt-preview-errors').textContent = errorCount;
+
+    const confirmBtn = document.getElementById('pdt-confirm-btn');
+    if (confirmBtn) confirmBtn.disabled = validCount === 0;
+}
+
+/** Iterates through valid preview rows and merges them into the POS Cart */
+function confirmPdtImport() {
+    const validRows = pdtState.previewRows.filter(r => !r.error && r.item_code);
+    if (!validRows.length) {
+        toast('No valid rows to import.', 'error');
+        return;
+    }
+
+    let imported = 0;
+    validRows.forEach(row => {
+        const pdtQty = parseFloat(row.qty) || 1;
+        const discount = parseFloat(row.discount) || 0;
+
+        const existingItem = S.items.find(i => i.item_code === row.item_code);
+        if (existingItem) {
+            existingItem.qty += pdtQty;
+            // Discount: PDT se aaya ho toh override, warna existing rakho
+            if (row._discount_source === 'pdt') {
+                existingItem.discount_percentage = discount;
+            }
+            // Rate recalculate karo discount ke baad
+            const basePrice = existingItem.mrp || existingItem.rate || 0;
+            existingItem.rate = basePrice * (1 - existingItem.discount_percentage / 100);
+        } else {
+            const mrpVal = parseFloat(row.price) || 0;
+            const itemRate = mrpVal * (1 - discount / 100);
+
+            S.items.push({
+                item_code:           row.item_code,
+                item_name:           row.item_name || row.article || row.item_code,
+                stock_uom:           row.stock_uom || 'Nos',
+                brand:               row.brand || '',
+                item_group:          row.item_group || '',
+                rate:                itemRate,
+                mrp:                 mrpVal,
+                gst_percentage:      parseFloat(row.tax) || 0,
+                tax_template:        row.tax_template || '',
+                available_qty:       parseFloat(row.available_qty) || 0,
+                qty:                 pdtQty,
+                discount_percentage: discount,
+            });
+        }
+        imported++;
+    });
+
+    renderCart();
+    closeModal('modal-pdt-preview');
+    toast(`✅ PDT Import complete — ${imported} item(s) merged into cart.`, 'success');
+
+    // Reset state
+    pdtState = { fileContent: null, fileType: null, fileName: null, allHeaders: [], mapping: {}, previewRows: [] };
 }
 
 document.getElementById('auth-pass').addEventListener('keypress', e => { if (e.key === 'Enter') doAuth(); });

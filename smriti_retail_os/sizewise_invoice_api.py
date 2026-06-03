@@ -13,6 +13,8 @@ import frappe
 import json
 from frappe.utils import flt, nowdate
 from frappe import _
+from smriti_retail_os.utils.invoice_utils import resolve_barcode, parse_pdt_file, detect_pdt_columns
+
 
 
 # ─── Company / Master Data ────────────────────────────────────────────────────
@@ -163,94 +165,11 @@ def search_items(query=""):
 @frappe.whitelist()
 def resolve_barcode(barcode):
     """
-    Resolves a barcode to full item variant details for the Sizewise Invoice scan feature.
-
-    Resolution order:
-      1. Item Barcode child table (EAN-13, vendor barcodes, internal barcodes)
-      2. Direct Item.name match (item_code used as barcode)
-
-    Returns dict with article, color, size, mrp, rate, gst_pct, hsn_code, category,
-    sub_category — or {"error": "...", "barcode": "..."} if not found.
+    Resolves a barcode to full item variant details (imported from core utils).
     """
-    # Enforce read permission for Item
-    frappe.has_permission("Item", "read", throw=True)
+    from smriti_retail_os.utils.invoice_utils import resolve_barcode as core_resolve_barcode
+    return core_resolve_barcode(barcode)
 
-    if not barcode:
-        return {"error": "Empty barcode", "barcode": ""}
-
-    barcode = str(barcode).strip()
-
-    # ── 1. Look up Item Barcode child table ───────────────────────────
-    item_code = frappe.db.get_value(
-        "Item Barcode",
-        {"barcode": barcode},
-        "parent"
-    )
-
-    # ── 2. Fallback: direct item_code match ───────────────────────────
-    if not item_code:
-        if frappe.db.exists("Item", barcode):
-            item_code = barcode
-
-    if not item_code:
-        return {"error": "Barcode not found", "barcode": barcode}
-
-    # ── 3. Load item document ─────────────────────────────────────────
-    item = frappe.get_doc("Item", item_code)
-
-    article      = item.variant_of or item.name
-    category     = item.item_group or ""
-    
-    # ── 4. Retrieve values with parent template fallback ──────────────
-    mrp = flt(item.get("custom_mrp"))
-    if not mrp and item.variant_of:
-        mrp = flt(frappe.db.get_value("Item", item.variant_of, "custom_mrp"))
-    if not mrp:
-        mrp = flt(item.valuation_rate or item.standard_rate or 0)
-
-    gst_pct = flt(item.get("custom_gst_percentage"))
-    if not gst_pct and item.variant_of:
-        gst_pct = flt(frappe.db.get_value("Item", item.variant_of, "custom_gst_percentage"))
-    if not gst_pct:
-        gst_pct = 12.0
-
-    hsn_code = item.gst_hsn_code
-    if not hsn_code and item.variant_of:
-        hsn_code = frappe.db.get_value("Item", item.variant_of, "gst_hsn_code")
-
-    sub_category = item.get("custom_sub_category")
-    if not sub_category and item.variant_of:
-        sub_category = frappe.db.get_value("Item", item.variant_of, "custom_sub_category")
-
-    # ── 5. Extract Color and Size from attributes ─────────────────────
-    attributes = {a.attribute.strip().upper(): a.attribute_value for a in item.attributes if a.attribute_value}
-    color = attributes.get("COLOR") or attributes.get("COLOUR") or ""
-    size = attributes.get("SIZE") or ""
-
-    # ── 6. Fallback: parse article-color-size from item_code ──────────
-    if item.variant_of and (not color or not size):
-        # e.g. "TESTSTYLE-BLACK-38"  →  parts = ["TESTSTYLE", "BLACK", "38"]
-        parts = item_code.replace(article, "", 1).lstrip("-").split("-")
-        if not color and len(parts) >= 1:
-            color = parts[0]
-        if not size and len(parts) >= 2:
-            size = parts[-1]
-
-    # ── 7. Calculate tax-exclusive Rate from MRP + GST% ───────────────
-    rate = flt(mrp / (1 + (gst_pct / 100.0)), 2) if mrp > 0 else 0.0
-
-    return {
-        "item_code":    item_code,
-        "article":      article,
-        "color":        color,
-        "size":         size,
-        "mrp":          mrp,
-        "rate":         rate,
-        "gst_pct":      gst_pct,
-        "hsn_code":     hsn_code or "",
-        "category":     category,
-        "sub_category": sub_category or "",
-    }
 
 
 @frappe.whitelist()
@@ -776,3 +695,49 @@ def get_admin_session_for_pdf():
         return sid[0][0]
     return ""
 
+
+# ─── PDT Import APIs ──────────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_pdt_column_map(file_content, file_type="csv"):
+    """
+    Detect columns from an uploaded PDT file (base64 encoded) and propose
+    a default column mapping based on known aliases.
+
+    Returns:
+        { "headers": [...], "mapping": { "barcode": "BARCODE NO", ... } }
+    """
+    check_invoice_permissions()
+    import base64
+    if not file_content:
+        frappe.throw("No file content provided.")
+    try:
+        raw = base64.b64decode(file_content)
+    except Exception:
+        frappe.throw("Invalid base64 file content.")
+
+    headers, mapping = detect_pdt_columns(raw, file_type)
+    return {"headers": headers, "mapping": mapping}
+
+
+@frappe.whitelist()
+def preview_pdt_import(file_content, file_type="csv", mapping=None, price_type="Selling", supplier=None):
+    """
+    Parse a PDT file and resolve each barcode against Item Master.
+    Returns a list of row dicts ready for the preview table.
+    """
+    check_invoice_permissions()
+    import base64
+    import json
+    if not file_content:
+        frappe.throw("No file content provided.")
+    try:
+        raw = base64.b64decode(file_content)
+    except Exception:
+        frappe.throw("Invalid base64 file content.")
+
+    if isinstance(mapping, str):
+        mapping = json.loads(mapping)
+
+    rows = parse_pdt_file(raw, file_type, col_mapping=mapping, price_type=price_type, supplier=supplier)
+    return rows
