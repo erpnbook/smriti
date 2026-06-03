@@ -19,7 +19,7 @@ from frappe import _
 # ─────────────────────────────────────────────────────────────────────────────
 
 TEMPLATE_HEADERS = [
-    "BARCODE NO", "PURCHASE CLASS", "DEPARTMENT", "MERCHANDISE CATEGORY",
+    "BARCODE NO", "SECONDARY BARCODES", "PURCHASE CLASS", "DEPARTMENT", "MERCHANDISE CATEGORY",
     "Category", "Sub category", "ITEM DESCRIPTION", "HEELS", "GENDER",
     "UPPER MATERIAL", "OUTSOLE", "VENDOR CODE", "PRODUCT STYLE CODE",
     "BRAND NAME", "COLOR", "SIZE", "COST PRICE", "PLANNED MRP",
@@ -77,9 +77,11 @@ def validate_import_rows(rows_json):
                 existing_item = frappe.db.get_value(
                     "Item Barcode", {"barcode": barcode}, "parent"
                 )
-                if existing_item:
+                collides_with_item = frappe.db.exists("Item", barcode)
+                if existing_item or collides_with_item:
+                    ref_name = existing_item or barcode
                     errors.append(
-                        f"Barcode already exists on item '{existing_item}' — barcodes must be unique"
+                        f"Barcode already exists on system as item code or barcode '{ref_name}' — barcodes must be unique"
                     )
 
         # ── GST % validation ───────────────────────────────────────────────
@@ -199,11 +201,13 @@ def import_item_master(rows_json):
             existing_on_system = frappe.db.get_value(
                 "Item Barcode", {"barcode": barcode}, "parent"
             )
-            if existing_on_system:
+            collides_with_item = frappe.db.exists("Item", barcode)
+            if existing_on_system or collides_with_item:
+                ref_name = existing_on_system or barcode
                 skipped_duplicates.append({
                     "row": idx + 1,
                     "barcode": barcode,
-                    "reason": f"Barcode already exists on item '{existing_on_system}'"
+                    "reason": f"Barcode already exists on system as item code or barcode '{ref_name}'"
                 })
                 continue
 
@@ -282,13 +286,40 @@ def import_item_master(rows_json):
             else:
                 variant = frappe.get_doc("Item", variant_code)
 
-            # ── Attach barcode to variant ──────────────────────────────────
-            already_linked = frappe.db.exists(
-                "Item Barcode", {"barcode": barcode, "parent": variant_code}
-            )
-            if not already_linked:
-                variant.append("barcodes", {"barcode": barcode, "uom": "Nos"})
-                variant.save(ignore_permissions=True)
+            # ── Attach barcode to variant (enforcing single primary, preserving secondary barcodes) ──
+            var_doc = frappe.get_doc("Item", variant_code)
+            secondaries = [b for b in var_doc.barcodes if not b.custom_is_primary]
+            
+            var_doc.barcodes = []
+            var_doc.append("barcodes", {
+                "barcode": barcode,
+                "uom": "Nos",
+                "custom_is_primary": 1
+            })
+            for sec in secondaries:
+                if sec.barcode != barcode:
+                    var_doc.append("barcodes", {
+                        "barcode": sec.barcode,
+                        "uom": sec.uom or "Nos",
+                        "custom_is_primary": 0
+                    })
+                    
+            # Parse and append any new secondary barcodes from sheet row
+            secondary_str = str(row.get("SECONDARY BARCODES", "") or "").strip()
+            if secondary_str:
+                sec_barcodes = [b.strip() for b in secondary_str.split(",") if b.strip()]
+                current_barcodes = {b.barcode for b in var_doc.barcodes}
+                for sb in sec_barcodes:
+                    if sb not in current_barcodes:
+                        dup_parent = frappe.db.get_value("Item Barcode", {"barcode": sb, "parent": ["!=", variant_code]}, "parent")
+                        collides_with_item = frappe.db.exists("Item", sb) and sb != variant_code
+                        if not dup_parent and not collides_with_item:
+                            var_doc.append("barcodes", {
+                                "barcode": sb,
+                                "uom": "Nos",
+                                "custom_is_primary": 0
+                            })
+            var_doc.save(ignore_permissions=True)
 
             # ── Create prices (Standard Selling = MRP, MRP list = MRP) ─────
             _upsert_item_price(variant_code, "Standard Selling", mrp)
@@ -617,7 +648,7 @@ def generate_ean13_barcode():
     check_digit = (10 - (total % 10)) % 10
     barcode = f"{body}{check_digit}"
     
-    if frappe.db.exists("Item Barcode", {"barcode": barcode}):
+    if frappe.db.exists("Item Barcode", {"barcode": barcode}) or frappe.db.exists("Item", barcode):
         return generate_ean13_barcode()
     return barcode
 
@@ -755,9 +786,14 @@ def create_style_with_variants(base_details, sizes_config):
         if barcode_mode == "manual":
             if not manual_barcode:
                 frappe.throw(frappe._("Manual barcode is required for size {0}").format(size))
+            import re
+            if not re.match(r"^[a-zA-Z0-9\-_]+$", manual_barcode):
+                frappe.throw(frappe._("Manual barcode '{0}' contains invalid characters. Only alphanumeric, hyphens, and underscores are allowed.").format(manual_barcode))
+            if len(manual_barcode) < 3 or len(manual_barcode) > 30:
+                frappe.throw(frappe._("Manual barcode must be between 3 and 30 characters."))
             barcode = manual_barcode
         else:
-            existing_barcode = frappe.db.get_value("Item Barcode", {"parent": variant_code}, "barcode")
+            existing_barcode = frappe.db.get_value("Item Barcode", {"parent": variant_code, "custom_is_primary": 1}, "barcode")
             if existing_barcode:
                 barcode = existing_barcode
             else:
@@ -767,6 +803,8 @@ def create_style_with_variants(base_details, sizes_config):
         duplicate = frappe.db.get_value("Item Barcode", {"barcode": barcode, "parent": ["!=", variant_code]}, "parent")
         if duplicate:
             frappe.throw(frappe._("Barcode '{0}' is already registered on item '{1}'!").format(barcode, duplicate))
+        if frappe.db.exists("Item", barcode) and barcode != variant_code:
+            frappe.throw(frappe._("Barcode '{0}' collides with an existing Item Code in the system!").format(barcode))
             
         # Create or update variant Item doc
         if not frappe.db.exists("Item", variant_code):
@@ -805,10 +843,23 @@ def create_style_with_variants(base_details, sizes_config):
             var.save(ignore_permissions=True)
             updated_count += 1
             
-        # Force set barcode child table row
-        frappe.db.delete("Item Barcode", {"parent": variant_code})
+        # Force set barcode child table row (preserving secondary barcodes)
         var_doc = frappe.get_doc("Item", variant_code)
-        var_doc.append("barcodes", {"barcode": barcode, "uom": "Nos"})
+        secondaries = [b for b in var_doc.barcodes if not b.custom_is_primary]
+        
+        var_doc.barcodes = []
+        var_doc.append("barcodes", {
+            "barcode": barcode,
+            "uom": "Nos",
+            "custom_is_primary": 1
+        })
+        for sec in secondaries:
+            if sec.barcode != barcode:
+                var_doc.append("barcodes", {
+                    "barcode": sec.barcode,
+                    "uom": sec.uom or "Nos",
+                    "custom_is_primary": 0
+                })
         var_doc.save(ignore_permissions=True)
         
         # Standard Selling prices sync
@@ -1023,7 +1074,7 @@ def import_pivot_item_master(styles_json):
                 variant_code = f"{style_code}-{color}-{size}"
                 
                 # Check for existing barcode, or generate mock
-                existing_barcode = frappe.db.get_value("Item Barcode", {"parent": variant_code}, "barcode")
+                existing_barcode = frappe.db.get_value("Item Barcode", {"parent": variant_code, "custom_is_primary": 1}, "barcode")
                 if existing_barcode:
                     barcode = existing_barcode
                 else:
@@ -1065,10 +1116,23 @@ def import_pivot_item_master(styles_json):
                     var.save(ignore_permissions=True)
                     updated_count += 1
                     
-                # Link Barcode
-                frappe.db.delete("Item Barcode", {"parent": variant_code})
+                # Link Barcode (preserving secondary barcodes)
                 var_doc = frappe.get_doc("Item", variant_code)
-                var_doc.append("barcodes", {"barcode": barcode, "uom": "Nos"})
+                secondaries = [b for b in var_doc.barcodes if not b.custom_is_primary]
+                
+                var_doc.barcodes = []
+                var_doc.append("barcodes", {
+                    "barcode": barcode,
+                    "uom": "Nos",
+                    "custom_is_primary": 1
+                })
+                for sec in secondaries:
+                    if sec.barcode != barcode:
+                        var_doc.append("barcodes", {
+                            "barcode": sec.barcode,
+                            "uom": sec.uom or "Nos",
+                            "custom_is_primary": 0
+                        })
                 var_doc.save(ignore_permissions=True)
                 
                 # Link Prices
@@ -1188,6 +1252,42 @@ def reset_all_items():
         "message": "All Item Masters, variants, prices, and barcodes have been cleanly reset to 0!",
         "cleared_doctypes": deleted
     }
+
+
+@frappe.whitelist()
+def get_items_missing_barcodes():
+    """
+    Returns active non-template items that do not have a barcode registered
+    in the Item Barcode child table.
+    """
+    check_store_manager_role()
+    
+    # Query active items that are not template items (i.e. has_variants = 0)
+    items = frappe.db.get_all(
+        "Item",
+        filters={
+            "disabled": 0,
+            "has_variants": 0
+        },
+        fields=["name", "item_name", "item_group", "brand", "variant_of"]
+    )
+    
+    # Get all parent codes that have barcodes
+    barcoded_parents = frappe.db.get_all("Item Barcode", pluck="parent")
+    barcoded_set = set(barcoded_parents)
+    
+    missing = []
+    for it in items:
+        if it.name not in barcoded_set:
+            missing.append({
+                "item_code": it.name,
+                "item_name": it.item_name,
+                "item_group": it.item_group,
+                "brand": it.brand or "",
+                "variant_of": it.variant_of or ""
+            })
+            
+    return missing
 
 
 

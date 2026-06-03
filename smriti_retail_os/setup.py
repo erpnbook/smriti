@@ -602,6 +602,16 @@ def setup_smriti_retail_os():
                 "default": "0",
                 "module": "SMRITI Retail OS"
             }
+        ],
+        "Item Barcode": [
+            {
+                "fieldname": "custom_is_primary",
+                "label": "Is Primary",
+                "fieldtype": "Check",
+                "default": "0",
+                "in_list_view": 1,
+                "module": "SMRITI Retail OS"
+            }
         ]
     }
 

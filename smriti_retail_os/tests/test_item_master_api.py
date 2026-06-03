@@ -25,6 +25,8 @@ from smriti_retail_os.item_master_api import (
     create_style_with_variants,
     delete_size_variant,
     import_pivot_item_master,
+    import_item_master,
+    get_items_missing_barcodes,
 )
 
 class TestSmritiRetailItemMasterAPI(unittest.TestCase):
@@ -405,3 +407,157 @@ class TestPivotMatrixImport(unittest.TestCase):
             len(variants_after_second), 2,
             msg=f"Idempotency failed — got {len(variants_after_second)} variants on second run"
         )
+
+
+class TestBarcodeHardening(unittest.TestCase):
+    def setUp(self):
+        self.company = frappe.db.exists("Company", "_Test Company")
+        if not self.company:
+            comp = frappe.new_doc("Company")
+            comp.company_name = "_Test Company"
+            comp.country = "India"
+            comp.default_currency = "INR"
+            comp.insert(ignore_permissions=True)
+            self.company = comp.name
+        frappe.defaults.set_user_default("company", self.company, frappe.session.user)
+
+        if not frappe.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):
+            r = frappe.new_doc("Has Role")
+            r.parent = frappe.session.user
+            r.parenttype = "User"
+            r.parentfield = "roles"
+            r.role = "SMRITI Store Manager"
+            r.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        self.test_variant_code = "TST-HARDEN-BLK-8"
+        self._cleanup()
+
+    def tearDown(self):
+        self._cleanup()
+        frappe.db.delete("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"})
+        frappe.db.commit()
+
+    def _cleanup(self):
+        frappe.db.delete("Item Barcode", {"parent": self.test_variant_code})
+        frappe.db.delete("Item Barcode", {"barcode": "9998887776665"})
+        frappe.db.delete("Item Barcode", {"barcode": "9998887776660"})
+        frappe.db.delete("Item Barcode", {"barcode": "SEC89012345"})
+        frappe.db.delete("Item Price", {"item_code": self.test_variant_code})
+        frappe.delete_doc("Item", self.test_variant_code, ignore_missing=True, force=True)
+        frappe.delete_doc("Item", "TST-HARDEN", ignore_missing=True, force=True)
+        frappe.db.commit()
+
+    def test_manual_barcode_validation(self):
+        """
+        Verify manual barcode format and length validation.
+        """
+        base_details = {
+            "article_no": "TST-HARDEN",
+            "description": "Test Hardening Jordan",
+            "color": "BLK",
+            "brand": "Nike",
+            "item_group": "Products",
+            "cost_price": 1000,
+            "mrp": 2000,
+            "gst_percentage": "18",
+            "hsn_code": "640311",
+            "gender": "UNISEX",
+            "purchase_class": "FW",
+            "vendor_code": "",
+            "product_tax_group": ""
+        }
+        
+        # Scenario 1: Spaces in manual barcode
+        sizes_config = [
+            { "size": "8", "active": True, "barcode_mode": "manual", "manual_barcode": "SPACE BARCODE" }
+        ]
+        with self.assertRaises(frappe.ValidationError):
+            create_style_with_variants(frappe.as_json(base_details), frappe.as_json(sizes_config))
+
+        # Scenario 2: Special characters
+        sizes_config[0]["manual_barcode"] = "BARCODE@#"
+        with self.assertRaises(frappe.ValidationError):
+            create_style_with_variants(frappe.as_json(base_details), frappe.as_json(sizes_config))
+
+        # Scenario 3: Under minimum length
+        sizes_config[0]["manual_barcode"] = "12"
+        with self.assertRaises(frappe.ValidationError):
+            create_style_with_variants(frappe.as_json(base_details), frappe.as_json(sizes_config))
+
+        # Scenario 4: Over maximum length
+        sizes_config[0]["manual_barcode"] = "1" * 35
+        with self.assertRaises(frappe.ValidationError):
+            create_style_with_variants(frappe.as_json(base_details), frappe.as_json(sizes_config))
+
+    def test_secondary_barcode_preservation(self):
+        """
+        Verify updates preserve secondary barcodes while ensuring single primary.
+        """
+        # Create style variant
+        base_details = {
+            "article_no": "TST-HARDEN",
+            "description": "Test Hardening Sandal",
+            "color": "BLK",
+            "brand": "Puma",
+            "item_group": "Products",
+            "cost_price": 500,
+            "mrp": 1000,
+            "gst_percentage": "18",
+            "hsn_code": "640311",
+            "gender": "UNISEX",
+            "purchase_class": "FW",
+            "vendor_code": "",
+            "product_tax_group": ""
+        }
+        sizes_config = [
+            { "size": "8", "active": True, "barcode_mode": "manual", "manual_barcode": "9998887776665" }
+        ]
+        
+        create_style_with_variants(frappe.as_json(base_details), frappe.as_json(sizes_config))
+        
+        # Link a secondary barcode manually to mimic vendor barcode population
+        var_doc = frappe.get_doc("Item", self.test_variant_code)
+        var_doc.append("barcodes", {
+            "barcode": "SEC89012345",
+            "uom": "Nos",
+            "custom_is_primary": 0
+        })
+        var_doc.save(ignore_permissions=True)
+        
+        # Verify the two barcodes exist
+        self.assertEqual(len(var_doc.barcodes), 2)
+        
+        # Run create_style_with_variants again with a different primary barcode
+        sizes_config[0]["manual_barcode"] = "9998887776660"
+        create_style_with_variants(frappe.as_json(base_details), frappe.as_json(sizes_config))
+        
+        # Reload and check
+        var_doc = frappe.get_doc("Item", self.test_variant_code)
+        primaries = [b.barcode for b in var_doc.barcodes if b.custom_is_primary]
+        secondaries = [b.barcode for b in var_doc.barcodes if not b.custom_is_primary]
+        
+        self.assertEqual(len(primaries), 1)
+        self.assertEqual(primaries[0], "9998887776660")
+        self.assertIn("SEC89012345", secondaries)
+        self.assertEqual(len(secondaries), 1)
+
+    def test_missing_barcode_detection(self):
+        """
+        Verify get_items_missing_barcodes returns active variants without barcodes.
+        """
+        from smriti_retail_os.item_master_api import _ensure_hsn_code
+        _ensure_hsn_code("640311")
+        
+        # Create an item without barcodes
+        item = frappe.new_doc("Item")
+        item.item_code = self.test_variant_code
+        item.item_name = "Jordan Missing Barcode"
+        item.item_group = "Products"
+        item.stock_uom = "Nos"
+        item.gst_hsn_code = "640311"
+        item.insert(ignore_permissions=True)
+        
+        missing = get_items_missing_barcodes()
+        missing_codes = [m["item_code"] for m in missing]
+        self.assertIn(self.test_variant_code, missing_codes)

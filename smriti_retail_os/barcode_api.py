@@ -133,11 +133,17 @@ def get_item_print_details(item_code, default_print_qty):
     """
     item_doc = frappe.get_doc("Item", item_code)
 
-    # 1. Fetch Barcode
-    barcode = (
-        frappe.db.get_value("Item Barcode", {"parent": item_code}, "barcode")
-        or item_code
+    # 1. Fetch Barcode - prioritize custom_is_primary = 1, then fallback to first, then item_code
+    barcodes_list = frappe.db.get_all(
+        "Item Barcode",
+        filters={"parent": item_code},
+        fields=["barcode", "custom_is_primary"],
+        order_by="custom_is_primary desc, creation asc"
     )
+    
+    barcode = item_code
+    if barcodes_list:
+        barcode = barcodes_list[0].barcode
 
     # 2. Fetch MRP — custom_mrp > MRP price list > Standard Selling > valuation_rate
     mrp = (
