@@ -83,13 +83,19 @@ class TestSmritiRetailPurchaseAPI(unittest.TestCase):
             self.warehouse = w.name
 
         # Resolve Supplier
-        self.supplier = frappe.db.get_value("Supplier", {}, "name")
+        self.supplier = frappe.db.get_value("Supplier", {"disabled": 0, "on_hold": 0}, "name")
         if not self.supplier:
-            sup = frappe.new_doc("Supplier")
-            sup.supplier_name = "Test Supplier"
-            sup.supplier_group = frappe.db.get_value("Supplier Group", {}, "name") or "All Supplier Groups"
-            sup.insert(ignore_permissions=True)
-            self.supplier = sup.name
+            existing = frappe.db.get_value("Supplier", {}, "name")
+            if existing:
+                frappe.db.set_value("Supplier", existing, {"disabled": 0, "on_hold": 0})
+                frappe.db.commit()
+                self.supplier = existing
+            else:
+                sup = frappe.new_doc("Supplier")
+                sup.supplier_name = "Test Supplier"
+                sup.supplier_group = frappe.db.get_value("Supplier Group", {}, "name") or "All Supplier Groups"
+                sup.insert(ignore_permissions=True)
+                self.supplier = sup.name
 
         # Create active Fiscal Year robustly if missing or if company is not in it
         fy_name = "2026-2027"

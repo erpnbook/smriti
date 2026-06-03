@@ -68,7 +68,7 @@ frappe.ui.form.on("Purchase Order", {
 function _smriti_po_setup(frm) {
     // Filter suppliers — active only
     frm.set_query("supplier", function () {
-        return { filters: { disabled: 0, supplier_type: "Company" } };
+        return { filters: { disabled: 0 } };
     });
     // Filter items — retail items only
     frm.set_query("item_code", "items", function () {
