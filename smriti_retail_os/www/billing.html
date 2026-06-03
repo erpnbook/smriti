@@ -928,6 +928,9 @@ tbody tr:last-child td { border-bottom: none; }
 <div id="toast-container"></div>
 
 <script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+let loggedUser = '{{ cashier }}';
+
 /* ══════════════════════════════════════════════════
    SMRITI Billing Terminal — Standalone JS v2.0
    Frappe REST API Backend Only. Zero Frappe Chrome.
@@ -947,28 +950,13 @@ const S = {
 };
 
 // ── CSRF + API ──
-function getCsrf() {
-    return fetch('/api/method/frappe.auth.get_logged_user', { credentials: 'include' })
-        .then(r => r.json())
-        .then(d => {
-            // Get CSRF from cookie
-            const m = document.cookie.match(/X-Frappe-CSRF-Token=([^;]+)/);
-            if (m) S.csrf = decodeURIComponent(m[1]);
-            return d;
-        });
-}
-
 function api(method, params = {}) {
-    // Read CSRF from cookie fresh each call
-    const csrfMatch = document.cookie.match(/(?:^|;\s*)X-Frappe-CSRF-Token=([^;]+)/);
-    const csrf = csrfMatch ? decodeURIComponent(csrfMatch[1]) : (S.csrf || '');
-
     return fetch(`/api/method/${method}`, {
         method: 'POST',
         credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
-            'X-Frappe-CSRF-Token': csrf,
+            'X-Frappe-CSRF-Token': CSRF_TOKEN,
         },
         body: JSON.stringify(params),
     })

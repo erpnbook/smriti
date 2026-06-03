@@ -653,6 +653,9 @@ body.popout-mode .sidebar { display: none !important; }
 <div id="toast-container"></div>
 
 <script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+let loggedUser = '{{ cashier }}';
+
 /* ══════════════════════════════════════════════
    SMRITI Purchase Manager — Standalone v1.0
    Frappe REST API Backend Only. Zero Frappe UI.
@@ -676,11 +679,9 @@ const S = {
 
 // ── API ──
 function api(method, params = {}) {
-    const m = document.cookie.match(/(?:^|;\s*)X-Frappe-CSRF-Token=([^;]+)/);
-    const csrf = m ? decodeURIComponent(m[1]) : '';
     return fetch(`/api/method/${method}`, {
         method: 'POST', credentials: 'include',
-        headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': csrf },
+        headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': CSRF_TOKEN },
         body: JSON.stringify(params),
     })
     .then(r => r.json())

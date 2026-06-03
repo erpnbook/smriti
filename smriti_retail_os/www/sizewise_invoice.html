@@ -1348,6 +1348,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 // ── Constants & State ────────────────────────────────────────
 const CSRF = '{{ csrf_token }}';
 const CASHIER = '{{ cashier }}';
+let loggedUser = CASHIER;
 
 const PRESETS = {
     footwear: ['36','37','38','39','40','41','42'],
@@ -1429,8 +1430,12 @@ async function loadCompanyDetails() {
         }
 
         // Print header
-        document.getElementById('ph-company-name').textContent = c.company_name;
-        document.getElementById('ph-company-addr').innerHTML = metaLines.join(' | ');
+        if (document.getElementById('p-company-name')) {
+            document.getElementById('p-company-name').textContent = c.company_name;
+        }
+        if (document.getElementById('p-company-meta')) {
+            document.getElementById('p-company-meta').innerHTML = metaLines.join(' | ');
+        }
     } catch(e) {
         console.error('Company details error:', e);
         toast('Could not load company details. Using defaults.', 'info');
