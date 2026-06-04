@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/smriti_retail_os/page/smriti_purchase/__init__.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI Purchase page registration.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

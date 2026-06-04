@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/item_master_api.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Backend API for SMRITI Item Master import, creation, and variant management.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0
@@ -170,6 +170,9 @@ def import_item_master(rows_json):
     """
     rows = frappe.parse_json(rows_json)
 
+    # Clear per-batch HSN resolution cache for this import run
+    _clear_hsn_cache()
+
     # Ensure hardcoded standard UOM 'Nos' exists in the database
     _ensure_uom("Nos")
 
@@ -315,7 +318,7 @@ def import_item_master(rows_json):
                 _safe_set(variant, "custom_gst_percentage", gst_pct)
                 if image_link:
                     variant.image = image_link
-                resolved_hsn = _resolve_hsn_code(hsn_code)
+                resolved_hsn = _resolve_hsn_code_cached(hsn_code)
                 if resolved_hsn:
                     _ensure_hsn_code(resolved_hsn)
                     variant.gst_hsn_code = resolved_hsn
@@ -523,6 +526,30 @@ def _resolve_hsn_code(hsn_code):
     return hsn_digits
 
 
+# Per-batch HSN resolution cache — populated by _resolve_hsn_code_cached(), cleared at
+# the start of each import/create call to avoid stale data across separate requests.
+_hsn_code_cache: dict = {}
+
+
+def _resolve_hsn_code_cached(hsn_code):
+    """Cached wrapper around _resolve_hsn_code().
+    Avoids repeated DB round-trips and regex work for the same HSN value within a single
+    import batch. The cache is keyed on the raw input string and is a module-level dict
+    cleared at the start of each top-level import function.
+    """
+    global _hsn_code_cache
+    key = str(hsn_code or "")
+    if key not in _hsn_code_cache:
+        _hsn_code_cache[key] = _resolve_hsn_code(hsn_code)
+    return _hsn_code_cache[key]
+
+
+def _clear_hsn_cache():
+    """Clears the per-batch HSN resolution cache. Call at the start of each import function."""
+    global _hsn_code_cache
+    _hsn_code_cache = {}
+
+
 def _ensure_master_value(doctype_name, value):
     """Checks if a value exists in a Master DocType, and inserts it if not.
     Silently skips if the DocType itself is not installed (fresh installs).
@@ -606,7 +633,7 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
 
         if brand:
             item.brand = brand
-        resolved_hsn = _resolve_hsn_code(hsn_code)
+        resolved_hsn = _resolve_hsn_code_cached(hsn_code)
         if resolved_hsn:
             _ensure_hsn_code(resolved_hsn)
             item.gst_hsn_code = resolved_hsn
@@ -854,7 +881,7 @@ def create_style_with_variants(base_details, sizes_config):
         _safe_set(template, "custom_gst_percentage", gst_pct)
         if brand:
             template.brand = brand
-        resolved_hsn = _resolve_hsn_code(hsn_code)
+        resolved_hsn = _resolve_hsn_code_cached(hsn_code)
         if resolved_hsn:
             _ensure_hsn_code(resolved_hsn)
             template.gst_hsn_code = resolved_hsn
@@ -919,7 +946,7 @@ def create_style_with_variants(base_details, sizes_config):
             _safe_set(var, "custom_is_retail_item", 1)
             _safe_set(var, "custom_mrp", mrp)
             _safe_set(var, "custom_gst_percentage", gst_pct)
-            resolved_hsn = _resolve_hsn_code(hsn_code)
+            resolved_hsn = _resolve_hsn_code_cached(hsn_code)
             if resolved_hsn:
                 _ensure_hsn_code(resolved_hsn)
                 var.gst_hsn_code = resolved_hsn
@@ -936,7 +963,7 @@ def create_style_with_variants(base_details, sizes_config):
             var.item_name = f"{item_name} ({color} / {size})"
             _safe_set(var, "custom_mrp", mrp)
             _safe_set(var, "custom_gst_percentage", gst_pct)
-            resolved_hsn = _resolve_hsn_code(hsn_code)
+            resolved_hsn = _resolve_hsn_code_cached(hsn_code)
             if resolved_hsn:
                 _ensure_hsn_code(resolved_hsn)
                 var.gst_hsn_code = resolved_hsn
@@ -1195,7 +1222,7 @@ def import_pivot_item_master(styles_json):
                 template.item_name = item_name
                 _safe_set(template, "custom_mrp", mrp)
                 _safe_set(template, "custom_gst_percentage", gst_pct)
-                resolved_hsn = _resolve_hsn_code(hsn_code)
+                resolved_hsn = _resolve_hsn_code_cached(hsn_code)
                 if resolved_hsn:
                     _ensure_hsn_code(resolved_hsn)
                     template.gst_hsn_code = resolved_hsn
@@ -1232,7 +1259,7 @@ def import_pivot_item_master(styles_json):
                     _safe_set(var, "custom_is_retail_item", 1)
                     _safe_set(var, "custom_mrp", mrp)
                     _safe_set(var, "custom_gst_percentage", gst_pct)
-                    resolved_hsn = _resolve_hsn_code(hsn_code)
+                    resolved_hsn = _resolve_hsn_code_cached(hsn_code)
                     if resolved_hsn:
                         _ensure_hsn_code(resolved_hsn)
                         var.gst_hsn_code = resolved_hsn
@@ -1249,7 +1276,7 @@ def import_pivot_item_master(styles_json):
                     var.item_name = f"{item_name} ({color} / {size})"
                     _safe_set(var, "custom_mrp", mrp)
                     _safe_set(var, "custom_gst_percentage", gst_pct)
-                    resolved_hsn = _resolve_hsn_code(hsn_code)
+                    resolved_hsn = _resolve_hsn_code_cached(hsn_code)
                     if resolved_hsn:
                         _ensure_hsn_code(resolved_hsn)
                         var.gst_hsn_code = resolved_hsn

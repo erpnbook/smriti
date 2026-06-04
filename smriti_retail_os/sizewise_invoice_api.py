@@ -714,11 +714,11 @@ def get_pdt_column_map(file_content, file_type="csv"):
     check_invoice_permissions()
     import base64
     if not file_content:
-        frappe.throw("No file content provided.")
+        frappe.throw(_("No file content provided."))
     try:
         raw = base64.b64decode(file_content)
     except Exception:
-        frappe.throw("Invalid base64 file content.")
+        frappe.throw(_("Invalid base64 file content."))
 
     headers, mapping = detect_pdt_columns(raw, file_type)
     return {"headers": headers, "mapping": mapping}
@@ -734,11 +734,11 @@ def preview_pdt_import(file_content, file_type="csv", mapping=None, price_type="
     import base64
     import json
     if not file_content:
-        frappe.throw("No file content provided.")
+        frappe.throw(_("No file content provided."))
     try:
         raw = base64.b64decode(file_content)
     except Exception:
-        frappe.throw("Invalid base64 file content.")
+        frappe.throw(_("Invalid base64 file content."))
 
     if isinstance(mapping, str):
         mapping = json.loads(mapping)

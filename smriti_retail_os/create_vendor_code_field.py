@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/create_vendor_code_field.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Migration helper to create the Vendor Code custom field on Supplier.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

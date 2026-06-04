@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/smriti_retail_os/page/smriti_item_master/smriti_item_master.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI Item Master Frappe page controller.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

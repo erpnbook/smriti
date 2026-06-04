@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/hooks_logic.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Document event hooks -- syncs item taxes, customer addresses, and retail invoice state.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0
