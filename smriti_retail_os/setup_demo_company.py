@@ -1,21 +1,33 @@
 # -*- coding: utf-8 -*-
 #
-# @file: smriti_retail_os/setup_tattly_threads.py
-# @description: Handles user login, registration, and JWT token generation.
+# @file: smriti_retail_os/setup_demo_company.py
+# @description: Demo company provisioning — Excel-driven company, address, bank, and logo setup.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
 import frappe
 import openpyxl
 import os
 
-def parse_excel_setup():
-    file_path = "/home/frappe/frappe-bench/company/SMRITiRetailOS_Templates_TATTLY_THREADS.xlsx"
-    if not os.path.exists(file_path):
+def parse_excel_setup(file_path=None):
+    if not file_path:
+        # Search for any setup template Excel in the company directory
+        company_dir = "/home/frappe/frappe-bench/company"
+        if os.path.exists(company_dir):
+            for f in os.listdir(company_dir):
+                if f.endswith(".xlsx") and "template" in f.lower():
+                    file_path = os.path.join(company_dir, f)
+                    break
+            if not file_path:
+                # Fallback: look for any xlsx
+                for f in os.listdir(company_dir):
+                    if f.endswith(".xlsx"):
+                        file_path = os.path.join(company_dir, f)
+                        break
+    if not file_path or not os.path.exists(file_path):
         print(f"ERROR: Excel setup file not found at {file_path}")
         return None
         
@@ -65,7 +77,7 @@ def parse_excel_setup():
     return data
 
 def run():
-    print("Starting Tattly Threads Dynamic Programmatic Setup...")
+    print("Starting Demo Company Dynamic Programmatic Setup...")
     
     # 0. Pre-create standard Warehouse Types to avoid LinkValidationErrors
     warehouse_types = ["All", "Transit", "Bonded", "Consignment", "Spares", "Work In Progress"]
@@ -87,13 +99,16 @@ def run():
         print("Aborting setup: could not parse Excel setup.")
         return
         
-    company_name = info.get("company_name", "TATTLY THREADS")
-    abbr = info.get("abbr", "TT")
+    company_name = info.get("company_name")
+    if not company_name:
+        print("ERROR: company_name not found in Excel setup sheet.")
+        return
+    abbr = info.get("abbr", "")
     
     print(f"Retrieved Company Name: '{company_name}' from Excel.")
     
     # 2. Upsert Company
-    logo_filename = "tattly_threads_logo.png"
+    logo_filename = info.get("logo_filename", "company_logo.png")
     src_logo = os.path.join("/home/frappe/frappe-bench/company", logo_filename)
     company_logo_path = None
     if os.path.exists(src_logo):
@@ -289,4 +304,4 @@ def run():
         except Exception as e:
             print(f"Error updating Navbar Settings: {e}")
 
-    print("Tattly Threads Dynamic Programmatic Setup finished successfully!")
+    print("Demo Company Dynamic Programmatic Setup finished successfully!")

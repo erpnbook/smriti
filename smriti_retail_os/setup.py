@@ -1058,18 +1058,32 @@ def after_install():
     sync_assets()
 
 
-def patch_tattly_threads_tax_invoice():
+def patch_company_tax_invoice(print_format_name=None):
     """
-    Patches the custom 'Tattly Threads Tax Invoice' Print Format in the database.
+    Patches a company Tax Invoice Print Format in the database.
     Injects E-way Bill and Vehicle Number rendering inside the Invoice Details header block.
+    If no print_format_name is given, searches for the first custom Sales Invoice print format.
     """
     import frappe
-    print("[SMRITI] Patching custom Print Format 'Tattly Threads Tax Invoice'...")
-    if not frappe.db.exists("Print Format", "Tattly Threads Tax Invoice"):
-        print("[SMRITI] Error: Print Format 'Tattly Threads Tax Invoice' does not exist!")
+    if not print_format_name:
+        # Auto-detect the first custom Sales Invoice print format
+        pf_name = frappe.db.get_value(
+            "Print Format",
+            {"doc_type": "Sales Invoice", "standard": "No"},
+            "name"
+        )
+        if pf_name:
+            print_format_name = pf_name
+        else:
+            print("[SMRITI] No custom Sales Invoice Print Format found to patch.")
+            return
+
+    print(f"[SMRITI] Patching custom Print Format '{print_format_name}'...")
+    if not frappe.db.exists("Print Format", print_format_name):
+        print(f"[SMRITI] Error: Print Format '{print_format_name}' does not exist!")
         return
         
-    pf = frappe.get_doc("Print Format", "Tattly Threads Tax Invoice")
+    pf = frappe.get_doc("Print Format", print_format_name)
     
     target = """                    <tr>
                         <td class="bold" style="padding: 2px 0;">Place of Supply:</td>
@@ -1097,16 +1111,17 @@ def patch_tattly_threads_tax_invoice():
         pf.html = pf.html.replace(target, replacement)
         pf.save(ignore_permissions=True)
         frappe.db.commit()
-        print("[SMRITI] Success! Print Format 'Tattly Threads Tax Invoice' updated in database.")
+        print(f"[SMRITI] Success! Print Format '{print_format_name}' updated in database.")
     elif "{% if doc.ewaybill %}" in pf.html:
-        print("[SMRITI] Print Format is already patched and up to date.")
+        print(f"[SMRITI] Print Format '{print_format_name}' is already patched and up to date.")
     else:
-        print("[SMRITI] Error: Place of supply target layout block not found in Print Format HTML!")
+        print(f"[SMRITI] Error: Place of supply target layout block not found in '{print_format_name}' HTML!")
 
 
 def create_default_admin_account():
-    """Creates the default Admin (Business Owner) account if it does not exist."""
-    email = "admin@smriti.io"
+    """Creates the default Admin (Business Owner) account if it does not exist.
+    Uses admin email from site_config or falls back to 'admin@<site_name>'."""
+    email = frappe.conf.get("smriti_admin_email") or f"admin@{frappe.local.site}"
     if not frappe.db.exists("User", email):
         try:
             doc = frappe.new_doc("User")
@@ -1119,7 +1134,7 @@ def create_default_admin_account():
             doc.append("roles", {"role": "SMRITI Store Manager"})
             doc.insert(ignore_permissions=True)
             frappe.db.commit()
-            print("[SMRITI] Created default Admin (Business Owner) account: admin@smriti.io")
+            print(f"[SMRITI] Created default Admin (Business Owner) account: {email}")
         except Exception as e:
             frappe.log_error(f"Error creating default Admin account: {str(e)}", "SMRITI Setup Error")
 

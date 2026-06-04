@@ -23,6 +23,15 @@ from frappe import _
 from frappe.utils import cint
 from frappe.utils.password import update_password
 
+
+def _get_smriti_admin_email():
+    """Returns the SMRITI Admin (Business Owner) email.
+    Reads from site_config['smriti_admin_email'] if set, otherwise falls back
+    to 'admin@<site_name>' so deployments without explicit config still work.
+    """
+    return frappe.conf.get("smriti_admin_email") or f"admin@{frappe.local.site}"
+
+
 # ─── Security Governance Guards ──────────────────────────────────────────────
 
 def check_administrator_only():
@@ -36,7 +45,8 @@ def check_administrator_only():
 def check_store_manager_or_admin():
     """Raises PermissionError if caller is not a Store Manager, System Manager, or Administrator."""
     # Strict Default Security Model - Admin (Business Owner) Blockage
-    if frappe.session.user in ("Admin", "admin@smriti.io"):
+    _admin_email = _get_smriti_admin_email()
+    if frappe.session.user in ("Admin", _admin_email):
         frappe.throw(
             _("Access Denied: The Admin (Business Owner) account is blocked from accessing the Security Center and User Administration."),
             frappe.PermissionError
@@ -213,7 +223,8 @@ def get_user_metrics():
     # Access Check: Allow Admin (Business Owner) as well as standard Store Manager, System Manager, Administrator
     roles = set(frappe.get_roles())
     allowed = {"SMRITI Store Manager", "System Manager", "Administrator"}
-    is_allowed = bool(roles & allowed) or frappe.session.user in ("Admin", "admin@smriti.io")
+    _admin_email = _get_smriti_admin_email()
+    is_allowed = bool(roles & allowed) or frappe.session.user in ("Admin", _admin_email)
     if not is_allowed:
         frappe.throw(
             _("Access Denied: You do not have permissions to access User Metrics."),

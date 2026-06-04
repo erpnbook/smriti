@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/www/security.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Page controller for SMRITI Security & Workflow Center.
+#               Enforces access checks and initializes template context.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0
@@ -20,6 +21,7 @@
 
 import frappe
 from frappe import _
+from smriti_retail_os.security_api import _get_smriti_admin_email
 
 no_cache = 1
 
@@ -28,7 +30,8 @@ def get_context(context):
         frappe.throw(_("Please log in to access the SMRITI Security Center."), frappe.AuthenticationError)
 
     # Block Admin (Business Owner) from Security Center page
-    if frappe.session.user in ("Admin", "admin@smriti.io"):
+    _admin_email = _get_smriti_admin_email()
+    if frappe.session.user in ("Admin", _admin_email):
         frappe.throw(_("Access Denied: The Admin (Business Owner) account is blocked from Security Center."), frappe.PermissionError)
 
     roles = frappe.get_roles(frappe.session.user)

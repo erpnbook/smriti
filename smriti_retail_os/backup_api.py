@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/backup_api.py
-# @description: Configurable database and files backup and restore module.
+# @description: Configurable database and files backup, restore, and cloud-sync module.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0
@@ -16,11 +16,33 @@ import shutil
 import smtplib
 import subprocess
 import frappe
+from frappe import _
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 from frappe.utils.backups import new_backup
 from frappe.utils import get_site_path
+
+
+def _validate_backup_file_path(file_name):
+    """Validates a backup file_name for safety.
+    Raises ValidationError if the name contains path traversal sequences,
+    directory separators, or any characters outside the expected safe set.
+    """
+    import re
+    if not file_name:
+        frappe.throw(_("File name is required."), frappe.ValidationError)
+    # Reject any traversal or separator characters
+    if any(c in file_name for c in ("/", "\\", "..")):
+        frappe.throw(_("Invalid file name: path separators are not allowed."), frappe.ValidationError)
+    # Allow only safe characters: alphanumeric, hyphen, underscore, dot, @
+    if not re.match(r"^[\w.\-@]+$", file_name):
+        frappe.throw(_("Invalid file name: contains disallowed characters."), frappe.ValidationError)
+    # Ensure the resolved path stays inside the backups directory
+    backups_dir = os.path.realpath(os.path.join(get_site_path(), "private", "backups"))
+    resolved = os.path.realpath(os.path.join(backups_dir, file_name))
+    if not resolved.startswith(backups_dir + os.sep) and resolved != backups_dir:
+        frappe.throw(_("Invalid file path: access outside backup directory is not permitted."), frappe.PermissionError)
 
 
 DEFAULT_SETTINGS = {
@@ -42,7 +64,7 @@ DEFAULT_SETTINGS = {
 @frappe.whitelist()
 def get_settings():
     if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
-        frappe.throw("Not authorized", frappe.PermissionError)
+        frappe.throw(_("Not authorized"), frappe.PermissionError)
         
     settings_str = frappe.db.get_default("smriti_backup_settings")
     if settings_str:
@@ -60,7 +82,7 @@ def get_settings():
 @frappe.whitelist()
 def save_settings(settings):
     if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
-        frappe.throw("Not authorized", frappe.PermissionError)
+        frappe.throw(_("Not authorized"), frappe.PermissionError)
         
     if isinstance(settings, str):
         settings = json.loads(settings)
@@ -73,7 +95,7 @@ def save_settings(settings):
 @frappe.whitelist()
 def get_backup_status():
     if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
-        frappe.throw("Not authorized", frappe.PermissionError)
+        frappe.throw(_("Not authorized"), frappe.PermissionError)
         
     backups_dir = os.path.join(get_site_path(), "private", "backups")
     if not os.path.exists(backups_dir):
@@ -105,7 +127,7 @@ def get_backup_status():
 @frappe.whitelist()
 def get_backup_history():
     if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
-        frappe.throw("Not authorized", frappe.PermissionError)
+        frappe.throw(_("Not authorized"), frappe.PermissionError)
         
     backups_dir = os.path.join(get_site_path(), "private", "backups")
     if not os.path.exists(backups_dir):
@@ -148,7 +170,7 @@ def get_backup_history():
 @frappe.whitelist()
 def take_backup_now(backup_type="Database Only"):
     if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
-        frappe.throw("Not authorized", frappe.PermissionError)
+        frappe.throw(_("Not authorized"), frappe.PermissionError)
         
     ignore_files = True
     if backup_type == "Database & Files":
@@ -201,36 +223,34 @@ def take_backup_now(backup_type="Database Only"):
 @frappe.whitelist()
 def delete_backup(file_name):
     if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
-        frappe.throw("Not authorized", frappe.PermissionError)
-        
+        frappe.throw(_("Not authorized"), frappe.PermissionError)
+
     # Prevent directory traversal
     if "/" in file_name or "\\" in file_name or ".." in file_name:
-        frappe.throw("Invalid file name")
+        frappe.throw(_("Invalid file name"), frappe.ValidationError)
         
     backups_dir = os.path.join(get_site_path(), "private", "backups")
     file_path = os.path.join(backups_dir, file_name)
-    
+
     if os.path.exists(file_path):
         os.remove(file_path)
         return {"status": "success", "message": f"File {file_name} deleted."}
     else:
-        frappe.throw(f"File {file_name} not found.")
+        frappe.throw(_("File {0} not found.").format(file_name), frappe.DoesNotExistError)
 
 
 @frappe.whitelist()
 def restore_backup(file_name):
     if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
-        frappe.throw("Not authorized", frappe.PermissionError)
-        
-    # Prevent directory traversal
-    if "/" in file_name or "\\" in file_name or ".." in file_name:
-        frappe.throw("Invalid file name")
+        frappe.throw(_("Not authorized"), frappe.PermissionError)
+
+    _validate_backup_file_path(file_name)
         
     backups_dir = os.path.join(get_site_path(), "private", "backups")
     sql_path = os.path.join(backups_dir, file_name)
     
     if not os.path.exists(sql_path):
-        frappe.throw(f"Backup file {file_name} not found.")
+        frappe.throw(_("Backup file {0} not found.").format(file_name), frappe.DoesNotExistError)
         
     # Find matching files and private files
     prefix = file_name.split("-")[0] # E.g. "20260529_025305"

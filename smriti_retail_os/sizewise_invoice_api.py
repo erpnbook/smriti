@@ -29,7 +29,11 @@ def get_company_details(company=None):
             company_name = (frappe.defaults.get_user_default("company")
                             or frappe.get_all("Company", limit=1)[0].name)
         else:
-            company_name = (frappe.db.exists("Company", "TATTLY THREADS") and "TATTLY THREADS") or (frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name)
+            company_name = (
+                frappe.defaults.get_user_default("company")
+                or frappe.db.get_single_value("Global Defaults", "default_company")
+                or frappe.get_all("Company", limit=1, pluck="name")[0]
+            )
     
     company = frappe.get_doc("Company", company_name)
 

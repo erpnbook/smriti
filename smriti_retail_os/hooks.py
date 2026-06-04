@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/hooks.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Frappe application hooks — event bindings, scheduler jobs, and app metadata.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0
@@ -13,7 +13,7 @@ app_name = "smriti_retail_os"
 app_title = "SMRITI Retail OS"
 app_publisher = "SMRITI Retail OS"
 app_description = "Retail Experience Layer"
-app_email = "admin@smriti.io"
+app_email = "support@smriti.io"
 app_license = "mit"
 brand_html = "<b style='color:#e94560;font-family:Inter,sans-serif'>SMRITI Retail OS</b>"
 

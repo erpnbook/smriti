@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/verify_security.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Automated sanity-check runner for the SMRITI Security & Workflow Center APIs.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0
@@ -27,7 +27,8 @@ from smriti_retail_os.security_api import (
     list_user_permissions, add_user_permission, remove_user_permission,
     list_workflows, get_workflow_details, save_workflow, delete_workflow,
     list_workflow_states, save_workflow_state,
-    get_pending_approvals, apply_workflow_action, get_user_metrics
+    get_pending_approvals, apply_workflow_action, get_user_metrics,
+    _get_smriti_admin_email
 )
 
 def run_tests():
@@ -286,7 +287,8 @@ def run_tests():
             errors += 1
 
         # Test 7: Block Admin (Business Owner) from security features but allow metrics
-        frappe.set_user("admin@smriti.io")
+        _admin_email = _get_smriti_admin_email()
+        frappe.set_user(_admin_email)
         try:
             list_users()
             print("  [ERROR] list_users() allowed Admin (Business Owner) to access user list!")
