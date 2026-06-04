@@ -625,6 +625,7 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
 
     # Always link/sync supplier if vendor_code is present and matches a Supplier
     if vendor_code:
+        supplier_name = None
         vendor_code_clean = str(vendor_code).strip()
         vendor_code_clean_upper = vendor_code_clean.upper()
         if vendor_code_clean_upper not in ("", "NA", "N/A", "NONE", "NULL", "NAN", "DV"):
