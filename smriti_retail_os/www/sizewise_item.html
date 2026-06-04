@@ -382,6 +382,67 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .btn-verify-confirm:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 .verify-hint { font-size: 0.75rem; color: var(--text-muted); }
 
+/* ══════════════════════════════════════════════════════════════
+   ITEM LIST TAB — Table & Action Buttons
+   ══════════════════════════════════════════════════════════════ */
+.item-list-toolbar { display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+.item-list-search {
+    flex:1; min-width:200px; padding:10px 14px 10px 38px;
+    background:rgba(0,0,0,0.25); border:1px solid var(--border2); border-radius:var(--radius-sm);
+    color:var(--text); font-size:0.88rem; outline:none; transition:all var(--t); font-family:inherit;
+}
+.item-list-search:focus { border-color:var(--primary); box-shadow:0 0 0 2px rgba(99,102,241,0.15); }
+.item-list-search-wrap { position:relative; flex:1; min-width:200px; }
+.item-list-search-wrap .material-symbols-outlined {
+    position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:18px; color:var(--text-muted); pointer-events:none;
+}
+.btn-refresh-list {
+    padding:9px 16px; background:linear-gradient(135deg, var(--primary), #4f46e5); border:none;
+    border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.82rem; cursor:pointer;
+    display:flex; align-items:center; gap:6px; transition:all 0.2s;
+}
+.btn-refresh-list:hover { transform:translateY(-1px); box-shadow:0 4px 14px rgba(99,102,241,0.3); }
+.item-list-count { font-size:0.78rem; color:var(--text-muted); margin-left:auto; }
+
+.item-list-table { width:100%; border-collapse:separate; border-spacing:0; font-size:0.82rem; }
+.item-list-table thead th {
+    text-align:left; padding:10px 12px; font-size:0.72rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:0.6px; color:var(--primary-lt);
+    border-bottom:2px solid var(--border2); position:sticky; top:0; background:var(--card); z-index:2;
+}
+.item-list-table tbody tr {
+    transition:background 0.15s;
+}
+.item-list-table tbody tr:hover { background:rgba(99,102,241,0.04); }
+.item-list-table tbody td {
+    padding:9px 12px; border-bottom:1px solid var(--border); color:var(--text); vertical-align:middle;
+}
+.item-list-table tbody td.item-code-cell { font-weight:700; color:var(--primary-lt); font-family:'Outfit',sans-serif; }
+.item-list-table tbody td.item-variants-cell {
+    font-size:0.75rem; color:var(--accent);
+}
+.item-list-table .item-actions { display:flex; gap:6px; }
+.btn-edit-item, .btn-delete-item {
+    background:none; border:1px solid transparent; cursor:pointer; padding:5px 10px;
+    border-radius:6px; font-size:0.82rem; transition:all 0.15s; display:inline-flex; align-items:center; gap:4px;
+    color:var(--text-muted);
+}
+.btn-edit-item:hover { background:rgba(99,102,241,0.12); border-color:rgba(99,102,241,0.2); color:var(--primary-lt); }
+.btn-delete-item:hover { background:rgba(239,68,68,0.12); border-color:rgba(239,68,68,0.2); color:var(--danger); }
+
+.item-list-empty {
+    text-align:center; padding:48px 20px; color:var(--text-muted); font-size:0.9rem;
+}
+.item-list-empty .material-symbols-outlined { font-size:48px; display:block; margin-bottom:12px; opacity:0.3; }
+.item-list-scroll { max-height:calc(100vh - 320px); overflow-y:auto; border-radius:var(--radius-sm); }
+
+.item-list-loading { text-align:center; padding:40px; color:var(--text-muted); }
+.item-list-loading .spinner {
+    width:32px; height:32px; border:3px solid var(--border2); border-top-color:var(--primary);
+    border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
 </style>
 
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
@@ -435,6 +496,10 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                     <span class="material-symbols-outlined tab-icon">content_paste_go</span>
                     Paste Size Matrix (Excel)
                     <span class="tab-badge">NEW</span>
+                </div>
+                <div class="sim-tab" data-tab="list" onclick="switchTab('list'); loadItemList();">
+                    <span class="material-symbols-outlined tab-icon">list_alt</span>
+                    Item List
                 </div>
             </div>
 
@@ -618,6 +683,47 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                     <div style="margin-left:auto; font-size:0.78rem; color:var(--text-muted);" id="paste-summary-text"></div>
                 </div>
             </div>
+
+            <!-- ═══════════════════════════════════════════════════════
+                 TAB 3: ITEM LIST (Edit / Delete)
+                 ═══════════════════════════════════════════════════════ -->
+            <div class="sim-panel" id="panel-list">
+                <div class="section-card">
+                    <div class="section-title"><span class="material-symbols-outlined">inventory_2</span> Item Master — All Styles</div>
+                    <div class="item-list-toolbar">
+                        <div class="item-list-search-wrap">
+                            <span class="material-symbols-outlined">search</span>
+                            <input type="text" class="item-list-search" id="item-list-search" placeholder="Search by article code, name, brand, color..." oninput="filterItemList()">
+                        </div>
+                        <button class="btn-refresh-list" onclick="loadItemList()">
+                            <span class="material-symbols-outlined" style="font-size:16px;">refresh</span> Refresh
+                        </button>
+                        <div class="item-list-count" id="item-list-count"></div>
+                    </div>
+                    <div class="item-list-scroll">
+                        <table class="item-list-table">
+                            <thead>
+                                <tr>
+                                    <th>Article / Style Code</th>
+                                    <th>Description</th>
+                                    <th>Brand</th>
+                                    <th>Color</th>
+                                    <th>Category</th>
+                                    <th>MRP (₹)</th>
+                                    <th>Variants</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="item-list-body">
+                                <tr><td colspan="8" class="item-list-empty">
+                                    <span class="material-symbols-outlined">inventory_2</span>
+                                    Click "Refresh" or switch to this tab to load items.
+                                </td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
             <!-- END panels -->
 
         </div>
@@ -749,6 +855,15 @@ function init() {
 
     renderPivotGrid();
     loadDynamicSizeGroups();
+
+    // Check for query param redirect (from Item List edit)
+    const urlParams = new URLSearchParams(window.location.search);
+    const editArticle = urlParams.get('article_no') || urlParams.get('style');
+    if (editArticle) {
+        document.getElementById('style-code').value = editArticle;
+        switchTab('manual');
+        lookupStyle(editArticle);
+    }
 }
 
 function renderPivotGrid() {
@@ -1696,6 +1811,169 @@ async function executePivotImport() {
         toast('Import failed: ' + e.message, 'error');
         btn.disabled = false;
         btn.innerHTML = '<span class="material-symbols-outlined">cloud_upload</span> Retry Import';
+    }
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  ITEM LIST TAB — Load / Search / Edit / Delete
+// ═══════════════════════════════════════════════════════════════════════════
+
+let allItemListData = [];
+
+async function loadItemList() {
+    const tbody = document.getElementById('item-list-body');
+    tbody.innerHTML = `<tr><td colspan="8" class="item-list-loading">
+        <div class="spinner"></div>Loading items from database...
+    </td></tr>`;
+
+    try {
+        // Fetch all template items (has_variants=1 means it's a style template)
+        const items = await api('frappe.client.get_list', {
+            doctype: 'Item',
+            filters: { has_variants: 1 },
+            fields: ['name', 'item_name', 'brand', 'item_group', 'description'],
+            limit_page_length: 500,
+            order_by: 'modified desc'
+        });
+
+        // For each template, get variant count and details
+        allItemListData = [];
+        for (const item of (items || [])) {
+            // Get variant count
+            const variants = await api('frappe.client.get_count', {
+                doctype: 'Item',
+                filters: { variant_of: item.name }
+            });
+
+            // Extract color from item name or attributes
+            let color = '';
+            let mrp = '';
+            try {
+                const details = await api('smriti_retail_os.item_master_api.get_style_details', {
+                    article_no: item.name
+                });
+                color = details.color || '';
+                mrp = details.mrp || '';
+            } catch(e) { /* ignore */ }
+
+            allItemListData.push({
+                name: item.name,
+                item_name: item.item_name || item.name,
+                brand: item.brand || '',
+                color: color,
+                item_group: item.item_group || '',
+                mrp: mrp,
+                variant_count: variants || 0
+            });
+        }
+
+        renderItemListTable(allItemListData);
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="8" class="item-list-empty">
+            <span class="material-symbols-outlined">error</span>
+            Failed to load items: ${e.message}
+        </td></tr>`;
+    }
+}
+
+function renderItemListTable(data) {
+    const tbody = document.getElementById('item-list-body');
+    const countEl = document.getElementById('item-list-count');
+
+    if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="item-list-empty">
+            <span class="material-symbols-outlined">inventory_2</span>
+            No items found.
+        </td></tr>`;
+        if (countEl) countEl.textContent = '0 items';
+        return;
+    }
+
+    if (countEl) countEl.textContent = `${data.length} style${data.length !== 1 ? 's' : ''} found`;
+
+    tbody.innerHTML = data.map(item => `
+        <tr>
+            <td class="item-code-cell">${escHtml(item.name)}</td>
+            <td>${escHtml(item.item_name)}</td>
+            <td>${escHtml(item.brand)}</td>
+            <td>${escHtml(item.color)}</td>
+            <td>${escHtml(item.item_group)}</td>
+            <td>${item.mrp ? '₹' + Number(item.mrp).toLocaleString('en-IN') : '—'}</td>
+            <td class="item-variants-cell">${item.variant_count} variant${item.variant_count !== 1 ? 's' : ''}</td>
+            <td class="item-actions">
+                <button class="btn-edit-item" onclick="editItem('${escAttr(item.name)}')" title="Edit this style">
+                    <span class="material-symbols-outlined" style="font-size:16px;">edit</span> Edit
+                </button>
+                <button class="btn-delete-item" onclick="deleteItem('${escAttr(item.name)}', '${escAttr(item.item_name)}', ${item.variant_count})" title="Delete this style + all variants">
+                    <span class="material-symbols-outlined" style="font-size:16px;">delete</span> Delete
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(str) {
+    if (!str) return '';
+    return String(str).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\&quot;');
+}
+
+function filterItemList() {
+    const q = (document.getElementById('item-list-search').value || '').toLowerCase().trim();
+    if (!q) {
+        renderItemListTable(allItemListData);
+        return;
+    }
+    const filtered = allItemListData.filter(item =>
+        (item.name || '').toLowerCase().includes(q) ||
+        (item.item_name || '').toLowerCase().includes(q) ||
+        (item.brand || '').toLowerCase().includes(q) ||
+        (item.color || '').toLowerCase().includes(q) ||
+        (item.item_group || '').toLowerCase().includes(q)
+    );
+    renderItemListTable(filtered);
+}
+
+function editItem(itemCode) {
+    // Switch to Style Creator tab and load the item
+    document.getElementById('style-code').value = itemCode;
+    switchTab('manual');
+    lookupStyle(itemCode);
+    // Scroll to top
+    document.querySelector('.content-area')?.scrollTo({ top: 0, behavior: 'smooth' });
+    toast(`📝 Editing style "${itemCode}" — modify fields and click Save.`, 'info');
+}
+
+async function deleteItem(itemCode, itemName, variantCount) {
+    const confirmed = confirm(
+        `⚠️ Delete "${itemName}" (${itemCode})?\n\n` +
+        `This action will:\n` +
+        `• Delete the template item\n` +
+        `• Delete ${variantCount} size variant(s)\n` +
+        `• Delete all associated barcodes\n` +
+        `• Delete all price lists\n\n` +
+        `This CANNOT be undone!`
+    );
+    if (!confirmed) return;
+
+    const reconfirm = confirm(`Last chance! Permanently delete "${itemCode}" and all its variants?`);
+    if (!reconfirm) return;
+
+    try {
+        toast(`🗑️ Deleting ${itemCode} and ${variantCount} variant(s)...`, 'info');
+        const result = await api(
+            'smriti_retail_os.item_master_api.delete_style_and_variants',
+            { style_code: itemCode }
+        );
+        toast(`✅ ${result.message || itemCode + ' deleted successfully'}`, 'success');
+        // Refresh list
+        loadItemList();
+    } catch(e) {
+        toast(`❌ Delete failed: ${e.message}`, 'error');
     }
 }
 

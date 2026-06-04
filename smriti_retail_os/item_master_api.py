@@ -990,6 +990,45 @@ def delete_size_variant(variant_code):
 
 
 @frappe.whitelist()
+def delete_style_and_variants(style_code):
+    """Delete style template + all variants + barcodes + prices."""
+    check_store_manager_role()
+
+    if not frappe.db.exists("Item", style_code):
+        frappe.throw(_("Item '{0}' not found").format(style_code))
+
+    # Find all variants of this style
+    variants = frappe.get_all("Item",
+        filters={"variant_of": style_code},
+        pluck="name"
+    )
+
+    deleted_variants = 0
+    for variant in variants:
+        # Delete prices for this variant
+        frappe.db.delete("Item Price", {"item_code": variant})
+        # Delete barcodes for this variant
+        frappe.db.delete("Item Barcode", {"parent": variant})
+        # Delete the variant item itself
+        frappe.delete_doc("Item", variant, ignore_permissions=True, force=True)
+        deleted_variants += 1
+
+    # Delete prices for the template itself
+    frappe.db.delete("Item Price", {"item_code": style_code})
+    # Delete barcodes for the template itself
+    frappe.db.delete("Item Barcode", {"parent": style_code})
+    # Delete the template item
+    frappe.delete_doc("Item", style_code, ignore_permissions=True, force=True)
+    frappe.db.commit()
+
+    return {
+        "success": True,
+        "deleted_variants": deleted_variants,
+        "message": _("Style '{0}' and {1} variants deleted successfully").format(style_code, deleted_variants)
+    }
+
+
+@frappe.whitelist()
 def validate_pivot_values(styles_json):
     """
     Pre-import verification: checks all unique category, color, and sub-category
