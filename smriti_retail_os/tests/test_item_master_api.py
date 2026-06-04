@@ -636,3 +636,80 @@ class TestBarcodeHardening(unittest.TestCase):
         res_create_ok = create_style_with_variants(frappe.as_json(base_details), frappe.as_json(sizes_config))
         self.assertTrue(res_create_ok["success"])
 
+    def test_supplier_vendor_code_mapping(self):
+        """
+        Verify Supplier Registry Vendor Code mapping and Item Master linkage.
+        """
+        from smriti_retail_os.master_api import save_supplier_detail, get_supplier_detail
+        
+        # Cleanup potential existing test suppliers
+        frappe.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-MAP-1"})
+        frappe.db.delete("Supplier", {"supplier_name": "Test Null Vendor Supplier 1"})
+        frappe.db.delete("Supplier", {"supplier_name": "Test Null Vendor Supplier 2"})
+        frappe.db.delete("Item Barcode", {"parent": "TST-MAP-ITEM-1"})
+        frappe.delete_doc("Item", "TST-MAP-ITEM-1", ignore_missing=True, force=True)
+        frappe.db.commit()
+
+        # 1. Test saving supplier details with null/None vendor code doesn't collide
+        s1 = save_supplier_detail(
+            supplier_name="Test Null Vendor Supplier 1",
+            supplier_type="Company",
+            supplier_group="Local",
+            custom_vendor_code=""
+        )
+        s2 = save_supplier_detail(
+            supplier_name="Test Null Vendor Supplier 2",
+            supplier_type="Company",
+            supplier_group="Local",
+            custom_vendor_code=None
+        )
+        self.assertIsNotNone(s1.get("name"))
+        self.assertIsNotNone(s2.get("name"))
+
+        # 2. Test saving and retrieving custom_vendor_code via APIs
+        s3 = save_supplier_detail(
+            supplier_name="Test Map Supplier 1",
+            supplier_type="Company",
+            supplier_group="Local",
+            custom_vendor_code="VND-TEST-MAP-1"
+        )
+        details = get_supplier_detail(s3["name"])
+        self.assertEqual(details.get("custom_vendor_code"), "VND-TEST-MAP-1")
+
+        # 3. Test that importing item template links the supplier
+        base_details = {
+            "article_no": "TST-MAP-ITEM-1",
+            "description": "Test Map Link Item",
+            "color": "BLK",
+            "brand": "Nike",
+            "item_group": "Products",
+            "cost_price": 1000,
+            "mrp": 2000,
+            "gst_percentage": "18",
+            "hsn_code": "640311",
+            "gender": "UNISEX",
+            "purchase_class": "FW",
+            "vendor_code": "VND-TEST-MAP-1",
+            "product_tax_group": ""
+        }
+        sizes_config = [
+            { "size": "8", "active": True, "barcode_mode": "auto", "manual_barcode": "" }
+        ]
+        
+        # Creation path
+        res_create = create_style_with_variants(frappe.as_json(base_details), frappe.as_json(sizes_config))
+        self.assertTrue(res_create["success"])
+        
+        # Verify supplier linked
+        item_doc = frappe.get_doc("Item", "TST-MAP-ITEM-1")
+        self.assertTrue(any(d.supplier == s3["name"] and d.supplier_part_no == "VND-TEST-MAP-1" for d in item_doc.supplier_items))
+
+        # Cleanup
+        frappe.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-MAP-1"})
+        frappe.db.delete("Supplier", {"supplier_name": "Test Null Vendor Supplier 1"})
+        frappe.db.delete("Supplier", {"supplier_name": "Test Null Vendor Supplier 2"})
+        frappe.db.delete("Item Barcode", {"parent": "TST-MAP-ITEM-1"})
+        frappe.delete_doc("Item", "TST-MAP-ITEM-1", ignore_missing=True, force=True)
+        frappe.db.commit()
+
+

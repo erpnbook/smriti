@@ -286,6 +286,7 @@ def get_supplier_detail(name):
         "custom_shipping_address_text": doc.get("custom_shipping_address_text") or "",
         "contact_person": contact_person,
         "status": status,
+        "custom_vendor_code": doc.get("custom_vendor_code") or "",
         
         # Advanced fields
         "default_currency": doc.default_currency,
@@ -339,6 +340,7 @@ def save_supplier_detail(**kwargs):
     doc.custom_credit_days = cint(kwargs.get("custom_credit_days") or 0)
     doc.custom_address_text = kwargs.get("custom_address_text")
     doc.custom_shipping_address_text = kwargs.get("custom_shipping_address_text")
+    doc.custom_vendor_code = kwargs.get("custom_vendor_code") or None
 
     # Status mapping
     status = kwargs.get("status") or "Active"

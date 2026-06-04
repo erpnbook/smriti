@@ -1,4 +1,4 @@
-﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/suppliers.html
   @description: SMRITI Supplier Registry — Standalone UI (Zero Frappe chrome)
@@ -243,6 +243,10 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 <div class="form-group">
                     <label class="form-label">PAN (Tax ID)</label>
                     <input type="text" class="form-input" id="supp-pan" placeholder="e.g. ABCDE1234F">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Vendor Code</label>
+                    <input type="text" class="form-input" id="supp-vendor-code" placeholder="e.g. VND-ACME">
                 </div>
             </div>
 
@@ -517,7 +521,7 @@ async function loadSuppliers() {
     try {
         const data = await api('frappe.client.get_list', {
             doctype: 'Supplier',
-            fields: ['name', 'supplier_name', 'supplier_group', 'mobile_no', 'custom_credit_days'],
+            fields: ['name', 'supplier_name', 'supplier_group', 'mobile_no', 'custom_credit_days', 'custom_vendor_code'],
             order_by: 'creation desc',
             limit_page_length: 200
         });
@@ -713,6 +717,7 @@ function renderTable(list) {
         <tr>
             <td>
                 <div style="font-weight:600; color:var(--text);">${s.supplier_name}</div>
+                ${s.custom_vendor_code ? `<div style="font-size:0.75rem; color:var(--accent); font-weight:500; margin-top:2px;">Vendor Code: ${s.custom_vendor_code}</div>` : ''}
             </td>
             <td style="font-weight:600; color:var(--primary-lt);">${s.mobile_no || 'N/A'}</td>
             <td style="color:var(--text-muted);">${s.supplier_group}</td>
@@ -741,6 +746,7 @@ function applyFilters() {
         filtered = filtered.filter(s => 
             s.supplier_name.toLowerCase().includes(q) ||
             s.name.toLowerCase().includes(q) ||
+            (s.custom_vendor_code || '').toLowerCase().includes(q) ||
             (s.mobile_no || '').includes(q)
         );
     }
@@ -796,6 +802,7 @@ function openAddSupplierModal() {
     document.getElementById('supp-gstin').value = "";
     document.getElementById('supp-gst-category').value = "Registered Regular";
     document.getElementById('supp-pan').value = "";
+    document.getElementById('supp-vendor-code').value = "";
     
     // Clear Address
     document.getElementById('bill-line1').value = "";
@@ -869,6 +876,7 @@ async function openEditSupplierModal(name) {
         document.getElementById('supp-gstin').value = s.gstin || "";
         document.getElementById('supp-gst-category').value = s.gst_category || "Registered Regular";
         document.getElementById('supp-pan').value = s.pan || "";
+        document.getElementById('supp-vendor-code').value = s.custom_vendor_code || "";
         
         // Parse Billing Address Text
         const billLines = (s.custom_address_text || "").split('\n');
@@ -1017,6 +1025,7 @@ async function saveSupplierDetail() {
             custom_credit_days: document.getElementById('supp-credit-days').value,
             custom_address_text: billText,
             custom_shipping_address_text: shipText,
+            custom_vendor_code: document.getElementById('supp-vendor-code').value.trim() || null,
             
             // Advanced fields
             default_currency: document.getElementById('supp-currency').value,

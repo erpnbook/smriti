@@ -550,76 +550,75 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
                              outsole, heel_type, purchase_class, merch_cat, sub_cat,
                              tax_group, vendor_code, company):
     if frappe.db.exists("Item", style_code):
-        return frappe.get_doc("Item", style_code)
+        item = frappe.get_doc("Item", style_code)
+    else:
+        # Auto-create brand if missing
+        if brand and not frappe.db.exists("Brand", brand):
+            b = frappe.new_doc("Brand")
+            b.brand = brand
+            b.insert(ignore_permissions=True)
 
-    # Auto-create brand if missing
-    if brand and not frappe.db.exists("Brand", brand):
-        b = frappe.new_doc("Brand")
-        b.brand = brand
-        b.insert(ignore_permissions=True)
-
-    # Ensure Item Group exists
-    print(f"[DEBUG] _get_or_create_template: item_group before={item_group}, exists={bool(frappe.db.exists('Item Group', item_group or ''))}")
-    if not item_group or not frappe.db.exists("Item Group", item_group):
-        item_group = "Products"
-    if not frappe.db.exists("Item Group", item_group):
-        existing_group = frappe.db.get_all("Item Group", pluck="name", limit=1)
-        if existing_group:
-            item_group = existing_group[0]
-            print(f"[DEBUG] Item Group fallback to={item_group}")
-        else:
-            ig = frappe.new_doc("Item Group")
-            ig.item_group_name = "Products"
-            ig.is_group = 0
-            ig.insert(ignore_permissions=True)
+        # Ensure Item Group exists
+        print(f"[DEBUG] _get_or_create_template: item_group before={item_group}, exists={bool(frappe.db.exists('Item Group', item_group or ''))}")
+        if not item_group or not frappe.db.exists("Item Group", item_group):
             item_group = "Products"
-            print(f"[DEBUG] Item Group 'Products' created. exists after={bool(frappe.db.exists('Item Group', 'Products'))}")
+        if not frappe.db.exists("Item Group", item_group):
+            existing_group = frappe.db.get_all("Item Group", pluck="name", limit=1)
+            if existing_group:
+                item_group = existing_group[0]
+                print(f"[DEBUG] Item Group fallback to={item_group}")
+            else:
+                ig = frappe.new_doc("Item Group")
+                ig.item_group_name = "Products"
+                ig.is_group = 0
+                ig.insert(ignore_permissions=True)
+                item_group = "Products"
+                print(f"[DEBUG] Item Group 'Products' created. exists after={bool(frappe.db.exists('Item Group', 'Products'))}")
 
 
-    item = frappe.new_doc("Item")
-    item.item_code              = style_code
-    item.item_name              = item_name
-    item.item_group             = item_group
-    item.stock_uom              = "Nos"
-    item.is_stock_item          = 1
-    item.has_variants           = 1
+        item = frappe.new_doc("Item")
+        item.item_code              = style_code
+        item.item_name              = item_name
+        item.item_group             = item_group
+        item.stock_uom              = "Nos"
+        item.is_stock_item          = 1
+        item.has_variants           = 1
 
-    # Core fields — safe even on fresh installs
-    _safe_set(item, "custom_is_retail_item", 1)
-    _safe_set(item, "custom_mrp", mrp)
-    _safe_set(item, "valuation_rate", cost)
-    _safe_set(item, "custom_gst_percentage", gst_pct)
+        # Core fields — safe even on fresh installs
+        _safe_set(item, "custom_is_retail_item", 1)
+        _safe_set(item, "custom_mrp", mrp)
+        _safe_set(item, "valuation_rate", cost)
+        _safe_set(item, "custom_gst_percentage", gst_pct)
 
-    # Custom SMRITI classification fields — silently skip if field missing
-    _safe_set(item, "custom_gender",               _ensure_master_value("SMRITI Gender", gender))
-    _safe_set(item, "custom_upper_material",        _ensure_master_value("SMRITI Upper Material", upper_material))
-    _safe_set(item, "custom_outsole",               _ensure_master_value("SMRITI Outsole", outsole))
-    _safe_set(item, "custom_heel_type",             _ensure_master_value("SMRITI Heel Type", heel_type))
-    _safe_set(item, "custom_purchase_class",        _ensure_master_value("SMRITI Purchase Class", purchase_class))
-    _safe_set(item, "custom_merchandise_category",  _ensure_master_value("SMRITI Merchandise Category", merch_cat))
-    _safe_set(item, "custom_sub_category",          _ensure_master_value("SMRITI Sub Category", sub_cat))
+        # Custom SMRITI classification fields — silently skip if field missing
+        _safe_set(item, "custom_gender",               _ensure_master_value("SMRITI Gender", gender))
+        _safe_set(item, "custom_upper_material",        _ensure_master_value("SMRITI Upper Material", upper_material))
+        _safe_set(item, "custom_outsole",               _ensure_master_value("SMRITI Outsole", outsole))
+        _safe_set(item, "custom_heel_type",             _ensure_master_value("SMRITI Heel Type", heel_type))
+        _safe_set(item, "custom_purchase_class",        _ensure_master_value("SMRITI Purchase Class", purchase_class))
+        _safe_set(item, "custom_merchandise_category",  _ensure_master_value("SMRITI Merchandise Category", merch_cat))
+        _safe_set(item, "custom_sub_category",          _ensure_master_value("SMRITI Sub Category", sub_cat))
 
-    if brand:
-        item.brand = brand
-    resolved_hsn = _resolve_hsn_code(hsn_code)
-    if resolved_hsn:
-        _ensure_hsn_code(resolved_hsn)
-        item.gst_hsn_code = resolved_hsn
-        _safe_set(item, "gn_hsn_code", resolved_hsn)
-    if image_link:
-        item.image = image_link
+        if brand:
+            item.brand = brand
+        resolved_hsn = _resolve_hsn_code(hsn_code)
+        if resolved_hsn:
+            _ensure_hsn_code(resolved_hsn)
+            item.gst_hsn_code = resolved_hsn
+            _safe_set(item, "gn_hsn_code", resolved_hsn)
+        if image_link:
+            item.image = image_link
 
-    # Variant attribute definitions on template
-    _ensure_item_attribute("Color")
-    _ensure_item_attribute("Size")
-    item.append("attributes", {"attribute": "Color"})
-    item.append("attributes", {"attribute": "Size"})
+        # Variant attribute definitions on template
+        _ensure_item_attribute("Color")
+        _ensure_item_attribute("Size")
+        item.append("attributes", {"attribute": "Color"})
+        item.append("attributes", {"attribute": "Size"})
 
-    _attach_tax_template(item, tax_group, gst_pct, company)
-    item.insert(ignore_permissions=True)
+        _attach_tax_template(item, tax_group, gst_pct, company)
+        item.insert(ignore_permissions=True)
 
-    # Link supplier via custom field (supplier_items child needs POS profile / default config)
-    supplier_name = None
+    # Always link/sync supplier if vendor_code is present and matches a Supplier
     if vendor_code:
         supplier_name = frappe.db.get_value(
             "Supplier",
@@ -627,14 +626,14 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
             "name"
         )
         if supplier_name:
-            item_doc = frappe.get_doc("Item", style_code)
-            item_doc.append("supplier_items", {
-                "supplier": supplier_name,
-                "supplier_part_no": vendor_code
-            })
-            item_doc.save(ignore_permissions=True)
+            if not any(d.supplier == supplier_name for d in item.supplier_items):
+                item.append("supplier_items", {
+                    "supplier": supplier_name,
+                    "supplier_part_no": vendor_code
+                })
+                item.save(ignore_permissions=True)
 
-    return frappe.get_doc("Item", style_code)
+    return item
 
 
 def _ensure_item_attribute(attribute_name):
