@@ -187,6 +187,20 @@ class TestSmritiRetailPurchaseAPI(unittest.TestCase):
         self.assertTrue(res["name"])
         self.assertTrue(frappe.db.exists("Purchase Order", res["name"]))
 
+    def test_create_purchase_order_with_custom_warehouse(self):
+        items = [{
+            "item_code": self.item_code,
+            "qty": 5,
+            "rate": 120.0,
+            "stock_uom": self.uom
+        }]
+        
+        res = create_purchase_order(self.supplier, items, warehouse=self.warehouse)
+        self.assertIsNotNone(res)
+        self.assertTrue(res["name"])
+        po_doc = frappe.get_doc("Purchase Order", res["name"])
+        self.assertEqual(po_doc.items[0].warehouse, self.warehouse)
+
     def test_get_open_purchase_orders(self):
         pos = get_open_purchase_orders(self.supplier)
         self.assertIsInstance(pos, list)
@@ -222,6 +236,20 @@ class TestSmritiRetailPurchaseAPI(unittest.TestCase):
         self.assertIsNotNone(res)
         self.assertTrue(res["name"])
         self.assertTrue(frappe.db.exists("Purchase Receipt", res["name"]))
+
+    def test_create_purchase_receipt_standalone_with_custom_warehouse(self):
+        items = [{
+            "item_code": self.item_code,
+            "qty": 10,
+            "rate": 150.0,
+            "stock_uom": self.uom
+        }]
+        
+        res = create_purchase_receipt(self.supplier, items, warehouse=self.warehouse)
+        self.assertIsNotNone(res)
+        self.assertTrue(res["name"])
+        pr_doc = frappe.get_doc("Purchase Receipt", res["name"])
+        self.assertEqual(pr_doc.items[0].warehouse, self.warehouse)
 
     def test_create_purchase_receipt_against_po(self):
         # 1. Create and submit PO

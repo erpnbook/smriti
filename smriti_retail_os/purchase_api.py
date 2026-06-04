@@ -128,7 +128,7 @@ def get_po_details(po_name):
     }
 
 @frappe.whitelist()
-def create_purchase_order(supplier, items, schedule_date=None, remarks=None, image_base64=None, image_filename=None):
+def create_purchase_order(supplier, items, schedule_date=None, remarks=None, image_base64=None, image_filename=None, warehouse=None):
     """
     Creates and submits a standard Purchase Order.
     Includes auto-creation of footwear variant items if they do not exist.
@@ -140,7 +140,7 @@ def create_purchase_order(supplier, items, schedule_date=None, remarks=None, ima
 
     items_list = frappe.parse_json(items)
     company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company") or (frappe.get_all("Company", limit=1)[0].name if frappe.get_all("Company", limit=1) else None)
-    warehouse = _get_default_warehouse(company)
+    warehouse = warehouse or _get_default_warehouse(company)
 
     # Save uploaded image file if present
     file_url = None
@@ -258,7 +258,7 @@ def create_purchase_order(supplier, items, schedule_date=None, remarks=None, ima
     }
 
 @frappe.whitelist()
-def create_purchase_receipt(supplier, items, po_name=None):
+def create_purchase_receipt(supplier, items, po_name=None, warehouse=None):
     """
     Creates and submits a standard Purchase Receipt (GRN).
     Can be created against an existing Purchase Order or standalone (No PO).
@@ -270,7 +270,7 @@ def create_purchase_receipt(supplier, items, po_name=None):
 
     items_list = frappe.parse_json(items)
     company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company") or (frappe.get_all("Company", limit=1)[0].name if frappe.get_all("Company", limit=1) else None)
-    warehouse = _get_default_warehouse(company)
+    warehouse = warehouse or _get_default_warehouse(company)
 
     pr = frappe.new_doc("Purchase Receipt")
     pr.supplier = supplier

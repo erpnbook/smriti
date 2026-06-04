@@ -134,7 +134,7 @@ def scan_item_for_inventory(barcode, warehouse=None):
 
 
 @frappe.whitelist()
-def create_grn(supplier, invoice_no, items):
+def create_grn(supplier, invoice_no, items, warehouse=None):
     """
     Creates and submits a standard Purchase Receipt (GRN) in ERPNext.
     Cashiers are blocked from submitting.
@@ -146,7 +146,7 @@ def create_grn(supplier, invoice_no, items):
 
     items_list = frappe.parse_json(items)
     company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company") or (frappe.get_all("Company", limit=1)[0].name if frappe.get_all("Company", limit=1) else None)
-    warehouse = _get_default_warehouse(company)
+    warehouse = warehouse or _get_default_warehouse(company)
 
     pr = frappe.new_doc("Purchase Receipt")
     pr.supplier = supplier
