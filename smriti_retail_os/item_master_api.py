@@ -111,8 +111,10 @@ def validate_import_rows(rows_json):
 
         # ── Vendor / Supplier hard check ───────────────────────────────────
         vendor = _clean_str(row.get("VENDOR CODE", ""))
-        if vendor and str(vendor).strip() not in ("", "nan", "None", "N/A"):
+        if vendor:
             vendor_clean = str(vendor).strip()
+            vendor_clean_upper = vendor_clean.upper()
+            if vendor_clean_upper not in ("", "NA", "N/A", "NONE", "NULL", "NAN"):
             supplier_exists = frappe.db.exists(
                 "Supplier",
                 {"custom_vendor_code": vendor_clean}
@@ -406,8 +408,11 @@ def import_item_master(rows_json):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _validate_vendor_code(vendor_code):
-    if not vendor_code or str(vendor_code).strip() in ("", "nan", "None", "N/A"):
-        return  # vendor code empty hai — optional, skip
+    if not vendor_code:
+        return
+    vendor_code_clean = str(vendor_code).strip().upper()
+    if vendor_code_clean in ("", "NA", "N/A", "NONE", "NULL", "NAN"):
+        return  # skip validation for empty/placeholder values
     
     vendor_code = str(vendor_code).strip()
     
@@ -620,11 +625,14 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
 
     # Always link/sync supplier if vendor_code is present and matches a Supplier
     if vendor_code:
-        supplier_name = frappe.db.get_value(
-            "Supplier",
-            {"custom_vendor_code": str(vendor_code).strip()},
-            "name"
-        )
+        vendor_code_clean = str(vendor_code).strip()
+        vendor_code_clean_upper = vendor_code_clean.upper()
+        if vendor_code_clean_upper not in ("", "NA", "N/A", "NONE", "NULL", "NAN"):
+            supplier_name = frappe.db.get_value(
+                "Supplier",
+                {"custom_vendor_code": vendor_code_clean},
+                "name"
+            )
         if supplier_name:
             if not any(d.supplier == supplier_name for d in item.supplier_items):
                 item.append("supplier_items", {
