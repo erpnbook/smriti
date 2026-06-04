@@ -97,6 +97,10 @@ def scan_item_for_inventory(barcode, warehouse=None):
     if not barcode:
         return None
 
+    barcode = str(barcode).strip()
+    if barcode.endswith(".0") and barcode[:-2].isdigit():
+        barcode = barcode[:-2]
+
     # Search in barcodes child table
     item_code = frappe.db.get_value("Item Barcode", {"barcode": barcode}, "parent")
     

@@ -21,6 +21,10 @@ def add_item_by_barcode(barcode, price_list="Standard Selling"):
     if not barcode:
         return None
 
+    barcode = str(barcode).strip()
+    if barcode.endswith(".0") and barcode[:-2].isdigit():
+        barcode = barcode[:-2]
+
     # Search in barcodes child table
     item_code = frappe.db.get_value("Item Barcode", {"barcode": barcode}, "parent")
     

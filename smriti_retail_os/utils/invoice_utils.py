@@ -78,6 +78,8 @@ def resolve_barcode(barcode):
         return {"error": "Empty barcode", "barcode": ""}
     
     barcode = str(barcode).strip()
+    if barcode.endswith(".0") and barcode[:-2].isdigit():
+        barcode = barcode[:-2]
     
     item_code = frappe.db.get_value(
         "Item Barcode", {"barcode": barcode}, "parent"
