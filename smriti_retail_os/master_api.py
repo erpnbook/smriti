@@ -560,10 +560,8 @@ def save_destinationwise_taxes(mappings):
 @frappe.whitelist()
 def get_item_tax_templates():
     """Returns all Item Tax Templates with their tax account details."""
-    company = (
-        frappe.defaults.get_user_default("company")
-        or frappe.db.get_value("Company", {}, "name")
-    )
+    from smriti_retail_os.company_api import get_active_company
+    company = get_active_company()
     templates = frappe.get_all(
         "Item Tax Template",
         filters={"company": company} if company else {},
@@ -590,10 +588,8 @@ def create_item_tax_template(title, gst_rate, taxes):
     _check_config_permission()
     gst_rate = flt(gst_rate)
     taxes_data = frappe.parse_json(taxes) if isinstance(taxes, str) else taxes
-    company = (
-        frappe.defaults.get_user_default("company")
-        or frappe.db.get_value("Company", {}, "name")
-    )
+    from smriti_retail_os.company_api import get_active_company
+    company = get_active_company()
 
     # Check if already exists
     full_title = f"{title} - {company}"
@@ -623,9 +619,10 @@ def create_item_tax_template(title, gst_rate, taxes):
 @frappe.whitelist()
 def get_brands():
     """Returns all Brands registered in ERPNext."""
+    # Note: ERPNext v16 Brand DocType uses 'description' not 'brand_description'.
     brands = frappe.get_all(
         "Brand",
-        fields=["name", "brand", "brand_description", "image"],
+        fields=["name", "brand", "description", "image"],
         order_by="brand asc"
     )
     return brands
@@ -645,7 +642,11 @@ def create_brand(brand_name, brand_description=None):
     doc = frappe.new_doc("Brand")
     doc.brand = brand_name
     if brand_description:
-        doc.brand_description = brand_description
+        # ERPNext v16 uses 'description'; older versions used 'brand_description'.
+        try:
+            doc.description = brand_description
+        except Exception:
+            pass
     doc.insert(ignore_permissions=True)
     frappe.db.commit()
     return {"name": doc.name, "brand": doc.brand}
@@ -669,11 +670,9 @@ def delete_brand(brand_name):
 
 @frappe.whitelist()
 def get_tax_accounts():
-    """Returns CGST, SGST, IGST tax accounts for the default company."""
-    company = (
-        frappe.defaults.get_user_default("company")
-        or frappe.db.get_value("Company", {}, "name")
-    )
+    """Returns CGST, SGST, IGST tax accounts for the active company."""
+    from smriti_retail_os.company_api import get_active_company
+    company = get_active_company()
     accounts = frappe.get_all(
         "Account",
         filters={"company": company, "account_type": "Tax", "is_group": 0},

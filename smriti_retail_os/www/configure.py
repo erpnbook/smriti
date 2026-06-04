@@ -9,7 +9,11 @@
 
 import frappe
 from frappe import _
-from smriti_retail_os.company_api import get_active_company, get_company_settings
+from smriti_retail_os.company_api import (
+    get_active_company,
+    get_company_settings,
+    _check_manager_permission,
+)
 
 no_cache = 1
 
@@ -17,10 +21,7 @@ def get_context(context):
     if frappe.session.user == "Guest":
         frappe.throw(_("Please log in to access the configuration portal."), frappe.AuthenticationError)
 
-    roles = frappe.get_roles(frappe.session.user)
-    allowed = {"SMRITI Store Manager", "System Manager", "Administrator"}
-    if not (allowed & set(roles)) and frappe.session.user != "Administrator":
-        frappe.throw(_("Access Denied: Only Store Managers can access this page."), frappe.PermissionError)
+    _check_manager_permission()
 
     context.no_cache = 1
     context.title = "SMRITI Config Portal"

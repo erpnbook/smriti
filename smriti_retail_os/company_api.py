@@ -89,6 +89,10 @@ def get_company_settings(company=None):
     """
     Return SMRITI Company Settings for the given (or active) company.
     Creates a blank record on-the-fly if none exists yet.
+    Also augments the result with Company-level custom fields
+    (custom_smriti_store_type, custom_smriti_gstin_state,
+    custom_smriti_settings_configured) so the frontend only needs
+    one whitelisted API call instead of two.
 
     Returns:
         dict: Flat settings dictionary safe for JSON serialisation.
@@ -100,16 +104,29 @@ def get_company_settings(company=None):
 
     if frappe.db.exists(_SETTINGS_DOCTYPE, {"company": company}):
         doc = frappe.get_doc(_SETTINGS_DOCTYPE, {"company": company})
-        return doc.as_dict()
+        result = doc.as_dict()
     else:
         # Return in-memory defaults — do NOT auto-save (avoid side-effects on read)
-        return _default_settings(company)
+        result = _default_settings(company)
+
+    # Augment with Company-level custom fields so the frontend can get
+    # everything in a single call without using frappe.client.get_value.
+    company_extras = frappe.db.get_value(
+        "Company",
+        company,
+        ["custom_smriti_store_type", "custom_smriti_gstin_state", "custom_smriti_settings_configured"],
+        as_dict=True
+    ) or {}
+    result.update(company_extras)
+    return result
 
 
 @frappe.whitelist()
 def save_company_settings(company=None, settings=None):
     """
     Upsert SMRITI Company Settings for the given company.
+    Also writes Company-level custom fields (e.g. custom_smriti_store_type)
+    so the frontend needs only one save call instead of three.
 
     Args:
         company (str): Company name.
@@ -128,7 +145,16 @@ def save_company_settings(company=None, settings=None):
     if isinstance(settings, str):
         settings = json.loads(settings)
 
-    # Sanitise — only allow known writable fields
+    settings = dict(settings or {})
+
+    # Write Company-level custom fields directly to the Company DocType.
+    # These are NOT stored in SMRITI Company Settings.
+    _COMPANY_DIRECT_FIELDS = {"custom_smriti_store_type"}
+    for field in _COMPANY_DIRECT_FIELDS:
+        if field in settings:
+            frappe.db.set_value("Company", company, field, settings.pop(field))
+
+    # Sanitise — only allow known writable SMRITI Settings fields
     allowed_fields = {
         "store_trade_name", "store_logo_url", "brand_color",
         "receipt_footer_text", "invoice_series_prefix",
@@ -137,7 +163,7 @@ def save_company_settings(company=None, settings=None):
         "loyalty_enabled", "loyalty_points_per_rupee",
         "size_groups_json", "destinationwise_taxes_json", "backup_settings_json"
     }
-    clean = {k: v for k, v in (settings or {}).items() if k in allowed_fields}
+    clean = {k: v for k, v in settings.items() if k in allowed_fields}
 
     existing = frappe.db.exists(_SETTINGS_DOCTYPE, {"company": company})
     if existing:
@@ -168,13 +194,16 @@ def get_store_address(company=None):
         
     address_name = f"{company}-Registered"
     if not frappe.db.exists("Address", address_name):
-        # Search links
-        res = frappe.db.sql("""
-            SELECT parent FROM `tabAddress Link` 
-            WHERE link_doctype='Company' AND link_name=%s
-        """, (company,))
-        if res:
-            address_name = res[0][0]
+        # Use the Frappe ORM Dynamic Link table (tabAddress Link does not
+        # exist in Frappe v15+; the correct table is tabDynamic Link).
+        links = frappe.get_all(
+            "Dynamic Link",
+            filters={"link_doctype": "Company", "link_name": company, "parenttype": "Address"},
+            fields=["parent"],
+            limit=1
+        )
+        if links:
+            address_name = links[0].parent
         else:
             # Return empty default
             return {
@@ -249,12 +278,15 @@ def save_store_address(company=None, address_data=None):
     if frappe.db.exists("Address", address_name):
         existing_addr = address_name
     else:
-        res = frappe.db.sql("""
-            SELECT parent FROM `tabAddress Link` 
-            WHERE link_doctype='Company' AND link_name=%s
-        """, (company,))
-        if res:
-            existing_addr = res[0][0]
+        # Use Frappe ORM Dynamic Link (tabAddress Link removed in Frappe v15+)
+        links = frappe.get_all(
+            "Dynamic Link",
+            filters={"link_doctype": "Company", "link_name": company, "parenttype": "Address"},
+            fields=["parent"],
+            limit=1
+        )
+        if links:
+            existing_addr = links[0].parent
             
     if existing_addr:
         addr = frappe.get_doc("Address", existing_addr)
