@@ -115,15 +115,15 @@ def validate_import_rows(rows_json):
             vendor_clean = str(vendor).strip()
             vendor_clean_upper = vendor_clean.upper()
             if vendor_clean_upper not in ("", "NA", "N/A", "NONE", "NULL", "NAN"):
-            supplier_exists = frappe.db.exists(
-                "Supplier",
-                {"custom_vendor_code": vendor_clean}
-            )
-            if not supplier_exists:
-                errors.append(
-                    f"Vendor Code '{vendor_clean}' not found in Supplier Master. "
-                    f"Please create a Supplier with Vendor Code '{vendor_clean}' before importing items."
+                supplier_exists = frappe.db.exists(
+                    "Supplier",
+                    {"custom_vendor_code": vendor_clean}
                 )
+                if not supplier_exists:
+                    errors.append(
+                        f"Vendor Code '{vendor_clean}' not found in Supplier Master. "
+                        f"Please create a Supplier with Vendor Code '{vendor_clean}' before importing items."
+                    )
 
         # ── Brand soft check ───────────────────────────────────────────────
         brand = _clean_str(row.get("BRAND NAME", ""))
