@@ -415,11 +415,12 @@
 
     <!-- Tabs -->
     <div class="tab-strip" role="tablist">
-      <button class="tab-btn active" id="tab-company-btn" role="tab" onclick="switchTab('company')">🏢 Company Settings</button>
-      <button class="tab-btn"        id="tab-tax-btn"     role="tab" onclick="switchTab('tax')">🏷️ Item Tax  <span class="tcount" id="cnt-tax">…</span></button>
-      <button class="tab-btn"        id="tab-sg-btn"      role="tab" onclick="switchTab('sg')"> 📐 Size Groups <span class="tcount" id="cnt-sg">…</span></button>
-      <button class="tab-btn"        id="tab-state-btn"   role="tab" onclick="switchTab('state')">🗺️ State Tax  <span class="tcount" id="cnt-state">…</span></button>
-      <button class="tab-btn"        id="tab-brand-btn"   role="tab" onclick="switchTab('brand')">🏷️ Brands  <span class="tcount" id="cnt-brand">…</span></button>
+      <button class="tab-btn active" id="tab-company-btn"   role="tab" onclick="switchTab('company')">🏢 Company Settings</button>
+      <button class="tab-btn"        id="tab-tax-btn"       role="tab" onclick="switchTab('tax')">🏷️ Item Tax  <span class="tcount" id="cnt-tax">…</span></button>
+      <button class="tab-btn"        id="tab-sg-btn"        role="tab" onclick="switchTab('sg')"> 📐 Size Groups <span class="tcount" id="cnt-sg">…</span></button>
+      <button class="tab-btn"        id="tab-state-btn"     role="tab" onclick="switchTab('state')">🗺️ State Tax  <span class="tcount" id="cnt-state">…</span></button>
+      <button class="tab-btn"        id="tab-brand-btn"     role="tab" onclick="switchTab('brand')">🏷️ Brands  <span class="tcount" id="cnt-brand">…</span></button>
+      <button class="tab-btn"        id="tab-companies-btn" role="tab" onclick="switchTab('companies')">🏢 Companies <span class="tcount" id="cnt-companies">…</span></button>
     </div>
 
     <div class="tab-content">
@@ -456,12 +457,25 @@
 
           <div class="grid-2 mt-12">
              <div>
-               <label class="lbl">SMRITI GSTIN State Code (read-only)</label>
-               <input type="text" id="cfg-gstin-state" readonly placeholder="Calculated from Company GSTIN"/>
+               <label class="lbl">Company GSTIN</label>
+               <input type="text" id="cfg-company-gstin" maxlength="15"
+                      placeholder="e.g. 27ABCDE1234F1ZX"
+                      style="text-transform:uppercase;letter-spacing:.5px;"
+                      oninput="onGstinInput(this.value)"/>
+               <div id="cfg-gstin-msg" style="font-size:.73rem;margin-top:4px;"></div>
              </div>
-             <div style="display:flex; align-items:center; gap:10px; margin-top:20px;">
-               <input type="checkbox" id="cfg-settings-configured" disabled style="width: 20px; height: 20px; cursor: not-allowed;"/>
-               <label class="lbl" for="cfg-settings-configured" style="margin-bottom:0; cursor: not-allowed;">SMRITI Settings Configured (read-only)</label>
+             <div class="grid-2">
+               <div>
+                 <label class="lbl">GST State Code (auto)</label>
+                 <input type="text" id="cfg-gstin-state" readonly placeholder="Auto from GSTIN"
+                        style="background:var(--bg-surface);cursor:not-allowed;"/>
+               </div>
+               <div style="display:flex;align-items:center;gap:8px;padding-top:22px;">
+                 <input type="checkbox" id="cfg-settings-configured" disabled
+                        style="width:18px;height:18px;cursor:not-allowed;"/>
+                 <label class="lbl" for="cfg-settings-configured"
+                        style="margin-bottom:0;cursor:not-allowed;font-size:.78rem;">Configured</label>
+               </div>
              </div>
           </div>
 
@@ -728,6 +742,32 @@
         </div>
       </div>
 
+      <!-- ══════ TAB 5: Company Management ══════ -->
+      <div class="tab-panel" id="tab-companies" role="tabpanel">
+        <div class="config-card">
+          <div class="config-card-header">
+            <div>
+              <div class="config-card-title">🏢 Company Management</div>
+              <div class="config-card-sub">Create, update and manage ERPNext companies. Abbreviation cannot be changed after creation.</div>
+            </div>
+            <button class="btn btn-primary" onclick="openCompanyDialog()">＋ New Company</button>
+          </div>
+          <div id="companies-loading" style="text-align:center;padding:24px;"><div class="spinner"></div></div>
+          <table class="data-table" id="companies-table" style="display:none;">
+            <thead>
+              <tr>
+                <th>Company Name</th><th>Abbr</th><th>Country</th><th>Currency</th><th>GSTIN</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="companies-tbody"></tbody>
+          </table>
+          <div class="empty-state" id="companies-empty" style="display:none;">
+            <div class="es-icon">🏢</div>
+            <p>No companies found.</p>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /tab-content -->
   </div><!-- /main -->
 </div><!-- /shell -->
@@ -760,6 +800,46 @@
     <div class="flex-row-end" style="margin-top:18px;">
       <button class="btn btn-secondary" onclick="closeTaxDialog()">Cancel</button>
       <button class="btn btn-primary" onclick="submitTaxTemplate()">Create Template</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Company Dialog ── -->
+<div id="company-dialog-overlay" style="display:none;position:fixed;inset:0;background:#00000088;z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);width:min(540px,95vw);padding:24px;box-shadow:var(--shadow);">
+    <div class="flex-row-between" style="margin-bottom:18px;">
+      <h2 id="company-dialog-title" style="font-size:1rem;font-weight:600;">🏢 New Company</h2>
+      <button class="btn btn-secondary btn-sm" onclick="closeCompanyDialog()">✕ Close</button>
+    </div>
+    <input type="hidden" id="company-dialog-mode" value="create"/>
+    <input type="hidden" id="company-dialog-docname"/>
+    <div class="grid-2 mb-8">
+      <div>
+        <label class="lbl">Company Name *</label>
+        <input type="text" id="cd-company-name" placeholder="e.g. My Retail Pvt Ltd" oninput="cdAutoAbbr()"/>
+      </div>
+      <div>
+        <label class="lbl">Abbreviation * <span style="font-size:.7rem;color:var(--text-3);">(cannot change later)</span></label>
+        <input type="text" id="cd-abbr" placeholder="e.g. MRS" maxlength="10"/>
+      </div>
+    </div>
+    <div class="grid-2 mb-8">
+      <div>
+        <label class="lbl">Country</label>
+        <input type="text" id="cd-country" value="India" placeholder="India"/>
+      </div>
+      <div>
+        <label class="lbl">Default Currency</label>
+        <input type="text" id="cd-currency" value="INR" placeholder="INR" maxlength="5"/>
+      </div>
+    </div>
+    <div class="mb-8">
+      <label class="lbl">GSTIN (optional)</label>
+      <input type="text" id="cd-gstin" placeholder="e.g. 27ABCDE1234F1ZX" maxlength="15" style="text-transform:uppercase;"/>
+    </div>
+    <div class="flex-row-end" style="margin-top:18px;gap:10px;">
+      <button class="btn btn-secondary" onclick="closeCompanyDialog()">Cancel</button>
+      <button class="btn btn-primary" id="company-submit-btn" onclick="submitCompanyForm()">Create Company</button>
     </div>
   </div>
 </div>
@@ -797,14 +877,15 @@ function toast(msg, type = 'info', dur = 3500) {
 }
 
 // ─── Tab Switching (with lazy-load) ──────────────────────────────────────────
-const TABS = ['company', 'tax', 'sg', 'state', 'brand'];
+const TABS = ['company', 'tax', 'sg', 'state', 'brand', 'companies'];
 // Track which tabs have already fetched their data
 const _tabLoaded = new Set(['company']);
 const _TAB_LOADERS = {
-  tax:   () => loadTaxTemplates(),
-  sg:    () => loadSizeGroups(),
-  state: () => loadStateTax(),
-  brand: () => loadBrands()
+  tax:       () => loadTaxTemplates(),
+  sg:        () => loadSizeGroups(),
+  state:     () => loadStateTax(),
+  brand:     () => loadBrands(),
+  companies: () => loadCompanies()
 };
 function switchTab(id) {
   TABS.forEach(t => {
@@ -896,6 +977,10 @@ function loadCompanySettings(company = null) {
     } else {
       document.getElementById('cfg-walk-in-customer-display').value = '';
     }
+    // GSTIN
+    const gstin = settings.gstin || '';
+    document.getElementById('cfg-company-gstin').value = gstin;
+    onGstinInput(gstin); // auto-derive state code + validation message
     document.getElementById('cfg-default-intrastate-tax-template').value = settings.default_intrastate_tax_template || '';
     document.getElementById('cfg-default-interstate-tax-template').value = settings.default_interstate_tax_template || '';
 
@@ -930,6 +1015,151 @@ function updateDropdown(elementId, items, valueField, labelField, placeholder) {
     html += `<option value="${esc(val)}">${esc(lbl)}</option>`;
   });
   el.innerHTML = html;
+}
+
+// ─── GSTIN Input Handler ──────────────────────────────────────────────────
+const GSTIN_RE = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+
+function onGstinInput(raw) {
+  const val  = (raw || '').trim().toUpperCase();
+  const msg  = document.getElementById('cfg-gstin-msg');
+  const code = document.getElementById('cfg-gstin-state');
+  if (!val) {
+    code.value = ''; msg.textContent = ''; return;
+  }
+  // Auto-derive state code from first 2 digits
+  code.value = val.length >= 2 ? val.substring(0, 2) : '';
+  if (val.length === 15) {
+    if (GSTIN_RE.test(val)) {
+      msg.textContent = '✅ Valid GSTIN format'; msg.style.color = 'var(--success)';
+    } else {
+      msg.textContent = '❌ Invalid GSTIN format'; msg.style.color = 'var(--danger)';
+    }
+  } else if (val.length > 0) {
+    msg.textContent = `${val.length}/15 characters`; msg.style.color = 'var(--text-3)';
+  } else {
+    msg.textContent = '';
+  }
+}
+
+// ─── Companies Tab ─────────────────────────────────────────────────────────
+function loadCompanies() {
+  const tbl = document.getElementById('companies-table');
+  const ldr = document.getElementById('companies-loading');
+  const emp = document.getElementById('companies-empty');
+  tbl.style.display = 'none'; emp.style.display = 'none';
+  ldr.style.display = 'block';
+
+  API.call('smriti_retail_os.company_api.list_companies').then(companies => {
+    ldr.style.display = 'none';
+    const cnt = (companies || []).length;
+    document.getElementById('cnt-companies').textContent = cnt;
+    if (!cnt) { emp.style.display = 'block'; return; }
+
+    document.getElementById('companies-tbody').innerHTML = companies.map(c => `
+      <tr>
+        <td><strong>${esc(c.company_name || c.name)}</strong></td>
+        <td><span class="hl-tag">${esc(c.abbr || '—')}</span></td>
+        <td>${esc(c.country || 'India')}</td>
+        <td>${esc(c.default_currency || 'INR')}</td>
+        <td><span class="hl-tag hl-purple">${esc(c.gstin || '—')}</span></td>
+        <td style="text-align:right;">
+          <button class="btn btn-secondary btn-sm" style="margin-right:6px;"
+                  onclick="openCompanyDialog('${esc(c.name)}','${esc(c.company_name)}','${esc(c.default_currency)}','${esc(c.gstin||'')}')">
+            ✏️ Edit
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCompany('${esc(c.name)}','${esc(c.company_name)}')">
+            🗑️ Delete
+          </button>
+        </td>
+      </tr>`).join('');
+    tbl.style.display = 'table';
+  }).catch(e => {
+    ldr.style.display = 'none';
+    toast('Failed to load companies: ' + (e.message || e), 'error');
+  });
+}
+
+function openCompanyDialog(name, companyName, currency, gstin) {
+  const isEdit = !!name;
+  document.getElementById('company-dialog-mode').value    = isEdit ? 'edit' : 'create';
+  document.getElementById('company-dialog-docname').value = name || '';
+  document.getElementById('company-dialog-title').textContent = isEdit ? '✏️ Edit Company' : '🏢 New Company';
+  document.getElementById('company-submit-btn').textContent   = isEdit ? 'Save Changes' : 'Create Company';
+
+  document.getElementById('cd-company-name').value = companyName || '';
+  document.getElementById('cd-abbr').value          = '';
+  document.getElementById('cd-abbr').disabled       = isEdit; // abbr immutable after creation
+  document.getElementById('cd-country').value       = 'India';
+  document.getElementById('cd-currency').value      = currency || 'INR';
+  document.getElementById('cd-gstin').value         = gstin    || '';
+
+  const overlay = document.getElementById('company-dialog-overlay');
+  overlay.style.display = 'flex';
+}
+
+function closeCompanyDialog() {
+  document.getElementById('company-dialog-overlay').style.display = 'none';
+  document.getElementById('cd-abbr').disabled = false;
+}
+
+function cdAutoAbbr() {
+  const nameEl = document.getElementById('cd-company-name');
+  const abbrEl = document.getElementById('cd-abbr');
+  if (abbrEl.disabled) return;
+  const words = (nameEl.value || '').trim().split(/\s+/).filter(Boolean);
+  abbrEl.value = words.map(w => w[0]).join('').toUpperCase().substring(0, 6);
+}
+
+function submitCompanyForm() {
+  const mode    = document.getElementById('company-dialog-mode').value;
+  const docname = document.getElementById('company-dialog-docname').value;
+  const name    = document.getElementById('cd-company-name').value.trim();
+  const abbr    = document.getElementById('cd-abbr').value.trim().toUpperCase();
+  const country = document.getElementById('cd-country').value.trim();
+  const currency= document.getElementById('cd-currency').value.trim().toUpperCase();
+  const gstin   = document.getElementById('cd-gstin').value.trim().toUpperCase();
+
+  if (!name) { toast('Company Name is mandatory.', 'error'); return; }
+  if (mode === 'create' && !abbr) { toast('Abbreviation is mandatory.', 'error'); return; }
+
+  const btn = document.getElementById('company-submit-btn');
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> ' + (mode === 'create' ? 'Creating…' : 'Saving…');
+
+  const apiMethod = mode === 'create'
+    ? 'smriti_retail_os.company_api.create_company'
+    : 'smriti_retail_os.company_api.update_company';
+
+  const args = mode === 'create'
+    ? { company_name: name, abbr, country, default_currency: currency, gstin: gstin || null }
+    : { company: docname, company_name: name, gstin: gstin || '', default_currency: currency };
+
+  API.call(apiMethod, args).then(res => {
+    toast(mode === 'create'
+      ? `✅ Company '${esc(res.company_name || name)}' created!`
+      : '✅ Company updated!', 'success');
+    closeCompanyDialog();
+    loadCompanies();
+    // Refresh company selector to include new company
+    location.reload();
+  }).catch(e => {
+    toast((e.message || e || 'Unknown error').replace(/<[^>]+>/g, ''), 'error');
+  }).finally(() => {
+    btn.disabled = false; btn.innerHTML = orig;
+  });
+}
+
+function deleteCompany(name, displayName) {
+  if (!confirm(`Are you sure you want to delete '${displayName}'?\n\nThis is irreversible. Companies with any transactions will be blocked automatically.`)) return;
+
+  API.call('smriti_retail_os.company_api.delete_company', { company: name })
+    .then(() => {
+      toast(`🗑️ '${esc(displayName)}' deleted.`, 'success');
+      loadCompanies();
+    })
+    .catch(e => toast((e.message || e || '').replace(/<[^>]+>/g,''), 'error'));
 }
 
 // ─── Walk-in Customer Autocomplete ──────────────────────────────────────────
@@ -1010,6 +1240,7 @@ function saveCompanySettings() {
   // can write it to the Company DocType — no separate frappe.client.set_value needed.
   const settings = {
     custom_smriti_store_type: storeType,
+    gstin: document.getElementById('cfg-company-gstin').value.trim().toUpperCase(),
     store_trade_name: storeTradeName,
     store_logo_url: document.getElementById('cfg-store-logo-url').value.trim(),
     brand_color: document.getElementById('cfg-brand-color-hex').value.trim(),

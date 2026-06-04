@@ -114,7 +114,8 @@ def get_company_settings(company=None):
     company_extras = frappe.db.get_value(
         "Company",
         company,
-        ["custom_smriti_store_type", "custom_smriti_gstin_state", "custom_smriti_settings_configured"],
+        ["custom_smriti_store_type", "custom_smriti_gstin_state",
+         "custom_smriti_settings_configured", "gstin"],
         as_dict=True
     ) or {}
     result.update(company_extras)
@@ -149,7 +150,7 @@ def save_company_settings(company=None, settings=None):
 
     # Write Company-level custom fields directly to the Company DocType.
     # These are NOT stored in SMRITI Company Settings.
-    _COMPANY_DIRECT_FIELDS = {"custom_smriti_store_type"}
+    _COMPANY_DIRECT_FIELDS = {"custom_smriti_store_type", "gstin"}
     for field in _COMPANY_DIRECT_FIELDS:
         if field in settings:
             frappe.db.set_value("Company", company, field, settings.pop(field))
@@ -360,6 +361,130 @@ def ensure_company_settings(doc, method=None):
                 f"[SMRITI] Failed to auto-create Company Settings for {company}: {e}",
                 "Company Settings Auto-Provision"
             )
+
+
+# ─── Company CRUD ──────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def create_company(company_name, abbr, country="India", default_currency="INR", gstin=None):
+    """
+    Create a new ERPNext Company with optional GSTIN.
+    Triggers ERPNext chart-of-accounts setup automatically via insert().
+    """
+    _check_manager_permission()
+
+    company_name = (company_name or "").strip()
+    abbr = (abbr or "").strip()
+
+    if not company_name:
+        frappe.throw(_("Company Name is mandatory."))
+    if not abbr:
+        frappe.throw(_("Abbreviation is mandatory."))
+    if frappe.db.exists("Company", company_name):
+        frappe.throw(_("Company '{0}' already exists.").format(company_name))
+    if frappe.db.exists("Company", {"abbr": abbr}):
+        frappe.throw(_("Abbreviation '{0}' is already used by another company.").format(abbr))
+
+    doc = frappe.new_doc("Company")
+    doc.company_name = company_name
+    doc.abbr = abbr
+    doc.country = country or "India"
+    doc.default_currency = default_currency or "INR"
+    if gstin:
+        doc.gstin = gstin.strip().upper()
+
+    doc.insert(ignore_permissions=True)
+    frappe.db.commit()
+
+    # Auto-provision SMRITI Company Settings
+    ensure_company_settings(doc)
+
+    return {
+        "name": doc.name,
+        "company_name": doc.company_name,
+        "abbr": doc.abbr,
+        "country": doc.country,
+        "default_currency": doc.default_currency,
+        "gstin": doc.gstin or ""
+    }
+
+
+@frappe.whitelist()
+def update_company(company, company_name=None, gstin=None, default_currency=None):
+    """
+    Update basic Company fields (display name, GSTIN, currency).
+    Abbreviation is intentionally not editable — ERPNext appends it to all
+    GL account names and changing it causes data inconsistency.
+    """
+    _check_manager_permission()
+
+    if not company or not frappe.db.exists("Company", company):
+        frappe.throw(_("Company '{0}' not found.").format(company))
+
+    doc = frappe.get_doc("Company", company)
+    changed = False
+
+    if company_name and company_name.strip():
+        doc.company_name = company_name.strip()
+        changed = True
+    if gstin is not None:
+        doc.gstin = (gstin.strip().upper() if str(gstin).strip() else "")
+        changed = True
+    if default_currency and default_currency.strip():
+        doc.default_currency = default_currency.strip().upper()
+        changed = True
+
+    if changed:
+        doc.save(ignore_permissions=True)
+        frappe.db.commit()
+
+    return {"success": True, "message": _("Company updated successfully.")}
+
+
+@frappe.whitelist()
+def delete_company(company):
+    """
+    Delete a Company after verifying it has zero transactions.
+    Blocks deletion if Sales Invoice, Purchase Invoice, GL Entry,
+    or Stock Ledger Entry records exist to prevent data loss.
+    Only System Manager / Administrator may delete.
+    """
+    _check_manager_permission()
+
+    # Extra gate: only System Manager can delete companies
+    if frappe.session.user != "Administrator":
+        roles = set(frappe.get_roles(frappe.session.user))
+        if "System Manager" not in roles:
+            frappe.throw(
+                _("Only System Managers can delete companies."),
+                frappe.PermissionError
+            )
+
+    if not company or not frappe.db.exists("Company", company):
+        frappe.throw(_("Company '{0}' not found.").format(company))
+
+    # Safety: block if any transactions exist
+    blockers = {}
+    for doctype in ["Sales Invoice", "Purchase Invoice", "GL Entry", "Stock Ledger Entry"]:
+        count = frappe.db.count(doctype, {"company": company})
+        if count:
+            blockers[doctype] = count
+
+    if blockers:
+        details = ", ".join([f"{dt}: {n} record(s)" for dt, n in blockers.items()])
+        frappe.throw(
+            _("Cannot delete '{0}'. Existing transactions found: {1}. "
+              "Archive or manage via ERPNext Desk instead.").format(company, details)
+        )
+
+    # Clean up SMRITI Company Settings first
+    settings_name = frappe.db.exists(_SETTINGS_DOCTYPE, {"company": company})
+    if settings_name:
+        frappe.delete_doc(_SETTINGS_DOCTYPE, settings_name, ignore_permissions=True)
+
+    frappe.delete_doc("Company", company, ignore_permissions=True)
+    frappe.db.commit()
+    return {"success": True, "message": _("Company '{0}' deleted.").format(company)}
 
 
 # ─── Convenience getters for other API modules ───────────────────────────────
