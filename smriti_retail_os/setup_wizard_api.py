@@ -516,9 +516,23 @@ def run_setup_wizard(setup_data):
                 if comp_key not in seen_companies:
                     seen_companies.add(comp_key)
                     unique_accounts.append(acc)
-            
-            final_companies = [acc.company for acc in mop_doc.accounts]
-            mop_doc.accounts = unique_accounts
+
+            # ── Orphan purge ──────────────────────────────────────────────────────
+            # Frappe validates ALL child rows on save, including rows for companies
+            # that were deleted after setup (e.g. test/demo companies).  Strip any
+            # Mode of Payment Account rows whose Company no longer exists to prevent
+            # "Could not find Row #N: Company: <name>" errors.
+            clean_accounts = []
+            for acc in unique_accounts:
+                if frappe.db.exists("Company", acc.company):
+                    clean_accounts.append(acc)
+                else:
+                    log(f"  [cleanup] Removed stale MoP account row for deleted company: {acc.company}")
+            # ─────────────────────────────────────────────────────────────────────
+
+            final_companies = [acc.company for acc in clean_accounts]
+            mop_doc.accounts = clean_accounts
+            mop_doc.flags.ignore_links = True  # Belt-and-suspenders: skip Link re-validation for newly inserted company rows
             mop_doc.save(ignore_permissions=True)
             log(f"Mapped {mop} to Company {company_name} successfully.")
 
@@ -583,6 +597,7 @@ def run_setup_wizard(setup_data):
                     "default_ledger": bank_ledger
                 })
             
+            pp.flags.ignore_links = True  # Prevent "Could not find Row #N: Company" on payments child table
             pp.insert(ignore_permissions=True)
             log(f"POS Profile '{pp.name}' created.")
             pos_profile_id = pp.name
@@ -632,6 +647,7 @@ def run_setup_wizard(setup_data):
                     unique_payments.append(p)
             pp.payments = unique_payments
             
+            pp.flags.ignore_links = True  # Prevent "Could not find Row #N: Company" on payments child table
             pp.save(ignore_permissions=True)
             log(f"POS Profile '{pos_profile_name}' updated successfully.")
 

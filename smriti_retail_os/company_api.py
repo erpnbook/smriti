@@ -354,6 +354,7 @@ def ensure_company_settings(doc, method=None):
             defaults = _default_settings(company)
             new_doc = frappe.new_doc(_SETTINGS_DOCTYPE)
             new_doc.update(defaults)
+            new_doc.flags.ignore_links = True  # Prevent "Could not find Row #N: Company" — hook fires inside Company.after_insert before outer commit
             new_doc.insert(ignore_permissions=True)
             frappe.db.commit()
             frappe.logger().info(
