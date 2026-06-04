@@ -1,4 +1,51 @@
-ERPNext,SMRITI
-Frappe,SMRITI Framework
-Powered by Frappe,SMRITI Retail OS
-Built with Frappe,SMRITI Retail OS
+source,target
+Not authorized,Not authorized
+Invalid file name,Invalid file name
+File name is required.,File name is required.
+Invalid file name: path separators are not allowed.,Invalid file name: path separators are not allowed.
+Invalid file name: contains disallowed characters.,Invalid file name: contains disallowed characters.
+Invalid file path: access outside backup directory is not permitted.,Invalid file path: access outside backup directory is not permitted.
+Backup file {0} not found.,Backup file {0} not found.
+File {0} not found.,File {0} not found.
+No file content provided.,No file content provided.
+Invalid base64 file content.,Invalid base64 file content.
+Access Denied: The Admin (Business Owner) account is blocked from accessing the Security Center and User Administration.,Access Denied: The Admin (Business Owner) account is blocked from accessing the Security Center and User Administration.
+Access Denied: The Admin (Business Owner) account is blocked from Security Center.,Access Denied: The Admin (Business Owner) account is blocked from Security Center.
+Access Denied: You do not have permissions to access User Metrics.,Access Denied: You do not have permissions to access User Metrics.
+Access Denied: Only Store Managers and Administrators can access this page.,Access Denied: Only Store Managers and Administrators can access this page.
+Please log in to access the SMRITI Security Center.,Please log in to access the SMRITI Security Center.
+Authentication Required: Please log in to run Setup Wizard.,Authentication Required: Please log in to run Setup Wizard.
+Permission Denied: Only Administrators or System Managers can access this portal.,Permission Denied: Only Administrators or System Managers can access this portal.
+GSTIN must be exactly 15 characters.,GSTIN must be exactly 15 characters.
+GSTIN format is invalid. Expected format: 2-digit state code + 10-char PAN + 1 entity number + Z + 1 checksum.,GSTIN format is invalid. Expected format: 2-digit state code + 10-char PAN + 1 entity number + Z + 1 checksum.
+Pincode must be exactly 6 digits.,Pincode must be exactly 6 digits.
+Company abbreviation {0} is already in use by another company.,Company abbreviation {0} is already in use by another company.
+Setup Wizard has already been completed.,Setup Wizard has already been completed.
+Shift is already open.,Shift is already open.
+No open shift found for this user.,No open shift found for this user.
+Cannot close shift: opening amount not confirmed.,Cannot close shift: opening amount not confirmed.
+Backup completed successfully.,Backup completed successfully.
+Restore completed successfully.,Restore completed successfully.
+Scheduled backup failed.,Scheduled backup failed.
+Item group {0} not found.,Item group {0} not found.
+Barcode {0} already exists.,Barcode {0} already exists.
+Customer not found.,Customer not found.
+Supplier not found.,Supplier not found.
+Company not found.,Company not found.
+Warehouse not found.,Warehouse not found.
+Invoice not found.,Invoice not found.
+Invalid quantity.,Invalid quantity.
+Invalid rate.,Invalid rate.
+Invalid discount.,Invalid discount.
+Tax rate must be between 0 and 100.,Tax rate must be between 0 and 100.
+POS Profile not configured.,POS Profile not configured.
+Default walk-in customer not configured.,Default walk-in customer not configured.
+Default warehouse not configured.,Default warehouse not configured.
+Loyalty points insufficient.,Loyalty points insufficient.
+Loyalty program not found.,Loyalty program not found.
+User {0} does not exist.,User {0} does not exist.
+Role {0} already exists.,Role {0} already exists.
+Role {0} does not exist.,Role {0} does not exist.
+Workflow {0} not found.,Workflow {0} not found.
+Cannot delete a system-protected role.,Cannot delete a system-protected role.
+Cannot modify Administrator account.,Cannot modify Administrator account.

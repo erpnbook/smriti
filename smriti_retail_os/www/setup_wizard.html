@@ -469,8 +469,9 @@
           <input type="text" id="admin-fullname" placeholder="System Administrator"/>
         </div>
         <div class="form-group">
-          <label class="lbl">Change Password (optional)</label>
-          <input type="password" id="admin-password" placeholder="Enter new password if you want to change it"/>
+          <label class="lbl">Change Password (optional — min 8 chars, 1 number)</label>
+          <input type="password" id="admin-password" placeholder="Enter new password if you want to change it" oninput="checkPasswordStrength(this)"/>
+          <span id="pw-strength-hint" style="font-size:0.72rem;margin-top:4px;display:block;"></span>
         </div>
       </div>
 
@@ -487,6 +488,7 @@
           <div class="form-group">
             <label class="lbl">Company Abbreviation *</label>
             <input type="text" id="company-abbr" placeholder="e.g. SRS" maxlength="5"/>
+            <span style="font-size:0.71rem;color:var(--text-2);margin-top:3px;display:block;">Auto-suggested from Company Name. 2–5 alphanumeric chars.</span>
           </div>
         </div>
 
@@ -514,7 +516,8 @@
           </div>
           <div class="form-group">
             <label class="lbl">Company GSTIN (optional)</label>
-            <input type="text" id="company-gstin" placeholder="27AAAAA0000A1Z0" maxlength="15" style="text-transform: uppercase;"/>
+            <input type="text" id="company-gstin" placeholder="27AAAAA0000A1Z0" maxlength="15" style="text-transform: uppercase;" oninput="autoDecodeGstinState(this.value)"/>
+            <span id="gstin-hint" style="font-size:0.71rem;margin-top:3px;display:block;color:var(--text-2);">Format: 2-digit state + 10-char PAN + entity + Z + checksum</span>
           </div>
         </div>
 
@@ -550,7 +553,7 @@
             </div>
             <div class="form-group">
               <label class="lbl">Pincode / ZIP Code *</label>
-              <input type="text" id="store-pincode" placeholder="e.g. 400001"/>
+              <input type="text" id="store-pincode" placeholder="e.g. 400001" maxlength="6" inputmode="numeric"/>
             </div>
           </div>
 
@@ -694,9 +697,17 @@
         if (!storeTradeNameInput.dataset.edited) {
           storeTradeNameInput.value = e.target.value;
         }
+        // Auto-suggest abbreviation from company name initials
+        const abbrEl = document.getElementById("company-abbr");
+        if (!abbrEl.dataset.edited) {
+          abbrEl.value = suggestAbbr(e.target.value);
+        }
       });
       storeTradeNameInput.addEventListener("input", () => {
         storeTradeNameInput.dataset.edited = "true";
+      });
+      document.getElementById("company-abbr").addEventListener("input", () => {
+        document.getElementById("company-abbr").dataset.edited = "true";
       });
     });
 
@@ -758,6 +769,72 @@
 
     function updateStateCode(stateName) {
       // Reserved for custom logic if state changes
+    }
+
+    /** Auto-detect state from first 2 digits of GSTIN and update the state dropdown. */
+    function autoDecodeGstinState(raw) {
+      const gstin = raw.trim().toUpperCase();
+      const hintEl = document.getElementById("gstin-hint");
+      if (gstin.length === 0) {
+        hintEl.style.color = "var(--text-2)";
+        hintEl.textContent = "Format: 2-digit state + 10-char PAN + entity + Z + checksum";
+        return;
+      }
+      if (gstin.length === 15) {
+        const gstinRe = /^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9]{1}$/;
+        if (!gstinRe.test(gstin)) {
+          hintEl.style.color = "var(--danger, #ef4444)";
+          hintEl.textContent = "\u26A0\uFE0F Invalid GSTIN format";
+          return;
+        }
+        hintEl.style.color = "var(--success, #10b981)";
+        hintEl.textContent = "\u2714 Valid GSTIN format";
+      } else {
+        hintEl.style.color = "var(--text-2)";
+        hintEl.textContent = `${gstin.length}/15 characters`;
+      }
+      // Auto-select state based on first 2 digit state code
+      const stateCode = gstin.substring(0, 2);
+      const reverseMap = {};
+      Object.entries(stateCodeMap).forEach(([name, code]) => { reverseMap[code] = name; });
+      const matchedState = reverseMap[stateCode];
+      if (matchedState) {
+        const sel = document.getElementById("state-select");
+        sel.value = matchedState;
+      }
+    }
+
+    /** Auto-suggest a company abbreviation from the company name initials. */
+    function suggestAbbr(name) {
+      if (!name) return "";
+      const words = name.trim().split(/\s+/);
+      if (words.length === 1) {
+        return words[0].replace(/[^a-zA-Z0-9]/g, "").substring(0, 4).toUpperCase();
+      }
+      return words
+        .map(w => w.replace(/[^a-zA-Z0-9]/g, "")[0] || "")
+        .join("")
+        .toUpperCase()
+        .substring(0, 5);
+    }
+
+    /** Check password strength and update hint span. */
+    function checkPasswordStrength(input) {
+      const pw = input.value;
+      const hint = document.getElementById("pw-strength-hint");
+      if (!pw) { hint.textContent = ""; return; }
+      const hasMin = pw.length >= 8;
+      const hasNum = /\d/.test(pw);
+      if (!hasMin) {
+        hint.style.color = "var(--danger, #ef4444)";
+        hint.textContent = "\u26A0\uFE0F Minimum 8 characters required";
+      } else if (!hasNum) {
+        hint.style.color = "var(--accent, #f59e0b)";
+        hint.textContent = "\u26A0\uFE0F Add at least one number for stronger security";
+      } else {
+        hint.style.color = "var(--success, #10b981)";
+        hint.textContent = "\u2714 Password looks good";
+      }
     }
 
     // Step navigation controller
@@ -825,8 +902,17 @@
           showBanner("Administrator Full Name cannot be empty.");
           return false;
         }
+      const pw = document.getElementById("admin-password").value;
+        if (pw && pw.length < 8) {
+          showBanner("Password must be at least 8 characters.");
+          return false;
+        }
+        if (pw && !/\d/.test(pw)) {
+          showBanner("Password must contain at least one number.");
+          return false;
+        }
       }
-      
+
       if (currentStep === 2) {
         const companyName = document.getElementById("company-name").value.trim();
         const companyAbbr = document.getElementById("company-abbr").value.trim();
@@ -853,6 +939,13 @@
           showBanner("GSTIN must be exactly 15 characters.");
           return false;
         }
+        if (gstin && gstin.length === 15) {
+          const gstinRe = /^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9]{1}$/;
+          if (!gstinRe.test(gstin.toUpperCase())) {
+            showBanner("Invalid GSTIN format. Expected: 2-digit state code + 10-char PAN + entity number + Z + checksum.");
+            return false;
+          }
+        }
 
         // Store primary address validations
         if (!storeTradeName) {
@@ -869,6 +962,10 @@
         }
         if (!storePincode) {
           showBanner("Store Pincode is required.");
+          return false;
+        }
+        if (!/^\d{6}$/.test(storePincode)) {
+          showBanner("Store Pincode must be exactly 6 digits.");
           return false;
         }
         if (!storeState) {

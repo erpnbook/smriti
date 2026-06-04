@@ -9,6 +9,7 @@
 #
 
 import frappe
+from frappe import _
 from frappe.utils import flt
 import csv
 import io
@@ -75,7 +76,7 @@ def detect_pdt_columns(file_content, file_type="csv"):
     Parses headers from uploaded file content and proposes a default column mapping.
     """
     if len(file_content) > 5 * 1024 * 1024:
-        frappe.throw("PDT file too large. Maximum 5MB allowed.")
+        frappe.throw(_("PDT file too large. Maximum 5MB allowed."))
         
     headers = []
     mapping = {k: "" for k in COL_ALIASES.keys()}
@@ -238,7 +239,7 @@ def parse_pdt_file(file_content, file_type="csv", col_mapping=None, price_type="
       - Tax missing -> Item Master custom_gst_percentage
     """
     if len(file_content) > 5 * 1024 * 1024:
-        frappe.throw("PDT file too large. Maximum 5MB allowed.")
+        frappe.throw(_("PDT file too large. Maximum 5MB allowed."))
         
     # Propose default mapping if not provided
     if not col_mapping:

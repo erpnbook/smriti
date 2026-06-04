@@ -591,21 +591,18 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
             b.insert(ignore_permissions=True)
 
         # Ensure Item Group exists
-        print(f"[DEBUG] _get_or_create_template: item_group before={item_group}, exists={bool(frappe.db.exists('Item Group', item_group or ''))}")
         if not item_group or not frappe.db.exists("Item Group", item_group):
             item_group = "Products"
         if not frappe.db.exists("Item Group", item_group):
             existing_group = frappe.db.get_all("Item Group", pluck="name", limit=1)
             if existing_group:
                 item_group = existing_group[0]
-                print(f"[DEBUG] Item Group fallback to={item_group}")
             else:
                 ig = frappe.new_doc("Item Group")
                 ig.item_group_name = "Products"
                 ig.is_group = 0
                 ig.insert(ignore_permissions=True)
                 item_group = "Products"
-                print(f"[DEBUG] Item Group 'Products' created. exists after={bool(frappe.db.exists('Item Group', 'Products'))}")
 
 
         item = frappe.new_doc("Item")
@@ -674,12 +671,10 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
 
 def _ensure_item_attribute(attribute_name):
     """Create Item Attribute doctype record if it doesn't exist yet."""
-    print(f"[DEBUG] _ensure_item_attribute({attribute_name}) - exists before: {bool(frappe.db.exists('Item Attribute', attribute_name))}")
     if not frappe.db.exists("Item Attribute", attribute_name):
         attr = frappe.new_doc("Item Attribute")
         attr.attribute_name = attribute_name
         attr.insert(ignore_permissions=True)
-        print(f"[DEBUG] _ensure_item_attribute({attribute_name}) - inserted. name={attr.name}. exists after: {bool(frappe.db.exists('Item Attribute', attribute_name))}")
 
 
 

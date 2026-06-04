@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/www/offline.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Page controller for SMRITI PWA offline fallback page.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

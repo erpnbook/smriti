@@ -6,9 +6,64 @@
 # @date: 2026-06-02
 #
 
+import re
 import frappe
 from frappe import _
 from frappe.utils import flt, nowdate
+
+
+# ─── Validation Helpers ────────────────────────────────────────────
+
+_GSTIN_PATTERN = re.compile(
+    r"^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9]{1}$"
+)
+
+
+def _validate_gstin(gstin):
+    """Validates the format of an Indian GSTIN (15 characters).
+    Raises frappe.ValidationError if the format is incorrect.
+    """
+    if not gstin:
+        return  # GSTIN is optional — skip validation when absent
+    gstin = str(gstin).strip().upper()
+    if len(gstin) != 15:
+        frappe.throw(_("GSTIN must be exactly 15 characters."), frappe.ValidationError)
+    if not _GSTIN_PATTERN.match(gstin):
+        frappe.throw(
+            _("GSTIN format is invalid. Expected format: 2-digit state code + 10-char PAN + 1 entity number + Z + 1 checksum."),
+            frappe.ValidationError
+        )
+    return gstin
+
+
+def _validate_pincode(pincode):
+    """Validates that a pincode is exactly 6 numeric digits.
+    Raises frappe.ValidationError if not.
+    """
+    if not pincode:
+        return  # Pincode is optional
+    pincode = str(pincode).strip()
+    if not re.match(r"^\d{6}$", pincode):
+        frappe.throw(_("Pincode must be exactly 6 digits."), frappe.ValidationError)
+    return pincode
+
+
+def _validate_company_abbr(abbr, current_company=None):
+    """Validates that a company abbreviation is not already in use by another company.
+    Raises frappe.ValidationError if duplicate found.
+    """
+    if not abbr:
+        return
+    filters = {"abbr": abbr}
+    if current_company:
+        filters["name"] = ("!=", current_company)
+    existing = frappe.db.get_value("Company", filters, "name")
+    if existing:
+        frappe.throw(
+            _("Company abbreviation {0} is already in use by another company.").format(frappe.bold(abbr)),
+            frappe.ValidationError
+        )
+
 
 @frappe.whitelist()
 def get_setup_wizard_initial_data():
@@ -111,10 +166,14 @@ def run_setup_wizard(setup_data):
         state = setup_data.get("state", "Maharashtra")
         state_code = setup_data.get("state_code", "27")
         gstin = setup_data.get("gstin")
-        
-        log(f"Configuring Company: {company_name} ({company_abbr})...")
+
+        # ── Validate inputs before touching the database ──
+        gstin = _validate_gstin(gstin)
+        _validate_pincode(setup_data.get("store_pincode"))
         company_exists = frappe.db.exists("Company", company_name)
-        
+        _validate_company_abbr(company_abbr, current_company=company_name if company_exists else None)
+
+        log(f"Configuring Company: {company_name} ({company_abbr})...")
         if not company_exists:
             co = frappe.new_doc("Company")
             co.company_name = company_name
@@ -435,10 +494,6 @@ def run_setup_wizard(setup_data):
             # Map accounts in Mode of Payment (Defensively guard against duplicate entries)
             mop_doc = frappe.get_doc("Mode of Payment", mop)
             existing_companies = [acc.company for acc in mop_doc.accounts]
-            log(f"[DEBUG] POS Profile Setup: Mode of Payment: {mop}")
-            log(f"[DEBUG] Existing companies mapped to {mop}: {existing_companies}")
-            log(f"[DEBUG] Company being appended: {company_name}")
-            
             has_mapping = False
             for acc in mop_doc.accounts:
                 if str(acc.company).strip().upper() == str(company_name).strip().upper():
@@ -452,7 +507,6 @@ def run_setup_wizard(setup_data):
                         "company": company_name,
                         "default_account": ledger
                     })
-                    log(f"[DEBUG] Appended {company_name} to Mode of Payment {mop}")
             
             # Defensive deduplication check to satisfy ERPNext validation
             seen_companies = set()
@@ -463,10 +517,8 @@ def run_setup_wizard(setup_data):
                     seen_companies.add(comp_key)
                     unique_accounts.append(acc)
             
-            mop_doc.accounts = unique_accounts
             final_companies = [acc.company for acc in mop_doc.accounts]
-            log(f"[DEBUG] Final company list before saving Mode of Payment {mop}: {final_companies}")
-            
+            mop_doc.accounts = unique_accounts
             mop_doc.save(ignore_permissions=True)
             log(f"Mapped {mop} to Company {company_name} successfully.")
 
@@ -678,15 +730,26 @@ def verify_setup_wizard_access():
     Access is granted to:
     - Guests/Anyone if NO Company document exists in the system (first setup).
     - 'Administrator' or any user with the 'System Manager' role otherwise.
+    Emits a warning (non-blocking) if the system has already been configured.
     """
     companies = frappe.get_all("Company", limit=1)
     if not companies:
-        # First-time initialization allow access
+        # First-time initialization — allow access to anyone
         return
-        
+
+    # Already configured — check permissions
     if frappe.session.user == "Guest":
         frappe.throw(_("Authentication Required: Please log in to run Setup Wizard."), frappe.AuthenticationError)
 
     roles = frappe.get_roles(frappe.session.user)
     if "System Manager" not in roles and frappe.session.user != "Administrator":
         frappe.throw(_("Permission Denied: Only Administrators or System Managers can access this portal."), frappe.PermissionError)
+
+    # Warn (non-blocking) that setup has already been completed
+    already_configured = frappe.db.get_value("Company", companies[0]["name"], "custom_smriti_settings_configured")
+    if already_configured:
+        frappe.msgprint(
+            _("Setup Wizard has already been completed. Re-running will update existing settings without deleting data."),
+            title=_("Re-run Warning"),
+            indicator="orange"
+        )
