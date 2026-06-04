@@ -224,20 +224,23 @@ def get_store_address(company=None):
             }
             
     addr = frappe.get_doc("Address", address_name)
+    # Use addr.get() for all optional / India-Compliance-specific fields.
+    # Direct attribute access (addr.gstin) raises AttributeError when the
+    # column does not exist in this ERPNext installation (e.g. migration not run).
     return {
-        "address_title": addr.address_title,
-        "address_line1": addr.address_line1,
-        "address_line2": addr.address_line2,
-        "city": addr.city,
-        "state": addr.state,
-        "country": addr.country or "India",
-        "pincode": addr.pincode,
-        "gstin": addr.gstin,
-        "gst_state": addr.gst_state,
-        "gst_state_number": addr.gst_state_number,
-        "landmark": addr.landmark,
-        "latitude": addr.latitude,
-        "longitude": addr.longitude
+        "address_title": addr.get("address_title", ""),
+        "address_line1": addr.get("address_line1", ""),
+        "address_line2": addr.get("address_line2", ""),
+        "city":          addr.get("city", ""),
+        "state":         addr.get("state", ""),
+        "country":       addr.get("country") or "India",
+        "pincode":       addr.get("pincode", ""),
+        "gstin":         addr.get("gstin", ""),
+        "gst_state":     addr.get("gst_state", ""),
+        "gst_state_number": addr.get("gst_state_number", ""),
+        "landmark":      addr.get("landmark", ""),
+        "latitude":      addr.get("latitude"),
+        "longitude":     addr.get("longitude"),
     }
 
 
