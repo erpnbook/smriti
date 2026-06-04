@@ -114,7 +114,7 @@ def validate_import_rows(rows_json):
         if vendor:
             vendor_clean = str(vendor).strip()
             vendor_clean_upper = vendor_clean.upper()
-            if vendor_clean_upper not in ("", "NA", "N/A", "NONE", "NULL", "NAN"):
+            if vendor_clean_upper not in ("", "NA", "N/A", "NONE", "NULL", "NAN", "DV"):
                 supplier_exists = frappe.db.exists(
                     "Supplier",
                     {"custom_vendor_code": vendor_clean}
@@ -411,7 +411,7 @@ def _validate_vendor_code(vendor_code):
     if not vendor_code:
         return
     vendor_code_clean = str(vendor_code).strip().upper()
-    if vendor_code_clean in ("", "NA", "N/A", "NONE", "NULL", "NAN"):
+    if vendor_code_clean in ("", "NA", "N/A", "NONE", "NULL", "NAN", "DV"):
         return  # skip validation for empty/placeholder values
     
     vendor_code = str(vendor_code).strip()
@@ -627,7 +627,7 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
     if vendor_code:
         vendor_code_clean = str(vendor_code).strip()
         vendor_code_clean_upper = vendor_code_clean.upper()
-        if vendor_code_clean_upper not in ("", "NA", "N/A", "NONE", "NULL", "NAN"):
+        if vendor_code_clean_upper not in ("", "NA", "N/A", "NONE", "NULL", "NAN", "DV"):
             supplier_name = frappe.db.get_value(
                 "Supplier",
                 {"custom_vendor_code": vendor_code_clean},

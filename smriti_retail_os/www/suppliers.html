@@ -717,7 +717,7 @@ function renderTable(list) {
         <tr>
             <td>
                 <div style="font-weight:600; color:var(--text);">${s.supplier_name}</div>
-                ${s.custom_vendor_code ? `<div style="font-size:0.75rem; color:var(--accent); font-weight:500; margin-top:2px;">Vendor Code: ${s.custom_vendor_code}</div>` : ''}
+                <div style="font-size:0.75rem; color:var(--accent); font-weight:500; margin-top:2px;">Vendor Code: ${s.custom_vendor_code || 'DV'}</div>
             </td>
             <td style="font-weight:600; color:var(--primary-lt);">${s.mobile_no || 'N/A'}</td>
             <td style="color:var(--text-muted);">${s.supplier_group}</td>
@@ -802,7 +802,7 @@ function openAddSupplierModal() {
     document.getElementById('supp-gstin').value = "";
     document.getElementById('supp-gst-category').value = "Registered Regular";
     document.getElementById('supp-pan').value = "";
-    document.getElementById('supp-vendor-code').value = "";
+    document.getElementById('supp-vendor-code').value = "DV";
     
     // Clear Address
     document.getElementById('bill-line1').value = "";
@@ -876,7 +876,7 @@ async function openEditSupplierModal(name) {
         document.getElementById('supp-gstin').value = s.gstin || "";
         document.getElementById('supp-gst-category').value = s.gst_category || "Registered Regular";
         document.getElementById('supp-pan').value = s.pan || "";
-        document.getElementById('supp-vendor-code').value = s.custom_vendor_code || "";
+        document.getElementById('supp-vendor-code').value = s.custom_vendor_code || "DV";
         
         // Parse Billing Address Text
         const billLines = (s.custom_address_text || "").split('\n');

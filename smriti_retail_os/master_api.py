@@ -340,11 +340,11 @@ def save_supplier_detail(**kwargs):
     doc.custom_credit_days = cint(kwargs.get("custom_credit_days") or 0)
     doc.custom_address_text = kwargs.get("custom_address_text")
     doc.custom_shipping_address_text = kwargs.get("custom_shipping_address_text")
-    # Clean vendor code: treat NA, N/A, None, NULL, etc. as None (NULL) to prevent database uniqueness collisions
+    # Clean vendor code: treat NA, N/A, None, NULL, DV, etc. as None (NULL) to prevent database uniqueness collisions
     vendor_code = kwargs.get("custom_vendor_code")
     if vendor_code:
         vendor_code_clean = str(vendor_code).strip().upper()
-        if vendor_code_clean in ("", "NA", "N/A", "NONE", "NULL", "NAN"):
+        if vendor_code_clean in ("", "NA", "N/A", "NONE", "NULL", "NAN", "DV"):
             doc.custom_vendor_code = None
         else:
             doc.custom_vendor_code = str(vendor_code).strip()
