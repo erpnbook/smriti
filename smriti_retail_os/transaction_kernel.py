@@ -32,6 +32,7 @@ import frappe
 import json
 from frappe import _
 from frappe.utils import flt, cint, nowdate, now_datetime, cstr
+from smriti_retail_os.utils.invoice_utils import get_barcode_candidates
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -750,10 +751,21 @@ def _resolve_barcode(barcode, company):
     """Barcode → enriched item dict."""
     if not barcode:
         return None
-    item_code = frappe.db.get_value("Item Barcode", {"barcode": barcode}, "parent")
+    
+    candidates = get_barcode_candidates(barcode)
+    
+    item_code = None
+    for cand in candidates:
+        item_code = frappe.db.get_value("Item Barcode", {"barcode": cand}, "parent")
+        if item_code:
+            break
+            
     if not item_code:
-        if frappe.db.exists("Item", barcode):
-            item_code = barcode
+        for cand in candidates:
+            if frappe.db.exists("Item", cand):
+                item_code = cand
+                break
+                
     if not item_code:
         return None
     return _lookup_item_master(item_code, company)

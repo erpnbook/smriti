@@ -22,6 +22,47 @@ COL_ALIASES = {
 }
 
 
+def get_barcode_candidates(barcode):
+    """
+    Normalizes a barcode string and generates potential candidates
+    (e.g., stripping trailing .0, stripping leading zeros, EAN/UPC padding/stripping).
+    """
+    if not barcode:
+        return []
+    barcode = str(barcode).strip()
+    
+    # Remove trailing ".0" if it's a float-looking string
+    if barcode.endswith(".0") and barcode[:-2].isdigit():
+        barcode = barcode[:-2]
+        
+    candidates = [barcode]
+    
+    # If the barcode contains digits only
+    if barcode.isdigit():
+        # Candidate 1: without leading zeros (e.g., "07007..." -> "7007...")
+        stripped = barcode.lstrip('0')
+        if stripped and stripped not in candidates:
+            candidates.append(stripped)
+            
+        # Candidate 2: EAN-13 padding (12 digits -> 13 digits with leading 0)
+        if len(barcode) == 12:
+            candidates.append("0" + barcode)
+            
+        # Candidate 3: GTIN-14 padding (13 digits -> 14 digits with leading 0)
+        if len(barcode) == 13:
+            candidates.append("0" + barcode)
+            
+        # Candidate 4: If barcode scanned was 14 digits starting with '0', also try the 13 digit EAN-13
+        if len(barcode) == 14 and barcode.startswith("0"):
+            candidates.append(barcode[1:])
+            
+        # Candidate 5: If barcode scanned was 13 digits starting with '0', try the 12 digit UPC-A
+        if len(barcode) == 13 and barcode.startswith("0"):
+            candidates.append(barcode[1:])
+            
+    return candidates
+
+
 def _match(header, aliases):
     if not header:
         return False
@@ -77,16 +118,21 @@ def resolve_barcode(barcode):
     if not barcode:
         return {"error": "Empty barcode", "barcode": ""}
     
-    barcode = str(barcode).strip()
-    if barcode.endswith(".0") and barcode[:-2].isdigit():
-        barcode = barcode[:-2]
+    candidates = get_barcode_candidates(barcode)
     
-    item_code = frappe.db.get_value(
-        "Item Barcode", {"barcode": barcode}, "parent"
-    )
+    item_code = None
+    for cand in candidates:
+        item_code = frappe.db.get_value(
+            "Item Barcode", {"barcode": cand}, "parent"
+        )
+        if item_code:
+            break
+            
     if not item_code:
-        if frappe.db.exists("Item", barcode):
-            item_code = barcode
+        for cand in candidates:
+            if frappe.db.exists("Item", cand):
+                item_code = cand
+                break
             
     if not item_code:
         return {"error": "Barcode not found", "barcode": barcode}

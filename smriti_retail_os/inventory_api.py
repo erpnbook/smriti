@@ -12,11 +12,12 @@
 import frappe
 from frappe.utils import flt, cint, nowdate
 from frappe import _
+from smriti_retail_os.utils.invoice_utils import get_barcode_candidates
 
 def _get_default_warehouse(company):
     """Company ke saath matching warehouse lo."""
     if not company:
-        return "Stores - _C"
+        return None
     warehouse = frappe.db.get_value(
         "Warehouse",
         {"company": company, "is_group": 0, "warehouse_name": "Stores"},
@@ -35,7 +36,9 @@ def _get_default_warehouse(company):
             {"company": company},
             "name"
         )
-    return warehouse or "Stores - _C"
+    if warehouse and frappe.db.get_value("Warehouse", warehouse, "company") == company:
+        return warehouse
+    return None
 
 def check_store_manager_role():
     """
@@ -97,17 +100,19 @@ def scan_item_for_inventory(barcode, warehouse=None):
     if not barcode:
         return None
 
-    barcode = str(barcode).strip()
-    if barcode.endswith(".0") and barcode[:-2].isdigit():
-        barcode = barcode[:-2]
-
-    # Search in barcodes child table
-    item_code = frappe.db.get_value("Item Barcode", {"barcode": barcode}, "parent")
+    candidates = get_barcode_candidates(barcode)
     
+    item_code = None
+    for cand in candidates:
+        item_code = frappe.db.get_value("Item Barcode", {"barcode": cand}, "parent")
+        if item_code:
+            break
+            
     if not item_code:
-        # Fallback: check if barcode matches item_code directly
-        if frappe.db.exists("Item", barcode):
-            item_code = barcode
+        for cand in candidates:
+            if frappe.db.exists("Item", cand):
+                item_code = cand
+                break
 
     if not item_code:
         return None

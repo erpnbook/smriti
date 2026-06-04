@@ -16,7 +16,7 @@ from frappe import _
 def _get_default_warehouse(company):
     """Company ke saath matching warehouse lo."""
     if not company:
-        return "Stores - _C"
+        return None
     warehouse = frappe.db.get_value(
         "Warehouse",
         {"company": company, "is_group": 0, "warehouse_name": "Stores"},
@@ -35,7 +35,9 @@ def _get_default_warehouse(company):
             {"company": company},
             "name"
         )
-    return warehouse or "Stores - _C"
+    if warehouse and frappe.db.get_value("Warehouse", warehouse, "company") == company:
+        return warehouse
+    return None
 
 def check_store_manager_role():
     """
@@ -269,7 +271,12 @@ def create_purchase_receipt(supplier, items, po_name=None, warehouse=None):
         frappe.throw(_("Cannot create Purchase Receipt with an empty items list."))
 
     items_list = frappe.parse_json(items)
-    company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company") or (frappe.get_all("Company", limit=1)[0].name if frappe.get_all("Company", limit=1) else None)
+    company = None
+    if po_name and frappe.db.exists("Purchase Order", po_name):
+        company = frappe.db.get_value("Purchase Order", po_name, "company")
+
+    if not company:
+        company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company") or (frappe.get_all("Company", limit=1)[0].name if frappe.get_all("Company", limit=1) else None)
     warehouse = warehouse or _get_default_warehouse(company)
 
     pr = frappe.new_doc("Purchase Receipt")

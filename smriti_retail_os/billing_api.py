@@ -12,6 +12,7 @@
 import frappe
 from frappe.utils import flt, cint, now_datetime, nowdate
 from frappe import _
+from smriti_retail_os.utils.invoice_utils import get_barcode_candidates
 
 @frappe.whitelist()
 def add_item_by_barcode(barcode, price_list="Standard Selling"):
@@ -21,17 +22,19 @@ def add_item_by_barcode(barcode, price_list="Standard Selling"):
     if not barcode:
         return None
 
-    barcode = str(barcode).strip()
-    if barcode.endswith(".0") and barcode[:-2].isdigit():
-        barcode = barcode[:-2]
-
-    # Search in barcodes child table
-    item_code = frappe.db.get_value("Item Barcode", {"barcode": barcode}, "parent")
+    candidates = get_barcode_candidates(barcode)
     
+    item_code = None
+    for cand in candidates:
+        item_code = frappe.db.get_value("Item Barcode", {"barcode": cand}, "parent")
+        if item_code:
+            break
+            
     if not item_code:
-        # Fallback: check if barcode matches item_code directly
-        if frappe.db.exists("Item", barcode):
-            item_code = barcode
+        for cand in candidates:
+            if frappe.db.exists("Item", cand):
+                item_code = cand
+                break
 
     if not item_code:
         return None
