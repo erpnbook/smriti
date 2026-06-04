@@ -186,24 +186,48 @@ def extend_bootinfo(bootinfo):
     - Port 9000: SMRITI Retail POS. Nginx root block redirects / → /billing.
                  Only Cashiers who access port 8080 are redirected to /billing
                  via bootinfo.default_route below (they have no desk access anyway).
+
+    NOTE ON SETUP WIZARD ROUTING:
+    - If no Company exists in the system (fresh install), ALL privileged users
+      (Administrator + System Manager) are redirected to /setup-wizard.
+    - website_context.py handles the same redirect for non-Desk (web) routes.
+    - This bootinfo hook covers the /app SPA entry point which bypasses
+      website_context entirely.
     """
 
-    # ── Always apply branding ──────────────────────────────────────────────────
+    # ── Always apply branding ────────────────────────────────────────────
     _apply_branding(bootinfo)
 
-    # ── Check if any company exists in the system ──────────────────────────────
+    # ── Check if any company exists in the system ──────────────────────────
     try:
         companies = frappe.get_all("Company", limit=1)
         bootinfo.has_company = len(companies) > 0
     except Exception:
         bootinfo.has_company = True
 
-    # ── Role-based routing ─────────────────────────────────────────────────────
+    # ── Role-based routing ───────────────────────────────────────────────
     user = frappe.session.user
     roles = frappe.get_roles(user)
 
-    # Cashier redirect: Cashiers have no ERPNext desk access,
-    # so redirect them to the standalone billing terminal on either port.
+    # ── Setup Wizard redirect (fresh install, no company yet) ───────────────
+    # When no Company document exists, privileged desk users are redirected to
+    # the Setup Wizard instead of landing on a blank/broken ERPNext workspace.
+    # Cashiers are excluded — they have no desk access and are handled below.
+    if not bootinfo.has_company:
+        is_privileged = (
+            user == "Administrator"
+            or "System Manager" in roles
+            or "SMRITI Store Manager" in roles
+        )
+        if is_privileged:
+            bootinfo.default_route = "/setup-wizard"
+            # Also expose the wizard URL to the frontend for any JS that needs it
+            bootinfo.smriti_setup_wizard_url = "/setup-wizard"
+            return  # Skip all other routing — wizard takes priority
+
+    # ── Cashier redirect ────────────────────────────────────────────────
+    # Cashiers have no ERPNext desk access, so redirect them to the standalone
+    # billing terminal on either port.
     if "SMRITI Cashier" in roles:
         bootinfo.default_route = "/billing"
 
