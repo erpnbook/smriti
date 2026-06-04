@@ -1011,6 +1011,7 @@ async function saveSupplierDetail() {
 
     try {
         await api('smriti_retail_os.master_api.save_supplier_detail', {
+            name: suppId || "",
             supplier_name: name,
             naming_series: document.getElementById('supp-naming-series').value,
             supplier_type: document.getElementById('supp-type').value,
