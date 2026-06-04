@@ -851,6 +851,21 @@
 const CSRF_TOKEN = '{{ csrf_token }}';
 
 // ─── Frappe API helper ────────────────────────────────────────────────────────
+// Frappe _server_messages is double-encoded:
+// a JSON string of an array of JSON strings of message objects.
+// e.g. '["{\"message\":\"Cannot delete...\"}"]'
+// We unwrap both layers to get the human-readable message.
+function _parseFrappeError(data) {
+  try {
+    const msgs = JSON.parse(data._server_messages || '[]');
+    if (Array.isArray(msgs) && msgs.length) {
+      const first = JSON.parse(msgs[0]);
+      return (first.message || '').replace(/<[^>]+>/g, '') || data.exc_type;
+    }
+  } catch (_) {}
+  return data.exc_type || 'An unexpected error occurred.';
+}
+
 const API = {
   call(method, args = {}) {
     return fetch('/api/method/' + method, {
@@ -860,20 +875,23 @@ const API = {
     })
     .then(r => r.json())
     .then(data => {
-      if (data.exc_type) throw new Error(data._server_messages || data.exc_type);
+      if (data.exc_type) throw new Error(_parseFrappeError(data));
       return data.message !== undefined ? data.message : data;
     });
   }
 };
 
 // ─── Toast ───────────────────────────────────────────────────────────────────
-function toast(msg, type = 'info', dur = 3500) {
+// Errors stay visible longer (6 s) so the user can read the full message.
+function toast(msg, type = 'info', dur) {
+  const defaults = { success: 3000, error: 6000, info: 3500 };
+  const ms = dur !== undefined ? dur : (defaults[type] ?? 3500);
   const icons = { success: '✅', error: '❌', info: 'ℹ️' };
   const el = document.createElement('div');
   el.className = `toast ${type}`;
   el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
   document.getElementById('toast-wrap').appendChild(el);
-  setTimeout(() => el.remove(), dur);
+  setTimeout(() => el.remove(), ms);
 }
 
 // ─── Tab Switching (with lazy-load) ──────────────────────────────────────────
