@@ -306,6 +306,26 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── Link Field (search-as-you-type autocomplete) ── */
+    .link-field-wrap { position: relative; }
+    .link-dropdown {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); z-index: 600;
+      max-height: 240px; overflow-y: auto;
+      display: none; box-shadow: var(--shadow);
+    }
+    .link-dropdown.open { display: block; }
+    .link-option {
+      padding: 9px 13px; cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background .12s;
+    }
+    .link-option:last-child { border-bottom: none; }
+    .link-option:hover { background: var(--bg-surface); color: var(--accent-2); }
+    .link-option-main { font-size: .88rem; font-weight: 500; }
+    .link-option-sub  { font-size: .75rem; color: var(--text-3); margin-top: 2px; }
+
     /* ── Empty state ── */
     .empty-state {
       text-align: center; padding: 36px 20px; color: var(--text-3);
@@ -497,13 +517,16 @@
                 </select>
               </div>
               <div class="mb-8">
-                <label class="lbl">Default Walk-in Customer</label>
-                <select id="cfg-default-walk-in-customer">
-                  <option value="">-- Select Customer --</option>
-                  {% for cust in customers %}
-                    <option value="{{ cust.name }}">{{ cust.customer_name }} ({{ cust.name }})</option>
-                  {% endfor %}
-                </select>
+                <label class="lbl" for="cfg-walk-in-customer-display">Default Walk-in Customer</label>
+                <div class="link-field-wrap" id="wrap-walk-in-customer">
+                  <input type="text" id="cfg-walk-in-customer-display"
+                         placeholder="Search customer by name or mobile…"
+                         autocomplete="off"
+                         oninput="searchWalkInCustomer(this.value)"
+                         onfocus="searchWalkInCustomer(this.value)"/>
+                  <input type="hidden" id="cfg-default-walk-in-customer"/>
+                  <div class="link-dropdown" id="walk-in-customer-dropdown"></div>
+                </div>
               </div>
               <div class="mb-8">
                 <label class="lbl">Default Intrastate Tax Template</label>
@@ -859,7 +882,20 @@ function loadCompanySettings(company = null) {
 
     document.getElementById('cfg-default-warehouse').value = settings.default_warehouse || '';
     document.getElementById('cfg-default-pos-profile').value = settings.default_pos_profile || '';
-    document.getElementById('cfg-default-walk-in-customer').value = settings.default_walk_in_customer || '';
+    // Walk-in customer: set hidden value AND resolve display name
+    const walkInVal = settings.default_walk_in_customer || '';
+    document.getElementById('cfg-default-walk-in-customer').value = walkInVal;
+    if (walkInVal) {
+      API.call('frappe.client.get_value', {
+        doctype: 'Customer', filters: { name: walkInVal }, fieldname: ['customer_name']
+      }).then(r => {
+        document.getElementById('cfg-walk-in-customer-display').value = (r && r.customer_name) || walkInVal;
+      }).catch(() => {
+        document.getElementById('cfg-walk-in-customer-display').value = walkInVal;
+      });
+    } else {
+      document.getElementById('cfg-walk-in-customer-display').value = '';
+    }
     document.getElementById('cfg-default-intrastate-tax-template').value = settings.default_intrastate_tax_template || '';
     document.getElementById('cfg-default-interstate-tax-template').value = settings.default_interstate_tax_template || '';
 
@@ -894,6 +930,49 @@ function updateDropdown(elementId, items, valueField, labelField, placeholder) {
     html += `<option value="${esc(val)}">${esc(lbl)}</option>`;
   });
   el.innerHTML = html;
+}
+
+// ─── Walk-in Customer Autocomplete ──────────────────────────────────────────
+let _walkInTimer = null;
+
+function searchWalkInCustomer(query) {
+  const dd  = document.getElementById('walk-in-customer-dropdown');
+  clearTimeout(_walkInTimer);
+  if (!query) {
+    document.getElementById('cfg-default-walk-in-customer').value = '';
+    dd.classList.remove('open');
+    return;
+  }
+  _walkInTimer = setTimeout(() => {
+    API.call('frappe.client.get_list', {
+      doctype: 'Customer',
+      filters: [['customer_name', 'like', `%${query}%`]],
+      fields: ['name', 'customer_name', 'mobile_no'],
+      limit: 10,
+      order_by: 'customer_name asc'
+    }).then(results => {
+      if (!results || !results.length) {
+        dd.innerHTML = '<div class="link-option" style="color:var(--text-3);cursor:default;font-style:italic;">No customers found</div>';
+        dd.classList.add('open');
+        return;
+      }
+      dd.innerHTML = results.map(c =>
+        `<div class="link-option" onclick="selectWalkInCustomer('${esc(c.name)}','${esc(c.customer_name)}')">
+           <div class="link-option-main">${esc(c.customer_name)}</div>
+           <div class="link-option-sub">${esc(c.name)}${c.mobile_no ? ' &middot; 📞 ' + esc(c.mobile_no) : ''}</div>
+         </div>`
+      ).join('');
+      dd.classList.add('open');
+    }).catch(() => dd.classList.remove('open'));
+  }, 250);
+}
+
+function selectWalkInCustomer(name, customerName) {
+  document.getElementById('cfg-default-walk-in-customer').value = name;
+  document.getElementById('cfg-walk-in-customer-display').value = customerName;
+  const dd = document.getElementById('walk-in-customer-dropdown');
+  dd.classList.remove('open');
+  dd.innerHTML = '';
 }
 
 function saveCompanySettings() {
@@ -1317,6 +1396,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // All other tabs lazy-load their data on first click — see switchTab + _tabLoaded.
   // This reduces initial page load from 10 API calls to 5.
+
+  // Close link-field dropdowns when clicking outside their wrapper
+  document.addEventListener('click', e => {
+    document.querySelectorAll('.link-dropdown.open').forEach(dd => {
+      const wrap = dd.closest('.link-field-wrap');
+      if (wrap && !wrap.contains(e.target)) dd.classList.remove('open');
+    });
+  });
 
   // Sync color picker with hex input
   const colorPicker = document.getElementById('cfg-brand-color');
