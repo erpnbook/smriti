@@ -13,6 +13,30 @@ import frappe
 from frappe.utils import flt, cint, nowdate
 from frappe import _
 
+def _get_default_warehouse(company):
+    """Company ke saath matching warehouse lo."""
+    if not company:
+        return "Stores - _C"
+    warehouse = frappe.db.get_value(
+        "Warehouse",
+        {"company": company, "is_group": 0, "warehouse_name": "Stores"},
+        "name"
+    )
+    if not warehouse:
+        warehouse = frappe.db.get_value(
+            "Warehouse",
+            {"company": company, "is_group": 0},
+            "name",
+            order_by="creation asc"
+        )
+    if not warehouse:
+        warehouse = frappe.db.get_value(
+            "Warehouse",
+            {"company": company},
+            "name"
+        )
+    return warehouse or "Stores - _C"
+
 def check_store_manager_role():
     """
     Enforces that only SMRITI Store Manager or System Manager can perform submissions.
@@ -115,8 +139,8 @@ def create_purchase_order(supplier, items, schedule_date=None, remarks=None, ima
         frappe.throw(_("Cannot create Purchase Order with an empty items list."))
 
     items_list = frappe.parse_json(items)
-    company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
-    warehouse = frappe.db.get_value("Warehouse", {"warehouse_name": "Stores"}, "name") or "Stores - _C"
+    company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company") or (frappe.get_all("Company", limit=1)[0].name if frappe.get_all("Company", limit=1) else None)
+    warehouse = _get_default_warehouse(company)
 
     # Save uploaded image file if present
     file_url = None
@@ -245,8 +269,8 @@ def create_purchase_receipt(supplier, items, po_name=None):
         frappe.throw(_("Cannot create Purchase Receipt with an empty items list."))
 
     items_list = frappe.parse_json(items)
-    company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
-    warehouse = frappe.db.get_value("Warehouse", {"warehouse_name": "Stores"}, "name") or "Stores - _C"
+    company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company") or (frappe.get_all("Company", limit=1)[0].name if frappe.get_all("Company", limit=1) else None)
+    warehouse = _get_default_warehouse(company)
 
     pr = frappe.new_doc("Purchase Receipt")
     pr.supplier = supplier
