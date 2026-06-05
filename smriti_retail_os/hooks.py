@@ -441,6 +441,11 @@ website_route_rules = [
         # Standalone Platform Center (Technical Admin Portal) — served from www/platform_center.html + www/platform_center.py
         "from_route": "/platform_center",
         "to_route": "platform_center"
+    },
+    {
+        # Standalone Reports Dashboard — served from www/reports.html + www/reports.py
+        "from_route": "/reports",
+        "to_route": "reports"
     }
 ]
 

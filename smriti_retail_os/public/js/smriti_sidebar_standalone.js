@@ -97,7 +97,7 @@ SMRITI.sidebarSchema = [
         id: 'reports',
         emoji: '📊',
         label: 'Reports',
-        url: '#'
+        url: '/reports'
     },
     {
         type: 'category',
