@@ -117,7 +117,7 @@ doctype_js = {
 
 # application home page — use Frappe default (login screen)
 # Port 9000 Nginx block handles the SMRITI POS redirect to /billing
-home_page = "login"
+home_page = "index"
 
 # website user home page (by Role)
 # Desk users (System Manager, Store Manager) land on ERPNext /app on port 8080.
