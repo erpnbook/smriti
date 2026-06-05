@@ -211,15 +211,23 @@ def get_stock_report(warehouse=None, item_group=None, show_zero=0):
     )
 
     # Enrich with item details
+    # Get all item codes from bins first
+    item_codes = [b.item_code for b in bins]
+
+    # Single bulk fetch — replaces N individual DB calls
+    item_map = {}
+    if item_codes:
+        items = frappe.get_all(
+            "Item",
+            filters={"name": ["in", item_codes]},
+            fields=["name", "item_name", "item_group",
+                    "custom_mrp", "custom_gst_percentage", "stock_uom"]
+        )
+        item_map = {i.name: i for i in items}
+
     result = []
     for b in bins:
-        item = frappe.db.get_value(
-            "Item",
-            b.item_code,
-            ["item_name", "item_group", "custom_mrp",
-             "custom_gst_percentage", "stock_uom"],
-            as_dict=True
-        ) or {}
+        item = item_map.get(b.item_code, {})
 
         # Filter by item_group if set
         if item_group and item.get("item_group") != item_group:
