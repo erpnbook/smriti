@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/cleanup_test_data.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Test data cleanup utility — removes SMRITI test fixtures after test runs.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

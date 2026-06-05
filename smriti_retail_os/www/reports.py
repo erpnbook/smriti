@@ -25,7 +25,7 @@ def get_context(context):
     allowed = {"SMRITI Store Manager", "SMRITI Admin",
                "System Manager", "Administrator"}
     if not allowed.intersection(set(roles)):
-        frappe.throw("Access Denied", frappe.PermissionError)
+        frappe.throw(_("Access Denied"), frappe.PermissionError)
     context.update({
         "title": "Reports — SMRITI Retail OS",
         "user": user

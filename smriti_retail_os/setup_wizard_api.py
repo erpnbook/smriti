@@ -65,7 +65,7 @@ def _validate_company_abbr(abbr, current_company=None):
         )
 
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def get_setup_wizard_initial_data():
     """
     Returns initial state for the Setup Wizard.
@@ -127,7 +127,7 @@ def get_setup_wizard_initial_data():
         "current_user": frappe.session.user
     }
 
-@frappe.whitelist()
+@frappe.whitelist(allow_guest=True)
 def run_setup_wizard(setup_data):
     """
     Executes setup wizard configuration programmatically.
