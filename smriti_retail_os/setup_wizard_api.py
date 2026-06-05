@@ -144,6 +144,9 @@ def run_setup_wizard(setup_data):
         print(f"[SMRITI SETUP] {msg}")
 
     try:
+        # Escalate session user to Administrator to prevent PermissionError in third-party hooks (e.g. india_compliance)
+        frappe.set_user("Administrator")
+
         # 1. Update Admin credentials if provided
         log("Updating Administrator profile details...")
         admin_fullname = setup_data.get("admin_fullname")
