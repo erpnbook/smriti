@@ -222,7 +222,7 @@ class SmritiDeskPage {
                         <div class="sys-list">
                             <div class="sys-row">
                                 <div class="sys-label">Retail OS Version</div>
-                                <div class="sys-val">v0.0.1 (Stable)</div>
+                                <div class="sys-val">v${(frappe.boot && frappe.boot.versions && frappe.boot.versions.smriti_retail_os) || "1.2.9"} (Stable)</div>
                             </div>
                             <div class="sys-row">
                                 <div class="sys-label">Database Connection</div>

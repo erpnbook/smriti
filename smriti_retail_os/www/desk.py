@@ -47,5 +47,6 @@ def get_context(context):
 
     context.cashier    = frappe.session.user
     context.csrf_token = frappe.sessions.get_csrf_token()
+    context.app_version = frappe.get_attr("smriti_retail_os.__version__")
 
     return context
