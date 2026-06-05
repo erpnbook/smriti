@@ -4,7 +4,7 @@
 # @description: Frappe application hooks — event bindings, scheduler jobs, and app metadata.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.2.7
+# @version: 1.2.8
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
@@ -13,7 +13,7 @@ app_name = "smriti_retail_os"
 app_title = "SMRITI Retail OS"
 app_publisher = "SMRITI Retail OS"
 app_description = "Retail Experience Layer"
-app_email = "support@smriti.io"
+app_email = "support@erpnbook.com"
 app_license = "mit"
 brand_html = "<b style='color:#e94560;font-family:Inter,sans-serif'>SMRITI Retail OS</b>"
 
@@ -35,7 +35,7 @@ email_footer = "smriti_retail_os/templates/emails/smriti_email_footer.html"
 
 # Support Link Overrides
 help_links = [
-    {"title": "SMRITI Support Desk", "url": "https://support.smriti.io"},
+    {"title": "SMRITI Support Desk", "url": "https://support.erpnbook.com"},
     {"title": "User Manual", "url": "/app/smriti-desk#user-manual"}
 ]
 

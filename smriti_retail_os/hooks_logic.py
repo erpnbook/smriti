@@ -543,7 +543,7 @@ def validate_and_reconcile_retail_invoice(doc, method):
                         "reference_doctype": doc.doctype,
                         "reference_name": doc.name,
                         "content": f"SMRITI: Auto-Reconciled negative stock. Restocked {needed_qty} qty of item {item.item_code} in warehouse {item.warehouse} to authorize instant checkout.",
-                        "comment_email": "system@smriti.io",
+                        "comment_email": "system@erpnbook.com",
                         "comment_by": "SMRITI Retail OS"
                     }).insert(ignore_permissions=True)
                 except Exception as stock_ex:

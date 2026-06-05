@@ -16,7 +16,7 @@ window.SMRITI = window.SMRITI || {};
 
 SMRITI.renderSidebar = function(active_page) {
     const is_manager = frappe.user.has_role("SMRITI Store Manager");
-    const is_admin_account = frappe.session.user === "Admin" || frappe.session.user === "admin@smriti.io";
+    const is_admin_account = frappe.session.user === "Admin" || frappe.session.user === "admin@erpnbook.com";
 
     const nav_items = [
         {id:"billing",    icon:"💳", label:"Billing",

@@ -184,7 +184,7 @@ SMRITI.renderFlexibleSidebar = function(activePageId) {
     // 4. Generate Scrollable Menu Items
     let menuHtml = '<div class="sidebar-menu">';
     
-    const isAdminAccount = loggedUser === 'Admin' || loggedUser === 'admin@smriti.io';
+    const isAdminAccount = loggedUser === 'Admin' || loggedUser === 'admin@erpnbook.com';
     
     SMRITI.sidebarSchema.forEach(block => {
         if (block.type === 'link') {
