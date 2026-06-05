@@ -226,6 +226,55 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
 .toast span { font-size:20px; }
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+/* Autocomplete Dropdown Styling */
+.autocomplete-items {
+    position: absolute;
+    border: 1px solid var(--border2);
+    border-top: none;
+    z-index: 9999;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg2);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    max-height: 250px;
+    overflow-y: auto;
+}
+.autocomplete-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background var(--t);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+.autocomplete-item:hover, .autocomplete-item.autocomplete-item-active {
+    background: rgba(99, 102, 241, 0.15);
+    border-left: 3px solid var(--primary);
+}
+.autocomplete-row-main {
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+.autocomplete-row-sub {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+.autocomplete-row-barcode {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--primary-lt);
+}
 </style>
 
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
@@ -273,7 +322,10 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                     <div class="panel-section-title"><span class="material-symbols-outlined">filter_alt</span> Load Items manually</div>
                     <div class="form-group">
                         <label class="form-label">Style / Article No</label>
-                        <input type="text" class="form-input" id="flt-style" placeholder="e.g. BBM-01, sport-04...">
+                        <div style="position: relative;">
+                            <input type="text" class="form-input" style="width: 100%;" id="flt-style" placeholder="e.g. BBM-01, sport-04..." autocomplete="off">
+                            <div id="autocomplete-list" class="autocomplete-items" style="display: none;"></div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Search Keyword</label>
@@ -1099,6 +1151,141 @@ function populateTemplatesDropdown() {
         tempSel.appendChild(opt);
     });
 }
+
+// --- Live Autocomplete Audit Implementation ---
+let currentFocus = -1;
+
+function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const styleInput = document.getElementById('flt-style');
+    const autoList = document.getElementById('autocomplete-list');
+    if (!styleInput || !autoList) return;
+
+    // input handler with 300ms debounce
+    styleInput.addEventListener('input', debounce(async (e) => {
+        const txt = e.target.value.trim();
+        if (!txt) {
+            closeAutocomplete();
+            return;
+        }
+
+        try {
+            const results = await api('smriti_retail_os.barcode_api.search_barcode_items', { txt });
+            showAutocomplete(results);
+        } catch (err) {
+            console.error('Autocomplete failed:', err);
+        }
+    }, 300));
+
+    // Keyboard navigation
+    styleInput.addEventListener('keydown', function(e) {
+        let items = autoList.getElementsByClassName('autocomplete-item');
+        if (!items || !items.length) return;
+
+        if (e.keyCode === 40) { // Arrow Down
+            currentFocus++;
+            addActive(items);
+            e.preventDefault();
+        } else if (e.keyCode === 38) { // Arrow Up
+            currentFocus--;
+            addActive(items);
+            e.preventDefault();
+        } else if (e.keyCode === 13) { // Enter
+            e.preventDefault();
+            if (currentFocus > -1 && items[currentFocus]) {
+                items[currentFocus].click();
+            } else if (items[0]) {
+                items[0].click();
+            }
+        } else if (e.keyCode === 27) { // Escape
+            closeAutocomplete();
+        }
+    });
+
+    function addActive(items) {
+        if (!items) return false;
+        removeActive(items);
+        if (currentFocus >= items.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = items.length - 1;
+        items[currentFocus].classList.add('autocomplete-item-active');
+        items[currentFocus].scrollIntoView({ block: 'nearest' });
+    }
+
+    function removeActive(items) {
+        for (let i = 0; i < items.length; i++) {
+            items[i].classList.remove('autocomplete-item-active');
+        }
+    }
+
+    function showAutocomplete(results) {
+        autoList.innerHTML = '';
+        currentFocus = -1;
+
+        if (!results || !results.length) {
+            autoList.style.display = 'none';
+            return;
+        }
+
+        results.forEach((item) => {
+            const div = document.createElement('div');
+            div.className = 'autocomplete-item';
+            
+            // Premium layout showing Article, Name, Barcode
+            div.innerHTML = `
+                <div class="autocomplete-row-main">
+                    <span>${item.style || 'N/A'}</span>
+                    <span class="autocomplete-row-barcode">${item.barcode || 'No Barcode'}</span>
+                </div>
+                <div class="autocomplete-row-sub">${item.item_name || 'N/A'}</div>
+            `;
+
+            // Suggestion click behavior
+            div.addEventListener('click', async () => {
+                styleInput.value = item.item_code;
+                closeAutocomplete();
+                
+                // Clicking suggestion auto loads item(s) into worksheet (without Search button)
+                try {
+                    const loadedItems = await api('smriti_retail_os.barcode_api.get_items_for_printing', {
+                        filters: JSON.stringify({ search_text: item.item_code })
+                    });
+                    if (loadedItems && loadedItems.length) {
+                        addItemsToQueue(loadedItems);
+                        toast(`Loaded item: ${item.item_code}`, 'success');
+                    } else {
+                        toast(`Failed to load details for: ${item.item_code}`, 'info');
+                    }
+                } catch (err) {
+                    toast('Failed to load selected item: ' + err.message, 'error');
+                }
+            });
+
+            autoList.appendChild(div);
+        });
+
+        autoList.style.display = 'block';
+    }
+
+    function closeAutocomplete() {
+        autoList.innerHTML = '';
+        autoList.style.display = 'none';
+        currentFocus = -1;
+    }
+
+    // Close autocomplete when clicking outside
+    document.addEventListener('click', (e) => {
+        if (e.target !== styleInput && e.target !== autoList && !autoList.contains(e.target)) {
+            closeAutocomplete();
+        }
+    });
+});
 
 // Load manual search
 async function loadManualItems() {

@@ -1105,3 +1105,62 @@ def save_print_template(template_name, label_size, printer_language, raw_templat
     
     return get_print_templates()
 
+
+@frappe.whitelist()
+def search_barcode_items(txt):
+    """
+    Search against:
+    - item_code
+    - item_name
+    - barcode
+    - style/article code
+    
+    Returns top 20 matches.
+    """
+    if not txt:
+        return []
+
+    search_val = f"%{txt}%"
+    
+    # Check if custom_style_code or style_no column exists in Item
+    style_columns = ["variant_of"]
+    if frappe.db.has_column("Item", "custom_style_code"):
+        style_columns.append("custom_style_code")
+    elif frappe.db.has_column("Item", "style_no"):
+        style_columns.append("style_no")
+        
+    where_clauses = [
+        "i.name LIKE %(search_val)s",
+        "i.item_name LIKE %(search_val)s",
+        "ib.barcode LIKE %(search_val)s"
+    ]
+    for col in style_columns:
+        where_clauses.append(f"i.{col} LIKE %(search_val)s")
+        
+    query = f"""
+        SELECT DISTINCT
+            i.name as item_code,
+            i.item_name,
+            COALESCE(i.variant_of, i.name) as style,
+            (
+                SELECT b.barcode 
+                FROM `tabItem Barcode` b 
+                WHERE b.parent = i.name 
+                ORDER BY b.custom_is_primary DESC, b.creation ASC 
+                LIMIT 1
+            ) as barcode
+        FROM
+            `tabItem` i
+        LEFT JOIN
+            `tabItem Barcode` ib ON ib.parent = i.name
+        WHERE
+            i.disabled = 0
+            AND i.has_variants = 0
+            AND ({" OR ".join(where_clauses)})
+        LIMIT 20
+    """
+    
+    results = frappe.db.sql(query, {"search_val": search_val}, as_dict=True)
+    return results
+
+
