@@ -396,7 +396,7 @@
     </nav>
     <div class="sidebar-footer">
       <div>SMRITI Retail OS</div>
-      <div style="margin-top:3px;"><a href="/app">Open ERPNext ↗</a></div>
+      <div style="margin-top:3px;"><a href="/app">Open Desk ↗</a></div>
     </div>
   </aside>
 
@@ -748,7 +748,7 @@
           <div class="config-card-header">
             <div>
               <div class="config-card-title">🏢 Company Management</div>
-              <div class="config-card-sub">Create, update and manage ERPNext companies. Abbreviation cannot be changed after creation.</div>
+              <div class="config-card-sub">Create, update and manage companies. Abbreviation cannot be changed after creation.</div>
             </div>
             <button class="btn btn-primary" onclick="openCompanyDialog()">＋ New Company</button>
           </div>
@@ -850,12 +850,12 @@
 <script>
 const CSRF_TOKEN = '{{ csrf_token }}';
 
-// ─── Frappe API helper ────────────────────────────────────────────────────────
-// Frappe _server_messages is double-encoded:
+// ─── API helper ────────────────────────────────────────────────────────
+// System _server_messages is double-encoded:
 // a JSON string of an array of JSON strings of message objects.
 // e.g. '["{\"message\":\"Cannot delete...\"}"]'
 // We unwrap both layers to get the human-readable message.
-function _parseFrappeError(data) {
+function _parseServerError(data) {
   try {
     const msgs = JSON.parse(data._server_messages || '[]');
     if (Array.isArray(msgs) && msgs.length) {
@@ -870,12 +870,12 @@ const API = {
   call(method, args = {}) {
     return fetch('/api/method/' + method, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': CSRF_TOKEN },
+      headers: { 'Content-Type': 'application/json', 'x-frappe-csrf-token': CSRF_TOKEN },
       body: JSON.stringify(args)
     })
     .then(r => r.json())
     .then(data => {
-      if (data.exc_type) throw new Error(_parseFrappeError(data));
+      if (data.exc_type) throw new Error(_parseServerError(data));
       return data.message !== undefined ? data.message : data;
     });
   }
@@ -1273,7 +1273,7 @@ function saveCompanySettings() {
     loyalty_points_per_rupee: parseFloat(document.getElementById('cfg-loyalty-points-per-rupee').value) || 1.0
   };
 
-  // area/locality maps to address_line2 in ERPNext Address DocType
+  // area/locality maps to address_line2 in system Address DocType
   const addressData = {
     address_title: storeTradeName,
     address_line1: storeAddressLine1,

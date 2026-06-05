@@ -408,7 +408,7 @@ function doLogin() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-Frappe-CSRF-Token': 'fetch'
+            'x-frappe-csrf-token': 'fetch'
         },
         body: JSON.stringify({ usr, pwd })
     })

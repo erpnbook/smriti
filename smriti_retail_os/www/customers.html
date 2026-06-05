@@ -1,7 +1,7 @@
-﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/customers.html
-  @description: SMRITI Customer Directory — Standalone UI (Zero Frappe chrome)
+  @description: SMRITI Customer Directory — Standalone UI (Zero system chrome)
   @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
   @version: 1.0.0
   @license: MIT
@@ -344,7 +344,7 @@ function api(method, params = {}) {
         credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
-            'X-Frappe-CSRF-Token': CSRF_TOKEN
+            'x-frappe-csrf-token': CSRF_TOKEN
         },
         body: JSON.stringify(params)
     })

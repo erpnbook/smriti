@@ -324,7 +324,7 @@
           <div class="sec-card">
             <h3 class="card-title">📖 Security Governance Policies</h3>
             <p style="line-height:1.6;color:var(--text-2);">
-              SMRITI's Security & Workflow Center maps directly to standard ERPNext modules. Access is tier-restricted:<br/><br/>
+              SMRITI's Security & Workflow Center maps directly to standard backend modules. Access is tier-restricted:<br/><br/>
               • <strong>Security Architect (Administrator)</strong>: Absolute core authority to Create/Edit/Delete system Roles, manage the complete Workflow state-machine engines, and customize Workflow States.<br/>
               • <strong>Store Manager</strong>: Retail-scoped access. Can onboard Users, activate/deactivate System Users, bind existing Roles/Role Profiles, reset passwords, manage row-level permissions restricted to <strong>Company</strong> & <strong>Warehouse</strong>, and process pending approvals.
             </p>
@@ -378,7 +378,7 @@
             <div class="panel-hdr">
               <div>
                 <h1 class="panel-title"><span class="material-symbols-outlined">verified_user</span> System Roles</h1>
-                <p class="panel-sub">Create and view standard system roles in the ERPNext engine.</p>
+                <p class="panel-sub">Create and view standard system roles in the engine.</p>
               </div>
               <button class="btn btn-primary" onclick="openAddRoleModal()">＋ Create Role</button>
             </div>
@@ -815,7 +815,7 @@ const API = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Frappe-CSRF-Token': CSRF_TOKEN
+        'x-frappe-csrf-token': CSRF_TOKEN
       },
       body: JSON.stringify(args)
     })
@@ -945,7 +945,7 @@ function loadOverviewStats() {
 function syncInboxCountOnly() {
   fetch('/api/method/smriti_retail_os.security_api.get_pending_approvals', {
     method: 'POST',
-    headers: { 'X-Frappe-CSRF-Token': CSRF_TOKEN }
+    headers: { 'x-frappe-csrf-token': CSRF_TOKEN }
   })
   .then(r => r.json())
   .then(d => {

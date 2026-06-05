@@ -11,10 +11,10 @@
 /* ============================================================
    SMRITI Retail OS — Client-Side Branding Safety Net
    Priority order:
-     1. frappe.boot data patch  (prevents re-render from ERPNext data)
+     1. frappe.boot data patch  (prevents re-render from backend data)
      2. DOM TreeWalker scrubber (catches dynamic re-renders / modals)
      3. MutationObserver        (re-runs scrubber on every DOM add)
-     4. About dialog override   (replaces Frappe's about modal)
+     4. About dialog override   (replaces standard about modal)
    ============================================================ */
 
 var SMRITI_LOGO  = '/assets/smriti_retail_os/images/logo.svg';

@@ -1,7 +1,7 @@
-﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/barcode.html
-  @description: SMRITI Barcode Printer & Generator — Standalone UI (Zero Frappe chrome)
+  @description: SMRITI Barcode Printer & Generator — Standalone UI (Zero system chrome)
   @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
   @version: 2.0.0
   @license: MIT
@@ -306,7 +306,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 <thead>
                     <tr>
                         <th>Token</th>
-                        <th>ERPNext Field Mapping</th>
+                        <th>System Field Mapping</th>
                         <th>Example</th>
                     </tr>
                 </thead>
@@ -333,7 +333,7 @@ function api(method, params = {}) {
         credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
-            'X-Frappe-CSRF-Token': CSRF_TOKEN
+            'x-frappe-csrf-token': CSRF_TOKEN
         },
         body: JSON.stringify(params)
     })

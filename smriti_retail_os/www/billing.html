@@ -1,7 +1,7 @@
-﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/billing.html
-  @description: SMRITI Retail Billing Terminal — Standalone UI (Frappe as pure API backend)
+  @description: SMRITI Retail Billing Terminal — Standalone UI (system as pure API backend)
   @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
   @version: 2.0.0 (Standalone)
   @license: MIT
@@ -972,7 +972,7 @@ let loggedUser = '{{ cashier }}';
 
 /* ══════════════════════════════════════════════════
    SMRITI Billing Terminal — Standalone JS v2.0
-   Frappe REST API Backend Only. Zero Frappe Chrome.
+   System REST API Backend Only. Zero system Chrome.
    ══════════════════════════════════════════════════ */
 
 // ── State ──
@@ -995,7 +995,7 @@ function api(method, params = {}) {
         credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
-            'X-Frappe-CSRF-Token': CSRF_TOKEN,
+            'x-frappe-csrf-token': CSRF_TOKEN,
         },
         body: JSON.stringify(params),
     })
@@ -1038,7 +1038,7 @@ async function doAuth() {
         const r = await fetch('/api/method/login', {
             method: 'POST',
             credentials: 'include',
-            headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': 'fetch' },
+            headers: { 'Content-Type': 'application/json', 'x-frappe-csrf-token': 'fetch' },
             body: JSON.stringify({ usr, pwd }),
         });
         const d = await r.json();

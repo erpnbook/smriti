@@ -21,6 +21,14 @@ brand_html = "<b style='color:#e94560;font-family:Inter,sans-serif'>SMRITI Retai
 app_logo_url = "/assets/smriti_retail_os/images/logo.svg"
 favicon = "/assets/smriti_retail_os/images/logo.svg"
 
+# Email notifications whitelabeling
+sender_name = "SMRITI Retail OS"
+email_brand_image = "/assets/smriti_retail_os/images/logo.svg"
+
+# Footer suppression
+footer_items = []
+disable_built_with = 1
+
 # Email Whitelabeling templates
 email_header = "smriti_retail_os/templates/emails/smriti_email_header.html"
 email_footer = "smriti_retail_os/templates/emails/smriti_email_footer.html"

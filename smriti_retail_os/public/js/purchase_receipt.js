@@ -11,7 +11,7 @@
 /* ─────────────────────────────────────────────
    SMRITI — Purchase Receipt Form Simplification
    GRN receipt entry for retail store.
-   System Manager sees normal ERPNext form.
+   System Manager sees normal standard form.
    ───────────────────────────────────────────── */
 
 frappe.ui.form.on("Purchase Receipt", {

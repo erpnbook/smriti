@@ -662,7 +662,7 @@
               <span class="arrow">→</span>
             </a>
             <a href="/app" class="launch-btn">
-              <span>🏢 Go to ERPNext Desk</span>
+              <span>🏢 Go to SMRITI Desk</span>
               <span class="arrow">→</span>
             </a>
           </div>
@@ -714,7 +714,7 @@
     function loadInitialData() {
       fetch('/api/method/smriti_retail_os.setup_wizard_api.get_setup_wizard_initial_data', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': CSRF_TOKEN }
+        headers: { 'Content-Type': 'application/json', 'x-frappe-csrf-token': CSRF_TOKEN }
       })
       .then(r => r.json())
       .then(res => {
@@ -1046,7 +1046,7 @@
         
         fetch('/api/method/smriti_retail_os.setup_wizard_api.run_setup_wizard', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': CSRF_TOKEN },
+          headers: { 'Content-Type': 'application/json', 'x-frappe-csrf-token': CSRF_TOKEN },
           body: JSON.stringify({ setup_data: payload })
         })
         .then(r => r.json())

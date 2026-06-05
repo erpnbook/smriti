@@ -479,7 +479,7 @@
       {% else %}
       <div>Administrator Portal</div>
       {% endif %}
-      <div style="margin-top:4px;"><a href="/app">Back to ERPNext Desk ↗</a></div>
+      <div style="margin-top:4px;"><a href="/app">Back to SMRITI Desk ↗</a></div>
     </div>
   </aside>
 
@@ -932,7 +932,7 @@ const API = {
   call(method, args = {}) {
     return fetch('/api/method/' + method, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': CSRF_TOKEN },
+      headers: { 'Content-Type': 'application/json', 'x-frappe-csrf-token': CSRF_TOKEN },
       body: JSON.stringify(args)
     })
     .then(r => r.json())

@@ -11,7 +11,7 @@
 /* ─────────────────────────────────────────────
    SMRITI — Purchase Order Form Simplification
    Retail-focused PO creation for Store Manager.
-   System Manager sees normal ERPNext form.
+   System Manager sees normal standard form.
    ───────────────────────────────────────────── */
 
 frappe.ui.form.on("Purchase Order", {

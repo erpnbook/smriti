@@ -189,7 +189,7 @@ class SmritiInventoryController {
                         <!-- Main Submit Button -->
                         <div class="payment-drawer-card" style="margin-top: 15px;">
                             <button class="btn btn-primary btn-block btn-checkout-save" id="smriti-inv-btn-submit" ${!this.is_manager ? 'disabled' : ''}>
-                                <span class="material-symbols-outlined" style="color: white; margin-right: 4px;">send</span> F9: ${__('Commit to ERPNext')}
+                                <span class="material-symbols-outlined" style="color: white; margin-right: 4px;">send</span> F9: ${__('Commit to SMRITI')}
                             </button>
                         </div>
                     </div>
@@ -666,7 +666,7 @@ class SmritiInventoryController {
         if (!this.is_manager) {
             frappe.msgprint({
                 title: __('Access Denied'),
-                message: __('Only Store Managers or System Managers are authorized to commit inventory records to ERPNext.'),
+                message: __('Only Store Managers or System Managers are authorized to commit inventory records to SMRITI.'),
                 indicator: 'red'
             });
             return;
@@ -707,7 +707,7 @@ class SmritiInventoryController {
                     items: JSON.stringify(state.items)
                 },
                 freeze: true,
-                freeze_message: __("Generating Purchase Receipt (GRN) in ERPNext..."),
+                freeze_message: __("Generating Purchase Receipt (GRN) in SMRITI..."),
                 callback: function(r) {
                     if (r.message) {
                         frappe.msgprint({

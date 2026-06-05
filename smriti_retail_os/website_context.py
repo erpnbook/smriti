@@ -73,6 +73,8 @@ def get_context(context):
             "meta_description": "SMRITI Retail OS — Smarter Retail, Built for India.",
             "meta_title":       _BRAND_NAME,
             "csrf_token":       frappe.local.session.data.csrf_token if (getattr(frappe.local, "session", None) and frappe.local.session.data.get("csrf_token")) else "",
+            "footer_items":     [],
+            "disable_built_with": True,
         }
     )
     return context

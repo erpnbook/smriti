@@ -10,7 +10,7 @@
 {% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/eway_bill.html
-  @description: SMRITI E-way Bill Generation & Dashboard — Standalone UI (Zero Frappe chrome)
+  @description: SMRITI E-way Bill Generation & Dashboard — Standalone UI (Zero system chrome)
   @author: Antigravity <antigravity@google.com>
   @version: 1.0.0
   @license: MIT
@@ -344,7 +344,7 @@ function api(method, params = {}) {
         credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
-            'X-Frappe-CSRF-Token': CSRF_TOKEN
+            'x-frappe-csrf-token': CSRF_TOKEN
         },
         body: JSON.stringify(params)
     })

@@ -11,7 +11,7 @@
 /* ─────────────────────────────────────────────
    SMRITI Reports — Phase 6
    4 Report types: Sales | Stock | GST | Outstanding
-   All data from ERPNext via reports_api.py
+   All data from SMRITI via reports_api.py
    ───────────────────────────────────────────── */
 
 window.SMRITIReports = (function () {
@@ -585,7 +585,7 @@ window.SMRITIReports = (function () {
             <div class="sr-section-title" style="margin-top:24px">📊 Tax Account-wise Breakdown</div>
             ${tax_table}
             <div style="margin-top:16px;padding:14px 16px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:8px;font-size:12px;color:#f59e0b">
-                ⚠️ This is a summary view only. For GSTR-1 filing, use India Compliance → GST Reports → GSTR-1 in ERPNext.
+                ⚠️ This is a summary view only. For GSTR-1 filing, use India Compliance → GST Reports → GSTR-1 in SMRITI.
             </div>
         `);
     }

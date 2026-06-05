@@ -10,8 +10,8 @@
 
 /* ============================================================
    SMRITI Retail OS — Brand Overrides & Whitelabeling
-   100% SMRITI branding. Zero ERPNext / Frappe mentions.
-   Respects Frappe/ERPNext default themes.
+   100% SMRITI branding. Zero system mentions.
+   Respects default themes.
    ============================================================ */
 
 /* ----- Google Font: Inter ----- */
@@ -37,7 +37,7 @@ body, *, input, button, select, textarea {
 }
 
 /* ============================================================
-   HIDE ALL FRAPPE / ERPNEXT BRANDING ELEMENTS
+   HIDE ALL BRANDING ELEMENTS
    ============================================================ */
 .powered-by,
 .built-with,
@@ -55,9 +55,9 @@ a[href*="erpnext.com"] {
 img[src*="erpnext"],
 img[src*="frappe-logo"],
 img[src*="frappe/images"],
-img[alt="ERPNext"],
-img[alt="Frappe Framework"],
-img[alt="Frappe"] {
+img[alt="erpnext" i],
+img[alt="frappe framework" i],
+img[alt="frappe" i] {
   content: url('/assets/smriti_retail_os/images/logo.svg') !important;
   max-height: 38px !important;
   width: auto !important;
