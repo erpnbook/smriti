@@ -55,8 +55,11 @@ def add_item_by_barcode(barcode, price_list="Standard Selling"):
         "price_list_rate"
     ) or rate
 
-    # Resolve tax details (India Compliance Integration)
+    # Resolve tax details (India Compliance Integration — HSN-first)
     gst_percentage = cint(item_doc.custom_gst_percentage) if item_doc.custom_gst_percentage else 0
+    if not gst_percentage and item_doc.gst_hsn_code:
+        from smriti_retail_os.hooks_logic import get_gst_rate_from_hsn
+        gst_percentage = get_gst_rate_from_hsn(item_doc.gst_hsn_code) or 0
     tax_template = ""
     if item_doc.taxes:
         tax_template = item_doc.taxes[0].item_tax_template
@@ -78,6 +81,7 @@ def add_item_by_barcode(barcode, price_list="Standard Selling"):
         "mrp": flt(mrp),
         "gst_percentage": gst_percentage,
         "tax_template": tax_template,
+        "gst_hsn_code": item_doc.gst_hsn_code or "",
         "available_qty": flt(stock_qty)
     }
 
@@ -485,7 +489,7 @@ def search_items(query, price_list="Standard Selling"):
             "brand": ["like", f"%{query}%"],
             "item_group": ["like", f"%{query}%"]
         },
-        fields=["name", "item_name", "stock_uom", "brand", "item_group", "custom_mrp", "custom_gst_percentage", "valuation_rate"]
+        fields=["name", "item_name", "stock_uom", "brand", "item_group", "custom_mrp", "custom_gst_percentage", "valuation_rate", "gst_hsn_code"]
     )
     
     results = []
@@ -505,6 +509,9 @@ def search_items(query, price_list="Standard Selling"):
         ) or rate
         
         gst_percentage = cint(it.custom_gst_percentage) if it.custom_gst_percentage else 0
+        if not gst_percentage and it.gst_hsn_code:
+            from smriti_retail_os.hooks_logic import get_gst_rate_from_hsn
+            gst_percentage = get_gst_rate_from_hsn(it.gst_hsn_code) or 0
         
         # Resolve tax template
         tax_template = ""
@@ -521,7 +528,8 @@ def search_items(query, price_list="Standard Selling"):
             "rate": flt(rate),
             "mrp": flt(mrp),
             "gst_percentage": gst_percentage,
-            "tax_template": tax_template
+            "tax_template": tax_template,
+            "gst_hsn_code": it.gst_hsn_code or ""
         })
     return results
 
@@ -565,7 +573,8 @@ def load_held_invoice(invoice_name):
             "discount_percentage": flt(it.discount_percentage or 0.0),
             "mrp": flt(mrp),
             "gst_percentage": gst_percentage,
-            "tax_template": tax_template
+            "tax_template": tax_template,
+            "gst_hsn_code": item_doc.gst_hsn_code or ""
         })
         
     return {

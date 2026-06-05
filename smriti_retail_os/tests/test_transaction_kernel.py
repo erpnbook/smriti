@@ -33,7 +33,15 @@ from smriti_retail_os.transaction_kernel import (
 
 
 class TestTransactionKernelHelpers(unittest.TestCase):
-    """Unit tests for pure helper functions — no DB required."""
+    """Unit tests for pure helper functions."""
+
+    @classmethod
+    def setUpClass(cls):
+        frappe.set_user("Administrator")
+        # Resolve a real item for matrix tests (Fix 3 now throws for unknown items)
+        cls.real_item = frappe.db.get_value(
+            "Item", {"is_sales_item": 1, "disabled": 0}, "name"
+        ) or "_SMRITI_GENERIC_ITEM_"
 
     # ── _safe_parse_json ───────────────────────────────────────────────────────
 
@@ -87,8 +95,8 @@ class TestTransactionKernelHelpers(unittest.TestCase):
                 "size_columns": ["36", "37", "38"],
                 "rows": [
                     {
-                        "article":  "20016",
-                        "color":    "BLACK",
+                        "article":  self.real_item,
+                        "color":    "",
                         "sizes":    {"36": 0, "37": 9, "38": 5},
                         "mrp":      1899,
                         "rate":     1610.17,
@@ -139,7 +147,7 @@ class TestTransactionKernelHelpers(unittest.TestCase):
         data = {
             "_matrix": {
                 "size_columns": ["36"],
-                "rows": [{"article": "A", "sizes": {"36": 2}}],
+                "rows": [{"article": self.real_item, "sizes": {"36": 2}}],
             },
             "items": [{"item_code": "EXISTING", "qty": 1}],
         }
@@ -154,7 +162,7 @@ class TestTransactionKernelHelpers(unittest.TestCase):
         data = {
             "_matrix": {
                 "size_columns": [36, 37],
-                "rows": [{"article": "A", "sizes": {36: 3, 37: 0}}],
+                "rows": [{"article": self.real_item, "sizes": {36: 3, 37: 0}}],
             }
         }
         meta = frappe.get_meta("Sales Invoice")
@@ -165,14 +173,32 @@ class TestTransactionKernelHelpers(unittest.TestCase):
 
     # ── _resolve_item_code_from_matrix ────────────────────────────────────────
 
-    def test_resolve_item_code_uses_fallback_if_nothing_found(self):
-        # Fabricated article that definitely doesn't exist
+    def test_resolve_item_code_returns_none_on_miss(self):
+        """
+        After Fix 3: _resolve_item_code_from_matrix must return None for unknown articles.
+        It must NOT silently create a ghost sentinel item in the Item master.
+        Callers are responsible for raising a visible error.
+        """
         code = _resolve_item_code_from_matrix(
             "ZZZNOTEXIST999", "BLUE", "99", ""
         )
-        # Should return sentinel or some valid fallback — never raises
-        self.assertIsNotNone(code)
-        self.assertIsInstance(code, str)
+        # Must return None — never a sentinel string, never raises
+        self.assertIsNone(code)
+
+    def test_flatten_matrix_unknown_article_raises_error(self):
+        """
+        After Fix 3: _flatten_matrix_to_rows must raise ValidationError when the
+        article cannot be resolved to any existing Item in the master.
+        """
+        data = {
+            "_matrix": {
+                "size_columns": ["36"],
+                "rows": [{"article": "ZZZNOTEXIST999", "color": "RED", "sizes": {"36": 1}}],
+            }
+        }
+        meta = frappe.get_meta("Sales Invoice")
+        with self.assertRaises(frappe.ValidationError):
+            _flatten_matrix_to_rows(data, meta)
 
 
 class TestTransactionKernelIntegration(unittest.TestCase):

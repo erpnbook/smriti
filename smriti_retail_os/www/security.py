@@ -9,15 +9,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
-# @file: smriti_retail_os/www/security.py
-# @description: Page controller for SMRITI Security & Workflow Center.
-#               Enforces access checks and initializes template context.
-# @author: Antigravity <antigravity@google.com>
-# @version: 1.0.0
-# @license: MIT
-#
 
 import frappe
 from frappe import _

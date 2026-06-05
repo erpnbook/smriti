@@ -8,17 +8,9 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
-# @file: smriti_retail_os/security_api.py
-# @description: Backend controller for SMRITI Security & Workflow Center.
-#               Enforces Security Governance Tiers directly using Frappe standard tables.
-# @author: Antigravity <antigravity@google.com>
-# @version: 1.0.0
-# @license: MIT
-#
 
 import frappe
+import secrets
 from frappe import _
 from frappe.utils import cint
 from frappe.utils.password import update_password
@@ -140,13 +132,27 @@ def save_user(email, first_name, last_name=None, roles=None, role_profile=None):
         user.first_name = first_name
         user.last_name = last_name
         user.role_profile_name = role_profile
-        # Assign a safe temporary default password; the manager can trigger reset
-        user.new_password = "SmritiUser123!"
-        
+        # SEC-02: Generate a cryptographically random one-time password.
+        # This is NEVER exposed to the caller — the admin must send a password
+        # reset email via the Security Centre "Send Reset Link" button.
+        # Using secrets.token_urlsafe(16) guarantees uniqueness per user creation.
+        user.new_password = secrets.token_urlsafe(16)
+        # Force password reset on first login
+        user.reset_password_key = frappe.generate_hash()
+
         if roles:
             user.set("roles", [{"role": r} for r in roles])
-            
+
         user.insert(ignore_permissions=True)
+        # Notify admin to send a reset link — the user cannot log in until they set a password
+        frappe.log_error(
+            title="SMRITI: New user created — password reset required",
+            message=(
+                f"User '{email}' was created with a random temporary password.\n"
+                f"Go to Security Centre → Users → '{email}' → Send Reset Link "
+                f"so the user can set their own password before first login."
+            )
+        )
     else:
         user = frappe.get_doc("User", email)
         user.first_name = first_name

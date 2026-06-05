@@ -1,6 +1,6 @@
 /**
  * @file: smriti_retail_os/smriti_retail_os/page/smriti_item_master/smriti_item_master.js
- * @description: Handles user login, registration, and JWT token generation.
+ * @description: Page controller for SMRITI Item Master Import — Excel paste, file upload, and validation grid.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
  * @version: 1.0.0
@@ -250,7 +250,8 @@ class SmritiItemMasterController {
                         const selected = String(opt).trim().toUpperCase() === String(val).trim().toUpperCase() ? 'selected' : '';
                         return `<option value="${_esc(opt)}" ${selected}>${_esc(opt)}</option>`;
                     }).join('');
-                    tds += `<td><select class="sim-cell-input" 
+                    const disabled = col.key === 'PRODUCT TAX' ? 'disabled style="background: var(--sim-border-color); cursor: not-allowed;"' : '';
+                    tds += `<td><select class="sim-cell-input" ${disabled}
                                data-suffix="${suffix}" data-row="${idx}" data-col="${col.key}">
                              ${optionsHtml}
                            </select></td>`;
@@ -328,6 +329,34 @@ class SmritiItemMasterController {
             if (rows[rowIdx]) {
                 rows[rowIdx].data[col] = $(this).val();
                 rows[rowIdx].status    = null;  // reset validation
+
+                // HSN-first auto derivation
+                if (col === 'HSN CODE') {
+                    const hsn_val = $(this).val();
+                    if (hsn_val) {
+                        frappe.call({
+                            method: 'smriti_retail_os.smriti_retail_os.item_master_api.get_hsn_gst_rate',
+                            args: { hsn_code: hsn_val },
+                            callback: function (r) {
+                                if (r.message !== undefined && rows[rowIdx]) {
+                                    const derived_gst = String(r.message);
+                                    rows[rowIdx].data['PRODUCT TAX'] = derived_gst;
+                                    const $cellSelect = $(`#sim-row-${suffix}-${rowIdx} select[data-col="PRODUCT TAX"]`);
+                                    if ($cellSelect.length) {
+                                        $cellSelect.val(derived_gst);
+                                    }
+                                    self._update_stats(suffix);
+                                }
+                            }
+                        });
+                    } else {
+                        rows[rowIdx].data['PRODUCT TAX'] = '0';
+                        const $cellSelect = $(`#sim-row-${suffix}-${rowIdx} select[data-col="PRODUCT TAX"]`);
+                        if ($cellSelect.length) {
+                            $cellSelect.val('0');
+                        }
+                    }
+                }
             }
             self._update_stats(suffix);
         });
@@ -463,6 +492,28 @@ class SmritiItemMasterController {
         const existing = this._get_rows(suffix);
         this._set_rows(suffix, [...existing, ...newRows]);
         this._render_grid_rows(suffix);
+
+        // Auto-resolve HSN for pasted rows
+        newRows.forEach((row, i) => {
+            const rowIdx = startIdx + i;
+            const hsn = row.data['HSN CODE'];
+            if (hsn) {
+                frappe.call({
+                    method: 'smriti_retail_os.smriti_retail_os.item_master_api.get_hsn_gst_rate',
+                    args: { hsn_code: hsn },
+                    callback: function (r) {
+                        if (r.message !== undefined && self._get_rows(suffix)[rowIdx]) {
+                            const derived = String(r.message);
+                            self._get_rows(suffix)[rowIdx].data['PRODUCT TAX'] = derived;
+                            const $cellSelect = $(`#sim-row-${suffix}-${rowIdx} select[data-col="PRODUCT TAX"]`);
+                            if ($cellSelect.length) {
+                                $cellSelect.val(derived);
+                            }
+                        }
+                    }
+                });
+            }
+        });
 
         frappe.show_alert({
             message: `✅ ${newRows.length} row${newRows.length > 1 ? 's' : ''} pasted — click Validate to check`,

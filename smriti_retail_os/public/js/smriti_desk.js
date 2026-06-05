@@ -1,6 +1,6 @@
 /**
  * @file: smriti_retail_os/page/smriti-desk/smriti-desk.js
- * @description: Handles user login, registration, and JWT token generation.
+ * @description: Frontend controller for SMRITI Desk view customizations..
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
  * @version: 1.0.0

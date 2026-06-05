@@ -176,6 +176,15 @@ def _flatten_matrix_to_rows(data, meta):
 
             # Resolve best-match item_code for this article/color/size
             resolved_code = _resolve_item_code_from_matrix(article, color, size, item_code)
+            if not resolved_code:
+                frappe.throw(
+                    _(
+                        "Item not found for Article: <b>{0}</b>, Color: <b>{1}</b>, Size: <b>{2}</b>. "
+                        "Please verify your Item Master \u2014 the variant may not have been imported yet. "
+                        "Go to SMRITI Item Master \u2192 Import to create missing variants before invoicing."
+                    ).format(article, color, size),
+                    title=_("Item Not Found in Item Master")
+                )
 
             expanded_rows.append({
                 "item_code":   resolved_code,
@@ -206,7 +215,10 @@ def _flatten_matrix_to_rows(data, meta):
 
 def _resolve_item_code_from_matrix(article, color, size, fallback):
     """
-    Priority cascade: ARTICLE-COLOR-SIZE → ARTICLE-COLOR → ARTICLE → fallback → fuzzy → sentinel.
+    Priority cascade: ARTICLE-COLOR-SIZE → ARTICLE-COLOR → ARTICLE → fallback → fuzzy.
+    Returns None if no matching item is found — callers must handle None gracefully
+    and surface a descriptive error to the user rather than silently inserting
+    a ghost sentinel item into the item master.
     """
     candidates = [
         f"{article}-{color}-{size}" if article and color and size else None,
@@ -228,28 +240,40 @@ def _resolve_item_code_from_matrix(article, color, size, fallback):
         if found:
             return found
 
-    # Sentinel fallback — ensures invoice line doesn't break
-    return _ensure_sentinel_item()
+    # Item not found — return None so the caller can raise a visible error.
+    # DO NOT auto-create a sentinel item here: ghost items corrupt stock reports,
+    # low-stock alerts, and purchasing recommendations.
+    return None
 
 
 def _ensure_sentinel_item():
-    """Creates a generic non-stock sentinel item if it doesn't exist."""
+    """
+    INTERNAL USE ONLY — NOT invoked automatically by the transaction kernel.
+
+    Creates the SMRITI generic sentinel item for manual/test use.
+    This function must NEVER be called from live transaction flows:
+    auto-inserting a ghost item corrupts stock reports, low-stock alerts,
+    and purchasing recommendations.
+
+    To deliberately pre-create this item in a dev/test environment, call:
+        from smriti_retail_os.transaction_kernel import _ensure_sentinel_item
+        _ensure_sentinel_item()
+    """
     sentinel = "_SMRITI_GENERIC_ITEM_"
     if not frappe.db.exists("Item", sentinel):
         try:
             frappe.get_doc({
-                "doctype":      "Item",
-                "item_code":    sentinel,
-                "item_name":    "SMRITI Generic Article (Kernel Sentinel)",
-                "item_group":   "All Item Groups",
-                "is_stock_item": 0,
-                "is_sales_item": 1,
+                "doctype":          "Item",
+                "item_code":        sentinel,
+                "item_name":        "SMRITI Generic Article (Kernel Sentinel)",
+                "item_group":       "All Item Groups",
+                "is_stock_item":    0,
+                "is_sales_item":    1,
                 "is_purchase_item": 1,
-                "stock_uom":    "Nos",
+                "stock_uom":        "Nos",
             }).insert(ignore_permissions=True)
             frappe.db.commit()
         except Exception:
-            # Last resort — return first available item
             first = frappe.db.get_value("Item", {"is_sales_item": 1, "disabled": 0}, "name")
             return first or ""
     return sentinel

@@ -1,6 +1,6 @@
 /**
  * @file: smriti_retail_os/page/smriti-loyalty/smriti-loyalty.js
- * @description: Handles user login, registration, and JWT token generation.
+ * @description: Page controller for SMRITI Loyalty & Promotions Page..
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
  * @version: 1.0.0

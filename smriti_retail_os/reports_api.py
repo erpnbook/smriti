@@ -32,36 +32,34 @@ def get_sales_report(from_date=None, to_date=None, granularity="daily"):
     """
     Sales summary from POS Invoice (submitted only).
     Returns totals + breakdown by date or hour.
+    Uses SQL aggregates (SUM, COUNT, GROUP BY) throughout — zero in-memory
+    invoice loading, constant memory regardless of date range width.
     """
     if not from_date:
         from_date = nowdate()
     if not to_date:
         to_date = nowdate()
 
-    filters = {
-        "docstatus": 1,
-        "posting_date": ["between", [from_date, to_date]]
-    }
+    # ── Summary totals via single SQL aggregate query ──────────────────────────────
+    totals_rows = frappe.db.sql("""
+        SELECT
+            COUNT(*) AS total_bills,
+            COALESCE(SUM(grand_total), 0) AS total_sales,
+            COALESCE(SUM(net_total), 0) AS total_net,
+            COALESCE(SUM(total_taxes_and_charges), 0) AS total_tax,
+            COALESCE(SUM(COALESCE(discount_amount, 0)), 0) AS total_discount
+        FROM `tabPOS Invoice`
+        WHERE docstatus = 1
+          AND posting_date BETWEEN %(from_date)s AND %(to_date)s
+    """, {"from_date": from_date, "to_date": to_date}, as_dict=True)
 
-    invoices = frappe.get_all(
-        "POS Invoice",
-        filters=filters,
-        fields=[
-            "name", "posting_date", "posting_time",
-            "grand_total", "net_total", "total_taxes_and_charges",
-            "customer", "owner as cashier", "pos_profile",
-            "discount_amount"
-        ],
-        order_by="posting_date asc, posting_time asc"
-    )
-
-    # Summary totals
-    total_sales    = sum(flt(i.grand_total) for i in invoices)
-    total_net      = sum(flt(i.net_total) for i in invoices)
-    total_tax      = sum(flt(i.total_taxes_and_charges) for i in invoices)
-    total_discount = sum(flt(i.discount_amount or 0) for i in invoices)
-    total_bills    = len(invoices)
-    avg_bill       = flt(total_sales / total_bills, 2) if total_bills else 0
+    totals = totals_rows[0] if totals_rows else {}
+    total_bills   = int(totals.get("total_bills") or 0)
+    total_sales   = flt(totals.get("total_sales") or 0, 2)
+    total_net     = flt(totals.get("total_net") or 0, 2)
+    total_tax     = flt(totals.get("total_tax") or 0, 2)
+    total_discount = flt(totals.get("total_discount") or 0, 2)
+    avg_bill      = flt(total_sales / total_bills, 2) if total_bills else 0
 
     # Payment method breakdown
     payment_totals = _get_payment_breakdown(from_date, to_date)
@@ -72,18 +70,18 @@ def get_sales_report(from_date=None, to_date=None, granularity="daily"):
     # Cashier-wise summary
     cashier_summary = _get_cashier_summary(from_date, to_date)
 
-    # Date-wise or hour-wise breakdown
+    # Date-wise or hour-wise breakdown via SQL GROUP BY
     if granularity == "hourly" and from_date == to_date:
-        breakdown = _get_hourly_breakdown(invoices)
+        breakdown = _get_hourly_breakdown_sql(from_date)
     else:
-        breakdown = _get_daily_breakdown(invoices)
+        breakdown = _get_daily_breakdown_sql(from_date, to_date)
 
     return {
         "summary": {
-            "total_sales":    flt(total_sales, 2),
-            "total_net":      flt(total_net, 2),
-            "total_tax":      flt(total_tax, 2),
-            "total_discount": flt(total_discount, 2),
+            "total_sales":    total_sales,
+            "total_net":      total_net,
+            "total_tax":      total_tax,
+            "total_discount": total_discount,
             "total_bills":    total_bills,
             "avg_bill":       avg_bill
         },
@@ -154,8 +152,49 @@ def _get_cashier_summary(from_date, to_date):
         return []
 
 
+def _get_daily_breakdown_sql(from_date, to_date):
+    """Group invoices by date using SQL GROUP BY — zero in-memory invoice loading."""
+    try:
+        rows = frappe.db.sql("""
+            SELECT
+                posting_date AS date,
+                COUNT(*) AS bills,
+                COALESCE(SUM(grand_total), 0) AS sales
+            FROM `tabPOS Invoice`
+            WHERE docstatus = 1
+              AND posting_date BETWEEN %(from_date)s AND %(to_date)s
+            GROUP BY posting_date
+            ORDER BY posting_date ASC
+        """, {"from_date": from_date, "to_date": to_date}, as_dict=True)
+        return [{"date": str(r.date), "bills": int(r.bills), "sales": flt(r.sales, 2)} for r in rows]
+    except Exception:
+        return []
+
+
+def _get_hourly_breakdown_sql(date):
+    """Group invoices by hour for single-day view using SQL GROUP BY."""
+    try:
+        rows = frappe.db.sql("""
+            SELECT
+                LPAD(HOUR(posting_time), 2, '0') AS hour,
+                COUNT(*) AS bills,
+                COALESCE(SUM(grand_total), 0) AS sales
+            FROM `tabPOS Invoice`
+            WHERE docstatus = 1
+              AND posting_date = %(date)s
+            GROUP BY HOUR(posting_time)
+            ORDER BY HOUR(posting_time) ASC
+        """, {"date": date}, as_dict=True)
+        return [{"hour": f"{r.hour}:00", "bills": int(r.bills), "sales": flt(r.sales, 2)} for r in rows]
+    except Exception:
+        return []
+
+
+# Legacy in-memory breakdown helpers — kept for backward compatibility with existing tests.
+# Prefer the SQL variants above for production use.
+
 def _get_daily_breakdown(invoices):
-    """Group invoices by date."""
+    """DEPRECATED: Group invoices by date (in-memory). Use _get_daily_breakdown_sql() instead."""
     by_date = {}
     for inv in invoices:
         d = str(inv.posting_date)
@@ -167,7 +206,7 @@ def _get_daily_breakdown(invoices):
 
 
 def _get_hourly_breakdown(invoices):
-    """Group invoices by hour for single-day view."""
+    """DEPRECATED: Group invoices by hour (in-memory). Use _get_hourly_breakdown_sql() instead."""
     by_hour = {}
     for inv in invoices:
         if inv.posting_time:

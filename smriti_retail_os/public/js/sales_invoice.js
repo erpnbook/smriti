@@ -1,6 +1,6 @@
 /**
  * @file: smriti_retail_os/public/js/sales_invoice.js
- * @description: Handles user login, registration, and JWT token generation.
+ * @description: Form controller for SMRITI Sales Invoice customizations..
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
  * @version: 1.0.0

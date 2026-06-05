@@ -30,6 +30,63 @@ REQUIRED_COLS = ["BARCODE NO", "PRODUCT STYLE CODE", "ITEM DESCRIPTION", "COLOR"
 VALID_GST = {0, 5, 12, 18, 28}
 
 
+def _build_import_lookup_cache():
+    """
+    Pre-loads all lookup sets needed by validate_import_rows and import_item_master
+    in a single bulk query pass. This eliminates the N+1 DB query pattern where
+    every row in the import grid triggered individual frappe.db.exists() calls.
+
+    Returns a dict with:
+      barcode_to_item   : {barcode: parent_item_code}  — from Item Barcode table
+      existing_items    : set of all item_codes         — from Item table
+      existing_vendors  : set of custom_vendor_code     — from Supplier table
+      existing_brands   : set of brand names            — from Brand table
+      attr_doctypes     : set of DocType names that exist on this instance
+    """
+    # 1. Barcode → parent item mapping (covers duplicate barcode check)
+    raw_barcodes = frappe.db.sql(
+        "SELECT barcode, parent FROM `tabItem Barcode`", as_dict=True
+    )
+    barcode_to_item = {r.barcode: r.parent for r in raw_barcodes}
+
+    # 2. All item codes (covers item_code namespace collision check)
+    existing_items = set(
+        r[0] for r in frappe.db.sql("SELECT name FROM `tabItem`")
+    )
+
+    # 3. All vendor codes (covers supplier hard check)
+    vendor_rows = frappe.db.sql(
+        "SELECT custom_vendor_code FROM `tabSupplier` WHERE custom_vendor_code IS NOT NULL AND custom_vendor_code != ''",
+        as_dict=True
+    )
+    existing_vendors = {r.custom_vendor_code for r in vendor_rows}
+
+    # 4. All brand names (covers brand soft check)
+    existing_brands = set(
+        r[0] for r in frappe.db.sql("SELECT name FROM `tabBrand`")
+    )
+
+    # 5. Which attribute DocTypes exist on this install (avoids 7×N DocType exists() checks)
+    attr_doctype_names = [
+        "SMRITI Gender", "SMRITI Purchase Class", "SMRITI Merchandise Category",
+        "SMRITI Sub Category", "SMRITI Upper Material", "SMRITI Outsole", "SMRITI Heel Type"
+    ]
+    existing_doctypes = set(
+        r[0] for r in frappe.db.sql(
+            f"SELECT name FROM `tabDocType` WHERE name IN ({','.join(['%s']*len(attr_doctype_names))})",
+            attr_doctype_names
+        )
+    )
+
+    return {
+        "barcode_to_item":   barcode_to_item,
+        "existing_items":    existing_items,
+        "existing_vendors":  existing_vendors,
+        "existing_brands":   existing_brands,
+        "existing_doctypes": existing_doctypes,
+    }
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  PUBLIC API
 # ─────────────────────────────────────────────────────────────────────────────
@@ -41,6 +98,14 @@ def get_import_template_headers():
 
 
 @frappe.whitelist()
+def get_hsn_gst_rate(hsn_code):
+    """Whitelisted wrapper to fetch GST percentage from an HSN code."""
+    from smriti_retail_os.hooks_logic import get_gst_rate_from_hsn
+    rate = get_gst_rate_from_hsn(hsn_code)
+    return rate if rate is not None else 0
+
+
+@frappe.whitelist()
 def validate_import_rows(rows_json):
     """
     Dry-run validation of pasted/uploaded rows.
@@ -49,6 +114,22 @@ def validate_import_rows(rows_json):
     """
     rows = frappe.parse_json(rows_json)
     results = []
+
+    companies = frappe.get_all("Company", limit=1)
+    company = (
+        frappe.defaults.get_user_default("company") or
+        (companies[0].name if companies else None)
+    )
+
+    _clear_hsn_cache()
+
+    # Pre-load all lookup sets in 5 bulk queries — eliminates N+1 per-row DB hits
+    _cache = _build_import_lookup_cache()
+    _barcode_to_item   = _cache["barcode_to_item"]
+    _existing_items    = _cache["existing_items"]
+    _existing_vendors  = _cache["existing_vendors"]
+    _existing_brands   = _cache["existing_brands"]
+    _existing_doctypes = _cache["existing_doctypes"]
 
     # Track barcodes seen within the sheet itself (for intra-sheet duplicate check)
     seen_barcodes = {}
@@ -83,54 +164,59 @@ def validate_import_rows(rows_json):
             else:
                 seen_barcodes[barcode] = idx
 
-                # ── System duplicate barcode check ─────────────────────────
-                existing_item = frappe.db.get_value(
-                    "Item Barcode", {"barcode": barcode}, "parent"
-                )
+                # ── System duplicate barcode check (uses pre-loaded cache) ──
+                existing_item = _barcode_to_item.get(barcode)
                 # Allow re-import: barcode already belongs to THIS exact variant → OK
                 if existing_item and existing_item != variant_code_early:
                     errors.append(
                         f"Barcode '{barcode}' already assigned to item '{existing_item}' — barcodes must be unique"
                     )
                 elif not existing_item:
-                    # Check barcode collision with item_code namespace
-                    collides_with_item = frappe.db.exists("Item", barcode)
+                    # Check barcode collision with item_code namespace (uses pre-loaded set)
+                    collides_with_item = barcode in _existing_items
                     if collides_with_item and barcode != variant_code_early:
                         errors.append(
                             f"Barcode '{barcode}' collides with existing item_code — cannot use item_code as barcode"
                         )
 
         # ── GST % validation ───────────────────────────────────────────────
-        gst_raw = _clean_str(row.get("PRODUCT TAX", "0"))
-        try:
-            gst_val = int(float(gst_raw or "0"))
-            if gst_val not in VALID_GST:
-                errors.append(f"GST '{gst_raw}%' is not valid — allowed: 0, 5, 12, 18, 28")
-        except ValueError:
-            errors.append(f"GST '{gst_raw}' is not a number")
+        hsn_raw = row.get("HSN CODE", "")
+        hsn_code = _resolve_hsn_code_cached(hsn_raw) if hsn_raw else None
+        
+        from smriti_retail_os.hooks_logic import get_gst_rate_from_hsn
+        hsn_derived_rate = get_gst_rate_from_hsn(hsn_code, company) if hsn_code else None
+        
+        if hsn_derived_rate is not None:
+            gst_val = hsn_derived_rate
+        else:
+            gst_raw = _clean_str(row.get("PRODUCT TAX", "0"))
+            try:
+                gst_val = int(float(gst_raw or "0"))
+            except ValueError:
+                errors.append(f"GST '{gst_raw}' is not a number")
+                gst_val = None
+                
+        if gst_val is not None and gst_val not in VALID_GST:
+            errors.append(f"GST '{gst_val}%' is not valid — allowed: 0, 5, 12, 18, 28")
 
-        # ── Vendor / Supplier hard check ───────────────────────────────────
+        # ── Vendor / Supplier hard check (uses pre-loaded cache) ───────────
         vendor = _clean_str(row.get("VENDOR CODE", ""))
         if vendor:
             vendor_clean = str(vendor).strip()
             vendor_clean_upper = vendor_clean.upper()
             if vendor_clean_upper not in ("", "NA", "N/A", "NONE", "NULL", "NAN", "DV"):
-                supplier_exists = frappe.db.exists(
-                    "Supplier",
-                    {"custom_vendor_code": vendor_clean}
-                )
-                if not supplier_exists:
+                if vendor_clean not in _existing_vendors:
                     errors.append(
                         f"Vendor Code '{vendor_clean}' not found in Supplier Master. "
                         f"Please create a Supplier with Vendor Code '{vendor_clean}' before importing items."
                     )
 
-        # ── Brand soft check ───────────────────────────────────────────────
+        # ── Brand soft check (uses pre-loaded cache) ───────────────────────
         brand = _clean_str(row.get("BRAND NAME", ""))
-        if brand and not frappe.db.exists("Brand", brand):
+        if brand and brand not in _existing_brands:
             warnings.append(f"Brand '{brand}' not found — will be auto-created")
 
-        # ── Attribute Soft Checks (auto-create warnings) ──────────────────
+        # ── Attribute Soft Checks (uses pre-loaded DocType set) ───────────
         attr_checks = [
             ("GENDER", "SMRITI Gender", "Gender"),
             ("PURCHASE CLASS", "SMRITI Purchase Class", "Purchase Class"),
@@ -142,10 +228,11 @@ def validate_import_rows(rows_json):
         ]
         for row_key, doctype_name, label in attr_checks:
             val = _clean_str(row.get(row_key, ""))
-            if val:
-                # Guard: DocType may not exist on fresh installs
+            if val and doctype_name in _existing_doctypes:
+                # Single per-value lookup is still needed here — we can't pre-load all values
+                # for every custom attribute, but DocType existence check is now cache-free
                 try:
-                    if frappe.db.exists("DocType", doctype_name) and not frappe.db.exists(doctype_name, val):
+                    if not frappe.db.exists(doctype_name, val):
                         warnings.append(f"{label} '{val}' not found — will be auto-created")
                 except Exception:
                     pass
@@ -204,10 +291,18 @@ def import_item_master(rows_json):
             mrp             = flt(row.get("PLANNED MRP", 0))
             cost            = flt(row.get("COST PRICE", 0))
             
-            gst_raw         = _clean_str(row.get("PRODUCT TAX", "0"))
-            gst_pct         = str(int(float(gst_raw or "0"))).strip() if gst_raw else "0"
-            
             hsn_code        = _clean_str(row.get("HSN CODE", ""))
+            resolved_hsn    = _resolve_hsn_code_cached(hsn_code) if hsn_code else None
+            
+            # Derive GST percentage (HSN-first)
+            from smriti_retail_os.hooks_logic import get_gst_rate_from_hsn
+            hsn_derived_rate = get_gst_rate_from_hsn(resolved_hsn, company) if resolved_hsn else None
+            if hsn_derived_rate is not None:
+                gst_pct = str(hsn_derived_rate)
+            else:
+                gst_raw = _clean_str(row.get("PRODUCT TAX", "0"))
+                gst_pct = str(int(float(gst_raw or "0"))).strip() if gst_raw else "0"
+            
             image_link      = _clean_str(row.get("IMAGE LINK", ""))
             item_group      = _clean_str(row.get("DEPARTMENT", "Products")) or "Products"
             vendor_code     = _clean_str(row.get("VENDOR CODE", ""))
@@ -820,6 +915,9 @@ def get_style_details(article_no):
 def create_style_with_variants(base_details, sizes_config):
     check_store_manager_role()
     
+    # Clear per-batch HSN resolution cache for this run
+    _clear_hsn_cache()
+    
     # Ensure hardcoded standard UOM 'Nos' exists in the database
     _ensure_uom("Nos")
     
@@ -832,8 +930,20 @@ def create_style_with_variants(base_details, sizes_config):
     brand = bd.get("brand")
     mrp = flt(bd.get("mrp", 0))
     cost = flt(bd.get("cost_price", 0))
-    gst_pct = str(bd.get("gst_percentage", "0")).strip()
     hsn_code = bd.get("hsn_code")
+    
+    # Resolve company first — needed for HSN GST rate derivation below
+    company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+
+    # Derive GST percentage (HSN-first)
+    resolved_hsn = _resolve_hsn_code_cached(hsn_code) if hsn_code else None
+    from smriti_retail_os.hooks_logic import get_gst_rate_from_hsn
+    hsn_derived_rate = get_gst_rate_from_hsn(resolved_hsn, company) if resolved_hsn else None
+    if hsn_derived_rate is not None:
+        gst_pct = str(hsn_derived_rate)
+    else:
+        gst_pct = str(bd.get("gst_percentage", "0")).strip()
+        
     gender = bd.get("gender")
     purchase_class = bd.get("purchase_class")
     merch_cat = bd.get("merchandise_category")
@@ -842,8 +952,6 @@ def create_style_with_variants(base_details, sizes_config):
     vendor_code = bd.get("vendor_code")
     _validate_vendor_code(vendor_code)
     color = bd.get("color", "UNKNOWN").strip()
-    
-    company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
     
     # 1. Get or create style template parent item
     template = _get_or_create_template(
@@ -1144,6 +1252,7 @@ def import_pivot_item_master(styles_json):
     Saves a batch of Style Templates and their dynamic Size variant items.
     """
     check_store_manager_role()
+    _clear_hsn_cache()
     styles = frappe.parse_json(styles_json)
     
     created_count = 0
@@ -1167,8 +1276,17 @@ def import_pivot_item_master(styles_json):
             brand = bd.get("brand")
             mrp = flt(bd.get("mrp", 0))
             cost = flt(bd.get("cost_price", 0))
-            gst_pct = str(bd.get("gst_percentage", "18")).strip()
             hsn_code = bd.get("hsn_code")
+            
+            # Derive GST percentage (HSN-first)
+            resolved_hsn = _resolve_hsn_code_cached(hsn_code) if hsn_code else None
+            from smriti_retail_os.hooks_logic import get_gst_rate_from_hsn
+            hsn_derived_rate = get_gst_rate_from_hsn(resolved_hsn, company) if resolved_hsn else None
+            if hsn_derived_rate is not None:
+                gst_pct = str(hsn_derived_rate)
+            else:
+                gst_pct = str(bd.get("gst_percentage", "18")).strip()
+                
             gender = bd.get("gender", "UNISEX")
             purchase_class = bd.get("purchase_class", "FW")
             merch_cat = bd.get("merchandise_category")

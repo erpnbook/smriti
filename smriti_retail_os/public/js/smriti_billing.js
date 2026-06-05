@@ -1,6 +1,6 @@
 /**
  * @file: smriti_retail_os/public/js/smriti_billing.js
- * @description: Handles user login, registration, and JWT token generation.
+ * @description: Frontend controller for SMRITI Retail Billing terminal — barcode scanning, cart, split payments.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
  * @version: 1.0.0

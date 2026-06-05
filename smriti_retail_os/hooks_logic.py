@@ -14,7 +14,49 @@ from frappe.utils import flt, cint
 from frappe import _
 
 # Helper to get state from GSTIN using India Compliance utilities
-def resolve_address_state(gstin, address_text="", fallback="Karnataka"):
+def _get_company_state_fallback(company=None):
+    """
+    Returns the state of the company for GST jurisdiction determination.
+
+    Returns None (instead of a hardcoded fallback) if the company state is not
+    configured. This prevents silent application of incorrect intrastate tax rates
+    while still allowing callers like resolve_address_state() to resolve state
+    from GSTIN or address text before escalating.
+
+    Callers that REQUIRE a state for tax calculations (e.g. _resolve_default_tax_template)
+    should throw their own descriptive error when they receive None.
+    """
+    try:
+        if not company:
+            company = (
+                frappe.defaults.get_user_default("company")
+                or frappe.db.get_value("Company", {}, "name")
+            )
+        if company:
+            state = frappe.db.get_value("Company", company, "state")
+            if state:
+                return state
+            # State field is empty — log a warning so admins notice in Error Log.
+            # DO NOT hardcode "Karnataka" — that silently produces incorrect GST
+            # invoices for companies in any other state.
+            frappe.log_error(
+                title="SMRITI: Company state not configured — GST risk",
+                message=(
+                    f"Company '{company}' has no 'State' configured. "
+                    f"Go to Accounting → Company → {company} and set the 'State' field. "
+                    f"Without this, intrastate vs interstate GST determination may be incorrect."
+                )
+            )
+            return None
+    except Exception:
+        pass
+    return None
+
+
+
+def resolve_address_state(gstin, address_text="", fallback=None, company=None):
+    if fallback is None:
+        fallback = _get_company_state_fallback(company)
     if address_text:
         states = [
             "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
@@ -39,19 +81,87 @@ def resolve_address_state(gstin, address_text="", fallback="Karnataka"):
 
 # --- Item (Product Master) Hooks ---
 
+def get_gst_rate_from_hsn(hsn_code, company=None):
+    """Derive the total GST rate from an HSN Code via India Compliance's HSN master.
+    
+    Lookup chain: gst_hsn_code → GST HSN Code.taxes → Item Tax Template → sum(tax_rate)
+    Returns the total GST percentage (e.g. 18) or None if not determinable.
+    """
+    if not hsn_code:
+        return None
+
+    try:
+        if not frappe.db.exists("GST HSN Code", hsn_code):
+            return None
+
+        hsn_doc = frappe.get_doc("GST HSN Code", hsn_code)
+        if not hsn_doc.taxes:
+            return None
+
+        # Get the first matching Item Tax Template (prefer company-specific)
+        template_name = None
+        for tax in hsn_doc.taxes:
+            if not tax.item_tax_template:
+                continue
+            if company:
+                tmpl_company = frappe.db.get_value("Item Tax Template", tax.item_tax_template, "company")
+                if tmpl_company == company:
+                    template_name = tax.item_tax_template
+                    break
+            else:
+                template_name = tax.item_tax_template
+                break
+
+        if not template_name and hsn_doc.taxes:
+            # Fallback to first available template
+            template_name = hsn_doc.taxes[0].item_tax_template
+
+        if not template_name:
+            return None
+
+        # Sum up tax rates from the template details (CGST + SGST = total GST)
+        total_rate = frappe.db.sql(
+            "SELECT SUM(tax_rate) FROM `tabItem Tax Template Detail` WHERE parent = %s",
+            (template_name,)
+        )
+
+        if total_rate and total_rate[0][0]:
+            return int(total_rate[0][0])
+
+        return None
+    except Exception:
+        return None
+
+
 def sync_item_taxes_and_prices(doc, method):
     """
     Triggers before_save on Item.
-    1. Maps custom_gst_percentage to India Compliance standard Item Tax Templates.
-    2. Syncs custom_mrp to standard Item Price.
-    3. Handles UOM fallbacks.
+    1. HSN-first: If gst_hsn_code is set, derive custom_gst_percentage from India Compliance's HSN master.
+       Falls back to manual custom_gst_percentage only when HSN is absent or has no configured taxes.
+    2. Maps the resolved GST percentage to the correct Item Tax Template.
+    3. Syncs custom_mrp to standard Item Price.
+    4. Handles UOM fallbacks.
     """
     if not doc.stock_uom:
         doc.stock_uom = "Nos"
-    
-    if doc.custom_gst_percentage:
-        pct = cint(doc.custom_gst_percentage)
-        company = frappe.defaults.get_user_default("company") or frappe.db.get_value("Company", {}, "name")
+
+    company = frappe.defaults.get_user_default("company") or frappe.db.get_value("Company", {}, "name")
+
+    # HSN-first: derive GST % from HSN Code if available
+    hsn_derived_rate = None
+    if doc.gst_hsn_code:
+        hsn_derived_rate = get_gst_rate_from_hsn(doc.gst_hsn_code, company)
+        if hsn_derived_rate is not None:
+            # Auto-populate custom_gst_percentage as a derived read-only value
+            try:
+                doc.custom_gst_percentage = str(hsn_derived_rate)
+            except Exception:
+                pass
+
+    # Resolve the effective GST percentage (HSN-derived takes priority)
+    pct = hsn_derived_rate if hsn_derived_rate is not None else cint(doc.custom_gst_percentage or 0)
+
+    if pct:
         template_name = frappe.db.get_value(
             "Item Tax Template", 
             {"name": ["like", f"%{pct}%"], "company": company}, 
@@ -69,7 +179,12 @@ def sync_item_taxes_and_prices(doc, method):
                 template_name = details[0]
                 
         if template_name:
-            doc.taxes = []
+            # Skip if the correct template is already the sole entry (idempotent)
+            existing = [t.item_tax_template for t in (doc.taxes or [])]
+            if existing == [template_name]:
+                return
+            # Properly clear child table (doc.taxes = [] doesn't work in Frappe hooks)
+            doc.set("taxes", [])
             doc.append("taxes", {
                 "item_tax_template": template_name,
                 "tax_category": ""

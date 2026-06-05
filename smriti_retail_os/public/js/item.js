@@ -1,6 +1,6 @@
 /**
  * @file: smriti_retail_os/public/js/item.js
- * @description: Handles user login, registration, and JWT token generation.
+ * @description: Item form customizations for SMRITI Retail OS — hides advanced tabs, shows retail fields.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
  * @version: 1.0.0
@@ -15,6 +15,11 @@ frappe.ui.form.on('Item', {
         }
     },
     refresh: function(frm) {
+        // HSN-first: custom_gst_percentage is always read-only, auto-derived from HSN master
+        frm.set_df_property('custom_gst_percentage', 'read_only', 1);
+        frm.set_df_property('custom_gst_percentage', 'description',
+            __('Auto-derived from HSN Code. Set HSN Code to update.'));
+
         const is_smriti = frappe.user.has_role("SMRITI Store Manager") || frappe.user.has_role("SMRITI Cashier");
         if (is_smriti) {
             // 1. Hide Advanced Tabs
@@ -36,6 +41,7 @@ frappe.ui.form.on('Item', {
             frm.toggle_display('custom_department', true);
             frm.toggle_display('custom_gst_percentage', true);
             frm.toggle_display('custom_mrp', true);
+            frm.toggle_display('gst_hsn_code', true);
             frm.toggle_display('custom_current_stock_html', true);
             
             // 4. Fetch current retail stock dynamically
@@ -58,6 +64,22 @@ frappe.ui.form.on('Item', {
                     }
                 });
             }
+        }
+    },
+    gst_hsn_code: function(frm) {
+        // HSN-first: when HSN code changes, auto-derive GST % from HSN master
+        if (frm.doc.gst_hsn_code) {
+            frappe.call({
+                method: 'smriti_retail_os.smriti_retail_os.item_master_api.get_hsn_gst_rate',
+                args: { hsn_code: frm.doc.gst_hsn_code },
+                callback: function(r) {
+                    if (r.message !== undefined) {
+                        frm.set_value('custom_gst_percentage', String(r.message));
+                    }
+                }
+            });
+        } else {
+            frm.set_value('custom_gst_percentage', '0');
         }
     }
 });

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: verify_security.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Utility script to verify security and token permissions..
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0
