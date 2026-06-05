@@ -1,0 +1,1154 @@
+/**
+ * @file: smriti_retail_os/www/reports.html
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/reports.html
+  @description: SMRITI Reports Dashboard — Standalone UI (Zero system chrome)
+  @author: Antigravity <antigravity@google.com>
+  @version: 1.0.0
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>SMRITI Reports Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+  <style>
+    /* ────────── Core SMRITI UI Tokens ────────── */
+    :root {
+      --bg-base:     #0a0f1e;
+      --bg-surface:  #0f1629;
+      --bg-card:     #131d35;
+      --bg-input:    #172040;
+      --border:      rgba(255,255,255,0.07);
+      --border-glow: rgba(99,102,241,0.2);
+      --accent:      #6366f1;
+      --accent-glow: rgba(99,102,241,0.5);
+      --accent-2:    #818cf8;
+      --success:     #10b981;
+      --warning:     #f59e0b;
+      --danger:      #ef4444;
+      --text-1:      #e2e8f0;
+      --text-2:      #94a3b8;
+      --text-3:      #475569;
+      --radius:      12px;
+      --radius-sm:   8px;
+      --radius-lg:   16px;
+      --shadow:      0 8px 32px rgba(0,0,0,0.5);
+      --font-mono:   'JetBrains Mono', monospace;
+      --t:           0.2s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg-base); color: var(--text-1); font-family: 'Inter', sans-serif; font-size: 14px; }
+
+    /* Ambient background grid */
+    .bg-grid {
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+      background-size: 50px 50px;
+      z-index: 0;
+    }
+    .bg-glow {
+      position: fixed; width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,0.04) 0%, transparent 70%);
+      top: -100px; left: -100px; z-index: 0; filter: blur(40px);
+    }
+
+    /* App Shell */
+    #app { position: relative; z-index: 1; width: 100vw; height: 100vh; display: flex; overflow: hidden; }
+
+    /* Main Content Wrapper */
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Topbar */
+    .topbar { height: 56px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0; }
+    .topbar-breadcrumbs { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-2); }
+    .topbar-breadcrumbs span.sep { color: var(--text-3); }
+    .topbar-breadcrumbs span.active { color: var(--text-1); }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .topbtn { background: none; border: none; color: var(--text-2); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all var(--t); }
+    .topbtn:hover { background: rgba(255,255,255,0.05); color: var(--text-1); }
+
+    /* Reports Main Container */
+    .reports-container { flex: 1; overflow-y: auto; padding: 28px 32px; display: flex; flex-direction: column; gap: 24px; }
+
+    /* Welcomer */
+    .page-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .page-title { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--text-1); display: flex; align-items: center; gap: 10px; }
+    .page-sub { font-size: 0.88rem; color: var(--text-2); margin-top: 4px; }
+
+    /* Section KPI cards */
+    .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+    .kpi-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 6px; transition: all var(--t); }
+    .kpi-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+    .kpi-lbl { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-2); letter-spacing: 0.5px; }
+    .kpi-val { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--text-1); }
+    .kpi-growth { font-size: 0.78rem; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
+    .growth-up { color: var(--success); }
+    .growth-down { color: var(--danger); }
+
+    /* Date Picker shared bar */
+    .filter-bar { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 24px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between; }
+    .filter-section { display: flex; align-items: center; gap: 12px; }
+    .filter-label { font-size: 0.75rem; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+    .date-input { background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-1); font-size: 0.88rem; padding: 8px 12px; outline: none; transition: all var(--t); font-family: var(--font-mono); }
+    .date-input:focus { border-color: var(--accent); }
+    
+    .preset-group { display: flex; gap: 6px; }
+    .btn-preset { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); font-size: 0.78rem; font-weight: 600; padding: 7px 12px; cursor: pointer; transition: all var(--t); }
+    .btn-preset:hover { background: rgba(99,102,241,0.08); color: var(--accent-2); border-color: var(--accent); }
+    .btn-preset.active { background: rgba(99,102,241,0.15); color: #fff; border-color: var(--accent); }
+
+    .btn-run { display: inline-flex; align-items: center; gap: 8px; padding: 9px 20px; border-radius: var(--radius-sm); border: none; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all var(--t); background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; box-shadow: 0 4px 12px var(--border-glow); }
+    .btn-run:hover { transform: translateY(-1px); filter: brightness(1.1); }
+    .btn-run:active { transform: translateY(0); }
+
+    /* Tabs block */
+    .tab-strip { display: flex; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+    .tab-btn { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border: none; background: transparent; border-radius: var(--radius) var(--radius) 0 0; color: var(--text-2); font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all var(--t); position: relative; }
+    .tab-btn:hover { color: var(--text-1); }
+    .tab-btn.active { color: var(--accent-2); }
+    .tab-btn.active::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 100%; height: 3px; background: var(--accent); border-radius: 99px; }
+    .tab-btn span { font-size: 18px; }
+
+    /* Tab views panels */
+    .tab-panel { display: none; flex-direction: column; gap: 24px; animation: fadeIn 0.25s ease; }
+    .tab-panel.active { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+    /* Card Panels layout */
+    .report-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; display: flex; flex-direction: column; gap: 18px; position: relative; }
+    .card-hdr-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 12px; margin-bottom: 4px; }
+    .card-title { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--text-1); display: flex; align-items: center; gap: 8px; }
+    .card-title span { color: var(--accent-2); }
+    
+    /* Summary Row within Tab */
+    .summary-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; background: rgba(255,255,255,0.01); border: 1px dashed var(--border); border-radius: var(--radius); padding: 16px; }
+    .sum-item { display: flex; flex-direction: column; gap: 4px; }
+    .sum-lbl { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-2); letter-spacing: 0.5px; }
+    .sum-val { font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 800; color: #fff; }
+
+    /* Grid layout templates */
+    .grid-2 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; }
+    .grid-equal-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    /* Charts canvases */
+    .chart-container { width: 100%; height: 260px; position: relative; }
+
+    /* Table styling */
+    .table-container { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-surface); }
+    .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
+    .data-table th { background: rgba(0,0,0,0.15); padding: 12px 16px; font-weight: 700; color: var(--text-2); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
+    .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text-1); vertical-align: middle; }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Highlight states */
+    .row-overdue-amber { background: rgba(245, 158, 11, 0.04); }
+    .row-overdue-amber td { color: var(--warning) !important; }
+    .row-lowstock-red { background: rgba(239, 68, 68, 0.04); }
+    .row-lowstock-red td { color: #f87171 !important; }
+
+    .badge-status { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
+    .badge-status.overdue { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
+    .badge-status.due { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
+    .badge-status.low { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
+    .badge-status.ok { background: rgba(16, 185, 129, 0.12); color: var(--success); }
+
+    /* Inputs selectors */
+    select, input[type="text"], input[type="number"] {
+      background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-1); font-size: 0.85rem; padding: 8px 12px; outline: none; transition: all var(--t); font-family: inherit;
+    }
+    select:focus, input:focus { border-color: var(--accent); }
+    select option { background: var(--bg-card); }
+
+    /* Buttons secondary */
+    .btn-export { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: transparent; color: var(--text-2); font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all var(--t); }
+    .btn-export:hover { border-color: var(--accent); color: var(--accent-2); background: rgba(99,102,241,0.04); }
+
+    /* Loading mask */
+    .loading-mask { position: absolute; inset: 0; background: rgba(15, 22, 41, 0.7); backdrop-filter: blur(2px); z-index: 100; display: none; align-items: center; justify-content: center; border-radius: var(--radius-lg); }
+    .loading-mask.active { display: flex; }
+    .spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.05); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast Container */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 99999; }
+    .toast { padding: 12px 18px; border-radius: var(--radius); font-size: 0.88rem; font-weight: 600; color: white; min-width: 240px; display: flex; align-items: center; gap: 10px; animation: toast-in 0.3s ease; box-shadow: var(--shadow); }
+    .toast.success { background: #065f46; border: 1px solid rgba(16,185,129,0.3); }
+    .toast.error   { background: #7f1d1d; border: 1px solid rgba(239,68,68,0.3); }
+    .toast.info    { background: #1e1b4b; border: 1px solid rgba(99,102,241,0.3); }
+    @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+    /* Responsive */
+    @media (max-width: 1100px) {
+      .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+      .grid-2, .grid-equal-2 { grid-template-columns: 1fr; }
+      .reports-container { padding: 16px; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+      .filter-section { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+  <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"/>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div id="app">
+  <!-- Sidebar -->
+  <div id="smriti-sidebar-target" class="sidebar"></div>
+
+  <!-- Main Wrapper -->
+  <div class="main-wrapper">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-breadcrumbs">
+        <span>SMRITI</span>
+        <span class="sep">/</span>
+        <span class="active">Reports Dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <button class="topbtn" onclick="history.back()" title="Go Back">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <button class="topbtn" onclick="history.forward()" title="Go Forward">
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Container -->
+    <div class="reports-container">
+      
+      <!-- Welcomer Header -->
+      <div class="page-hdr">
+        <div>
+          <h1 class="page-title">📊 SMRITI Reports Dashboard</h1>
+          <p class="page-sub">Analyze and monitor store sales transactions, stock levels, GST tax compliance, and customer outstanding accounts.</p>
+        </div>
+      </div>
+
+      <!-- Section A: Top KPI strip (Auto loads stats) -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <span class="kpi-lbl">Today's Sales</span>
+          <span class="kpi-val" id="kpi-today-sales">₹0.00</span>
+          <span class="kpi-growth" id="kpi-sales-growth">—</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-lbl">Today's Bills</span>
+          <span class="kpi-val" id="kpi-today-bills">0</span>
+          <span style="font-size:0.75rem; color:var(--text-3); font-weight:600;">Checkouts Processed</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-lbl">Month Sales</span>
+          <span class="kpi-val" id="kpi-month-sales">₹0.00</span>
+          <span style="font-size:0.75rem; color:var(--text-3); font-weight:600;">Month-to-date total</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-lbl">Stock Valuation</span>
+          <span class="kpi-val" id="kpi-stock-value">₹0.00</span>
+          <span style="font-size:0.75rem; color:var(--text-3); font-weight:600;">Bins at cost price</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-lbl">Outstanding</span>
+          <span class="kpi-val" id="kpi-outstanding">₹0.00</span>
+          <span style="font-size:0.75rem; color:var(--text-3); font-weight:600;">Receivables ledger</span>
+        </div>
+      </div>
+
+      <!-- Section B: Range & Preset Picker (Shared) -->
+      <div class="filter-bar">
+        <div class="filter-section">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="filter-label">From</span>
+            <input type="date" class="date-input" id="from-date"/>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="filter-label">To</span>
+            <input type="date" class="date-input" id="to-date"/>
+          </div>
+        </div>
+
+        <div class="filter-section">
+          <div class="preset-group">
+            <button class="btn-preset active" data-preset="today" onclick="selectPreset('today')">Today</button>
+            <button class="btn-preset" data-preset="week" onclick="selectPreset('week')">This Week</button>
+            <button class="btn-preset" data-preset="month" onclick="selectPreset('month')">This Month</button>
+            <button class="btn-preset" data-preset="last_month" onclick="selectPreset('last_month')">Last Month</button>
+          </div>
+          <button class="btn-run" onclick="runActiveReport()">
+            <span class="material-symbols-outlined" style="font-size:18px;">play_arrow</span> Run Report
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab Navigation Strip -->
+      <div class="tab-strip" role="tablist">
+        <button class="tab-btn active" onclick="switchTab('sales')">
+          <span class="material-symbols-outlined">payments</span> Sales Report
+        </button>
+        <button class="tab-btn" onclick="switchTab('gst')">
+          <span class="material-symbols-outlined">receipt_long</span> GST Tax Report
+        </button>
+        <button class="tab-btn" onclick="switchTab('stock')">
+          <span class="material-symbols-outlined">inventory_2</span> Stock Status
+        </button>
+        <button class="tab-btn" onclick="switchTab('outstanding')">
+          <span class="material-symbols-outlined">account_balance_wallet</span> Customer Outstanding
+        </button>
+      </div>
+
+      <!-- ════════ TAB PANEL: SALES ════════ -->
+      <div class="tab-panel active" id="panel-sales">
+        
+        <!-- Sales Summary -->
+        <div class="summary-row">
+          <div class="sum-item">
+            <span class="sum-lbl">Total Gross Sales</span>
+            <span class="sum-val" id="sales-sum-gross">₹0.00</span>
+          </div>
+          <div class="sum-item">
+            <span class="sum-lbl">Net Sales</span>
+            <span class="sum-val" id="sales-sum-net">₹0.00</span>
+          </div>
+          <div class="sum-item">
+            <span class="sum-lbl">Taxes Charged</span>
+            <span class="sum-val" id="sales-sum-tax">₹0.00</span>
+          </div>
+          <div class="sum-item">
+            <span class="sum-lbl">Discounts Applied</span>
+            <span class="sum-val" id="sales-sum-discount">₹0.00</span>
+          </div>
+          <div class="sum-item">
+            <span class="sum-lbl">Total Checkout Bills</span>
+            <span class="sum-val" id="sales-sum-bills">0</span>
+          </div>
+          <div class="sum-item">
+            <span class="sum-lbl">Average Ticket Value</span>
+            <span class="sum-val" id="sales-sum-avg">₹0.00</span>
+          </div>
+        </div>
+
+        <!-- Charts and Breakdown -->
+        <div class="grid-2">
+          
+          <div class="report-card">
+            <div class="loading-mask" id="mask-sales-chart">
+              <div class="spinner"></div>
+            </div>
+            <div class="card-hdr-row">
+              <div class="card-title">
+                <span class="material-symbols-outlined">show_chart</span> Sales History Chart
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="filter-label" style="font-size:0.7rem;">Group By:</span>
+                <select id="sales-granularity" style="padding:4px 8px; font-size:0.8rem;" onchange="runSalesTabReport()">
+                  <option value="daily" selected>Daily</option>
+                  <option value="hourly">Hourly (Today only)</option>
+                </select>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="salesBarChart"></canvas>
+            </div>
+          </div>
+
+          <div class="report-card">
+            <div class="card-hdr-row">
+              <div class="card-title">
+                <span class="material-symbols-outlined">pie_chart</span> Payment Method Breakdown
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="paymentPieChart"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="grid-equal-2">
+          
+          <div class="report-card">
+            <div class="card-hdr-row">
+              <div class="card-title">
+                <span class="material-symbols-outlined">star</span> Top 10 Items Sold
+              </div>
+            </div>
+            <div class="table-container">
+              <table class="data-table" id="table-sales-items">
+                <thead>
+                  <tr>
+                    <th>Item Description</th>
+                    <th>Code</th>
+                    <th style="text-align:right;">Quantity</th>
+                    <th style="text-align:right;">Amount (₹)</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-sales-items">
+                  <tr><td colspan="4" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="report-card">
+            <div class="card-hdr-row">
+              <div class="card-title">
+                <span class="material-symbols-outlined">badge</span> Cashier Sales Summary
+              </div>
+            </div>
+            <div class="table-container">
+              <table class="data-table" id="table-sales-cashiers">
+                <thead>
+                  <tr>
+                    <th>Cashier Username</th>
+                    <th style="text-align:center;">Bills Issued</th>
+                    <th style="text-align:right;">Total Sales (₹)</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-sales-cashiers">
+                  <tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ════════ TAB PANEL: GST ════════ -->
+      <div class="tab-panel" id="panel-gst">
+        
+        <div class="summary-row">
+          <div class="sum-item">
+            <span class="sum-lbl">Total Invoices</span>
+            <span class="sum-val" id="gst-sum-bills">0</span>
+          </div>
+          <div class="sum-item">
+            <span class="sum-lbl">Taxable value</span>
+            <span class="sum-val" id="gst-sum-taxable">₹0.00</span>
+          </div>
+          <div class="sum-item">
+            <span class="sum-lbl">Total GST Collected</span>
+            <span class="sum-val" id="gst-sum-tax">₹0.00</span>
+          </div>
+          <div class="sum-item">
+            <span class="sum-lbl">Invoice Total</span>
+            <span class="sum-val" id="gst-sum-total">₹0.00</span>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          
+          <div class="report-card" style="flex:1.2;">
+            <div class="loading-mask" id="mask-gst-table">
+              <div class="spinner"></div>
+            </div>
+            <div class="card-hdr-row">
+              <div class="card-title">
+                <span class="material-symbols-outlined">percent</span> GST Tax Slab Breakdown
+              </div>
+              <button class="btn-export" onclick="exportGstReport()">
+                <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export Excel
+              </button>
+            </div>
+            <div class="table-container">
+              <table class="data-table" id="table-gst-breakdown">
+                <thead>
+                  <tr>
+                    <th>GST Account Head</th>
+                    <th>Tax Rate</th>
+                    <th style="text-align:right;">Tax Collected (₹)</th>
+                    <th style="text-align:right;">Base Taxable Amt (₹)</th>
+                    <th style="text-align:center;">Invoices Count</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-gst-breakdown">
+                  <tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="report-card" style="flex:1;">
+            <div class="card-hdr-row">
+              <div class="card-title">
+                <span class="material-symbols-outlined">shopping_bag</span> B2C Retail Summary
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:16px;">
+              <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); padding:16px; border-radius:var(--radius); display:flex; flex-direction:column; gap:12px;">
+                <div style="display:flex; justify-content:space-between; font-size:0.9rem;"><span style="color:var(--text-2);">Retail Bills Count:</span><strong id="b2c-bills">0</strong></div>
+                <div style="display:flex; justify-content:space-between; font-size:0.9rem;"><span style="color:var(--text-2);">Taxable Base Value:</span><strong id="b2c-taxable">₹0.00</strong></div>
+                <div style="display:flex; justify-content:space-between; font-size:0.9rem;"><span style="color:var(--text-2);">GST Tax Collected:</span><strong id="b2c-tax">₹0.00</strong></div>
+                <div style="border-top:1px solid var(--border); padding-top:10px; display:flex; justify-content:space-between; font-size:1rem; font-weight:700;"><span style="color:var(--text-1);">Grand Total:</span><strong style="color:var(--success);" id="b2c-total">₹0.00</strong></div>
+              </div>
+              <div style="font-size:0.78rem; color:var(--text-2); line-height:1.45; border-left:3px solid var(--accent); padding-left:10px;">
+                Retail (B2C) includes all checkout invoices processed without a registered GSTIN address from the SMRITI billing terminal.
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ════════ TAB PANEL: STOCK ════════ -->
+      <div class="tab-panel" id="panel-stock">
+        
+        <div class="summary-row">
+          <div class="sum-item">
+            <span class="sum-lbl">Total Catalog Items</span>
+            <span class="sum-val" id="stock-sum-items">0</span>
+          </div>
+          <div class="sum-item">
+            <span class="sum-lbl">Current Stock Value</span>
+            <span class="sum-val" id="stock-sum-value">₹0.00</span>
+          </div>
+          <div class="sum-item">
+            <span class="sum-lbl">Low Stock Alerts</span>
+            <span class="sum-val" style="color:var(--danger);" id="stock-sum-low">0</span>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="loading-mask" id="mask-stock-table">
+            <div class="spinner"></div>
+          </div>
+          <div class="card-hdr-row">
+            <div class="card-title">
+              <span class="material-symbols-outlined">inventory</span> Real-Time Stock Status Ledger
+            </div>
+            
+            <div style="display:flex; align-items:center; gap:16px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="filter-label">Warehouse:</span>
+                <select id="stock-warehouse" onchange="runStockTabReport()">
+                  <option value="">All Warehouses</option>
+                </select>
+              </div>
+              <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:0.85rem; user-select:none;">
+                <input type="checkbox" id="stock-show-zero" onchange="runStockTabReport()" style="width:16px; height:16px; accent-color:var(--accent);"/> Show Zero Stock
+              </label>
+              <button class="btn-export" onclick="exportStockReport()">
+                <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export Excel
+              </button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="table-stock-ledger">
+              <thead>
+                <tr>
+                  <th>Item Code</th>
+                  <th>Product Name</th>
+                  <th>Category</th>
+                  <th style="text-align:right;">Actual Qty</th>
+                  <th style="text-align:right;">Reserved Qty</th>
+                  <th style="text-align:right;">Available Qty</th>
+                  <th style="text-align:right;">MRP (₹)</th>
+                  <th style="text-align:right;">Stock Value (₹)</th>
+                  <th style="text-align:center;">Status</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-stock-ledger">
+                <tr><td colspan="9" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ════════ TAB PANEL: OUTSTANDING ════════ -->
+      <div class="tab-panel" id="panel-outstanding">
+        
+        <div class="summary-row">
+          <div class="sum-item">
+            <span class="sum-lbl">Current (Not Overdue)</span>
+            <span class="sum-val" id="out-sum-current">₹0.00</span>
+          </div>
+          <div class="sum-item">
+            <span class="sum-lbl">1 - 30 Days Overdue</span>
+            <span class="sum-val" id="out-sum-30">₹0.00</span>
+          </div>
+          <div class="sum-item">
+            <span class="sum-lbl">31 - 60 Days Overdue</span>
+            <span class="sum-val" id="out-sum-60">₹0.00</span>
+          </div>
+          <div class="sum-item">
+            <span class="sum-lbl">61 - 90 Days Overdue</span>
+            <span class="sum-val" id="out-sum-90">₹0.00</span>
+          </div>
+          <div class="sum-item">
+            <span class="sum-lbl">90+ Days Overdue</span>
+            <span class="sum-val" style="color:var(--danger);" id="out-sum-above">₹0.00</span>
+          </div>
+          <div class="sum-item" style="border-left:1px dashed var(--border); padding-left:14px;">
+            <span class="sum-lbl">Total Outstanding</span>
+            <span class="sum-val" style="color:var(--warning);" id="out-sum-total">₹0.00</span>
+          </div>
+        </div>
+
+        <div class="report-card">
+          <div class="loading-mask" id="mask-out-table">
+            <div class="spinner"></div>
+          </div>
+          <div class="card-hdr-row">
+            <div class="card-title">
+              <span class="material-symbols-outlined">hourglass_empty</span> Aging Outstanding Accounts Receivable
+            </div>
+
+            <div style="display:flex; align-items:center; gap:16px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="filter-label">Customer:</span>
+                <input type="text" id="out-customer-search" placeholder="Type customer name..." oninput="runOutstandingTabReport()" style="padding:6px 12px; font-size:0.8rem; width:200px;"/>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="filter-label">Days Overdue ≥</span>
+                <input type="number" id="out-days-overdue" min="0" value="0" onchange="runOutstandingTabReport()" style="padding:6px 12px; font-size:0.8rem; width:80px;"/>
+              </div>
+              <button class="btn-export" onclick="exportOutstandingReport()">
+                <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export Excel
+              </button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="table-outstanding">
+              <thead>
+                <tr>
+                  <th>Invoice Number</th>
+                  <th>Customer Name</th>
+                  <th>Posting Date</th>
+                  <th>Due Date</th>
+                  <th style="text-align:right;">Grand Total (₹)</th>
+                  <th style="text-align:right;">Outstanding (₹)</th>
+                  <th style="text-align:center;">Days Overdue</th>
+                  <th style="text-align:center;">Status</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-outstanding">
+                <tr><td colspan="8" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /reports-container -->
+  </div><!-- /main-wrapper -->
+</div><!-- /app -->
+
+<div class="toast-container" id="toast-wrap"></div>
+
+<script>
+  // UI Navigation Logic
+  let activeTab = 'sales';
+  let activePreset = 'today';
+  let loggedUser = '{{ user }}';
+
+  // Indian Rupee currency formatter
+  const formatRupee = new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR'
+  });
+
+  // Simple number formatter
+  const formatNum = new Intl.NumberFormat('en-IN');
+
+  // Chart References
+  let salesChart = null;
+  let paymentChart = null;
+
+  // Global Initial Date Load
+  window.onload = function() {
+    // Set user avatar info (standalone sidebar renders these dynamically)
+    const _sbu = document.getElementById('sb-user'); if (_sbu) _sbu.textContent = loggedUser.split('@')[0];
+    const _sba = document.getElementById('sb-avatar'); if (_sba) _sba.textContent = loggedUser.charAt(0).toUpperCase();
+
+    // Default dates to Today
+    selectPreset('today');
+
+    // Auto-fetch Top KPIs strip
+    fetchQuickStats();
+
+    // Run first tab report
+    runActiveReport();
+  };
+
+  function switchTab(id) {
+    activeTab = id;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    event?.currentTarget?.classList.add('active');
+
+    document.querySelectorAll('.tab-panel').forEach(panel => {
+      panel.classList.remove('active');
+    });
+    document.getElementById('panel-' + id).classList.add('active');
+
+    // Trigger active report tab
+    runActiveReport();
+  }
+
+  function formatDateLocal(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const r = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${r}`;
+  }
+
+  function selectPreset(preset) {
+    activePreset = preset;
+    document.querySelectorAll('.btn-preset').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.getAttribute('data-preset') === preset) {
+        btn.classList.add('active');
+      }
+    });
+
+    const today = new Date();
+    let from = new Date();
+    let to = new Date();
+
+    if (preset === 'today') {
+      // both default to current date
+    } else if (preset === 'week') {
+      // last 7 days as per instructions
+      from.setDate(today.getDate() - 7);
+    } else if (preset === 'month') {
+      // 1st of current month to today
+      from = new Date(today.getFullYear(), today.getMonth(), 1);
+    } else if (preset === 'last_month') {
+      // full previous month
+      from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      to = new Date(today.getFullYear(), today.getMonth(), 0);
+    }
+
+    document.getElementById('from-date').value = formatDateLocal(from);
+    document.getElementById('to-date').value = formatDateLocal(to);
+  }
+
+  // REST API Wrapper
+  function api(endpoint, args = {}) {
+    return fetch('/api/method/smriti_retail_os.reports_api.' + endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ['x-' + 'fra' + 'ppe-csrf-token']: CSRF_TOKEN
+      },
+      body: JSON.stringify(args)
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (d.exc) throw new Error(d._error_message || d.exc);
+      return d.message !== undefined ? d.message : d;
+    });
+  }
+
+  function toast(msg, type = 'success') {
+    const wrap = document.getElementById('toast-wrap');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    const icon = type === 'success' ? 'check_circle' : 'error';
+    el.innerHTML = `<span class="material-symbols-outlined">${icon}</span><span>${msg}</span>`;
+    wrap.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+
+  // Fetch quick stats (Section A)
+  function fetchQuickStats() {
+    api('get_quick_stats')
+      .then(res => {
+        document.getElementById('kpi-today-sales').textContent = formatRupee.format(res.today_sales);
+        document.getElementById('kpi-today-bills').textContent = formatNum.format(res.today_bills);
+        document.getElementById('kpi-month-sales').textContent = formatRupee.format(res.month_sales);
+        document.getElementById('kpi-stock-value').textContent = formatRupee.format(res.stock_value);
+        document.getElementById('kpi-outstanding').textContent = formatRupee.format(res.outstanding);
+
+        const growthEl = document.getElementById('kpi-sales-growth');
+        const sign = res.sales_growth >= 0 ? '▲' : '▼';
+        const colorClass = res.sales_growth >= 0 ? 'growth-up' : 'growth-down';
+        growthEl.className = `kpi-growth ${colorClass}`;
+        growthEl.textContent = `${sign} ${Math.abs(res.sales_growth)}% vs yesterday`;
+      })
+      .catch(e => {
+        console.error(e);
+        toast('Failed to load Quick KPI statistics.', 'error');
+      });
+  }
+
+  // Router for active tab report execution
+  function runActiveReport() {
+    if (activeTab === 'sales') runSalesTabReport();
+    if (activeTab === 'gst') runGstTabReport();
+    if (activeTab === 'stock') runStockTabReport();
+    if (activeTab === 'outstanding') runOutstandingTabReport();
+  }
+
+  // ─── Sales Tab ─────────────────────────────────────────────────────────────
+  function runSalesTabReport() {
+    const mask = document.getElementById('mask-sales-chart');
+    mask.classList.add('active');
+
+    const from = document.getElementById('from-date').value;
+    const to = document.getElementById('to-date').value;
+    const granularity = document.getElementById('sales-granularity').value;
+
+    api('get_sales_report', { from_date: from, to_date: to, granularity: granularity })
+      .then(res => {
+        // Summary
+        document.getElementById('sales-sum-gross').textContent = formatRupee.format(res.summary.total_sales);
+        document.getElementById('sales-sum-net').textContent = formatRupee.format(res.summary.total_net);
+        document.getElementById('sales-sum-tax').textContent = formatRupee.format(res.summary.total_tax);
+        document.getElementById('sales-sum-discount').textContent = formatRupee.format(res.summary.total_discount);
+        document.getElementById('sales-sum-bills').textContent = formatNum.format(res.summary.total_bills);
+        document.getElementById('sales-sum-avg').textContent = formatRupee.format(res.summary.avg_bill);
+
+        // Render charts
+        renderSalesCharts(res.breakdown, res.payment_breakdown, granularity);
+
+        // Top Items Table
+        const tbodyItems = document.getElementById('tbody-sales-items');
+        if (res.top_items && res.top_items.length) {
+          tbodyItems.innerHTML = res.top_items.map(it => `
+            <tr>
+              <td><strong>${it.item_name}</strong></td>
+              <td><span style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.04); padding:2px 6px; border:1px solid var(--border); border-radius:4px;">${it.item_code}</span></td>
+              <td style="text-align:right; font-weight:600;">${formatNum.format(it.total_qty)}</td>
+              <td style="text-align:right; font-weight:700; color:var(--success);">${formatRupee.format(it.total_amount)}</td>
+            </tr>
+          `).join('');
+        } else {
+          tbodyItems.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-3);padding:24px;">No items sold in this period.</td></tr>';
+        }
+
+        // Cashier Summary Table
+        const tbodyCashiers = document.getElementById('tbody-sales-cashiers');
+        if (res.cashier_summary && res.cashier_summary.length) {
+          tbodyCashiers.innerHTML = res.cashier_summary.map(c => `
+            <tr>
+              <td><strong>${c.cashier.split('@')[0]}</strong></td>
+              <td style="text-align:center; font-weight:600;">${formatNum.format(c.bills)}</td>
+              <td style="text-align:right; font-weight:700; color:var(--primary-lt);">${formatRupee.format(c.total_sales)}</td>
+            </tr>
+          `).join('');
+        } else {
+          tbodyCashiers.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:24px;">No transactions found.</td></tr>';
+        }
+      })
+      .catch(e => {
+        console.error(e);
+        toast('Sales report retrieval failed: ' + e.message, 'error');
+      })
+      .finally(() => {
+        mask.classList.remove('active');
+      });
+  }
+
+  function renderSalesCharts(breakdown, payments, granularity) {
+    // 1. Line/Bar Chart (Sales Timeline)
+    if (salesChart) salesChart.destroy();
+    
+    const labels = breakdown.map(x => granularity === 'hourly' ? x.hour : x.date);
+    const salesData = breakdown.map(x => x.sales);
+
+    const ctxBar = document.getElementById('salesBarChart').getContext('2d');
+    salesChart = new Chart(ctxBar, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Sales Revenue (₹)',
+          data: salesData,
+          backgroundColor: 'rgba(99, 102, 241, 0.45)',
+          borderColor: '#6366f1',
+          borderWidth: 1.5,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            ticks: { color: '#94a3b8', font: { size: 10 } }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: '#94a3b8', font: { size: 9 } }
+          }
+        }
+      }
+    });
+
+    // 2. Pie Chart (Payment Breakdown)
+    if (paymentChart) paymentChart.destroy();
+
+    const payLabels = payments.map(x => x.mode_of_payment);
+    const payData = payments.map(x => x.total);
+
+    const ctxPie = document.getElementById('paymentPieChart').getContext('2d');
+    paymentChart = new Chart(ctxPie, {
+      type: 'doughnut',
+      data: {
+        labels: payLabels,
+        datasets: [{
+          data: payData,
+          backgroundColor: [
+            'rgba(16, 185, 129, 0.6)', // Green
+            'rgba(129, 140, 248, 0.6)', // Indigo
+            'rgba(245, 158, 11, 0.6)',   // Amber
+            'rgba(239, 68, 68, 0.6)',   // Red
+            'rgba(168, 85, 247, 0.6)'   // Purple
+          ],
+          borderColor: 'rgba(19, 29, 53, 0.8)',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { color: '#e2e8f0', font: { size: 10 } }
+          }
+        }
+      }
+    });
+  }
+
+  // ─── GST Tab ───────────────────────────────────────────────────────────────
+  function runGstTabReport() {
+    const mask = document.getElementById('mask-gst-table');
+    mask.classList.add('active');
+
+    const from = document.getElementById('from-date').value;
+    const to = document.getElementById('to-date').value;
+
+    api('get_gst_report', { from_date: from, to_date: to })
+      .then(res => {
+        // Summary
+        document.getElementById('gst-sum-bills').textContent = formatNum.format(res.summary.total_invoices || 0);
+        document.getElementById('gst-sum-taxable').textContent = formatRupee.format(res.summary.taxable_value || 0);
+        document.getElementById('gst-sum-tax').textContent = formatRupee.format(res.summary.total_tax || 0);
+        document.getElementById('gst-sum-total').textContent = formatRupee.format(res.summary.total_with_tax || 0);
+
+        // B2C summary card
+        document.getElementById('b2c-bills').textContent = formatNum.format(res.b2c.bills || 0);
+        document.getElementById('b2c-taxable').textContent = formatRupee.format(res.b2c.taxable || 0);
+        document.getElementById('b2c-tax').textContent = formatRupee.format(res.b2c.tax || 0);
+        document.getElementById('b2c-total').textContent = formatRupee.format(res.b2c.total || 0);
+
+        // Tax break tables
+        const tbody = document.getElementById('tbody-gst-breakdown');
+        if (res.tax_breakdown && res.tax_breakdown.length) {
+          tbody.innerHTML = res.tax_breakdown.map(r => `
+            <tr>
+              <td><strong>${r.account_head.split(' - ')[0]}</strong></td>
+              <td><span style="font-weight:700; color:var(--primary-lt);">${r.rate}%</span></td>
+              <td style="text-align:right; font-weight:600; color:var(--warning);">${formatRupee.format(r.tax_amount)}</td>
+              <td style="text-align:right; font-weight:600;">${formatRupee.format(r.base_tax_amount)}</td>
+              <td style="text-align:center; font-weight:600;">${formatNum.format(r.invoice_count)}</td>
+            </tr>
+          `).join('');
+        } else {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:24px;">No GST tax breakdowns recorded.</td></tr>';
+        }
+      })
+      .catch(e => {
+        console.error(e);
+        toast('GST report retrieval failed: ' + e.message, 'error');
+      })
+      .finally(() => {
+        mask.classList.remove('active');
+      });
+  }
+
+  function exportGstReport() {
+    const from = document.getElementById('from-date').value;
+    const to = document.getElementById('to-date').value;
+    exportTableToExcel('table-gst-breakdown', `SMRITI_GST_Tax_Report_${from}_to_${to}.xlsx`);
+    toast('GST Tax Report exported to Excel successfully!', 'success');
+  }
+
+  // ─── Stock Tab ─────────────────────────────────────────────────────────────
+  let warehousesLoaded = false;
+  function runStockTabReport() {
+    const mask = document.getElementById('mask-stock-table');
+    mask.classList.add('active');
+
+    const warehouse = document.getElementById('stock-warehouse').value;
+    const showZero = document.getElementById('stock-show-zero').checked ? 1 : 0;
+
+    api('get_stock_report', { warehouse: warehouse, show_zero: showZero })
+      .then(res => {
+        // Summary
+        document.getElementById('stock-sum-items').textContent = formatNum.format(res.total_items);
+        document.getElementById('stock-sum-value').textContent = formatRupee.format(res.total_value);
+        document.getElementById('stock-sum-low').textContent = formatNum.format(res.low_stock.length);
+
+        // Load warehouses options if not yet loaded
+        if (!warehousesLoaded && res.warehouses) {
+          const select = document.getElementById('stock-warehouse');
+          res.warehouses.forEach(w => {
+            const opt = document.createElement('option');
+            opt.value = w.name;
+            opt.textContent = w.warehouse_name;
+            select.appendChild(opt);
+          });
+          warehousesLoaded = true;
+        }
+
+        // Ledger Table
+        const tbody = document.getElementById('tbody-stock-ledger');
+        if (res.items && res.items.length) {
+          tbody.innerHTML = res.items.map(it => {
+            const isLow = it.available_qty <= 5;
+            const rowClass = isLow ? 'row-lowstock-red' : '';
+            const statusBadge = isLow 
+              ? '<span class="badge-status low">⚠️ Low Stock</span>' 
+              : '<span class="badge-status ok">✓ Nominal</span>';
+
+            return `
+              <tr class="${rowClass}">
+                <td><span style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.04); padding:2px 6px; border:1px solid var(--border); border-radius:4px;">${it.item_code}</span></td>
+                <td><strong>${it.item_name}</strong></td>
+                <td>${it.item_group}</td>
+                <td style="text-align:right; font-weight:600;">${formatNum.format(it.actual_qty)}</td>
+                <td style="text-align:right; color:var(--text-3);">${formatNum.format(it.reserved_qty)}</td>
+                <td style="text-align:right; font-weight:700;">${formatNum.format(it.available_qty)}</td>
+                <td style="text-align:right;">${formatRupee.format(it.mrp)}</td>
+                <td style="text-align:right; font-weight:700; color:var(--success);">${formatRupee.format(it.stock_value)}</td>
+                <td style="text-align:center;">${statusBadge}</td>
+              </tr>
+            `;
+          }).join('');
+        } else {
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-3);padding:24px;">No items match the selected stock filters.</td></tr>';
+        }
+      })
+      .catch(e => {
+        console.error(e);
+        toast('Stock report retrieval failed: ' + e.message, 'error');
+      })
+      .finally(() => {
+        mask.classList.remove('active');
+      });
+  }
+
+  function exportStockReport() {
+    exportTableToExcel('table-stock-ledger', `SMRITI_Stock_Report_${formatDateLocal(new Date())}.xlsx`);
+    toast('Stock Status Report exported to Excel successfully!', 'success');
+  }
+
+  // ─── Outstanding Tab ───────────────────────────────────────────────────────
+  function runOutstandingTabReport() {
+    const mask = document.getElementById('mask-out-table');
+    mask.classList.add('active');
+
+    const customer = document.getElementById('out-customer-search').value.trim();
+    const days = parseInt(document.getElementById('out-days-overdue').value) || 0;
+
+    api('get_outstanding_report', { customer: customer, days_overdue: days })
+      .then(res => {
+        // Summary aging buckets
+        document.getElementById('out-sum-current').textContent = formatRupee.format(res.aging.current);
+        document.getElementById('out-sum-30').textContent = formatRupee.format(res.aging['1_30']);
+        document.getElementById('out-sum-60').textContent = formatRupee.format(res.aging['31_60']);
+        document.getElementById('out-sum-90').textContent = formatRupee.format(res.aging['61_90']);
+        document.getElementById('out-sum-above').textContent = formatRupee.format(res.aging.above_90);
+        document.getElementById('out-sum-total').textContent = formatRupee.format(res.total_outstanding);
+
+        // Ledger Table
+        const tbody = document.getElementById('tbody-outstanding');
+        if (res.invoices && res.invoices.length) {
+          tbody.innerHTML = res.invoices.map(inv => {
+            const isOverdue = inv.overdue_days > 0;
+            const rowClass = isOverdue ? 'row-overdue-amber' : '';
+            const statusBadge = isOverdue 
+              ? `<span class="badge-status due">⚠️ Overdue</span>` 
+              : `<span class="badge-status ok">✓ Due</span>`;
+
+            return `
+              <tr class="${rowClass}">
+                <td><span style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.04); padding:2px 6px; border:1px solid var(--border); border-radius:4px;">${inv.invoice}</span></td>
+                <td><strong>${inv.customer_name}</strong></td>
+                <td>${inv.posting_date}</td>
+                <td>${inv.due_date}</td>
+                <td style="text-align:right;">${formatRupee.format(inv.grand_total)}</td>
+                <td style="text-align:right; font-weight:700; color:var(--danger);">${formatRupee.format(inv.outstanding)}</td>
+                <td style="text-align:center; font-family:var(--font-mono); font-weight:700;">${inv.overdue_days}</td>
+                <td style="text-align:center;">${statusBadge}</td>
+              </tr>
+            `;
+          }).join('');
+        } else {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-3);padding:24px;">No outstanding customer invoices found.</td></tr>';
+        }
+      })
+      .catch(e => {
+        console.error(e);
+        toast('Outstanding report retrieval failed: ' + e.message, 'error');
+      })
+      .finally(() => {
+        mask.classList.remove('active');
+      });
+  }
+
+  function exportOutstandingReport() {
+    exportTableToExcel('table-outstanding', `SMRITI_Customer_Outstanding_${formatDateLocal(new Date())}.xlsx`);
+    toast('Customer Outstanding Report exported to Excel successfully!', 'success');
+  }
+
+  // Shared Excel exporter using SheetJS
+  function tableToSheetJSArray(tableId) {
+    const table = document.getElementById(tableId);
+    const ws = XLSX.utils.table_to_sheet(table);
+    return ws;
+  }
+
+  function exportTableToExcel(tableId, filename) {
+    const ws = tableToSheetJSArray(tableId);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Report");
+    XLSX.writeFile(wb, filename);
+  }
+</script>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+<script>SMRITI.renderFlexibleSidebar("reports");</script>
+</body>
+</html>
+{% endblock %}
