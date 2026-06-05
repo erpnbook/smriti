@@ -761,11 +761,9 @@ class TestBarcodeHardening(unittest.TestCase):
 
         # Pre-test cleanup — remove stale records from any previous failed run
         frappe.db.delete("GST HSN Code", {"name": hsn_test_code})
+        frappe.db.delete("Item Tax Template Detail", {"parent": ["like", "%GST 12% - Test%"]})
+        frappe.db.delete("Item Tax Template", {"name": ["like", "%GST 12% - Test%"]})
         tax_template_name = f"GST 12% - Test - {self.company}"
-        # Delete by title match (name may include company abbreviation suffix)
-        stale = frappe.db.get_all("Item Tax Template", filters={"title": tax_template_name}, pluck="name")
-        for s in stale:
-            frappe.delete_doc("Item Tax Template", s, ignore_missing=True, force=True)
         frappe.db.commit()
 
         # Create Item Tax Template for 12%

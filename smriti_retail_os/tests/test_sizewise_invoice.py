@@ -147,6 +147,8 @@ class TestSizewiseInvoiceAPI(unittest.TestCase):
         frappe.db.sql("DELETE FROM `tabSales Taxes and Charges` WHERE parent IN (SELECT name FROM `tabSales Invoice` WHERE customer IN ('Test B2B Customer Intra', 'Test B2B Customer Inter'))")
         frappe.db.sql("DELETE FROM `tabSales Invoice` WHERE customer IN ('Test B2B Customer Intra', 'Test B2B Customer Inter')")
         frappe.db.delete("Customer", {"name": ["like", "Test B2B%"]})
+        frappe.db.delete("Item Tax", {"parent": ["like", "TEST-ART%"]})
+        frappe.db.delete("Item Price", {"item_code": ["like", "TEST-ART%"]})
         frappe.db.delete("Item", {"item_code": ["like", "TEST-ART%"]})
         frappe.db.delete("Address", {"name": ["like", "%-Registered-Test%"]})
         frappe.db.delete("Dynamic Link", {"link_name": ["like", "%_Test Company%"]})
