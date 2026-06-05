@@ -29,6 +29,43 @@ from smriti_retail_os.item_master_api import (
     get_items_missing_barcodes,
 )
 
+def ensure_test_tax_template(company):
+    # Ensure Item Tax Template GST 18% - VTC exists in the test DB
+    if not frappe.db.exists("Item Tax Template", {"title": "GST 18% - VTC", "company": company}):
+        try:
+            t = frappe.new_doc("Item Tax Template")
+            t.title = "GST 18% - VTC"
+            t.company = company
+            t.gst_treatment = "Taxable"
+            t.gst_rate = 18.0
+            
+            filters_cgst = [
+                ["account_type", "=", "Tax"],
+                ["company", "=", company],
+                ["name", "like", "%CGST%"],
+                ["name", "not like", "%RCM%"],
+                ["name", "not like", "%Refund%"]
+            ]
+            cgst = frappe.db.get_value("Account", filters_cgst, "name")
+            
+            filters_sgst = [
+                ["account_type", "=", "Tax"],
+                ["company", "=", company],
+                ["name", "like", "%SGST%"],
+                ["name", "not like", "%RCM%"],
+                ["name", "not like", "%Refund%"]
+            ]
+            sgst = frappe.db.get_value("Account", filters_sgst, "name")
+            
+            if cgst:
+                t.append("taxes", {"tax_type": cgst, "tax_rate": 9.0})
+            if sgst:
+                t.append("taxes", {"tax_type": sgst, "tax_rate": 9.0})
+            t.insert(ignore_permissions=True)
+            frappe.db.commit()
+        except Exception as e:
+            print("Failed to create test tax template:", str(e))
+
 class TestSmritiRetailItemMasterAPI(unittest.TestCase):
 
     def setUp(self):
@@ -43,6 +80,7 @@ class TestSmritiRetailItemMasterAPI(unittest.TestCase):
             self.company = comp.name
             
         frappe.defaults.set_user_default("company", self.company, frappe.session.user)
+        ensure_test_tax_template(self.company)
 
         # Create store manager role link to prevent permission errors in tests
         if not frappe.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):
@@ -225,6 +263,7 @@ class TestPivotMatrixImport(unittest.TestCase):
             self.company = comp.name
 
         frappe.defaults.set_user_default("company", self.company, frappe.session.user)
+        ensure_test_tax_template(self.company)
 
         # Grant store manager role if not already present
         if not frappe.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):
@@ -420,6 +459,7 @@ class TestBarcodeHardening(unittest.TestCase):
             comp.insert(ignore_permissions=True)
             self.company = comp.name
         frappe.defaults.set_user_default("company", self.company, frappe.session.user)
+        ensure_test_tax_template(self.company)
 
         if not frappe.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):
             r = frappe.new_doc("Has Role")
