@@ -173,6 +173,12 @@ def run_setup_wizard(setup_data):
         company_exists = frappe.db.exists("Company", company_name)
         _validate_company_abbr(company_abbr, current_company=company_name if company_exists else None)
 
+        log("Ensuring standard Warehouse Types exist...")
+        for w_type in ["Transit", "Standard", "Subcontracted"]:
+            if not frappe.db.exists("Warehouse Type", w_type):
+                frappe.get_doc({"doctype": "Warehouse Type", "name": w_type}).insert(ignore_permissions=True)
+                log(f"Created standard Warehouse Type: {w_type}")
+
         log(f"Configuring Company: {company_name} ({company_abbr})...")
         if not company_exists:
             co = frappe.new_doc("Company")
