@@ -318,6 +318,9 @@
         <button class="tab-btn" onclick="switchTab('outstanding')">
           <span class="material-symbols-outlined">account_balance_wallet</span> Customer Outstanding
         </button>
+        <button class="tab-btn" onclick="switchTab('returns')">
+          <span class="material-symbols-outlined">assignment_return</span> Returns Book
+        </button>
       </div>
 
       <!-- ════════ TAB PANEL: SALES ════════ -->
@@ -514,6 +517,80 @@
 
         </div>
 
+        <!-- GSTR-1 Table 9B Credit/Debit Notes -->
+        <div class="report-card" style="margin-top: 20px;">
+          <div class="loading-mask" id="mask-gst-9b-table">
+            <div class="spinner"></div>
+          </div>
+          <div class="card-hdr-row">
+            <div class="card-title">
+              <span class="material-symbols-outlined">receipt</span> GSTR-1 Table 9B (Credit / Debit Notes)
+            </div>
+            <button class="btn-export" onclick="exportGstr9bReport()">
+              <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export Table 9B Excel
+            </button>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div>
+              <div class="sec-title" style="margin-bottom: 10px; font-size: 0.95rem; font-weight: 700; color: var(--accent-2);">Table 9B Registered (B2B Credit/Debit Notes)</div>
+              <div class="table-container">
+                <table class="data-table" id="table-gstr1-9b-b2b">
+                  <thead>
+                    <tr>
+                      <th>Recipient GSTIN</th>
+                      <th>Customer Name</th>
+                      <th>Note Number</th>
+                      <th>Note Date</th>
+                      <th>Type</th>
+                      <th>POS</th>
+                      <th>Original Bill</th>
+                      <th>Original Date</th>
+                      <th style="text-align:right;">Taxable Value (₹)</th>
+                      <th style="text-align:right;">CGST (₹)</th>
+                      <th style="text-align:right;">SGST (₹)</th>
+                      <th style="text-align:right;">IGST (₹)</th>
+                      <th style="text-align:right;">Total Tax (₹)</th>
+                      <th style="text-align:right;">Grand Total (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-gstr1-9b-b2b">
+                    <tr><td colspan="14" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div>
+              <div class="sec-title" style="margin-bottom: 10px; font-size: 0.95rem; font-weight: 700; color: var(--accent-2);">Table 9B Unregistered (B2C Credit/Debit Notes)</div>
+              <div class="table-container">
+                <table class="data-table" id="table-gstr1-9b-b2c">
+                  <thead>
+                    <tr>
+                      <th>Customer Name</th>
+                      <th>Note Number</th>
+                      <th>Note Date</th>
+                      <th>Type</th>
+                      <th>POS</th>
+                      <th>Original Bill</th>
+                      <th>Original Date</th>
+                      <th style="text-align:right;">Taxable Value (₹)</th>
+                      <th style="text-align:right;">CGST (₹)</th>
+                      <th style="text-align:right;">SGST (₹)</th>
+                      <th style="text-align:right;">IGST (₹)</th>
+                      <th style="text-align:right;">Total Tax (₹)</th>
+                      <th style="text-align:right;">Grand Total (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-gstr1-9b-b2c">
+                    <tr><td colspan="13" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- ════════ TAB PANEL: STOCK ════════ -->
@@ -656,6 +733,107 @@
               </tbody>
             </table>
           </div>
+        </div>
+
+      </div>
+
+      <!-- ════════ TAB PANEL: RETURNS ════════ -->
+      <div class="tab-panel" id="panel-returns">
+        
+        <!-- Credit Note Deadline Alerts -->
+        <div class="report-card">
+          <div class="card-hdr-row">
+            <div class="card-title">
+              <span class="material-symbols-outlined" style="color: var(--danger);">notifications_active</span> R-07 Credit Note Deadline Alerts (Tax adjustment)
+            </div>
+            <div style="font-size: 0.78rem; color: var(--text-2);">
+              Deadline is Nov 30 of the following FY.
+            </div>
+          </div>
+          
+          <div id="alerts-container" style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="padding: 16px; background: rgba(255,255,255,0.02); border: 1px dashed var(--border); border-radius: var(--radius); text-align: center; color: var(--text-3);">
+              Loading deadline alerts...
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-equal-2">
+          
+          <!-- Sales Return Register -->
+          <div class="report-card">
+            <div class="loading-mask" id="mask-sales-return-table">
+              <div class="spinner"></div>
+            </div>
+            <div class="card-hdr-row">
+              <div class="card-title">
+                <span class="material-symbols-outlined">assignment_return</span> Sales Return Book (R-01)
+              </div>
+              <button class="btn-export" onclick="exportSalesReturnReport()">
+                <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export Excel
+              </button>
+            </div>
+            
+            <div class="table-container">
+              <table class="data-table" id="table-sales-return">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Return No</th>
+                    <th>Original Invoice</th>
+                    <th>Customer Name</th>
+                    <th style="text-align:right;">Taxable (₹)</th>
+                    <th style="text-align:right;">CGST (₹)</th>
+                    <th style="text-align:right;">SGST (₹)</th>
+                    <th style="text-align:right;">IGST (₹)</th>
+                    <th style="text-align:right;">Total Tax (₹)</th>
+                    <th style="text-align:right;">Grand Total (₹)</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-sales-return">
+                  <tr><td colspan="10" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Purchase Return Register -->
+          <div class="report-card">
+            <div class="loading-mask" id="mask-purchase-return-table">
+              <div class="spinner"></div>
+            </div>
+            <div class="card-hdr-row">
+              <div class="card-title">
+                <span class="material-symbols-outlined">assignment_return</span> Purchase Return Book (R-02)
+              </div>
+              <button class="btn-export" onclick="exportPurchaseReturnReport()">
+                <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export Excel
+              </button>
+            </div>
+            
+            <div class="table-container">
+              <table class="data-table" id="table-purchase-return">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Return No</th>
+                    <th>Original Invoice</th>
+                    <th>Supplier Name</th>
+                    <th style="text-align:right;">Taxable (₹)</th>
+                    <th style="text-align:right;">CGST (₹)</th>
+                    <th style="text-align:right;">SGST (₹)</th>
+                    <th style="text-align:right;">IGST (₹)</th>
+                    <th style="text-align:right;">Total Tax (₹)</th>
+                    <th style="text-align:right;">Grand Total (₹)</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-purchase-return">
+                  <tr><td colspan="10" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
 
       </div>
@@ -810,6 +988,7 @@
     if (activeTab === 'gst') runGstTabReport();
     if (activeTab === 'stock') runStockTabReport();
     if (activeTab === 'outstanding') runOutstandingTabReport();
+    if (activeTab === 'returns') runReturnsTabReport();
   }
 
   // ─── Sales Tab ─────────────────────────────────────────────────────────────
@@ -986,6 +1165,9 @@
         } else {
           tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:24px;">No GST tax breakdowns recorded.</td></tr>';
         }
+
+        // Fetch GSTR-1 9B Credit/Debit Notes
+        runGstr9bReport();
       })
       .catch(e => {
         console.error(e);
@@ -994,6 +1176,92 @@
       .finally(() => {
         mask.classList.remove('active');
       });
+  }
+
+  let gstr9bData = { b2b: [], b2c: [] };
+
+  function runGstr9bReport() {
+    const mask = document.getElementById('mask-gst-9b-table');
+    if (mask) mask.classList.add('active');
+
+    const from = document.getElementById('from-date').value;
+    const to = document.getElementById('to-date').value;
+
+    api('get_gstr1_9b_report', { from_date: from, to_date: to })
+      .then(res => {
+        gstr9bData = res;
+        
+        // Render B2B
+        const tbodyB2b = document.getElementById('tbody-gstr1-9b-b2b');
+        if (res.b2b && res.b2b.length) {
+          tbodyB2b.innerHTML = res.b2b.map(note => `
+            <tr>
+              <td><span style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.04); padding:2px 6px; border:1px solid var(--border); border-radius:4px;">${note.gstin}</span></td>
+              <td><strong>${note.customer_name}</strong></td>
+              <td><span style="font-family:var(--font-mono); font-size:0.75rem;">${note.note_no}</span></td>
+              <td>${note.note_date}</td>
+              <td style="text-align:center;"><span class="badge-status ${note.note_type === 'C' ? 'low' : 'ok'}">${note.note_type}</span></td>
+              <td>${note.pos}</td>
+              <td><span style="font-family:var(--font-mono); font-size:0.75rem;">${note.orig_invoice}</span></td>
+              <td>${note.orig_date}</td>
+              <td style="text-align:right; font-weight:600;">${formatRupee.format(note.taxable_value)}</td>
+              <td style="text-align:right;">${formatRupee.format(note.cgst)}</td>
+              <td style="text-align:right;">${formatRupee.format(note.sgst)}</td>
+              <td style="text-align:right;">${formatRupee.format(note.igst)}</td>
+              <td style="text-align:right; font-weight:600;">${formatRupee.format(note.total_tax)}</td>
+              <td style="text-align:right; font-weight:700; color:${note.note_type === 'C' ? 'var(--danger)' : 'var(--success)'};">${formatRupee.format(note.grand_total)}</td>
+            </tr>
+          `).join('');
+        } else {
+          tbodyB2b.innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--text-3);padding:24px;">No registered (B2B) Credit/Debit Notes found.</td></tr>';
+        }
+
+        // Render B2C
+        const tbodyB2c = document.getElementById('tbody-gstr1-9b-b2c');
+        if (res.b2c && res.b2c.length) {
+          tbodyB2c.innerHTML = res.b2c.map(note => `
+            <tr>
+              <td><strong>${note.customer_name}</strong></td>
+              <td><span style="font-family:var(--font-mono); font-size:0.75rem;">${note.note_no}</span></td>
+              <td>${note.note_date}</td>
+              <td style="text-align:center;"><span class="badge-status ${note.note_type === 'C' ? 'low' : 'ok'}">${note.note_type}</span></td>
+              <td>${note.pos}</td>
+              <td><span style="font-family:var(--font-mono); font-size:0.75rem;">${note.orig_invoice}</span></td>
+              <td>${note.orig_date}</td>
+              <td style="text-align:right; font-weight:600;">${formatRupee.format(note.taxable_value)}</td>
+              <td style="text-align:right;">${formatRupee.format(note.cgst)}</td>
+              <td style="text-align:right;">${formatRupee.format(note.sgst)}</td>
+              <td style="text-align:right;">${formatRupee.format(note.igst)}</td>
+              <td style="text-align:right; font-weight:600;">${formatRupee.format(note.total_tax)}</td>
+              <td style="text-align:right; font-weight:700; color:${note.note_type === 'C' ? 'var(--danger)' : 'var(--success)'};">${formatRupee.format(note.grand_total)}</td>
+            </tr>
+          `).join('');
+        } else {
+          tbodyB2c.innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--text-3);padding:24px;">No unregistered (B2C) Credit/Debit Notes found.</td></tr>';
+        }
+      })
+      .catch(e => {
+        console.error(e);
+        toast('GSTR-1 9B report retrieval failed: ' + e.message, 'error');
+      })
+      .finally(() => {
+        if (mask) mask.classList.remove('active');
+      });
+  }
+
+  function exportGstr9bReport() {
+    const from = document.getElementById('from-date').value;
+    const to = document.getElementById('to-date').value;
+    
+    const wb = XLSX.utils.book_new();
+    const wsB2b = tableToSheetJSArray('table-gstr1-9b-b2b');
+    const wsB2c = tableToSheetJSArray('table-gstr1-9b-b2c');
+    
+    XLSX.utils.book_append_sheet(wb, wsB2b, "9B Registered (B2B)");
+    XLSX.utils.book_append_sheet(wb, wsB2c, "9B Unregistered (B2C)");
+    
+    XLSX.writeFile(wb, `SMRITI_GSTR1_Table9B_${from}_to_${to}.xlsx`);
+    toast('GSTR-1 Table 9B exported to Excel with separate sheets!', 'success');
   }
 
   function exportGstReport() {
@@ -1130,6 +1398,159 @@
   function exportOutstandingReport() {
     exportTableToExcel('table-outstanding', `SMRITI_Customer_Outstanding_${formatDateLocal(new Date())}.xlsx`);
     toast('Customer Outstanding Report exported to Excel successfully!', 'success');
+  }
+
+  // ─── Returns Tab ────────────────────────────────────────────────────────────
+  function runReturnsTabReport() {
+    runDeadlineAlerts();
+    runSalesReturnRegister();
+    runPurchaseReturnRegister();
+  }
+
+  function runDeadlineAlerts() {
+    const container = document.getElementById('alerts-container');
+    api('get_deadline_alerts')
+      .then(res => {
+        if (res && res.length) {
+          container.innerHTML = res.map(alert => {
+            let badgeClass = 'ok';
+            let style = 'border-left: 4px solid var(--success);';
+            if (alert.status === 'Red') {
+              badgeClass = 'low';
+              style = 'border-left: 4px solid var(--danger); background: rgba(239, 68, 68, 0.04);';
+            } else if (alert.status === 'Amber') {
+              badgeClass = 'due';
+              style = 'border-left: 4px solid var(--warning); background: rgba(245, 158, 11, 0.04);';
+            }
+            
+            return `
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--border); border-radius: var(--radius); ${style}">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                  <span class="badge-status ${badgeClass}" style="padding: 4px 10px; font-size: 0.8rem;">${alert.status} ALERT</span>
+                  <div>
+                    <div style="font-weight: 700; font-size: 0.95rem;">
+                      ${alert.doctype}: <span style="font-family:var(--font-mono); color:var(--accent-2);">${alert.name}</span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-2); margin-top: 2px;">
+                      Original Bill: <strong>${alert.orig_invoice}</strong> (${alert.orig_date}) | Party: <strong>${alert.party}</strong>
+                    </div>
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-weight: 800; font-family: var(--font-mono); font-size: 1rem; color: var(--danger);">${formatRupee.format(alert.grand_total)}</div>
+                  <div style="font-size: 0.8rem; color: var(--text-2); margin-top: 2px; font-weight: 600;">
+                    Deadline: <span style="color:var(--text-1);">${alert.deadline}</span> (${alert.days_left < 0 ? 'Expired' : alert.days_left + ' days left'})
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          container.innerHTML = `
+            <div style="padding: 16px; background: rgba(16, 185, 129, 0.04); border: 1px solid rgba(16,185,129,0.15); border-left: 4px solid var(--success); border-radius: var(--radius); text-align: center; color: var(--success); font-weight: 600;">
+              ✓ All clear! No returns approaching the November 30 GST credit note tax adjustment deadline.
+            </div>
+          `;
+        }
+      })
+      .catch(e => {
+        console.error(e);
+        container.innerHTML = `
+          <div style="padding: 16px; background: rgba(239, 68, 68, 0.04); border: 1px dashed var(--danger); border-radius: var(--radius); text-align: center; color: var(--danger);">
+            Failed to load deadline alerts: ${e.message}
+          </div>
+        `;
+      });
+  }
+
+  function runSalesReturnRegister() {
+    const mask = document.getElementById('mask-sales-return-table');
+    if (mask) mask.classList.add('active');
+
+    const from = document.getElementById('from-date').value;
+    const to = document.getElementById('to-date').value;
+
+    api('get_sales_return_register', { from_date: from, to_date: to })
+      .then(res => {
+        const tbody = document.getElementById('tbody-sales-return');
+        if (res && res.length) {
+          tbody.innerHTML = res.map(row => `
+            <tr>
+              <td>${row.date}</td>
+              <td><span style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.04); padding:2px 6px; border:1px solid var(--border); border-radius:4px;">${row.return_no}</span></td>
+              <td><span style="font-family:var(--font-mono); font-size:0.75rem;">${row.orig_invoice}</span></td>
+              <td><strong>${row.customer_name}</strong></td>
+              <td style="text-align:right; font-weight:600;">${formatRupee.format(row.taxable_value)}</td>
+              <td style="text-align:right;">${formatRupee.format(row.cgst)}</td>
+              <td style="text-align:right;">${formatRupee.format(row.sgst)}</td>
+              <td style="text-align:right;">${formatRupee.format(row.igst)}</td>
+              <td style="text-align:right; font-weight:600;">${formatRupee.format(row.total_tax)}</td>
+              <td style="text-align:right; font-weight:700; color:var(--danger);">${formatRupee.format(row.grand_total)}</td>
+            </tr>
+          `).join('');
+        } else {
+          tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-3);padding:24px;">No sales returns recorded in this period.</td></tr>';
+        }
+      })
+      .catch(e => {
+        console.error(e);
+        toast('Sales return register retrieval failed: ' + e.message, 'error');
+      })
+      .finally(() => {
+        if (mask) mask.classList.remove('active');
+      });
+  }
+
+  function runPurchaseReturnRegister() {
+    const mask = document.getElementById('mask-purchase-return-table');
+    if (mask) mask.classList.add('active');
+
+    const from = document.getElementById('from-date').value;
+    const to = document.getElementById('to-date').value;
+
+    api('get_purchase_return_register', { from_date: from, to_date: to })
+      .then(res => {
+        const tbody = document.getElementById('tbody-purchase-return');
+        if (res && res.length) {
+          tbody.innerHTML = res.map(row => `
+            <tr>
+              <td>${row.date}</td>
+              <td><span style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.04); padding:2px 6px; border:1px solid var(--border); border-radius:4px;">${row.return_no}</span></td>
+              <td><span style="font-family:var(--font-mono); font-size:0.75rem;">${row.orig_invoice}</span></td>
+              <td><strong>${row.supplier_name}</strong></td>
+              <td style="text-align:right; font-weight:600;">${formatRupee.format(row.taxable_value)}</td>
+              <td style="text-align:right;">${formatRupee.format(row.cgst)}</td>
+              <td style="text-align:right;">${formatRupee.format(row.sgst)}</td>
+              <td style="text-align:right;">${formatRupee.format(row.igst)}</td>
+              <td style="text-align:right; font-weight:600;">${formatRupee.format(row.total_tax)}</td>
+              <td style="text-align:right; font-weight:700; color:var(--danger);">${formatRupee.format(row.grand_total)}</td>
+            </tr>
+          `).join('');
+        } else {
+          tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-3);padding:24px;">No purchase returns recorded in this period.</td></tr>';
+        }
+      })
+      .catch(e => {
+        console.error(e);
+        toast('Purchase return register retrieval failed: ' + e.message, 'error');
+      })
+      .finally(() => {
+        if (mask) mask.classList.remove('active');
+      });
+  }
+
+  function exportSalesReturnReport() {
+    const from = document.getElementById('from-date').value;
+    const to = document.getElementById('to-date').value;
+    exportTableToExcel('table-sales-return', `SMRITI_Sales_Return_Book_${from}_to_${to}.xlsx`);
+    toast('Sales Return Book exported to Excel successfully!', 'success');
+  }
+
+  function exportPurchaseReturnReport() {
+    const from = document.getElementById('from-date').value;
+    const to = document.getElementById('to-date').value;
+    exportTableToExcel('table-purchase-return', `SMRITI_Purchase_Return_Book_${from}_to_${to}.xlsx`);
+    toast('Purchase Return Book exported to Excel successfully!', 'success');
   }
 
   // Shared Excel exporter using SheetJS

@@ -299,7 +299,7 @@ def get_gst_report(from_date=None, to_date=None):
                 pt.rate,
                 SUM(pt.tax_amount) as tax_amount,
                 SUM(pt.base_tax_amount) as base_tax_amount,
-                COUNT(DISTINCT pi.name) as invoice_count
+                SUM(CASE WHEN pi.is_return = 1 THEN -1 ELSE 1 END) as invoice_count
             FROM `tabPOS Invoice` pi
             JOIN `tabSales Taxes and Charges` pt ON pt.parent = pi.name
             WHERE pi.docstatus = 1
@@ -315,7 +315,7 @@ def get_gst_report(from_date=None, to_date=None):
     try:
         inv_summary = frappe.db.sql("""
             SELECT
-                COUNT(*) as total_invoices,
+                SUM(CASE WHEN is_return = 1 THEN -1 ELSE 1 END) as total_invoices,
                 SUM(net_total) as taxable_value,
                 SUM(total_taxes_and_charges) as total_tax,
                 SUM(grand_total) as total_with_tax
@@ -334,7 +334,7 @@ def get_gst_report(from_date=None, to_date=None):
                 SUM(net_total) as taxable,
                 SUM(total_taxes_and_charges) as tax,
                 SUM(grand_total) as total,
-                COUNT(*) as bills
+                SUM(CASE WHEN is_return = 1 THEN -1 ELSE 1 END) as bills
             FROM `tabPOS Invoice`
             WHERE docstatus = 1
               AND posting_date BETWEEN %(from_date)s AND %(to_date)s
@@ -490,3 +490,374 @@ def get_quick_stats():
         "stock_value":    flt(stock_value.get("total", 0), 2),
         "outstanding":    flt(outstanding.get("total", 0), 2)
     }
+
+
+def get_credit_note_deadline(invoice_date):
+    """
+    Calculates the credit note deadline (November 30 of the following financial year)
+    for a given invoice date.
+    India FY: April 1 to March 31.
+    """
+    dt = getdate(invoice_date)
+    if dt.month >= 4:
+        deadline_year = dt.year + 1
+    else:
+        deadline_year = dt.year
+    return f"{deadline_year}-11-30"
+
+
+@frappe.whitelist()
+def get_sales_return_register(from_date=None, to_date=None):
+    """
+    Returns Sales Returns (Credit Notes) in bill-by-bill format.
+    Filters: Sales Invoices and POS Invoices where is_return = 1 and docstatus = 1.
+    """
+    if not from_date:
+        from_date = str(get_first_day(nowdate()))
+    if not to_date:
+        to_date = nowdate()
+
+    notes = []
+    for doctype in ["Sales Invoice", "POS Invoice"]:
+        try:
+            invs = frappe.db.get_all(
+                doctype,
+                filters={
+                    "docstatus": 1,
+                    "posting_date": ["between", [from_date, to_date]],
+                    "is_return": 1
+                },
+                fields=[
+                    "name", "posting_date", "customer", "customer_name",
+                    "return_against", "net_total", "total_taxes_and_charges", "grand_total"
+                ]
+            )
+            for inv in invs:
+                inv["doc_type"] = doctype
+                notes.append(inv)
+        except Exception as e:
+            frappe.log_error(f"Error in get_sales_return_register for {doctype}", str(e))
+
+    result = []
+    for note in notes:
+        cgst = 0.0
+        sgst = 0.0
+        igst = 0.0
+        
+        taxes = frappe.db.get_all(
+            "Sales Taxes and Charges",
+            filters={"parent": note.name},
+            fields=["account_head", "tax_amount"]
+        )
+        
+        for t in taxes:
+            head = (t.account_head or "").upper()
+            amt = flt(t.tax_amount)
+            if amt > 0:
+                amt = -amt
+            
+            if "CGST" in head:
+                cgst += amt
+            elif "SGST" in head:
+                sgst += amt
+            elif "IGST" in head:
+                igst += amt
+
+        taxable = flt(note.net_total)
+        total_tax = flt(note.total_taxes_and_charges)
+        grand = flt(note.grand_total)
+        if taxable > 0:
+            taxable = -taxable
+            total_tax = -total_tax
+            grand = -grand
+
+        result.append({
+            "date": str(note.posting_date),
+            "return_no": note.name,
+            "orig_invoice": note.return_against or "",
+            "customer_name": note.customer_name or note.customer,
+            "taxable_value": taxable,
+            "cgst": cgst,
+            "sgst": sgst,
+            "igst": igst,
+            "total_tax": total_tax,
+            "grand_total": grand
+        })
+
+    return result
+
+
+@frappe.whitelist()
+def get_purchase_return_register(from_date=None, to_date=None):
+    """
+    Returns Purchase Returns (Debit Notes) in bill-by-bill format.
+    Filters: Purchase Invoices where is_return = 1 and docstatus = 1.
+    """
+    if not from_date:
+        from_date = str(get_first_day(nowdate()))
+    if not to_date:
+        to_date = nowdate()
+
+    try:
+        invs = frappe.db.get_all(
+            "Purchase Invoice",
+            filters={
+                "docstatus": 1,
+                "posting_date": ["between", [from_date, to_date]],
+                "is_return": 1
+            },
+            fields=[
+                "name", "posting_date", "supplier", "supplier_name",
+                "return_against", "net_total", "total_taxes_and_charges", "grand_total"
+            ]
+        )
+    except Exception as e:
+        frappe.log_error("Error in get_purchase_return_register", str(e))
+        return []
+
+    result = []
+    for inv in invs:
+        cgst = 0.0
+        sgst = 0.0
+        igst = 0.0
+        
+        taxes = frappe.db.get_all(
+            "Purchase Taxes and Charges",
+            filters={"parent": inv.name},
+            fields=["account_head", "tax_amount"]
+        )
+        
+        for t in taxes:
+            head = (t.account_head or "").upper()
+            amt = flt(t.tax_amount)
+            if amt > 0:
+                amt = -amt
+            
+            if "CGST" in head:
+                cgst += amt
+            elif "SGST" in head:
+                sgst += amt
+            elif "IGST" in head:
+                igst += amt
+
+        taxable = flt(inv.net_total)
+        total_tax = flt(inv.total_taxes_and_charges)
+        grand = flt(inv.grand_total)
+        if taxable > 0:
+            taxable = -taxable
+            total_tax = -total_tax
+            grand = -grand
+
+        result.append({
+            "date": str(inv.posting_date),
+            "return_no": inv.name,
+            "orig_invoice": inv.return_against or "",
+            "supplier_name": inv.supplier_name or inv.supplier,
+            "taxable_value": taxable,
+            "cgst": cgst,
+            "sgst": sgst,
+            "igst": igst,
+            "total_tax": total_tax,
+            "grand_total": grand
+        })
+
+    return result
+
+
+@frappe.whitelist()
+def get_gstr1_9b_report(from_date=None, to_date=None):
+    """
+    Returns Credit/Debit Notes issued to customers split into B2B and B2C tables.
+    """
+    if not from_date:
+        from_date = str(get_first_day(nowdate()))
+    if not to_date:
+        to_date = nowdate()
+
+    b2b_list = []
+    b2c_list = []
+    
+    notes = []
+    for doctype in ["Sales Invoice", "POS Invoice"]:
+        try:
+            invs = frappe.db.get_all(
+                doctype,
+                filters={
+                    "docstatus": 1,
+                    "posting_date": ["between", [from_date, to_date]],
+                    "is_return": 1
+                },
+                fields=[
+                    "name", "posting_date", "customer", "customer_name",
+                    "billing_address_gstin", "place_of_supply", "return_against",
+                    "net_total", "total_taxes_and_charges", "grand_total"
+                ]
+            )
+            for inv in invs:
+                inv["doc_type"] = doctype
+                inv["note_type"] = "C"
+                notes.append(inv)
+        except Exception as e:
+            frappe.log_error(f"Error fetching GSTR-1 9B for {doctype}", str(e))
+
+        if doctype == "Sales Invoice":
+            try:
+                deb_notes = frappe.db.get_all(
+                    doctype,
+                    filters={
+                        "docstatus": 1,
+                        "posting_date": ["between", [from_date, to_date]],
+                        "is_debit_note": 1
+                    },
+                    fields=[
+                        "name", "posting_date", "customer", "customer_name",
+                        "billing_address_gstin", "place_of_supply",
+                        "net_total", "total_taxes_and_charges", "grand_total"
+                    ]
+                )
+                for inv in deb_notes:
+                    inv["doc_type"] = doctype
+                    inv["note_type"] = "D"
+                    inv["return_against"] = ""
+                    notes.append(inv)
+            except Exception as e:
+                frappe.log_error("Error fetching Debit Notes for GSTR-1 9B", str(e))
+
+    for note in notes:
+        orig_date = ""
+        if note.get("return_against"):
+            orig_doctype = "Sales Invoice" if note.doc_type == "Sales Invoice" else "POS Invoice"
+            orig_date = frappe.db.get_value(orig_doctype, note.return_against, "posting_date") or ""
+        
+        cgst = 0.0
+        sgst = 0.0
+        igst = 0.0
+        
+        taxes = frappe.db.get_all(
+            "Sales Taxes and Charges",
+            filters={"parent": note.name},
+            fields=["account_head", "tax_amount"]
+        )
+        
+        for t in taxes:
+            head = (t.account_head or "").upper()
+            amt = flt(t.tax_amount)
+            if note.note_type == "C" and amt > 0:
+                amt = -amt
+            
+            if "CGST" in head:
+                cgst += amt
+            elif "SGST" in head:
+                sgst += amt
+            elif "IGST" in head:
+                igst += amt
+
+        taxable = flt(note.net_total)
+        total_tax = flt(note.total_taxes_and_charges)
+        grand = flt(note.grand_total)
+        if note.note_type == "C" and taxable > 0:
+            taxable = -taxable
+            total_tax = -total_tax
+            grand = -grand
+
+        record = {
+            "gstin": note.get("billing_address_gstin") or "",
+            "customer_name": note.get("customer_name") or note.get("customer"),
+            "note_no": note.name,
+            "note_date": str(note.posting_date),
+            "note_type": note.note_type,
+            "pos": note.get("place_of_supply") or "",
+            "orig_invoice": note.get("return_against") or "",
+            "orig_date": str(orig_date) if orig_date else "",
+            "taxable_value": taxable,
+            "cgst": cgst,
+            "sgst": sgst,
+            "igst": igst,
+            "total_tax": total_tax,
+            "grand_total": grand
+        }
+        
+        if record["gstin"]:
+            b2b_list.append(record)
+        else:
+            b2c_list.append(record)
+
+    return {
+        "b2b": b2b_list,
+        "b2c": b2c_list
+    }
+
+
+@frappe.whitelist()
+def get_deadline_alerts():
+    """
+    Returns returns (Credit/Debit Notes) and original invoices that are approaching
+    the November 30 tax adjustment deadline.
+    """
+    from frappe.utils import getdate, date_diff, nowdate
+    current_date = getdate(nowdate())
+    alerts = []
+    
+    doctypes = {
+        "Sales Invoice": "Customer",
+        "POS Invoice": "Customer",
+        "Purchase Invoice": "Supplier"
+    }
+    
+    for doctype, party_field in doctypes.items():
+        try:
+            fields = ["name", "posting_date", "return_against", "grand_total"]
+            if doctype == "Purchase Invoice":
+                fields.append("supplier as party")
+                fields.append("supplier_name as party_name")
+            else:
+                fields.append("customer as party")
+                fields.append("customer_name as party_name")
+                
+            invs = frappe.db.get_all(
+                doctype,
+                filters={"docstatus": 1, "is_return": 1},
+                fields=fields
+            )
+            
+            for inv in invs:
+                orig_date = None
+                if inv.return_against:
+                    orig_doctype = "Purchase Invoice" if doctype == "Purchase Invoice" else ("POS Invoice" if doctype == "POS Invoice" else "Sales Invoice")
+                    orig_date = frappe.db.get_value(orig_doctype, inv.return_against, "posting_date")
+                
+                ref_date = orig_date or inv.posting_date
+                if not ref_date:
+                    continue
+                    
+                deadline = get_credit_note_deadline(ref_date)
+                deadline_dt = getdate(deadline)
+                days_left = date_diff(deadline_dt, current_date)
+                
+                if days_left <= 180:
+                    if days_left <= 30:
+                        status = "Red"
+                    elif days_left <= 90:
+                        status = "Amber"
+                    else:
+                        status = "Green"
+                        
+                    alerts.append({
+                        "doctype": doctype,
+                        "name": inv.name,
+                        "party": inv.party_name or inv.party,
+                        "party_type": party_field,
+                        "orig_invoice": inv.return_against or "Direct Return",
+                        "orig_date": str(ref_date),
+                        "deadline": deadline,
+                        "days_left": days_left,
+                        "status": status,
+                        "grand_total": flt(inv.grand_total)
+                    })
+        except Exception as e:
+            frappe.log_error(f"Error in get_deadline_alerts for {doctype}", str(e))
+            
+    status_order = {"Red": 0, "Amber": 1, "Green": 2}
+    alerts.sort(key=lambda x: (status_order.get(x["status"], 3), x["days_left"]))
+    return alerts
+
