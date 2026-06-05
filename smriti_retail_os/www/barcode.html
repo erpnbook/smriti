@@ -13,6 +13,7 @@
 <title>SMRITI Label Studio</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qz-tray@2.1.2/qz-tray.js"></script>
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -258,6 +259,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 <button class="topbtn" onclick="history.forward()" title="Go Forward">
                     <span class="material-symbols-outlined">arrow_forward</span>
                 </button>
+                <button class="topbtn" onclick="openAnalyticsModal()"><span class="material-symbols-outlined">analytics</span> Analytics</button>
                 <button class="topbtn" onclick="openTokenHelp()"><span class="material-symbols-outlined">help</span> Mapping Reference</button>
             </div>
         </div>
@@ -345,12 +347,34 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Network Printer IP</label>
-                        <input type="text" class="form-input" id="cfg-ip" placeholder="e.g. 192.168.1.180">
+                        <label class="form-label">Printer Interface</label>
+                        <select class="form-input" id="cfg-printer-type" onchange="togglePrinterTypeFields(this.value)">
+                            <option value="LAN">LAN (Direct TCP/IP)</option>
+                            <option value="USB">USB / Local (QZ Tray)</option>
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Printer TCP Port</label>
-                        <input type="number" class="form-input" id="cfg-port" value="9100">
+                    <div id="lan-fields-group">
+                        <div class="form-group">
+                            <label class="form-label">Network Printer IP</label>
+                            <input type="text" class="form-input" id="cfg-ip" placeholder="e.g. 192.168.1.180">
+                        </div>
+                        <div class="form-group" style="margin-top: 8px;">
+                            <label class="form-label">Printer TCP Port</label>
+                            <input type="number" class="form-input" id="cfg-port" value="9100">
+                        </div>
+                    </div>
+                    <div id="usb-fields-group" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">USB/Local Printer Name</label>
+                            <div class="form-input-wrap">
+                                <select class="form-input" id="cfg-usb-printer">
+                                    <option value="">-- No Local Printers Detected --</option>
+                                </select>
+                                <button class="btn-icon-input" onclick="refreshQZPrinters()" title="Refresh printers from QZ Tray">
+                                    <span class="material-symbols-outlined">refresh</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -364,6 +388,10 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                         <button class="diag-btn" onclick="sendTestLabel()">
                             <span class="material-symbols-outlined">print</span> Test Label
                         </button>
+                    </div>
+                    <div id="qz-status-badge" style="display:flex; align-items:center; gap:6px; font-size:0.8rem; font-weight:600; padding:8px 10px; background:rgba(0,0,0,0.15); border:1px solid var(--border); border-radius:var(--radius-sm); margin-top:8px;">
+                        <span id="qz-status-dot" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--danger); transition: background-color 0.3s;"></span>
+                        <span id="qz-status-text">🔴 QZ Tray Not Running</span>
                     </div>
                 </div>
 
@@ -385,7 +413,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                         <button class="topbtn" onclick="openAddCustomRowModal()" style="color:var(--primary-lt); border-color:var(--primary);"><span class="material-symbols-outlined">add_circle</span> Add Custom Item</button>
                         <button class="topbtn" onclick="clearQueue()" style="color:var(--danger); border-color:rgba(239,68,68,0.3);"><span class="material-symbols-outlined">delete_sweep</span> Clear All</button>
                         <button class="topbtn" onclick="downloadPRN()" style="color:var(--primary-lt); border-color:var(--primary);"><span class="material-symbols-outlined">download</span> Download PRN</button>
-                        <button class="btn-submit" onclick="printToLAN()" style="padding:6px 16px; font-size:12px; width:auto; height:32px; box-shadow:none;"><span class="material-symbols-outlined">print</span> Direct Print</button>
+                        <button class="btn-submit" onclick="triggerPrintConfirmation()" style="padding:6px 16px; font-size:12px; width:auto; height:32px; box-shadow:none;"><span class="material-symbols-outlined">print</span> Direct Print</button>
                     </div>
                 </div>
 
@@ -456,10 +484,45 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                     <label class="form-label">Printer Capability Profile</label>
                     <select class="form-input" id="cfg-capability" onchange="applyPrinterCapability(this.value)">
                         <option value="TSC TE244">TSC TE244 (203 DPI, TSPL)</option>
-                        <option value="Zebra GK420D" selected>Zebra GK420D (203 DPI, ZPL)</option>
                         <option value="TVS LP46">TVS LP46 (203 DPI, TSPL)</option>
+                        <option value="Zebra GK420D" selected>Zebra GK420D (203 DPI, ZPL)</option>
+                        <option value="Zebra ZD230">Zebra ZD230 (203 DPI, ZPL)</option>
                         <option value="Citizen CL-E321">Citizen CL-E321 (300 DPI, ZPL)</option>
+                        <option value="TSC MH241">TSC MH241 (300 DPI, TSPL)</option>
+                        <option value="Custom Profile">Custom Profile</option>
                     </select>
+                </div>
+
+                <!-- Custom Profile settings fields (shown when Custom Profile is selected) -->
+                <div id="custom-capability-group" style="display: none; border-left: 2px solid var(--primary); padding-left: 10px; margin-top: 8px; gap: 8px; flex-direction: column;">
+                    <div class="form-group">
+                        <label class="form-label">Custom Language</label>
+                        <select class="form-input" id="cfg-custom-lang" onchange="applyCustomCapabilities()">
+                            <option value="ZPL">ZPL</option>
+                            <option value="TSPL">TSPL</option>
+                            <option value="EPL">EPL</option>
+                            <option value="CPCL">CPCL</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Custom Resolution</label>
+                        <select class="form-input" id="cfg-custom-dpi" onchange="applyCustomCapabilities()">
+                            <option value="203">203 DPI</option>
+                            <option value="300">300 DPI</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Language Mismatch Warning Banner -->
+                <div id="language-mismatch-warning" style="display:none; margin-top: 10px; padding: 10px 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); border-radius: var(--radius-sm); font-size: 0.8rem; line-height: 1.4;">
+                    <div style="color: var(--danger); font-weight: 700; display: flex; align-items: center; gap: 4px; margin-bottom: 4px;">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">warning</span> Language Mismatch
+                    </div>
+                    <div style="color: var(--text-muted); font-size: 0.78rem;">
+                        Template: <strong id="mismatch-template-lang" style="color: var(--text)">ZPL</strong><br>
+                        Printer: <strong id="mismatch-printer-lang" style="color: var(--text)">TSPL</strong><br>
+                        Print quality or output may fail.
+                    </div>
                 </div>
 
                 <!-- Variable Validator Status -->
@@ -607,9 +670,9 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                     <!-- Import file drag zone -->
                     <div class="drop-zone" onclick="document.getElementById('file-import-input').click()">
                         <span class="material-symbols-outlined">upload_file</span>
-                        <div><strong>Click to upload .prn / .zpl / .tspl / .txt template</strong></div>
-                        <div style="font-size:0.75rem; color:var(--text-sub);">File size limit: 100 KB max (ZPL/TSPL language auto-detected)</div>
-                        <input type="file" id="file-import-input" style="display:none;" accept=".prn,.zpl,.tspl,.txt" onchange="triggerFileImport(this)">
+                        <div><strong>Click to upload template file (.prn, .zpl, .tspl, .json)</strong></div>
+                        <div style="font-size:0.75rem; color:var(--text-sub);">File size limit: 100 KB max</div>
+                        <input type="file" id="file-import-input" style="display:none;" accept=".prn,.zpl,.tspl,.txt,.json" onchange="triggerFileImport(this)">
                     </div>
 
                     <!-- Token Chips Helper -->
@@ -649,6 +712,9 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
             </div>
         </div>
         <div class="modal-footer">
+            <button class="topbtn" onclick="exportDesignerTemplate()" style="margin-right: auto; color: var(--primary-lt); border-color: var(--primary);">
+                <span class="material-symbols-outlined">download</span> Export JSON
+            </button>
             <button class="topbtn" onclick="closeModal('designer-modal')">Close</button>
             <button class="btn-submit" onclick="submitDesignerTemplate()" style="width:auto; padding:8px 22px;">Save Template</button>
         </div>
@@ -715,6 +781,115 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
     </div>
 </div>
 
+<!-- Modal: Print Safety Confirmation Modal -->
+<div class="modal-backdrop" id="print-confirm-modal" onclick="closeModal('print-confirm-modal')">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title"><span class="material-symbols-outlined">verified_user</span> Print Safety Confirmation</div>
+            <button class="modal-close" onclick="closeModal('print-confirm-modal')">&times;</button>
+        </div>
+        <div class="modal-body" style="gap: 16px;">
+            <!-- Safety Alerts -->
+            <div id="confirm-high-volume-warning" style="display: none;"></div>
+            <div id="confirm-mismatch-warning" style="display: none;"></div>
+            
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.85rem;">
+                <div>
+                    <span style="color: var(--text-muted);">Template:</span>
+                    <div id="confirm-template-name" style="font-weight: 700; color: var(--text);">Built-in Default</div>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">Printer / Target:</span>
+                    <div id="confirm-printer-target" style="font-weight: 700; color: var(--text);">-</div>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">Total Label Count:</span>
+                    <div id="confirm-label-count" style="font-weight: 800; color: var(--accent);">0</div>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">Printer Interface:</span>
+                    <div id="confirm-printer-interface" style="font-weight: 700; color: var(--text);">-</div>
+                </div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); border-radius: var(--radius-sm); padding: 15px; border: 1px dashed var(--border);">
+                <span style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Preview Snapshot</span>
+                <div id="confirm-preview-container" style="display: flex; justify-content: center; width: 100%;"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="topbtn" onclick="downloadPreviewPDF()" style="color: var(--primary-lt); border-color: var(--primary);">
+                <span class="material-symbols-outlined">picture_as_pdf</span> Download Preview PDF
+            </button>
+            <button class="topbtn" onclick="closeModal('print-confirm-modal')">Cancel</button>
+            <button class="btn-submit" id="btn-confirm-print-action" onclick="executeFinalPrintRun()" style="width:auto; padding:8px 24px;">Confirm & Print</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Analytics Dashboard Modal -->
+<div class="modal-backdrop" id="analytics-modal" onclick="closeModal('analytics-modal')">
+    <div class="modal lg-designer" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title"><span class="material-symbols-outlined">analytics</span> Label Studio Print Analytics</div>
+            <button class="modal-close" onclick="closeModal('analytics-modal')">&times;</button>
+        </div>
+        <div class="modal-body" style="gap: 20px;">
+            <!-- Six KPI cards -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                <div style="background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Total Labels Printed</span>
+                    <span id="an-total-labels" style="font-size: 1.8rem; font-weight: 800; color: var(--primary-lt);">0</span>
+                </div>
+                <div style="background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Successful Prints</span>
+                    <span id="an-success-jobs" style="font-size: 1.8rem; font-weight: 800; color: var(--success);">0</span>
+                </div>
+                <div style="background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Failed Prints</span>
+                    <span id="an-failed-jobs" style="font-size: 1.8rem; font-weight: 800; color: var(--danger);">0</span>
+                </div>
+                <div style="background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Average Labels per Job</span>
+                    <span id="an-avg-labels" style="font-size: 1.8rem; font-weight: 800; color: var(--accent);">0</span>
+                </div>
+                <div style="background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Most Used Template</span>
+                    <span id="an-most-used-temp" style="font-size: 1.1rem; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 8px;">-</span>
+                </div>
+                <div style="background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: 4px;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Most Used Printer</span>
+                    <span id="an-most-used-printer" style="font-size: 1.1rem; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 8px;">-</span>
+                </div>
+            </div>
+            
+            <!-- History Logs table -->
+            <div style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                <div class="panel-section-title" style="padding-left: 0; padding-bottom: 8px;"><span class="material-symbols-outlined">history</span> Print Run History Audit</div>
+                <div style="flex: 1; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                    <table class="smriti-table" style="font-size: 0.8rem;">
+                        <thead>
+                            <tr>
+                                <th>Date/Time</th>
+                                <th>Template</th>
+                                <th>Printer Target</th>
+                                <th style="text-align: center;">Labels</th>
+                                <th style="text-align: center;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="an-history-tbody">
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-sub);">No print runs logged</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="topbtn" onclick="closeModal('analytics-modal')">Close</button>
+        </div>
+    </div>
+</div>
+
 <div id="toast-container"></div>
 
 <script>
@@ -726,6 +901,92 @@ let printTemplatesList = [];
 let printProfilesObj = {};
 let activePrinterLanguage = "ZPL";
 let activeDPI = 203;
+let qzPrinters = [];
+
+// QZ Tray WebSocket Connection & Lifecycle Management
+function initQZ() {
+    if (typeof qz === 'undefined') {
+        updateQZStatus(false, "QZ library not loaded");
+        return;
+    }
+    try {
+        qz.security.setCertificatePromise((resolve) => resolve());
+        qz.security.setSignaturePromise(() => (resolve) => resolve());
+    } catch(e) {
+        console.warn("QZ security configuration failed:", e);
+    }
+    checkQZConnection();
+    setInterval(checkQZConnection, 5000);
+}
+
+async function checkQZConnection() {
+    if (typeof qz === 'undefined') {
+        updateQZStatus(false, "QZ library not loaded");
+        return;
+    }
+    if (qz.websocket.isActive()) {
+        updateQZStatus(true, "QZ Connected");
+        return;
+    }
+    try {
+        await qz.websocket.connect();
+        updateQZStatus(true, "QZ Connected");
+        await refreshQZPrinters();
+    } catch (e) {
+        updateQZStatus(false, "QZ Tray Not Running");
+    }
+}
+
+function updateQZStatus(connected, text) {
+    const dot = document.getElementById('qz-status-dot');
+    const textEl = document.getElementById('qz-status-text');
+    if (!dot || !textEl) return;
+    if (connected) {
+        dot.style.backgroundColor = 'var(--success)';
+        textEl.textContent = `🟢 ${text}`;
+    } else {
+        dot.style.backgroundColor = 'var(--danger)';
+        textEl.textContent = `🔴 ${text}`;
+    }
+}
+
+async function refreshQZPrinters() {
+    if (typeof qz === 'undefined' || !qz.websocket.isActive()) return;
+    try {
+        const printers = await qz.printers.find();
+        qzPrinters = printers || [];
+        populateQZPrintersDropdown();
+    } catch(e) {
+        console.error("Failed to fetch QZ printers:", e);
+    }
+}
+
+function populateQZPrintersDropdown() {
+    const usbSel = document.getElementById('cfg-usb-printer');
+    if (!usbSel) return;
+    const currentVal = usbSel.value;
+    if (!qzPrinters.length) {
+        usbSel.innerHTML = '<option value="">-- No Local Printers Detected --</option>';
+        return;
+    }
+    usbSel.innerHTML = qzPrinters.map(p => `<option value="${p}">${p}</option>`).join('');
+    if (qzPrinters.includes(currentVal)) {
+        usbSel.value = currentVal;
+    }
+}
+
+function togglePrinterTypeFields(type) {
+    const lanGroup = document.getElementById('lan-fields-group');
+    const usbGroup = document.getElementById('usb-fields-group');
+    if (type === 'LAN') {
+        lanGroup.style.display = 'block';
+        usbGroup.style.display = 'none';
+    } else {
+        lanGroup.style.display = 'none';
+        usbGroup.style.display = 'block';
+        checkQZConnection();
+    }
+}
 
 // REST API Helper
 function api(method, params = {}) {
@@ -810,6 +1071,9 @@ async function init() {
 
         // Load token reference in background
         loadTokenReference();
+        
+        // Initialize QZ Tray WebSocket
+        initQZ();
         
         // Render empty state initially
         renderQueue();
@@ -1171,27 +1435,93 @@ function drawLivePreview(item) {
 
 // Capability Profiles
 function applyPrinterCapability(capabilityName) {
+    const customGroup = document.getElementById('custom-capability-group');
+    if (capabilityName === "Custom Profile") {
+        customGroup.style.display = 'flex';
+        applyCustomCapabilities();
+        return;
+    }
+    
+    customGroup.style.display = 'none';
+    
     if (capabilityName === "TSC TE244") {
         activePrinterLanguage = "TSPL";
         activeDPI = 203;
-        document.getElementById('cfg-port').value = 9100;
-    } else if (capabilityName === "Zebra GK420D") {
-        activePrinterLanguage = "ZPL";
-        activeDPI = 203;
-        document.getElementById('cfg-port').value = 9100;
     } else if (capabilityName === "TVS LP46") {
         activePrinterLanguage = "TSPL";
         activeDPI = 203;
-        document.getElementById('cfg-port').value = 9100;
+    } else if (capabilityName === "Zebra GK420D") {
+        activePrinterLanguage = "ZPL";
+        activeDPI = 203;
+    } else if (capabilityName === "Zebra ZD230") {
+        activePrinterLanguage = "ZPL";
+        activeDPI = 203;
     } else if (capabilityName === "Citizen CL-E321") {
         activePrinterLanguage = "ZPL";
         activeDPI = 300;
-        document.getElementById('cfg-port').value = 9100;
+    } else if (capabilityName === "TSC MH241") {
+        activePrinterLanguage = "TSPL";
+        activeDPI = 300;
     }
     
     // Re-validate current active template sandbox on capability change
     const activeItem = printQueue.find(q => q.selected);
     if (activeItem) drawLivePreview(activeItem);
+    
+    checkPrinterTemplateMismatch();
+}
+
+function applyCustomCapabilities() {
+    activePrinterLanguage = document.getElementById('cfg-custom-lang').value;
+    activeDPI = parseInt(document.getElementById('cfg-custom-dpi').value) || 203;
+    
+    const activeItem = printQueue.find(q => q.selected);
+    if (activeItem) drawLivePreview(activeItem);
+    
+    checkPrinterTemplateMismatch();
+}
+
+function checkPrinterTemplateMismatch() {
+    const templateSelect = document.getElementById('cfg-template');
+    const selectedTemplateVal = templateSelect.value;
+    let templateLanguage = "ZPL";
+    
+    if (selectedTemplateVal) {
+        const found = printTemplatesList.find(t => t.name === selectedTemplateVal);
+        if (found) {
+            templateLanguage = found.printer_language;
+        }
+    } else {
+        // Built-in Default template detects language based on selected item label size
+        // standard fallback: 106x55 is TSPL, others are ZPL
+        const activeItem = printQueue.find(q => q.selected) || printQueue[0];
+        if (activeItem && activeItem.label_size === "106x55") {
+            templateLanguage = "TSPL";
+        } else {
+            templateLanguage = "ZPL";
+        }
+    }
+    
+    // Selected printer language from capability preset
+    const capabilityPreset = document.getElementById('cfg-capability').value;
+    let printerLanguage = activePrinterLanguage;
+    if (capabilityPreset === "Custom Profile") {
+        printerLanguage = document.getElementById('cfg-custom-lang').value;
+    }
+    
+    const warningBanner = document.getElementById('language-mismatch-warning');
+    const tmplLangEl = document.getElementById('mismatch-template-lang');
+    const prnLangEl = document.getElementById('mismatch-printer-lang');
+    
+    if (!warningBanner || !tmplLangEl || !prnLangEl) return;
+    
+    if (templateLanguage !== printerLanguage) {
+        tmplLangEl.textContent = templateLanguage;
+        prnLangEl.textContent = printerLanguage;
+        warningBanner.style.display = 'block';
+    } else {
+        warningBanner.style.display = 'none';
+    }
 }
 
 // Sandbox validation
@@ -1260,6 +1590,7 @@ function selectPrintTemplate(val) {
         document.getElementById('sandbox-status').innerHTML = `<div style="color:var(--text-muted); display:flex; align-items:center; gap:4px;"><span class="material-symbols-outlined" style="font-size:16px;">help</span> Using built-in fallback template</div>`;
         const activeItem = printQueue.find(q => q.selected);
         if (activeItem) drawLivePreview(activeItem);
+        checkPrinterTemplateMismatch();
         return;
     }
     const found = printTemplatesList.find(t => t.name === val);
@@ -1267,6 +1598,7 @@ function selectPrintTemplate(val) {
         validateSandbox(found.raw_template || '');
         const activeItem = printQueue.find(q => q.selected);
         if (activeItem) drawLivePreview(activeItem);
+        checkPrinterTemplateMismatch();
     }
 }
 
@@ -1288,8 +1620,9 @@ async function testConnection() {
         });
 
         if (res && res.success) {
-            toast(res.message, 'success');
-            logSessionPrint(ip, 'PING SUCCESS', true);
+            const latencyStr = res.latency_ms !== null && res.latency_ms !== undefined ? ` (${res.latency_ms} ms)` : '';
+            toast(`Connection successful!${latencyStr}`, 'success');
+            logSessionPrint(ip, `PING SUCCESS${latencyStr}`, true);
         } else {
             toast(res.message, 'error');
             logSessionPrint(ip, 'PING FAIL: ' + res.message, false);
@@ -1627,24 +1960,114 @@ function triggerFileImport(input) {
             return;
         }
         
+        const isJson = file.name.endsWith('.json');
+        
         const reader = new FileReader();
         reader.onload = function(e) {
             const content = e.target.result;
             
-            // Auto detect printer language
-            let lang = "ZPL";
-            if (content.includes("SIZE ") || content.includes("GAP ") || content.includes("PRINT ")) {
-                lang = "TSPL";
+            if (isJson) {
+                try {
+                    const parsed = JSON.parse(content);
+                    
+                    // Validate JSON signature
+                    if (parsed.smriti_version !== "2.1" || parsed.template_version !== "1.0.0") {
+                        alert("Template cannot be imported.\nInvalid or unsupported SMRITI template signature version.");
+                        input.value = '';
+                        return;
+                    }
+                    
+                    // Validate supported language
+                    const supported = ["ZPL", "TSPL", "EPL", "CPCL"];
+                    const lang = (parsed.printer_language || "").toUpperCase();
+                    if (!supported.includes(lang)) {
+                        alert("Template cannot be imported.\nUnsupported printer language.");
+                        input.value = '';
+                        return;
+                    }
+                    
+                    // Load properties to designer
+                    document.getElementById('design-name').value = parsed.template_name || '';
+                    document.getElementById('design-size').value = parsed.label_size || '50x25';
+                    document.getElementById('design-lang').value = lang;
+                    document.getElementById('design-raw').value = parsed.raw_template || '';
+                    
+                    try {
+                        designerMappings = parsed.custom_field_mappings_json ? JSON.parse(parsed.custom_field_mappings_json) : [];
+                    } catch(e) {
+                        designerMappings = [];
+                    }
+                    renderMappingTable();
+                    toast(`Template JSON imported successfully!`, 'success');
+                    validateSandbox(parsed.raw_template || '');
+                } catch(err) {
+                    alert("Failed to parse template JSON: " + err.message);
+                }
+            } else {
+                // Auto detect printer language
+                let lang = "ZPL";
+                if (content.includes("SIZE ") || content.includes("GAP ") || content.includes("PRINT ")) {
+                    lang = "TSPL";
+                }
+                
+                // Validate if it is supported language
+                const supported = ["ZPL", "TSPL", "EPL", "CPCL"];
+                if (!supported.includes(lang)) {
+                    alert("Template cannot be imported.\nUnsupported printer language.");
+                    input.value = '';
+                    return;
+                }
+                
+                document.getElementById('design-raw').value = content;
+                document.getElementById('design-lang').value = lang;
+                
+                toast(`PRN Template imported! Detected Language: ${lang}`, 'success');
+                validateSandbox(content);
             }
-            
-            document.getElementById('design-raw').value = content;
-            document.getElementById('design-lang').value = lang;
-            
-            toast(`PRN Template imported! Detected Language: ${lang}`, 'success');
-            validateSandbox(content);
+            input.value = '';
         };
         reader.readAsText(file);
     }
+}
+
+function exportDesignerTemplate() {
+    const name = document.getElementById('design-name').value.trim();
+    const size = document.getElementById('design-size').value;
+    const lang = document.getElementById('design-lang').value;
+    const raw = document.getElementById('design-raw').value.trim();
+    
+    if (!name) {
+        toast('Template Name is required to export', 'error');
+        return;
+    }
+    if (!raw) {
+        toast('Template Raw Code is required to export', 'error');
+        return;
+    }
+    
+    const mappings = getDesignerMappings();
+    
+    const payload = {
+        "smriti_version": "2.1",
+        "template_version": "1.0.0",
+        "supported_languages": ["ZPL", "TSPL", "EPL", "CPCL"],
+        "template_name": name,
+        "label_size": size,
+        "printer_language": lang,
+        "raw_template": raw,
+        "custom_field_mappings_json": mappings.length ? JSON.stringify(mappings) : null
+    };
+    
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${name.toLowerCase().replace(/\s+/g, '_')}_template.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+    toast('Template exported as JSON successfully', 'success');
 }
 
 function renderMappingTable() {
@@ -1783,38 +2206,117 @@ async function downloadPRN() {
     }
 }
 
-// Direct LAN socket printing
-async function printToLAN() {
+let finalPrintCallback = null;
+
+function triggerPrintConfirmation() {
     const checkedItems = printQueue.filter(q => q.selected);
     if (!checkedItems.length) {
         toast('No rows selected for printing!', 'error');
         return;
     }
 
+    const printerType = document.getElementById('cfg-printer-type').value;
+    const template = document.getElementById('cfg-template').value;
     const ip = document.getElementById('cfg-ip').value.trim();
     const port = parseInt(document.getElementById('cfg-port').value) || 9100;
-    const template = document.getElementById('cfg-template').value;
-
-    if (!ip) {
-        toast('Network Printer IP address is required for direct LAN printing.', 'error');
-        return;
-    }
-
-    // Sandbox validator check
+    const usbPrinter = document.getElementById('cfg-usb-printer').value;
+    
+    const targetPrinter = printerType === 'LAN' ? `${ip}:${port}` : (usbPrinter || "Default USB Printer");
+    const templateName = template || "Built-in Default";
+    const totalQty = checkedItems.reduce((acc, q) => acc + q.print_qty, 0);
+    
+    // Check if template language matches printer language
+    const templateSelect = document.getElementById('cfg-template');
+    let templateLanguage = "ZPL";
     if (template) {
         const found = printTemplatesList.find(t => t.name === template);
-        if (found && !validateSandbox(found.raw_template || '')) {
-            const proceed = confirm("Pre-Print Sanitizer Warning: Mappings contain errors. Direct Print anyway?");
-            if (!proceed) return;
+        if (found) templateLanguage = found.printer_language;
+    } else {
+        const activeItem = printQueue.find(q => q.selected) || printQueue[0];
+        if (activeItem && activeItem.label_size === "106x55") {
+            templateLanguage = "TSPL";
         }
     }
+    
+    const capabilityPreset = document.getElementById('cfg-capability').value;
+    let printerLanguage = activePrinterLanguage;
+    if (capabilityPreset === "Custom Profile") {
+        printerLanguage = document.getElementById('cfg-custom-lang').value;
+    }
+    
+    // Update confirmation modal details
+    document.getElementById('confirm-template-name').textContent = templateName;
+    document.getElementById('confirm-printer-target').textContent = targetPrinter;
+    document.getElementById('confirm-label-count').textContent = totalQty;
+    document.getElementById('confirm-printer-interface').textContent = printerType === 'LAN' ? 'LAN (Direct Socket)' : 'USB / Local (QZ Tray)';
+    
+    // Render preview inside modal
+    const activeIdx = printQueue.findIndex(q => q.selected);
+    const itemToPreview = activeIdx !== -1 ? printQueue[activeIdx] : checkedItems[0];
+    drawLivePreview(itemToPreview);
+    
+    const previewBox = document.getElementById('preview-box-container').innerHTML;
+    document.getElementById('confirm-preview-container').innerHTML = previewBox;
+    
+    // Handle High Volume Warning
+    const highVolWarning = document.getElementById('confirm-high-volume-warning');
+    if (totalQty > 200) {
+        highVolWarning.innerHTML = `
+            <div style="background: rgba(239, 68, 68, 0.15); border: 1px dashed var(--danger); padding: 12px; border-radius: var(--radius-sm); color: var(--danger); font-weight: 700; margin-bottom: 12px; font-size: 0.85rem; line-height: 1.4;">
+                <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                    <span class="material-symbols-outlined" style="font-size:18px;">warning</span> High Volume Print Job
+                </div>
+                You are about to print <strong>${totalQty} labels</strong>. Please check that printer media, ribbon, and calibration are aligned before proceeding.
+            </div>
+        `;
+        highVolWarning.style.display = 'block';
+    } else {
+        highVolWarning.style.display = 'none';
+    }
+    
+    // Handle Mismatch Warning in confirmation modal
+    const confirmMismatch = document.getElementById('confirm-mismatch-warning');
+    if (templateLanguage !== printerLanguage) {
+        confirmMismatch.innerHTML = `
+            <div style="background: rgba(245, 158, 11, 0.15); border: 1px dashed var(--warning); padding: 12px; border-radius: var(--radius-sm); color: var(--accent); font-weight: 600; margin-bottom: 12px; font-size: 0.85rem; line-height: 1.4;">
+                <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                    <span class="material-symbols-outlined" style="font-size:18px;">warning_amber</span> Template / Printer Language Mismatch
+                </div>
+                Template uses <strong>${templateLanguage}</strong> but the selected printer is configured for <strong>${printerLanguage}</strong>. The output may not print correctly.
+            </div>
+        `;
+        confirmMismatch.style.display = 'block';
+    } else {
+        confirmMismatch.style.display = 'none';
+    }
+    
+    // Define the print callback to execute when user clicks "Confirm & Print"
+    finalPrintCallback = function() {
+        if (printerType === 'LAN') {
+            executeDirectLANPrint(checkedItems, template, ip, port, totalQty);
+        } else {
+            executeDirectUSBPrint(checkedItems, template, usbPrinter, totalQty);
+        }
+    };
+    
+    openModal('print-confirm-modal');
+}
 
-    const labelCount = checkedItems.reduce((acc, q) => acc + q.print_qty, 0);
-    const confirmPrint = confirm(`Confirm Direct Print Run?\n\n- Template: ${template || 'Built-in Default'}\n- Labels count: ${labelCount}\n- Destination Printer IP: ${ip}:${port}`);
-    if (!confirmPrint) return;
+function executeFinalPrintRun() {
+    closeModal('print-confirm-modal');
+    if (finalPrintCallback) {
+        finalPrintCallback();
+    }
+}
 
+async function executeDirectLANPrint(checkedItems, template, ip, port, totalQty) {
+    if (!ip) {
+        toast('Network Printer IP address is required for LAN printing.', 'error');
+        return;
+    }
+    
     try {
-        toast('Pinging printer port before print stream...', 'info');
+        toast('Testing printer socket connection...', 'info');
         const pingRes = await api('smriti_retail_os.barcode_api.test_printer_connection', {
             printer_ip: ip,
             printer_port: port
@@ -1824,7 +2326,7 @@ async function printToLAN() {
             throw new Error(`Connection test failed: ${pingRes.message}`);
         }
 
-        toast('Streaming raw ZPL/TSPL script...', 'info');
+        toast(`Streaming raw print script to LAN Printer (${totalQty} labels)...`, 'info');
         const res = await api('smriti_retail_os.barcode_api.send_to_network_printer', {
             items: JSON.stringify(checkedItems),
             template_name: template || null,
@@ -1834,34 +2336,191 @@ async function printToLAN() {
 
         if (res && res.success) {
             toast(res.message, 'success');
-            logSessionPrint(ip, `DIRECT PRINT SUCCESS (${labelCount} labels)`, true);
+            logSessionPrint(ip, `DIRECT LAN SUCCESS (${totalQty} labels)`, true);
             
             // Log to backend print audit log
             await api('smriti_retail_os.barcode_api.log_print_job', {
                 template_name: template || 'Built-in Default',
                 printer_ip: ip,
-                labels_count: labelCount,
+                labels_count: totalQty,
                 success: 1,
                 print_profile: document.getElementById('cfg-profile').value || null,
                 details: JSON.stringify(checkedItems.map(i => ({ code: i.item_code, qty: i.print_qty })))
             });
         } else {
-            throw new Error('Direct print failed');
+            throw new Error('LAN direct print failed');
         }
     } catch(e) {
         toast(e.message, 'error');
-        logSessionPrint(ip, 'DIRECT PRINT FAIL: ' + e.message, false);
+        logSessionPrint(ip, 'LAN DIRECT FAIL: ' + e.message, false);
         
         // Log failure to backend
         await api('smriti_retail_os.barcode_api.log_print_job', {
             template_name: template || 'Built-in Default',
             printer_ip: ip,
-            labels_count: labelCount,
+            labels_count: totalQty,
             success: 0,
             error_message: e.message,
             print_profile: document.getElementById('cfg-profile').value || null,
             details: JSON.stringify(checkedItems.map(i => ({ code: i.item_code, qty: i.print_qty })))
         });
+    }
+}
+
+async function executeDirectUSBPrint(checkedItems, template, usbPrinter, totalQty) {
+    if (typeof qz === 'undefined' || !qz.websocket.isActive()) {
+        toast('QZ Tray is not running. Please start QZ Tray on this machine.', 'error');
+        return;
+    }
+    
+    if (!usbPrinter) {
+        toast('Please select a USB/Local printer from the list.', 'error');
+        return;
+    }
+    
+    try {
+        toast('Generating ZPL/TSPL print commands...', 'info');
+        const prnContent = await api('smriti_retail_os.barcode_api.generate_prn', {
+            items: JSON.stringify(checkedItems),
+            template_name: template || null
+        });
+        
+        if (!prnContent) {
+            throw new Error('No print payload generated.');
+        }
+        
+        toast(`Sending print job to local printer '${usbPrinter}' via QZ Tray...`, 'info');
+        const config = qz.configs.create(usbPrinter);
+        
+        await qz.print(config, [{
+            type: 'raw',
+            format: 'command',
+            flavor: 'plain',
+            data: prnContent
+        }]);
+        
+        toast(`Successfully sent ${totalQty} labels to printer '${usbPrinter}'`, 'success');
+        logSessionPrint(usbPrinter, `USB PRINT SUCCESS (${totalQty} labels)`, true);
+        
+        // Log to backend print audit log
+        await api('smriti_retail_os.barcode_api.log_print_job', {
+            template_name: template || 'Built-in Default',
+            printer_ip: usbPrinter,
+            labels_count: totalQty,
+            success: 1,
+            print_profile: document.getElementById('cfg-profile').value || null,
+            details: JSON.stringify(checkedItems.map(i => ({ code: i.item_code, qty: i.print_qty })))
+        });
+    } catch(e) {
+        toast('USB Print failed: ' + e.message, 'error');
+        logSessionPrint(usbPrinter || 'USB', 'USB PRINT FAIL: ' + e.message, false);
+        
+        // Log failure to backend
+        await api('smriti_retail_os.barcode_api.log_print_job', {
+            template_name: template || 'Built-in Default',
+            printer_ip: usbPrinter || 'USB',
+            labels_count: totalQty,
+            success: 0,
+            error_message: e.message,
+            print_profile: document.getElementById('cfg-profile').value || null,
+            details: JSON.stringify(checkedItems.map(i => ({ code: i.item_code, qty: i.print_qty })))
+        });
+    }
+}
+
+function downloadPreviewPDF() {
+    const labelHtml = document.getElementById('confirm-preview-container').innerHTML;
+    const popup = window.open('', '_blank', 'width=800,height=600');
+    popup.document.write(`
+        <html>
+        <head>
+            <title>Print Label Preview</title>
+            <style>
+                body {
+                    margin: 0;
+                    padding: 20px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    background: #ffffff;
+                    color: #000000;
+                    font-family: 'Inter', sans-serif;
+                }
+                /* Visual representation overrides for paper print */
+                .sim-label {
+                    background: #ffffff !important;
+                    color: #000000 !important;
+                    border: 1px dashed #000000 !important;
+                    box-shadow: none !important;
+                }
+                .sim-sub-col {
+                    background: #ffffff !important;
+                    color: #000000 !important;
+                    border: 1px dashed #000000 !important;
+                }
+                .sim-barcode-img {
+                    background: repeating-linear-gradient(90deg, #000000, #000000 2px, #ffffff 2px, #ffffff 5px) !important;
+                }
+                .sim-barcode-img.narrow {
+                    background: repeating-linear-gradient(90deg, #000000, #000000 1px, #ffffff 1px, #ffffff 3px) !important;
+                }
+                /* Font face import */
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+            </style>
+        </head>
+        <body>
+            ${labelHtml}
+            <script>
+                window.onload = function() {
+                    window.print();
+                };
+            <\/script>
+        </body>
+        </html>
+    `);
+    popup.document.close();
+}
+
+async function openAnalyticsModal() {
+    openModal('analytics-modal');
+    const tbody = document.getElementById('an-history-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-sub);">Loading print analytics...</td></tr>';
+    
+    try {
+        const stats = await api('smriti_retail_os.barcode_api.get_print_analytics');
+        
+        // Set metrics
+        document.getElementById('an-total-labels').textContent = stats.total_labels || 0;
+        document.getElementById('an-success-jobs').textContent = stats.success_jobs || 0;
+        document.getElementById('an-failed-jobs').textContent = stats.failed_jobs || 0;
+        
+        // Calculate average labels per job
+        const avg = stats.total_jobs > 0 ? Math.round(stats.total_labels / stats.total_jobs) : 0;
+        document.getElementById('an-avg-labels').textContent = avg;
+        
+        document.getElementById('an-most-used-temp').textContent = stats.top_template || 'None';
+        document.getElementById('an-most-used-printer').textContent = stats.top_printer || 'None';
+        
+        // Render history table
+        if (!stats.history || !stats.history.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">No print run history found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = stats.history.map(h => {
+            const statusClass = h.status === 'Success' ? 'style="color:var(--success); font-weight:700;"' : 'style="color:var(--danger); font-weight:700;"';
+            return `
+                <tr>
+                    <td style="font-family:monospace; color:var(--text-muted);">${h.date}</td>
+                    <td style="font-weight:600; color:var(--text);">${h.template}</td>
+                    <td style="font-family:monospace;">${h.printer}</td>
+                    <td style="text-align:center; font-weight:700; color:var(--accent);">${h.labels}</td>
+                    <td style="text-align:center;" ${statusClass}>${h.status}</td>
+                </tr>
+            `;
+        }).join('');
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--danger);">Failed to load: ${e.message}</td></tr>`;
     }
 }
 

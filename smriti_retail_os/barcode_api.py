@@ -710,12 +710,13 @@ def test_printer_connection(printer_ip, printer_port=9100):
         elapsed = (time.time() - start_time) * 1000
         return {
             "success": True,
+            "latency_ms": round(elapsed, 1),
             "message": f"Connection successful! Response time: {elapsed:.1f} ms"
         }
     except socket.timeout:
-        return {"success": False, "message": "Connection timed out. Verify IP and Port."}
+        return {"success": False, "latency_ms": None, "message": "Connection timed out. Verify IP and Port."}
     except Exception as e:
-        return {"success": False, "message": f"Connection failed: {str(e)}"}
+        return {"success": False, "latency_ms": None, "message": f"Connection failed: {str(e)}"}
 
 
 @frappe.whitelist()
@@ -778,8 +779,9 @@ def log_print_job(template_name, printer_ip, labels_count, success, error_messag
     except Exception as e:
         frappe.log_error(f"Failed to write local print log: {str(e)}")
 
-    # 2. Frappe Activity Log
+    # 2. Frappe Activity Log (Standardized JSON remarks)
     try:
+        import json
         company = frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
         log_doc = frappe.new_doc("Activity Log")
         log_doc.user = frappe.session.user
@@ -787,14 +789,162 @@ def log_print_job(template_name, printer_ip, labels_count, success, error_messag
         log_doc.status = "Success" if success_val else "Failed"
         log_doc.subject = f"Printed {labels_count} label(s) using template {template_name} on {printer_ip}"
         
-        details_str = f"Printer IP: {printer_ip}\nProfile: {print_profile or 'None'}\nSuccess: {success_val}\nError: {error_message or ''}\nCompany: {company}\nDetails: {details or ''}"
-        log_doc.remarks = details_str
+        remarks_dict = {
+            "labels": cint(labels_count),
+            "template": template_name,
+            "printer": printer_ip,
+            "status": "success" if success_val else "failed",
+            "error_message": error_message or "",
+            "company": company,
+            "profile": print_profile or "None",
+            "details": details or ""
+        }
+        log_doc.remarks = json.dumps(remarks_dict)
         log_doc.insert(ignore_permissions=True)
         frappe.db.commit()
     except Exception as e:
         frappe.log_error(f"Failed to write Activity Log print job: {str(e)}")
 
     return {"success": True}
+
+
+@frappe.whitelist()
+def get_print_analytics():
+    """
+    Compiles detailed print analytics by parsing remarks JSON from SMRITI Activity Logs.
+    """
+    try:
+        logs = frappe.db.get_all(
+            "Activity Log",
+            filters={"operation": "SMRITI Label Studio Print Run"},
+            fields=["remarks", "status", "creation"],
+            order_by="creation desc"
+        )
+        
+        total_labels = 0
+        total_jobs = len(logs)
+        failed_jobs = 0
+        success_jobs = 0
+        
+        template_stats = {}
+        printer_stats = {}
+        history = []
+        
+        import json
+        for log in logs:
+            remarks = log.remarks or ""
+            data = {}
+            if remarks.strip().startswith("{") and remarks.strip().endswith("}"):
+                try:
+                    data = json.loads(remarks)
+                except Exception:
+                    pass
+            
+            if not data:
+                # Fallback parser for older/legacy logs
+                labels = 0
+                template = "Unknown"
+                printer = "Unknown"
+                status = "success" if log.status == "Success" else "failed"
+                for line in remarks.split("\n"):
+                    if line.startswith("Printer IP:"): printer = line.split("Printer IP:")[1].strip()
+                    elif line.startswith("Success:"): status = "success" if line.split("Success:")[1].strip() == "1" else "failed"
+                
+                # Check subject for labels count
+                subj = log.subject or ""
+                if "Printed " in subj and " label" in subj:
+                    try:
+                        labels = cint(subj.split("Printed ")[1].split(" label")[0])
+                    except Exception:
+                        pass
+                if "using template " in subj:
+                    try:
+                        template = subj.split("using template ")[1].split(" on ")[0]
+                    except Exception:
+                        pass
+                
+                data = {
+                    "labels": labels,
+                    "template": template,
+                    "printer": printer,
+                    "status": status
+                }
+            
+            labels = cint(data.get("labels", 0))
+            template = data.get("template", "Unknown") or "Unknown"
+            printer = data.get("printer", "Unknown") or "Unknown"
+            status = data.get("status", "success")
+            
+            total_labels += labels
+            if status == "success" or log.status == "Success":
+                success_jobs += 1
+            else:
+                failed_jobs += 1
+                
+            # Aggregate template usage
+            if template not in template_stats:
+                template_stats[template] = {"runs": 0, "labels": 0}
+            template_stats[template]["runs"] += 1
+            template_stats[template]["labels"] += labels
+            
+            # Aggregate printer usage
+            if printer not in printer_stats:
+                printer_stats[printer] = {"runs": 0, "labels": 0}
+            printer_stats[printer]["runs"] += 1
+            printer_stats[printer]["labels"] += labels
+            
+            # Add to history list (limit to latest 30)
+            if len(history) < 30:
+                history.append({
+                    "date": log.creation.strftime("%Y-%m-%d %H:%M"),
+                    "template": template,
+                    "printer": printer,
+                    "labels": labels,
+                    "status": "Success" if (status == "success" or log.status == "Success") else "Failed"
+                })
+                
+        # Find top template
+        top_template = "None"
+        max_temp_runs = 0
+        for t, s in template_stats.items():
+            if s["runs"] > max_temp_runs:
+                max_temp_runs = s["runs"]
+                top_template = t
+                
+        # Find top printer
+        top_printer = "None"
+        max_print_runs = 0
+        for p, s in printer_stats.items():
+            if s["runs"] > max_print_runs:
+                max_print_runs = s["runs"]
+                top_printer = p
+                
+        return {
+            "total_labels": total_labels,
+            "total_jobs": total_jobs,
+            "failed_jobs": failed_jobs,
+            "success_jobs": success_jobs,
+            "failed_percentage": round((failed_jobs / total_jobs * 100), 1) if total_jobs > 0 else 0.0,
+            "top_template": top_template,
+            "top_printer": top_printer,
+            "template_stats": template_stats,
+            "printer_stats": printer_stats,
+            "history": history
+        }
+    except Exception as e:
+        frappe.log_error(f"Error compiling print analytics: {str(e)}")
+        return {
+            "total_labels": 0,
+            "total_jobs": 0,
+            "failed_jobs": 0,
+            "success_jobs": 0,
+            "failed_percentage": 0.0,
+            "top_template": "None",
+            "top_printer": "None",
+            "template_stats": {},
+            "printer_stats": {},
+            "history": []
+        }
 
 
 @frappe.whitelist()
