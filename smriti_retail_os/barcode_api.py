@@ -35,7 +35,7 @@ def get_barcode_filters():
     if frappe.db.exists("DocType", "SMRITI Print Template"):
         templates = frappe.get_all(
             "SMRITI Print Template",
-            fields=["name", "template_name", "label_size", "printer_language"],
+            fields=["name", "template_name", "label_size", "printer_language", "raw_template", "custom_field_mappings_json"],
             order_by="template_name asc"
         )
 
@@ -57,7 +57,7 @@ def get_print_templates():
 
     return frappe.get_all(
         "SMRITI Print Template",
-        fields=["name", "template_name", "label_size", "printer_language"],
+        fields=["name", "template_name", "label_size", "printer_language", "raw_template", "custom_field_mappings_json"],
         order_by="template_name asc"
     )
 
@@ -103,6 +103,16 @@ def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
             db_filters["item_group"] = flt_dict.get("item_group")
         if flt_dict.get("custom_barcode_size"):
             db_filters["custom_barcode_size"] = flt_dict.get("custom_barcode_size")
+
+        # Style / Article No Filter with schema check-guards
+        if flt_dict.get("style"):
+            style_val = flt_dict.get("style").strip()
+            if frappe.db.has_column("Item", "custom_style_code"):
+                db_filters["custom_style_code"] = ["like", f"%{style_val}%"]
+            elif frappe.db.has_column("Item", "style_no"):
+                db_filters["style_no"] = ["like", f"%{style_val}%"]
+            else:
+                db_filters["item_code"] = ["like", f"%{style_val}%"]
 
         or_filters = {}
         if flt_dict.get("search_text"):
@@ -289,6 +299,62 @@ def generate_prn(items, template_name=None):
         if db_template:
             try:
                 raw = db_template.raw_template or ""
+                
+                # Check for dynamic mappings JSON
+                mappings_json = db_template.get("custom_field_mappings_json")
+                if mappings_json:
+                    mappings = frappe.parse_json(mappings_json)
+                    if mappings and isinstance(mappings, list):
+                        item_doc = None
+                        try:
+                            item_doc = frappe.get_doc("Item", item_code)
+                        except Exception:
+                            pass
+                            
+                        # Rebuild token dict dynamically using mappings
+                        token_dict = {}
+                        for m in mappings:
+                            lbl_f = m.get("label_field")
+                            erp_f = m.get("erp_field")
+                            if not lbl_f or not erp_f:
+                                continue
+                            
+                            val = None
+                            if item_doc and item_doc.meta.has_field(erp_f):
+                                val = item_doc.get(erp_f)
+                            elif erp_f == "item_code":
+                                val = item_code
+                            elif erp_f == "item_name":
+                                val = item_name
+                            elif erp_f == "barcode":
+                                val = barcode
+                            elif erp_f == "mrp":
+                                val = mrp
+                            elif erp_f == "brand":
+                                val = brand
+                            elif erp_f == "size":
+                                val = size
+                            elif erp_f == "color":
+                                val = color
+                            elif erp_f == "style":
+                                val = style
+                            elif erp_f == "pkd_date":
+                                val = pkd_date
+                            elif erp_f in it:
+                                val = it.get(erp_f)
+                            else:
+                                # Fallback to pre-resolved footwear attributes
+                                val = it.get(lbl_f) or ""
+                                
+                            # Currency formatting
+                            if lbl_f == "mrp" or "mrp" in erp_f or "rate" in erp_f or "price" in erp_f:
+                                try:
+                                    val = f"{int(flt(val))}"
+                                except Exception:
+                                    pass
+                                    
+                            token_dict[lbl_f] = str(val) if val is not None else ""
+
                 label_str = raw.format(**token_dict)
                 for _ in range(qty):
                     prn_output.append(label_str)
@@ -576,3 +642,316 @@ def get_field_mapping_reference():
             "description": "Buying classification — FW/MFW/LFW/BFW/GFW/KFW/SPORTS/ACC/BAG etc."
         },
     ]
+
+
+# ---------------------------------------------------------------------------
+# SMRITI LABEL STUDIO V2 APIS
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()
+def get_recent_transactions(doctype, limit=15):
+    """
+    Fetches the latest transacting records of type Purchase Receipt or Stock Entry.
+    """
+    if doctype not in ["Purchase Receipt", "Stock Entry"]:
+        return []
+
+    if doctype == "Purchase Receipt":
+        query_res = frappe.db.sql(
+            """
+            SELECT 
+                pr.name, 
+                pr.posting_date, 
+                pr.supplier_name as extra_info,
+                (SELECT COUNT(*) FROM `tabPurchase Receipt Item` pri WHERE pri.parent = pr.name) as items_count
+            FROM `tabPurchase Receipt` pr
+            ORDER BY pr.creation DESC
+            LIMIT %s
+            """,
+            (cint(limit) or 15,),
+            as_dict=True
+        )
+    else: # Stock Entry
+        query_res = frappe.db.sql(
+            """
+            SELECT 
+                se.name, 
+                se.posting_date, 
+                se.purpose as extra_info,
+                (SELECT COUNT(*) FROM `tabStock Entry Detail` sed WHERE sed.parent = se.name) as items_count
+            FROM `tabStock Entry` se
+            ORDER BY se.creation DESC
+            LIMIT %s
+            """,
+            (cint(limit) or 15,),
+            as_dict=True
+        )
+
+    for r in query_res:
+        if r.posting_date:
+            r.posting_date = r.posting_date.strftime("%Y-%m-%d")
+    return query_res
+
+
+@frappe.whitelist()
+def test_printer_connection(printer_ip, printer_port=9100):
+    """
+    TCP ping/connection test to label printer IP/Port.
+    """
+    import socket
+    import time
+    
+    port = cint(printer_port) or 9100
+    start_time = time.time()
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(3.0)
+            s.connect((printer_ip.strip(), port))
+        elapsed = (time.time() - start_time) * 1000
+        return {
+            "success": True,
+            "message": f"Connection successful! Response time: {elapsed:.1f} ms"
+        }
+    except socket.timeout:
+        return {"success": False, "message": "Connection timed out. Verify IP and Port."}
+    except Exception as e:
+        return {"success": False, "message": f"Connection failed: {str(e)}"}
+
+
+@frappe.whitelist()
+def print_test_label(printer_ip, printer_port=9100, printer_language="ZPL"):
+    """
+    Sends a test print layout directly to raw printer socket.
+    """
+    import socket
+    
+    port = cint(printer_port) or 9100
+    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    if printer_language == "TSPL":
+        test_code = (
+            f"SIZE 50 mm, 25 mm\n"
+            f"GAP 3 mm, 0 mm\n"
+            f"DIRECTION 1\n"
+            f"CLS\n"
+            f'TEXT 20,20,"3",0,1,1,"SMRITI TEST"\n'
+            f'TEXT 20,60,"2",0,1,1,"IP: {printer_ip}"\n'
+            f'TEXT 20,100,"2",0,1,1,"PORT: {printer_port}"\n'
+            f'TEXT 20,140,"1",0,1,1,"{now_str}"\n'
+            f"PRINT 1,1\n"
+        )
+    else: # ZPL
+        test_code = (
+            f"^XA\n"
+            f"^FO40,30^ADN,24,14^FDSMRITI PRINTER TEST^FS\n"
+            f"^FO40,70^ADN,18,10^FDPrinter IP: {printer_ip}^FS\n"
+            f"^FO40,100^ADN,18,10^FDPort: {printer_port}^FS\n"
+            f"^FO40,135^ADN,14,8^FDTime: {now_str}^FS\n"
+            f"^XZ\n"
+        )
+
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(5)
+            s.connect((printer_ip.strip(), port))
+            s.sendall(test_code.encode("utf-8", errors="replace"))
+        return {"success": True, "message": "Test label sent successfully."}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+
+@frappe.whitelist()
+def log_print_job(template_name, printer_ip, labels_count, success, error_message=None, print_profile=None, details=None):
+    """
+    Logs print job activity locally and in Frappe Activity Log for audit-trail.
+    """
+    success_val = cint(success)
+    # 1. Local file log
+    try:
+        import os
+        log_dir = os.path.join(frappe.get_app_path("smriti_retail_os"), "logs")
+        os.makedirs(log_dir, exist_ok=True)
+        log_file = os.path.join(log_dir, "barcode_print.log")
+        log_msg = f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - User: {frappe.session.user} - Template: {template_name} - IP: {printer_ip} - Count: {labels_count} - Success: {success_val} - Error: {error_message or 'None'}\n"
+        with open(log_file, "a", encoding="utf-8") as lf:
+            lf.write(log_msg)
+    except Exception as e:
+        frappe.log_error(f"Failed to write local print log: {str(e)}")
+
+    # 2. Frappe Activity Log
+    try:
+        company = frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+        log_doc = frappe.new_doc("Activity Log")
+        log_doc.user = frappe.session.user
+        log_doc.operation = "SMRITI Label Studio Print Run"
+        log_doc.status = "Success" if success_val else "Failed"
+        log_doc.subject = f"Printed {labels_count} label(s) using template {template_name} on {printer_ip}"
+        
+        details_str = f"Printer IP: {printer_ip}\nProfile: {print_profile or 'None'}\nSuccess: {success_val}\nError: {error_message or ''}\nCompany: {company}\nDetails: {details or ''}"
+        log_doc.remarks = details_str
+        log_doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+    except Exception as e:
+        frappe.log_error(f"Failed to write Activity Log print job: {str(e)}")
+
+    return {"success": True}
+
+
+@frappe.whitelist()
+def get_template_usage_stats():
+    """
+    Aggregates template usage statistics from the Activity Log database table.
+    """
+    try:
+        logs = frappe.db.get_all(
+            "Activity Log",
+            filters={"operation": "SMRITI Label Studio Print Run"},
+            fields=["subject", "status", "creation"]
+        )
+        stats = {}
+        for log in logs:
+            subj = log.subject or ""
+            if "using template " in subj:
+                parts = subj.split("using template ")
+                if len(parts) > 1:
+                    temp_part = parts[1].split(" on ")[0]
+                    if temp_part not in stats:
+                        stats[temp_part] = {"runs": 0, "labels": 0, "success": 0, "failed": 0}
+                    
+                    stats[temp_part]["runs"] += 1
+                    if log.status == "Success":
+                        stats[temp_part]["success"] += 1
+                    else:
+                        stats[temp_part]["failed"] += 1
+                        
+                    try:
+                        lbl_cnt = int(subj.split("Printed ")[1].split(" label")[0])
+                        stats[temp_part]["labels"] += lbl_cnt
+                    except Exception:
+                        pass
+        return stats
+    except Exception as e:
+        frappe.log_error(f"Error compiling template usage stats: {str(e)}")
+        return {}
+
+
+@frappe.whitelist()
+def get_print_profiles():
+    """
+    Retrieves print profiles JSON from SMRITI Company Settings.
+    """
+    settings_name = frappe.db.get_value("SMRITI Company Settings", {}, "name")
+    if not settings_name:
+        return {}
+    
+    profiles_json = frappe.db.get_value("SMRITI Company Settings", settings_name, "custom_print_profiles_json")
+    if not profiles_json:
+        return {}
+        
+    try:
+        return frappe.parse_json(profiles_json)
+    except Exception:
+        return {}
+
+
+@frappe.whitelist()
+def save_print_profile(profile_name, template_name, printer_ip, printer_port=9100, dpi="203 DPI", copies=1, label_size="50x25", is_default=0):
+    """
+    Saves a print profile in SMRITI Company Settings as a keyed JSON object.
+    """
+    import json
+    settings_name = frappe.db.get_value("SMRITI Company Settings", {}, "name")
+    if not settings_name:
+        comp = frappe.db.get_value("Company", {}, "name")
+        if not comp:
+            frappe.throw(_("Please create a Company record first."))
+        doc = frappe.new_doc("SMRITI Company Settings")
+        doc.company = comp
+        doc.insert(ignore_permissions=True)
+        settings_name = doc.name
+
+    doc = frappe.get_doc("SMRITI Company Settings", settings_name)
+    profiles = {}
+    if doc.custom_print_profiles_json:
+        try:
+            profiles = frappe.parse_json(doc.custom_print_profiles_json)
+        except Exception:
+            profiles = {}
+
+    is_default = cint(is_default)
+    if is_default:
+        for p in profiles.values():
+            p["is_default"] = 0
+
+    profiles[profile_name] = {
+        "profile_name": profile_name,
+        "template_name": template_name,
+        "printer_ip": printer_ip,
+        "printer_port": cint(printer_port) or 9100,
+        "dpi": dpi,
+        "copies": cint(copies) or 1,
+        "label_size": label_size,
+        "is_default": is_default
+    }
+
+    doc.custom_print_profiles_json = json.dumps(profiles)
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return profiles
+
+
+@frappe.whitelist()
+def delete_print_profile(profile_name):
+    """
+    Deletes a print profile from SMRITI Company Settings.
+    """
+    settings_name = frappe.db.get_value("SMRITI Company Settings", {}, "name")
+    if not settings_name:
+        return {}
+
+    doc = frappe.get_doc("SMRITI Company Settings", settings_name)
+    if not doc.custom_print_profiles_json:
+        return {}
+
+    try:
+        profiles = frappe.parse_json(doc.custom_print_profiles_json)
+    except Exception:
+        return {}
+
+    if profile_name in profiles:
+        del profiles[profile_name]
+        doc.custom_print_profiles_json = json.dumps(profiles)
+        doc.save(ignore_permissions=True)
+        frappe.db.commit()
+
+    return profiles
+
+
+@frappe.whitelist()
+def save_print_template(template_name, label_size, printer_language, raw_template, field_mappings_json=None):
+    """
+    Saves or updates a SMRITI Print Template record with size validations.
+    """
+    # 100 KB template size limit validation
+    if len(raw_template.encode('utf-8')) > 102400:
+        frappe.throw(_("Template size exceeds the maximum limit of 100 KB."))
+
+    if not frappe.db.exists("DocType", "SMRITI Print Template"):
+        frappe.throw(_("DocType SMRITI Print Template not found."))
+
+    if frappe.db.exists("SMRITI Print Template", template_name):
+        doc = frappe.get_doc("SMRITI Print Template", template_name)
+    else:
+        doc = frappe.new_doc("SMRITI Print Template")
+        doc.template_name = template_name
+
+    doc.label_size = label_size
+    doc.printer_language = printer_language
+    doc.raw_template = raw_template
+    doc.custom_field_mappings_json = field_mappings_json
+    
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    
+    return get_print_templates()
+

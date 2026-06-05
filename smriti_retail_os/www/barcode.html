@@ -1,17 +1,17 @@
 {% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/barcode.html
-  @description: SMRITI Barcode Printer & Generator — Standalone UI (Zero system chrome)
+  @description: SMRITI Label Studio — Widescreen 3-panel control desk (Zero system chrome)
   @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-  @version: 2.0.0
+  @version: 2.1.0
   @license: MIT
 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SMRITI Barcode Generator & Printer</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<title>SMRITI Label Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -60,7 +60,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .topbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
 .topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--text-muted); }
 .topbar-breadcrumbs span.sep { color:var(--text-sub); }
-.topbar-breadcrumbs span.active { color:var(--text); }
+.topbar-breadcrumbs span.active { color:var(--text); font-family:'Outfit',sans-serif; font-weight:800; letter-spacing:0.5px; }
 .topbar-right { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
 .topbtn { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:var(--radius-sm); font-size:12px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); white-space:nowrap; }
 .topbtn span { font-size:16px; }
@@ -68,74 +68,158 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 
 /* Layout Panels */
 .split-layout { flex:1; display:flex; overflow:hidden; min-height:0; }
-.left-form { width:340px; flex-shrink:0; border-right:1px solid var(--border); background:var(--bg2); display:flex; flex-direction:column; overflow-y:auto; }
-.right-table { flex:1; display:flex; flex-direction:column; overflow:hidden; background:rgba(10,15,30,0.4); }
+.left-form { width:310px; flex-shrink:0; border-right:1px solid var(--border); background:var(--bg2); display:flex; flex-direction:column; overflow-y:auto; }
+.right-table { flex:1; display:flex; flex-direction:column; overflow:hidden; background:rgba(10,15,30,0.2); border-right:1px solid var(--border); }
+.preview-pane { width:340px; flex-shrink:0; background:var(--bg2); display:flex; flex-direction:column; overflow-y:auto; padding:18px; gap:18px; }
 
-.panel-section { padding:18px 20px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:12px; }
-.panel-section-title { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--primary-lt); display:flex; align-items:center; gap:6px; }
+.panel-section { padding:16px 18px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:10px; }
+.panel-section-title { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--primary-lt); display:flex; align-items:center; gap:6px; }
 .panel-section-title span { font-size:18px; }
 
 .form-group { display:flex; flex-direction:column; gap:5px; }
-.form-label { font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
-.form-input { padding:8px 12px; background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.88rem; outline:none; transition:all var(--t); font-family:inherit; }
+.form-label { font-size:0.72rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+.form-input-wrap { display:flex; gap:6px; }
+.form-input { flex:1; padding:8px 10px; background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.85rem; outline:none; transition:all var(--t); font-family:inherit; }
 .form-input:focus { border-color:var(--primary); }
 
-.btn-search { width:100%; padding:9px; background:var(--primary); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.88rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; }
+.btn-icon-input { padding:8px; background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text-muted); cursor:pointer; display:flex; align-items:center; }
+.btn-icon-input:hover { border-color:var(--primary); color:var(--primary-lt); }
+
+.btn-search { width:100%; padding:8px; background:var(--primary); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.85rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; }
 .btn-search:hover { background:var(--primary-lt); }
 
-.btn-submit { width:100%; padding:11px; background:linear-gradient(135deg,var(--accent),#d97706); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.92rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 12px rgba(245,158,11,0.2); }
-.btn-submit:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(245,158,11,0.35); }
-.btn-submit:disabled { opacity:0.4; cursor:not-allowed; transform:none !important; }
+.btn-submit { width:100%; padding:10px; background:linear-gradient(135deg,var(--accent),#d97706); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.88rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 12px rgba(245,158,11,0.15); }
+.btn-submit:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(245,158,11,0.25); }
 
-/* Right Table View */
-.table-header-bar { padding:14px 24px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; gap:16px; align-items:center; flex-shrink:0; }
-.table-header-title { font-weight:700; font-size:1rem; }
-.table-header-actions { margin-left:auto; display:flex; gap:8px; }
+/* Right Table Worksheet */
+.table-header-bar { padding:12px 20px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; gap:12px; align-items:center; flex-shrink:0; }
+.table-header-title { font-weight:700; font-size:0.95rem; font-family:'Outfit',sans-serif; }
+.table-header-actions { margin-left:auto; display:flex; gap:8px; align-items:center; }
 
-.table-wrap { flex:1; overflow:auto; padding:16px 24px; }
+.bulk-actions-toolbar { padding:8px 20px; background:rgba(99,102,241,0.08); border-bottom:1px solid var(--border); display:flex; gap:12px; align-items:center; font-size:0.82rem; color:var(--primary-lt); font-weight:600; }
+.bulk-btn { background:none; border:none; color:var(--text); font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:4px; font-size:0.82rem; padding:4px 8px; border-radius:4px; transition:background var(--t); }
+.bulk-btn:hover { background:rgba(255,255,255,0.06); }
+.bulk-btn span { font-size:16px; }
+
+.table-wrap { flex:1; overflow:auto; padding:12px 20px; }
 .smriti-table { width:100%; border-collapse:collapse; text-align:left; }
-.smriti-table th { padding:10px 14px; background:var(--card2); color:var(--text-muted); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1; }
-.smriti-table td { padding:12px 14px; border-bottom:1px solid var(--border); font-size:0.88rem; vertical-align:middle; }
-.smriti-table tbody tr:hover td { background:rgba(99,102,241,0.04); }
-.smriti-table tbody tr:last-child td { border-bottom:none; }
+.smriti-table th { padding:8px 12px; background:var(--card2); color:var(--text-muted); font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1; }
+.smriti-table td { padding:10px 12px; border-bottom:1px solid var(--border); font-size:0.85rem; vertical-align:middle; }
+.smriti-table tbody tr.selected td { background:rgba(99,102,241,0.05); }
+.smriti-table tbody tr:hover td { background:rgba(255,255,255,0.02); }
+.smriti-table tbody tr.selected:hover td { background:rgba(99,102,241,0.08); }
 
-.item-code-badge { font-family:monospace; font-size:0.75rem; color:var(--text-muted); background:rgba(255,255,255,0.04); padding:2px 6px; border-radius:4px; border:1px solid var(--border); }
-.tbl-input { padding:4px 8px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-weight:600; font-size:0.88rem; outline:none; transition:all var(--t); font-family:inherit; }
+.item-code-badge { font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--text-muted); background:rgba(255,255,255,0.04); padding:2px 6px; border-radius:4px; border:1px solid var(--border); }
+.tbl-input { padding:4px 8px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-weight:600; font-size:0.85rem; outline:none; transition:all var(--t); font-family:inherit; }
 .tbl-input:focus { border-color:var(--primary); }
-.qty-input { width:65px; text-align:center; }
-.size-select { width:100px; }
+.qty-input { width:60px; text-align:center; }
+.size-select { width:90px; }
 
-.btn-del-row { padding:8px; border-radius:var(--radius-sm); background:none; border:1px solid rgba(239,68,68,0.2); color:var(--danger); cursor:pointer; transition:all var(--t); display:inline-flex; align-items:center; justify-content:center; }
+.btn-del-row { padding:6px; border-radius:var(--radius-sm); background:none; border:1px solid rgba(239,68,68,0.2); color:var(--danger); cursor:pointer; transition:all var(--t); display:inline-flex; align-items:center; justify-content:center; }
 .btn-del-row:hover { background:rgba(239,68,68,0.1); }
-.btn-del-row span { font-size:18px; }
 
 /* Placeholder Panel */
-.placeholder-panel { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-sub); gap:12px; }
-.placeholder-panel span.icon { font-size:56px; opacity:0.25; }
-.placeholder-panel h3 { font-size:1rem; font-weight:600; color:var(--text-muted); }
-.placeholder-panel p { font-size:0.85rem; text-align:center; max-width:320px; line-height:1.6; }
+.placeholder-panel { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-sub); gap:8px; padding:40px; }
+.placeholder-panel span.icon { font-size:48px; opacity:0.25; color:var(--primary-lt); }
+.placeholder-panel h3 { font-size:0.95rem; font-weight:600; color:var(--text-muted); }
+.placeholder-panel p { font-size:0.82rem; text-align:center; max-width:280px; line-height:1.5; }
+
+/* Real-time Visual Preview Panel */
+.preview-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); display:flex; flex-direction:column; overflow:hidden; }
+.preview-header { padding:12px 16px; background:var(--card2); border-bottom:1px solid var(--border); font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--primary-lt); display:flex; align-items:center; gap:6px; }
+.preview-header span { font-size:18px; }
+.preview-body { padding:16px; display:flex; justify-content:center; background:rgba(0,0,0,0.2); min-height:180px; align-items:center; position:relative; }
+
+/* Thermal Printed Label simulated look */
+.sim-label { background:#ffffff; color:#0f172a; width:220px; border-radius:4px; box-shadow:0 8px 24px rgba(0,0,0,0.5); padding:10px; display:flex; flex-direction:column; position:relative; font-family:'Inter',sans-serif; overflow:hidden; transition:all 0.3s ease; border: 1px dashed #94a3b8; }
+.sim-label.sz-50x25 { aspect-ratio: 2/1; height: 110px; }
+.sim-label.sz-50x30 { aspect-ratio: 5/3; height: 132px; }
+.sim-label.sz-75x50 { width: 240px; aspect-ratio: 3/2; height: 160px; }
+.sim-label.sz-100x50 { width: 280px; aspect-ratio: 2/1; height: 140px; }
+
+/* 3-Up Label Grid */
+.sim-label.sz-106x55 {
+    width: 320px;
+    height: 165px;
+    display: flex;
+    flex-direction: row;
+    padding: 4px;
+    gap: 4px;
+    background: #e2e8f0;
+    border: none;
+}
+.sim-sub-col { background:#ffffff; border-radius:3px; padding:6px; display:flex; flex-direction:column; overflow:hidden; font-size:8px; line-height:1.2; border:1px dashed #cbd5e1; }
+.sim-col1 { width: 50%; }
+.sim-col2 { width: 25%; }
+.sim-col3 { width: 25%; }
+
+/* Simulated Label Typography */
+.sim-brand { font-family:'Outfit',sans-serif; font-weight:800; font-size:11px; letter-spacing:0.5px; border-bottom:1px solid #e2e8f0; padding-bottom:2px; margin-bottom:4px; text-transform:uppercase; text-align:center; }
+.sim-name { font-size:9px; font-weight:600; color:#334155; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sim-barcode-img {
+    height: 32px;
+    margin: 4px 0;
+    background: repeating-linear-gradient(90deg, #0f172a, #0f172a 2px, #ffffff 2px, #ffffff 5px);
+    width: 100%;
+}
+.sim-barcode-img.narrow { height:22px; background: repeating-linear-gradient(90deg, #0f172a, #0f172a 1px, #ffffff 1px, #ffffff 3px); }
+.sim-barcode-text { font-family:'JetBrains Mono',monospace; font-size:8px; text-align:center; margin-bottom:4px; font-weight:500; }
+.sim-mrp-price { font-size:10px; font-weight:800; color:#0f172a; display:flex; justify-content:space-between; margin-top:auto; }
+.sim-meta { font-size:8px; color:#475569; display:flex; justify-content:space-between; margin-top:2px; }
+
+/* Visual design elements */
+.sandbox-indicator { padding:10px 14px; background:rgba(0,0,0,0.15); border:1px solid var(--border); border-radius:var(--radius-sm); font-size:0.8rem; line-height:1.4; }
+
+/* Diagnostics Panel */
+.diag-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.diag-btn { padding:7px; border-radius:var(--radius-sm); border:1px solid var(--border2); background:transparent; color:var(--text); font-weight:600; font-size:0.82rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:4px; }
+.diag-btn:hover { border-color:var(--primary-lt); color:var(--primary-lt); background:rgba(99,102,241,0.05); }
+.diag-btn span { font-size:16px; }
+
+/* Log List */
+.log-list { display:flex; flex-direction:column; gap:6px; max-height:120px; overflow-y:auto; font-family:'JetBrains Mono',monospace; font-size:0.75rem; }
+.log-item { display:flex; justify-content:space-between; color:var(--text-muted); padding:4px 6px; border-radius:4px; border-bottom:1px solid rgba(255,255,255,0.02); }
+.log-item.success { color:var(--success); }
+.log-item.error { color:var(--danger); }
 
 /* Modals */
 .modal-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(3,7,18,0.85); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
 .modal-backdrop.open { opacity:1; pointer-events:all; }
-.modal { background:var(--card2); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px; width:100%; max-width:550px; transform:translateY(20px); transition:transform 0.2s; display:flex; flex-direction:column; max-height:85vh; }
+.modal { background:var(--card2); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px; width:100%; max-width:550px; transform:translateY(20px); transition:transform 0.2s; display:flex; flex-direction:column; max-height:85vh; box-shadow:0 24px 64px rgba(0,0,0,0.8); }
 .modal-backdrop.open .modal { transform:translateY(0); }
 .modal-header { display:flex; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:12px; }
-.modal-title { font-family:'Outfit',sans-serif; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px; }
+.modal-title { font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:800; display:flex; align-items:center; gap:8px; }
 .modal-title span { color:var(--primary-lt); font-size:22px; }
 .modal-close { margin-left:auto; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:22px; display:flex; align-items:center; }
 .modal-close:hover { color:var(--text); }
-.modal-body { overflow-y:auto; flex:1; padding-right:4px; font-size:0.88rem; line-height:1.5; }
+.modal-body { overflow-y:auto; flex:1; padding-right:4px; font-size:0.85rem; line-height:1.5; display:flex; flex-direction:column; gap:12px; }
+.modal-footer { display:flex; justify-content:flex-end; gap:8px; border-top:1px solid var(--border); padding-top:12px; margin-top:12px; }
 
-/* Token Help styling */
-.token-table { width:100%; border-collapse:collapse; text-align:left; margin-top:10px; }
-.token-table th { padding:8px; background:rgba(0,0,0,0.15); font-weight:700; font-size:0.75rem; border-bottom:1px solid var(--border); }
-.token-table td { padding:8px; border-bottom:1px solid var(--border); font-size:0.82rem; }
-.token-badge { font-family:monospace; background:rgba(99,102,241,0.15); color:var(--primary-lt); padding:2px 6px; border-radius:4px; font-weight:600; }
+/* Designer Modal overrides */
+.modal.lg-designer { max-width:850px; width:90%; height:85vh; }
+.designer-split { display:flex; gap:20px; flex:1; min-height:0; }
+.designer-code-area { flex:1.2; display:flex; flex-direction:column; gap:8px; }
+.designer-mapping-area { flex:1; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
+
+.token-chip-container { display:flex; flex-wrap:wrap; gap:4px; padding:6px; background:var(--bg); border-radius:var(--radius-sm); border:1px solid var(--border); }
+.token-chip { font-family:'JetBrains Mono',monospace; font-size:0.7rem; font-weight:600; padding:2px 6px; border-radius:4px; background:rgba(99,102,241,0.15); color:var(--primary-lt); border:1px solid rgba(99,102,241,0.2); cursor:pointer; }
+.token-chip:hover { background:var(--primary); color:white; }
+
+.designer-textarea { font-family:'JetBrains Mono',monospace; font-size:0.82rem; color:#10b981; background:#040711; border:1px solid var(--border2); border-radius:var(--radius-sm); padding:10px; flex:1; outline:none; resize:none; line-height:1.5; }
+
+/* Mapping Table inside Designer */
+.mapping-tbl { width:100%; border-collapse:collapse; text-align:left; font-size:0.8rem; }
+.mapping-tbl th { padding:6px 10px; background:rgba(0,0,0,0.2); font-weight:700; color:var(--text-muted); border-bottom:1px solid var(--border); }
+.mapping-tbl td { padding:6px 10px; border-bottom:1px solid var(--border); }
+
+/* Import drop-zone */
+.drop-zone { border:2px dashed var(--border2); border-radius:var(--radius); padding:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; color:var(--text-muted); cursor:pointer; transition:all var(--t); gap:6px; }
+.drop-zone:hover { border-color:var(--primary); background:rgba(99,102,241,0.02); color:var(--text); }
+.drop-zone span { font-size:32px; color:var(--primary-lt); }
 
 /* Toast Container */
 #toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
-.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:240px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
 .toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
 .toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
 .toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
@@ -164,7 +248,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
             <div class="topbar-breadcrumbs">
                 <span>SMRITI</span>
                 <span class="sep">/</span>
-                <span class="active">Barcode Generator & Printer</span>
+                <span class="active">Label Studio V2</span>
             </div>
 
             <div class="topbar-right">
@@ -180,14 +264,18 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 
         <!-- Split Layout -->
         <div class="split-layout">
-            <!-- Left Filters & Config Panel -->
+            <!-- Left Filters & Config Panel (310px) -->
             <div class="left-form">
                 <!-- Manual Loading -->
                 <div class="panel-section">
                     <div class="panel-section-title"><span class="material-symbols-outlined">filter_alt</span> Load Items manually</div>
                     <div class="form-group">
+                        <label class="form-label">Style / Article No</label>
+                        <input type="text" class="form-input" id="flt-style" placeholder="e.g. BBM-01, sport-04...">
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Search Keyword</label>
-                        <input type="text" class="form-input" id="flt-search" placeholder="Item code, name or barcode...">
+                        <input type="text" class="form-input" id="flt-search" placeholder="Code, name or barcode...">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Brand</label>
@@ -224,7 +312,12 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                     </div>
                     <div class="form-group">
                         <label class="form-label">Transaction ID</label>
-                        <input type="text" class="form-input" id="tx-name" placeholder="e.g. MAT-STE-2026-00012">
+                        <div class="form-input-wrap">
+                            <input type="text" class="form-input" id="tx-name" placeholder="e.g. MAT-STE-2026-00012">
+                            <button class="btn-icon-input" onclick="openTxSearchModal()" title="Search recent transactions">
+                                <span class="material-symbols-outlined">search</span>
+                            </button>
+                        </div>
                     </div>
                     <button class="btn-search" onclick="loadTransactionItems()">
                         <span class="material-symbols-outlined">download</span> Fetch Transaction
@@ -232,13 +325,24 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 </div>
 
                 <!-- Print Options -->
-                <div class="panel-section" style="border-bottom: none; margin-top: auto;">
+                <div class="panel-section">
                     <div class="panel-section-title"><span class="material-symbols-outlined">print</span> Print Configuration</div>
                     <div class="form-group">
-                        <label class="form-label">Print Template</label>
-                        <select class="form-input" id="cfg-template">
-                            <option value="">Built-in Default</option>
+                        <label class="form-label">Print Profile Presets</label>
+                        <select class="form-input" id="cfg-profile" onchange="applyPrintProfile(this.value)">
+                            <option value="">-- Manual Selection --</option>
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Print Template</label>
+                        <div class="form-input-wrap">
+                            <select class="form-input" id="cfg-template" onchange="selectPrintTemplate(this.value)">
+                                <option value="">Built-in Default</option>
+                            </select>
+                            <button class="btn-icon-input" onclick="openTemplateDesigner()" title="Design / edit templates">
+                                <span class="material-symbols-outlined">edit_square</span>
+                            </button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Network Printer IP</label>
@@ -249,39 +353,70 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                         <input type="number" class="form-input" id="cfg-port" value="9100">
                     </div>
                 </div>
+
+                <!-- Printer Diagnostics -->
+                <div class="panel-section">
+                    <div class="panel-section-title"><span class="material-symbols-outlined">dns</span> Printer Diagnostics</div>
+                    <div class="diag-grid">
+                        <button class="diag-btn" onclick="testConnection()">
+                            <span class="material-symbols-outlined">router</span> Ping IP
+                        </button>
+                        <button class="diag-btn" onclick="sendTestLabel()">
+                            <span class="material-symbols-outlined">print</span> Test Label
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Log Panel -->
+                <div class="panel-section" style="border-bottom: none; margin-top: auto;">
+                    <div class="panel-section-title"><span class="material-symbols-outlined">history</span> Print Session Log</div>
+                    <div class="log-list" id="session-log-list">
+                        <div style="color:var(--text-sub); text-align:center; padding-top:10px; font-family:inherit;">No print jobs in this session</div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Right Tables & Actions -->
+            <!-- Middle Worksheet (Flex-1) -->
             <div class="right-table">
                 <!-- Table Header Actions -->
                 <div class="table-header-bar">
-                    <div class="table-header-title">Label Queue</div>
+                    <div class="table-header-title">Print Worksheet</div>
                     <div class="table-header-actions" id="action-buttons" style="display: none;">
-                        <button class="topbtn" onclick="clearQueue()" style="color:var(--danger);border-color:rgba(239,68,68,0.3);"><span class="material-symbols-outlined">delete_sweep</span> Clear Queue</button>
-                        <button class="topbtn" onclick="downloadPRN()" style="color:var(--primary-lt);border-color:var(--primary);"><span class="material-symbols-outlined">download</span> Download PRN</button>
-                        <button class="btn-submit" onclick="printToLAN()" style="padding:6px 16px; font-size:12px; width:auto; height:32px; box-shadow:none;"><span class="material-symbols-outlined">print</span> Direct LAN Print</button>
+                        <button class="topbtn" onclick="openAddCustomRowModal()" style="color:var(--primary-lt); border-color:var(--primary);"><span class="material-symbols-outlined">add_circle</span> Add Custom Item</button>
+                        <button class="topbtn" onclick="clearQueue()" style="color:var(--danger); border-color:rgba(239,68,68,0.3);"><span class="material-symbols-outlined">delete_sweep</span> Clear All</button>
+                        <button class="topbtn" onclick="downloadPRN()" style="color:var(--primary-lt); border-color:var(--primary);"><span class="material-symbols-outlined">download</span> Download PRN</button>
+                        <button class="btn-submit" onclick="printToLAN()" style="padding:6px 16px; font-size:12px; width:auto; height:32px; box-shadow:none;"><span class="material-symbols-outlined">print</span> Direct Print</button>
                     </div>
+                </div>
+
+                <!-- Bulk Toolbar -->
+                <div class="bulk-actions-toolbar" id="bulk-toolbar" style="display: none;">
+                    <span id="bulk-selected-count">0 items selected</span>
+                    <button class="bulk-btn" onclick="bulkSetQty()"><span class="material-symbols-outlined">edit</span> Set Qty</button>
+                    <button class="bulk-btn" onclick="bulkSetSize()"><span class="material-symbols-outlined">aspect_ratio</span> Set Label Size</button>
+                    <button class="bulk-btn" onclick="bulkDelete()" style="color:var(--danger);"><span class="material-symbols-outlined">delete</span> Delete</button>
                 </div>
 
                 <!-- Empty State Placeholder -->
                 <div class="placeholder-panel" id="table-placeholder">
-                    <span class="material-symbols-outlined icon">qr_code_scanner</span>
-                    <h3>Queue is Empty</h3>
-                    <p>Search and load products manually or select a backend Purchase Receipt / Stock Entry to populate the barcode printing worksheet.</p>
+                    <span class="material-symbols-outlined icon">barcode_scanner</span>
+                    <h3>Worksheet is Empty</h3>
+                    <p>Load variants manually by Style, search items, or select a Purchase Receipt / Stock Entry to populate the printing queue.</p>
                 </div>
 
                 <!-- Product Rows Worksheet -->
                 <div class="table-wrap" id="table-wrap" style="display: none;">
-                    <table class="smriti-table">
+                    <table class="smriti-table" id="worksheet-table">
                         <thead>
                             <tr>
+                                <th style="width: 40px; text-align:center;"><input type="checkbox" id="smriti-chk-all" checked onchange="toggleSelectAll(this.checked)"></th>
                                 <th>Item Code / Name</th>
                                 <th>Barcode</th>
                                 <th>Style / Brand</th>
                                 <th>Attributes</th>
                                 <th>MRP</th>
-                                <th style="text-align:center; width:90px;">Qty</th>
-                                <th style="text-align:center; width:120px;">Size</th>
+                                <th style="text-align:center; width:80px;">Qty</th>
+                                <th style="text-align:center; width:100px;">Size</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -289,25 +424,287 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                     </table>
                 </div>
             </div>
+
+            <!-- Right Preview Panel (340px) -->
+            <div class="preview-pane">
+                <!-- Visual Preview Card -->
+                <div class="preview-card">
+                    <div class="preview-header">
+                        <span class="material-symbols-outlined">visibility</span> Live Preview Simulation
+                    </div>
+                    <div class="preview-body" id="preview-box-container">
+                        <!-- Simulated Label (Visual) -->
+                        <div class="sim-label sz-50x25" id="sim-label-box">
+                            <div class="sim-brand" id="sim-brand">SMRITI</div>
+                            <div class="sim-name" id="sim-name">Select item to preview</div>
+                            <div class="sim-barcode-img" id="sim-barcode-img"></div>
+                            <div class="sim-barcode-text" id="sim-barcode">1234567890123</div>
+                            <div class="sim-mrp-price" id="sim-mrp-row">
+                                <span>Rs. 0.00</span>
+                                <span style="font-size:8px; font-weight:normal;" id="sim-mrp-tag">(Incl of all Taxes)</span>
+                            </div>
+                            <div class="sim-meta" id="sim-meta-row">
+                                <span id="sim-size">SIZE: L</span>
+                                <span id="sim-style">ART: -</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Capability Preset Selector -->
+                <div class="form-group">
+                    <label class="form-label">Printer Capability Profile</label>
+                    <select class="form-input" id="cfg-capability" onchange="applyPrinterCapability(this.value)">
+                        <option value="TSC TE244">TSC TE244 (203 DPI, TSPL)</option>
+                        <option value="Zebra GK420D" selected>Zebra GK420D (203 DPI, ZPL)</option>
+                        <option value="TVS LP46">TVS LP46 (203 DPI, TSPL)</option>
+                        <option value="Citizen CL-E321">Citizen CL-E321 (300 DPI, ZPL)</option>
+                    </select>
+                </div>
+
+                <!-- Variable Validator Status -->
+                <div class="form-group">
+                    <label class="form-label">Pre-Print Sanitizer</label>
+                    <div class="sandbox-indicator" id="sandbox-status">
+                        <div style="color:var(--text-muted); display:flex; align-items:center; gap:4px;">
+                            <span class="material-symbols-outlined" style="font-size:16px;">help</span> Select a template to scan syntax
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Profile Creator -->
+                <button class="btn-search" style="background:transparent; border:1px solid var(--primary); color:var(--primary-lt); font-weight:600;" onclick="openProfileSaveModal()">
+                    <span class="material-symbols-outlined">save</span> Save Current Settings Preset
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Transaction ID Search Autocomplete -->
+<div class="modal-backdrop" id="tx-search-modal" onclick="closeModal('tx-search-modal')">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title"><span class="material-symbols-outlined">search</span> Search Recent Transactions</div>
+            <button class="modal-close" onclick="closeModal('tx-search-modal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="color:var(--text-muted); margin-bottom:10px;">Select from the latest 15 transacting documents to load variants:</p>
+            <div style="max-height:300px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius-sm);">
+                <table class="smriti-table" style="font-size:0.82rem;">
+                    <thead>
+                        <tr>
+                            <th>Doc ID</th>
+                            <th>Posting Date</th>
+                            <th>Supplier / Purpose</th>
+                            <th style="text-align:center;">Items</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tx-search-tbody">
+                        <tr><td colspan="5" style="text-align:center; color:var(--text-sub);">Loading records...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Custom Temporary Item -->
+<div class="modal-backdrop" id="custom-row-modal" onclick="closeModal('custom-row-modal')">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title"><span class="material-symbols-outlined">add_circle</span> Insert Custom Item Tag</div>
+            <button class="modal-close" onclick="closeModal('custom-row-modal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group" style="grid-column: span 2;">
+                    <label class="form-label">Item Name</label>
+                    <input type="text" class="form-input" id="cust-name" value="Custom Promotag">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Style Code (Prefix)</label>
+                    <input type="text" class="form-input" id="cust-style" placeholder="e.g. CUST-01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Barcode (Numeric)</label>
+                    <input type="text" class="form-input" id="cust-barcode" placeholder="Leave blank to auto-gen">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Brand</label>
+                    <input type="text" class="form-input" id="cust-brand" value="SMRITI">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">MRP (INR)</label>
+                    <input type="number" class="form-input" id="cust-mrp" value="499">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Size</label>
+                    <input type="text" class="form-input" id="cust-size" value="Free">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Color</label>
+                    <input type="text" class="form-input" id="cust-color" value="Black">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Print Qty</label>
+                    <input type="number" class="form-input" id="cust-qty" value="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Barcode Size</label>
+                    <select class="form-input" id="cust-size-preset">
+                        <option value="50x25">50x25</option>
+                        <option value="50x30">50x30</option>
+                        <option value="75x50">75x50</option>
+                        <option value="100x50">100x50</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="topbtn" onclick="closeModal('custom-row-modal')">Cancel</button>
+            <button class="btn-submit" onclick="submitCustomRow()" style="width:auto; padding:8px 20px;">Add Row</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Advanced PRN Designer & Mapper -->
+<div class="modal-backdrop" id="designer-modal" onclick="closeModal('designer-modal')">
+    <div class="modal lg-designer" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title"><span class="material-symbols-outlined">design_services</span> SMRITI Template Designer & PRN Mapper</div>
+            <button class="modal-close" onclick="closeModal('designer-modal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="designer-split">
+                <!-- Left: Raw Code Area -->
+                <div class="designer-code-area">
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+                        <div class="form-group">
+                            <label class="form-label">Template Name</label>
+                            <input type="text" class="form-input" id="design-name" placeholder="e.g. My Footwear Tag">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Language</label>
+                            <select class="form-input" id="design-lang">
+                                <option value="ZPL">ZPL (Zebra)</option>
+                                <option value="TSPL">TSPL (TSC / TVS)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Label Size</label>
+                            <select class="form-input" id="design-size">
+                                <option value="50x25">50x25 mm</option>
+                                <option value="50x30">50x30 mm</option>
+                                <option value="75x50">75x50 mm</option>
+                                <option value="100x50">100x50 mm</option>
+                                <option value="106x55">106x55 mm</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Import file drag zone -->
+                    <div class="drop-zone" onclick="document.getElementById('file-import-input').click()">
+                        <span class="material-symbols-outlined">upload_file</span>
+                        <div><strong>Click to upload .prn / .zpl / .tspl / .txt template</strong></div>
+                        <div style="font-size:0.75rem; color:var(--text-sub);">File size limit: 100 KB max (ZPL/TSPL language auto-detected)</div>
+                        <input type="file" id="file-import-input" style="display:none;" accept=".prn,.zpl,.tspl,.txt" onchange="triggerFileImport(this)">
+                    </div>
+
+                    <!-- Token Chips Helper -->
+                    <div class="token-chip-container" id="token-chip-list"></div>
+
+                    <!-- Code Textarea -->
+                    <textarea class="designer-textarea" id="design-raw" placeholder="Paste ZPL or TSPL raw label script here..."></textarea>
+                    
+                    <!-- Validator -->
+                    <div class="sandbox-indicator" id="designer-sandbox-status" style="margin-top:4px;">
+                        <div style="color:var(--text-muted); display:flex; align-items:center; gap:4px;"><span class="material-symbols-outlined" style="font-size:16px;">verified</span> Enter template code to run sanitizer</div>
+                    </div>
+                </div>
+
+                <!-- Right: Variables Field Mapper -->
+                <div class="designer-mapping-area">
+                    <div class="panel-section-title" style="padding-left:0; padding-bottom:5px;"><span class="material-symbols-outlined">schema</span> Dynamic Variable Field Mapper</div>
+                    <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:6px;">Map placeholders in curly braces `{token}` to ERPNext Item fields:</p>
+                    
+                    <div style="flex:1; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius-sm); max-height:280px;">
+                        <table class="mapping-tbl">
+                            <thead>
+                                <tr>
+                                    <th>Token</th>
+                                    <th>ERP Database Field Mapping</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="designer-mapping-tbody"></tbody>
+                        </table>
+                    </div>
+                    
+                    <button class="topbtn" onclick="addNewMappingRow()" style="margin-top:6px; font-size:11px; align-self:flex-start;">
+                        <span class="material-symbols-outlined">add</span> Add Custom Map Row
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="topbtn" onclick="closeModal('designer-modal')">Close</button>
+            <button class="btn-submit" onclick="submitDesignerTemplate()" style="width:auto; padding:8px 22px;">Save Template</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Save Custom Print Preset Profile -->
+<div class="modal-backdrop" id="profile-save-modal" onclick="closeModal('profile-save-modal')">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title"><span class="material-symbols-outlined">save</span> Save Print Profile Preset</div>
+            <button class="modal-close" onclick="closeModal('profile-save-modal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Profile Name</label>
+                <input type="text" class="form-input" id="profile-name-input" placeholder="e.g. TVS Footwear Tags">
+            </div>
+            <div class="form-group">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" id="profile-default-chk">
+                    <label class="form-label" style="margin-bottom:0; cursor:pointer;" for="profile-default-chk">Set as Default Print Profile</label>
+                </div>
+            </div>
+            <div style="background:rgba(0,0,0,0.15); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; font-size:0.8rem; color:var(--text-muted); line-height:1.5; margin-top:10px;">
+                <strong>Captured Settings:</strong>
+                <ul style="padding-left:16px; margin-top:4px;">
+                    <li>Template: <span id="lbl-cap-temp" style="color:var(--text)">Built-in</span></li>
+                    <li>Printer IP: <span id="lbl-cap-ip" style="color:var(--text)">-</span></li>
+                    <li>TCP Port: <span id="lbl-cap-port" style="color:var(--text)">9100</span></li>
+                    <li>Capability: <span id="lbl-cap-cap" style="color:var(--text)">-</span></li>
+                </ul>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="topbtn" onclick="closeModal('profile-save-modal')">Cancel</button>
+            <button class="btn-submit" onclick="submitSavePrintProfile()" style="width:auto; padding:8px 20px;">Save Profile</button>
         </div>
     </div>
 </div>
 
 <!-- Token Mapping Reference Modal -->
-<div class="modal-backdrop" id="token-modal" onclick="closeTokenHelp()">
+<div class="modal-backdrop" id="token-modal" onclick="closeModal('token-modal')">
     <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-header">
             <div class="modal-title"><span class="material-symbols-outlined">info</span> Token Reference Manual</div>
-            <button class="modal-close" onclick="closeTokenHelp()">&times;</button>
+            <button class="modal-close" onclick="closeModal('token-modal')">&times;</button>
         </div>
         <div class="modal-body">
-            <p style="margin-bottom: 12px; color: var(--text-muted);">When designing custom raw print templates in the <strong style="color:var(--text)">SMRITI Print Template</strong> DocType, use the following placeholder tokens (enclosed in curly braces) to insert item metadata automatically:</p>
-            <table class="token-table">
+            <p style="margin-bottom: 12px; color: var(--text-muted);">Use the following placeholder tokens (enclosed in curly braces) in raw print codes to substitute item attributes dynamically:</p>
+            <table class="mapping-tbl">
                 <thead>
                     <tr>
                         <th>Token</th>
-                        <th>System Field Mapping</th>
-                        <th>Example</th>
+                        <th>ERP Field Reference</th>
+                        <th>Sample Output</th>
                     </tr>
                 </thead>
                 <tbody id="token-tbody">
@@ -325,6 +722,10 @@ const CSRF_TOKEN = '{{ csrf_token }}';
 let loggedUser = '{{ cashier }}';
 let printQueue = [];
 let sizeOptions = [];
+let printTemplatesList = [];
+let printProfilesObj = {};
+let activePrinterLanguage = "ZPL";
+let activeDPI = 203;
 
 // REST API Helper
 function api(method, params = {}) {
@@ -344,11 +745,6 @@ function api(method, params = {}) {
     });
 }
 
-function doLogout() {
-    fetch('/api/method/logout', { credentials: 'include' })
-    .then(() => { window.location.href = '/login'; });
-}
-
 function toast(msg, type = 'success') {
     const cont = document.getElementById('toast-container');
     const t = document.createElement('div');
@@ -359,9 +755,17 @@ function toast(msg, type = 'success') {
     setTimeout(() => { t.remove(); }, 4000);
 }
 
+function openModal(id) {
+    document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+}
+
 // Initial Loading
 async function init() {
-    // Set user metadata (sidebar renders these dynamically — guard against null)
+    // Set user metadata in sidebar if elements exist
     const _sbu = document.getElementById('sb-user'); if (_sbu) _sbu.textContent = loggedUser.split('@')[0];
     const _sba = document.getElementById('sb-avatar'); if (_sba) _sba.textContent = loggedUser.charAt(0).toUpperCase();
 
@@ -395,40 +799,59 @@ async function init() {
             opt.textContent = s;
             sizeSel.appendChild(opt);
         });
-        sizeOptions = filters.sizes; // cache sizes
+        sizeOptions = filters.sizes;
 
-        // Print Template selector
-        const tempSel = document.getElementById('cfg-template');
-        filters.print_templates.forEach(t => {
-            const opt = document.createElement('option');
-            opt.value = t.name;
-            opt.textContent = `${t.template_name} (${t.label_size} - ${t.printer_language})`;
-            tempSel.appendChild(opt);
-        });
+        // Render Templates dropdown
+        printTemplatesList = filters.print_templates || [];
+        populateTemplatesDropdown();
+
+        // Load print profiles
+        await fetchPrintProfiles();
 
         // Load token reference in background
         loadTokenReference();
+        
+        // Render empty state initially
+        renderQueue();
+        
+        // Bind text-area change validation in designer
+        document.getElementById('design-raw').addEventListener('input', function() {
+            validateSandbox(this.value);
+        });
 
     } catch(e) {
         console.error(e);
-        toast('Failed to load barcode metadata configurations', 'error');
+        toast('Failed to load barcode configuration data', 'error');
     }
+}
+
+function populateTemplatesDropdown() {
+    const tempSel = document.getElementById('cfg-template');
+    tempSel.innerHTML = '<option value="">Built-in Default</option>';
+    printTemplatesList.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.name;
+        opt.textContent = `${t.template_name} (${t.label_size} - ${t.printer_language})`;
+        tempSel.appendChild(opt);
+    });
 }
 
 // Load manual search
 async function loadManualItems() {
+    const style = document.getElementById('flt-style').value.trim();
     const brand = document.getElementById('flt-brand').value;
     const category = document.getElementById('flt-category').value;
     const size = document.getElementById('flt-size').value;
     const search_text = document.getElementById('flt-search').value.trim();
 
-    if (!brand && !category && !size && !search_text) {
+    if (!style && !brand && !category && !size && !search_text) {
         toast('Please specify at least one search filter or search keyword', 'info');
         return;
     }
 
     try {
         const filters = {
+            style: style || null,
             brand: brand || null,
             item_group: category || null,
             custom_barcode_size: size || null,
@@ -481,12 +904,14 @@ async function loadTransactionItems() {
 // Add items helper
 function addItemsToQueue(items) {
     items.forEach(it => {
-        // Avoid duplicate codes if already in queue, increment qty instead
         const existing = printQueue.find(q => q.item_code === it.item_code);
         if (existing) {
             existing.print_qty += it.print_qty || 1;
         } else {
-            printQueue.push({...it});
+            printQueue.push({
+                ...it,
+                selected: true // Default checkbox value
+            });
         }
     });
     renderQueue();
@@ -497,26 +922,44 @@ function renderQueue() {
     const placeholder = document.getElementById('table-placeholder');
     const wrap = document.getElementById('table-wrap');
     const actions = document.getElementById('action-buttons');
+    const bulkToolbar = document.getElementById('bulk-toolbar');
     const tbody = document.getElementById('barcode-tbody');
 
     if (!printQueue.length) {
         placeholder.style.display = 'flex';
         wrap.style.display = 'none';
         actions.style.display = 'none';
+        bulkToolbar.style.display = 'none';
+        drawLivePreview(null);
         return;
     }
 
     placeholder.style.display = 'none';
     wrap.style.display = 'flex';
     actions.style.display = 'flex';
+    
+    // Update bulk toolbar visibility
+    const checkedCount = printQueue.filter(q => q.selected).length;
+    if (checkedCount > 0) {
+        bulkToolbar.style.display = 'flex';
+        document.getElementById('bulk-selected-count').textContent = `${checkedCount} item(s) selected`;
+    } else {
+        bulkToolbar.style.display = 'none';
+    }
 
     tbody.innerHTML = printQueue.map((item, index) => {
         const optionsHtml = sizeOptions.map(sz => 
             `<option value="${sz}" ${item.label_size === sz ? 'selected' : ''}>${sz}</option>`
         ).join('');
 
+        const isChecked = item.selected ? 'checked' : '';
+        const rowClass = item.selected ? 'selected' : '';
+
         return `
-            <tr>
+            <tr class="${rowClass}" onclick="selectRowIndex(${index}, event)">
+                <td style="text-align:center;">
+                    <input type="checkbox" class="grid-select-chk" ${isChecked} onchange="toggleSelectRow(${index}, this.checked, event)">
+                </td>
                 <td>
                     <div style="font-weight:600; color:var(--text);">${item.item_name}</div>
                     <div style="margin-top:4px;"><span class="item-code-badge">${item.item_code}</span></div>
@@ -524,22 +967,22 @@ function renderQueue() {
                 <td style="font-family:monospace; color:var(--primary-lt); font-weight:600;">${item.barcode}</td>
                 <td>
                     <div style="font-weight:500;">${item.style}</div>
-                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${item.brand}</div>
+                    <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">${item.brand}</div>
                 </td>
                 <td>
-                    <div style="font-size:0.8rem; color:var(--text-muted);">Sz: <strong style="color:var(--text)">${item.size || 'N/A'}</strong></div>
-                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">Col: <strong style="color:var(--text)">${item.color || 'N/A'}</strong></div>
+                    <div style="font-size:0.78rem; color:var(--text-muted);">Sz: <strong style="color:var(--text)">${item.size || 'N/A'}</strong></div>
+                    <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">Col: <strong style="color:var(--text)">${item.color || 'N/A'}</strong></div>
                 </td>
                 <td style="font-weight:700; color:var(--success);">Rs. ${parseInt(item.mrp)}</td>
-                <td style="text-align:center;">
+                <td style="text-align:center;" onclick="event.stopPropagation()">
                     <input type="number" class="tbl-input qty-input" value="${item.print_qty}" min="1" onchange="updateQty(${index}, this.value)">
                 </td>
-                <td style="text-align:center;">
+                <td style="text-align:center;" onclick="event.stopPropagation()">
                     <select class="tbl-input size-select" onchange="updateSize(${index}, this.value)">
                         ${optionsHtml}
                     </select>
                 </td>
-                <td style="text-align:right;">
+                <td style="text-align:right;" onclick="event.stopPropagation()">
                     <button class="btn-del-row" onclick="removeRow(${index})">
                         <span class="material-symbols-outlined">delete</span>
                     </button>
@@ -547,15 +990,47 @@ function renderQueue() {
             </tr>
         `;
     }).join('');
+
+    // Highlight/select first checked row for preview
+    const activeIdx = printQueue.findIndex(q => q.selected);
+    if (activeIdx !== -1) {
+        drawLivePreview(printQueue[activeIdx]);
+    } else if (printQueue.length > 0) {
+        drawLivePreview(printQueue[0]);
+    }
+}
+
+function selectRowIndex(idx, event) {
+    drawLivePreview(printQueue[idx]);
+}
+
+function toggleSelectRow(idx, checked, event) {
+    printQueue[idx].selected = checked;
+    renderQueue();
+}
+
+function toggleSelectAll(checked) {
+    printQueue.forEach(q => q.selected = checked);
+    renderQueue();
 }
 
 function updateQty(idx, val) {
     const qty = parseInt(val) || 1;
     printQueue[idx].print_qty = qty;
+    
+    // If active preview is this item, redraw preview
+    const activeItemCode = document.getElementById('sim-barcode').textContent;
+    if (printQueue[idx].barcode === activeItemCode) {
+        drawLivePreview(printQueue[idx]);
+    }
 }
 
 function updateSize(idx, val) {
     printQueue[idx].label_size = val;
+    const activeItemCode = document.getElementById('sim-barcode').textContent;
+    if (printQueue[idx].barcode === activeItemCode) {
+        drawLivePreview(printQueue[idx]);
+    }
 }
 
 function removeRow(idx) {
@@ -563,20 +1038,724 @@ function removeRow(idx) {
     renderQueue();
 }
 
+// Bulk Actions
 function clearQueue() {
     printQueue = [];
+    document.getElementById('smriti-chk-all').checked = false;
     renderQueue();
-    toast('Print worksheet cleared', 'info');
+    toast('Print queue cleared', 'success');
+}
+
+function bulkDelete() {
+    printQueue = printQueue.filter(q => !q.selected);
+    document.getElementById('smriti-chk-all').checked = false;
+    renderQueue();
+    toast('Selected items deleted from worksheet', 'success');
+}
+
+function bulkSetQty() {
+    const qtyStr = prompt("Enter print quantity for all selected items:");
+    const qty = parseInt(qtyStr);
+    if (isNaN(qty) || qty < 1) {
+        if (qtyStr !== null) toast("Invalid print quantity entered", "error");
+        return;
+    }
+    printQueue.forEach(q => {
+        if (q.selected) q.print_qty = qty;
+    });
+    renderQueue();
+    toast(`Set print quantity to ${qty} for selected items`, 'success');
+}
+
+function bulkSetSize() {
+    const selectedSize = prompt("Enter custom label size (e.g. 50x25, 50x30, 75x50, 100x50):", "50x25");
+    if (!selectedSize) return;
+    const allowed = ["50x25", "50x30", "75x50", "100x50", "106x55"];
+    if (!allowed.includes(selectedSize)) {
+        toast("Invalid size format! Choose 50x25, 50x30, 75x50, or 100x50", "error");
+        return;
+    }
+    printQueue.forEach(q => {
+        if (q.selected) q.label_size = selectedSize;
+    });
+    renderQueue();
+    toast(`Set label size to ${selectedSize} for selected items`, 'success');
+}
+
+// Live Visual Preview Simulator
+function drawLivePreview(item) {
+    const boxContainer = document.getElementById('preview-box-container');
+    if (!item) {
+        boxContainer.innerHTML = `
+            <div class="sim-label sz-50x25" style="display:flex; align-items:center; justify-content:center; text-align:center; color:var(--text-sub);">
+                <div style="font-size:10px;">Load and select an item to simulate visual output</div>
+            </div>
+        `;
+        return;
+    }
+
+    const templateSelect = document.getElementById('cfg-template');
+    const selectedTemplateVal = templateSelect.value;
+    let templateLanguage = activePrinterLanguage;
+    let templateSize = item.label_size || "50x25";
+
+    // Detect size from active template if custom template chosen
+    if (selectedTemplateVal) {
+        const found = printTemplatesList.find(t => t.name === selectedTemplateVal);
+        if (found) {
+            templateLanguage = found.printer_language;
+            templateSize = found.label_size;
+        }
+    }
+
+    if (templateSize === "106x55") {
+        boxContainer.innerHTML = `
+            <div class="sim-label sz-106x55">
+                <!-- Col 1: MRP tag -->
+                <div class="sim-sub-col sim-col1">
+                    <div class="sim-brand" style="font-size:7px; margin-bottom:1px;">${(item.brand || 'SMRITI').toUpperCase()}</div>
+                    <div class="sim-name" style="font-size:7px; margin-bottom:1px;">${item.item_name}</div>
+                    <div class="sim-barcode-img narrow" style="height:16px;"></div>
+                    <div class="sim-barcode-text" style="font-size:6px; margin-bottom:1px;" id="sim-barcode">${item.barcode}</div>
+                    <div class="sim-mrp-price" style="font-size:7px; margin-top:2px;">Rs. ${parseInt(item.mrp)}/-</div>
+                    <div class="sim-meta" style="font-size:6px; margin-top:1px;">
+                        <span>Sz: ${item.size || 'L'}</span>
+                        <span>Col: ${item.color || ''}</span>
+                    </div>
+                </div>
+                <!-- Col 2: Shoe tag -->
+                <div class="sim-sub-col sim-col2">
+                    <div class="sim-brand" style="font-size:6px; border:none; margin-bottom:0; text-align:left;">${(item.brand || 'S').toUpperCase()}</div>
+                    <div class="sim-name" style="font-size:6px; margin-bottom:0;">${item.style}</div>
+                    <div class="sim-barcode-img narrow" style="height:12px;"></div>
+                    <div style="font-size:5px; text-align:center;">${item.barcode}</div>
+                    <div style="font-size:7px; font-weight:800; margin-top:auto;">Rs. ${parseInt(item.mrp)}</div>
+                    <div style="font-size:5px; color:#475569;">Size: ${item.size || 'L'}</div>
+                </div>
+                <!-- Col 3: Box tag -->
+                <div class="sim-sub-col sim-col3">
+                    <div class="sim-brand" style="font-size:6px; border:none; margin-bottom:0; text-align:left;">${(item.brand || 'S').toUpperCase()}</div>
+                    <div class="sim-name" style="font-size:6px; margin-bottom:0;">${item.style}</div>
+                    <div class="sim-barcode-img narrow" style="height:12px;"></div>
+                    <div style="font-size:5px; text-align:center;">${item.barcode}</div>
+                    <div style="font-size:7px; font-weight:800; margin-top:auto;">Rs. ${parseInt(item.mrp)}</div>
+                    <div style="font-size:5px; color:#475569;">Size: ${item.size || 'L'}</div>
+                </div>
+            </div>
+        `;
+    } else {
+        // ZPL/TSPL Standard labels
+        let barcodeImgClass = "sim-barcode-img";
+        if (templateSize === "50x25" || templateSize === "50x30") {
+            barcodeImgClass = "sim-barcode-img narrow";
+        }
+        
+        boxContainer.innerHTML = `
+            <div class="sim-label sz-${templateSize}" id="sim-label-box">
+                <div class="sim-brand" id="sim-brand">${(item.brand || 'SMRITI').toUpperCase()}</div>
+                <div class="sim-name" id="sim-name">${item.item_name}</div>
+                <div class="${barcodeImgClass}" id="sim-barcode-img"></div>
+                <div class="sim-barcode-text" id="sim-barcode">${item.barcode}</div>
+                <div class="sim-mrp-price" id="sim-mrp-row">
+                    <span>Rs. ${parseInt(item.mrp)}.00</span>
+                    <span style="font-size:7px; font-weight:normal;">(Incl of all Taxes)</span>
+                </div>
+                <div class="sim-meta" id="sim-meta-row">
+                    <span>SIZE: ${item.size || 'N/A'}</span>
+                    <span>ART: ${item.style}</span>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Capability Profiles
+function applyPrinterCapability(capabilityName) {
+    if (capabilityName === "TSC TE244") {
+        activePrinterLanguage = "TSPL";
+        activeDPI = 203;
+        document.getElementById('cfg-port').value = 9100;
+    } else if (capabilityName === "Zebra GK420D") {
+        activePrinterLanguage = "ZPL";
+        activeDPI = 203;
+        document.getElementById('cfg-port').value = 9100;
+    } else if (capabilityName === "TVS LP46") {
+        activePrinterLanguage = "TSPL";
+        activeDPI = 203;
+        document.getElementById('cfg-port').value = 9100;
+    } else if (capabilityName === "Citizen CL-E321") {
+        activePrinterLanguage = "ZPL";
+        activeDPI = 300;
+        document.getElementById('cfg-port').value = 9100;
+    }
+    
+    // Re-validate current active template sandbox on capability change
+    const activeItem = printQueue.find(q => q.selected);
+    if (activeItem) drawLivePreview(activeItem);
+}
+
+// Sandbox validation
+function validateSandbox(templateText) {
+    const sandboxStatus = document.getElementById('sandbox-status');
+    const matches = templateText.match(/\{[^}]+\}/g) || [];
+    const variables = matches.map(m => m.slice(1, -1).trim());
+    
+    const standardVars = [
+        "barcode", "item_code", "item_name", "brand", "mrp", "size", "color", "style", "pkd_date",
+        "gender", "heel_type", "outsole", "upper_material", "merchandise_category", "sub_category", "purchase_class"
+    ];
+    
+    // Retrieve mappings of active selected template
+    const activeTemplateId = document.getElementById('cfg-template').value;
+    const found = printTemplatesList.find(t => t.name === activeTemplateId);
+    let activeMappings = [];
+    if (found && found.custom_field_mappings_json) {
+        try {
+            activeMappings = JSON.parse(found.custom_field_mappings_json);
+        } catch(e) {}
+    }
+    
+    // Build combined list of custom mapped variable labels
+    const allCustomVars = [
+        ...designerMappings.map(m => m.label_field),
+        ...activeMappings.map(m => m.label_field)
+    ].map(v => v ? v.trim() : "").filter(Boolean);
+    
+    const errors = [];
+    const duplicates = [];
+    const seen = {};
+    
+    variables.forEach(v => {
+        if (seen[v]) {
+            if (!duplicates.includes(v)) duplicates.push(v);
+        }
+        seen[v] = true;
+        
+        if (!standardVars.includes(v) && !allCustomVars.includes(v)) {
+            errors.push(v);
+        }
+    });
+
+    // Mirror to designer modal indicator if open
+    const designerIndicator = document.getElementById('designer-sandbox-status');
+    
+    let html = '';
+    if (errors.length > 0) {
+        html = `<div style="color:var(--danger); display:flex; align-items:center; gap:4px; font-weight:600;"><span class="material-symbols-outlined" style="font-size:16px;">error</span> Unknown/Unmapped: ${errors.join(', ')}</div>`;
+    } else if (duplicates.length > 0) {
+        html = `<div style="color:var(--warning); display:flex; align-items:center; gap:4px;"><span class="material-symbols-outlined" style="font-size:16px;">warning</span> Duplicates: ${duplicates.join(', ')}</div>`;
+    } else {
+        html = `<div style="color:var(--success); display:flex; align-items:center; gap:4px; font-weight:600;"><span class="material-symbols-outlined" style="font-size:16px;">check_circle</span> Pre-Print Sanitizer: Validated</div>`;
+    }
+    
+    sandboxStatus.innerHTML = html;
+    if (designerIndicator) designerIndicator.innerHTML = html;
+    
+    return errors.length === 0;
+}
+
+// Template selection update
+function selectPrintTemplate(val) {
+    if (!val) {
+        document.getElementById('sandbox-status').innerHTML = `<div style="color:var(--text-muted); display:flex; align-items:center; gap:4px;"><span class="material-symbols-outlined" style="font-size:16px;">help</span> Using built-in fallback template</div>`;
+        const activeItem = printQueue.find(q => q.selected);
+        if (activeItem) drawLivePreview(activeItem);
+        return;
+    }
+    const found = printTemplatesList.find(t => t.name === val);
+    if (found) {
+        validateSandbox(found.raw_template || '');
+        const activeItem = printQueue.find(q => q.selected);
+        if (activeItem) drawLivePreview(activeItem);
+    }
+}
+
+// Printer Diagnostics pings
+async function testConnection() {
+    const ip = document.getElementById('cfg-ip').value.trim();
+    const port = parseInt(document.getElementById('cfg-port').value) || 9100;
+
+    if (!ip) {
+        toast('Please enter the Printer IP address first.', 'error');
+        return;
+    }
+
+    try {
+        toast('Testing printer socket connection...', 'info');
+        const res = await api('smriti_retail_os.barcode_api.test_printer_connection', {
+            printer_ip: ip,
+            printer_port: port
+        });
+
+        if (res && res.success) {
+            toast(res.message, 'success');
+            logSessionPrint(ip, 'PING SUCCESS', true);
+        } else {
+            toast(res.message, 'error');
+            logSessionPrint(ip, 'PING FAIL: ' + res.message, false);
+        }
+    } catch(e) {
+        toast(e.message, 'error');
+        logSessionPrint(ip, 'PING ERROR: ' + e.message, false);
+    }
+}
+
+async function sendTestLabel() {
+    const ip = document.getElementById('cfg-ip').value.trim();
+    const port = parseInt(document.getElementById('cfg-port').value) || 9100;
+
+    if (!ip) {
+        toast('Please enter the Printer IP address first.', 'error');
+        return;
+    }
+
+    try {
+        toast('Streaming raw diagnostic label...', 'info');
+        const res = await api('smriti_retail_os.barcode_api.print_test_label', {
+            printer_ip: ip,
+            printer_port: port,
+            printer_language: activePrinterLanguage
+        });
+
+        if (res && res.success) {
+            toast(res.message, 'success');
+            logSessionPrint(ip, 'TEST LABEL SENT', true);
+        } else {
+            toast(res.message, 'error');
+            logSessionPrint(ip, 'TEST LABEL FAIL: ' + res.message, false);
+        }
+    } catch(e) {
+        toast(e.message, 'error');
+        logSessionPrint(ip, 'TEST LABEL ERROR: ' + e.message, false);
+    }
+}
+
+// Session Log writer
+function logSessionPrint(ip, action, success) {
+    const list = document.getElementById('session-log-list');
+    const logs = list.querySelectorAll('.log-item');
+    if (logs.length === 0 || list.innerHTML.includes('No print jobs')) {
+        list.innerHTML = '';
+    }
+    
+    // Prune history to last 10 entries
+    if (logs.length >= 10) {
+        logs[0].remove();
+    }
+    
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const div = document.createElement('div');
+    div.className = `log-item ${success ? 'success' : 'error'}`;
+    div.innerHTML = `<span>${time} - ${action}</span> <span style="font-size:10px;">${ip}</span>`;
+    list.appendChild(div);
+    list.scrollTop = list.scrollHeight;
+}
+
+// Autocomplete Transaction search modal
+async function openTxSearchModal() {
+    openModal('tx-search-modal');
+    const doctype = document.getElementById('tx-doctype').value;
+    const tbody = document.getElementById('tx-search-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-sub);">Loading records...</td></tr>';
+    
+    try {
+        const txs = await api('smriti_retail_os.barcode_api.get_recent_transactions', {
+            doctype: doctype,
+            limit: 15
+        });
+
+        if (!txs || !txs.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">No recent transactions found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = txs.map(t => `
+            <tr>
+                <td style="font-family:monospace; font-weight:600; color:var(--primary-lt);">${t.name}</td>
+                <td>${t.posting_date}</td>
+                <td>${t.extra_info || '-'}</td>
+                <td style="text-align:center; font-weight:600; color:var(--accent);">${t.items_count} lines</td>
+                <td style="text-align:right;">
+                    <button class="topbtn" onclick="selectTxAndLoad('${t.name}')" style="padding:4px 8px; font-size:11px;">Load</button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--danger);">Error: ${e.message}</td></tr>`;
+    }
+}
+
+function selectTxAndLoad(name) {
+    document.getElementById('tx-name').value = name;
+    closeModal('tx-search-modal');
+    loadTransactionItems();
+}
+
+// Custom Item insertion
+function openAddCustomRowModal() {
+    // pre-fill random barcode starting with 99
+    document.getElementById('cust-barcode').value = "99" + Math.floor(Math.random() * 100000000000);
+    openModal('custom-row-modal');
+}
+
+function submitCustomRow() {
+    const name = document.getElementById('cust-name').value.trim();
+    const style = document.getElementById('cust-style').value.trim() || "CUST-GEN";
+    const barcode = document.getElementById('cust-barcode').value.trim();
+    const brand = document.getElementById('cust-brand').value.trim() || "SMRITI";
+    const mrp = parseFloat(document.getElementById('cust-mrp').value) || 0;
+    const size = document.getElementById('cust-size').value.trim();
+    const color = document.getElementById('cust-color').value.trim();
+    const qty = parseInt(document.getElementById('cust-qty').value) || 1;
+    const sizePreset = document.getElementById('cust-size-preset').value;
+
+    if (!name) {
+        toast('Item Name is required', 'error');
+        return;
+    }
+
+    const it = {
+        item_code: style + "-" + size,
+        item_name: name,
+        brand: brand,
+        barcode: barcode,
+        mrp: mrp,
+        size: size,
+        color: color,
+        style: style,
+        print_qty: qty,
+        label_size: sizePreset
+    };
+
+    addItemsToQueue([it]);
+    closeModal('custom-row-modal');
+    toast('Custom generic row added to queue', 'success');
+}
+
+// Print Profiles Presets
+async function fetchPrintProfiles() {
+    try {
+        printProfilesObj = await api('smriti_retail_os.barcode_api.get_print_profiles') || {};
+        const profileSel = document.getElementById('cfg-profile');
+        profileSel.innerHTML = '<option value="">-- Manual Selection --</option>';
+        
+        let hasDefault = false;
+        let defaultKey = "";
+        
+        Object.keys(printProfilesObj).forEach(k => {
+            const p = printProfilesObj[k];
+            const opt = document.createElement('option');
+            opt.value = p.profile_name;
+            opt.textContent = p.is_default ? `⭐️ ${p.profile_name}` : p.profile_name;
+            profileSel.appendChild(opt);
+            
+            if (p.is_default) {
+                hasDefault = true;
+                defaultKey = p.profile_name;
+            }
+        });
+        
+        // Auto apply default print profile
+        if (hasDefault && defaultKey) {
+            profileSel.value = defaultKey;
+            applyPrintProfile(defaultKey);
+        }
+        
+    } catch(e) {
+        console.error('Failed to load print profiles:', e);
+    }
+}
+
+function applyPrintProfile(profileName) {
+    if (!profileName || !printProfilesObj[profileName]) return;
+    const p = printProfilesObj[profileName];
+    
+    document.getElementById('cfg-ip').value = p.printer_ip || '';
+    document.getElementById('cfg-port').value = p.printer_port || 9100;
+    document.getElementById('cfg-template').value = p.template_name || '';
+    document.getElementById('cfg-capability').value = p.dpi === "300 DPI" ? "Citizen CL-E321" : "Zebra GK420D";
+    
+    activeDPI = p.dpi === "300 DPI" ? 300 : 203;
+    
+    selectPrintTemplate(p.template_name);
+    toast(`Applied print profile preset: ${p.profile_name}`, 'success');
+}
+
+function openProfileSaveModal() {
+    const template = document.getElementById('cfg-template').value;
+    const ip = document.getElementById('cfg-ip').value.trim();
+    const port = document.getElementById('cfg-port').value.trim();
+    const cap = document.getElementById('cfg-capability').value;
+
+    if (!ip) {
+        toast('Printer IP address is required to create a print profile.', 'error');
+        return;
+    }
+
+    document.getElementById('lbl-cap-temp').textContent = template || 'Built-in Default';
+    document.getElementById('lbl-cap-ip').textContent = ip;
+    document.getElementById('lbl-cap-port').textContent = port || '9100';
+    document.getElementById('lbl-cap-cap').textContent = cap;
+    
+    openModal('profile-save-modal');
+}
+
+async function submitSavePrintProfile() {
+    const name = document.getElementById('profile-name-input').value.trim();
+    const isDefault = document.getElementById('profile-default-chk').checked ? 1 : 0;
+    
+    const template = document.getElementById('cfg-template').value;
+    const ip = document.getElementById('cfg-ip').value.trim();
+    const port = parseInt(document.getElementById('cfg-port').value) || 9100;
+    const cap = document.getElementById('cfg-capability').value;
+    const dpi = cap.includes('300 DPI') ? '300 DPI' : '203 DPI';
+
+    if (!name) {
+        toast('Profile Name is required', 'error');
+        return;
+    }
+
+    try {
+        toast('Saving print profile to Company Settings...', 'info');
+        await api('smriti_retail_os.barcode_api.save_print_profile', {
+            profile_name: name,
+            template_name: template || null,
+            printer_ip: ip,
+            printer_port: port,
+            dpi: dpi,
+            copies: 1,
+            label_size: '50x25',
+            is_default: isDefault
+        });
+        
+        closeModal('profile-save-modal');
+        toast(`Print profile ${name} saved successfully`, 'success');
+        await fetchPrintProfiles();
+    } catch(e) {
+        toast(e.message, 'error');
+    }
+}
+
+// PRN Designer & Mapper modal
+let designerMappings = [];
+
+function openTemplateDesigner() {
+    const template = document.getElementById('cfg-template').value;
+    
+    // Chips Helper Loader
+    const chips = [
+        "barcode", "item_code", "item_name", "brand", "mrp", "size", "color", "style", "pkd_date",
+        "gender", "heel_type", "outsole", "upper_material", "merchandise_category", "sub_category", "purchase_class"
+    ];
+    const chipsDiv = document.getElementById('token-chip-list');
+    chipsDiv.innerHTML = chips.map(c => `
+        <span class="token-chip" onclick="insertTokenAtCursor('{${c}}')">{${c}}</span>
+    `).join('');
+
+    if (template) {
+        const found = printTemplatesList.find(t => t.name === template);
+        if (found) {
+            document.getElementById('design-name').value = found.template_name;
+            document.getElementById('design-lang').value = found.printer_language;
+            document.getElementById('design-size').value = found.label_size;
+            document.getElementById('design-raw').value = found.raw_template || '';
+            
+            try {
+                designerMappings = found.custom_field_mappings_json ? JSON.parse(found.custom_field_mappings_json) : [];
+            } catch(e) {
+                designerMappings = [];
+            }
+            renderMappingTable();
+            validateSandbox(found.raw_template || '');
+            openModal('designer-modal');
+            return;
+        }
+    }
+
+    // Default clean/new template state
+    document.getElementById('design-name').value = '';
+    document.getElementById('design-lang').value = 'ZPL';
+    document.getElementById('design-size').value = '50x25';
+    document.getElementById('design-raw').value = '^XA\n^FO20,10^BCN,60,Y,N,N^FD{barcode}^FS\n^FO20,80^ADN,18,10^FD{item_name}^FS\n^FO20,100^ADN,18,10^FDMRP: Rs.{mrp}^FS\n^FO20,120^ADN,14,8^FD{brand} | Size: {size}^FS\n^XZ';
+    designerMappings = [];
+    renderMappingTable();
+    validateSandbox(document.getElementById('design-raw').value);
+    openModal('designer-modal');
+}
+
+function insertTokenAtCursor(text) {
+    const textel = document.getElementById('design-raw');
+    const scrollPos = textel.scrollTop;
+    let strPos = 0;
+    const br = ((textel.selectionStart || textel.selectionStart === '0') ? "ff" : (document.selection ? "ie" : false));
+    if (br === "ff") {
+        strPos = textel.selectionStart;
+    } else if (br === "ie") {
+        textel.focus();
+        const range = document.selection.createRange();
+        range.moveStart('character', -textel.value.length);
+        strPos = range.text.length;
+    }
+
+    const front = (textel.value).substring(0, strPos);
+    const back = (textel.value).substring(strPos, textel.value.length);
+    textel.value = front + text + back;
+    strPos = strPos + text.length;
+    if (br === "ff") {
+        textel.selectionStart = strPos;
+        textel.selectionEnd = strPos;
+        textel.focus();
+    } else if (br === "ie") {
+        textel.focus();
+        const ieRange = document.selection.createRange();
+        ieRange.moveStart('character', -textel.value.length);
+        ieRange.moveStart('character', strPos);
+        ieRange.moveEnd('character', 0);
+        ieRange.select();
+    }
+    textel.scrollTop = scrollPos;
+    validateSandbox(textel.value);
+}
+
+function triggerFileImport(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        if (file.size > 102400) { // size limit 100 KB
+            toast('Template size exceeds the maximum limit of 100 KB.', 'error');
+            input.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            
+            // Auto detect printer language
+            let lang = "ZPL";
+            if (content.includes("SIZE ") || content.includes("GAP ") || content.includes("PRINT ")) {
+                lang = "TSPL";
+            }
+            
+            document.getElementById('design-raw').value = content;
+            document.getElementById('design-lang').value = lang;
+            
+            toast(`PRN Template imported! Detected Language: ${lang}`, 'success');
+            validateSandbox(content);
+        };
+        reader.readAsText(file);
+    }
+}
+
+function renderMappingTable() {
+    const tbody = document.getElementById('designer-mapping-tbody');
+    if (!designerMappings.length) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--text-sub); font-size:11px;">No custom field mappings defined</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = designerMappings.map((m, idx) => `
+        <tr>
+            <td><input type="text" class="tbl-input" style="width:100%; font-family:monospace; font-size:11px;" value="${m.label_field}" onchange="updateMappingRow(${idx}, 'label_field', this.value)"></td>
+            <td><input type="text" class="tbl-input" style="width:100%; font-family:monospace; font-size:11px;" value="${m.erp_field}" onchange="updateMappingRow(${idx}, 'erp_field', this.value)" placeholder="e.g. custom_mrp"></td>
+            <td style="text-align:right;"><button class="btn-del-row" onclick="removeMappingRow(${idx})" style="padding:4px;"><span class="material-symbols-outlined" style="font-size:14px;">close</span></button></td>
+        </tr>
+    `).join('');
+}
+
+function addNewMappingRow() {
+    designerMappings.push({ label_field: '', erp_field: '' });
+    renderMappingTable();
+}
+
+function updateMappingRow(idx, key, val) {
+    designerMappings[idx][key] = val.trim();
+    validateSandbox(document.getElementById('design-raw').value);
+}
+
+function removeMappingRow(idx) {
+    designerMappings.splice(idx, 1);
+    renderMappingTable();
+    validateSandbox(document.getElementById('design-raw').value);
+}
+
+function getDesignerMappings() {
+    return designerMappings.filter(m => m.label_field && m.erp_field);
+}
+
+async function submitDesignerTemplate() {
+    const name = document.getElementById('design-name').value.trim();
+    const size = document.getElementById('design-size').value;
+    const lang = document.getElementById('design-lang').value;
+    const raw = document.getElementById('design-raw').value.trim();
+
+    if (!name) {
+        toast('Template Name is required', 'error');
+        return;
+    }
+    if (!raw) {
+        toast('Raw Template code is required', 'error');
+        return;
+    }
+
+    // Size limit validation (100 KB)
+    if (new Blob([raw]).size > 102400) {
+        toast('Template size exceeds the maximum limit of 100 KB.', 'error');
+        return;
+    }
+
+    // Sandbox Validation Check
+    if (!validateSandbox(raw)) {
+        const proceed = confirm("Warning: Unknown placeholders detected in raw code. Do you still want to save?");
+        if (!proceed) return;
+    }
+
+    try {
+        toast('Saving Template to Database...', 'info');
+        const mappings = getDesignerMappings();
+        const resList = await api('smriti_retail_os.barcode_api.save_print_template', {
+            template_name: name,
+            label_size: size,
+            printer_language: lang,
+            raw_template: raw,
+            field_mappings_json: mappings.length ? JSON.stringify(mappings) : null
+        });
+
+        printTemplatesList = resList;
+        populateTemplatesDropdown();
+        document.getElementById('cfg-template').value = name;
+        selectPrintTemplate(name);
+        
+        closeModal('designer-modal');
+        toast(`Template '${name}' saved successfully`, 'success');
+
+    } catch(e) {
+        toast(e.message, 'error');
+    }
 }
 
 // Download PRN file
 async function downloadPRN() {
-    if (!printQueue.length) return;
+    const checkedItems = printQueue.filter(q => q.selected);
+    if (!checkedItems.length) {
+        toast('No rows selected for printing!', 'error');
+        return;
+    }
+
     const template = document.getElementById('cfg-template').value;
     
+    // Sandbox validator safeguard check
+    if (template) {
+        const found = printTemplatesList.find(t => t.name === template);
+        if (found && !validateSandbox(found.raw_template || '')) {
+            const proceed = confirm("Pre-Print Sanitizer Warning: Template has unknown variables. Print anyway?");
+            if (!proceed) return;
+        }
+    }
+
     try {
         const prnContent = await api('smriti_retail_os.barcode_api.generate_prn', {
-            items: JSON.stringify(printQueue),
+            items: JSON.stringify(checkedItems),
             template_name: template || null
         });
 
@@ -595,14 +1774,23 @@ async function downloadPRN() {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
         toast('PRN file downloaded successfully', 'success');
+        
+        // Log locally
+        logSessionPrint('LOCAL', `PRN DOWNLOADED (${checkedItems.length} lines)`, true);
+        
     } catch(e) {
         toast('PRN generation error: ' + e.message, 'error');
     }
 }
 
-// Direct Direct LAN socket printing
+// Direct LAN socket printing
 async function printToLAN() {
-    if (!printQueue.length) return;
+    const checkedItems = printQueue.filter(q => q.selected);
+    if (!checkedItems.length) {
+        toast('No rows selected for printing!', 'error');
+        return;
+    }
+
     const ip = document.getElementById('cfg-ip').value.trim();
     const port = parseInt(document.getElementById('cfg-port').value) || 9100;
     const template = document.getElementById('cfg-template').value;
@@ -612,10 +1800,33 @@ async function printToLAN() {
         return;
     }
 
+    // Sandbox validator check
+    if (template) {
+        const found = printTemplatesList.find(t => t.name === template);
+        if (found && !validateSandbox(found.raw_template || '')) {
+            const proceed = confirm("Pre-Print Sanitizer Warning: Mappings contain errors. Direct Print anyway?");
+            if (!proceed) return;
+        }
+    }
+
+    const labelCount = checkedItems.reduce((acc, q) => acc + q.print_qty, 0);
+    const confirmPrint = confirm(`Confirm Direct Print Run?\n\n- Template: ${template || 'Built-in Default'}\n- Labels count: ${labelCount}\n- Destination Printer IP: ${ip}:${port}`);
+    if (!confirmPrint) return;
+
     try {
-        toast('Sending raw data stream to printer...', 'info');
+        toast('Pinging printer port before print stream...', 'info');
+        const pingRes = await api('smriti_retail_os.barcode_api.test_printer_connection', {
+            printer_ip: ip,
+            printer_port: port
+        });
+        
+        if (!pingRes || !pingRes.success) {
+            throw new Error(`Connection test failed: ${pingRes.message}`);
+        }
+
+        toast('Streaming raw ZPL/TSPL script...', 'info');
         const res = await api('smriti_retail_os.barcode_api.send_to_network_printer', {
-            items: JSON.stringify(printQueue),
+            items: JSON.stringify(checkedItems),
             template_name: template || null,
             printer_ip: ip,
             printer_port: port
@@ -623,11 +1834,34 @@ async function printToLAN() {
 
         if (res && res.success) {
             toast(res.message, 'success');
+            logSessionPrint(ip, `DIRECT PRINT SUCCESS (${labelCount} labels)`, true);
+            
+            // Log to backend print audit log
+            await api('smriti_retail_os.barcode_api.log_print_job', {
+                template_name: template || 'Built-in Default',
+                printer_ip: ip,
+                labels_count: labelCount,
+                success: 1,
+                print_profile: document.getElementById('cfg-profile').value || null,
+                details: JSON.stringify(checkedItems.map(i => ({ code: i.item_code, qty: i.print_qty })))
+            });
         } else {
-            toast('Failed to stream barcodes to printer', 'error');
+            throw new Error('Direct print failed');
         }
     } catch(e) {
         toast(e.message, 'error');
+        logSessionPrint(ip, 'DIRECT PRINT FAIL: ' + e.message, false);
+        
+        // Log failure to backend
+        await api('smriti_retail_os.barcode_api.log_print_job', {
+            template_name: template || 'Built-in Default',
+            printer_ip: ip,
+            labels_count: labelCount,
+            success: 0,
+            error_message: e.message,
+            print_profile: document.getElementById('cfg-profile').value || null,
+            details: JSON.stringify(checkedItems.map(i => ({ code: i.item_code, qty: i.print_qty })))
+        });
     }
 }
 
@@ -638,7 +1872,7 @@ async function loadTokenReference() {
         const tbody = document.getElementById('token-tbody');
         tbody.innerHTML = ref.map(r => `
             <tr>
-                <td><span class="token-badge">${r.placeholder}</span></td>
+                <td><span class="token-badge" style="font-family:monospace; background:rgba(99,102,241,0.15); color:var(--primary-lt); padding:2px 6px; border-radius:4px; font-weight:600;">${r.placeholder}</span></td>
                 <td>
                     <div style="font-weight:600;color:var(--text);">${r.item_master_field}</div>
                     <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">${r.description}</div>
@@ -652,31 +1886,7 @@ async function loadTokenReference() {
 }
 
 function openTokenHelp() {
-    document.getElementById('token-modal').classList.add('open');
-}
-
-function closeTokenHelp() {
-    document.getElementById('token-modal').classList.remove('open');
-}
-
-// Auto Init
-function openPopout(e, url) {
-    e.preventDefault();
-    e.stopPropagation();
-    let popout_url = url;
-    if (popout_url.indexOf('?') === -1) {
-        popout_url += '?popout=true';
-    } else if (popout_url.indexOf('popout=true') === -1) {
-        popout_url += '&popout=true';
-    }
-    const w = screen.width - 60;
-    const h = screen.height - 60;
-    const left = 30;
-    const top = 30;
-    const win = window.open(popout_url, "smriti-popout-window", `width=${w},height=${h},top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`);
-    if (win) {
-        win.focus();
-    }
+    openModal('token-modal');
 }
 
 window.onload = init;

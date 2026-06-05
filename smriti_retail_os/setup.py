@@ -324,7 +324,55 @@ def setup_smriti_retail_os():
     seed_master_doctypes()
 
     # 1. Custom Fields Provisioning
-    custom_fields = {
+    custom_fields = {}
+
+    if frappe.db.exists("DocType", "SMRITI Print Template"):
+        custom_fields["SMRITI Print Template"] = [
+            {
+                "fieldname": "custom_field_mappings_json",
+                "label": "Field Mappings JSON",
+                "fieldtype": "Long Text",
+                "insert_after": "raw_template",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_version",
+                "label": "Template Version",
+                "fieldtype": "Data",
+                "default": "1.0.0",
+                "insert_after": "custom_field_mappings_json",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_active",
+                "label": "Active",
+                "fieldtype": "Check",
+                "default": "1",
+                "insert_after": "custom_version",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_is_default",
+                "label": "Is Default",
+                "fieldtype": "Check",
+                "default": "0",
+                "insert_after": "custom_active",
+                "module": "SMRITI Retail OS"
+            }
+        ]
+
+    if frappe.db.exists("DocType", "SMRITI Company Settings"):
+        custom_fields["SMRITI Company Settings"] = [
+            {
+                "fieldname": "custom_print_profiles_json",
+                "label": "Print Profiles JSON",
+                "fieldtype": "Long Text",
+                "insert_after": "backup_settings_json",
+                "module": "SMRITI Retail OS"
+            }
+        ]
+
+    custom_fields.update({
         "User": [
             {
                 "fieldname": "custom_is_smriti_user",
@@ -621,7 +669,7 @@ def setup_smriti_retail_os():
                 "module": "SMRITI Retail OS"
             }
         ]
-    }
+    })
 
     create_custom_fields(custom_fields, ignore_validate=True)
 
