@@ -173,67 +173,6 @@ def create_master_doctypes():
             except Exception as e:
                 frappe.log_error(f"Error creating custom Master DocType {doctype_name}: {str(e)}")
 
-    # Create SMRITI Print Template DocType specifically
-    if not frappe.db.exists("DocType", "SMRITI Print Template"):
-        try:
-            doc = frappe.new_doc("DocType")
-            doc.name = "SMRITI Print Template"
-            doc.module = "SMRITI Retail OS"
-            doc.custom = 1
-            doc.autoname = "field:template_name"
-            doc.editable_grid = 1
-            doc.quick_entry = 1
-            doc.track_changes = 1
-            
-            doc.append("fields", {
-                "fieldname": "template_name",
-                "fieldtype": "Data",
-                "label": "Template Name",
-                "reqd": 1,
-                "unique": 1,
-                "in_list_view": 1
-            })
-            
-            doc.append("fields", {
-                "fieldname": "label_size",
-                "fieldtype": "Select",
-                "label": "Label Size",
-                "options": "\n50x25\n50x30\n75x50\n100x50\n106x55",
-                "reqd": 1,
-                "in_list_view": 1
-            })
-            
-            doc.append("fields", {
-                "fieldname": "printer_language",
-                "fieldtype": "Select",
-                "label": "Printer Language",
-                "options": "\nZPL\nTSPL",
-                "reqd": 1,
-                "in_list_view": 1
-            })
-            
-            doc.append("fields", {
-                "fieldname": "raw_template",
-                "fieldtype": "Code",
-                "options": "text",
-                "label": "Raw PRN Template",
-                "reqd": 1
-            })
-            
-            doc.append("permissions", {
-                "role": "System Manager",
-                "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
-            })
-            
-            doc.append("permissions", {
-                "role": "SMRITI Store Manager",
-                "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
-            })
-            
-            doc.insert(ignore_permissions=True)
-            frappe.db.commit()
-        except Exception as e:
-            frappe.log_error(f"Error creating custom SMRITI Print Template: {str(e)}")
 
 def seed_master_doctypes():
     seeds = {
@@ -326,40 +265,6 @@ def setup_smriti_retail_os():
     # 1. Custom Fields Provisioning
     custom_fields = {}
 
-    if frappe.db.exists("DocType", "SMRITI Print Template"):
-        custom_fields["SMRITI Print Template"] = [
-            {
-                "fieldname": "custom_field_mappings_json",
-                "label": "Field Mappings JSON",
-                "fieldtype": "Long Text",
-                "insert_after": "raw_template",
-                "module": "SMRITI Retail OS"
-            },
-            {
-                "fieldname": "custom_version",
-                "label": "Template Version",
-                "fieldtype": "Data",
-                "default": "1.0.0",
-                "insert_after": "custom_field_mappings_json",
-                "module": "SMRITI Retail OS"
-            },
-            {
-                "fieldname": "custom_active",
-                "label": "Active",
-                "fieldtype": "Check",
-                "default": "1",
-                "insert_after": "custom_version",
-                "module": "SMRITI Retail OS"
-            },
-            {
-                "fieldname": "custom_is_default",
-                "label": "Is Default",
-                "fieldtype": "Check",
-                "default": "0",
-                "insert_after": "custom_active",
-                "module": "SMRITI Retail OS"
-            }
-        ]
 
     if frappe.db.exists("DocType", "SMRITI Company Settings"):
         custom_fields["SMRITI Company Settings"] = [
