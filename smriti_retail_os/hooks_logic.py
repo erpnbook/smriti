@@ -468,9 +468,18 @@ def sync_supplier_address_and_credit_days(doc, method):
             frappe.db.set_value("Supplier", doc.name, "payment_terms", template_name)
 
 
+def initialize_item_wise_tax_details(doc, method=None):
+    """Ensure _item_wise_tax_details is always initialized to an empty list
+    to prevent TypeError inside india_compliance's validate_item_wise_tax_detail.
+    """
+    if not hasattr(doc, "_item_wise_tax_details") or getattr(doc, "_item_wise_tax_details") is None:
+        doc._item_wise_tax_details = []
+
+
 # --- POS Invoice / Sales Invoice Hooks ---
 
 def validate_and_reconcile_retail_invoice(doc, method):
+    initialize_item_wise_tax_details(doc)
     """
     Triggers before_validate on POS Invoice and Sales Invoice.
     Validates loyalty redemption credits against database ledgers to prevent margin leaks.

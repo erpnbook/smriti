@@ -36,7 +36,7 @@ email_footer = "smriti_retail_os/templates/emails/smriti_email_footer.html"
 # Support Link Overrides
 help_links = [
     {"title": "SMRITI Support Desk", "url": "https://support.erpnbook.com"},
-    {"title": "User Manual", "url": "/app/smriti-desk#user-manual"}
+    {"title": "User Manual", "url": "/app/smriti_desk#user-manual"}
 ]
 
 # Apps
@@ -229,10 +229,37 @@ doc_events = {
         "on_update": "smriti_retail_os.hooks_logic.sync_supplier_address_and_credit_days"
     },
     "POS Invoice": {
-        "before_validate": "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
+        "before_validate": [
+            "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
+            "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
+        ]
     },
     "Sales Invoice": {
-        "before_validate": "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
+        "before_validate": [
+            "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
+            "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
+        ]
+    },
+    "Purchase Receipt": {
+        "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details"
+    },
+    "Purchase Invoice": {
+        "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details"
+    },
+    "Purchase Order": {
+        "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details"
+    },
+    "Sales Order": {
+        "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details"
+    },
+    "Delivery Note": {
+        "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details"
+    },
+    "Quotation": {
+        "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details"
+    },
+    "Supplier Quotation": {
+        "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details"
     },
     "Company": {
         "after_insert": "smriti_retail_os.company_api.ensure_company_settings",

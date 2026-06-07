@@ -246,24 +246,38 @@ def get_user_metrics():
     total_users = frappe.db.count("User", filters={"name": ["not in", exclude_users], "user_type": "System User"})
     
     # Count SMRITI Store Manager
+    # H-03 FIX: Do NOT use duplicate 'name' keys in a filters dict.
+    # Python silently discards the first key, so the "not in exclude_users" filter
+    # was being dropped, causing Administrator to be included in the count.
+    # Fix: resolve eligible users first, then filter by role membership.
+    store_manager_users = frappe.get_all(
+        "Has Role",
+        filters={"role": "SMRITI Store Manager", "parenttype": "User"},
+        pluck="parent"
+    )
+    eligible_sm = [u for u in store_manager_users if u not in exclude_users]
     store_managers = frappe.db.count(
         "User",
         filters={
-            "name": ["not in", exclude_users],
-            "user_type": "System User",
-            "name": ["in", frappe.get_all("Has Role", filters={"role": "SMRITI Store Manager"}, pluck="parent")]
+            "name": ["in", eligible_sm] if eligible_sm else ["in", ["__NONE__"]],
+            "user_type": "System User"
         }
-    )
+    ) if eligible_sm else 0
     
     # Count SMRITI Cashier
+    cashier_users = frappe.get_all(
+        "Has Role",
+        filters={"role": "SMRITI Cashier", "parenttype": "User"},
+        pluck="parent"
+    )
+    eligible_cashier = [u for u in cashier_users if u not in exclude_users]
     cashiers = frappe.db.count(
         "User",
         filters={
-            "name": ["not in", exclude_users],
-            "user_type": "System User",
-            "name": ["in", frappe.get_all("Has Role", filters={"role": "SMRITI Cashier"}, pluck="parent")]
+            "name": ["in", eligible_cashier] if eligible_cashier else ["in", ["__NONE__"]],
+            "user_type": "System User"
         }
-    )
+    ) if eligible_cashier else 0
     
     return {
         "total_users": total_users,

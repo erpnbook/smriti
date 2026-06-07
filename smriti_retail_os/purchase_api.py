@@ -174,7 +174,7 @@ def create_purchase_order(supplier, items, schedule_date=None, remarks=None, ima
     po.schedule_date = schedule_date or nowdate()
     po.company = company
     if remarks:
-        po.remarks = remarks  # po.terms is the legal Terms & Conditions field; remarks go here
+        po.terms = remarks  # po.terms is the legal Terms & Conditions field where remarks go in SMRITI
 
     for it in items_list:
         item_code = it.get("item_code")
@@ -353,3 +353,36 @@ def create_purchase_receipt(supplier, items, po_name=None, warehouse=None):
         "name": pr.name,
         "message": _("Purchase Receipt {0} submitted successfully.").format(pr.name)
     }
+
+
+@frappe.whitelist()
+def create_purchase_return(receipt_name):
+    """
+    Creates and submits a Purchase Return against the original Purchase Receipt (GRN).
+    """
+    check_store_manager_role()
+
+    docstatus = frappe.db.get_value("Purchase Receipt", receipt_name, "docstatus")
+    if docstatus is None:
+        frappe.throw(_("Purchase Receipt {0} not found.").format(receipt_name))
+        
+    if docstatus != 1:
+        frappe.throw(_("Purchase Receipt {0} must be submitted to create a return.").format(receipt_name))
+
+    from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_return
+    
+    return_doc = make_purchase_return(receipt_name)
+    
+    try:
+        return_doc.insert(ignore_permissions=True)
+        return_doc.submit()
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        raise
+
+    return {
+        "name": return_doc.name,
+        "message": _("Purchase Return {0} created and submitted successfully.").format(return_doc.name)
+    }
+

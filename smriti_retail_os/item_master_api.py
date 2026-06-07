@@ -857,17 +857,34 @@ def check_store_manager_role():
 
 @frappe.whitelist()
 def generate_ean13_barcode():
+    """
+    Generates a unique EAN-13 barcode with valid check digit.
+    Uses an iterative collision-avoidance loop (max 100 attempts).
+    Raises frappe.ValidationError if a unique barcode cannot be found.
+    """
     import random
-    body = f"23{random.randint(1000000000, 9999999999)}"
-    odds = sum(int(body[i]) for i in range(0, 12, 2))
-    evens = sum(int(body[i]) for i in range(1, 12, 2))
-    total = odds + (evens * 3)
-    check_digit = (10 - (total % 10)) % 10
-    barcode = f"{body}{check_digit}"
-    
-    if frappe.db.exists("Item Barcode", {"barcode": barcode}) or frappe.db.exists("Item", barcode):
-        return generate_ean13_barcode()
-    return barcode
+    # C-08 FIX: Replace unbounded recursion with an iterative loop.
+    # The old recursive version had no stack depth limit:
+    # in a busy system with many barcodes, repeated collisions could overflow
+    # Python's default call stack (1000 frames) and crash the gunicorn worker.
+    max_attempts = 100
+    for attempt in range(max_attempts):
+        body = f"23{random.randint(1000000000, 9999999999)}"
+        odds  = sum(int(body[i]) for i in range(0, 12, 2))
+        evens = sum(int(body[i]) for i in range(1, 12, 2))
+        total = odds + (evens * 3)
+        check_digit = (10 - (total % 10)) % 10
+        barcode = f"{body}{check_digit}"
+
+        # Check both Item Barcode table and Item master (to avoid item_code collisions)
+        if (not frappe.db.exists("Item Barcode", {"barcode": barcode})
+                and not frappe.db.exists("Item", barcode)):
+            return barcode
+
+    frappe.throw(
+        _("Could not generate a unique EAN-13 barcode after {0} attempts. "
+          "Please contact system administrator.").format(max_attempts)
+    )
 
 
 @frappe.whitelist()

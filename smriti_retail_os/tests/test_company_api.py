@@ -32,26 +32,42 @@ class TestSmritiCompanyAPI(unittest.TestCase):
         setup_smriti_retail_os()
         frappe.db.commit()
 
-        # Clean up any residual test companies
-        frappe.db.delete("Company", {"company_name": "Test Company Ltd"})
-        if frappe.db.exists("DocType", "SMRITI Company Settings"):
-            frappe.db.delete("SMRITI Company Settings", {"company": "Test Company Ltd"})
+        cls.company_name = "Test Company Ltd"
+        
+        # Robust cleanup first
+        if frappe.db.exists("Company", cls.company_name):
+            frappe.delete_doc("Company", cls.company_name, ignore_permissions=True, force=True)
+        frappe.db.delete("SMRITI Company Settings", {"company": cls.company_name})
+        frappe.db.delete("SMRITI Company Settings", {"name": cls.company_name})
         frappe.db.commit()
 
+        # Create the test company once
+        cls.company = frappe.new_doc("Company")
+        cls.company.company_name = cls.company_name
+        cls.company.default_currency = "INR"
+        cls.company.country = "India"
+        cls.company.insert(ignore_permissions=True)
+        frappe.db.commit()
+
+    @classmethod
+    def tearDownClass(cls):
+        # Remove the test company and settings once
+        if frappe.db.exists("Company", cls.company_name):
+            frappe.delete_doc("Company", cls.company_name, ignore_permissions=True, force=True)
+        frappe.db.delete("SMRITI Company Settings", {"company": cls.company_name})
+        frappe.db.delete("SMRITI Company Settings", {"name": cls.company_name})
+        frappe.db.commit()
+        super().tearDownClass()
+
     def setUp(self):
-        # Create a clean test company
         self.company_name = "Test Company Ltd"
-        self.company = frappe.new_doc("Company")
-        self.company.company_name = self.company_name
-        self.company.default_currency = "INR"
-        self.company.country = "India"
-        self.company.insert(ignore_permissions=True)
+        self.company = frappe.get_doc("Company", self.company_name)
+        ensure_company_settings(self.company)
         frappe.db.commit()
 
     def tearDown(self):
-        # Remove the test company and settings
-        frappe.db.delete("Company", {"company_name": self.company_name})
         frappe.db.delete("SMRITI Company Settings", {"company": self.company_name})
+        frappe.db.delete("SMRITI Company Settings", {"name": self.company_name})
         frappe.db.commit()
 
     def test_active_company_resolution(self):

@@ -19,8 +19,11 @@ import frappe
 from frappe import _
 from frappe.utils import (
     getdate, nowdate, add_days, add_months,
-    flt, fmt_money, get_first_day, get_last_day
+    flt, fmt_money, get_first_day, get_last_day, cint
 )
+import hashlib
+import json
+import time
 
 
 # ─────────────────────────────────────────────
@@ -899,4 +902,867 @@ def get_deadline_alerts():
     status_order = {"Red": 0, "Amber": 1, "Green": 2}
     alerts.sort(key=lambda x: (status_order.get(x["status"], 3), x["days_left"]))
     return alerts
+
+
+# ─────────────────────────────────────────────
+# SMRITI REPORT ENGINE (Phase 1)
+# ─────────────────────────────────────────────
+
+REPORT_QUERIES = {
+    "item_wise_sales": {
+        "base_sql": """
+            SELECT 
+                items.item_code,
+                items.item_name,
+                items.item_group,
+                items.brand,
+                SUM(items.qty) as qty_sold,
+                SUM(items.net_amount) as taxable_amount,
+                SUM(items.amount) as gross_amount
+            FROM `tabPOS Invoice Item` items
+            INNER JOIN `tabPOS Invoice` parent ON items.parent = parent.name
+            LEFT JOIN `tabItem` item ON items.item_code = item.name
+            WHERE parent.docstatus = 1 AND parent.is_return = 0
+        """,
+        "group_by": "items.item_code",
+        "order_by": "qty_sold DESC"
+    },
+    "daily_sales_summary": {
+        "base_sql": """
+            SELECT 
+                parent.posting_date,
+                COUNT(parent.name) as bills_count,
+                SUM(parent.total_qty) as qty_sold,
+                SUM(parent.net_total) as taxable_amount,
+                SUM(parent.total_taxes_and_charges) as tax_amount,
+                SUM(parent.discount_amount) as discount_amount,
+                SUM(parent.grand_total) as grand_total
+            FROM `tabPOS Invoice` parent
+            WHERE parent.docstatus = 1
+        """,
+        "group_by": "parent.posting_date",
+        "order_by": "parent.posting_date ASC"
+    },
+    "cash_z_report": {
+        "is_custom": True
+    },
+    "cash_reconciliation": {
+        "base_sql": """
+            SELECT 
+                ce.name as closing_id,
+                ce.posting_date,
+                ce.user as cashier,
+                ce.pos_profile,
+                cd.mode_of_payment,
+                cd.expected_amount,
+                cd.closing_amount as declared_amount,
+                (cd.closing_amount - cd.expected_amount) as difference
+            FROM `tabPOS Closing Entry` ce
+            JOIN `tabPOS Closing Entry Detail` cd ON cd.parent = ce.name
+            WHERE ce.docstatus = 1
+        """,
+        "group_by": None,
+        "order_by": "ce.posting_date DESC"
+    },
+    "current_stock_position": {
+        "base_sql": """
+            SELECT 
+                b.item_code,
+                i.item_name,
+                b.warehouse,
+                b.actual_qty,
+                b.valuation_rate,
+                b.stock_value,
+                CASE 
+                    WHEN b.actual_qty <= 0 THEN 'Out of Stock'
+                    WHEN b.actual_qty <= 5 THEN 'Low Stock'
+                    ELSE 'In Stock'
+                END as status
+            FROM `tabBin` b
+            JOIN `tabItem` i ON b.item_code = i.name
+            WHERE 1=1
+        """,
+        "group_by": None,
+        "order_by": "b.item_code ASC"
+    },
+    "style_wise_stock": {
+        "base_sql": """
+            SELECT 
+                COALESCE(i.custom_style_code, i.variant_of, i.name) as style_code,
+                COALESCE(parent_item.item_name, i.item_name) as style_name,
+                SUM(b.actual_qty) as actual_qty,
+                SUM(b.stock_value) as stock_value
+            FROM `tabBin` b
+            JOIN `tabItem` i ON b.item_code = i.name
+            LEFT JOIN `tabItem` parent_item ON i.variant_of = parent_item.name
+            WHERE 1=1
+        """,
+        "group_by": "style_code",
+        "order_by": "actual_qty DESC"
+    },
+    "size_wise_stock": {
+        "base_sql": """
+            SELECT 
+                COALESCE(i.custom_style_code, i.variant_of, i.name) as style_code,
+                COALESCE(parent_item.item_name, i.item_name) as style_name,
+                c_attr.attribute_value as color,
+                s_attr.attribute_value as size,
+                SUM(b.actual_qty) as actual_qty,
+                b.warehouse
+            FROM `tabBin` b
+            JOIN `tabItem` i ON b.item_code = i.name
+            LEFT JOIN `tabItem` parent_item ON i.variant_of = parent_item.name
+            LEFT JOIN `tabItem Variant Attribute` c_attr ON c_attr.parent = i.name AND c_attr.attribute = 'Color'
+            LEFT JOIN `tabItem Variant Attribute` s_attr ON s_attr.parent = i.name AND s_attr.attribute = 'Size'
+            WHERE 1=1
+        """,
+        "group_by": "style_code, color, size, b.warehouse",
+        "order_by": "style_code ASC"
+    },
+    "payment_mode_summary": {
+        "base_sql": """
+            SELECT 
+                p.mode_of_payment,
+                SUM(p.amount) as total_amount
+            FROM `tabSales Invoice Payment` p
+            JOIN `tabPOS Invoice` i ON p.parent = i.name
+            WHERE i.docstatus = 1
+        """,
+        "group_by": "p.mode_of_payment",
+        "order_by": "total_amount DESC"
+    },
+    "payment_register": {
+        "base_sql": """
+            SELECT 
+                posting_date,
+                name as payment_entry_no,
+                party_type,
+                party,
+                payment_type,
+                mode_of_payment,
+                paid_amount,
+                reference_no,
+                remarks
+            FROM `tabPayment Entry`
+            WHERE docstatus = 1 AND payment_type = 'Pay'
+        """,
+        "group_by": None,
+        "order_by": "posting_date DESC"
+    },
+    "receipt_register": {
+        "base_sql": """
+            SELECT 
+                pe.posting_date,
+                pe.name as receipt_no,
+                pe.party as customer,
+                ref.reference_name as against_invoice,
+                pe.mode_of_payment,
+                pe.paid_amount as amount_received,
+                pe.reference_no as reference_number
+            FROM `tabPayment Entry` pe
+            LEFT JOIN `tabPayment Entry Reference` ref ON ref.parent = pe.name
+            WHERE pe.docstatus = 1 AND pe.payment_type = 'Receive'
+        """,
+        "group_by": None,
+        "order_by": "pe.posting_date DESC"
+    },
+    "cash_book": {
+        "is_custom": True
+    },
+    "day_book": {
+        "is_custom": True
+    },
+    "customer_outstanding": {
+        "base_sql": """
+            SELECT 
+                customer,
+                name as invoice,
+                posting_date,
+                due_date,
+                outstanding_amount,
+                DATEDIFF(CURRENT_DATE(), posting_date) as ageing_days
+            FROM `tabSales Invoice`
+            WHERE docstatus = 1 AND outstanding_amount > 0
+        """,
+        "group_by": None,
+        "order_by": "posting_date ASC"
+    },
+    "supplier_outstanding": {
+        "base_sql": """
+            SELECT 
+                supplier,
+                name as invoice,
+                posting_date,
+                due_date,
+                outstanding_amount,
+                DATEDIFF(CURRENT_DATE(), posting_date) as ageing_days
+            FROM `tabPurchase Invoice`
+            WHERE docstatus = 1 AND outstanding_amount > 0
+        """,
+        "group_by": None,
+        "order_by": "posting_date ASC"
+    }
+}
+
+
+class SMRITIReportEngine:
+    def __init__(self, report_key, filters=None):
+        self.report_key = report_key
+        self.filters = filters or {}
+        self.template = self._load_template()
+
+    def _load_template(self):
+        """Loads SMRITI Report Template from DB."""
+        if frappe.db.exists("SMRITI Report Template", self.report_key):
+            return frappe.get_doc("SMRITI Report Template", self.report_key)
+        else:
+            frappe.throw(_("Report Template '{0}' not found").format(self.report_key))
+
+    def check_permissions(self):
+        """Checks if current user has role permission to run this report."""
+        user = frappe.session.user
+        if user == "Administrator" or "System Manager" in frappe.get_roles():
+            return True
+            
+        allowed_roles = [r.role for r in self.template.get("role_access", [])]
+        if not allowed_roles:
+            return True # If no specific roles are defined, permit access
+            
+        user_roles = frappe.get_roles()
+        if not set(allowed_roles).intersection(set(user_roles)):
+            frappe.throw(_("Access Denied for Report '{0}'").format(self.template.report_name), frappe.PermissionError)
+
+    def get_cache_key(self):
+        """Generates MD5 hash of filter options for secure caching."""
+        filter_hash = hashlib.md5(
+            json.dumps(self.filters, sort_keys=True).encode("utf-8")
+        ).hexdigest()
+        return f"smriti:{self.report_key}:{filter_hash}"
+
+    def run(self):
+        self.check_permissions()
+
+        # Check Cache
+        cache_minutes = cint(self.template.cache_minutes)
+        if cache_minutes > 0:
+            cache_key = self.get_cache_key()
+            cached_data = frappe.cache().get_value(cache_key)
+            if cached_data:
+                return json.loads(cached_data)
+
+        # Execute
+        start_time = time.time()
+        
+        query_config = REPORT_QUERIES.get(self.report_key)
+        if not query_config:
+            frappe.throw(_("Query configuration for report '{0}' not defined").format(self.report_key))
+
+        if query_config.get("is_custom"):
+            results = self._run_custom_report()
+        else:
+            results = self._run_sql_report(query_config)
+
+        duration = time.time() - start_time
+        
+        # Performance Logging in Activity Log
+        try:
+            log_doc = frappe.new_doc("Activity Log")
+            log_doc.user = frappe.session.user
+            log_doc.operation = "SMRITI Report Run"
+            log_doc.subject = f"Report {self.report_key} executed in {duration:.4f}s returning {len(results)} rows"
+            log_doc.remarks = json.dumps({
+                "report_key": self.report_key,
+                "filters": self.filters,
+                "duration_sec": duration,
+                "rows_count": len(results)
+            })
+            log_doc.insert(ignore_permissions=True)
+            frappe.db.commit()
+        except Exception as e:
+            frappe.log_error(f"Error logging report execution: {str(e)}")
+
+        # Write to Cache
+        if cache_minutes > 0:
+            cache_key = self.get_cache_key()
+            frappe.cache().set_value(cache_key, frappe.as_json(results), expires_in_sec=cache_minutes * 60)
+
+        return results
+
+    def _run_custom_report(self):
+        """Custom Python-based reporter for Cash Z-Report, Cash Book, and Day Book."""
+        if self.report_key == "cash_z_report":
+            return self._run_cash_z_report()
+        elif self.report_key == "cash_book":
+            return self._run_cash_book()
+        elif self.report_key == "day_book":
+            return self._run_day_book()
+        return []
+
+    def _run_cash_book(self):
+        from frappe.utils import flt, nowdate
+        company = self.filters.get("company")
+        if not company:
+            company = frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+            
+        from_date = self.filters.get("from_date") or nowdate()
+        to_date = self.filters.get("to_date") or nowdate()
+        
+        # 1. Resolve Cash Accounts
+        cash_accounts = frappe.get_all("Account", filters={"company": company, "account_type": "Cash"}, pluck="name")
+        if not cash_accounts:
+            cash_accounts = frappe.get_all("Account", filters={"company": company, "name": ["like", "%Cash%"]}, pluck="name")
+            
+        if not cash_accounts:
+            return []
+            
+        # 2. Get opening balance before from_date
+        gl_sum = frappe.db.sql("""
+            SELECT SUM(debit) as debit, SUM(credit) as credit
+            FROM `tabGL Entry`
+            WHERE company = %s AND account IN %s AND posting_date < %s AND is_cancelled = 0
+        """, (company, cash_accounts, from_date), as_dict=True)
+        
+        opening_bal = 0.0
+        if gl_sum:
+            opening_bal = flt(gl_sum[0].get("debit") or 0.0) - flt(gl_sum[0].get("credit") or 0.0)
+            
+        # 3. Get transactions grouped by date
+        entries = frappe.db.sql("""
+            SELECT 
+                posting_date,
+                SUM(debit) as receipts,
+                SUM(credit) as payments
+            FROM `tabGL Entry`
+            WHERE company = %s AND account IN %s AND posting_date BETWEEN %s AND %s AND is_cancelled = 0
+            GROUP BY posting_date
+            ORDER BY posting_date ASC
+        """, (company, cash_accounts, from_date, to_date), as_dict=True)
+        
+        results = []
+        current_bal = opening_bal
+        for entry in entries:
+            receipts = flt(entry.receipts)
+            payments = flt(entry.payments)
+            opening = current_bal
+            closing = opening + receipts - payments
+            
+            results.append({
+                "date": str(entry.posting_date),
+                "opening_balance": opening,
+                "cash_receipts": receipts,
+                "cash_payments": payments,
+                "closing_balance": closing
+            })
+            current_bal = closing
+            
+        return results
+
+    def _run_day_book(self):
+        from frappe.utils import flt, nowdate, getdate
+        from dateutil.rrule import rrule, DAILY
+        
+        company = self.filters.get("company")
+        if not company:
+            company = frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+            
+        from_date = self.filters.get("from_date") or nowdate()
+        to_date = self.filters.get("to_date") or nowdate()
+        
+        start = getdate(from_date)
+        end = getdate(to_date)
+        dates = [d.date() for d in rrule(DAILY, dtstart=start, until=end)]
+        
+        # Maps for quick indexing
+        sales_map = {}
+        sales_return_map = {}
+        purchase_map = {}
+        purchase_return_map = {}
+        receipt_map = {}
+        payment_map = {}
+        
+        # 1. Sales (excluding returns)
+        for r in frappe.db.sql("""
+            SELECT posting_date, SUM(grand_total) as total 
+            FROM `tabSales Invoice` 
+            WHERE company = %s AND docstatus = 1 AND is_return = 0 AND posting_date BETWEEN %s AND %s 
+            GROUP BY posting_date
+        """, (company, from_date, to_date), as_dict=True):
+            sales_map[str(r.posting_date)] = flt(r.total)
+            
+        if frappe.db.exists("DocType", "POS Invoice"):
+            for r in frappe.db.sql("""
+                SELECT posting_date, SUM(grand_total) as total 
+                FROM `tabPOS Invoice` 
+                WHERE company = %s AND docstatus = 1 AND is_return = 0 AND posting_date BETWEEN %s AND %s 
+                GROUP BY posting_date
+            """, (company, from_date, to_date), as_dict=True):
+                sales_map[str(r.posting_date)] = sales_map.get(str(r.posting_date), 0.0) + flt(r.total)
+                
+        # 2. Sales Returns
+        for r in frappe.db.sql("""
+            SELECT posting_date, SUM(grand_total) as total 
+            FROM `tabSales Invoice` 
+            WHERE company = %s AND docstatus = 1 AND is_return = 1 AND posting_date BETWEEN %s AND %s 
+            GROUP BY posting_date
+        """, (company, from_date, to_date), as_dict=True):
+            sales_return_map[str(r.posting_date)] = flt(r.total)
+            
+        if frappe.db.exists("DocType", "POS Invoice"):
+            for r in frappe.db.sql("""
+                SELECT posting_date, SUM(grand_total) as total 
+                FROM `tabPOS Invoice` 
+                WHERE company = %s AND docstatus = 1 AND is_return = 1 AND posting_date BETWEEN %s AND %s 
+                GROUP BY posting_date
+            """, (company, from_date, to_date), as_dict=True):
+                sales_return_map[str(r.posting_date)] = sales_return_map.get(str(r.posting_date), 0.0) + flt(r.total)
+                
+        # 3. Purchases (excluding returns)
+        for r in frappe.db.sql("""
+            SELECT posting_date, SUM(grand_total) as total 
+            FROM `tabPurchase Invoice` 
+            WHERE company = %s AND docstatus = 1 AND is_return = 0 AND posting_date BETWEEN %s AND %s 
+            GROUP BY posting_date
+        """, (company, from_date, to_date), as_dict=True):
+            purchase_map[str(r.posting_date)] = flt(r.total)
+            
+        # 4. Purchase Returns
+        for r in frappe.db.sql("""
+            SELECT posting_date, SUM(grand_total) as total 
+            FROM `tabPurchase Invoice` 
+            WHERE company = %s AND docstatus = 1 AND is_return = 1 AND posting_date BETWEEN %s AND %s 
+            GROUP BY posting_date
+        """, (company, from_date, to_date), as_dict=True):
+            purchase_return_map[str(r.posting_date)] = flt(r.total)
+            
+        # 5. Receipts
+        for r in frappe.db.sql("""
+            SELECT posting_date, SUM(paid_amount) as total 
+            FROM `tabPayment Entry` 
+            WHERE company = %s AND docstatus = 1 AND payment_type = 'Receive' AND posting_date BETWEEN %s AND %s 
+            GROUP BY posting_date
+        """, (company, from_date, to_date), as_dict=True):
+            receipt_map[str(r.posting_date)] = flt(r.total)
+            
+        # 6. Payments
+        for r in frappe.db.sql("""
+            SELECT posting_date, SUM(paid_amount) as total 
+            FROM `tabPayment Entry` 
+            WHERE company = %s AND docstatus = 1 AND payment_type = 'Pay' AND posting_date BETWEEN %s AND %s 
+            GROUP BY posting_date
+        """, (company, from_date, to_date), as_dict=True):
+            payment_map[str(r.posting_date)] = flt(r.total)
+            
+        results = []
+        for d in dates:
+            ds = str(d)
+            sales = sales_map.get(ds, 0.0)
+            sales_ret = sales_return_map.get(ds, 0.0)
+            purch = purchase_map.get(ds, 0.0)
+            purch_ret = purchase_return_map.get(ds, 0.0)
+            receipts = receipt_map.get(ds, 0.0)
+            payments = payment_map.get(ds, 0.0)
+            net_cash = receipts - payments
+            
+            if sales == 0.0 and sales_ret == 0.0 and purch == 0.0 and purch_ret == 0.0 and receipts == 0.0 and payments == 0.0:
+                continue
+                
+            results.append({
+                "date": ds,
+                "sales": sales,
+                "sales_returns": sales_ret,
+                "purchases": purch,
+                "purchase_returns": purch_ret,
+                "receipts": receipts,
+                "payments": payments,
+                "net_cash_position": net_cash
+            })
+            
+        return results
+
+    def _run_cash_z_report(self):
+        date = self.filters.get("from_date") or self.filters.get("date") or nowdate()
+        company = self.filters.get("company")
+        warehouse = self.filters.get("warehouse")
+        cashier = self.filters.get("cashier")
+        
+        # 1. Fetch opening entries
+        opening_filters = {"posting_date": date, "docstatus": 1}
+        if company:
+            opening_filters["company"] = company
+        if cashier:
+            opening_filters["user"] = cashier
+            
+        opening_entries = frappe.get_all("POS Opening Entry", filters=opening_filters, fields=["name"])
+        opening_cash = 0.0
+        for oe in opening_entries:
+            details = frappe.get_all("POS Opening Entry Detail", filters={"parent": oe.name, "mode_of_payment": "Cash"}, fields=["opening_amount"])
+            for d in details:
+                opening_cash += flt(d.opening_amount)
+
+        # 2. Build sales and payment aggregates
+        sales_where = ["docstatus = 1 AND posting_date = %(date)s"]
+        sales_params = {"date": date}
+        
+        if company:
+            sales_where.append("company = %(company)s")
+            sales_params["company"] = company
+        if cashier:
+            sales_where.append("owner = %(cashier)s")
+            sales_params["cashier"] = cashier
+        if warehouse:
+            sales_where.append("(set_warehouse = %(warehouse)s)")
+            sales_params["warehouse"] = warehouse
+            
+        sales_where_str = " AND ".join(sales_where)
+        
+        # Sales summary
+        sales_sum = frappe.db.sql(f"""
+            SELECT 
+                COUNT(*) as total_bills,
+                COALESCE(SUM(grand_total), 0) as total_sales,
+                COALESCE(SUM(net_total), 0) as total_net,
+                COALESCE(SUM(total_taxes_and_charges), 0) as total_tax,
+                COALESCE(SUM(discount_amount), 0) as total_discount
+            FROM `tabPOS Invoice`
+            WHERE {sales_where_str}
+        """, sales_params, as_dict=True)
+        
+        sales_info = sales_sum[0] if sales_sum else {}
+        
+        # Payment breakdown
+        pay_where = ["pi.docstatus = 1 AND pi.posting_date = %(date)s"]
+        if company:
+            pay_where.append("pi.company = %(company)s")
+        if cashier:
+            pay_where.append("pi.owner = %(cashier)s")
+        if warehouse:
+            pay_where.append("pi.set_warehouse = %(warehouse)s")
+        pay_where_str = " AND ".join(pay_where)
+
+        payments = frappe.db.sql(f"""
+            SELECT 
+                pp.mode_of_payment,
+                SUM(pp.amount) as amount
+            FROM `tabPOS Invoice` pi
+            JOIN `tabSales Invoice Payment` pp ON pp.parent = pi.name
+            WHERE {pay_where_str}
+            GROUP BY pp.mode_of_payment
+        """, sales_params, as_dict=True)
+        
+        # Refunds/Returns
+        refunds_sum = frappe.db.sql(f"""
+            SELECT 
+                COUNT(*) as total_refund_bills,
+                COALESCE(SUM(grand_total), 0) as total_refunds
+            FROM `tabPOS Invoice`
+            WHERE {sales_where_str} AND is_return = 1
+        """, sales_params, as_dict=True)
+        
+        refund_info = refunds_sum[0] if refunds_sum else {}
+        
+        # Format payment breakdown
+        cash_sales = 0.0
+        pay_strings = []
+        for p in payments:
+            pay_strings.append(f"{p.mode_of_payment}: Rs. {p.amount:.2f}")
+            if p.mode_of_payment == "Cash":
+                cash_sales = flt(p.amount)
+                
+        expected_cash = opening_cash + cash_sales - flt(refund_info.get("total_refunds", 0))
+        
+        results = [{
+            "date": date,
+            "cashier": cashier or "All Cashiers",
+            "opening_cash": opening_cash,
+            "total_bills": int(sales_info.get("total_bills") or 0),
+            "total_sales": flt(sales_info.get("total_sales") or 0),
+            "total_net": flt(sales_info.get("total_net") or 0),
+            "total_tax": flt(sales_info.get("total_tax") or 0),
+            "total_discount": flt(sales_info.get("total_discount") or 0),
+            "total_refunds": flt(refund_info.get("total_refunds") or 0),
+            "expected_cash_in_drawer": expected_cash,
+            "payment_modes": ", ".join(pay_strings) if pay_strings else "None"
+        }]
+        return results
+
+    def _run_sql_report(self, config):
+        base_sql = config["base_sql"]
+        group_by = config.get("group_by")
+        order_by = config.get("order_by")
+
+        where_clauses = []
+        params = {}
+
+        # Company filter (always applicable if source contains company)
+        company = self.filters.get("company")
+        if company:
+            where_clauses.append("parent.company = %(company)s" if "parent ON" in base_sql else "b.company = %(company)s" if "tabBin" in base_sql else "ce.company = %(company)s" if "tabPOS Closing Entry" in base_sql else "company = %(company)s")
+            params["company"] = company
+        elif self.template.company_restricted:
+            default_company = frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+            if default_company:
+                where_clauses.append("parent.company = %(company)s" if "parent ON" in base_sql else "b.company = %(company)s" if "tabBin" in base_sql else "ce.company = %(company)s" if "tabPOS Closing Entry" in base_sql else "company = %(company)s")
+                params["company"] = default_company
+
+        # Warehouse filter
+        warehouse = self.filters.get("warehouse")
+        if warehouse:
+            if "tabBin" in base_sql:
+                where_clauses.append("b.warehouse = %(warehouse)s")
+            elif "parent ON" in base_sql:
+                where_clauses.append("(items.warehouse = %(warehouse)s OR parent.set_warehouse = %(warehouse)s)")
+            else:
+                where_clauses.append("set_warehouse = %(warehouse)s")
+            params["warehouse"] = warehouse
+
+        # Date range filter (not applicable for stock position/ledger)
+        if "tabBin" not in base_sql:
+            from_date = self.filters.get("from_date")
+            to_date = self.filters.get("to_date")
+            if from_date and to_date:
+                date_field = "pe.posting_date" if "pe." in base_sql else "posting_date" if "tabPayment Entry" in base_sql or "tabSales Invoice" in base_sql or "tabPurchase Invoice" in base_sql else "parent.posting_date" if "parent ON" in base_sql else "ce.posting_date" if "tabPOS Closing Entry" in base_sql else "posting_date" if "tabPOS Invoice" in base_sql else "i.posting_date"
+                where_clauses.append(f"{date_field} BETWEEN %(from_date)s AND %(to_date)s")
+                params["from_date"] = from_date
+                params["to_date"] = to_date
+
+        # Item group & Brand
+        item_group = self.filters.get("item_group")
+        if item_group:
+            field = "items.item_group" if "parent ON" in base_sql else "i.item_group"
+            where_clauses.append(f"{field} = %(item_group)s")
+            params["item_group"] = item_group
+
+        brand = self.filters.get("brand")
+        if brand:
+            field = "items.brand" if "parent ON" in base_sql else "i.brand"
+            where_clauses.append(f"{field} = %(brand)s")
+            params["brand"] = brand
+
+        # Style / Article Code
+        style = self.filters.get("style")
+        if style:
+            if "parent ON" in base_sql:
+                where_clauses.append("(item.custom_style_code = %(style)s OR item.variant_of = %(style)s OR items.item_code = %(style)s)")
+            else:
+                where_clauses.append("(i.custom_style_code = %(style)s OR i.variant_of = %(style)s OR i.name = %(style)s)")
+            params["style"] = style
+
+        # Size (via tabItem Variant Attribute child table join)
+        size = self.filters.get("size")
+        if size:
+            if "s_attr" in base_sql:
+                # Reports that already JOIN tabItem Variant Attribute with s_attr alias
+                where_clauses.append("s_attr.attribute_value = %(size)s")
+            elif "parent ON" in base_sql:
+                # Reports that use `items` as item table alias (e.g. item_wise_sales, daily_sales_summary)
+                where_clauses.append("EXISTS (SELECT 1 FROM `tabItem Variant Attribute` va WHERE va.parent = items.item_code AND va.attribute = 'Size' AND va.attribute_value = %(size)s)")
+            else:
+                # Reports that use `i` as item table alias (e.g. current_stock_position)
+                where_clauses.append("EXISTS (SELECT 1 FROM `tabItem Variant Attribute` va WHERE va.parent = i.name AND va.attribute = 'Size' AND va.attribute_value = %(size)s)")
+            params["size"] = size
+
+        # Color (via tabItem Variant Attribute child table join)
+        color = self.filters.get("color")
+        if color:
+            if "c_attr" in base_sql:
+                # Reports that already JOIN tabItem Variant Attribute with c_attr alias
+                where_clauses.append("c_attr.attribute_value = %(color)s")
+            elif "parent ON" in base_sql:
+                # Reports that use `items` as item table alias
+                where_clauses.append("EXISTS (SELECT 1 FROM `tabItem Variant Attribute` va WHERE va.parent = items.item_code AND va.attribute = 'Color' AND va.attribute_value = %(color)s)")
+            else:
+                # Reports that use `i` as item table alias
+                where_clauses.append("EXISTS (SELECT 1 FROM `tabItem Variant Attribute` va WHERE va.parent = i.name AND va.attribute = 'Color' AND va.attribute_value = %(color)s)")
+            params["color"] = color
+
+        # Salesperson filter
+        salesperson = self.filters.get("salesperson")
+        if salesperson and "parent ON" in base_sql:
+            where_clauses.append("EXISTS (SELECT 1 FROM `tabSales Team` st WHERE st.parent = parent.name AND st.sales_person = %(salesperson)s)")
+            params["salesperson"] = salesperson
+
+        # Customer filter
+        customer = self.filters.get("customer")
+        if customer:
+            where_clauses.append("customer = %(customer)s")
+            params["customer"] = customer
+
+        # Supplier filter
+        supplier = self.filters.get("supplier")
+        if supplier:
+            where_clauses.append("supplier = %(supplier)s")
+            params["supplier"] = supplier
+
+        # Party filter
+        party = self.filters.get("party")
+        if party:
+            where_clauses.append("party = %(party)s")
+            params["party"] = party
+
+        # Payment Mode filter
+        payment_mode = self.filters.get("payment_mode")
+        if payment_mode:
+            where_clauses.append("mode_of_payment = %(payment_mode)s")
+            params["payment_mode"] = payment_mode
+
+        # Ageing Bucket filter
+        ageing_bucket = self.filters.get("ageing_bucket")
+        if ageing_bucket:
+            if ageing_bucket == "1-30":
+                where_clauses.append("DATEDIFF(CURRENT_DATE(), posting_date) BETWEEN 1 AND 30")
+            elif ageing_bucket == "31-60":
+                where_clauses.append("DATEDIFF(CURRENT_DATE(), posting_date) BETWEEN 31 AND 60")
+            elif ageing_bucket == "61-90":
+                where_clauses.append("DATEDIFF(CURRENT_DATE(), posting_date) BETWEEN 61 AND 90")
+            elif ageing_bucket == "90+":
+                where_clauses.append("DATEDIFF(CURRENT_DATE(), posting_date) > 90")
+
+        # Combine SQL
+        full_sql = base_sql
+        if where_clauses:
+            connector = " AND " if "WHERE" in base_sql else " WHERE "
+            full_sql += connector + " AND ".join(where_clauses)
+
+        if group_by:
+            full_sql += f" GROUP BY {group_by}"
+        if order_by:
+            full_sql += f" ORDER BY {order_by}"
+
+        # Large Dataset Protection: limit to 10000 rows
+        full_sql += " LIMIT 10000"
+
+        return frappe.db.sql(full_sql, params, as_dict=True)
+
+
+@frappe.whitelist()
+def get_smriti_report_data(report_key, filters=None):
+    """API endpoint to run SMRITI reporting engine."""
+    if isinstance(filters, str):
+        filters = json.loads(filters)
+    engine = SMRITIReportEngine(report_key, filters)
+    return engine.run()
+
+
+@frappe.whitelist()
+def save_smriti_saved_view(view_name, report_key, applied_filters_json, visible_columns_json, is_default=0):
+    """Creates a SMRITI Saved View record for the current user."""
+    user = frappe.session.user
+    is_default = cint(is_default)
+    
+    if is_default:
+        frappe.db.sql("""
+            UPDATE `tabSMRITI Saved View`
+            SET is_default = 0
+            WHERE report_template = %s AND user = %s
+        """, (report_key, user))
+        
+    doc = frappe.new_doc("SMRITI Saved View")
+    doc.view_name = view_name
+    doc.report_template = report_key
+    doc.user = user
+    doc.applied_filters_json = applied_filters_json
+    doc.visible_columns_json = visible_columns_json
+    doc.is_default = is_default
+    doc.insert(ignore_permissions=True)
+    frappe.db.commit()
+    return doc.name
+
+
+@frappe.whitelist()
+def get_smriti_saved_views(report_key):
+    """Retrieves all saved views for this report template for the current user."""
+    return frappe.get_all(
+        "SMRITI Saved View",
+        filters={"report_template": report_key, "user": frappe.session.user},
+        fields=["name", "view_name", "applied_filters_json", "visible_columns_json", "is_default"],
+        order_by="is_default desc, creation desc"
+    )
+
+
+@frappe.whitelist()
+def delete_smriti_saved_view(view_name):
+    """Deletes a saved view if the user is owner or system manager."""
+    doc = frappe.get_doc("SMRITI Saved View", view_name)
+    if doc.user == frappe.session.user or "System Manager" in frappe.get_roles():
+        frappe.delete_doc("SMRITI Saved View", view_name, ignore_permissions=True)
+        frappe.db.commit()
+        return {"success": True}
+    else:
+        frappe.throw(_("Not permitted to delete this saved view"), frappe.PermissionError)
+
+
+@frappe.whitelist()
+def get_smriti_reports_list():
+    """Returns all report templates that the current user is permitted to view.
+    M-05: Role access is resolved via a single batch query on SMRITI Report Role,
+    not one frappe.get_doc() call per template (N+1 pattern).
+    """
+    user = frappe.session.user
+    roles = frappe.get_roles()
+
+    _fields = [
+        "name", "report_key", "report_name", "report_category", "filters_json",
+        "columns_json", "company_restricted", "branch_restricted",
+        "cache_minutes", "schema_version", "is_public"
+    ]
+
+    templates = frappe.get_all("SMRITI Report Template", fields=_fields)
+
+    if user == "Administrator" or "System Manager" in roles:
+        return templates
+
+    # Batch-fetch ALL role_access rows for ALL templates in one query
+    role_rows = frappe.db.get_all(
+        "SMRITI Report Role",
+        fields=["parent", "role"]
+    )
+    # Build: template_name → set of allowed roles
+    template_roles = {}
+    for r in role_rows:
+        template_roles.setdefault(r.parent, set()).add(r.role)
+
+    user_roles = set(roles)
+
+    return [
+        t for t in templates
+        if not template_roles.get(t.name)                       # no role restriction = public
+        or template_roles[t.name].intersection(user_roles)      # user has at least one role
+    ]
+
+
+@frappe.whitelist()
+def get_smriti_warehouses():
+    """Returns list of active warehouses."""
+    return frappe.get_all("Warehouse", filters={"is_group": 0}, fields=["name", "warehouse_name", "company"], order_by="warehouse_name asc")
+
+
+@frappe.whitelist()
+def get_smriti_item_groups():
+    """Returns list of item groups."""
+    return frappe.get_all("Item Group", fields=["name"], order_by="name asc")
+
+
+@frappe.whitelist()
+def get_smriti_brands():
+    """Returns list of brands."""
+    return frappe.get_all("Brand", fields=["name"], order_by="name asc")
+
+
+@frappe.whitelist()
+def get_smriti_salespersons():
+    """Returns list of sales persons."""
+    return frappe.get_all("Sales Person", fields=["name", "sales_person_name"], order_by="sales_person_name asc")
+
+
+@frappe.whitelist()
+def get_smriti_cashiers():
+    """Returns active SMRITI cashiers/managers."""
+    return frappe.db.sql("""
+        SELECT DISTINCT u.name, COALESCE(NULLIF(CONCAT(u.first_name, ' ', u.last_name), ' '), u.name) as fullname
+        FROM `tabUser` u
+        JOIN `tabHas Role` r ON r.parent = u.name
+        WHERE r.role IN ('SMRITI Cashier', 'SMRITI Store Manager') AND u.enabled = 1
+        ORDER BY fullname ASC
+    """, as_dict=True)
+
 

@@ -1,19 +1,21 @@
-{#
+/**
  * @file: smriti_retail_os/www/reports.html
- * @description: Template for SMRITI Analytics and Custom Reports..
+ * @description: Handles user login, registration, and JWT token generation.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
  * @version: 1.0.0
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+{#
+ * @file: smriti_retail_os/www/reports.html
+ * @description: Metadata-driven reporting suite for SMRITI Retail OS.
+ * @author: Antigravity <antigravity@google.com>
+ * @date: 2026-06-07
+ * @version: 2.0.0
+ * @license: MIT
  #}
 {% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
-<!--
-  @file: smriti_retail_os/www/reports.html
-  @description: SMRITI Reports Dashboard — Standalone UI (Zero system chrome)
-  @author: Antigravity <antigravity@google.com>
-  @version: 1.0.0
--->
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -23,7 +25,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
   <style>
@@ -85,31 +86,401 @@
     .topbtn { background: none; border: none; color: var(--text-2); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all var(--t); }
     .topbtn:hover { background: rgba(255,255,255,0.05); color: var(--text-1); }
 
-    /* Reports Main Container */
-    .reports-container { flex: 1; overflow-y: auto; padding: 28px 32px; display: flex; flex-direction: column; gap: 24px; }
-
-    /* Welcomer */
-    .page-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-    .page-title { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--text-1); display: flex; align-items: center; gap: 10px; }
-    .page-sub { font-size: 0.88rem; color: var(--text-2); margin-top: 4px; }
-
-    /* Section KPI cards */
-    .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
-    .kpi-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; display: flex; flex-direction: column; gap: 6px; transition: all var(--t); }
-    .kpi-card:hover { transform: translateY(-2px); border-color: var(--accent); }
-    .kpi-lbl { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-2); letter-spacing: 0.5px; }
-    .kpi-val { font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--text-1); }
-    .kpi-growth { font-size: 0.78rem; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
-    .growth-up { color: var(--success); }
-    .growth-down { color: var(--danger); }
-
-    /* Date Picker shared bar */
-    .filter-bar { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 24px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between; }
-    .filter-section { display: flex; align-items: center; gap: 12px; }
-    .filter-label { font-size: 0.75rem; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
-    .date-input { background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-1); font-size: 0.88rem; padding: 8px 12px; outline: none; transition: all var(--t); font-family: var(--font-mono); }
-    .date-input:focus { border-color: var(--accent); }
+    /* ────────── Custom Reporting Suite Styles ────────── */
+    .reports-shell {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 56px);
+      overflow: hidden;
+      position: relative;
+    }
+    .reports-explorer {
+      width: 290px;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .explorer-hdr {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+    }
+    .explorer-hdr span {
+      position: absolute;
+      left: 32px;
+      color: var(--text-3);
+      font-size: 18px;
+    }
+    .explorer-hdr input {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      font-size: 0.85rem;
+      padding: 8px 12px 8px 36px;
+      border-radius: var(--radius-sm);
+      outline: none;
+      transition: all var(--t);
+    }
+    .explorer-hdr input:focus {
+      border-color: var(--accent);
+    }
+    .explorer-tree {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .category-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .category-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+    .category-title:hover {
+      color: var(--text-2);
+    }
+    .category-reports {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding-left: 8px;
+    }
+    .report-item-link {
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      color: var(--text-2);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all var(--t);
+      text-decoration: none;
+    }
+    .report-item-link:hover {
+      background: rgba(255,255,255,0.03);
+      color: var(--text-1);
+    }
+    .report-item-link.active {
+      background: rgba(99,102,241,0.12);
+      color: var(--accent-2);
+      font-weight: 600;
+      border-left: 3px solid var(--accent);
+    }
     
+    .reports-workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-base);
+    }
+    
+    .welcome-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      text-align: center;
+      gap: 16px;
+    }
+    .welcome-icon {
+      font-size: 64px;
+      color: var(--accent);
+      animation: pulse 3s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+    .welcome-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--text-1);
+    }
+    .welcome-desc {
+      font-size: 0.95rem;
+      color: var(--text-2);
+      max-width: 480px;
+      line-height: 1.5;
+    }
+    
+    .mobile-switcher-container {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
+      max-width: 320px;
+    }
+    
+    .report-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 28px;
+      gap: 20px;
+      overflow: hidden;
+    }
+    
+    .report-hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    .report-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-1);
+    }
+    .category-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: rgba(99,102,241,0.15);
+      color: var(--accent-2);
+      padding: 3px 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(99,102,241,0.25);
+    }
+    .report-sub {
+      font-size: 0.85rem;
+      color: var(--text-2);
+      margin-top: 4px;
+    }
+    .report-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .btn-group {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .btn-group .btn-export {
+      border: none;
+      border-radius: 0;
+      border-right: 1px solid var(--border);
+    }
+    .btn-group .btn-export:last-child {
+      border-right: none;
+    }
+    
+    /* Dynamic filter bar styles */
+    .filter-bar-generic {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .filter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .filter-item label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .filter-actions-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      padding-top: 12px;
+    }
+    
+    /* Grid card styles */
+    .grid-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    .table-scroll-container {
+      flex: 1;
+      overflow: auto;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+    .data-table th {
+      background: #0f1629;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 12px 16px;
+      font-weight: 700;
+      color: var(--text-2);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      border-bottom: 2px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .data-table th:hover {
+      color: var(--text-1);
+      background: rgba(255,255,255,0.02);
+    }
+    .data-table th.sort-asc::after {
+      content: '  ▲';
+      font-size: 0.7rem;
+      color: var(--accent-2);
+    }
+    .data-table th.sort-desc::after {
+      content: '  ▼';
+      font-size: 0.7rem;
+      color: var(--accent-2);
+    }
+    .data-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-1);
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    .data-table tr:hover td {
+      background: rgba(255,255,255,0.015);
+    }
+    
+    /* Grid summary row */
+    .grid-summary-bar {
+      background: rgba(0,0,0,0.25);
+      border-top: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-2);
+      flex-shrink: 0;
+    }
+    .summary-metrics {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .summary-metric {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .summary-metric-lbl {
+      color: var(--text-3);
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .summary-metric-val {
+      color: var(--text-1);
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+    
+    /* Dropdown menu */
+    .dropdown-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 6px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow);
+      padding: 10px;
+      z-index: 1000;
+      display: none;
+      min-width: 200px;
+      max-height: 280px;
+      overflow-y: auto;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .dropdown-menu.active {
+      display: flex;
+    }
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      color: var(--text-2);
+      border-radius: 4px;
+      user-select: none;
+    }
+    .dropdown-item:hover {
+      background: rgba(255,255,255,0.03);
+      color: var(--text-1);
+    }
+    .dropdown-item input {
+      cursor: pointer;
+    }
+    
+    /* Preset groups styles */
     .preset-group { display: flex; gap: 6px; }
     .btn-preset { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); font-size: 0.78rem; font-weight: 600; padding: 7px 12px; cursor: pointer; transition: all var(--t); }
     .btn-preset:hover { background: rgba(99,102,241,0.08); color: var(--accent-2); border-color: var(--accent); }
@@ -119,61 +490,9 @@
     .btn-run:hover { transform: translateY(-1px); filter: brightness(1.1); }
     .btn-run:active { transform: translateY(0); }
 
-    /* Tabs block */
-    .tab-strip { display: flex; gap: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
-    .tab-btn { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border: none; background: transparent; border-radius: var(--radius) var(--radius) 0 0; color: var(--text-2); font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: all var(--t); position: relative; }
-    .tab-btn:hover { color: var(--text-1); }
-    .tab-btn.active { color: var(--accent-2); }
-    .tab-btn.active::after { content: ''; position: absolute; bottom: -5px; left: 0; width: 100%; height: 3px; background: var(--accent); border-radius: 99px; }
-    .tab-btn span { font-size: 18px; }
-
-    /* Tab views panels */
-    .tab-panel { display: none; flex-direction: column; gap: 24px; animation: fadeIn 0.25s ease; }
-    .tab-panel.active { display: flex; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
-
-    /* Card Panels layout */
-    .report-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; display: flex; flex-direction: column; gap: 18px; position: relative; }
-    .card-hdr-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 12px; margin-bottom: 4px; }
-    .card-title { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--text-1); display: flex; align-items: center; gap: 8px; }
-    .card-title span { color: var(--accent-2); }
-    
-    /* Summary Row within Tab */
-    .summary-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; background: rgba(255,255,255,0.01); border: 1px dashed var(--border); border-radius: var(--radius); padding: 16px; }
-    .sum-item { display: flex; flex-direction: column; gap: 4px; }
-    .sum-lbl { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-2); letter-spacing: 0.5px; }
-    .sum-val { font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 800; color: #fff; }
-
-    /* Grid layout templates */
-    .grid-2 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; }
-    .grid-equal-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-
-    /* Charts canvases */
-    .chart-container { width: 100%; height: 260px; position: relative; }
-
-    /* Table styling */
-    .table-container { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-surface); }
-    .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
-    .data-table th { background: rgba(0,0,0,0.15); padding: 12px 16px; font-weight: 700; color: var(--text-2); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
-    .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text-1); vertical-align: middle; }
-    .data-table tr:last-child td { border-bottom: none; }
-    .data-table tr:hover td { background: rgba(255,255,255,0.02); }
-
-    /* Highlight states */
-    .row-overdue-amber { background: rgba(245, 158, 11, 0.04); }
-    .row-overdue-amber td { color: var(--warning) !important; }
-    .row-lowstock-red { background: rgba(239, 68, 68, 0.04); }
-    .row-lowstock-red td { color: #f87171 !important; }
-
-    .badge-status { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
-    .badge-status.overdue { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
-    .badge-status.due { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
-    .badge-status.low { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
-    .badge-status.ok { background: rgba(16, 185, 129, 0.12); color: var(--success); }
-
     /* Inputs selectors */
-    select, input[type="text"], input[type="number"] {
-      background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-1); font-size: 0.85rem; padding: 8px 12px; outline: none; transition: all var(--t); font-family: inherit;
+    select, input[type="text"], input[type="number"], input[type="date"] {
+      background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-1); font-size: 0.85rem; padding: 8px 12px; outline: none; transition: all var(--t); font-family: inherit; width: 100%;
     }
     select:focus, input:focus { border-color: var(--accent); }
     select option { background: var(--bg-card); }
@@ -196,16 +515,32 @@
     .toast.info    { background: #1e1b4b; border: 1px solid rgba(99,102,241,0.3); }
     @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 
-    /* Responsive */
-    @media (max-width: 1100px) {
-      .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    /* Badge highlight states */
+    .badge-status { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
+    .badge-status.low { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
+    .badge-status.due { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
+    .badge-status.ok { background: rgba(16, 185, 129, 0.12); color: var(--success); }
+
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+      .reports-explorer { display: none; }
+      .mobile-switcher-container { display: flex; }
     }
-    @media (max-width: 768px) {
-      .kpi-grid { grid-template-columns: 1fr; }
-      .grid-2, .grid-equal-2 { grid-template-columns: 1fr; }
-      .reports-container { padding: 16px; }
-      .filter-bar { flex-direction: column; align-items: stretch; }
-      .filter-section { flex-direction: column; align-items: stretch; }
+
+    /* Print layout override */
+    @media print {
+      body { background: white !important; color: black !important; }
+      #app, .topbar, .reports-explorer, .filter-bar-generic, .report-actions, .grid-summary-bar { display: none !important; }
+      .reports-shell { height: auto !important; overflow: visible !important; }
+      .reports-workspace { overflow: visible !important; background: white !important; padding: 0 !important; }
+      .report-content { display: block !important; overflow: visible !important; padding: 0 !important; }
+      .report-hdr { margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+      .report-title { color: black !important; font-size: 2rem !important; }
+      .category-badge { border: 1px solid #000 !important; color: black !important; background: none !important; }
+      .data-table { border: 1px solid #000 !important; }
+      .data-table th { background: #f0f0f0 !important; color: black !important; border-bottom: 2px solid #000 !important; }
+      .data-table td { color: black !important; border-bottom: 1px solid #ccc !important; }
+      .table-scroll-container { overflow: visible !important; }
     }
   </style>
   <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"/>
@@ -226,7 +561,7 @@
       <div class="topbar-breadcrumbs">
         <span>SMRITI</span>
         <span class="sep">/</span>
-        <span class="active">Reports Dashboard</span>
+        <span class="active">Reports Center</span>
       </div>
       <div class="topbar-right">
         <button class="topbtn" onclick="history.back()" title="Go Back">
@@ -238,617 +573,165 @@
       </div>
     </div>
 
-    <!-- Container -->
-    <div class="reports-container">
-      
-      <!-- Welcomer Header -->
-      <div class="page-hdr">
-        <div>
-          <h1 class="page-title">📊 SMRITI Reports Dashboard</h1>
-          <p class="page-sub">Analyze and monitor store sales transactions, stock levels, GST tax compliance, and customer outstanding accounts.</p>
+    <!-- Inner Shell with Left Explorer and Right Workspace -->
+    <div class="reports-shell">
+      <!-- Left Panel: Explorer -->
+      <div class="reports-explorer">
+        <div class="explorer-hdr">
+          <span class="material-symbols-outlined">search</span>
+          <input type="text" id="report-search" placeholder="Search reports..." oninput="filterExplorer()"/>
+        </div>
+        <div class="explorer-tree" id="explorer-tree">
+          <!-- Populated dynamically: Categories with report lists -->
         </div>
       </div>
 
-      <!-- Section A: Top KPI strip (Auto loads stats) -->
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <span class="kpi-lbl">Today's Sales</span>
-          <span class="kpi-val" id="kpi-today-sales">₹0.00</span>
-          <span class="kpi-growth" id="kpi-sales-growth">—</span>
+      <!-- Right Panel: Workspace -->
+      <div class="reports-workspace">
+        <div class="loading-mask" id="workspace-loading">
+          <div class="spinner"></div>
         </div>
-        <div class="kpi-card">
-          <span class="kpi-lbl">Today's Bills</span>
-          <span class="kpi-val" id="kpi-today-bills">0</span>
-          <span style="font-size:0.75rem; color:var(--text-3); font-weight:600;">Checkouts Processed</span>
-        </div>
-        <div class="kpi-card">
-          <span class="kpi-lbl">Month Sales</span>
-          <span class="kpi-val" id="kpi-month-sales">₹0.00</span>
-          <span style="font-size:0.75rem; color:var(--text-3); font-weight:600;">Month-to-date total</span>
-        </div>
-        <div class="kpi-card">
-          <span class="kpi-lbl">Stock Valuation</span>
-          <span class="kpi-val" id="kpi-stock-value">₹0.00</span>
-          <span style="font-size:0.75rem; color:var(--text-3); font-weight:600;">Bins at cost price</span>
-        </div>
-        <div class="kpi-card">
-          <span class="kpi-lbl">Outstanding</span>
-          <span class="kpi-val" id="kpi-outstanding">₹0.00</span>
-          <span style="font-size:0.75rem; color:var(--text-3); font-weight:600;">Receivables ledger</span>
-        </div>
-      </div>
-
-      <!-- Section B: Range & Preset Picker (Shared) -->
-      <div class="filter-bar">
-        <div class="filter-section">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span class="filter-label">From</span>
-            <input type="date" class="date-input" id="from-date"/>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span class="filter-label">To</span>
-            <input type="date" class="date-input" id="to-date"/>
-          </div>
-        </div>
-
-        <div class="filter-section">
-          <div class="preset-group">
-            <button class="btn-preset active" data-preset="today" onclick="selectPreset('today')">Today</button>
-            <button class="btn-preset" data-preset="week" onclick="selectPreset('week')">This Week</button>
-            <button class="btn-preset" data-preset="month" onclick="selectPreset('month')">This Month</button>
-            <button class="btn-preset" data-preset="last_month" onclick="selectPreset('last_month')">Last Month</button>
-          </div>
-          <button class="btn-run" onclick="runActiveReport()">
-            <span class="material-symbols-outlined" style="font-size:18px;">play_arrow</span> Run Report
-          </button>
-        </div>
-      </div>
-
-      <!-- Tab Navigation Strip -->
-      <div class="tab-strip" role="tablist">
-        <button class="tab-btn active" onclick="switchTab('sales')">
-          <span class="material-symbols-outlined">payments</span> Sales Report
-        </button>
-        <button class="tab-btn" onclick="switchTab('gst')">
-          <span class="material-symbols-outlined">receipt_long</span> GST Tax Report
-        </button>
-        <button class="tab-btn" onclick="switchTab('stock')">
-          <span class="material-symbols-outlined">inventory_2</span> Stock Status
-        </button>
-        <button class="tab-btn" onclick="switchTab('outstanding')">
-          <span class="material-symbols-outlined">account_balance_wallet</span> Customer Outstanding
-        </button>
-        <button class="tab-btn" onclick="switchTab('returns')">
-          <span class="material-symbols-outlined">assignment_return</span> Returns Book
-        </button>
-      </div>
-
-      <!-- ════════ TAB PANEL: SALES ════════ -->
-      <div class="tab-panel active" id="panel-sales">
         
-        <!-- Sales Summary -->
-        <div class="summary-row">
-          <div class="sum-item">
-            <span class="sum-lbl">Total Gross Sales</span>
-            <span class="sum-val" id="sales-sum-gross">₹0.00</span>
-          </div>
-          <div class="sum-item">
-            <span class="sum-lbl">Net Sales</span>
-            <span class="sum-val" id="sales-sum-net">₹0.00</span>
-          </div>
-          <div class="sum-item">
-            <span class="sum-lbl">Taxes Charged</span>
-            <span class="sum-val" id="sales-sum-tax">₹0.00</span>
-          </div>
-          <div class="sum-item">
-            <span class="sum-lbl">Discounts Applied</span>
-            <span class="sum-val" id="sales-sum-discount">₹0.00</span>
-          </div>
-          <div class="sum-item">
-            <span class="sum-lbl">Total Checkout Bills</span>
-            <span class="sum-val" id="sales-sum-bills">0</span>
-          </div>
-          <div class="sum-item">
-            <span class="sum-lbl">Average Ticket Value</span>
-            <span class="sum-val" id="sales-sum-avg">₹0.00</span>
-          </div>
-        </div>
-
-        <!-- Charts and Breakdown -->
-        <div class="grid-2">
+        <!-- Welcome Screen (when no report is selected) -->
+        <div class="welcome-screen" id="welcome-screen">
+          <span class="material-symbols-outlined welcome-icon">monitoring</span>
+          <h2 class="welcome-title">SMRITI Analytics & Reports Center</h2>
+          <p class="welcome-desc">Fully metadata-driven business intelligence module. Select a report from the explorer tree on the left to begin.</p>
           
-          <div class="report-card">
-            <div class="loading-mask" id="mask-sales-chart">
-              <div class="spinner"></div>
-            </div>
-            <div class="card-hdr-row">
-              <div class="card-title">
-                <span class="material-symbols-outlined">show_chart</span> Sales History Chart
-              </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span class="filter-label" style="font-size:0.7rem;">Group By:</span>
-                <select id="sales-granularity" style="padding:4px 8px; font-size:0.8rem;" onchange="runSalesTabReport()">
-                  <option value="daily" selected>Daily</option>
-                  <option value="hourly">Hourly (Today only)</option>
-                </select>
-              </div>
-            </div>
-            <div class="chart-container">
-              <canvas id="salesBarChart"></canvas>
-            </div>
-          </div>
-
-          <div class="report-card">
-            <div class="card-hdr-row">
-              <div class="card-title">
-                <span class="material-symbols-outlined">pie_chart</span> Payment Method Breakdown
-              </div>
-            </div>
-            <div class="chart-container">
-              <canvas id="paymentPieChart"></canvas>
-            </div>
-          </div>
-
-        </div>
-
-        <div class="grid-equal-2">
-          
-          <div class="report-card">
-            <div class="card-hdr-row">
-              <div class="card-title">
-                <span class="material-symbols-outlined">star</span> Top 10 Items Sold
-              </div>
-            </div>
-            <div class="table-container">
-              <table class="data-table" id="table-sales-items">
-                <thead>
-                  <tr>
-                    <th>Item Description</th>
-                    <th>Code</th>
-                    <th style="text-align:right;">Quantity</th>
-                    <th style="text-align:right;">Amount (₹)</th>
-                  </tr>
-                </thead>
-                <tbody id="tbody-sales-items">
-                  <tr><td colspan="4" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="report-card">
-            <div class="card-hdr-row">
-              <div class="card-title">
-                <span class="material-symbols-outlined">badge</span> Cashier Sales Summary
-              </div>
-            </div>
-            <div class="table-container">
-              <table class="data-table" id="table-sales-cashiers">
-                <thead>
-                  <tr>
-                    <th>Cashier Username</th>
-                    <th style="text-align:center;">Bills Issued</th>
-                    <th style="text-align:right;">Total Sales (₹)</th>
-                  </tr>
-                </thead>
-                <tbody id="tbody-sales-cashiers">
-                  <tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- ════════ TAB PANEL: GST ════════ -->
-      <div class="tab-panel" id="panel-gst">
-        
-        <div class="summary-row">
-          <div class="sum-item">
-            <span class="sum-lbl">Total Invoices</span>
-            <span class="sum-val" id="gst-sum-bills">0</span>
-          </div>
-          <div class="sum-item">
-            <span class="sum-lbl">Taxable value</span>
-            <span class="sum-val" id="gst-sum-taxable">₹0.00</span>
-          </div>
-          <div class="sum-item">
-            <span class="sum-lbl">Total GST Collected</span>
-            <span class="sum-val" id="gst-sum-tax">₹0.00</span>
-          </div>
-          <div class="sum-item">
-            <span class="sum-lbl">Invoice Total</span>
-            <span class="sum-val" id="gst-sum-total">₹0.00</span>
+          <div class="mobile-switcher-container">
+            <label class="filter-label">Quick Switch Report:</label>
+            <select id="mobile-report-select" onchange="loadReportByKey(this.value)">
+              <option value="">Choose a report...</option>
+            </select>
           </div>
         </div>
 
-        <div class="grid-2">
-          
-          <div class="report-card" style="flex:1.2;">
-            <div class="loading-mask" id="mask-gst-table">
-              <div class="spinner"></div>
-            </div>
-            <div class="card-hdr-row">
-              <div class="card-title">
-                <span class="material-symbols-outlined">percent</span> GST Tax Slab Breakdown
-              </div>
-              <button class="btn-export" onclick="exportGstReport()">
-                <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export Excel
-              </button>
-            </div>
-            <div class="table-container">
-              <table class="data-table" id="table-gst-breakdown">
-                <thead>
-                  <tr>
-                    <th>GST Account Head</th>
-                    <th>Tax Rate</th>
-                    <th style="text-align:right;">Tax Collected (₹)</th>
-                    <th style="text-align:right;">Base Taxable Amt (₹)</th>
-                    <th style="text-align:center;">Invoices Count</th>
-                  </tr>
-                </thead>
-                <tbody id="tbody-gst-breakdown">
-                  <tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="report-card" style="flex:1;">
-            <div class="card-hdr-row">
-              <div class="card-title">
-                <span class="material-symbols-outlined">shopping_bag</span> B2C Retail Summary
-              </div>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:16px;">
-              <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border); padding:16px; border-radius:var(--radius); display:flex; flex-direction:column; gap:12px;">
-                <div style="display:flex; justify-content:space-between; font-size:0.9rem;"><span style="color:var(--text-2);">Retail Bills Count:</span><strong id="b2c-bills">0</strong></div>
-                <div style="display:flex; justify-content:space-between; font-size:0.9rem;"><span style="color:var(--text-2);">Taxable Base Value:</span><strong id="b2c-taxable">₹0.00</strong></div>
-                <div style="display:flex; justify-content:space-between; font-size:0.9rem;"><span style="color:var(--text-2);">GST Tax Collected:</span><strong id="b2c-tax">₹0.00</strong></div>
-                <div style="border-top:1px solid var(--border); padding-top:10px; display:flex; justify-content:space-between; font-size:1rem; font-weight:700;"><span style="color:var(--text-1);">Grand Total:</span><strong style="color:var(--success);" id="b2c-total">₹0.00</strong></div>
-              </div>
-              <div style="font-size:0.78rem; color:var(--text-2); line-height:1.45; border-left:3px solid var(--accent); padding-left:10px;">
-                Retail (B2C) includes all checkout invoices processed without a registered GSTIN address from the SMRITI billing terminal.
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- GSTR-1 Table 9B Credit/Debit Notes -->
-        <div class="report-card" style="margin-top: 20px;">
-          <div class="loading-mask" id="mask-gst-9b-table">
-            <div class="spinner"></div>
-          </div>
-          <div class="card-hdr-row">
-            <div class="card-title">
-              <span class="material-symbols-outlined">receipt</span> GSTR-1 Table 9B (Credit / Debit Notes)
-            </div>
-            <button class="btn-export" onclick="exportGstr9bReport()">
-              <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export Table 9B Excel
-            </button>
-          </div>
-
-          <div style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- Report Content (hidden by default until a report is selected) -->
+        <div class="report-content" id="report-content" style="display: none;">
+          <!-- Report Header -->
+          <div class="report-hdr">
             <div>
-              <div class="sec-title" style="margin-bottom: 10px; font-size: 0.95rem; font-weight: 700; color: var(--accent-2);">Table 9B Registered (B2B Credit/Debit Notes)</div>
-              <div class="table-container">
-                <table class="data-table" id="table-gstr1-9b-b2b">
-                  <thead>
-                    <tr>
-                      <th>Recipient GSTIN</th>
-                      <th>Customer Name</th>
-                      <th>Note Number</th>
-                      <th>Note Date</th>
-                      <th>Type</th>
-                      <th>POS</th>
-                      <th>Original Bill</th>
-                      <th>Original Date</th>
-                      <th style="text-align:right;">Taxable Value (₹)</th>
-                      <th style="text-align:right;">CGST (₹)</th>
-                      <th style="text-align:right;">SGST (₹)</th>
-                      <th style="text-align:right;">IGST (₹)</th>
-                      <th style="text-align:right;">Total Tax (₹)</th>
-                      <th style="text-align:right;">Grand Total (₹)</th>
-                    </tr>
-                  </thead>
-                  <tbody id="tbody-gstr1-9b-b2b">
-                    <tr><td colspan="14" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
-                  </tbody>
-                </table>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <h1 class="report-title" id="report-title-display">Report Name</h1>
+                <span class="category-badge" id="report-category-badge">Category</span>
               </div>
-            </div>
-
-            <div>
-              <div class="sec-title" style="margin-bottom: 10px; font-size: 0.95rem; font-weight: 700; color: var(--accent-2);">Table 9B Unregistered (B2C Credit/Debit Notes)</div>
-              <div class="table-container">
-                <table class="data-table" id="table-gstr1-9b-b2c">
-                  <thead>
-                    <tr>
-                      <th>Customer Name</th>
-                      <th>Note Number</th>
-                      <th>Note Date</th>
-                      <th>Type</th>
-                      <th>POS</th>
-                      <th>Original Bill</th>
-                      <th>Original Date</th>
-                      <th style="text-align:right;">Taxable Value (₹)</th>
-                      <th style="text-align:right;">CGST (₹)</th>
-                      <th style="text-align:right;">SGST (₹)</th>
-                      <th style="text-align:right;">IGST (₹)</th>
-                      <th style="text-align:right;">Total Tax (₹)</th>
-                      <th style="text-align:right;">Grand Total (₹)</th>
-                    </tr>
-                  </thead>
-                  <tbody id="tbody-gstr1-9b-b2c">
-                    <tr><td colspan="13" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ════════ TAB PANEL: STOCK ════════ -->
-      <div class="tab-panel" id="panel-stock">
-        
-        <div class="summary-row">
-          <div class="sum-item">
-            <span class="sum-lbl">Total Catalog Items</span>
-            <span class="sum-val" id="stock-sum-items">0</span>
-          </div>
-          <div class="sum-item">
-            <span class="sum-lbl">Current Stock Value</span>
-            <span class="sum-val" id="stock-sum-value">₹0.00</span>
-          </div>
-          <div class="sum-item">
-            <span class="sum-lbl">Low Stock Alerts</span>
-            <span class="sum-val" style="color:var(--danger);" id="stock-sum-low">0</span>
-          </div>
-        </div>
-
-        <div class="report-card">
-          <div class="loading-mask" id="mask-stock-table">
-            <div class="spinner"></div>
-          </div>
-          <div class="card-hdr-row">
-            <div class="card-title">
-              <span class="material-symbols-outlined">inventory</span> Real-Time Stock Status Ledger
+              <p class="report-sub" id="report-description-display">Run report with filters below.</p>
             </div>
             
-            <div style="display:flex; align-items:center; gap:16px;">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span class="filter-label">Warehouse:</span>
-                <select id="stock-warehouse" onchange="runStockTabReport()">
-                  <option value="">All Warehouses</option>
+            <div class="report-actions">
+              <!-- Column Toggle Dropdown -->
+              <div class="dropdown-wrapper">
+                <button class="btn-export" onclick="toggleColumnDropdown()" id="btn-col-toggle">
+                  <span class="material-symbols-outlined" style="font-size:16px;">view_column</span> Columns
+                </button>
+                <div class="dropdown-menu" id="column-dropdown-menu">
+                  <!-- Generated dynamically -->
+                </div>
+              </div>
+
+              <!-- Saved Views Selector -->
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <select id="saved-views-select" onchange="applySavedView(this.value)" style="width: auto; max-width: 200px;">
+                  <option value="">Standard View</option>
                 </select>
+                <button class="btn-export" onclick="promptSaveView()" title="Save Current View">
+                  <span class="material-symbols-outlined" style="font-size:16px;">save</span> Save View
+                </button>
+                <button class="btn-export" onclick="deleteActiveView()" id="btn-delete-view" style="display:none;" title="Delete Saved View">
+                  <span class="material-symbols-outlined" style="font-size:16px; color:var(--danger);">delete</span>
+                </button>
               </div>
-              <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:0.85rem; user-select:none;">
-                <input type="checkbox" id="stock-show-zero" onchange="runStockTabReport()" style="width:16px; height:16px; accent-color:var(--accent);"/> Show Zero Stock
-              </label>
-              <button class="btn-export" onclick="exportStockReport()">
-                <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export Excel
+
+              <!-- Export Actions -->
+              <div class="btn-group">
+                <button class="btn-export" onclick="exportExcel()" title="Export to Excel">
+                  <span class="material-symbols-outlined" style="font-size:16px;">download_for_offline</span> Excel
+                </button>
+                <button class="btn-export" onclick="exportCSV()" title="Export to CSV">
+                  <span class="material-symbols-outlined" style="font-size:16px;">csv</span> CSV
+                </button>
+                <button class="btn-export" onclick="printReport()" title="Print / Save PDF">
+                  <span class="material-symbols-outlined" style="font-size:16px;">print</span> Print
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Filter Bar -->
+          <div class="filter-bar-generic">
+            <div class="filters-grid" id="filters-container">
+              <!-- Populated dynamically based on report_template.filters_json -->
+            </div>
+            <div class="filter-actions-row">
+              <div id="date-preset-container">
+                <!-- Date preset buttons injected here if report has date filters -->
+              </div>
+              <button class="btn-run" onclick="runReport()">
+                <span class="material-symbols-outlined" style="font-size:18px;">play_arrow</span> Run Report
               </button>
             </div>
           </div>
 
-          <div class="table-container">
-            <table class="data-table" id="table-stock-ledger">
-              <thead>
-                <tr>
-                  <th>Item Code</th>
-                  <th>Product Name</th>
-                  <th>Category</th>
-                  <th style="text-align:right;">Actual Qty</th>
-                  <th style="text-align:right;">Reserved Qty</th>
-                  <th style="text-align:right;">Available Qty</th>
-                  <th style="text-align:right;">MRP (₹)</th>
-                  <th style="text-align:right;">Stock Value (₹)</th>
-                  <th style="text-align:center;">Status</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-stock-ledger">
-                <tr><td colspan="9" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ════════ TAB PANEL: OUTSTANDING ════════ -->
-      <div class="tab-panel" id="panel-outstanding">
-        
-        <div class="summary-row">
-          <div class="sum-item">
-            <span class="sum-lbl">Current (Not Overdue)</span>
-            <span class="sum-val" id="out-sum-current">₹0.00</span>
-          </div>
-          <div class="sum-item">
-            <span class="sum-lbl">1 - 30 Days Overdue</span>
-            <span class="sum-val" id="out-sum-30">₹0.00</span>
-          </div>
-          <div class="sum-item">
-            <span class="sum-lbl">31 - 60 Days Overdue</span>
-            <span class="sum-val" id="out-sum-60">₹0.00</span>
-          </div>
-          <div class="sum-item">
-            <span class="sum-lbl">61 - 90 Days Overdue</span>
-            <span class="sum-val" id="out-sum-90">₹0.00</span>
-          </div>
-          <div class="sum-item">
-            <span class="sum-lbl">90+ Days Overdue</span>
-            <span class="sum-val" style="color:var(--danger);" id="out-sum-above">₹0.00</span>
-          </div>
-          <div class="sum-item" style="border-left:1px dashed var(--border); padding-left:14px;">
-            <span class="sum-lbl">Total Outstanding</span>
-            <span class="sum-val" style="color:var(--warning);" id="out-sum-total">₹0.00</span>
-          </div>
-        </div>
-
-        <div class="report-card">
-          <div class="loading-mask" id="mask-out-table">
-            <div class="spinner"></div>
-          </div>
-          <div class="card-hdr-row">
-            <div class="card-title">
-              <span class="material-symbols-outlined">hourglass_empty</span> Aging Outstanding Accounts Receivable
-            </div>
-
-            <div style="display:flex; align-items:center; gap:16px;">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span class="filter-label">Customer:</span>
-                <input type="text" id="out-customer-search" placeholder="Type customer name..." oninput="runOutstandingTabReport()" style="padding:6px 12px; font-size:0.8rem; width:200px;"/>
-              </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span class="filter-label">Days Overdue ≥</span>
-                <input type="number" id="out-days-overdue" min="0" value="0" onchange="runOutstandingTabReport()" style="padding:6px 12px; font-size:0.8rem; width:80px;"/>
-              </div>
-              <button class="btn-export" onclick="exportOutstandingReport()">
-                <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export Excel
-              </button>
-            </div>
-          </div>
-
-          <div class="table-container">
-            <table class="data-table" id="table-outstanding">
-              <thead>
-                <tr>
-                  <th>Invoice Number</th>
-                  <th>Customer Name</th>
-                  <th>Posting Date</th>
-                  <th>Due Date</th>
-                  <th style="text-align:right;">Grand Total (₹)</th>
-                  <th style="text-align:right;">Outstanding (₹)</th>
-                  <th style="text-align:center;">Days Overdue</th>
-                  <th style="text-align:center;">Status</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-outstanding">
-                <tr><td colspan="8" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ════════ TAB PANEL: RETURNS ════════ -->
-      <div class="tab-panel" id="panel-returns">
-        
-        <!-- Credit Note Deadline Alerts -->
-        <div class="report-card">
-          <div class="card-hdr-row">
-            <div class="card-title">
-              <span class="material-symbols-outlined" style="color: var(--danger);">notifications_active</span> R-07 Credit Note Deadline Alerts (Tax adjustment)
-            </div>
-            <div style="font-size: 0.78rem; color: var(--text-2);">
-              Deadline is Nov 30 of the following FY.
-            </div>
-          </div>
-          
-          <div id="alerts-container" style="display: flex; flex-direction: column; gap: 10px;">
-            <div style="padding: 16px; background: rgba(255,255,255,0.02); border: 1px dashed var(--border); border-radius: var(--radius); text-align: center; color: var(--text-3);">
-              Loading deadline alerts...
-            </div>
-          </div>
-        </div>
-
-        <div class="grid-equal-2">
-          
-          <!-- Sales Return Register -->
-          <div class="report-card">
-            <div class="loading-mask" id="mask-sales-return-table">
-              <div class="spinner"></div>
-            </div>
-            <div class="card-hdr-row">
-              <div class="card-title">
-                <span class="material-symbols-outlined">assignment_return</span> Sales Return Book (R-01)
-              </div>
-              <button class="btn-export" onclick="exportSalesReturnReport()">
-                <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export Excel
-              </button>
-            </div>
-            
-            <div class="table-container">
-              <table class="data-table" id="table-sales-return">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Return No</th>
-                    <th>Original Invoice</th>
-                    <th>Customer Name</th>
-                    <th style="text-align:right;">Taxable (₹)</th>
-                    <th style="text-align:right;">CGST (₹)</th>
-                    <th style="text-align:right;">SGST (₹)</th>
-                    <th style="text-align:right;">IGST (₹)</th>
-                    <th style="text-align:right;">Total Tax (₹)</th>
-                    <th style="text-align:right;">Grand Total (₹)</th>
-                  </tr>
+          <!-- Grid Workspace -->
+          <div class="grid-card">
+            <div class="table-scroll-container">
+              <table class="data-table" id="generic-grid-table">
+                <thead id="grid-header">
+                  <!-- Generated dynamically -->
                 </thead>
-                <tbody id="tbody-sales-return">
-                  <tr><td colspan="10" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
+                <tbody id="grid-body">
+                  <!-- Generated dynamically -->
                 </tbody>
               </table>
             </div>
-          </div>
-
-          <!-- Purchase Return Register -->
-          <div class="report-card">
-            <div class="loading-mask" id="mask-purchase-return-table">
-              <div class="spinner"></div>
-            </div>
-            <div class="card-hdr-row">
-              <div class="card-title">
-                <span class="material-symbols-outlined">assignment_return</span> Purchase Return Book (R-02)
-              </div>
-              <button class="btn-export" onclick="exportPurchaseReturnReport()">
-                <span class="material-symbols-outlined" style="font-size:16px;">download</span> Export Excel
-              </button>
-            </div>
             
-            <div class="table-container">
-              <table class="data-table" id="table-purchase-return">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Return No</th>
-                    <th>Original Invoice</th>
-                    <th>Supplier Name</th>
-                    <th style="text-align:right;">Taxable (₹)</th>
-                    <th style="text-align:right;">CGST (₹)</th>
-                    <th style="text-align:right;">SGST (₹)</th>
-                    <th style="text-align:right;">IGST (₹)</th>
-                    <th style="text-align:right;">Total Tax (₹)</th>
-                    <th style="text-align:right;">Grand Total (₹)</th>
-                  </tr>
-                </thead>
-                <tbody id="tbody-purchase-return">
-                  <tr><td colspan="10" style="text-align:center;color:var(--text-3);padding:24px;">Run report to load data.</td></tr>
-                </tbody>
-              </table>
+            <!-- Grid Summary Row -->
+            <div class="grid-summary-bar" id="grid-summary-bar">
+              <!-- Generated dynamically -->
             </div>
           </div>
-
         </div>
 
-      </div>
-
-    </div><!-- /reports-container -->
+      </div><!-- /reports-workspace -->
+    </div><!-- /reports-shell -->
   </div><!-- /main-wrapper -->
 </div><!-- /app -->
 
 <div class="toast-container" id="toast-wrap"></div>
 
 <script>
-  // UI Navigation Logic
-  let activeTab = 'sales';
-  let activePreset = 'today';
-  let loggedUser = '{{ user }}';
+  const CSRF_TOKEN = '{{ csrf_token }}';
+  const loggedUser = '{{ cashier }}';
+
+  // UI display cleanup helper
+  function getCleanReportName(name) {
+    if (!name) return '';
+    let clean = name.replace(/^SMRITI\s+/i, '');
+    if (clean.endsWith(' Outstanding Book')) {
+      clean = clean.slice(0, -5); // remove " Book"
+    }
+    return clean;
+  }
+
+  // Global reporting state
+  let reportsList = [];
+  let activeReportKey = null;
+  let activeReportTemplate = null;
+  let activeReportData = [];
+  let activeSavedViews = [];
+  let currentSortCol = null;
+  let currentSortDesc = false;
+  let hiddenColumns = [];
+
+  // Filter lookups cache
+  let filterOptions = {
+    companies: [],
+    warehouses: [],
+    itemGroups: [],
+    brands: [],
+    salespersons: [],
+    cashiers: []
+  };
 
   // Indian Rupee currency formatter
   const formatRupee = new Intl.NumberFormat('en-IN', {
@@ -859,83 +742,53 @@
   // Simple number formatter
   const formatNum = new Intl.NumberFormat('en-IN');
 
-  // Chart References
-  let salesChart = null;
-  let paymentChart = null;
-
-  // Global Initial Date Load
+  // Page initialization
   window.onload = function() {
-    // Set user avatar info (standalone sidebar renders these dynamically)
-    const _sbu = document.getElementById('sb-user'); if (_sbu) _sbu.textContent = loggedUser.split('@')[0];
-    const _sba = document.getElementById('sb-avatar'); if (_sba) _sba.textContent = loggedUser.charAt(0).toUpperCase();
-
-    // Default dates to Today
-    selectPreset('today');
-
-    // Auto-fetch Top KPIs strip
-    fetchQuickStats();
-
-    // Run first tab report
-    runActiveReport();
-  };
-
-  function switchTab(id) {
-    activeTab = id;
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.classList.remove('active');
-    });
-    event?.currentTarget?.classList.add('active');
-
-    document.querySelectorAll('.tab-panel').forEach(panel => {
-      panel.classList.remove('active');
-    });
-    document.getElementById('panel-' + id).classList.add('active');
-
-    // Trigger active report tab
-    runActiveReport();
-  }
-
-  function formatDateLocal(d) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const r = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${r}`;
-  }
-
-  function selectPreset(preset) {
-    activePreset = preset;
-    document.querySelectorAll('.btn-preset').forEach(btn => {
-      btn.classList.remove('active');
-      if (btn.getAttribute('data-preset') === preset) {
-        btn.classList.add('active');
+    showLoading(true);
+    
+    // Close dropdowns on clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.dropdown-wrapper') && !e.target.closest('#column-dropdown-menu')) {
+        document.getElementById('column-dropdown-menu').classList.remove('active');
       }
     });
 
-    const today = new Date();
-    let from = new Date();
-    let to = new Date();
+    // Run parallel lookup fetches and fetch reports templates
+    Promise.all([
+      fetchFilterLookups(),
+      fetchReportsList()
+    ]).then(() => {
+      buildExplorerTree();
+      buildMobileSwitcher();
+      showLoading(false);
+      
+      // Auto-load template if specified in query param
+      const urlParams = new URLSearchParams(window.location.search);
+      const rKey = urlParams.get('report');
+      if (rKey) {
+        loadReportByKey(rKey);
+      }
+    }).catch(err => {
+      showLoading(false);
+      toast('Error loading Reports Center: ' + err.message, 'error');
+    });
+  };
 
-    if (preset === 'today') {
-      // both default to current date
-    } else if (preset === 'week') {
-      // last 7 days as per instructions
-      from.setDate(today.getDate() - 7);
-    } else if (preset === 'month') {
-      // 1st of current month to today
-      from = new Date(today.getFullYear(), today.getMonth(), 1);
-    } else if (preset === 'last_month') {
-      // full previous month
-      from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      to = new Date(today.getFullYear(), today.getMonth(), 0);
+  function showLoading(active) {
+    const loader = document.getElementById('workspace-loading');
+    if (loader) {
+      if (active) loader.classList.add('active');
+      else loader.classList.remove('active');
     }
-
-    document.getElementById('from-date').value = formatDateLocal(from);
-    document.getElementById('to-date').value = formatDateLocal(to);
   }
 
   // REST API Wrapper
   function api(endpoint, args = {}) {
-    return fetch('/api/method/smriti_retail_os.reports_api.' + endpoint, {
+    let method = endpoint;
+    if (!method.includes('.')) {
+      method = 'smriti_retail_os.reports_api.' + endpoint;
+    }
+    return fetch('/api/method/' + method, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -952,620 +805,706 @@
 
   function toast(msg, type = 'success') {
     const wrap = document.getElementById('toast-wrap');
+    if (!wrap) return;
     const el = document.createElement('div');
     el.className = `toast ${type}`;
-    const icon = type === 'success' ? 'check_circle' : 'error';
+    const icon = type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info';
     el.innerHTML = `<span class="material-symbols-outlined">${icon}</span><span>${msg}</span>`;
     wrap.appendChild(el);
     setTimeout(() => el.remove(), 4000);
   }
 
-  // Fetch quick stats (Section A)
-  function fetchQuickStats() {
-    api('get_quick_stats')
-      .then(res => {
-        document.getElementById('kpi-today-sales').textContent = formatRupee.format(res.today_sales);
-        document.getElementById('kpi-today-bills').textContent = formatNum.format(res.today_bills);
-        document.getElementById('kpi-month-sales').textContent = formatRupee.format(res.month_sales);
-        document.getElementById('kpi-stock-value').textContent = formatRupee.format(res.stock_value);
-        document.getElementById('kpi-outstanding').textContent = formatRupee.format(res.outstanding);
+  // Fetch all options for dropdown filters
+  function fetchFilterLookups() {
+    return Promise.all([
+      api('smriti_retail_os.company_api.list_companies').then(res => filterOptions.companies = res || []),
+      api('get_smriti_warehouses').then(res => filterOptions.warehouses = res || []),
+      api('get_smriti_item_groups').then(res => filterOptions.itemGroups = res || []),
+      api('get_smriti_brands').then(res => filterOptions.brands = res || []),
+      api('get_smriti_salespersons').then(res => filterOptions.salespersons = res || []),
+      api('get_smriti_cashiers').then(res => filterOptions.cashiers = res || [])
+    ]).catch(err => {
+      console.error("Filter lookups fetch failure", err);
+      toast('Failed to load full filter options. Defaults will be used.', 'info');
+    });
+  }
 
-        const growthEl = document.getElementById('kpi-sales-growth');
-        const sign = res.sales_growth >= 0 ? '▲' : '▼';
-        const colorClass = res.sales_growth >= 0 ? 'growth-up' : 'growth-down';
-        growthEl.className = `kpi-growth ${colorClass}`;
-        growthEl.textContent = `${sign} ${Math.abs(res.sales_growth)}% vs yesterday`;
-      })
-      .catch(e => {
-        console.error(e);
-        toast('Failed to load Quick KPI statistics.', 'error');
+  // Fetch report templates
+  function fetchReportsList() {
+    return api('get_smriti_reports_list').then(res => {
+      reportsList = res || [];
+    });
+  }
+
+  // Build Explorer category tree
+  function buildExplorerTree() {
+    const tree = document.getElementById('explorer-tree');
+    tree.innerHTML = '';
+
+    // Group reports by category
+    const categories = {};
+    reportsList.forEach(r => {
+      const cat = r.report_category || 'Custom';
+      if (!categories[cat]) categories[cat] = [];
+      categories[cat].push(r);
+    });
+
+    // Render categories ordered
+    const catOrder = ['Sales', 'Inventory', 'Cash', 'Accounting', 'Purchase', 'Finance', 'Analytics', 'Custom'];
+    const categoryMap = {
+      'Sales': 'SMRITI Sales Analytics',
+      'Inventory': 'SMRITI Inventory Analytics',
+      'Cash': 'SMRITI Cash Analytics',
+      'Accounting': 'SMRITI Accounting Analytics',
+      'Purchase': 'SMRITI Purchase Analytics',
+      'Finance': 'SMRITI Finance Analytics',
+      'Analytics': 'SMRITI General Analytics',
+      'Custom': 'SMRITI Custom Analytics'
+    };
+    catOrder.forEach(cat => {
+      if (!categories[cat] || categories[cat].length === 0) return;
+
+      const groupEl = document.createElement('div');
+      groupEl.className = 'category-group';
+      
+      const titleEl = document.createElement('div');
+      titleEl.className = 'category-title';
+      const displayTitle = categoryMap[cat] || `SMRITI ${cat} Analytics`;
+      titleEl.innerHTML = `<span>📂 ${displayTitle}</span> <span class="material-symbols-outlined" style="font-size:16px;">expand_more</span>`;
+      
+      const listEl = document.createElement('div');
+      listEl.className = 'category-reports';
+      listEl.id = `cat-reports-${cat}`;
+
+      categories[cat].forEach(r => {
+        const item = document.createElement('a');
+        item.href = '#';
+        item.className = 'report-item-link';
+        item.setAttribute('data-key', r.report_key);
+        const displayName = getCleanReportName(r.report_name);
+        item.innerHTML = `<span class="material-symbols-outlined" style="font-size:16px;">description</span> ${displayName}`;
+        item.onclick = function(e) {
+          e.preventDefault();
+          loadReportByKey(r.report_key);
+        };
+        listEl.appendChild(item);
       });
-  }
 
-  // Router for active tab report execution
-  function runActiveReport() {
-    if (activeTab === 'sales') runSalesTabReport();
-    if (activeTab === 'gst') runGstTabReport();
-    if (activeTab === 'stock') runStockTabReport();
-    if (activeTab === 'outstanding') runOutstandingTabReport();
-    if (activeTab === 'returns') runReturnsTabReport();
-  }
-
-  // ─── Sales Tab ─────────────────────────────────────────────────────────────
-  function runSalesTabReport() {
-    const mask = document.getElementById('mask-sales-chart');
-    mask.classList.add('active');
-
-    const from = document.getElementById('from-date').value;
-    const to = document.getElementById('to-date').value;
-    const granularity = document.getElementById('sales-granularity').value;
-
-    api('get_sales_report', { from_date: from, to_date: to, granularity: granularity })
-      .then(res => {
-        // Summary
-        document.getElementById('sales-sum-gross').textContent = formatRupee.format(res.summary.total_sales);
-        document.getElementById('sales-sum-net').textContent = formatRupee.format(res.summary.total_net);
-        document.getElementById('sales-sum-tax').textContent = formatRupee.format(res.summary.total_tax);
-        document.getElementById('sales-sum-discount').textContent = formatRupee.format(res.summary.total_discount);
-        document.getElementById('sales-sum-bills').textContent = formatNum.format(res.summary.total_bills);
-        document.getElementById('sales-sum-avg').textContent = formatRupee.format(res.summary.avg_bill);
-
-        // Render charts
-        renderSalesCharts(res.breakdown, res.payment_breakdown, granularity);
-
-        // Top Items Table
-        const tbodyItems = document.getElementById('tbody-sales-items');
-        if (res.top_items && res.top_items.length) {
-          tbodyItems.innerHTML = res.top_items.map(it => `
-            <tr>
-              <td><strong>${it.item_name}</strong></td>
-              <td><span style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.04); padding:2px 6px; border:1px solid var(--border); border-radius:4px;">${it.item_code}</span></td>
-              <td style="text-align:right; font-weight:600;">${formatNum.format(it.total_qty)}</td>
-              <td style="text-align:right; font-weight:700; color:var(--success);">${formatRupee.format(it.total_amount)}</td>
-            </tr>
-          `).join('');
+      titleEl.onclick = function() {
+        const icon = titleEl.querySelector('.material-symbols-outlined');
+        if (listEl.style.display === 'none') {
+          listEl.style.display = 'flex';
+          icon.textContent = 'expand_more';
         } else {
-          tbodyItems.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-3);padding:24px;">No items sold in this period.</td></tr>';
+          listEl.style.display = 'none';
+          icon.textContent = 'chevron_right';
         }
+      };
 
-        // Cashier Summary Table
-        const tbodyCashiers = document.getElementById('tbody-sales-cashiers');
-        if (res.cashier_summary && res.cashier_summary.length) {
-          tbodyCashiers.innerHTML = res.cashier_summary.map(c => `
-            <tr>
-              <td><strong>${c.cashier.split('@')[0]}</strong></td>
-              <td style="text-align:center; font-weight:600;">${formatNum.format(c.bills)}</td>
-              <td style="text-align:right; font-weight:700; color:var(--primary-lt);">${formatRupee.format(c.total_sales)}</td>
-            </tr>
-          `).join('');
-        } else {
-          tbodyCashiers.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:24px;">No transactions found.</td></tr>';
-        }
-      })
-      .catch(e => {
-        console.error(e);
-        toast('Sales report retrieval failed: ' + e.message, 'error');
-      })
-      .finally(() => {
-        mask.classList.remove('active');
-      });
+      groupEl.appendChild(titleEl);
+      groupEl.appendChild(listEl);
+      tree.appendChild(groupEl);
+    });
   }
 
-  function renderSalesCharts(breakdown, payments, granularity) {
-    // 1. Line/Bar Chart (Sales Timeline)
-    if (salesChart) salesChart.destroy();
+  // Build mobile report select dropdown switcher
+  function buildMobileSwitcher() {
+    const select = document.getElementById('mobile-report-select');
+    select.innerHTML = '<option value="">Choose a report...</option>';
     
-    const labels = breakdown.map(x => granularity === 'hourly' ? x.hour : x.date);
-    const salesData = breakdown.map(x => x.sales);
-
-    const ctxBar = document.getElementById('salesBarChart').getContext('2d');
-    salesChart = new Chart(ctxBar, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Sales Revenue (₹)',
-          data: salesData,
-          backgroundColor: 'rgba(99, 102, 241, 0.45)',
-          borderColor: '#6366f1',
-          borderWidth: 1.5,
-          borderRadius: 4
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
-        },
-        scales: {
-          y: {
-            grid: { color: 'rgba(255,255,255,0.04)' },
-            ticks: { color: '#94a3b8', font: { size: 10 } }
-          },
-          x: {
-            grid: { display: false },
-            ticks: { color: '#94a3b8', font: { size: 9 } }
-          }
-        }
-      }
-    });
-
-    // 2. Pie Chart (Payment Breakdown)
-    if (paymentChart) paymentChart.destroy();
-
-    const payLabels = payments.map(x => x.mode_of_payment);
-    const payData = payments.map(x => x.total);
-
-    const ctxPie = document.getElementById('paymentPieChart').getContext('2d');
-    paymentChart = new Chart(ctxPie, {
-      type: 'doughnut',
-      data: {
-        labels: payLabels,
-        datasets: [{
-          data: payData,
-          backgroundColor: [
-            'rgba(16, 185, 129, 0.6)', // Green
-            'rgba(129, 140, 248, 0.6)', // Indigo
-            'rgba(245, 158, 11, 0.6)',   // Amber
-            'rgba(239, 68, 68, 0.6)',   // Red
-            'rgba(168, 85, 247, 0.6)'   // Purple
-          ],
-          borderColor: 'rgba(19, 29, 53, 0.8)',
-          borderWidth: 2
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'right',
-            labels: { color: '#e2e8f0', font: { size: 10 } }
-          }
-        }
-      }
+    reportsList.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.report_key;
+      const displayName = getCleanReportName(r.report_name);
+      opt.textContent = `[${r.report_category}] ${displayName}`;
+      select.appendChild(opt);
     });
   }
 
-  // ─── GST Tab ───────────────────────────────────────────────────────────────
-  function runGstTabReport() {
-    const mask = document.getElementById('mask-gst-table');
-    mask.classList.add('active');
+  // Filter Explorer search box
+  window.filterExplorer = function() {
+    const val = document.getElementById('report-search').value.toLowerCase();
+    document.querySelectorAll('.report-item-link').forEach(link => {
+      const name = link.textContent.toLowerCase();
+      if (name.includes(val)) {
+        link.style.display = 'flex';
+      } else {
+        link.style.display = 'none';
+      }
+    });
+  };
 
-    const from = document.getElementById('from-date').value;
-    const to = document.getElementById('to-date').value;
+  // Load a report
+  window.loadReportByKey = function(key) {
+    if (!key) return;
+    showLoading(true);
+    activeReportKey = key;
+    hiddenColumns = [];
+    currentSortCol = null;
+    currentSortDesc = false;
 
-    api('get_gst_report', { from_date: from, to_date: to })
-      .then(res => {
-        // Summary
-        document.getElementById('gst-sum-bills').textContent = formatNum.format(res.summary.total_invoices || 0);
-        document.getElementById('gst-sum-taxable').textContent = formatRupee.format(res.summary.taxable_value || 0);
-        document.getElementById('gst-sum-tax').textContent = formatRupee.format(res.summary.total_tax || 0);
-        document.getElementById('gst-sum-total').textContent = formatRupee.format(res.summary.total_with_tax || 0);
-
-        // B2C summary card
-        document.getElementById('b2c-bills').textContent = formatNum.format(res.b2c.bills || 0);
-        document.getElementById('b2c-taxable').textContent = formatRupee.format(res.b2c.taxable || 0);
-        document.getElementById('b2c-tax').textContent = formatRupee.format(res.b2c.tax || 0);
-        document.getElementById('b2c-total').textContent = formatRupee.format(res.b2c.total || 0);
-
-        // Tax break tables
-        const tbody = document.getElementById('tbody-gst-breakdown');
-        if (res.tax_breakdown && res.tax_breakdown.length) {
-          tbody.innerHTML = res.tax_breakdown.map(r => `
-            <tr>
-              <td><strong>${r.account_head.split(' - ')[0]}</strong></td>
-              <td><span style="font-weight:700; color:var(--primary-lt);">${r.rate}%</span></td>
-              <td style="text-align:right; font-weight:600; color:var(--warning);">${formatRupee.format(r.tax_amount)}</td>
-              <td style="text-align:right; font-weight:600;">${formatRupee.format(r.base_tax_amount)}</td>
-              <td style="text-align:center; font-weight:600;">${formatNum.format(r.invoice_count)}</td>
-            </tr>
-          `).join('');
-        } else {
-          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:24px;">No GST tax breakdowns recorded.</td></tr>';
+    // Set active class in Explorer
+    document.querySelectorAll('.report-item-link').forEach(link => {
+      if (link.getAttribute('data-key') === key) {
+        link.classList.add('active');
+        // Expand parent if hidden
+        const parentList = link.parentElement;
+        if (parentList) {
+          parentList.style.display = 'flex';
+          const titleIcon = parentList.previousElementSibling.querySelector('.material-symbols-outlined');
+          if (titleIcon) titleIcon.textContent = 'expand_more';
         }
+      } else {
+        link.classList.remove('active');
+      }
+    });
 
-        // Fetch GSTR-1 9B Credit/Debit Notes
-        runGstr9bReport();
-      })
-      .catch(e => {
-        console.error(e);
-        toast('GST report retrieval failed: ' + e.message, 'error');
-      })
-      .finally(() => {
-        mask.classList.remove('active');
+    activeReportTemplate = reportsList.find(r => r.report_key === key);
+    if (!activeReportTemplate) {
+      showLoading(false);
+      toast('Report template metadata not found.', 'error');
+      return;
+    }
+
+    // Update displays
+    document.getElementById('welcome-screen').style.display = 'none';
+    document.getElementById('report-content').style.display = 'flex';
+    document.getElementById('report-title-display').textContent = getCleanReportName(activeReportTemplate.report_name);
+    document.getElementById('report-category-badge').textContent = activeReportTemplate.report_category;
+    document.getElementById('report-description-display').textContent = `Standard SQL aggregate analysis. Enforced maximum row limit: 10,000 rows.`;
+    
+    // Set mobile select value
+    document.getElementById('mobile-report-select').value = key;
+
+    // Load filter controls
+    let filters = [];
+    try {
+      filters = JSON.parse(activeReportTemplate.filters_json || '[]');
+    } catch(e) {
+      console.error(e);
+    }
+    buildFilters(filters);
+
+    // Fetch saved views
+    loadSavedViewsList().then(() => {
+      // Run report automatically on load
+      runReport();
+    });
+  };
+
+  // Build filter HTML dynamically
+  function updateWarehouseOptions(selectedCompany) {
+    const warehouseSelect = document.getElementById('filter-warehouse');
+    if (!warehouseSelect) return;
+    
+    const currentVal = warehouseSelect.value;
+    warehouseSelect.innerHTML = '<option value="">All Warehouses</option>';
+    
+    const filtered = (filterOptions.warehouses || []).filter(w => {
+      return !selectedCompany || w.company === selectedCompany;
+    });
+    
+    filtered.forEach(w => {
+      const opt = document.createElement('option');
+      opt.value = w.name;
+      opt.textContent = w.warehouse_name;
+      if (w.name === currentVal) {
+        opt.selected = true;
+      }
+      warehouseSelect.appendChild(opt);
+    });
+  }
+
+  function buildFilters(filters) {
+    const container = document.getElementById('filters-container');
+    container.innerHTML = '';
+    
+    let hasDateFilter = false;
+    filters.forEach(f => {
+      container.innerHTML += renderFilterControl(f);
+      if (f.fieldname === 'from_date' || f.fieldname === 'to_date') {
+        hasDateFilter = true;
+      }
+    });
+    
+    // Pre-populate defaults
+    const today = formatDateLocal(new Date());
+    
+    const companySelect = document.getElementById('filter-company');
+    const warehouseSelect = document.getElementById('filter-warehouse');
+    
+    if (companySelect && companySelect.options.length > 0) {
+      companySelect.selectedIndex = 0;
+    }
+    
+    if (warehouseSelect) {
+      const selectedCompany = companySelect ? companySelect.value : null;
+      updateWarehouseOptions(selectedCompany);
+      if (companySelect) {
+        companySelect.onchange = function() {
+          updateWarehouseOptions(companySelect.value);
+        };
+      }
+    }
+    
+    if (document.getElementById('filter-from_date')) {
+      document.getElementById('filter-from_date').value = today;
+    }
+    if (document.getElementById('filter-to_date')) {
+      document.getElementById('filter-to_date').value = today;
+    }
+    
+    // Setup date presets row
+    const presetContainer = document.getElementById('date-preset-container');
+    if (hasDateFilter) {
+      presetContainer.innerHTML = `
+        <div class="preset-group">
+          <button class="btn-preset active" data-preset="today" onclick="setFilterDatesPreset('today')">Today</button>
+          <button class="btn-preset" data-preset="week" onclick="setFilterDatesPreset('week')">This Week</button>
+          <button class="btn-preset" data-preset="month" onclick="setFilterDatesPreset('month')">This Month</button>
+          <button class="btn-preset" data-preset="last_month" onclick="setFilterDatesPreset('last_month')">Last Month</button>
+        </div>
+      `;
+    } else {
+      presetContainer.innerHTML = '';
+    }
+  }
+
+  function renderFilterControl(filter) {
+    const key = filter.fieldname;
+    const label = filter.label || key;
+    let inputHtml = '';
+    
+    if (key === 'company') {
+      const optionsHtml = (filterOptions.companies || []).map(c => `<option value="${c.name}">${c.company_name}</option>`).join('');
+      inputHtml = `<select id="filter-${key}" class="filter-input" data-key="${key}">${optionsHtml}</select>`;
+    } else if (key === 'warehouse') {
+      const optionsHtml = `<option value="">All Warehouses</option>` + (filterOptions.warehouses || []).map(w => `<option value="${w.name}">${w.warehouse_name}</option>`).join('');
+      inputHtml = `<select id="filter-${key}" class="filter-input" data-key="${key}">${optionsHtml}</select>`;
+    } else if (key === 'item_group') {
+      const optionsHtml = `<option value="">All Groups</option>` + (filterOptions.itemGroups || []).map(ig => `<option value="${ig.name}">${ig.name}</option>`).join('');
+      inputHtml = `<select id="filter-${key}" class="filter-input" data-key="${key}">${optionsHtml}</select>`;
+    } else if (key === 'brand') {
+      const optionsHtml = `<option value="">All Brands</option>` + (filterOptions.brands || []).map(b => `<option value="${b.name}">${b.name}</option>`).join('');
+      inputHtml = `<select id="filter-${key}" class="filter-input" data-key="${key}">${optionsHtml}</select>`;
+    } else if (key === 'salesperson') {
+      const optionsHtml = `<option value="">All Salespersons</option>` + (filterOptions.salespersons || []).map(sp => `<option value="${sp.name}">${sp.sales_person_name}</option>`).join('');
+      inputHtml = `<select id="filter-${key}" class="filter-input" data-key="${key}">${optionsHtml}</select>`;
+    } else if (key === 'cashier') {
+      const optionsHtml = `<option value="">All Cashiers</option>` + (filterOptions.cashiers || []).map(cs => `<option value="${cs.name}">${cs.fullname}</option>`).join('');
+      inputHtml = `<select id="filter-${key}" class="filter-input" data-key="${key}">${optionsHtml}</select>`;
+    } else if (filter.fieldtype === 'Date' || key.includes('date')) {
+      inputHtml = `<input type="date" id="filter-${key}" class="filter-input date-input" data-key="${key}"/>`;
+    } else if (filter.fieldtype === 'Int' || filter.fieldtype === 'Float') {
+      inputHtml = `<input type="number" id="filter-${key}" class="filter-input" data-key="${key}"/>`;
+    } else {
+      inputHtml = `<input type="text" id="filter-${key}" class="filter-input" data-key="${key}" placeholder="Type value..."/>`;
+    }
+    
+    return `
+      <div class="filter-item">
+        <label>${label}</label>
+        ${inputHtml}
+      </div>
+    `;
+  }
+
+  // Date preset switches
+  window.setFilterDatesPreset = function(preset) {
+    document.querySelectorAll('#date-preset-container .btn-preset').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.getAttribute('data-preset') === preset) btn.classList.add('active');
+    });
+
+    const today = new Date();
+    let from = new Date();
+    let to = new Date();
+
+    if (preset === 'today') {
+      // defaults to current
+    } else if (preset === 'week') {
+      from.setDate(today.getDate() - 7);
+    } else if (preset === 'month') {
+      from = new Date(today.getFullYear(), today.getMonth(), 1);
+    } else if (preset === 'last_month') {
+      from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      to = new Date(today.getFullYear(), today.getMonth(), 0);
+    }
+
+    if (document.getElementById('filter-from_date')) {
+      document.getElementById('filter-from_date').value = formatDateLocal(from);
+    }
+    if (document.getElementById('filter-to_date')) {
+      document.getElementById('filter-to_date').value = formatDateLocal(to);
+    }
+  };
+
+  function formatDateLocal(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const r = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${r}`;
+  }
+
+  // Saved Views loading
+  function loadSavedViewsList() {
+    return api('get_smriti_saved_views', { report_key: activeReportKey }).then(res => {
+      activeSavedViews = res || [];
+      const select = document.getElementById('saved-views-select');
+      select.innerHTML = '<option value="">Standard View</option>';
+      
+      activeSavedViews.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v.name;
+        opt.textContent = v.view_name + (v.is_default ? ' (Default)' : '');
+        select.appendChild(opt);
       });
+      
+      document.getElementById('btn-delete-view').style.display = 'none';
+    });
   }
 
-  let gstr9bData = { b2b: [], b2c: [] };
+  window.applySavedView = function(viewName) {
+    if (!viewName) {
+      // Restore standard template
+      hiddenColumns = [];
+      buildFilters(JSON.parse(activeReportTemplate.filters_json || '[]'));
+      document.getElementById('btn-delete-view').style.display = 'none';
+      runReport();
+      return;
+    }
 
-  function runGstr9bReport() {
-    const mask = document.getElementById('mask-gst-9b-table');
-    if (mask) mask.classList.add('active');
+    const view = activeSavedViews.find(v => v.name === viewName);
+    if (!view) return;
 
-    const from = document.getElementById('from-date').value;
-    const to = document.getElementById('to-date').value;
+    document.getElementById('btn-delete-view').style.display = 'inline-flex';
 
-    api('get_gstr1_9b_report', { from_date: from, to_date: to })
+    // Apply filters
+    let filters = {};
+    try {
+      filters = JSON.parse(view.applied_filters_json || '{}');
+    } catch(e) {}
+
+    for (let key in filters) {
+      const input = document.getElementById(`filter-${key}`);
+      if (input) input.value = filters[key];
+    }
+
+    // Apply column visibilities
+    let visibleCols = [];
+    try {
+      visibleCols = JSON.parse(view.visible_columns_json || '[]');
+    } catch(e) {}
+
+    if (visibleCols.length > 0) {
+      let cols = [];
+      try { cols = JSON.parse(activeReportTemplate.columns_json || '[]'); } catch(e) {}
+      hiddenColumns = cols.map(c => c.fieldname).filter(name => !visibleCols.includes(name));
+    } else {
+      hiddenColumns = [];
+    }
+
+    runReport();
+  };
+
+  window.promptSaveView = function() {
+    const name = prompt("Enter a name for this custom view:");
+    if (!name || name.trim() === '') return;
+
+    // Collect filters
+    const filters = {};
+    document.querySelectorAll('.filter-input').forEach(input => {
+      filters[input.getAttribute('data-key')] = input.value;
+    });
+
+    // Collect visible columns
+    let cols = [];
+    try { cols = JSON.parse(activeReportTemplate.columns_json || '[]'); } catch(e) {}
+    const visibleCols = cols.map(c => c.fieldname).filter(name => !hiddenColumns.includes(name));
+
+    showLoading(true);
+    api('save_smriti_saved_view', {
+      view_name: name,
+      report_key: activeReportKey,
+      applied_filters_json: JSON.stringify(filters),
+      visible_columns_json: JSON.stringify(visibleCols),
+      is_default: 0
+    }).then(() => {
+      toast('View saved successfully!', 'success');
+      loadSavedViewsList().then(() => {
+        showLoading(false);
+      });
+    }).catch(err => {
+      showLoading(false);
+      toast('Failed to save view: ' + err.message, 'error');
+    });
+  };
+
+  window.deleteActiveView = function() {
+    const select = document.getElementById('saved-views-select');
+    const name = select.value;
+    if (!name) return;
+
+    if (!confirm('Are you sure you want to delete this saved view?')) return;
+
+    showLoading(true);
+    api('delete_smriti_saved_view', { view_name: name }).then(() => {
+      toast('View deleted successfully.', 'success');
+      loadSavedViewsList().then(() => {
+        showLoading(false);
+        applySavedView('');
+      });
+    }).catch(err => {
+      showLoading(false);
+      toast('Failed to delete view: ' + err.message, 'error');
+    });
+  };
+
+  // Run Report and Render dynamic grid
+  window.runReport = function() {
+    showLoading(true);
+    
+    // Collect active filters
+    const filters = {};
+    document.querySelectorAll('.filter-input').forEach(input => {
+      filters[input.getAttribute('data-key')] = input.value;
+    });
+
+    api('get_smriti_report_data', { report_key: activeReportKey, filters: filters })
       .then(res => {
-        gstr9bData = res;
+        activeReportData = res || [];
+        renderGrid();
+        showLoading(false);
+      })
+      .catch(err => {
+        showLoading(false);
+        toast('Report run failed: ' + err.message, 'error');
+        console.error(err);
+      });
+  };
+
+  // Render Generic Table Grid
+  function renderGrid() {
+    let cols = [];
+    try {
+      cols = JSON.parse(activeReportTemplate.columns_json || '[]');
+    } catch(e) {
+      console.error(e);
+    }
+
+    // Filter visible columns
+    const visibleCols = cols.filter(c => !hiddenColumns.includes(c.fieldname));
+
+    // Render columns toggle dropdown content
+    const colMenu = document.getElementById('column-dropdown-menu');
+    colMenu.innerHTML = cols.map(c => {
+      const isChecked = !hiddenColumns.includes(c.fieldname) ? 'checked' : '';
+      return `
+        <label class="dropdown-item">
+          <input type="checkbox" class="col-toggle-checkbox" data-col="${c.fieldname}" ${isChecked} onchange="toggleColumnVisibility('${c.fieldname}')"/>
+          <span>${c.label || c.fieldname}</span>
+        </label>
+      `;
+    }).join('');
+
+    // Sort active data if sort column is active
+    if (currentSortCol) {
+      activeReportData.sort((a, b) => {
+        let valA = a[currentSortCol];
+        let valB = b[currentSortCol];
+
+        if (typeof valA === 'string') {
+          return currentSortDesc ? valB.localeCompare(valA) : valA.localeCompare(valB);
+        } else {
+          return currentSortDesc ? (valB - valA) : (valA - valB);
+        }
+      });
+    }
+
+    // Render Headers
+    const header = document.getElementById('grid-header');
+    header.innerHTML = '';
+    const hr = document.createElement('tr');
+    
+    visibleCols.forEach(col => {
+      const th = document.createElement('th');
+      th.textContent = col.label || col.fieldname;
+      if (col.width) th.style.width = col.width + 'px';
+      th.onclick = () => sortColumn(col.fieldname);
+      
+      if (currentSortCol === col.fieldname) {
+        th.className = currentSortDesc ? 'sort-desc' : 'sort-asc';
+      }
+      hr.appendChild(th);
+    });
+    header.appendChild(hr);
+
+    // Render Body rows
+    const body = document.getElementById('grid-body');
+    body.innerHTML = '';
+
+    if (activeReportData.length === 0) {
+      body.innerHTML = `<tr><td colspan="${visibleCols.length}" style="text-align:center; color:var(--text-3); padding:32px;">No matching records found.</td></tr>`;
+      renderSummaryBar(visibleCols);
+      return;
+    }
+
+    activeReportData.forEach(row => {
+      const tr = document.createElement('tr');
+      visibleCols.forEach(col => {
+        const td = document.createElement('td');
+        const rawVal = row[col.fieldname];
+        td.innerHTML = formatCell(rawVal, col);
         
-        // Render B2B
-        const tbodyB2b = document.getElementById('tbody-gstr1-9b-b2b');
-        if (res.b2b && res.b2b.length) {
-          tbodyB2b.innerHTML = res.b2b.map(note => `
-            <tr>
-              <td><span style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.04); padding:2px 6px; border:1px solid var(--border); border-radius:4px;">${note.gstin}</span></td>
-              <td><strong>${note.customer_name}</strong></td>
-              <td><span style="font-family:var(--font-mono); font-size:0.75rem;">${note.note_no}</span></td>
-              <td>${note.note_date}</td>
-              <td style="text-align:center;"><span class="badge-status ${note.note_type === 'C' ? 'low' : 'ok'}">${note.note_type}</span></td>
-              <td>${note.pos}</td>
-              <td><span style="font-family:var(--font-mono); font-size:0.75rem;">${note.orig_invoice}</span></td>
-              <td>${note.orig_date}</td>
-              <td style="text-align:right; font-weight:600;">${formatRupee.format(note.taxable_value)}</td>
-              <td style="text-align:right;">${formatRupee.format(note.cgst)}</td>
-              <td style="text-align:right;">${formatRupee.format(note.sgst)}</td>
-              <td style="text-align:right;">${formatRupee.format(note.igst)}</td>
-              <td style="text-align:right; font-weight:600;">${formatRupee.format(note.total_tax)}</td>
-              <td style="text-align:right; font-weight:700; color:${note.note_type === 'C' ? 'var(--danger)' : 'var(--success)'};">${formatRupee.format(note.grand_total)}</td>
-            </tr>
-          `).join('');
-        } else {
-          tbodyB2b.innerHTML = '<tr><td colspan="14" style="text-align:center;color:var(--text-3);padding:24px;">No registered (B2B) Credit/Debit Notes found.</td></tr>';
+        // Text align for numeric columns
+        if (col.fieldtype === 'Currency' || col.fieldtype === 'Float' || col.fieldtype === 'Int' || col.fieldname.includes('qty') || col.fieldname.includes('amount') || col.fieldname.includes('value') || col.fieldname.includes('total')) {
+          td.style.textAlign = 'right';
         }
-
-        // Render B2C
-        const tbodyB2c = document.getElementById('tbody-gstr1-9b-b2c');
-        if (res.b2c && res.b2c.length) {
-          tbodyB2c.innerHTML = res.b2c.map(note => `
-            <tr>
-              <td><strong>${note.customer_name}</strong></td>
-              <td><span style="font-family:var(--font-mono); font-size:0.75rem;">${note.note_no}</span></td>
-              <td>${note.note_date}</td>
-              <td style="text-align:center;"><span class="badge-status ${note.note_type === 'C' ? 'low' : 'ok'}">${note.note_type}</span></td>
-              <td>${note.pos}</td>
-              <td><span style="font-family:var(--font-mono); font-size:0.75rem;">${note.orig_invoice}</span></td>
-              <td>${note.orig_date}</td>
-              <td style="text-align:right; font-weight:600;">${formatRupee.format(note.taxable_value)}</td>
-              <td style="text-align:right;">${formatRupee.format(note.cgst)}</td>
-              <td style="text-align:right;">${formatRupee.format(note.sgst)}</td>
-              <td style="text-align:right;">${formatRupee.format(note.igst)}</td>
-              <td style="text-align:right; font-weight:600;">${formatRupee.format(note.total_tax)}</td>
-              <td style="text-align:right; font-weight:700; color:${note.note_type === 'C' ? 'var(--danger)' : 'var(--success)'};">${formatRupee.format(note.grand_total)}</td>
-            </tr>
-          `).join('');
-        } else {
-          tbodyB2c.innerHTML = '<tr><td colspan="13" style="text-align:center;color:var(--text-3);padding:24px;">No unregistered (B2C) Credit/Debit Notes found.</td></tr>';
-        }
-      })
-      .catch(e => {
-        console.error(e);
-        toast('GSTR-1 9B report retrieval failed: ' + e.message, 'error');
-      })
-      .finally(() => {
-        if (mask) mask.classList.remove('active');
+        
+        tr.appendChild(td);
       });
+      body.appendChild(tr);
+    });
+
+    renderSummaryBar(visibleCols);
   }
 
-  function exportGstr9bReport() {
-    const from = document.getElementById('from-date').value;
-    const to = document.getElementById('to-date').value;
+  // Format cell based on metadata
+  function formatCell(val, col) {
+    if (val === null || val === undefined) return '—';
     
-    const wb = XLSX.utils.book_new();
-    const wsB2b = tableToSheetJSArray('table-gstr1-9b-b2b');
-    const wsB2c = tableToSheetJSArray('table-gstr1-9b-b2c');
+    const key = col.fieldname;
+    const type = col.fieldtype;
     
-    XLSX.utils.book_append_sheet(wb, wsB2b, "9B Registered (B2B)");
-    XLSX.utils.book_append_sheet(wb, wsB2c, "9B Unregistered (B2C)");
+    if (type === 'Currency' || key.includes('amount') || key.includes('total') || key.includes('value') || key.includes('price') || key.includes('taxable') || key.includes('expected') || key.includes('declared') || key.includes('difference')) {
+      return formatRupee.format(val);
+    }
+    if (type === 'Float' || type === 'Int' || key.includes('qty') || key.includes('count') || key.includes('bills')) {
+      return formatNum.format(val);
+    }
     
-    XLSX.writeFile(wb, `SMRITI_GSTR1_Table9B_${from}_to_${to}.xlsx`);
-    toast('GSTR-1 Table 9B exported to Excel with separate sheets!', 'success');
+    // Status color badge formats
+    if (key === 'status') {
+      let badgeClass = 'ok';
+      if (val.toLowerCase().includes('low') || val.toLowerCase().includes('red') || val.toLowerCase().includes('out')) {
+        badgeClass = 'low';
+      } else if (val.toLowerCase().includes('due') || val.toLowerCase().includes('amber') || val.toLowerCase().includes('warning')) {
+        badgeClass = 'due';
+      }
+      return `<span class="badge-status ${badgeClass}">${val}</span>`;
+    }
+    
+    return val;
   }
 
-  function exportGstReport() {
-    const from = document.getElementById('from-date').value;
-    const to = document.getElementById('to-date').value;
-    exportTableToExcel('table-gst-breakdown', `SMRITI_GST_Tax_Report_${from}_to_${to}.xlsx`);
-    toast('GST Tax Report exported to Excel successfully!', 'success');
+  // Sort columns client side
+  function sortColumn(fieldname) {
+    if (currentSortCol === fieldname) {
+      currentSortDesc = !currentSortDesc;
+    } else {
+      currentSortCol = fieldname;
+      currentSortDesc = false;
+    }
+    renderGrid();
   }
 
-  // ─── Stock Tab ─────────────────────────────────────────────────────────────
-  let warehousesLoaded = false;
-  function runStockTabReport() {
-    const mask = document.getElementById('mask-stock-table');
-    mask.classList.add('active');
+  // Toggle column visibility
+  window.toggleColumnVisibility = function(fieldname) {
+    const idx = hiddenColumns.indexOf(fieldname);
+    if (idx > -1) {
+      hiddenColumns.splice(idx, 1);
+    } else {
+      hiddenColumns.push(fieldname);
+    }
+    renderGrid();
+  };
 
-    const warehouse = document.getElementById('stock-warehouse').value;
-    const showZero = document.getElementById('stock-show-zero').checked ? 1 : 0;
+  window.toggleColumnDropdown = function() {
+    document.getElementById('column-dropdown-menu').classList.toggle('active');
+    event.stopPropagation();
+  };
 
-    api('get_stock_report', { warehouse: warehouse, show_zero: showZero })
-      .then(res => {
-        // Summary
-        document.getElementById('stock-sum-items').textContent = formatNum.format(res.total_items);
-        document.getElementById('stock-sum-value').textContent = formatRupee.format(res.total_value);
-        document.getElementById('stock-sum-low').textContent = formatNum.format(res.low_stock.length);
+  // Render table summary totals
+  function renderSummaryBar(visibleCols) {
+    const summaryBar = document.getElementById('grid-summary-bar');
+    summaryBar.innerHTML = '';
 
-        // Load warehouses options if not yet loaded
-        if (!warehousesLoaded && res.warehouses) {
-          const select = document.getElementById('stock-warehouse');
-          res.warehouses.forEach(w => {
-            const opt = document.createElement('option');
-            opt.value = w.name;
-            opt.textContent = w.warehouse_name;
-            select.appendChild(opt);
-          });
-          warehousesLoaded = true;
-        }
+    const totalRows = activeReportData.length;
+    let metricsHtml = `<div class="summary-metric"><span class="summary-metric-lbl">Total Rows:</span><span class="summary-metric-val">${totalRows}</span></div>`;
 
-        // Ledger Table
-        const tbody = document.getElementById('tbody-stock-ledger');
-        if (res.items && res.items.length) {
-          tbody.innerHTML = res.items.map(it => {
-            const isLow = it.available_qty <= 5;
-            const rowClass = isLow ? 'row-lowstock-red' : '';
-            const statusBadge = isLow 
-              ? '<span class="badge-status low">⚠️ Low Stock</span>' 
-              : '<span class="badge-status ok">✓ Nominal</span>';
+    // Sum matching numeric columns
+    const columnsToSum = visibleCols.filter(col => {
+      const k = col.fieldname;
+      const t = col.fieldtype;
+      return t === 'Currency' || t === 'Float' || t === 'Int' || k.includes('qty') || k.includes('amount') || k.includes('value') || k.includes('total') || k.includes('tax') || k.includes('difference');
+    });
 
-            return `
-              <tr class="${rowClass}">
-                <td><span style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.04); padding:2px 6px; border:1px solid var(--border); border-radius:4px;">${it.item_code}</span></td>
-                <td><strong>${it.item_name}</strong></td>
-                <td>${it.item_group}</td>
-                <td style="text-align:right; font-weight:600;">${formatNum.format(it.actual_qty)}</td>
-                <td style="text-align:right; color:var(--text-3);">${formatNum.format(it.reserved_qty)}</td>
-                <td style="text-align:right; font-weight:700;">${formatNum.format(it.available_qty)}</td>
-                <td style="text-align:right;">${formatRupee.format(it.mrp)}</td>
-                <td style="text-align:right; font-weight:700; color:var(--success);">${formatRupee.format(it.stock_value)}</td>
-                <td style="text-align:center;">${statusBadge}</td>
-              </tr>
-            `;
-          }).join('');
-        } else {
-          tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-3);padding:24px;">No items match the selected stock filters.</td></tr>';
-        }
-      })
-      .catch(e => {
-        console.error(e);
-        toast('Stock report retrieval failed: ' + e.message, 'error');
-      })
-      .finally(() => {
-        mask.classList.remove('active');
+    columnsToSum.forEach(col => {
+      let sum = 0.0;
+      activeReportData.forEach(row => {
+        sum += parseFloat(row[col.fieldname] || 0.0);
       });
+      
+      const formatted = formatCell(sum, col);
+      metricsHtml += `
+        <div class="summary-metric">
+          <span class="summary-metric-lbl">Sum (${col.label || col.fieldname}):</span>
+          <span class="summary-metric-val">${formatted}</span>
+        </div>
+      `;
+    });
+
+    summaryBar.innerHTML = `<div class="summary-metrics">${metricsHtml}</div>`;
   }
 
-  function exportStockReport() {
-    exportTableToExcel('table-stock-ledger', `SMRITI_Stock_Report_${formatDateLocal(new Date())}.xlsx`);
-    toast('Stock Status Report exported to Excel successfully!', 'success');
-  }
+  // Exports handlers
+  window.exportExcel = function() {
+    if (!activeReportKey || activeReportData.length === 0) {
+      toast('No data to export.', 'error');
+      return;
+    }
+    const table = document.getElementById('generic-grid-table');
+    const wb = XLSX.utils.table_to_book(table, { sheet: "SMRITI Report" });
+    XLSX.writeFile(wb, `SMRITI_${activeReportKey}_${formatDateLocal(new Date())}.xlsx`);
+    toast('Excel export complete!', 'success');
+  };
 
-  // ─── Outstanding Tab ───────────────────────────────────────────────────────
-  function runOutstandingTabReport() {
-    const mask = document.getElementById('mask-out-table');
-    mask.classList.add('active');
+  window.exportCSV = function() {
+    if (!activeReportKey || activeReportData.length === 0) {
+      toast('No data to export.', 'error');
+      return;
+    }
+    const table = document.getElementById('generic-grid-table');
+    let csv = [];
+    const rows = table.querySelectorAll('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+      const row = [], cols = rows[i].querySelectorAll('td, th');
+      for (let j = 0; j < cols.length; j++) {
+        let text = cols[j].innerText.trim().replace(/"/g, '""');
+        row.push('"' + text + '"');
+      }
+      csv.push(row.join(','));
+    }
+    
+    const csvContent = "data:text/csv;charset=utf-8," + csv.join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `SMRITI_${activeReportKey}_${formatDateLocal(new Date())}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast('CSV export complete!', 'success');
+  };
 
-    const customer = document.getElementById('out-customer-search').value.trim();
-    const days = parseInt(document.getElementById('out-days-overdue').value) || 0;
-
-    api('get_outstanding_report', { customer: customer, days_overdue: days })
-      .then(res => {
-        // Summary aging buckets
-        document.getElementById('out-sum-current').textContent = formatRupee.format(res.aging.current);
-        document.getElementById('out-sum-30').textContent = formatRupee.format(res.aging['1_30']);
-        document.getElementById('out-sum-60').textContent = formatRupee.format(res.aging['31_60']);
-        document.getElementById('out-sum-90').textContent = formatRupee.format(res.aging['61_90']);
-        document.getElementById('out-sum-above').textContent = formatRupee.format(res.aging.above_90);
-        document.getElementById('out-sum-total').textContent = formatRupee.format(res.total_outstanding);
-
-        // Ledger Table
-        const tbody = document.getElementById('tbody-outstanding');
-        if (res.invoices && res.invoices.length) {
-          tbody.innerHTML = res.invoices.map(inv => {
-            const isOverdue = inv.overdue_days > 0;
-            const rowClass = isOverdue ? 'row-overdue-amber' : '';
-            const statusBadge = isOverdue 
-              ? `<span class="badge-status due">⚠️ Overdue</span>` 
-              : `<span class="badge-status ok">✓ Due</span>`;
-
-            return `
-              <tr class="${rowClass}">
-                <td><span style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.04); padding:2px 6px; border:1px solid var(--border); border-radius:4px;">${inv.invoice}</span></td>
-                <td><strong>${inv.customer_name}</strong></td>
-                <td>${inv.posting_date}</td>
-                <td>${inv.due_date}</td>
-                <td style="text-align:right;">${formatRupee.format(inv.grand_total)}</td>
-                <td style="text-align:right; font-weight:700; color:var(--danger);">${formatRupee.format(inv.outstanding)}</td>
-                <td style="text-align:center; font-family:var(--font-mono); font-weight:700;">${inv.overdue_days}</td>
-                <td style="text-align:center;">${statusBadge}</td>
-              </tr>
-            `;
-          }).join('');
-        } else {
-          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-3);padding:24px;">No outstanding customer invoices found.</td></tr>';
-        }
-      })
-      .catch(e => {
-        console.error(e);
-        toast('Outstanding report retrieval failed: ' + e.message, 'error');
-      })
-      .finally(() => {
-        mask.classList.remove('active');
-      });
-  }
-
-  function exportOutstandingReport() {
-    exportTableToExcel('table-outstanding', `SMRITI_Customer_Outstanding_${formatDateLocal(new Date())}.xlsx`);
-    toast('Customer Outstanding Report exported to Excel successfully!', 'success');
-  }
-
-  // ─── Returns Tab ────────────────────────────────────────────────────────────
-  function runReturnsTabReport() {
-    runDeadlineAlerts();
-    runSalesReturnRegister();
-    runPurchaseReturnRegister();
-  }
-
-  function runDeadlineAlerts() {
-    const container = document.getElementById('alerts-container');
-    api('get_deadline_alerts')
-      .then(res => {
-        if (res && res.length) {
-          container.innerHTML = res.map(alert => {
-            let badgeClass = 'ok';
-            let style = 'border-left: 4px solid var(--success);';
-            if (alert.status === 'Red') {
-              badgeClass = 'low';
-              style = 'border-left: 4px solid var(--danger); background: rgba(239, 68, 68, 0.04);';
-            } else if (alert.status === 'Amber') {
-              badgeClass = 'due';
-              style = 'border-left: 4px solid var(--warning); background: rgba(245, 158, 11, 0.04);';
-            }
-            
-            return `
-              <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid var(--border); border-radius: var(--radius); ${style}">
-                <div style="display: flex; align-items: center; gap: 16px;">
-                  <span class="badge-status ${badgeClass}" style="padding: 4px 10px; font-size: 0.8rem;">${alert.status} ALERT</span>
-                  <div>
-                    <div style="font-weight: 700; font-size: 0.95rem;">
-                      ${alert.doctype}: <span style="font-family:var(--font-mono); color:var(--accent-2);">${alert.name}</span>
-                    </div>
-                    <div style="font-size: 0.8rem; color: var(--text-2); margin-top: 2px;">
-                      Original Bill: <strong>${alert.orig_invoice}</strong> (${alert.orig_date}) | Party: <strong>${alert.party}</strong>
-                    </div>
-                  </div>
-                </div>
-                <div style="text-align: right;">
-                  <div style="font-weight: 800; font-family: var(--font-mono); font-size: 1rem; color: var(--danger);">${formatRupee.format(alert.grand_total)}</div>
-                  <div style="font-size: 0.8rem; color: var(--text-2); margin-top: 2px; font-weight: 600;">
-                    Deadline: <span style="color:var(--text-1);">${alert.deadline}</span> (${alert.days_left < 0 ? 'Expired' : alert.days_left + ' days left'})
-                  </div>
-                </div>
-              </div>
-            `;
-          }).join('');
-        } else {
-          container.innerHTML = `
-            <div style="padding: 16px; background: rgba(16, 185, 129, 0.04); border: 1px solid rgba(16,185,129,0.15); border-left: 4px solid var(--success); border-radius: var(--radius); text-align: center; color: var(--success); font-weight: 600;">
-              ✓ All clear! No returns approaching the November 30 GST credit note tax adjustment deadline.
-            </div>
-          `;
-        }
-      })
-      .catch(e => {
-        console.error(e);
-        container.innerHTML = `
-          <div style="padding: 16px; background: rgba(239, 68, 68, 0.04); border: 1px dashed var(--danger); border-radius: var(--radius); text-align: center; color: var(--danger);">
-            Failed to load deadline alerts: ${e.message}
-          </div>
-        `;
-      });
-  }
-
-  function runSalesReturnRegister() {
-    const mask = document.getElementById('mask-sales-return-table');
-    if (mask) mask.classList.add('active');
-
-    const from = document.getElementById('from-date').value;
-    const to = document.getElementById('to-date').value;
-
-    api('get_sales_return_register', { from_date: from, to_date: to })
-      .then(res => {
-        const tbody = document.getElementById('tbody-sales-return');
-        if (res && res.length) {
-          tbody.innerHTML = res.map(row => `
-            <tr>
-              <td>${row.date}</td>
-              <td><span style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.04); padding:2px 6px; border:1px solid var(--border); border-radius:4px;">${row.return_no}</span></td>
-              <td><span style="font-family:var(--font-mono); font-size:0.75rem;">${row.orig_invoice}</span></td>
-              <td><strong>${row.customer_name}</strong></td>
-              <td style="text-align:right; font-weight:600;">${formatRupee.format(row.taxable_value)}</td>
-              <td style="text-align:right;">${formatRupee.format(row.cgst)}</td>
-              <td style="text-align:right;">${formatRupee.format(row.sgst)}</td>
-              <td style="text-align:right;">${formatRupee.format(row.igst)}</td>
-              <td style="text-align:right; font-weight:600;">${formatRupee.format(row.total_tax)}</td>
-              <td style="text-align:right; font-weight:700; color:var(--danger);">${formatRupee.format(row.grand_total)}</td>
-            </tr>
-          `).join('');
-        } else {
-          tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-3);padding:24px;">No sales returns recorded in this period.</td></tr>';
-        }
-      })
-      .catch(e => {
-        console.error(e);
-        toast('Sales return register retrieval failed: ' + e.message, 'error');
-      })
-      .finally(() => {
-        if (mask) mask.classList.remove('active');
-      });
-  }
-
-  function runPurchaseReturnRegister() {
-    const mask = document.getElementById('mask-purchase-return-table');
-    if (mask) mask.classList.add('active');
-
-    const from = document.getElementById('from-date').value;
-    const to = document.getElementById('to-date').value;
-
-    api('get_purchase_return_register', { from_date: from, to_date: to })
-      .then(res => {
-        const tbody = document.getElementById('tbody-purchase-return');
-        if (res && res.length) {
-          tbody.innerHTML = res.map(row => `
-            <tr>
-              <td>${row.date}</td>
-              <td><span style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.04); padding:2px 6px; border:1px solid var(--border); border-radius:4px;">${row.return_no}</span></td>
-              <td><span style="font-family:var(--font-mono); font-size:0.75rem;">${row.orig_invoice}</span></td>
-              <td><strong>${row.supplier_name}</strong></td>
-              <td style="text-align:right; font-weight:600;">${formatRupee.format(row.taxable_value)}</td>
-              <td style="text-align:right;">${formatRupee.format(row.cgst)}</td>
-              <td style="text-align:right;">${formatRupee.format(row.sgst)}</td>
-              <td style="text-align:right;">${formatRupee.format(row.igst)}</td>
-              <td style="text-align:right; font-weight:600;">${formatRupee.format(row.total_tax)}</td>
-              <td style="text-align:right; font-weight:700; color:var(--danger);">${formatRupee.format(row.grand_total)}</td>
-            </tr>
-          `).join('');
-        } else {
-          tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-3);padding:24px;">No purchase returns recorded in this period.</td></tr>';
-        }
-      })
-      .catch(e => {
-        console.error(e);
-        toast('Purchase return register retrieval failed: ' + e.message, 'error');
-      })
-      .finally(() => {
-        if (mask) mask.classList.remove('active');
-      });
-  }
-
-  function exportSalesReturnReport() {
-    const from = document.getElementById('from-date').value;
-    const to = document.getElementById('to-date').value;
-    exportTableToExcel('table-sales-return', `SMRITI_Sales_Return_Book_${from}_to_${to}.xlsx`);
-    toast('Sales Return Book exported to Excel successfully!', 'success');
-  }
-
-  function exportPurchaseReturnReport() {
-    const from = document.getElementById('from-date').value;
-    const to = document.getElementById('to-date').value;
-    exportTableToExcel('table-purchase-return', `SMRITI_Purchase_Return_Book_${from}_to_${to}.xlsx`);
-    toast('Purchase Return Book exported to Excel successfully!', 'success');
-  }
-
-  // Shared Excel exporter using SheetJS
-  function tableToSheetJSArray(tableId) {
-    const table = document.getElementById(tableId);
-    const ws = XLSX.utils.table_to_sheet(table);
-    return ws;
-  }
-
-  function exportTableToExcel(tableId, filename) {
-    const ws = tableToSheetJSArray(tableId);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Report");
-    XLSX.writeFile(wb, filename);
-  }
+  window.printReport = function() {
+    if (!activeReportKey || activeReportData.length === 0) {
+      toast('No data to print.', 'error');
+      return;
+    }
+    window.print();
+  };
 </script>
 
 <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>

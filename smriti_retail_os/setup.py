@@ -84,6 +84,611 @@ def create_smriti_company_settings_doctype():
         frappe.log_error(f"Error creating SMRITI Company Settings DocType: {str(e)}")
 
 
+def create_reporting_doctypes():
+    """Creates the SMRITI Report Role child table, SMRITI Report Template parent table, and SMRITI Saved View parent table."""
+    # 1. SMRITI Report Role (Child DocType)
+    if not frappe.db.exists("DocType", "SMRITI Report Role"):
+        try:
+            doc = frappe.new_doc("DocType")
+            doc.name = "SMRITI Report Role"
+            doc.module = "SMRITI Retail OS"
+            doc.custom = 1
+            doc.istable = 1
+            doc.autoname = "autoincrement"
+            doc.editable_grid = 1
+            
+            fields = [
+                {"fieldname": "role", "fieldtype": "Link", "options": "Role", "label": "Role", "reqd": 1, "in_list_view": 1}
+            ]
+            for f in fields:
+                doc.append("fields", f)
+            doc.insert(ignore_permissions=True)
+            print("[SMRITI] Created SMRITI Report Role Child DocType")
+        except Exception as e:
+            frappe.log_error(f"Error creating SMRITI Report Role child doctype: {str(e)}")
+
+    # 2. SMRITI Report Template
+    if not frappe.db.exists("DocType", "SMRITI Report Template"):
+        try:
+            doc = frappe.new_doc("DocType")
+            doc.name = "SMRITI Report Template"
+            doc.module = "SMRITI Retail OS"
+            doc.custom = 1
+            doc.autoname = "field:report_key"
+            doc.editable_grid = 0
+            doc.quick_entry = 0
+            doc.track_changes = 1
+            doc.issingle = 0
+            
+            fields = [
+                {"fieldname": "report_key", "fieldtype": "Data", "label": "Report Key", "reqd": 1, "unique": 1, "in_list_view": 1},
+                {"fieldname": "report_name", "fieldtype": "Data", "label": "Report Name", "reqd": 1, "in_list_view": 1},
+                {"fieldname": "report_category", "fieldtype": "Select", "label": "Report Category", "options": "Sales\nInventory\nCash\nPurchase\nFinance\nAnalytics\nAccounting\nCustom", "reqd": 1, "in_list_view": 1},
+                {"fieldname": "source_doctype", "fieldtype": "Link", "options": "DocType", "label": "Source DocType"},
+                {"fieldname": "columns_json", "fieldtype": "Long Text", "label": "Columns JSON"},
+                {"fieldname": "filters_json", "fieldtype": "Long Text", "label": "Filters JSON"},
+                {"fieldname": "group_by", "fieldtype": "Data", "label": "Group By"},
+                {"fieldname": "order_by", "fieldtype": "Data", "label": "Order By"},
+                {"fieldname": "branch_restricted", "fieldtype": "Check", "label": "Branch Restricted", "default": "0"},
+                {"fieldname": "company_restricted", "fieldtype": "Check", "label": "Company Restricted", "default": "0"},
+                {"fieldname": "cache_minutes", "fieldtype": "Int", "label": "Cache Minutes", "default": "0"},
+                {"fieldname": "schema_version", "fieldtype": "Int", "label": "Schema Version", "default": "1"},
+                {"fieldname": "layout_json", "fieldtype": "Long Text", "label": "Layout JSON", "hidden": 1},
+                {"fieldname": "chart_json", "fieldtype": "Long Text", "label": "Chart JSON", "hidden": 1},
+                {"fieldname": "pivot_json", "fieldtype": "Long Text", "label": "Pivot JSON", "hidden": 1},
+                {"fieldname": "widget_json", "fieldtype": "Long Text", "label": "Widget JSON", "hidden": 1},
+                {"fieldname": "is_public", "fieldtype": "Check", "label": "Is Public", "default": "1"},
+                {"fieldname": "role_access", "fieldtype": "Table", "options": "SMRITI Report Role", "label": "Role Access"}
+            ]
+            for f in fields:
+                doc.append("fields", f)
+                
+            doc.append("permissions", {
+                "role": "System Manager",
+                "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+            })
+            doc.append("permissions", {
+                "role": "SMRITI Store Manager",
+                "read": 1, "write": 1, "create": 1, "delete": 0, "share": 1
+            })
+            doc.append("permissions", {
+                "role": "SMRITI Cashier",
+                "read": 1, "write": 0, "create": 0, "delete": 0, "share": 0
+            })
+            doc.insert(ignore_permissions=True)
+            print("[SMRITI] Created SMRITI Report Template DocType")
+        except Exception as e:
+            frappe.log_error(f"Error creating SMRITI Report Template DocType: {str(e)}")
+    else:
+        try:
+            dt = frappe.get_doc("DocType", "SMRITI Report Template")
+            for f in dt.fields:
+                if f.fieldname == "report_category":
+                    options_list = [opt.strip() for opt in (f.options or "").split("\n") if opt.strip()]
+                    if "Accounting" not in options_list:
+                        # Rebuild with standard categories to match new definition
+                        f.options = "Sales\nInventory\nCash\nPurchase\nFinance\nAnalytics\nAccounting\nCustom"
+                        dt.save(ignore_permissions=True)
+                        frappe.db.commit()
+                        print("[SMRITI] Updated SMRITI Report Template report_category options")
+                    break
+        except Exception as e:
+            frappe.log_error(f"Error updating SMRITI Report Template options: {str(e)}")
+
+    # 3. SMRITI Saved View
+    if not frappe.db.exists("DocType", "SMRITI Saved View"):
+        try:
+            doc = frappe.new_doc("DocType")
+            doc.name = "SMRITI Saved View"
+            doc.module = "SMRITI Retail OS"
+            doc.custom = 1
+            doc.autoname = "autoincrement"
+            doc.editable_grid = 0
+            doc.quick_entry = 0
+            doc.track_changes = 1
+            doc.issingle = 0
+            
+            fields = [
+                {"fieldname": "view_name", "fieldtype": "Data", "label": "View Name", "reqd": 1, "in_list_view": 1},
+                {"fieldname": "report_template", "fieldtype": "Link", "options": "SMRITI Report Template", "label": "Report Template", "reqd": 1, "in_list_view": 1},
+                {"fieldname": "user", "fieldtype": "Link", "options": "User", "label": "User", "reqd": 1, "in_list_view": 1},
+                {"fieldname": "applied_filters_json", "fieldtype": "Long Text", "label": "Applied Filters JSON"},
+                {"fieldname": "visible_columns_json", "fieldtype": "Long Text", "label": "Visible Columns JSON"},
+                {"fieldname": "is_default", "fieldtype": "Check", "label": "Is Default", "default": "0"}
+            ]
+            for f in fields:
+                doc.append("fields", f)
+                
+            doc.append("permissions", {
+                "role": "System Manager",
+                "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+            })
+            doc.append("permissions", {
+                "role": "SMRITI Store Manager",
+                "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+            })
+            doc.append("permissions", {
+                "role": "SMRITI Cashier",
+                "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+            })
+            doc.insert(ignore_permissions=True)
+            print("[SMRITI] Created SMRITI Saved View DocType")
+        except Exception as e:
+            frappe.log_error(f"Error creating SMRITI Saved View DocType: {str(e)}")
+
+
+def seed_report_templates():
+    """Seeds the standard SMRITI Report Template records."""
+    import json
+    
+    reports = [
+        {
+            "report_key": "item_wise_sales",
+            "report_name": "SMRITI Item-wise Sales Analytics",
+            "report_category": "Sales",
+            "source_doctype": "POS Invoice",
+            "group_by": "items.item_code",
+            "order_by": "qty_sold DESC",
+            "company_restricted": 1,
+            "branch_restricted": 1,
+            "cache_minutes": 5,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager", "SMRITI Cashier"],
+            "columns": [
+                {"fieldname": "item_code", "label": "Item Code", "fieldtype": "Link", "options": "Item", "width": 120},
+                {"fieldname": "item_name", "label": "Item Name", "fieldtype": "Data", "width": 180},
+                {"fieldname": "item_group", "label": "Item Group", "fieldtype": "Link", "options": "Item Group", "width": 120},
+                {"fieldname": "brand", "label": "Brand", "fieldtype": "Link", "options": "Brand", "width": 100},
+                {"fieldname": "qty_sold", "label": "Qty Sold", "fieldtype": "Float", "width": 100},
+                {"fieldname": "taxable_amount", "label": "Taxable Amount", "fieldtype": "Currency", "width": 120},
+                {"fieldname": "gross_amount", "label": "Gross Amount", "fieldtype": "Currency", "width": 120}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "warehouse", "label": "Warehouse", "fieldtype": "Link", "options": "Warehouse"},
+                {"fieldname": "from_date", "label": "From Date", "fieldtype": "Date"},
+                {"fieldname": "to_date", "label": "To Date", "fieldtype": "Date"},
+                {"fieldname": "item_group", "label": "Item Group", "fieldtype": "Link", "options": "Item Group"},
+                {"fieldname": "brand", "label": "Brand", "fieldtype": "Link", "options": "Brand"},
+                {"fieldname": "style", "label": "Style / Article", "fieldtype": "Data"},
+                {"fieldname": "size", "label": "Size", "fieldtype": "Data"},
+                {"fieldname": "color", "label": "Color", "fieldtype": "Data"},
+                {"fieldname": "salesperson", "label": "Salesperson", "fieldtype": "Link", "options": "Sales Person"}
+            ]
+        },
+        {
+            "report_key": "daily_sales_summary",
+            "report_name": "SMRITI Daily Sales Summary",
+            "report_category": "Sales",
+            "source_doctype": "POS Invoice",
+            "group_by": "parent.posting_date",
+            "order_by": "parent.posting_date ASC",
+            "company_restricted": 1,
+            "branch_restricted": 1,
+            "cache_minutes": 5,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager", "SMRITI Cashier"],
+            "columns": [
+                {"fieldname": "posting_date", "label": "Date", "fieldtype": "Date", "width": 120},
+                {"fieldname": "bills_count", "label": "Bills Count", "fieldtype": "Int", "width": 100},
+                {"fieldname": "qty_sold", "label": "Qty Sold", "fieldtype": "Float", "width": 100},
+                {"fieldname": "taxable_amount", "label": "Taxable Amount", "fieldtype": "Currency", "width": 120},
+                {"fieldname": "tax_amount", "label": "Tax Amount", "fieldtype": "Currency", "width": 120},
+                {"fieldname": "discount_amount", "label": "Discount Amount", "fieldtype": "Currency", "width": 120},
+                {"fieldname": "grand_total", "label": "Grand Total", "fieldtype": "Currency", "width": 120}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "warehouse", "label": "Warehouse", "fieldtype": "Link", "options": "Warehouse"},
+                {"fieldname": "from_date", "label": "From Date", "fieldtype": "Date"},
+                {"fieldname": "to_date", "label": "To Date", "fieldtype": "Date"}
+            ]
+        },
+        {
+            "report_key": "cash_z_report",
+            "report_name": "SMRITI Cash Z-Report",
+            "report_category": "Cash",
+            "source_doctype": "POS Invoice",
+            "group_by": "",
+            "order_by": "",
+            "company_restricted": 1,
+            "branch_restricted": 1,
+            "cache_minutes": 0,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager", "SMRITI Cashier"],
+            "columns": [
+                {"fieldname": "date", "label": "Date", "fieldtype": "Date", "width": 110},
+                {"fieldname": "cashier", "label": "Cashier", "fieldtype": "Data", "width": 120},
+                {"fieldname": "opening_cash", "label": "Opening Cash", "fieldtype": "Currency", "width": 110},
+                {"fieldname": "total_bills", "label": "Total Bills", "fieldtype": "Int", "width": 90},
+                {"fieldname": "total_sales", "label": "Total Sales", "fieldtype": "Currency", "width": 110},
+                {"fieldname": "total_net", "label": "Total Net", "fieldtype": "Currency", "width": 110},
+                {"fieldname": "total_tax", "label": "Total Tax", "fieldtype": "Currency", "width": 100},
+                {"fieldname": "total_discount", "label": "Total Discount", "fieldtype": "Currency", "width": 110},
+                {"fieldname": "total_refunds", "label": "Total Refunds", "fieldtype": "Currency", "width": 110},
+                {"fieldname": "expected_cash_in_drawer", "label": "Expected Cash in Drawer", "fieldtype": "Currency", "width": 140},
+                {"fieldname": "payment_modes", "label": "Payment Breakdown", "fieldtype": "Data", "width": 250}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "from_date", "label": "Date", "fieldtype": "Date", "reqd": 1},
+                {"fieldname": "warehouse", "label": "Warehouse", "fieldtype": "Link", "options": "Warehouse"},
+                {"fieldname": "cashier", "label": "Cashier / User", "fieldtype": "Link", "options": "User"}
+            ]
+        },
+        {
+            "report_key": "cash_reconciliation",
+            "report_name": "SMRITI Cash Reconciliation Report",
+            "report_category": "Cash",
+            "source_doctype": "POS Closing Entry",
+            "group_by": "",
+            "order_by": "ce.posting_date DESC",
+            "company_restricted": 1,
+            "branch_restricted": 1,
+            "cache_minutes": 5,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager"],
+            "columns": [
+                {"fieldname": "closing_id", "label": "Closing Entry", "fieldtype": "Link", "options": "POS Closing Entry", "width": 130},
+                {"fieldname": "posting_date", "label": "Posting Date", "fieldtype": "Date", "width": 110},
+                {"fieldname": "cashier", "label": "Cashier", "fieldtype": "Link", "options": "User", "width": 120},
+                {"fieldname": "pos_profile", "label": "POS Profile", "fieldtype": "Link", "options": "POS Profile", "width": 120},
+                {"fieldname": "mode_of_payment", "label": "Mode of Payment", "fieldtype": "Data", "width": 120},
+                {"fieldname": "expected_amount", "label": "Expected", "fieldtype": "Currency", "width": 110},
+                {"fieldname": "declared_amount", "label": "Declared", "fieldtype": "Currency", "width": 110},
+                {"fieldname": "difference", "label": "Difference", "fieldtype": "Currency", "width": 110}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "from_date", "label": "From Date", "fieldtype": "Date"},
+                {"fieldname": "to_date", "label": "To Date", "fieldtype": "Date"}
+            ]
+        },
+        {
+            "report_key": "current_stock_position",
+            "report_name": "SMRITI Current Stock Position",
+            "report_category": "Inventory",
+            "source_doctype": "Bin",
+            "group_by": "",
+            "order_by": "b.item_code ASC",
+            "company_restricted": 1,
+            "branch_restricted": 1,
+            "cache_minutes": 5,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager"],
+            "columns": [
+                {"fieldname": "item_code", "label": "Item Code", "fieldtype": "Link", "options": "Item", "width": 120},
+                {"fieldname": "item_name", "label": "Item Name", "fieldtype": "Data", "width": 180},
+                {"fieldname": "warehouse", "label": "Warehouse", "fieldtype": "Link", "options": "Warehouse", "width": 120},
+                {"fieldname": "actual_qty", "label": "Actual Qty", "fieldtype": "Float", "width": 100},
+                {"fieldname": "valuation_rate", "label": "Valuation Rate", "fieldtype": "Currency", "width": 110},
+                {"fieldname": "stock_value", "label": "Stock Value", "fieldtype": "Currency", "width": 110},
+                {"fieldname": "status", "label": "Status", "fieldtype": "Data", "width": 100}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "warehouse", "label": "Warehouse", "fieldtype": "Link", "options": "Warehouse"},
+                {"fieldname": "item_group", "label": "Item Group", "fieldtype": "Link", "options": "Item Group"},
+                {"fieldname": "brand", "label": "Brand", "fieldtype": "Link", "options": "Brand"},
+                {"fieldname": "style", "label": "Style / Article", "fieldtype": "Data"},
+                {"fieldname": "size", "label": "Size", "fieldtype": "Data"},
+                {"fieldname": "color", "label": "Color", "fieldtype": "Data"}
+            ]
+        },
+        {
+            "report_key": "style_wise_stock",
+            "report_name": "SMRITI Style-wise Stock Position",
+            "report_category": "Inventory",
+            "source_doctype": "Bin",
+            "group_by": "style_code",
+            "order_by": "actual_qty DESC",
+            "company_restricted": 1,
+            "branch_restricted": 1,
+            "cache_minutes": 5,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager"],
+            "columns": [
+                {"fieldname": "style_code", "label": "Style / Article Code", "fieldtype": "Data", "width": 130},
+                {"fieldname": "style_name", "label": "Style / Article Name", "fieldtype": "Data", "width": 180},
+                {"fieldname": "actual_qty", "label": "Actual Qty", "fieldtype": "Float", "width": 100},
+                {"fieldname": "stock_value", "label": "Stock Value", "fieldtype": "Currency", "width": 110}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "warehouse", "label": "Warehouse", "fieldtype": "Link", "options": "Warehouse"},
+                {"fieldname": "item_group", "label": "Item Group", "fieldtype": "Link", "options": "Item Group"},
+                {"fieldname": "brand", "label": "Brand", "fieldtype": "Link", "options": "Brand"},
+                {"fieldname": "style", "label": "Style / Article", "fieldtype": "Data"}
+            ]
+        },
+        {
+            "report_key": "size_wise_stock",
+            "report_name": "SMRITI Variant Stock Position",
+            "report_category": "Inventory",
+            "source_doctype": "Bin",
+            "group_by": "style_code, color, size, b.warehouse",
+            "order_by": "style_code ASC",
+            "company_restricted": 1,
+            "branch_restricted": 1,
+            "cache_minutes": 5,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager"],
+            "columns": [
+                {"fieldname": "style_code", "label": "Style / Article Code", "fieldtype": "Data", "width": 130},
+                {"fieldname": "style_name", "label": "Style / Article Name", "fieldtype": "Data", "width": 180},
+                {"fieldname": "color", "label": "Color", "fieldtype": "Data", "width": 100},
+                {"fieldname": "size", "label": "Size", "fieldtype": "Data", "width": 80},
+                {"fieldname": "actual_qty", "label": "Actual Qty", "fieldtype": "Float", "width": 100},
+                {"fieldname": "warehouse", "label": "Warehouse", "fieldtype": "Link", "options": "Warehouse", "width": 120}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "warehouse", "label": "Warehouse", "fieldtype": "Link", "options": "Warehouse"},
+                {"fieldname": "item_group", "label": "Item Group", "fieldtype": "Link", "options": "Item Group"},
+                {"fieldname": "brand", "label": "Brand", "fieldtype": "Link", "options": "Brand"},
+                {"fieldname": "style", "label": "Style / Article", "fieldtype": "Data"},
+                {"fieldname": "size", "label": "Size", "fieldtype": "Data"},
+                {"fieldname": "color", "label": "Color", "fieldtype": "Data"}
+            ]
+        },
+        {
+            "report_key": "payment_mode_summary",
+            "report_name": "SMRITI Payment Mode Summary",
+            "report_category": "Cash",
+            "source_doctype": "POS Invoice",
+            "group_by": "p.mode_of_payment",
+            "order_by": "total_amount DESC",
+            "company_restricted": 1,
+            "branch_restricted": 1,
+            "cache_minutes": 5,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager", "SMRITI Cashier"],
+            "columns": [
+                {"fieldname": "mode_of_payment", "label": "Mode of Payment", "fieldtype": "Data", "width": 150},
+                {"fieldname": "total_amount", "label": "Total Amount", "fieldtype": "Currency", "width": 150}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "warehouse", "label": "Warehouse", "fieldtype": "Link", "options": "Warehouse"},
+                {"fieldname": "from_date", "label": "From Date", "fieldtype": "Date"},
+                {"fieldname": "to_date", "label": "To Date", "fieldtype": "Date"}
+            ]
+        }
+    ]
+    
+    reports.extend([
+        {
+            "report_key": "payment_register",
+            "report_name": "SMRITI Payment Register",
+            "report_category": "Accounting",
+            "source_doctype": "Payment Entry",
+            "group_by": "",
+            "order_by": "posting_date DESC",
+            "company_restricted": 1,
+            "branch_restricted": 0,
+            "cache_minutes": 5,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager"],
+            "columns": [
+                {"fieldname": "posting_date", "label": "Posting Date", "fieldtype": "Date", "width": 110},
+                {"fieldname": "payment_entry_no", "label": "Payment Entry No", "fieldtype": "Link", "options": "Payment Entry", "width": 140},
+                {"fieldname": "party_type", "label": "Party Type", "fieldtype": "Data", "width": 100},
+                {"fieldname": "party", "label": "Party Name", "fieldtype": "Data", "width": 150},
+                {"fieldname": "payment_type", "label": "Payment Type", "fieldtype": "Data", "width": 110},
+                {"fieldname": "mode_of_payment", "label": "Mode of Payment", "fieldtype": "Data", "width": 120},
+                {"fieldname": "paid_amount", "label": "Paid Amount", "fieldtype": "Currency", "width": 120},
+                {"fieldname": "reference_no", "label": "Reference Number", "fieldtype": "Data", "width": 120},
+                {"fieldname": "remarks", "label": "Remarks", "fieldtype": "Data", "width": 200}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "from_date", "label": "From Date", "fieldtype": "Date"},
+                {"fieldname": "to_date", "label": "To Date", "fieldtype": "Date"},
+                {"fieldname": "party", "label": "Party Name", "fieldtype": "Data"},
+                {"fieldname": "payment_mode", "label": "Payment Mode", "fieldtype": "Data"}
+            ]
+        },
+        {
+            "report_key": "receipt_register",
+            "report_name": "SMRITI Receipt Register",
+            "report_category": "Accounting",
+            "source_doctype": "Payment Entry",
+            "group_by": "",
+            "order_by": "pe.posting_date DESC",
+            "company_restricted": 1,
+            "branch_restricted": 0,
+            "cache_minutes": 5,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager"],
+            "columns": [
+                {"fieldname": "posting_date", "label": "Posting Date", "fieldtype": "Date", "width": 110},
+                {"fieldname": "receipt_no", "label": "Receipt No", "fieldtype": "Link", "options": "Payment Entry", "width": 140},
+                {"fieldname": "customer", "label": "Customer", "fieldtype": "Link", "options": "Customer", "width": 150},
+                {"fieldname": "against_invoice", "label": "Against Invoice", "fieldtype": "Data", "width": 140},
+                {"fieldname": "mode_of_payment", "label": "Mode of Payment", "fieldtype": "Data", "width": 120},
+                {"fieldname": "amount_received", "label": "Amount Received", "fieldtype": "Currency", "width": 120},
+                {"fieldname": "reference_number", "label": "Reference Number", "fieldtype": "Data", "width": 120}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "from_date", "label": "From Date", "fieldtype": "Date"},
+                {"fieldname": "to_date", "label": "To Date", "fieldtype": "Date"},
+                {"fieldname": "customer", "label": "Customer", "fieldtype": "Link", "options": "Customer"},
+                {"fieldname": "payment_mode", "label": "Payment Mode", "fieldtype": "Data"}
+            ]
+        },
+        {
+            "report_key": "cash_book",
+            "report_name": "SMRITI Cash Book",
+            "report_category": "Accounting",
+            "source_doctype": "GL Entry",
+            "group_by": "",
+            "order_by": "",
+            "company_restricted": 1,
+            "branch_restricted": 0,
+            "cache_minutes": 5,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager"],
+            "columns": [
+                {"fieldname": "date", "label": "Date", "fieldtype": "Date", "width": 110},
+                {"fieldname": "opening_balance", "label": "Opening Balance", "fieldtype": "Currency", "width": 130},
+                {"fieldname": "cash_receipts", "label": "Cash Receipts", "fieldtype": "Currency", "width": 130},
+                {"fieldname": "cash_payments", "label": "Cash Payments", "fieldtype": "Currency", "width": 130},
+                {"fieldname": "closing_balance", "label": "Closing Balance", "fieldtype": "Currency", "width": 130}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "from_date", "label": "From Date", "fieldtype": "Date"},
+                {"fieldname": "to_date", "label": "To Date", "fieldtype": "Date"}
+            ]
+        },
+        {
+            "report_key": "day_book",
+            "report_name": "SMRITI Day Book",
+            "report_category": "Accounting",
+            "source_doctype": "GL Entry",
+            "group_by": "",
+            "order_by": "",
+            "company_restricted": 1,
+            "branch_restricted": 0,
+            "cache_minutes": 5,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager"],
+            "columns": [
+                {"fieldname": "date", "label": "Date", "fieldtype": "Date", "width": 110},
+                {"fieldname": "sales", "label": "Sales", "fieldtype": "Currency", "width": 120},
+                {"fieldname": "sales_returns", "label": "Sales Returns", "fieldtype": "Currency", "width": 120},
+                {"fieldname": "purchases", "label": "Purchases", "fieldtype": "Currency", "width": 120},
+                {"fieldname": "purchase_returns", "label": "Purchase Returns", "fieldtype": "Currency", "width": 120},
+                {"fieldname": "receipts", "label": "Receipts", "fieldtype": "Currency", "width": 120},
+                {"fieldname": "payments", "label": "Payments", "fieldtype": "Currency", "width": 120},
+                {"fieldname": "net_cash_position", "label": "Net Cash Position", "fieldtype": "Currency", "width": 140}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "from_date", "label": "From Date", "fieldtype": "Date"},
+                {"fieldname": "to_date", "label": "To Date", "fieldtype": "Date"}
+            ]
+        },
+        {
+            "report_key": "customer_outstanding",
+            "report_name": "SMRITI Customer Outstanding Book",
+            "report_category": "Accounting",
+            "source_doctype": "Sales Invoice",
+            "group_by": "",
+            "order_by": "posting_date ASC",
+            "company_restricted": 1,
+            "branch_restricted": 0,
+            "cache_minutes": 5,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager"],
+            "columns": [
+                {"fieldname": "customer", "label": "Customer", "fieldtype": "Link", "options": "Customer", "width": 180},
+                {"fieldname": "invoice", "label": "Invoice", "fieldtype": "Link", "options": "Sales Invoice", "width": 140},
+                {"fieldname": "posting_date", "label": "Posting Date", "fieldtype": "Date", "width": 110},
+                {"fieldname": "due_date", "label": "Due Date", "fieldtype": "Date", "width": 110},
+                {"fieldname": "outstanding_amount", "label": "Outstanding Amount", "fieldtype": "Currency", "width": 140},
+                {"fieldname": "ageing_days", "label": "Ageing Days", "fieldtype": "Int", "width": 100}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "customer", "label": "Customer", "fieldtype": "Link", "options": "Customer"},
+                {"fieldname": "ageing_bucket", "label": "Ageing Bucket", "fieldtype": "Select", "options": "\n1-30\n31-60\n61-90\n90+"}
+            ]
+        },
+        {
+            "report_key": "supplier_outstanding",
+            "report_name": "SMRITI Supplier Outstanding Book",
+            "report_category": "Accounting",
+            "source_doctype": "Purchase Invoice",
+            "group_by": "",
+            "order_by": "posting_date ASC",
+            "company_restricted": 1,
+            "branch_restricted": 0,
+            "cache_minutes": 5,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager"],
+            "columns": [
+                {"fieldname": "supplier", "label": "Supplier", "fieldtype": "Link", "options": "Supplier", "width": 180},
+                {"fieldname": "invoice", "label": "Invoice", "fieldtype": "Link", "options": "Purchase Invoice", "width": 140},
+                {"fieldname": "posting_date", "label": "Posting Date", "fieldtype": "Date", "width": 110},
+                {"fieldname": "due_date", "label": "Due Date", "fieldtype": "Date", "width": 110},
+                {"fieldname": "outstanding_amount", "label": "Outstanding Amount", "fieldtype": "Currency", "width": 140},
+                {"fieldname": "ageing_days", "label": "Ageing Days", "fieldtype": "Int", "width": 100}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "supplier", "label": "Supplier", "fieldtype": "Link", "options": "Supplier"},
+                {"fieldname": "ageing_bucket", "label": "Ageing Bucket", "fieldtype": "Select", "options": "\n1-30\n31-60\n61-90\n90+"}
+            ]
+        }
+    ])
+    
+    for r in reports:
+        key = r["report_key"]
+        
+        # Check if exists
+        if frappe.db.exists("SMRITI Report Template", key):
+            doc = frappe.get_doc("SMRITI Report Template", key)
+            doc.report_name = r["report_name"]
+            doc.report_category = r["report_category"]
+            doc.source_doctype = r["source_doctype"]
+            doc.columns_json = json.dumps(r["columns"])
+            doc.filters_json = json.dumps(r["filters"])
+            doc.group_by = r["group_by"]
+            doc.order_by = r["order_by"]
+            doc.company_restricted = r["company_restricted"]
+            doc.branch_restricted = r["branch_restricted"]
+            doc.cache_minutes = r["cache_minutes"]
+            doc.schema_version = r["schema_version"]
+            doc.is_public = r["is_public"]
+            
+            # Reset role_access child table
+            doc.set("role_access", [])
+            for role in r["roles"]:
+                doc.append("role_access", {"role": role})
+                
+            doc.save(ignore_permissions=True)
+            print(f"[SMRITI] Updated SMRITI Report Template: {key}")
+        else:
+            doc = frappe.new_doc("SMRITI Report Template")
+            doc.report_key = key
+            doc.report_name = r["report_name"]
+            doc.report_category = r["report_category"]
+            doc.source_doctype = r["source_doctype"]
+            doc.columns_json = json.dumps(r["columns"])
+            doc.filters_json = json.dumps(r["filters"])
+            doc.group_by = r["group_by"]
+            doc.order_by = r["order_by"]
+            doc.company_restricted = r["company_restricted"]
+            doc.branch_restricted = r["branch_restricted"]
+            doc.cache_minutes = r["cache_minutes"]
+            doc.schema_version = r["schema_version"]
+            doc.is_public = r["is_public"]
+            
+            for role in r["roles"]:
+                doc.append("role_access", {"role": role})
+                
+            doc.insert(ignore_permissions=True)
+            print(f"[SMRITI] Created SMRITI Report Template: {key}")
+            
+    frappe.db.commit()
+
+
 def create_audit_log_doctype():
     """Creates the SMRITI Address Audit Log custom DocType for store address change tracking."""
     if frappe.db.exists("DocType", "SMRITI Address Audit Log"):
@@ -378,6 +983,10 @@ def setup_smriti_retail_os():
 
     # 0a. Provision SMRITI Address Audit Log DocType
     create_audit_log_doctype()
+
+    # 0c. Provision SMRITI Reporting DocTypes
+    create_reporting_doctypes()
+    seed_report_templates()
 
     # 0b. Provision dynamic attribute Master DocTypes + preserve existing database entries
     create_master_doctypes()
@@ -731,28 +1340,28 @@ def setup_smriti_retail_os():
             "label": "Retail Billing",
             "type": "Link",
             "link_type": "Page",
-            "link_to": "smriti-billing",
+            "link_to": "smriti_billing",
             "label_for_links": "Keyboard-driven fast point-of-sale checkout."
         },
         {
             "label": "Day Open / Close",
             "type": "Link",
             "link_type": "Page",
-            "link_to": "smriti-shift",
+            "link_to": "smriti_shift",
             "label_for_links": "Open and close cashier shifts with denomination count."
         },
         {
             "label": "Inventory",
             "type": "Link",
             "link_type": "Page",
-            "link_to": "smriti-inventory",
+            "link_to": "smriti_inventory",
             "label_for_links": "Mobile-ready quick scanning barcode inventory."
         },
         {
             "label": "Barcode Printing",
             "type": "Link",
             "link_type": "Page",
-            "link_to": "smriti-barcode",
+            "link_to": "smriti_barcode",
             "label_for_links": "Transaction-based or bulk label printing."
         },
 
@@ -773,7 +1382,7 @@ def setup_smriti_retail_os():
             "label": "Item Master Import",
             "type": "Link",
             "link_type": "Page",
-            "link_to": "smriti-item-master",
+            "link_to": "smriti_item_master",
             "label_for_links": "Paste from Excel or upload CSV to bulk-create items with variants."
         },
         {
@@ -801,14 +1410,14 @@ def setup_smriti_retail_os():
             "label": "Loyalty & Promotions",
             "type": "Link",
             "link_type": "Page",
-            "link_to": "smriti-loyalty",
+            "link_to": "smriti_loyalty",
             "label_for_links": "Configure customer points tiers and conversion rules."
         },
         {
             "label": "Reports",
             "type": "Link",
             "link_type": "Page",
-            "link_to": "smriti-reports",
+            "link_to": "smriti_reports",
             "label_for_links": "Visual sales, stock, and outstanding analytics."
         },
 
@@ -1199,17 +1808,19 @@ def create_default_admin_account():
     email = frappe.conf.get("smriti_admin_email") or f"admin@{frappe.local.site}"
     if not frappe.db.exists("User", email):
         try:
+            import secrets
             doc = frappe.new_doc("User")
             doc.email = email
             doc.first_name = "Admin"
             doc.username = "Admin"
             doc.send_welcome_email = 0
-            # Set the secure default password for Admin (Business Owner)
-            doc.new_password = "AdminPassword123!"
+            # C-06 FIX: Never hardcode passwords in source code.
+            # Force the user to set their own password on first login.
+            doc.reset_password_key = secrets.token_urlsafe(32)
             doc.append("roles", {"role": "SMRITI Store Manager"})
             doc.insert(ignore_permissions=True)
             frappe.db.commit()
-            print(f"[SMRITI] Created default Admin (Business Owner) account: {email}")
+            frappe.logger().info(f"[SMRITI] Created default Admin (Business Owner) account: {email}. Password reset required on first login.")
         except Exception as e:
             frappe.log_error(f"Error creating default Admin account: {str(e)}", "SMRITI Setup Error")
 

@@ -20,7 +20,8 @@ from smriti_retail_os.billing_api import (
     search_items,
     load_held_invoice,
     validate_manager_override,
-    submit_bill
+    submit_bill,
+    create_return_invoice
 )
 
 class TestSmritiRetailBillingAPI(unittest.TestCase):
@@ -358,6 +359,24 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
             role_doc.role = "SMRITI Store Manager"
             role_doc.insert(ignore_permissions=True)
         
+        # Create stock entry to initialize stock for TEST-ITEM-BAR to prevent NegativeStockError on credit sales
+        se = frappe.new_doc("Stock Entry")
+        se.purpose = "Material Receipt"
+        se.stock_entry_type = "Material Receipt"
+        se.company = self.company
+        se.posting_date = frappe.utils.nowdate()
+        se.append("items", {
+            "item_code": "TEST-ITEM-BAR",
+            "qty": 100.0,
+            "t_warehouse": self.warehouse,
+            "uom": self.uom,
+            "basic_rate": 100.0,
+            "expense_account": self.income_account,
+            "allow_zero_valuation_rate": 1
+        })
+        se.insert(ignore_permissions=True)
+        se.submit()
+        
         frappe.db.commit()
 
     def tearDown(self):
@@ -367,6 +386,14 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         frappe.db.delete("Item Price", {"item_code": "TEST-ITEM-BAR"})
         frappe.db.delete("Customer", {"customer_name": "Test Billing Customer"})
         
+        # Clean up Stock Entries created for this test item
+        se_names = frappe.db.sql_list("SELECT DISTINCT parent FROM `tabStock Entry Detail` WHERE item_code = 'TEST-ITEM-BAR'")
+        if se_names:
+            frappe.db.sql("DELETE FROM `tabStock Entry Detail` WHERE parent IN (%s)" % ", ".join(["%s"] * len(se_names)), tuple(se_names))
+            frappe.db.sql("DELETE FROM `tabStock Entry` WHERE name IN (%s)" % ", ".join(["%s"] * len(se_names)), tuple(se_names))
+            frappe.db.sql("DELETE FROM `tabStock Ledger Entry` WHERE item_code = 'TEST-ITEM-BAR'")
+            frappe.db.sql("DELETE FROM `tabBin` WHERE item_code = 'TEST-ITEM-BAR'")
+            
         # Safely and fully delete POS Invoices and Sales Invoices along with their child table items
         for dt, child_dt in [("POS Invoice", "POS Invoice Item"), ("Sales Invoice", "Sales Invoice Item")]:
             names = frappe.db.sql_list("SELECT name FROM `tab%s` WHERE customer = %%s" % dt, ("Test Billing Customer",))
@@ -608,3 +635,60 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         frappe.db.delete("Sales Invoice", {"name": invoice_name})
         frappe.db.delete("GL Entry", {"voucher_no": invoice_name})
         frappe.db.commit()
+
+    def test_create_return_invoice(self):
+        """
+        Verifies that create_return_invoice successfully creates and submits
+        a return Sales Invoice against a submitted Sales Invoice.
+        """
+        # 1. Create a submitted Sales Invoice
+        frappe.db.delete("POS Opening Entry", {"user": frappe.session.user})
+        frappe.db.commit()
+
+        items_payload = [{
+            "item_code": "TEST-ITEM-BAR",
+            "stock_uom": self.uom,
+            "qty": 3,
+            "rate": 100.0,
+            "mrp": 150.0,
+            "gst_percentage": 18,
+            "tax_template": ""
+        }]
+
+        payments_payload = [
+            {"mode_of_payment": self.mode_of_payment, "amount": 354.0}
+        ]
+
+        res = submit_bill(
+            cashier=frappe.session.user,
+            customer="Test Billing Customer",
+            items=frappe.as_json(items_payload),
+            payments=frappe.as_json(payments_payload)
+        )
+
+        invoice_name = res["invoice"]
+        self.assertTrue(frappe.db.exists("Sales Invoice", invoice_name))
+
+        # 2. Call create_return_invoice
+        ret_res = create_return_invoice(invoice_name)
+
+        self.assertIsNotNone(ret_res)
+        ret_name = ret_res["name"]
+        self.assertTrue(frappe.db.exists("Sales Invoice", ret_name))
+
+        # 3. Assert properties of the return invoice
+        ret_doc = frappe.get_doc("Sales Invoice", ret_name)
+        self.assertEqual(ret_doc.docstatus, 1)
+        self.assertEqual(cint(ret_doc.is_return), 1)
+        self.assertEqual(ret_doc.return_against, invoice_name)
+        self.assertEqual(flt(ret_doc.items[0].qty), -3.0)
+
+        # 4. Clean up both invoices
+        frappe.db.delete("Sales Invoice", {"name": ret_name})
+        frappe.db.delete("GL Entry", {"voucher_no": ret_name})
+        frappe.db.delete("Stock Ledger Entry", {"voucher_no": ret_name})
+        frappe.db.delete("Sales Invoice", {"name": invoice_name})
+        frappe.db.delete("GL Entry", {"voucher_no": invoice_name})
+        frappe.db.delete("Stock Ledger Entry", {"voucher_no": invoice_name})
+        frappe.db.commit()
+

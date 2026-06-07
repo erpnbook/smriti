@@ -29,7 +29,13 @@ try:
 except ImportError:
     pass
 
-frappe.init(site="frontend", sites_path="/home/frappe/frappe-bench/sites")
+sites_path = "/home/frappe/frappe-bench/sites"
+site = "frontend"
+if not os.path.exists(os.path.join(sites_path, site)):
+    folders = [f for f in os.listdir(sites_path) if os.path.isdir(os.path.join(sites_path, f)) and f not in ('assets', 'languages')]
+    if folders:
+        site = folders[0]
+frappe.init(site=site, sites_path=sites_path)
 frappe.connect()
 frappe.flags.in_import = True
 
@@ -39,7 +45,7 @@ if hasattr(frappe.local, 'conf'):
     frappe.local.conf.developer_mode = 1
 
 def import_page(page_name):
-    json_path = f'/home/frappe/frappe-bench/apps/smriti_retail_os/smriti_retail_os/page/{page_name}/{page_name}.json'
+    json_path = frappe.get_app_path('smriti_retail_os', 'smriti_retail_os', 'page', page_name, f'{page_name}.json')
     if not os.path.exists(json_path):
         print(f"SKIP {page_name}")
         return
@@ -49,9 +55,14 @@ def import_page(page_name):
     for k in ['modified', 'modified_by', 'creation', 'owner']:
         data.pop(k, None)
         
-    if frappe.db.exists('Page', page_name):
-        frappe.delete_doc('Page', page_name, ignore_permissions=True, force=True)
-        print(f"DELETED OLD {page_name}")
+    data['name'] = page_name
+    data['page_name'] = page_name
+        
+    old_hyphen_name = page_name.replace('_', '-')
+    for name_to_check in (page_name, old_hyphen_name):
+        if frappe.db.exists('Page', name_to_check):
+            frappe.delete_doc('Page', name_to_check, ignore_permissions=True, force=True)
+            print(f"DELETED OLD {name_to_check}")
         
     data['doctype'] = 'Page'
     doc = frappe.get_doc(data)
@@ -60,14 +71,15 @@ def import_page(page_name):
     doc.insert(ignore_permissions=True)
     print(f"CREATED {page_name}")
 
-import_page('smriti-desk')
-import_page('smriti-billing')
-import_page('smriti-shift')
-import_page('smriti-inventory')
-import_page('smriti-barcode')
-import_page('smriti-purchase')
-import_page('smriti-reports')
-import_page('smriti-loyalty')
-import_page('smriti-backup')
+import_page('smriti_desk')
+import_page('smriti_billing')
+import_page('smriti_shift')
+import_page('smriti_inventory')
+import_page('smriti_barcode')
+import_page('smriti_purchase')
+import_page('smriti_reports')
+import_page('smriti_loyalty')
+import_page('smriti_backup')
+import_page('smriti_item_master')
 frappe.db.commit()
 print("DONE")

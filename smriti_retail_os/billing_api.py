@@ -767,3 +767,37 @@ def generate_mock_eway_bill(invoice_name, vehicle_no=None, distance=None, mode_o
         "message": msg
     }
 
+
+@frappe.whitelist()
+def create_return_invoice(invoice_name):
+    """
+    Creates and submits a return invoice (Sales/POS Return) against the original invoice.
+    """
+    docstatus = frappe.db.get_value("Sales Invoice", invoice_name, "docstatus")
+    if docstatus is None:
+        docstatus = frappe.db.get_value("POS Invoice", invoice_name, "docstatus")
+        
+    if docstatus is None:
+        frappe.throw(_("Invoice {0} not found.").format(invoice_name))
+        
+    if docstatus != 1:
+        frappe.throw(_("Invoice {0} must be submitted to create a return.").format(invoice_name))
+
+    from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return
+    
+    return_doc = make_sales_return(invoice_name)
+    
+    try:
+        return_doc.insert(ignore_permissions=True)
+        return_doc.submit()
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        raise
+
+    return {
+        "name": return_doc.name,
+        "message": _("Return Invoice {0} created and submitted successfully.").format(return_doc.name)
+    }
+
+

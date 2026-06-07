@@ -16,7 +16,8 @@ from smriti_retail_os.purchase_api import (
     get_open_purchase_orders,
     get_po_details,
     create_purchase_order,
-    create_purchase_receipt
+    create_purchase_receipt,
+    create_purchase_return
 )
 
 class TestSmritiRetailPurchaseAPI(unittest.TestCase):
@@ -340,3 +341,46 @@ class TestSmritiRetailPurchaseAPI(unittest.TestCase):
         mrp_rate = frappe.db.get_value("Item Price", {"item_code": variant_code, "price_list": "MRP"}, "price_list_rate")
         self.assertEqual(flt(selling_rate), 350.0 * 1.2)
         self.assertEqual(flt(mrp_rate), 350.0 * 1.5)
+
+    def test_create_purchase_return(self):
+        """
+        Verifies that create_purchase_return successfully creates and submits
+        a Purchase Return (Debit Note) against a submitted Purchase Receipt.
+        """
+        # 1. Create standalone submitted Purchase Receipt
+        items = [{
+            "item_code": self.item_code,
+            "qty": 10,
+            "rate": 150.0,
+            "warehouse": self.warehouse,
+            "stock_uom": self.uom
+        }]
+        
+        res = create_purchase_receipt(self.supplier, items)
+        self.assertIsNotNone(res)
+        receipt_name = res["name"]
+        self.assertTrue(frappe.db.exists("Purchase Receipt", receipt_name))
+
+        # 2. Call create_purchase_return
+        ret_res = create_purchase_return(receipt_name)
+        
+        self.assertIsNotNone(ret_res)
+        ret_name = ret_res["name"]
+        self.assertTrue(frappe.db.exists("Purchase Receipt", ret_name))
+
+        # 3. Assert properties of the return Purchase Receipt
+        ret_doc = frappe.get_doc("Purchase Receipt", ret_name)
+        self.assertEqual(ret_doc.docstatus, 1)
+        self.assertEqual(cint(ret_doc.is_return), 1)
+        self.assertEqual(ret_doc.return_against, receipt_name)
+        self.assertEqual(flt(ret_doc.items[0].qty), -10.0)
+
+        # 4. Clean up both receipts
+        frappe.db.delete("Purchase Receipt", {"name": ret_name})
+        frappe.db.delete("Stock Ledger Entry", {"voucher_no": ret_name})
+        frappe.db.delete("GL Entry", {"voucher_no": ret_name})
+        frappe.db.delete("Purchase Receipt", {"name": receipt_name})
+        frappe.db.delete("Stock Ledger Entry", {"voucher_no": receipt_name})
+        frappe.db.delete("GL Entry", {"voucher_no": receipt_name})
+        frappe.db.commit()
+

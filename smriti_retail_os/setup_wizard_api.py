@@ -141,11 +141,15 @@ def run_setup_wizard(setup_data):
     logs = []
     def log(msg):
         logs.append(msg)
-        print(f"[SMRITI SETUP] {msg}")
+        frappe.logger().info(f"[SMRITI SETUP] {msg}")
 
     try:
-        # Escalate session user to Administrator to prevent PermissionError in third-party hooks (e.g. india_compliance)
-        frappe.set_user("Administrator")
+        # C-07 FIX: Do NOT use frappe.set_user("Administrator") here.
+        # frappe.set_user() permanently re-assigns frappe.session.user for the entire
+        # remaining request, affecting all subsequent permission checks including
+        # third-party hooks (india_compliance, erpnext). This bypasses audit trails.
+        # Instead, use frappe.flags.ignore_permissions=True selectively on each doc.
+        frappe.flags.ignore_permissions = True
 
         # 1. Update Admin credentials if provided
         log("Updating Administrator profile details...")
