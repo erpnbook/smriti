@@ -245,9 +245,8 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     if on_credit:
         doctype = "Sales Invoice"
         use_pos = False
-        if is_recalled:
-            frappe.delete_doc("POS Invoice", invoice_name, ignore_permissions=True)
-            is_recalled = False
+        # NOTE: Do NOT delete the recalled POS Invoice here.
+        # It will be cancelled/deleted AFTER the Sales Invoice is committed (see below).
     else:
         use_pos = is_recalled or has_open_shift
         doctype = "POS Invoice" if use_pos else "Sales Invoice"
@@ -337,47 +336,85 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
         invoice_doc.taxes_and_charges = default_tax_template
         invoice_doc.run_method("set_taxes")
 
-    for it in items_list:
-        # Item Default child table holds per-company default warehouses
-        item_wh = frappe.db.get_value(
-            "Item Default",
-            {"parent": it.get("item_code"), "company": company},
-            "default_warehouse"
-        ) or _fallback_wh
+    # ── Pre-fetch all per-item data in batch to eliminate N+1 DB queries ─────
+    item_codes = [it.get("item_code") for it in items_list]
 
-        # Resolve tax template — prefer caller-supplied, fall back to item's first matching template
+    # Batch 1: Item Default warehouses — one query, not one per item
+    item_defaults_rows = frappe.db.get_all(
+        "Item Default",
+        filters={"parent": ["in", item_codes], "company": company},
+        fields=["parent", "default_warehouse"]
+    )
+    item_wh_map = {r.parent: r.default_warehouse for r in item_defaults_rows}
+
+    # Batch 2: Item Tax Template assignments for these items
+    item_tax_rows = frappe.db.get_all(
+        "Item Tax",
+        filters={"parent": ["in", item_codes]},
+        fields=["parent", "item_tax_template"]
+    )
+    # Only first matching tax per item (same behaviour as previous per-item frappe.get_doc)
+    item_tax_map = {}
+    for r in item_tax_rows:
+        if r.parent not in item_tax_map:
+            item_tax_map[r.parent] = r.item_tax_template
+
+    # Batch 3: Item Tax Template company ownership (to validate they belong to this company)
+    all_templates = list(set(item_tax_map.values()))
+    if all_templates:
+        tmpl_rows = frappe.db.get_all(
+            "Item Tax Template",
+            filters={"name": ["in", all_templates]},
+            fields=["name", "company"]
+        )
+        tmpl_company_map = {r.name: r.company for r in tmpl_rows}
+    else:
+        tmpl_company_map = {}
+
+    # Batch 4: GST percentage per item (for tax-inclusive rate calculation)
+    gst_rows = frappe.db.get_all(
+        "Item",
+        filters={"name": ["in", item_codes]},
+        fields=["name", "custom_gst_percentage"]
+    )
+    item_gst_map = {r.name: flt(r.custom_gst_percentage or 0.0) for r in gst_rows}
+
+    # Resolve company cost_center once (used as fallback for all items)
+    company_cc = frappe.db.get_value("Company", company, "cost_center")
+    if not company_cc:
+        company_cc = frappe.db.get_value("Cost Center", {"company": company, "is_group": 0}, "name")
+    # ─────────────────────────────────────────────────────────────────────────
+
+    for it in items_list:
+        item_code = it.get("item_code")
+
+        # Warehouse: pre-fetched item default → fallback warehouse
+        item_wh = item_wh_map.get(item_code) or _fallback_wh
+
+        # Tax template: caller-supplied → pre-fetched item tax → None
         tax_template = it.get("tax_template") or it.get("item_tax_template")
         if not tax_template:
-            item_doc = frappe.get_doc("Item", it.get("item_code"))
-            for t in item_doc.taxes:
-                # Verify this template actually exists and belongs to the company
-                tmpl_company = frappe.db.get_value("Item Tax Template", t.item_tax_template, "company")
-                if tmpl_company == company:
-                    tax_template = t.item_tax_template
-                    break
+            tax_template = item_tax_map.get(item_code)
 
-        # Final safety: verify the resolved template exists and belongs to this company
+        # Validate tax template belongs to this company (using pre-fetched map)
         if tax_template:
-            tmpl_company = frappe.db.get_value("Item Tax Template", tax_template, "company")
-            if not tmpl_company or tmpl_company != company:
+            if tmpl_company_map.get(tax_template) != company:
                 tax_template = None
 
-        # Resolve cost center robustly to prevent validation failures on clean DBs
-        item_cc = it.get("cost_center") or frappe.db.get_value("Company", company, "cost_center")
-        if not item_cc:
-            item_cc = frappe.db.get_value("Cost Center", {"company": company, "is_group": 0}, "name")
+        # Cost center: caller-supplied → company default (pre-fetched)
+        item_cc = it.get("cost_center") or company_cc
 
-        # Resolve rate backing out tax if override is set to Inclusive
+        # GST rate for tax-inclusive rate calculation (pre-fetched)
         rate = flt(it.get("rate"))
         gst_pct = flt(it.get("gst_percentage") or it.get("custom_gst_percentage") or 0.0)
         if gst_pct <= 0.0:
-            gst_pct = flt(frappe.db.get_value("Item", it.get("item_code"), "custom_gst_percentage") or 0.0)
-            
+            gst_pct = item_gst_map.get(item_code, 0.0)
+
         if resolved_tax_override == "Inclusive" and gst_pct > 0.0:
             rate = rate / (1.0 + (gst_pct / 100.0))
 
         invoice_doc.append("items", {
-            "item_code": it.get("item_code"),
+            "item_code": item_code,
             "qty": flt(it.get("qty")),
             "rate": rate,
             "price_list_rate": flt(it.get("mrp")),
@@ -387,7 +424,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
             "item_tax_template": tax_template,
             "cost_center": item_cc
         })
-        
+
     # 2. Split Payments
     for p in payments_list:
         if flt(p.get("amount")) > 0:
@@ -402,7 +439,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
                 "amount": flt(p.get("amount")),
                 "account": mop_account
             })
-            
+
     # 3. Loyalty Points Redemption
     if loyalty_points and int(loyalty_points) > 0:
         loyalty_program = frappe.db.get_value("Customer", invoice_doc.customer, "loyalty_program")
@@ -412,12 +449,25 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
             invoice_doc.loyalty_program = loyalty_program
 
     # 4. Save and Submit
-    if is_recalled:
-        invoice_doc.save(ignore_permissions=True)
-    else:
-        invoice_doc.insert(ignore_permissions=True)
-    
-    invoice_doc.submit()
+    try:
+        if is_recalled:
+            invoice_doc.save(ignore_permissions=True)
+        else:
+            invoice_doc.insert(ignore_permissions=True)
+
+        invoice_doc.submit()
+    except Exception:
+        frappe.db.rollback()
+        raise
+
+    # C-02 FIX: Delete the recalled POS Invoice AFTER the replacement SI is committed.
+    # If we deleted it before (as before), any failure during SI creation would result
+    # in zero invoices with no recovery. Now the POS Invoice survives until SI is safe.
+    if on_credit and invoice_name and frappe.db.exists("POS Invoice", invoice_name):
+        try:
+            frappe.delete_doc("POS Invoice", invoice_name, ignore_permissions=True)
+        except Exception as del_ex:
+            frappe.log_error(f"[SMRITI] Could not delete recalled POS Invoice {invoice_name}: {del_ex}")
     
     # REL-02: Move non-critical post-billing tasks to background workers
     # This prevents UI blocking and DB lock contention
@@ -444,13 +494,25 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
 def process_post_billing_tasks(invoice_name, doctype, payments_list, company):
     """
     Background worker to handle non-critical billing tasks:
-    1. Reconcile Payment Entries for Sales Invoices.
+    1. Reconcile Payment Entries for Sales Invoices (idempotent — will not create duplicate PEs).
     """
     if doctype == "Sales Invoice":
         from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
         total_paid = sum(flt(p.get("amount")) for p in payments_list)
         if total_paid > 0:
             try:
+                # C-03 FIX: Idempotency check — do not create a PE if one already exists
+                # for this invoice. Background workers can retry on failure, so this
+                # prevents duplicate Payment Entries and double-payment in the ledger.
+                existing_pe = frappe.db.get_value(
+                    "Payment Entry Reference",
+                    {"reference_name": invoice_name, "docstatus": 1},
+                    "parent"
+                )
+                if existing_pe:
+                    frappe.logger().info(f"[SMRITI] PE already exists ({existing_pe}) for {invoice_name}. Skipping.")
+                    return
+
                 pe = get_payment_entry(doctype, invoice_name)
                 if payments_list:
                     first_p = payments_list[0]
@@ -466,7 +528,7 @@ def process_post_billing_tasks(invoice_name, doctype, payments_list, company):
                 frappe.db.commit()
                 frappe.logger().info(f"[SMRITI] Background Payment Entry created for {invoice_name}")
             except Exception as e:
-                frappe.log_error(f"Post-Billing Payment Entry Error for {invoice_name}: {str(e)}")
+                frappe.log_error(f"Post-Billing Payment Entry Error for {invoice_name}: {frappe.get_traceback()}")
 
 
 @frappe.whitelist()
@@ -492,33 +554,40 @@ def search_items(query, price_list="Standard Selling"):
         fields=["name", "item_name", "stock_uom", "brand", "item_group", "custom_mrp", "custom_gst_percentage", "valuation_rate", "gst_hsn_code"]
     )
     
+    # ── Batch-fetch all selling prices and MRP prices — eliminates N+1 per item ──
+    item_names = [it.name for it in items]
+
+    price_rows = frappe.db.get_all(
+        "Item Price",
+        filters={"item_code": ["in", item_names], "price_list": ["in", [price_list, "MRP"]]},
+        fields=["item_code", "price_list", "price_list_rate"]
+    )
+    selling_price_map = {}   # item_code → selling rate
+    mrp_price_map = {}       # item_code → MRP rate
+    for pr in price_rows:
+        if pr.price_list == price_list:
+            selling_price_map[pr.item_code] = flt(pr.price_list_rate)
+        elif pr.price_list == "MRP":
+            mrp_price_map[pr.item_code] = flt(pr.price_list_rate)
+    # ──────────────────────────────────────────────────────────────────────────
+
     results = []
     for it in items:
-        # Get standard selling price
-        rate = frappe.db.get_value(
-            "Item Price", 
-            {"item_code": it.name, "price_list": price_list}, 
-            "price_list_rate"
-        ) or it.valuation_rate or 0.0
-        
-        # Get MRP
-        mrp = it.custom_mrp or frappe.db.get_value(
-            "Item Price", 
-            {"item_code": it.name, "price_list": "MRP"}, 
-            "price_list_rate"
-        ) or rate
-        
+        # Prices now resolved from pre-fetched maps — zero DB hits per item
+        rate = selling_price_map.get(it.name) or flt(it.valuation_rate) or 0.0
+        mrp = flt(it.custom_mrp) or mrp_price_map.get(it.name) or rate
+
         gst_percentage = cint(it.custom_gst_percentage) if it.custom_gst_percentage else 0
         if not gst_percentage and it.gst_hsn_code:
             from smriti_retail_os.hooks_logic import get_gst_rate_from_hsn
             gst_percentage = get_gst_rate_from_hsn(it.gst_hsn_code) or 0
-        
-        # Resolve tax template
+
+        # Resolve tax template — use cached doc (no extra DB hit)
         tax_template = ""
         item_doc = frappe.get_cached_doc("Item", it.name)
         if item_doc.taxes:
             tax_template = item_doc.taxes[0].item_tax_template
-            
+
         results.append({
             "item_code": it.name,
             "item_name": it.item_name,

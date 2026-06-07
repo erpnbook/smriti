@@ -174,7 +174,7 @@ def create_purchase_order(supplier, items, schedule_date=None, remarks=None, ima
     po.schedule_date = schedule_date or nowdate()
     po.company = company
     if remarks:
-        po.terms = remarks
+        po.remarks = remarks  # po.terms is the legal Terms & Conditions field; remarks go here
 
     for it in items_list:
         item_code = it.get("item_code")
@@ -250,9 +250,16 @@ def create_purchase_order(supplier, items, schedule_date=None, remarks=None, ima
             "uom": it.get("stock_uom") or frappe.db.get_value("Item", item_code, "stock_uom")
         })
 
-    po.docstatus = 1  # Submit
-    po.save(ignore_permissions=True)
-    frappe.db.commit()
+    # Correct Frappe submit lifecycle: insert() then submit()
+    # DO NOT use docstatus=1 + save() — that bypasses before_submit/on_submit/after_submit hooks
+    # which means stock reservation, GL entries, and PO status updates are never triggered.
+    try:
+        po.insert(ignore_permissions=True)
+        po.submit()
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        raise
 
     return {
         "name": po.name,
@@ -292,16 +299,26 @@ def create_purchase_receipt(supplier, items, po_name=None, warehouse=None):
         pr.currency = po_doc.currency
         pr.conversion_rate = po_doc.conversion_rate
 
+    # ── Batch-fetch item flags to eliminate N+1 queries in the item loop ─────
+    item_codes_list = [it.get("item_code") for it in items_list]
+    item_flag_rows = frappe.db.get_all(
+        "Item",
+        filters={"name": ["in", item_codes_list]},
+        fields=["name", "has_batch_no", "stock_uom"]
+    )
+    item_flags_map = {r.name: r for r in item_flag_rows}
+    # ──────────────────────────────────────────────────────────────────────────
+
     for it in items_list:
         item_code = it.get("item_code")
         qty = flt(it.get("qty"))
         rate = flt(it.get("rate"))
         wh = it.get("warehouse") or warehouse
 
-        # Handle batch & expiry tracking
+        # Handle batch & expiry tracking — uses pre-fetched flag, no per-item DB call
         batch_no = None
-        has_batch_no = frappe.db.get_value("Item", item_code, "has_batch_no")
-        if has_batch_no:
+        item_flags = item_flags_map.get(item_code) or frappe._dict()
+        if item_flags.get("has_batch_no"):
             expiry_date = it.get("expiry_date")
             batch_no = get_or_create_batch(item_code, expiry_date)
 
@@ -311,7 +328,7 @@ def create_purchase_receipt(supplier, items, po_name=None, warehouse=None):
             "rate": rate,
             "warehouse": wh,
             "batch_no": batch_no,
-            "uom": it.get("stock_uom") or frappe.db.get_value("Item", item_code, "stock_uom")
+            "uom": it.get("stock_uom") or item_flags.get("stock_uom") or "Nos"
         }
 
         # Map to Purchase Order if applicable
@@ -321,9 +338,16 @@ def create_purchase_receipt(supplier, items, po_name=None, warehouse=None):
 
         pr.append("items", row)
 
-    pr.docstatus = 1  # Submit
-    pr.save(ignore_permissions=True)
-    frappe.db.commit()
+    # Correct Frappe submit lifecycle: insert() then submit()
+    # DO NOT use docstatus=1 + save() — that bypasses before_submit/on_submit/after_submit hooks
+    # which means Stock Ledger Entries, GL Entries, and PO received_qty updates are never created.
+    try:
+        pr.insert(ignore_permissions=True)
+        pr.submit()
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        raise
 
     return {
         "name": pr.name,
