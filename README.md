@@ -837,4 +837,4 @@ MIT License — Free for commercial use.
 ---
 
 *SMRITI — Smart Retail Intelligence.*
-*Built for Indian retail. Powered by ERPNext.*
+*Built for Indian retail. Powered by ERPNbook.*
