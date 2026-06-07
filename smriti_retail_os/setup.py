@@ -872,7 +872,7 @@ def seed_master_doctypes():
                     "^FT335,175\n"
                     "^A0N,17,23^FDColor:^FS\n"
                     "^FT335,386\n"
-                    "^ABN,11,7^FDcare@tattlythreads.com^FS\n"
+                    "^ABN,11,7^FDcontact@yourstore.com^FS\n"
                     "^FO34,125\n"
                     "^BY2^BCN,30,N,N^FD{barcode}^FS\n"
                     "^FT46,181\n"

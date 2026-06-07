@@ -473,6 +473,11 @@ website_route_rules = [
         # Standalone Reports Dashboard — served from www/reports.html + www/reports.py
         "from_route": "/reports",
         "to_route": "reports"
+    },
+    {
+        # Standalone Print Templates — served from www/print_templates.html + www/print_templates.py
+        "from_route": "/print_templates",
+        "to_route": "print_templates"
     }
 ]
 

@@ -57,3 +57,6 @@ jspm_packages/
 # SMRITI Branding Policy (do not commit to GitHub)
 BRANDING_POLICY.md
 
+# SMRITI extracted images from sheets
+smriti_retail_os/public/extracted_images/
+

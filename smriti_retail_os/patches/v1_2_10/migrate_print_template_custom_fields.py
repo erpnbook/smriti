@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/patches/v1_2_10/migrate_print_template_custom_fields.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: One-time patch to migrate legacy programmatic custom fields for SMRITI Print Template.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-# Copyright (c) 2026, SMRITI Retail OS and contributors
-# For license information, please see license.txt
 
 import frappe
 

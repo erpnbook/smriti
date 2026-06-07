@@ -573,6 +573,11 @@ function _redirect_to_smriti_home() {
     // If not logged in or on a 404 page, do nothing to prevent loops
     if (frappe.session.user === "Guest" || document.title.includes("404")) return;
 
+    // Bypass redirect if standard hash route is present
+    if (window.location.hash && (window.location.hash.includes('List/') || window.location.hash.includes('Form/') || window.location.hash.includes('workspace/'))) {
+        return;
+    }
+
     var current_route = "";
     try {
         current_route = (typeof frappe.get_route_str === 'function') ? frappe.get_route_str() : "";
@@ -664,6 +669,7 @@ function get_smriti_active_page() {
     if (page_name === "smriti-reports")   return "reports";
     if (page_name === "smriti-loyalty")   return "loyalty";
     if (page_name === "smriti-item-master") return "item_import";
+    if (page_name === "print_templates" || page_name === "smriti-print-template" || route[1] === "SMRITI Print Template") return "print_templates";
     if (page_name === "customer" || route[1] === "Customer") return "customers";
     if (page_name === "item" || route[1] === "Item") return "products";
     if (page_name === "supplier" || route[1] === "Supplier") return "suppliers";

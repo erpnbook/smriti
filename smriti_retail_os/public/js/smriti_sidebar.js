@@ -15,7 +15,7 @@
 window.SMRITI = window.SMRITI || {};
 
 SMRITI.renderSidebar = function(active_page) {
-    const is_manager = frappe.user.has_role("SMRITI Store Manager");
+    const is_manager = frappe.user.has_role("SMRITI Store Manager") || frappe.user.has_role("System Manager");
     const is_admin_account = frappe.session.user === "Admin" || frappe.session.user === "admin@erpnbook.com";
 
     const nav_items = [
@@ -39,7 +39,7 @@ SMRITI.renderSidebar = function(active_page) {
             {id:"item_import", icon:"📥", label:"Item Master Import",
              url:"/app/smriti-item-master"},
             {id:"print_templates", icon:"📐", label:"Print Templates",
-             url:"/app/smriti-print-template"},
+             url:"/print_templates"},
             {id:"purchase_orders", icon:"📝", label:"Purchase Orders",
              url:"/app/purchase-order"},
             {id:"purchase_receipts", icon:"🚚", label:"Purchase Receipts",

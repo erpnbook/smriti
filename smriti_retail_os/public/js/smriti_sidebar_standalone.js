@@ -71,6 +71,7 @@ SMRITI.sidebarSchema = [
         items: [
             { id: 'inventory_ops', label: '├─ Stock Operations', url: '/inventory' },
             { id: 'barcode', label: '├─ Barcode Center', url: '/barcode' },
+            { id: 'print_templates', label: '├─ Print Templates', url: '/print_templates' },
             { id: 'stock_adjust', label: '└─ Stock Adjustments', url: '#' }
         ]
     },

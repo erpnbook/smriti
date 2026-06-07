@@ -1,0 +1,535 @@
+/**
+ * @file: smriti_retail_os/www/print_templates.html
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/print_templates.html
+  @description: SMRITI Print Templates Registry — Standalone UI (Zero system chrome)
+  @author: Antigravity AI
+  @version: 1.0.0
+  @license: MIT
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMRITI Print Templates</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg:         #0a0f1e;
+    --bg2:        #0f1629;
+    --card:       #131d35;
+    --card2:      #172040;
+    --border:     rgba(255,255,255,0.07);
+    --border2:    rgba(255,255,255,0.12);
+    --primary:    #6366f1;
+    --primary-lt: #818cf8;
+    --accent:     #f59e0b;
+    --success:    #10b981;
+    --warning:    #f59e0b;
+    --danger:     #ef4444;
+    --text:       #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-sub:   #475569;
+    --radius:     12px;
+    --radius-sm:  8px;
+    --radius-lg:  16px;
+    --t:          0.2s ease;
+}
+
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+
+/* Ambient background grid */
+.bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 0;
+}
+
+#app { position:relative; z-index:1; width:100vw; height:100vh; display:flex; overflow:hidden; }
+
+/* Main Wrapper */
+.main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+/* Topbar */
+.topbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
+.topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--text-muted); }
+.topbar-breadcrumbs span.sep { color:var(--text-sub); }
+.topbar-breadcrumbs span.active { color:var(--text); }
+.topbar-right { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
+.topbtn { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:var(--radius-sm); font-size:12px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); white-space:nowrap; }
+.topbtn span { font-size:16px; }
+.topbtn:hover { border-color:var(--primary); color:var(--primary-lt); }
+
+/* Filter Bar */
+.filter-bar { padding:14px 24px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; gap:16px; align-items:center; flex-shrink:0; }
+.form-input { padding:8px 12px; background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.88rem; outline:none; transition:all var(--t); font-family:inherit; }
+.form-input:focus { border-color:var(--primary); }
+.search-input { width:320px; }
+.filter-select { width:180px; }
+
+/* Content Table Area */
+.table-wrap { flex:1; overflow:auto; padding:16px 24px; }
+.smriti-table { width:100%; border-collapse:collapse; text-align:left; }
+.smriti-table th { padding:10px 14px; background:var(--card2); color:var(--text-muted); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1; }
+.smriti-table td { padding:12px 14px; border-bottom:1px solid var(--border); font-size:0.88rem; vertical-align:middle; }
+.smriti-table tbody tr:hover td { background:rgba(99,102,241,0.04); }
+.smriti-table tbody tr:last-child td { border-bottom:none; }
+
+.badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700; }
+.badge-primary { background:rgba(99,102,241,0.15); color:var(--primary-lt); }
+.badge-accent { background:rgba(245,158,11,0.15); color:var(--accent); }
+.badge-success { background:rgba(16,185,129,0.15); color:var(--success); }
+.badge-danger { background:rgba(239,68,68,0.15); color:var(--danger); }
+.template-id-badge { font-family:monospace; font-size:0.75rem; color:var(--text-muted); background:rgba(255,255,255,0.04); padding:2px 6px; border-radius:4px; border:1px solid var(--border); }
+
+/* Modals */
+.modal-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(3,7,18,0.85); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+.modal-backdrop.open { opacity:1; pointer-events:all; }
+.modal { background:var(--card2); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px; width:100%; max-width:850px; transform:translateY(20px); transition:transform 0.2s; display:flex; flex-direction:column; }
+.modal-backdrop.open .modal { transform:translateY(0); }
+.modal-header { display:flex; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:12px; }
+.modal-title { font-family:'Outfit',sans-serif; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px; }
+.modal-title span { color:var(--primary-lt); font-size:22px; }
+.modal-close { margin-left:auto; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:22px; display:flex; align-items:center; }
+.modal-close:hover { color:var(--text); }
+.modal-body { display:flex; flex-direction:column; gap:14px; }
+
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-label { font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+.btn-submit { width:100%; padding:11px; background:linear-gradient(135deg,var(--accent),#d97706); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.92rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 12px rgba(245,158,11,0.2); margin-top:10px; }
+.btn-submit:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(245,158,11,0.35); }
+.btn-submit:disabled { opacity:0.4; cursor:not-allowed; transform:none !important; }
+
+/* Toast Container */
+#toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
+.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+.toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
+.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
+.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+.toast span { font-size:20px; }
+@keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+</style>
+
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
+<body>
+<script>
+    if (new URLSearchParams(window.location.search).get('popout') === 'true') {
+        document.body.classList.add('popout-mode');
+    }
+</script>
+
+<div class="bg-grid"></div>
+
+<div id="app">
+    <!-- Sidebar -->
+    <div id="smriti-sidebar-target" class="sidebar"></div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-breadcrumbs">
+                <span>SMRITI</span>
+                <span class="sep">/</span>
+                <span class="active">Print Templates</span>
+            </div>
+
+            <div class="topbar-right">
+                <button class="topbtn" onclick="history.back()" title="Go Back">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+                <button class="topbtn" onclick="history.forward()" title="Go Forward">
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+                <button class="topbtn" onclick="openAddTemplateModal()" style="border-color:var(--primary);color:var(--primary-lt);"><span class="material-symbols-outlined">add_circle</span> Quick Add Template</button>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <input type="text" class="form-input search-input" id="search-box" placeholder="Search by template title or ID..." oninput="handleSearch(this.value)">
+            <select class="form-input filter-select" id="filter-size" onchange="applyFilters()">
+                <option value="">All Label Sizes</option>
+                <option value="50x25">50x25</option>
+                <option value="50x30">50x30</option>
+                <option value="75x50">75x50</option>
+                <option value="100x50">100x50</option>
+                <option value="106x55">106x55</option>
+            </select>
+            <select class="form-input filter-select" id="filter-language" onchange="applyFilters()">
+                <option value="">All Languages</option>
+                <option value="ZPL">ZPL</option>
+                <option value="TSPL">TSPL</option>
+            </select>
+        </div>
+
+        <!-- Directory Table -->
+        <div class="table-wrap">
+            <table class="smriti-table">
+                <thead>
+                    <tr>
+                        <th>Template Details</th>
+                        <th>Label Size</th>
+                        <th>Language / Family</th>
+                        <th>Status</th>
+                        <th>Default</th>
+                        <th>System ID</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="templates-tbody">
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading templates...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Template Form Modal -->
+<div class="modal-backdrop" id="template-modal" onclick="closeTemplateModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title"><span class="material-symbols-outlined">settings_suggest</span> <span id="modal-action-title">Quick Add Template</span></div>
+            <button class="modal-close" onclick="closeTemplateModal()">&times;</button>
+        </div>
+        <div class="modal-body" style="max-height: 80vh; overflow-y: auto; padding-right: 6px;">
+            <input type="hidden" id="tmpl-name-id" value="">
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+                <div class="form-group">
+                    <label class="form-label">Template Title *</label>
+                    <input type="text" class="form-input" id="tmpl-title" placeholder="e.g. Standard Footwear 50x30 ZPL">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Label Size *</label>
+                    <select class="form-input" id="tmpl-size">
+                        <option value="50x25">50x25</option>
+                        <option value="50x30" selected>50x30</option>
+                        <option value="75x50">75x50</option>
+                        <option value="100x50">100x50</option>
+                        <option value="106x55">106x55</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Printer Language *</label>
+                    <select class="form-input" id="tmpl-language">
+                        <option value="ZPL" selected>ZPL</option>
+                        <option value="TSPL">TSPL</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Printer Family *</label>
+                    <select class="form-input" id="tmpl-family">
+                        <option value="ZPL" selected>ZPL</option>
+                        <option value="TSPL">TSPL</option>
+                        <option value="EPL">EPL</option>
+                        <option value="CPCL">CPCL</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Template Version</label>
+                    <input type="text" class="form-input" id="tmpl-version" placeholder="1.0.0" value="1.0.0">
+                </div>
+                <div class="form-group" style="flex-direction:row; gap:16px; align-items:center; margin-top:20px;">
+                    <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                        <input type="checkbox" id="tmpl-active" checked style="accent-color:var(--primary); width:16px; height:16px;"> Active
+                    </label>
+                    <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                        <input type="checkbox" id="tmpl-default" style="accent-color:var(--primary); width:16px; height:16px;"> Is Default for Size
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Raw PRN Template (ZPL / TSPL Code) *</label>
+                <textarea class="form-input" id="tmpl-raw" rows="8" placeholder="^XA\n^FO50,50^A0N,30,30^FDFootwear Label^FS\n^XZ" style="font-family:monospace; font-size:0.85rem; line-height:1.4; resize:vertical;"></textarea>
+                <div style="font-size:0.75rem; color:var(--text-muted); text-align:right;">Max 100 KB limit.</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Field Mappings JSON (Dynamic Variables mapping)</label>
+                <textarea class="form-input" id="tmpl-mappings" rows="4" placeholder='{\n  "article_no": "custom_article_no",\n  "color": "custom_color",\n  "size": "custom_size"\n}' style="font-family:monospace; font-size:0.85rem; line-height:1.4; resize:vertical;"></textarea>
+            </div>
+
+            <button class="btn-submit" id="btn-save" onclick="saveTemplateDetail()">
+                <span class="material-symbols-outlined">save</span> Save Template
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+let loggedUser = '{{ cashier }}';
+let masterTemplatesList = [];
+
+// REST API
+function api(method, params = {}) {
+    return fetch(`/api/method/${method}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-frappe-csrf-token': CSRF_TOKEN
+        },
+        body: JSON.stringify(params)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.exc) throw new Error(d._error_message || d.exc);
+        return d.message;
+    });
+}
+
+function doLogout() {
+    fetch('/api/method/logout', { credentials: 'include' })
+    .then(() => { window.location.href = '/login'; });
+}
+
+function toast(msg, type = 'success') {
+    const cont = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icon = type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info';
+    t.innerHTML = `<span class="material-symbols-outlined">${icon}</span> <span>${msg}</span>`;
+    cont.appendChild(t);
+    setTimeout(() => { t.remove(); }, 4000);
+}
+
+async function init() {
+    // Set user avatar info (sidebar renders these dynamically — guard against null)
+    const _sbu = document.getElementById('sb-user'); if (_sbu) _sbu.textContent = loggedUser.split('@')[0];
+    const _sba = document.getElementById('sb-avatar'); if (_sba) _sba.textContent = loggedUser.charAt(0).toUpperCase();
+
+    await loadTemplates();
+}
+
+async function loadTemplates() {
+    try {
+        const data = await api('frappe.client.get_list', {
+            doctype: 'SMRITI Print Template',
+            fields: ['name', 'template_title', 'label_size', 'printer_language', 'printer_family', 'custom_active', 'custom_is_default', 'custom_version'],
+            order_by: 'template_title asc',
+            limit_page_length: 200
+        });
+
+        masterTemplatesList = data || [];
+        renderTable(masterTemplatesList);
+    } catch(e) {
+        toast('Failed to load templates: ' + e.message, 'error');
+    }
+}
+
+function renderTable(list) {
+    const tbody = document.getElementById('templates-tbody');
+    if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-sub);padding:40px 0;">No templates found.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = list.map(t => `
+        <tr>
+            <td>
+                <div style="font-weight:600; color:var(--text);">${t.template_title}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">Version: ${t.custom_version || '1.0.0'}</div>
+            </td>
+            <td><span class="badge badge-primary">${t.label_size}</span></td>
+            <td><span class="badge badge-accent">${t.printer_language} (${t.printer_family})</span></td>
+            <td>
+                <span class="badge ${t.custom_active ? 'badge-success' : 'badge-danger'}">
+                    ${t.custom_active ? 'Active' : 'Inactive'}
+                </span>
+            </td>
+            <td>
+                ${t.custom_is_default ? '<span class="badge badge-success" style="background:rgba(16,185,129,0.25);">Default</span>' : '<span style="color:var(--text-sub); font-size:0.8rem;">—</span>'}
+            </td>
+            <td><span class="template-id-badge">${t.name}</span></td>
+            <td style="text-align:right; white-space:nowrap;">
+                <button class="topbtn" onclick="openEditTemplateModal('${t.name}')" title="Edit Template" style="padding:4px 8px;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">edit</span>
+                </button>
+                <button class="topbtn" onclick="deleteTemplate('${t.name}')" title="Delete Template" style="padding:4px 8px; border-color:rgba(239,68,68,0.25); color:var(--danger);">
+                    <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function handleSearch(q) {
+    applyFilters();
+}
+
+function applyFilters() {
+    const q = document.getElementById('search-box').value.toLowerCase();
+    const size = document.getElementById('filter-size').value;
+    const lang = document.getElementById('filter-language').value;
+
+    let filtered = masterTemplatesList;
+
+    if (q) {
+        filtered = filtered.filter(t => 
+            t.template_title.toLowerCase().includes(q) ||
+            t.name.toLowerCase().includes(q)
+        );
+    }
+    if (size) {
+        filtered = filtered.filter(t => t.label_size === size);
+    }
+    if (lang) {
+        filtered = filtered.filter(t => t.printer_language === lang);
+    }
+
+    renderTable(filtered);
+}
+
+function openAddTemplateModal() {
+    document.getElementById('modal-action-title').textContent = "Quick Add Template";
+    document.getElementById('tmpl-name-id').value = "";
+    document.getElementById('tmpl-title').value = "";
+    document.getElementById('tmpl-size').value = "50x30";
+    document.getElementById('tmpl-language').value = "ZPL";
+    document.getElementById('tmpl-family').value = "ZPL";
+    document.getElementById('tmpl-version').value = "1.0.0";
+    document.getElementById('tmpl-active').checked = true;
+    document.getElementById('tmpl-default').checked = false;
+    document.getElementById('tmpl-raw').value = "";
+    document.getElementById('tmpl-mappings').value = "";
+    
+    document.getElementById('template-modal').classList.add('open');
+}
+
+async function openEditTemplateModal(name) {
+    try {
+        toast('Fetching template details...', 'info');
+        const doc = await api('frappe.client.get', {
+            doctype: 'SMRITI Print Template',
+            name: name
+        });
+        
+        document.getElementById('modal-action-title').textContent = "Edit Print Template";
+        document.getElementById('tmpl-name-id').value = doc.name;
+        document.getElementById('tmpl-title').value = doc.template_title || "";
+        document.getElementById('tmpl-size').value = doc.label_size || "50x30";
+        document.getElementById('tmpl-language').value = doc.printer_language || "ZPL";
+        document.getElementById('tmpl-family').value = doc.printer_family || "ZPL";
+        document.getElementById('tmpl-version').value = doc.custom_version || "1.0.0";
+        document.getElementById('tmpl-active').checked = doc.custom_active === 1;
+        document.getElementById('tmpl-default').checked = doc.custom_is_default === 1;
+        document.getElementById('tmpl-raw').value = doc.raw_template || "";
+        document.getElementById('tmpl-mappings').value = doc.custom_field_mappings_json || "";
+        
+        document.getElementById('template-modal').classList.add('open');
+    } catch(e) {
+        toast('Error loading template: ' + e.message, 'error');
+    }
+}
+
+function closeTemplateModal() {
+    document.getElementById('template-modal').classList.remove('open');
+}
+
+async function saveTemplateDetail() {
+    const nameId = document.getElementById('tmpl-name-id').value;
+    const titleText = document.getElementById('tmpl-title').value.trim();
+    const size = document.getElementById('tmpl-size').value;
+    const lang = document.getElementById('tmpl-language').value;
+    const family = document.getElementById('tmpl-family').value;
+    const version = document.getElementById('tmpl-version').value.trim() || "1.0.0";
+    const active = document.getElementById('tmpl-active').checked ? 1 : 0;
+    const isDefault = document.getElementById('tmpl-default').checked ? 1 : 0;
+    const rawCode = document.getElementById('tmpl-raw').value;
+    const mappingsText = document.getElementById('tmpl-mappings').value.trim();
+
+    if (!titleText) {
+        toast('Template Title is required!', 'error');
+        return;
+    }
+    if (!rawCode) {
+        toast('Raw Template code is required!', 'error');
+        return;
+    }
+
+    if (rawCode.length > 102400) {
+        toast('Template exceeds 100KB limit!', 'error');
+        return;
+    }
+
+    // Validate mappings JSON if present
+    if (mappingsText) {
+        try {
+            JSON.parse(mappingsText);
+        } catch(e) {
+            toast('Invalid Mappings JSON structure!', 'error');
+            return;
+        }
+    }
+
+    const btn = document.getElementById('btn-save');
+    btn.disabled = true;
+
+    try {
+        toast('Saving template...', 'info');
+        
+        await api('smriti_retail_os.barcode_api.save_print_template', {
+            template_name: titleText,
+            label_size: size,
+            printer_language: lang,
+            printer_family: family,
+            raw_template: rawCode,
+            field_mappings_json: mappingsText || null,
+            custom_active: active,
+            custom_is_default: isDefault,
+            custom_version: version
+        });
+
+        toast('Template saved successfully!');
+        closeTemplateModal();
+        await loadTemplates();
+    } catch(e) {
+        toast('Error saving template: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function deleteTemplate(name) {
+    if (!confirm(`Are you sure you want to delete the print template "${name}"?`)) {
+        return;
+    }
+
+    try {
+        toast('Deleting template...', 'info');
+        await api('smriti_retail_os.barcode_api.delete_print_template', {
+            name_id: name
+        });
+        toast('Template deleted successfully!');
+        await loadTemplates();
+    } catch(e) {
+        toast('Error deleting template: ' + e.message, 'error');
+    }
+}
+window.onload = init;
+</script>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=1.4.1"></script>
+<script>SMRITI.renderFlexibleSidebar("print_templates");</script>
+</body>
+</html>
+{% endblock %}

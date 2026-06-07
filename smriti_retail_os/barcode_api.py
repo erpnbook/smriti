@@ -1090,7 +1090,7 @@ def delete_print_profile(profile_name):
 
 
 @frappe.whitelist()
-def save_print_template(template_name, label_size, printer_language, raw_template, field_mappings_json=None, printer_family=None):
+def save_print_template(template_name, label_size, printer_language, raw_template, field_mappings_json=None, printer_family=None, custom_active=1, custom_is_default=0, custom_version="1.0.0"):
     """
     Saves or updates a SMRITI Print Template record with size validations.
     """
@@ -1124,10 +1124,36 @@ def save_print_template(template_name, label_size, printer_language, raw_templat
     doc.printer_family = printer_family or printer_language
     doc.raw_template = raw_template
     doc.custom_field_mappings_json = field_mappings_json
+    doc.custom_active = int(custom_active)
+    doc.custom_version = custom_version
+
+    if int(custom_is_default) == 1:
+        # Unset other defaults for the same label size
+        frappe.db.sql(
+            "UPDATE `tabSMRITI Print Template` SET custom_is_default = 0 WHERE label_size = %s",
+            (label_size,)
+        )
+        doc.custom_is_default = 1
+    else:
+        doc.custom_is_default = int(custom_is_default)
     
     doc.save(ignore_permissions=True)
     frappe.db.commit()
     
+    return get_print_templates()
+
+
+@frappe.whitelist()
+def delete_print_template(name_id):
+    """
+    Deletes a SMRITI Print Template record.
+    """
+    if not frappe.db.exists("DocType", "SMRITI Print Template"):
+        frappe.throw(_("DocType SMRITI Print Template not found."))
+
+    if frappe.db.exists("SMRITI Print Template", name_id):
+        frappe.delete_doc("SMRITI Print Template", name_id, ignore_permissions=True)
+        frappe.db.commit()
     return get_print_templates()
 
 
