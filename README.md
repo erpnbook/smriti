@@ -1,5 +1,5 @@
 # SMRITI Retail OS
-### Shoper9-style Retail Experience Layer for ERPNext + India Compliance
+### Keyboard-First Retail Experience Layer for ERPNext + India Compliance
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![ERPNext: v16](https://img.shields.io/badge/ERPNext-v16-blue.svg)](https://github.com/frappe/erpnext)
@@ -15,7 +15,7 @@ SMRITI Retail OS is **not a new ERP**.
 It is a **Retail Experience Layer** — a thin,
 upgrade-safe Frappe application that sits on top
 of ERPNext and transforms it into a
-Shoper9-style retail operating system.
+keyboard-first retail operating system.
 
 ERPNext remains the engine for:
 - Inventory management

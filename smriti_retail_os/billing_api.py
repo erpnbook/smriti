@@ -727,7 +727,7 @@ def validate_manager_override(pin, action_type, invoice_name=None):
 def generate_mock_eway_bill(invoice_name, vehicle_no=None, distance=None, mode_of_transport=None, gst_vehicle_type=None, transporter_name=None):
     """
     Generates a mock 12-digit E-way Bill number for the invoice to support
-    Vyapar-style prints and standalone demo generations.
+    optimized retail layouts and standalone demo generations.
     """
     if not invoice_name:
         frappe.throw(_("Invoice name is required."))

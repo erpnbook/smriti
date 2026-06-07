@@ -9,7 +9,7 @@
  */
 
 /* ─────────────────────────────────────────────
-   SMRITI — Shoper9 Pure Mode
+   SMRITI — Pure Retail Mode
    Beautifully simple, sleek, and compact.
    ───────────────────────────────────────────── */
 
