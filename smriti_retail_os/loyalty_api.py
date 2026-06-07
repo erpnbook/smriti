@@ -56,14 +56,16 @@ def get_loyalty_details(customer):
             }
             
         conversion_factor = flt(lp.get("conversion_factor") or 0.0)
-        points = cint(lp.get("loyalty_points") or 0)
-        
+        # H-14: Guard against negative loyalty points — negative redeem_amount INCREASES invoice total
+        points = max(0, cint(lp.get("loyalty_points") or 0))
+        redeem_amount = max(0.0, flt(points * conversion_factor))
+
         return {
             "enrolled": True,
             "loyalty_program": lp.get("loyalty_program"),
             "loyalty_points": points,
             "conversion_factor": conversion_factor,
-            "redeem_amount": flt(points * conversion_factor),
+            "redeem_amount": redeem_amount,
             "tier_name": lp.get("tier_name") or "Regular"
         }
     except Exception as e:
@@ -109,15 +111,24 @@ def save_loyalty_scheme(doc_name=None, loyalty_program_name=None, conversion_fac
         
     company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
     
-    # Resolve fallback expense account and cost center
-    expense_account = frappe.db.get_value(
-        "Account", 
-        {"root_type": "Expense", "company": company}, 
-        "name"
-    ) or frappe.db.get_value(
-        "Account", 
-        {"account_type": "Expense Account", "company": company}, 
-        "name"
+    # M-11: Prefer a Loyalty-named expense account; arbitrary Expense account picks COGS/Rent etc.
+    expense_account = (
+        frappe.db.get_value(
+            "Account",
+            {"account_name": ["like", "%Loyalty%"], "root_type": "Expense", "company": company, "is_group": 0},
+            "name"
+        )
+        or frappe.db.get_value(
+            "Account",
+            {"root_type": "Expense", "company": company, "is_group": 0},
+            "name",
+            order_by="account_name asc"
+        )
+        or frappe.db.get_value(
+            "Account",
+            {"account_type": "Expense Account", "company": company},
+            "name"
+        )
     )
     
     cost_center = frappe.db.get_value(
@@ -164,16 +175,21 @@ def save_loyalty_scheme(doc_name=None, loyalty_program_name=None, conversion_fac
 def enroll_customer(customer, program_name):
     """
     Enrolls a customer into a loyalty program.
+    M-12: Restricted to Store Manager or Administrator — Cashiers must NOT be able
+    to change any customer's loyalty program (financial control requirement).
     """
+    from smriti_retail_os.security_api import check_store_manager_or_admin
+    check_store_manager_or_admin()
+
     if not frappe.db.exists("Customer", customer):
         frappe.throw(_("Customer {0} not found.").format(customer))
-        
+
     if program_name and not frappe.db.exists("Loyalty Program", program_name):
         frappe.throw(_("Loyalty Program {0} not found.").format(program_name))
-        
+
     frappe.db.set_value("Customer", customer, "loyalty_program", program_name)
     frappe.db.commit()
-    
+
     return {
         "success": True,
         "message": _("Customer '{0}' enrolled in Loyalty Program '{1}' successfully.").format(customer, program_name)

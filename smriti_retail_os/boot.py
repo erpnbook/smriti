@@ -196,7 +196,12 @@ def extend_bootinfo(bootinfo):
     """
 
     # ── Always apply branding ────────────────────────────────────────────
-    _apply_branding(bootinfo)
+    # L-15: Wrapped in try/except — branding is cosmetic; an exception here
+    # must NEVER block desk logins for all users.
+    try:
+        _apply_branding(bootinfo)
+    except Exception:
+        frappe.log_error(title="SMRITI: _apply_branding() failed", message=frappe.get_traceback())
 
     # ── Check if any company exists in the system ──────────────────────────
     try:

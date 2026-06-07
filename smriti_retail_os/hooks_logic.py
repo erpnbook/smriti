@@ -239,98 +239,114 @@ def sync_price_list_rate(item_code, price_list, rate, uom):
 def sync_customer_address(doc, method):
     """
     Triggers on_update on Customer.
-    Auto-creates or updates standard linked Address record from custom_address_text and custom_shipping_address_text.
+    Auto-creates or updates standard linked Address record from custom_address_text
+    and custom_shipping_address_text.
+    M-01: Both sync blocks are wrapped in try/except — address sync is a convenience
+    feature and must NEVER roll back the parent Customer save on failure.
     """
+    # --- Billing Address ---
     if doc.custom_address_text:
-        address_title = f"{doc.customer_name} - Retail Billing"
-        address_lines = [line.strip() for line in doc.custom_address_text.split("\n") if line.strip()]
-        
-        address_line1 = address_lines[0] if len(address_lines) > 0 else "N/A"
-        address_line2 = ", ".join(address_lines[1:]) if len(address_lines) > 1 else ""
-        
-        # Resolve state from GSTIN or fallback
-        state = resolve_address_state(doc.tax_id or doc.get("gstin"), doc.custom_address_text)
-        
-        gstin_state = resolve_address_state(doc.tax_id or doc.get("gstin"))
-        resolved_gstin = doc.tax_id if state == gstin_state else None
+        try:
+            address_title = f"{doc.customer_name} - Retail Billing"
+            address_lines = [line.strip() for line in doc.custom_address_text.split("\n") if line.strip()]
 
-        existing_address = frappe.db.get_value(
-            "Address",
-            {
-                "links.link_doctype": "Customer",
-                "links.link_name": doc.name,
-                "address_type": "Billing"
-            },
-            "name"
-        )
+            address_line1 = address_lines[0] if len(address_lines) > 0 else "N/A"
+            address_line2 = ", ".join(address_lines[1:]) if len(address_lines) > 1 else ""
 
-        if existing_address:
-            addr = frappe.get_doc("Address", existing_address)
-            addr.address_line1 = address_line1[:140]
-            addr.address_line2 = address_line2[:140] if address_line2 else None
-            addr.gstin = resolved_gstin
-            addr.state = state
-            addr.save(ignore_permissions=True)
-        else:
-            addr = frappe.new_doc("Address")
-            addr.address_title = address_title[:140]
-            addr.address_type = "Billing"
-            addr.address_line1 = address_line1[:140]
-            addr.address_line2 = address_line2[:140] if address_line2 else None
-            addr.city = "Unknown"
-            addr.country = "India"
-            addr.state = state
-            addr.gstin = resolved_gstin
-            addr.append("links", {
-                "link_doctype": "Customer",
-                "link_name": doc.name
-            })
-            addr.insert(ignore_permissions=True)
+            state = resolve_address_state(doc.tax_id or doc.get("gstin"), doc.custom_address_text)
 
+            gstin_state = resolve_address_state(doc.tax_id or doc.get("gstin"))
+            resolved_gstin = doc.tax_id if state == gstin_state else None
+
+            existing_address = frappe.db.get_value(
+                "Address",
+                {
+                    "links.link_doctype": "Customer",
+                    "links.link_name": doc.name,
+                    "address_type": "Billing"
+                },
+                "name"
+            )
+
+            if existing_address:
+                addr = frappe.get_doc("Address", existing_address)
+                addr.address_line1 = address_line1[:140]
+                addr.address_line2 = address_line2[:140] if address_line2 else None
+                addr.gstin = resolved_gstin
+                addr.state = state
+                addr.save(ignore_permissions=True)
+            else:
+                addr = frappe.new_doc("Address")
+                addr.address_title = address_title[:140]
+                addr.address_type = "Billing"
+                addr.address_line1 = address_line1[:140]
+                addr.address_line2 = address_line2[:140] if address_line2 else None
+                addr.city = "Unknown"
+                addr.country = "India"
+                addr.state = state
+                addr.gstin = resolved_gstin
+                addr.append("links", {
+                    "link_doctype": "Customer",
+                    "link_name": doc.name
+                })
+                addr.insert(ignore_permissions=True)
+        except Exception:
+            frappe.log_error(
+                title=f"SMRITI: Billing address sync failed for Customer {doc.name}",
+                message=frappe.get_traceback()
+            )
+
+    # --- Shipping Address ---
     if doc.get("custom_shipping_address_text"):
-        address_title = f"{doc.customer_name} - Retail Shipping"
-        address_lines = [line.strip() for line in doc.custom_shipping_address_text.split("\n") if line.strip()]
-        
-        address_line1 = address_lines[0] if len(address_lines) > 0 else "N/A"
-        address_line2 = ", ".join(address_lines[1:]) if len(address_lines) > 1 else ""
-        
-        state = resolve_address_state(doc.tax_id or doc.get("gstin"), doc.custom_shipping_address_text)
-        
-        gstin_state = resolve_address_state(doc.tax_id or doc.get("gstin"))
-        resolved_gstin = doc.tax_id if state == gstin_state else None
+        try:
+            address_title = f"{doc.customer_name} - Retail Shipping"
+            address_lines = [line.strip() for line in doc.custom_shipping_address_text.split("\n") if line.strip()]
 
-        existing_address = frappe.db.get_value(
-            "Address",
-            {
-                "links.link_doctype": "Customer",
-                "links.link_name": doc.name,
-                "address_type": "Shipping"
-            },
-            "name"
-        )
+            address_line1 = address_lines[0] if len(address_lines) > 0 else "N/A"
+            address_line2 = ", ".join(address_lines[1:]) if len(address_lines) > 1 else ""
 
-        if existing_address:
-            addr = frappe.get_doc("Address", existing_address)
-            addr.address_line1 = address_line1[:140]
-            addr.address_line2 = address_line2[:140] if address_line2 else None
-            addr.gstin = resolved_gstin
-            addr.state = state
-            addr.save(ignore_permissions=True)
-        else:
-            addr = frappe.new_doc("Address")
-            addr.address_title = address_title[:140]
-            addr.address_type = "Shipping"
-            addr.address_line1 = address_line1[:140]
-            addr.address_line2 = address_line2[:140] if address_line2 else None
-            addr.city = "Unknown"
-            addr.country = "India"
-            addr.state = state
-            addr.gstin = resolved_gstin
-            addr.append("links", {
-                "link_doctype": "Customer",
-                "link_name": doc.name
-            })
-            addr.insert(ignore_permissions=True)
+            state = resolve_address_state(doc.tax_id or doc.get("gstin"), doc.custom_shipping_address_text)
+
+            gstin_state = resolve_address_state(doc.tax_id or doc.get("gstin"))
+            resolved_gstin = doc.tax_id if state == gstin_state else None
+
+            existing_address = frappe.db.get_value(
+                "Address",
+                {
+                    "links.link_doctype": "Customer",
+                    "links.link_name": doc.name,
+                    "address_type": "Shipping"
+                },
+                "name"
+            )
+
+            if existing_address:
+                addr = frappe.get_doc("Address", existing_address)
+                addr.address_line1 = address_line1[:140]
+                addr.address_line2 = address_line2[:140] if address_line2 else None
+                addr.gstin = resolved_gstin
+                addr.state = state
+                addr.save(ignore_permissions=True)
+            else:
+                addr = frappe.new_doc("Address")
+                addr.address_title = address_title[:140]
+                addr.address_type = "Shipping"
+                addr.address_line1 = address_line1[:140]
+                addr.address_line2 = address_line2[:140] if address_line2 else None
+                addr.city = "Unknown"
+                addr.country = "India"
+                addr.state = state
+                addr.gstin = resolved_gstin
+                addr.append("links", {
+                    "link_doctype": "Customer",
+                    "link_name": doc.name
+                })
+                addr.insert(ignore_permissions=True)
+        except Exception:
+            frappe.log_error(
+                title=f"SMRITI: Shipping address sync failed for Customer {doc.name}",
+                message=frappe.get_traceback()
+            )
 
 
 # --- Supplier Hooks ---
@@ -456,17 +472,23 @@ def sync_supplier_address_and_credit_days(doc, method):
 
 def validate_and_reconcile_retail_invoice(doc, method):
     """
-    Triggers before_validate on POS Invoice and Sales Invoice during submission.
-    1. Validates loyalty redemption credits against database ledgers to prevent margin leaks.
-    2. Auto-heals inventory mismatches. If an item is out of stock in the target warehouse,
-       automatically creates a Draft Stock Entry (Material Receipt) for the missing quantity
-       and submits it, ensuring that checkout never fails due to negative stock exceptions!
+    Triggers before_validate on POS Invoice and Sales Invoice.
+    Validates loyalty redemption credits against database ledgers to prevent margin leaks.
+
+    NOTE: The auto-heal stock block has been removed (2026-06-07).
+    It was architecturally unsound:
+    - The docstatus guard (docstatus != 1) made it a no-op in before_validate context
+    - It used selling rate as valuation rate, corrupting inventory valuation
+    - It called frappe.db.commit() inside a document event hook, violating Frappe transaction boundaries
+    - It bypassed all permissions with ignore_permissions=True
+    Use ERPNext standard negative stock control or a manager-approved Stock Entry instead.
     """
-    print(f"[HOOKS LOGIC] Called validate_and_reconcile_retail_invoice: docstatus={doc.docstatus}, update_stock={doc.get('update_stock')}")
-    if doc.docstatus != 1:
+    if doc.docstatus != 0:
+        # Only run on Draft documents (before_validate context)
+        # docstatus=0: Draft being saved/validated
         return
 
-    # 1. Validate Loyalty Redemption Credits
+    # Validate Loyalty Redemption Credits
     if doc.redeem_loyalty_points and doc.loyalty_points > 0:
         try:
             from erpnext.accounts.doctype.loyalty_program.loyalty_program import get_loyalty_details
@@ -479,77 +501,23 @@ def validate_and_reconcile_retail_invoice(doc, method):
                             available_points, doc.loyalty_points
                         )
                     )
-        except Exception:
-            # Fallback raw database check to be bulletproof
+        except ImportError:
+            # C-05 FIX: Only catch ImportError (india_compliance/erpnext module not installed).
+            # Previously `except Exception` was catching frappe.throw() (ValidationError),
+            # silently bypassing the loyalty check and allowing over-redemption.
+            # Fallback raw database check when the module is not available:
             loyalty_program = frappe.db.get_value("Customer", doc.customer, "loyalty_program")
             if loyalty_program:
-                points = frappe.db.get_value("Loyalty Point Entry", {"customer": doc.customer, "loyalty_program": loyalty_program}, "SUM(remaining_points)") or 0
-                if doc.loyalty_points > points:
+                points = frappe.db.sql(
+                    "SELECT SUM(remaining_points) FROM `tabLoyalty Point Entry` WHERE customer=%s AND loyalty_program=%s",
+                    (doc.customer, loyalty_program)
+                )
+                available_points = (points[0][0] if points and points[0][0] else 0)
+                if doc.loyalty_points > available_points:
                     frappe.throw(
                         _("Customer loyalty points balance ({0}) is less than points requested for redemption ({1}).").format(
-                            points, doc.loyalty_points
+                            available_points, doc.loyalty_points
                         )
-                    )
-
-    # 2. Auto-heal negative stock on target warehouse to prevent transaction failures!
-    if doc.update_stock:
-        for item in doc.items:
-            # Check current actual quantity in target warehouse
-            actual_qty = frappe.db.get_value(
-                "Bin",
-                {"item_code": item.item_code, "warehouse": item.warehouse},
-                "actual_qty"
-            ) or 0.0
-
-            # If the quantity to sell is greater than actual available stock, auto-reconcile
-            needed_qty = flt(item.qty) - flt(actual_qty)
-            if needed_qty > 0:
-                # Log stock adjustment start
-                frappe.logger().info(f"SMRITI Auto-Reconciliation: Item {item.item_code} requires {needed_qty} qty in warehouse {item.warehouse}. Creating auto-material receipt.")
-                try:
-                    # Ensure Stock Entry Type "Material Receipt" exists (e.g. for testing environments or fresh installations)
-                    if not frappe.db.exists("Stock Entry Type", "Material Receipt"):
-                        try:
-                            se_type = frappe.new_doc("Stock Entry Type")
-                            se_type.name = "Material Receipt"
-                            se_type.purpose = "Material Receipt"
-                            se_type.insert(ignore_permissions=True)
-                            frappe.db.commit()
-                        except Exception as se_type_ex:
-                            frappe.log_error("SMRITI Auto-Create Stock Entry Type Failure", str(se_type_ex))
-
-                    # Create automatic Material Receipt Stock Entry
-                    se = frappe.new_doc("Stock Entry")
-                    se.purpose = "Material Receipt"
-                    se.stock_entry_type = "Material Receipt"
-                    se.company = doc.company
-                    se.posting_date = doc.posting_date
-                    se.append("items", {
-                        "item_code": item.item_code,
-                        "qty": needed_qty,
-                        "t_warehouse": item.warehouse,
-                        "uom": item.uom,
-                        "basic_rate": flt(item.rate) or 1.0,
-                        "cost_center": item.cost_center
-                    })
-                    se.flags.ignore_permissions = True
-                    se.insert(ignore_permissions=True)
-                    se.submit()
-                    
-                    # Log override action in document timeline comments
-                    frappe.get_doc({
-                        "doctype": "Comment",
-                        "comment_type": "Comment",
-                        "reference_doctype": doc.doctype,
-                        "reference_name": doc.name,
-                        "content": f"SMRITI: Auto-Reconciled negative stock. Restocked {needed_qty} qty of item {item.item_code} in warehouse {item.warehouse} to authorize instant checkout.",
-                        "comment_email": "system@erpnbook.com",
-                        "comment_by": "SMRITI Retail OS"
-                    }).insert(ignore_permissions=True)
-                except Exception as stock_ex:
-                    frappe.log_error(
-                        title="SMRITI Auto-Reconciliation Failure",
-                        message=f"Failed to reconcile item {item.item_code} in warehouse {item.warehouse}: {str(stock_ex)}"
                     )
 
 
