@@ -62,8 +62,13 @@ def open_shift(cashier, pos_profile, opening_entries):
 
     opening.flags.ignore_permissions = True
     opening.insert()
-    opening.submit()
-    frappe.db.commit()
+    try:
+        opening.submit()
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        frappe.log_error(title="SMRITI open_shift Submit Failed", message=frappe.get_traceback())
+        frappe.throw(_("Failed to open shift for {0}. Please try again.").format(cashier))
 
     return {
         "opening_entry": opening.name,
@@ -273,9 +278,13 @@ def close_shift(opening_entry_name, closing_entries, manager_pin=None, notes=Non
 
     closing.flags.ignore_permissions = True
     closing.insert()
-    closing.submit()
-
-    frappe.db.commit()
+    try:
+        closing.submit()
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        frappe.log_error(title="SMRITI close_shift Submit Failed", message=frappe.get_traceback())
+        frappe.throw(_("Failed to close shift. Please try again or contact your administrator."))
 
     return {
         "closing_entry": closing.name,

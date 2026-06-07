@@ -1,29 +1,31 @@
 {
  "actions": [],
- "autoname": "field:template_name",
- "creation": "2026-06-06 12:00:00.000000",
- "doctype": "DocType",
- "editable_grid": 1,
- "engine": "InnoDB",
- "field_order": [
-  "template_name",
-  "label_size",
-  "printer_language",
-  "raw_template",
-  "custom_field_mappings_json",
-  "custom_version",
-  "custom_active",
-  "custom_is_default"
- ],
- "fields": [
-  {
-   "fieldname": "template_name",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Template Name",
-   "reqd": 1,
-   "unique": 1
-  },
+  "autoname": "Prompt",
+  "creation": "2026-06-06 12:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+   "template_title",
+   "label_size",
+   "printer_language",
+   "printer_family",
+   "raw_template",
+   "custom_field_mappings_json",
+   "custom_version",
+   "custom_active",
+   "custom_is_default",
+   "template_checksum"
+  ],
+  "fields": [
+   {
+    "fieldname": "template_title",
+    "fieldtype": "Data",
+    "in_list_view": 1,
+    "label": "Template Title",
+    "reqd": 1,
+    "unique": 1
+   },
   {
    "fieldname": "label_size",
    "fieldtype": "Select",
@@ -38,6 +40,14 @@
    "in_list_view": 1,
    "label": "Printer Language",
    "options": "\nZPL\nTSPL",
+   "reqd": 1
+  },
+  {
+   "fieldname": "printer_family",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Printer Family",
+   "options": "\nZPL\nTSPL\nEPL\nCPCL",
    "reqd": 1
   },
   {
@@ -69,6 +79,13 @@
    "fieldname": "custom_is_default",
    "fieldtype": "Check",
    "label": "Is Default"
+  },
+  {
+   "fieldname": "template_checksum",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Template Checksum",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,

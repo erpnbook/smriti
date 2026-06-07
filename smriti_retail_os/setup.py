@@ -197,26 +197,148 @@ def seed_master_doctypes():
     if frappe.db.exists("DocType", "SMRITI Print Template"):
         default_templates = [
             {
-                "template_name": "Zebra 50x25 Standard Label",
+                "name": "ZEBRA_50X25_STANDARD",
+                "template_title": "Zebra 50x25 Standard Label",
                 "label_size": "50x25",
                 "printer_language": "ZPL",
+                "printer_family": "ZPL",
                 "raw_template": "^XA\n^FO20,10^BCN,60,Y,N,N^FD{barcode}^FS\n^FO20,80^ADN,18,10^FD{item_name}^FS\n^FO20,100^ADN,18,10^FDMRP: Rs.{mrp}^FS\n^FO20,120^ADN,14,8^FD{brand} | Size: {size} | Color: {color}^FS\n^XZ"
             },
             {
-                "template_name": "TSC 106x55 3-Up Footwear Label",
+                "name": "TSC_106X55_3UP_FOOTWEAR",
+                "template_title": "TSC 106x55 3-Up Footwear Label",
                 "label_size": "106x55",
                 "printer_language": "TSPL",
+                "printer_family": "TSPL",
                 "raw_template": "SIZE 106.6 mm, 55.4 mm\nGAP 3 mm, 0 mm\nSPEED 4\nDENSITY 14\nDIRECTION 0,0\nREFERENCE 0,0\nOFFSET 0 mm\nSET PEEL OFF\nSET CUTTER OFF\nSET TEAR ON\nCLS\nCODEPAGE 850\nTEXT 820,372,\"2\",180,2,2,\"{color}\"\nTEXT 702,318,\"2\",180,3,3,\"{size}\"\nTEXT 820,428,\"3\",180,2,2,\"{item_code}\"\nTEXT 556,335,\"4\",180,1,1,\"{mrp}/-\"\nTEXT 824,260,\"3\",180,1,1,\"{brand}\"\nTEXT 809,304,\"1\",180,2,2,\"SIZE-\"\nTEXT 475,401,\"1\",180,1,1,\"Footwear\"\nTEXT 596,401,\"1\",180,1,1,\"Commodity :\"\nTEXT 594,381,\"1\",180,1,1,\"Net Contents :\"\nTEXT 448,381,\"1\",180,1,1,\"1 Pair\"\nTEXT 600,301,\"1\",180,1,1,\"(Incl of all Taxes)\"\nTEXT 594,358,\"1\",180,1,1,\"Pkd On :\"\nTEXT 501,358,\"1\",180,1,1,\"{pkd_date}\"\nBARCODE 613,279,\"128\",95,0,180,2,4,\"{barcode}\"\nTEXT 597,176,\"3\",180,1,1,\"{barcode}\"\nPRINT 1,1"
+            },
+            {
+                "name": "IMPACT_HONEYWELL_IH2_ZPL",
+                "template_title": "IMPACT by Honeywell IH-2 (ZPL)",
+                "label_size": "100x50",
+                "printer_language": "ZPL",
+                "printer_family": "ZPL",
+                "raw_template": (
+                    "^XA\n"
+                    "^SZ2^JMA\n"
+                    "^MCY^PMN\n"
+                    "^PW804\n"
+                    "^JZY\n"
+                    "^LH0,0^LRN\n"
+                    "^XZ\n"
+                    "^XA\n"
+                    "^FO706,47\n"
+                    "^BY3^BCB,50,N,N^FD{barcode}^FS\n"
+                    "^FT781,340\n"
+                    "^CI0\n"
+                    "^AAB,27,15^FD{barcode}^FS\n"
+                    "^FT345,53\n"
+                    "^A0N,34,46^FD{brand}^FS\n"
+                    "^FT335,340\n"
+                    "^A0N,17,23^FDMKTD.By:{brand}^FS\n"
+                    "^FT335,351\n"
+                    "^ABN,11,7^FD81,Umerkhadi,Mumbai,400003^FS\n"
+                    "^FO615,135\n"
+                    "^GB76,80,76^FS\n"
+                    "^FT615,198\n"
+                    "^A0N,79,77^FR^FD{size}^FS\n"
+                    "^FT400,182\n"
+                    "^A0N,37,49^FD{color}^FS\n"
+                    "^FO410,86\n"
+                    "^GB277,46,46^FS\n"
+                    "^FT410,124\n"
+                    "^A0N,45,43^FR^FD{item_code}^FS\n"
+                    "^FO327,84\n"
+                    "^GB367,129,3^FS\n"
+                    "^FO329,128\n"
+                    "^GB337,0,3^FS\n"
+                    "^FT536,274\n"
+                    "^A0N,17,23^FD(Incl of all taxes)^FS\n"
+                    "^FT493,251\n"
+                    "^A0N,42,56^FD{mrp}/-^FS\n"
+                    "^FT410,246\n"
+                    "^A0N,28,38^FDMRP:^FS\n"
+                    "^FT327,274\n"
+                    "^A0N,17,23^FDMFG.Dt.: {pkd_date}^FS\n"
+                    "^FT327,290\n"
+                    "^ABN,11,7^FDNET CONTENTS:1 Pair Footwear^FS\n"
+                    "^FT335,113\n"
+                    "^A0N,17,23^FDArt.No.^FS\n"
+                    "^FT335,175\n"
+                    "^A0N,17,23^FDColor:^FS\n"
+                    "^FT335,386\n"
+                    "^ABN,11,7^FDcare@tattlythreads.com^FS\n"
+                    "^FO34,125\n"
+                    "^BY2^BCN,30,N,N^FD{barcode}^FS\n"
+                    "^FT46,181\n"
+                    "^A0N,25,34^FD{barcode}^FS\n"
+                    "^FO37,60\n"
+                    "^GB70,67,67^FS\n"
+                    "^FT37,114\n"
+                    "^A0N,65,72^FR^FD{size}^FS\n"
+                    "^FO116,50\n"
+                    "^GB101,30,30^FS\n"
+                    "^FT116,76\n"
+                    "^A0N,28,38^FR^FD{color}^FS\n"
+                    "^FT37,47\n"
+                    "^A0N,28,27^FD{item_code}^FS\n"
+                    "^FT17,159\n"
+                    "^ABB,11,7^FD{brand}^FS\n"
+                    "^FT116,97\n"
+                    "^A0N,20,27^FDMRP:{mrp}/-^FS\n"
+                    "^FT116,114\n"
+                    "^A0N,17,23^FD(Incl of all taxes)^FS\n"
+                    "^FO33,338\n"
+                    "^BCN,30,N,N^FD{barcode}^FS\n"
+                    "^FT45,394\n"
+                    "^A0N,25,34^FD{barcode}^FS\n"
+                    "^FO33,275\n"
+                    "^GB70,65,65^FS\n"
+                    "^FT33,327\n"
+                    "^A0N,62,70^FR^FD{size}^FS\n"
+                    "^FO116,263\n"
+                    "^GB101,30,30^FS\n"
+                    "^FT116,289\n"
+                    "^A0N,28,38^FR^FD{color}^FS\n"
+                    "^FT33,260\n"
+                    "^A0N,28,27^FD{item_code}^FS\n"
+                    "^FT16,372\n"
+                    "^ABB,11,7^FD{brand}^FS\n"
+                    "^FT116,310\n"
+                    "^A0N,20,27^FDMRP:{mrp}/-^FS\n"
+                    "^FT116,327\n"
+                    "^A0N,17,23^FD(Incl of all taxes)^FS\n"
+                    "^FO328,308\n"
+                    "^GB367,0,3^FS\n"
+                    "^FO328,365\n"
+                    "^GB367,0,3^FS\n"
+                    "^PQ1,0,1,Y\n"
+                    "^XZ"
+                )
             }
         ]
         for t in default_templates:
-            if not frappe.db.exists("SMRITI Print Template", t["template_name"]):
+            if frappe.db.exists("SMRITI Print Template", t["name"]):
+                try:
+                    # Update path to refresh missing or updated fields on existing template
+                    doc = frappe.get_doc("SMRITI Print Template", t["name"])
+                    updated = False
+                    for key in ["template_title", "label_size", "printer_language", "printer_family", "raw_template"]:
+                        if doc.get(key) != t.get(key):
+                            doc.set(key, t.get(key))
+                            updated = True
+                    if updated:
+                        doc.save(ignore_permissions=True)
+                except Exception as e:
+                    frappe.log_error(f"Error updating print template {t['name']}: {str(e)}")
+            else:
                 try:
                     doc = frappe.new_doc("SMRITI Print Template")
+                    doc.name = t["name"]
                     doc.update(t)
                     doc.insert(ignore_permissions=True)
                 except Exception as e:
-                    frappe.log_error(f"Error seeding print template {t['template_name']}: {str(e)}")
+                    frappe.log_error(f"Error seeding print template {t['name']}: {str(e)}")
     frappe.db.commit()
 
 def backup_and_seed_existing_data():

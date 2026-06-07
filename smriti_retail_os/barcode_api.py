@@ -35,9 +35,11 @@ def get_barcode_filters():
     if frappe.db.exists("DocType", "SMRITI Print Template"):
         templates = frappe.get_all(
             "SMRITI Print Template",
-            fields=["name", "template_name", "label_size", "printer_language", "raw_template", "custom_field_mappings_json"],
-            order_by="template_name asc"
+            fields=["name", "template_title", "label_size", "printer_language", "printer_family", "raw_template", "custom_field_mappings_json"],
+            order_by="template_title asc"
         )
+        for t in templates:
+            t["template_name"] = t["template_title"]
 
     return {
         "brands": brands,
@@ -55,11 +57,15 @@ def get_print_templates():
     if not frappe.db.exists("DocType", "SMRITI Print Template"):
         return []
 
-    return frappe.get_all(
+    templates = frappe.get_all(
         "SMRITI Print Template",
-        fields=["name", "template_name", "label_size", "printer_language", "raw_template", "custom_field_mappings_json"],
-        order_by="template_name asc"
+        fields=["name", "template_title", "label_size", "printer_language", "printer_family", "raw_template", "custom_field_mappings_json"],
+        order_by="template_title asc"
     )
+    for t in templates:
+        t["template_name"] = t["template_title"]
+    return templates
+
 
 
 # ---------------------------------------------------------------------------
@@ -254,6 +260,12 @@ def generate_prn(items, template_name=None):
     if template_name and frappe.db.exists("DocType", "SMRITI Print Template"):
         if frappe.db.exists("SMRITI Print Template", template_name):
             db_template = frappe.get_doc("SMRITI Print Template", template_name)
+        else:
+            # Fallback: search by template_title
+            matched_name = frappe.db.get_value("SMRITI Print Template", {"template_title": template_name}, "name")
+            if matched_name:
+                db_template = frappe.get_doc("SMRITI Print Template", matched_name)
+
 
     for it in items_list:
         barcode        = it.get("barcode") or ""
@@ -1078,25 +1090,38 @@ def delete_print_profile(profile_name):
 
 
 @frappe.whitelist()
-def save_print_template(template_name, label_size, printer_language, raw_template, field_mappings_json=None):
+def save_print_template(template_name, label_size, printer_language, raw_template, field_mappings_json=None, printer_family=None):
     """
     Saves or updates a SMRITI Print Template record with size validations.
     """
     # 100 KB template size limit validation
     if len(raw_template.encode('utf-8')) > 102400:
-        frappe.throw(_("Template size exceeds the maximum limit of 100 KB."))
+        frappe.throw(_("Template exceeds 100KB limit"))
 
     if not frappe.db.exists("DocType", "SMRITI Print Template"):
         frappe.throw(_("DocType SMRITI Print Template not found."))
 
-    if frappe.db.exists("SMRITI Print Template", template_name):
-        doc = frappe.get_doc("SMRITI Print Template", template_name)
+    def _slugify_name(val):
+        import re
+        clean = re.sub(r'[^a-zA-Z0-9\-]', '_', val)
+        clean = re.sub(r'_+', '_', clean)
+        return clean.strip('_').upper()
+
+    name_id = _slugify_name(template_name)
+
+    if frappe.db.exists("SMRITI Print Template", name_id):
+        doc = frappe.get_doc("SMRITI Print Template", name_id)
+    elif frappe.db.exists("SMRITI Print Template", {"template_title": template_name}):
+        matched_name = frappe.db.get_value("SMRITI Print Template", {"template_title": template_name}, "name")
+        doc = frappe.get_doc("SMRITI Print Template", matched_name)
     else:
         doc = frappe.new_doc("SMRITI Print Template")
-        doc.template_name = template_name
+        doc.name = name_id
 
+    doc.template_title = template_name
     doc.label_size = label_size
     doc.printer_language = printer_language
+    doc.printer_family = printer_family or printer_language
     doc.raw_template = raw_template
     doc.custom_field_mappings_json = field_mappings_json
     

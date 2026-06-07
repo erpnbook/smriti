@@ -801,7 +801,7 @@ class TestBarcodeHardening(unittest.TestCase):
         hsn_doc.insert(ignore_permissions=True)
         if not frappe.db.exists("Brand", "Nike"):
             brand_doc = frappe.new_doc("Brand")
-            brand_doc.brand_name = "Nike"
+            brand_doc.brand = "Nike"
             brand_doc.insert(ignore_permissions=True)
         frappe.db.commit()
 

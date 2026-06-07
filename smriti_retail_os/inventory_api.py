@@ -185,9 +185,14 @@ def create_grn(supplier, invoice_no, items, warehouse=None):
             "uom": it.get("stock_uom") or frappe.db.get_value("Item", item_code, "stock_uom")
         })
 
-    pr.docstatus = 1  # Submit
-    pr.save(ignore_permissions=True)
-    frappe.db.commit()
+    try:
+        pr.insert(ignore_permissions=True)
+        pr.submit()  # Triggers before_submit, on_submit, Stock Ledger, GL Entries
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        frappe.log_error(title="SMRITI GRN Submit Failed", message=frappe.get_traceback())
+        raise
 
     return {
         "name": pr.name,
@@ -235,9 +240,14 @@ def create_stock_transfer(from_warehouse, to_warehouse, items):
             "allow_zero_valuation_rate": 1
         })
 
-    se.docstatus = 1  # Submit
-    se.save(ignore_permissions=True)
-    frappe.db.commit()
+    try:
+        se.insert(ignore_permissions=True)
+        se.submit()  # Triggers Stock Ledger + GL Entries for the transfer
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        frappe.log_error(title="SMRITI Stock Transfer Submit Failed", message=frappe.get_traceback())
+        raise
 
     return {
         "name": se.name,
@@ -313,9 +323,14 @@ def create_stock_adjustment(items, reason):
 
         se.append("items", row)
 
-    se.docstatus = 1  # Submit
-    se.save(ignore_permissions=True)
-    frappe.db.commit()
+    try:
+        se.insert(ignore_permissions=True)
+        se.submit()  # Triggers Stock Ledger + GL Entries for the adjustment
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        frappe.log_error(title="SMRITI Stock Adjustment Submit Failed", message=frappe.get_traceback())
+        raise
 
     return {
         "name": se.name,
@@ -362,9 +377,14 @@ def create_stock_audit(items):
             "valuation_rate": val_rate
         })
 
-    sr.docstatus = 1  # Submit
-    sr.save(ignore_permissions=True)
-    frappe.db.commit()
+    try:
+        sr.insert(ignore_permissions=True)
+        sr.submit()  # Triggers Stock Ledger + GL Entries for the reconciliation
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        frappe.log_error(title="SMRITI Stock Audit Submit Failed", message=frappe.get_traceback())
+        raise
 
     return {
         "name": sr.name,
@@ -404,18 +424,35 @@ def get_stock_summary(warehouse=None):
 
 
 @frappe.whitelist()
-def reset_db():
+def reset_db(confirmation_token=None):
     """
     Resets all SMRITI Retail OS transaction tables and balance ledgers to zero,
     allowing naming series to restart from 1. Bypasses constraint checks for speed.
-    """
-    # Only allow Administrator or System Manager to run this
-    if frappe.session.user != "Administrator" and "System Manager" not in frappe.get_roles(frappe.session.user):
-        frappe.throw(_("Access Denied: Only Administrators or System Managers can reset transactions."))
 
-    print("[SMRITI] Truncating transaction tables...")
+    DANGER: This is a destructive, irreversible operation.
+    Requires Administrator role AND a matching confirmation_token for safety.
+    """
+    # Restrict to Administrator only — System Manager is NOT enough for destructive wipe
+    if frappe.session.user != "Administrator":
+        frappe.throw(
+            _("Access Denied: Only the Administrator account can reset transactions."),
+            frappe.PermissionError
+        )
+
+    # Require an explicit confirmation nonce to prevent accidental / scripted calls
+    EXPECTED_TOKEN = "SMRITI_CONFIRM_RESET"
+    if confirmation_token != EXPECTED_TOKEN:
+        frappe.throw(
+            _("Safety check failed. Pass confirmation_token='SMRITI_CONFIRM_RESET' to proceed."),
+            frappe.ValidationError
+        )
+
+    frappe.logger().warning(
+        f"[SMRITI] reset_db() initiated by {frappe.session.user} — truncating transaction tables."
+    )
+
     frappe.db.sql("SET FOREIGN_KEY_CHECKS = 0;")
-    
+
     tables = [
         "tabStock Reconciliation",
         "tabStock Reconciliation Item",
@@ -440,14 +477,27 @@ def reset_db():
         "tabBin",
         "tabSeries"
     ]
-    
+
+    failed_tables = []
     for t in tables:
         try:
             frappe.db.sql(f"TRUNCATE TABLE `{t}`")
-        except Exception as e:
-            pass
-            
+        except Exception:
+            failed_tables.append(t)
+            frappe.log_error(
+                title=f"SMRITI reset_db: Failed to truncate {t}",
+                message=frappe.get_traceback()
+            )
+
     frappe.db.sql("SET FOREIGN_KEY_CHECKS = 1;")
     frappe.db.commit()
-    return {"status": "success", "message": "All transactions reset to zero successfully. Starting from 1."}
+
+    msg = "All transactions reset to zero successfully. Starting from 1."
+    if failed_tables:
+        msg = f"Reset completed with {len(failed_tables)} table failure(s): {', '.join(failed_tables)}. Check error logs."
+
+    frappe.logger().warning(
+        f"[SMRITI] reset_db() completed. Failed tables: {failed_tables or 'None'}."
+    )
+    return {"status": "success" if not failed_tables else "partial", "message": msg}
 

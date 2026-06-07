@@ -356,7 +356,8 @@ def ensure_company_settings(doc, method=None):
             new_doc.update(defaults)
             new_doc.flags.ignore_links = True  # Prevent "Could not find Row #N: Company" — hook fires inside Company.after_insert before outer commit
             new_doc.insert(ignore_permissions=True)
-            frappe.db.commit()
+            # NOTE: Do NOT call frappe.db.commit() here — this hook fires inside Company.after_insert
+            # and committing mid-hook corrupts ERPNext's own chart-of-accounts setup transaction.
             frappe.logger().info(
                 f"[SMRITI] Created Company Settings for: {company}"
             )

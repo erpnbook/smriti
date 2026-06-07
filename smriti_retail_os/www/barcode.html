@@ -1021,7 +1021,8 @@ function populateQZPrintersDropdown() {
         usbSel.innerHTML = '<option value="">-- No Local Printers Detected --</option>';
         return;
     }
-    usbSel.innerHTML = qzPrinters.map(p => `<option value="${p}">${p}</option>`).join('');
+    // esc() guards against printer names containing HTML characters
+    usbSel.innerHTML = qzPrinters.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
     if (qzPrinters.includes(currentVal)) {
         usbSel.value = currentVal;
     }
@@ -1058,12 +1059,34 @@ function api(method, params = {}) {
     });
 }
 
+// ─── XSS Guard ────────────────────────────────────────────────────────────────
+// Use esc() for every piece of DB-sourced / user-supplied text injected into
+// innerHTML. Never bypass this with raw string interpolation.
+function esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+// ──────────────────────────────────────────────────────────────────────────────
+
 function toast(msg, type = 'success') {
     const cont = document.getElementById('toast-container');
     const t = document.createElement('div');
     t.className = `toast ${type}`;
     const icon = type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info';
-    t.innerHTML = `<span class="material-symbols-outlined">${icon}</span> <span>${msg}</span>`;
+    // Use DOM nodes — never innerHTML with msg (msg can be a server error string)
+    const iconEl = document.createElement('span');
+    iconEl.className = 'material-symbols-outlined';
+    iconEl.textContent = icon;   // static value, safe
+    const msgEl = document.createElement('span');
+    msgEl.textContent = msg;     // textContent escapes all HTML automatically
+    t.appendChild(iconEl);
+    t.appendChild(document.createTextNode(' '));
+    t.appendChild(msgEl);
     cont.appendChild(t);
     setTimeout(() => { t.remove(); }, 4000);
 }
@@ -1236,15 +1259,22 @@ document.addEventListener('DOMContentLoaded', () => {
         results.forEach((item) => {
             const div = document.createElement('div');
             div.className = 'autocomplete-item';
-            
-            // Premium layout showing Article, Name, Barcode
-            div.innerHTML = `
-                <div class="autocomplete-row-main">
-                    <span>${item.style || 'N/A'}</span>
-                    <span class="autocomplete-row-barcode">${item.barcode || 'No Barcode'}</span>
-                </div>
-                <div class="autocomplete-row-sub">${item.item_name || 'N/A'}</div>
-            `;
+
+            // Build DOM nodes — never inject DB strings via innerHTML (XSS risk)
+            const mainRow = document.createElement('div');
+            mainRow.className = 'autocomplete-row-main';
+            const styleSpan = document.createElement('span');
+            styleSpan.textContent = item.style || 'N/A';
+            const barcodeSpan = document.createElement('span');
+            barcodeSpan.className = 'autocomplete-row-barcode';
+            barcodeSpan.textContent = item.barcode || 'No Barcode';
+            mainRow.appendChild(styleSpan);
+            mainRow.appendChild(barcodeSpan);
+            const subRow = document.createElement('div');
+            subRow.className = 'autocomplete-row-sub';
+            subRow.textContent = item.item_name || 'N/A';
+            div.appendChild(mainRow);
+            div.appendChild(subRow);
 
             // Suggestion click behavior
             div.addEventListener('click', async () => {
@@ -1406,23 +1436,24 @@ function renderQueue() {
         const isChecked = item.selected ? 'checked' : '';
         const rowClass = item.selected ? 'selected' : '';
 
+        // esc() applied to all DB-sourced strings — prevents XSS from crafted item names/barcodes
         return `
             <tr class="${rowClass}" onclick="selectRowIndex(${index}, event)">
                 <td style="text-align:center;">
                     <input type="checkbox" class="grid-select-chk" ${isChecked} onchange="toggleSelectRow(${index}, this.checked, event)">
                 </td>
                 <td>
-                    <div style="font-weight:600; color:var(--text);">${item.item_name}</div>
-                    <div style="margin-top:4px;"><span class="item-code-badge">${item.item_code}</span></div>
+                    <div style="font-weight:600; color:var(--text);">${esc(item.item_name)}</div>
+                    <div style="margin-top:4px;"><span class="item-code-badge">${esc(item.item_code)}</span></div>
                 </td>
-                <td style="font-family:monospace; color:var(--primary-lt); font-weight:600;">${item.barcode}</td>
+                <td style="font-family:monospace; color:var(--primary-lt); font-weight:600;">${esc(item.barcode)}</td>
                 <td>
-                    <div style="font-weight:500;">${item.style}</div>
-                    <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">${item.brand}</div>
+                    <div style="font-weight:500;">${esc(item.style)}</div>
+                    <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">${esc(item.brand)}</div>
                 </td>
                 <td>
-                    <div style="font-size:0.78rem; color:var(--text-muted);">Sz: <strong style="color:var(--text)">${item.size || 'N/A'}</strong></div>
-                    <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">Col: <strong style="color:var(--text)">${item.color || 'N/A'}</strong></div>
+                    <div style="font-size:0.78rem; color:var(--text-muted);">Sz: <strong style="color:var(--text)">${esc(item.size || 'N/A')}</strong></div>
+                    <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">Col: <strong style="color:var(--text)">${esc(item.color || 'N/A')}</strong></div>
                 </td>
                 <td style="font-weight:700; color:var(--success);">Rs. ${parseInt(item.mrp)}</td>
                 <td style="text-align:center;" onclick="event.stopPropagation()">
@@ -1866,7 +1897,15 @@ function logSessionPrint(ip, action, success) {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const div = document.createElement('div');
     div.className = `log-item ${success ? 'success' : 'error'}`;
-    div.innerHTML = `<span>${time} - ${action}</span> <span style="font-size:10px;">${ip}</span>`;
+    // Use DOM nodes — action and ip come from OS/network, never inject via innerHTML
+    const leftSpan = document.createElement('span');
+    leftSpan.textContent = `${time} - ${action}`;
+    const rightSpan = document.createElement('span');
+    rightSpan.style.fontSize = '10px';
+    rightSpan.textContent = ip;
+    div.appendChild(leftSpan);
+    div.appendChild(document.createTextNode(' '));
+    div.appendChild(rightSpan);
     list.appendChild(div);
     list.scrollTop = list.scrollHeight;
 }
@@ -1889,20 +1928,28 @@ async function openTxSearchModal() {
             return;
         }
 
+        // esc() applied to all server-returned strings to prevent XSS
         tbody.innerHTML = txs.map(t => `
             <tr>
-                <td style="font-family:monospace; font-weight:600; color:var(--primary-lt);">${t.name}</td>
-                <td>${t.posting_date}</td>
-                <td>${t.extra_info || '-'}</td>
-                <td style="text-align:center; font-weight:600; color:var(--accent);">${t.items_count} lines</td>
+                <td style="font-family:monospace; font-weight:600; color:var(--primary-lt);">${esc(t.name)}</td>
+                <td>${esc(t.posting_date)}</td>
+                <td>${esc(t.extra_info || '-')}</td>
+                <td style="text-align:center; font-weight:600; color:var(--accent);">${esc(String(t.items_count))} lines</td>
                 <td style="text-align:right;">
-                    <button class="topbtn" onclick="selectTxAndLoad('${t.name}')" style="padding:4px 8px; font-size:11px;">Load</button>
+                    <button class="topbtn" onclick="selectTxAndLoad('${esc(t.name)}')" style="padding:4px 8px; font-size:11px;">Load</button>
                 </td>
             </tr>
         `).join('');
 
     } catch(e) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--danger);">Error: ${e.message}</td></tr>`;
+        const errTr = document.createElement('tr');
+        const errTd = document.createElement('td');
+        errTd.colSpan = 5;
+        errTd.style.cssText = 'text-align:center;color:var(--danger);';
+        errTd.textContent = `Error: ${e.message}`;
+        errTr.appendChild(errTd);
+        tbody.innerHTML = '';
+        tbody.appendChild(errTr);
     }
 }
 

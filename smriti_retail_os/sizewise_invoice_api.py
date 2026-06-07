@@ -293,7 +293,7 @@ def get_states_list():
         {"code": "34", "name": "Puducherry"},
         {"code": "35", "name": "Andaman & Nicobar Islands"},
         {"code": "36", "name": "Telangana"},
-        {"code": "37", "name": "Andhra Pradesh"},
+        {"code": "37", "name": "Andhra Pradesh (Reorganised)"},
         {"code": "38", "name": "Ladakh"},
         {"code": "97", "name": "Other Territory"},
         {"code": "96", "name": "Foreign Country"},
@@ -524,7 +524,11 @@ def save_sizewise_invoice(payload):
 
 
 def _resolve_item_code(article, color, size, fallback_item_code):
-    """Resolves the best-match ERPNext item code for a given article/color/size."""
+    """
+    Resolves the best-match ERPNext item code for a given article/color/size.
+    Raises frappe.throw() if no match found — never auto-creates items or
+    issues mid-transaction commits (which would corrupt the parent invoice save).
+    """
     # Try most specific first: ARTICLE-COLOR-SIZE
     for candidate in [
         f"{article}-{color}-{size}",
@@ -540,26 +544,12 @@ def _resolve_item_code(article, color, size, fallback_item_code):
     if found:
         return found
 
-    # Graceful fallback: dynamically ensure '_SIZEWISE_ITEM_' exists and use it
-    if not frappe.db.exists("Item", "_SIZEWISE_ITEM_"):
-        try:
-            item = frappe.get_doc({
-                "doctype": "Item",
-                "item_code": "_SIZEWISE_ITEM_",
-                "item_name": "Sizewise General Article",
-                "item_group": "All Item Groups",
-                "is_stock_item": 0,
-                "is_sales_item": 1,
-                "stock_uom": "Nos"
-            })
-            item.insert(ignore_permissions=True)
-            frappe.db.commit()
-        except Exception:
-            first_item = frappe.db.get_value("Item", {"is_sales_item": 1, "disabled": 0}, "name")
-            if first_item:
-                return first_item
-
-    return "_SIZEWISE_ITEM_"
+    # No match — raise a clear validation error instead of creating a phantom item.
+    # Auto-creating items and committing mid-transaction corrupts the invoice save.
+    frappe.throw(
+        _("Item not found for Article: {0}, Color: {1}, Size: {2}. "
+          "Please create the item in the Item Master first.").format(article, color, size)
+    )
 
 
 def _add_gst_taxes(si, tax_type, company):
@@ -688,16 +678,17 @@ def cancel_sizewise_invoice(invoice_name):
 
 @frappe.whitelist()
 def get_admin_session_for_pdf():
-    """Returns the most recent active Administrator session ID.
-    Restricted to System Manager role to prevent session hijacking."""
-    if "System Manager" not in frappe.get_roles(frappe.session.user):
-        frappe.throw(_("Access Denied: Only System Managers can retrieve session data."), frappe.PermissionError)
-    sid = frappe.db.sql(
-        "SELECT sid FROM tabSessions WHERE user = 'Administrator' ORDER BY lastupdate DESC LIMIT 1"
+    """
+    DEPRECATED — H-08 Security Fix.
+    Returning live Administrator session SIDs to any caller is a privilege escalation vector.
+    PDF generation should use frappe.get_print() with proper role context instead.
+    This stub is retained to avoid 404s from older frontend calls.
+    """
+    frappe.throw(
+        _("This endpoint has been disabled for security reasons. "
+          "Use frappe.get_print() with the current user's session for PDF generation."),
+        frappe.PermissionError
     )
-    if sid:
-        return sid[0][0]
-    return ""
 
 
 # ─── PDT Import APIs ──────────────────────────────────────────────────────────
