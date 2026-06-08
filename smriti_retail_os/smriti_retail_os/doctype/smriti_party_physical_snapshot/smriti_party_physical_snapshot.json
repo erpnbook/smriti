@@ -1,0 +1,101 @@
+{
+  "actions": [],
+  "creation": "2026-06-08 12:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "is_submittable": 1,
+  "field_order": [
+    "company",
+    "party_stock_account",
+    "audit_date",
+    "status",
+    "approved_by",
+    "approved_on",
+    "items"
+  ],
+  "fields": [
+    {
+      "fieldname": "company",
+      "fieldtype": "Link",
+      "label": "Company",
+      "options": "Company",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "party_stock_account",
+      "fieldtype": "Link",
+      "label": "Party Stock Account",
+      "options": "SMRITI Party Stock Account",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "audit_date",
+      "fieldtype": "Date",
+      "label": "Audit Date",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "default": "Draft",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "\nDraft\nPending Approval\nApproved\nRejected",
+      "read_only": 1
+    },
+    {
+      "fieldname": "approved_by",
+      "fieldtype": "Link",
+      "label": "Approved By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "approved_on",
+      "fieldtype": "Datetime",
+      "label": "Approved On",
+      "read_only": 1
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Snapshot Items",
+      "options": "SMRITI Party Physical Item"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-06-08 12:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "SMRITI Party Physical Snapshot",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "read": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1,
+      "submit": 1,
+      "cancel": 1
+    },
+    {
+      "create": 1,
+      "read": 1,
+      "role": "SMRITI Store Manager",
+      "share": 1,
+      "write": 1,
+      "submit": 1,
+      "cancel": 1
+    }
+  ],
+  "quick_entry": 1,
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

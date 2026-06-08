@@ -238,6 +238,15 @@ doc_events = {
         "before_validate": [
             "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
             "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
+        ],
+        "before_cancel": [
+            "smriti_retail_os.psv_service.validate_sales_invoice_cancel"
+        ],
+        "on_submit": [
+            "smriti_retail_os.psv_service.process_sales_invoice_submit"
+        ],
+        "on_cancel": [
+            "smriti_retail_os.psv_service.process_sales_invoice_cancel"
         ]
     },
     "Purchase Receipt": {

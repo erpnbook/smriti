@@ -1,0 +1,117 @@
+{
+  "actions": [],
+  "creation": "2026-06-08 12:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "timestamp",
+    "party_stock_account",
+    "sales_invoice",
+    "item_code",
+    "missing_qty",
+    "status",
+    "reconciliation_notes",
+    "reconciled_by",
+    "reconciled_on"
+  ],
+  "fields": [
+    {
+      "fieldname": "timestamp",
+      "fieldtype": "Datetime",
+      "label": "Timestamp",
+      "reqd": 1,
+      "in_list_view": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "party_stock_account",
+      "fieldtype": "Link",
+      "label": "Party Stock Account",
+      "options": "SMRITI Party Stock Account",
+      "reqd": 1,
+      "in_list_view": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "sales_invoice",
+      "fieldtype": "Link",
+      "label": "Sales Invoice",
+      "options": "Sales Invoice",
+      "reqd": 1,
+      "in_list_view": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "item_code",
+      "fieldtype": "Link",
+      "label": "Item Code",
+      "options": "Item",
+      "reqd": 1,
+      "in_list_view": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "missing_qty",
+      "fieldtype": "Float",
+      "label": "Missing Qty",
+      "reqd": 1,
+      "in_list_view": 1,
+      "read_only": 1
+    },
+    {
+      "default": "Pending Reconciliation",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "\nPending Reconciliation\nReconciled",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "reconciliation_notes",
+      "fieldtype": "Small Text",
+      "label": "Reconciliation Notes"
+    },
+    {
+      "fieldname": "reconciled_by",
+      "fieldtype": "Link",
+      "label": "Reconciled By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "reconciled_on",
+      "fieldtype": "Datetime",
+      "label": "Reconciled On",
+      "read_only": 1
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-06-08 12:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "SMRITI PSV Exception Record",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "read": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "read": 1,
+      "role": "SMRITI Store Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "quick_entry": 1,
+  "sort_field": "timestamp",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

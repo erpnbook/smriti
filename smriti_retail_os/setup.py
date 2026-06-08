@@ -1280,6 +1280,14 @@ def setup_smriti_retail_os():
                 "read_only": 1,
                 "unique": 1,
                 "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_party_stock_account",
+                "label": "Party Stock Account",
+                "fieldtype": "Link",
+                "options": "SMRITI Party Stock Account",
+                "insert_after": "custom_billing_session_id",
+                "module": "SMRITI Retail OS"
             }
         ],
         "Company": [
@@ -1399,6 +1407,13 @@ def setup_smriti_retail_os():
             "label_for_links": "Cashier-friendly quick customer onboarding."
         },
         {
+            "label": "Party Stock Accounts",
+            "type": "Link",
+            "link_type": "DocType",
+            "link_to": "SMRITI Party Stock Account",
+            "label_for_links": "Manage third-party stock locations for customers."
+        },
+        {
             "label": "Suppliers",
             "type": "Link",
             "link_type": "DocType",
@@ -1425,6 +1440,20 @@ def setup_smriti_retail_os():
             "link_type": "Page",
             "link_to": "smriti_reports",
             "label_for_links": "Visual sales, stock, and outstanding analytics."
+        },
+        {
+            "label": "Party Sales Uploads",
+            "type": "Link",
+            "link_type": "DocType",
+            "link_to": "SMRITI Party Sales Upload",
+            "label_for_links": "Upload weekly distributor sales spreadsheets."
+        },
+        {
+            "label": "Party Stock Audits",
+            "type": "Link",
+            "link_type": "DocType",
+            "link_to": "SMRITI Party Physical Snapshot",
+            "label_for_links": "Verify physical stock and reconcile variances."
         },
 
         # Card 4: Settings & Configuration
@@ -1566,6 +1595,27 @@ def setup_smriti_retail_os():
         },
         "POS Profile": {
             "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "delete": 1}
+        },
+        "SMRITI Party Stock Account": {
+             "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "delete": 1}
+        },
+        "SMRITI Party Sales Upload": {
+             "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "submit": 1, "cancel": 1}
+        },
+        "SMRITI Party Physical Snapshot": {
+             "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "submit": 1, "cancel": 1}
+        },
+        "SMRITI PSV Exception Record": {
+             "SMRITI Store Manager": {"read": 1, "write": 1}
+        },
+        "SMRITI PSV Settings": {
+             "SMRITI Store Manager": {"read": 1, "write": 1}
+        },
+        "SMRITI Party Stock Ledger Entry": {
+             "SMRITI Store Manager": {"read": 1}
+        },
+        "SMRITI PSV Activity Log": {
+             "SMRITI Store Manager": {"read": 1}
         }
     }
 

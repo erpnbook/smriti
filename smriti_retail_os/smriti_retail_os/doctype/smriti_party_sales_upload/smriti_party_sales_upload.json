@@ -1,0 +1,108 @@
+{
+  "actions": [],
+  "creation": "2026-06-08 12:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "is_submittable": 1,
+  "field_order": [
+    "company",
+    "party_stock_account",
+    "period_start_date",
+    "period_end_date",
+    "excel_file",
+    "file_hash",
+    "status",
+    "items"
+  ],
+  "fields": [
+    {
+      "fieldname": "company",
+      "fieldtype": "Link",
+      "label": "Company",
+      "options": "Company",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "party_stock_account",
+      "fieldtype": "Link",
+      "label": "Party Stock Account",
+      "options": "SMRITI Party Stock Account",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "period_start_date",
+      "fieldtype": "Date",
+      "label": "Period Start Date",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "period_end_date",
+      "fieldtype": "Date",
+      "label": "Period End Date",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "excel_file",
+      "fieldtype": "Attach",
+      "label": "Upload Excel File"
+    },
+    {
+      "fieldname": "file_hash",
+      "fieldtype": "Data",
+      "label": "File Hash",
+      "read_only": 1,
+      "hidden": 1
+    },
+    {
+      "default": "Draft",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "\nDraft\nImported",
+      "read_only": 1
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Sales Items",
+      "options": "SMRITI Party Sales Item"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-06-08 12:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "SMRITI Party Sales Upload",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "read": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1,
+      "submit": 1,
+      "cancel": 1
+    },
+    {
+      "create": 1,
+      "read": 1,
+      "role": "SMRITI Store Manager",
+      "share": 1,
+      "write": 1,
+      "submit": 1,
+      "cancel": 1
+    }
+  ],
+  "quick_entry": 1,
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}
