@@ -978,6 +978,19 @@ def setup_smriti_retail_os():
     Initializes custom fields, roles, and workspaces for standard DocTypes
     to extend ERPNext for SMRITI Retail OS.
     """
+    # 00. Provision SMRITI roles first to prevent dependency issues in custom DocTypes
+    for role_name in ["SMRITI Cashier", "SMRITI Store Manager"]:
+        if not frappe.db.exists("Role", role_name):
+            try:
+                role = frappe.new_doc("Role")
+                role.role_name = role_name
+                role.desk_access = 1
+                role.insert(ignore_permissions=True)
+                frappe.db.commit()
+                print(f"Created custom SMRITI role: {role_name}")
+            except Exception as e:
+                frappe.log_error(f"Error creating role {role_name}: {str(e)}")
+
     # 0. Provision SMRITI Company Settings DocType
     create_smriti_company_settings_doctype()
 
@@ -1318,15 +1331,7 @@ def setup_smriti_retail_os():
             if frappe.db.exists("Custom Field", custom_field_name):
                 frappe.db.set_value("Custom Field", custom_field_name, "module", "SMRITI Retail OS")
 
-    # 2. Role Provisioning
-
-    for role_name in ["SMRITI Cashier", "SMRITI Store Manager"]:
-        if not frappe.db.exists("Role", role_name):
-            role = frappe.new_doc("Role")
-            role.role_name = role_name
-            role.desk_access = 1
-            role.insert(ignore_permissions=True)
-            print(f"Created custom SMRITI role: {role_name}")
+    # 2. Role Provisioning (Note: provisioned at start of setup to prevent DocPerm insert errors)
 
     # 3. Programmatic Workspace Provisioning
     workspace_name = "SMRITI Retail OS"
