@@ -992,6 +992,7 @@ def setup_smriti_retail_os():
     create_master_doctypes()
     backup_and_seed_existing_data()
     seed_master_doctypes()
+    seed_retail_defaults()
 
     # 1. Custom Fields Provisioning
     custom_fields = {}
@@ -1823,6 +1824,112 @@ def create_default_admin_account():
             frappe.logger().info(f"[SMRITI] Created default Admin (Business Owner) account: {email}. Password reset required on first login.")
         except Exception as e:
             frappe.log_error(f"Error creating default Admin account: {str(e)}", "SMRITI Setup Error")
+
+
+def seed_retail_defaults():
+    """Seeds standard defaults for SMRITI Retail OS: Walk-In Customer and UPI Mode of Payment."""
+    # 1. Walk-In Customer
+    if not frappe.db.exists("Customer", "Walk-In Customer"):
+        try:
+            # Resolve non-group Customer Group
+            cg = frappe.db.get_value("Customer Group", {"is_group": 0}, "name")
+            if not cg:
+                if not frappe.db.exists("Customer Group", "All Customer Groups"):
+                    cg_parent = frappe.new_doc("Customer Group")
+                    cg_parent.customer_group_name = "All Customer Groups"
+                    cg_parent.is_group = 1
+                    cg_parent.insert(ignore_permissions=True)
+                cg_doc = frappe.new_doc("Customer Group")
+                cg_doc.customer_group_name = "Individual"
+                cg_doc.parent_customer_group = "All Customer Groups"
+                cg_doc.is_group = 0
+                cg_doc.insert(ignore_permissions=True)
+                cg = cg_doc.name
+            
+            # Resolve non-group Territory
+            terr = frappe.db.get_value("Territory", {"is_group": 0}, "name")
+            if not terr:
+                if not frappe.db.exists("Territory", "All Territories"):
+                    terr_parent = frappe.new_doc("Territory")
+                    terr_parent.territory_name = "All Territories"
+                    terr_parent.is_group = 1
+                    terr_parent.insert(ignore_permissions=True)
+                terr_doc = frappe.new_doc("Territory")
+                terr_doc.territory_name = "India"
+                terr_doc.parent_territory = "All Territories"
+                terr_doc.is_group = 0
+                terr_doc.insert(ignore_permissions=True)
+                terr = terr_doc.name
+
+            cust = frappe.new_doc("Customer")
+            cust.customer_name = "Walk-In Customer"
+            cust.customer_type = "Individual"
+            cust.customer_group = cg
+            cust.territory = terr
+            cust.insert(ignore_permissions=True)
+            print("[SMRITI] Seeded Walk-In Customer")
+        except Exception as e:
+            frappe.log_error(f"Error seeding Walk-In Customer: {str(e)}", "SMRITI Setup Error")
+
+    # 2. UPI and other payment modes
+    mops = ["Cash", "Bank", "UPI", "Card"]
+    for mop in mops:
+        if not frappe.db.exists("Mode of Payment", mop):
+            try:
+                doc = frappe.new_doc("Mode of Payment")
+                doc.mode_of_payment = mop
+                doc.insert(ignore_permissions=True)
+                print(f"[SMRITI] Created Mode of Payment: {mop}")
+            except Exception as e:
+                frappe.log_error(f"Error creating Mode of Payment {mop}: {str(e)}", "SMRITI Setup Error")
+
+        # Map accounts for each active company
+        try:
+            mop_doc = frappe.get_doc("Mode of Payment", mop)
+            for comp in frappe.get_all("Company", pluck="name"):
+                # Check if mapping already exists
+                has_mapping = False
+                for acc in mop_doc.accounts:
+                    if str(acc.company).strip().upper() == str(comp).strip().upper():
+                        has_mapping = True
+                        break
+                
+                if not has_mapping:
+                    # Resolve appropriate ledger
+                    ledger = None
+                    if mop == "Cash":
+                        ledger = f"Cash - {frappe.db.get_value('Company', comp, 'abbr')}"
+                        if not frappe.db.exists("Account", ledger):
+                            ledger = frappe.db.get_value("Account", {"account_name": "Cash", "company": comp})
+                    else:
+                        ledger = f"Bank - {frappe.db.get_value('Company', comp, 'abbr')}"
+                        if not frappe.db.exists("Account", ledger):
+                            ledger = frappe.db.get_value("Account", {"account_type": "Bank", "company": comp})
+                            if not ledger:
+                                ledger = frappe.db.get_value("Account", {"account_name": ["like", "%Bank%"], "company": comp, "is_group": 0})
+                    
+                    if ledger:
+                        mop_doc.append("accounts", {
+                            "company": comp,
+                            "default_account": ledger
+                        })
+            
+            # Clean up accounts child table (deduplicate and remove orphaned deleted companies)
+            seen_companies = set()
+            clean_accounts = []
+            for acc in mop_doc.accounts:
+                comp_key = str(acc.company).strip().upper()
+                if comp_key not in seen_companies and frappe.db.exists("Company", acc.company):
+                    seen_companies.add(comp_key)
+                    clean_accounts.append(acc)
+            
+            mop_doc.accounts = clean_accounts
+            mop_doc.flags.ignore_links = True
+            mop_doc.save(ignore_permissions=True)
+        except Exception as e:
+            frappe.log_error(f"Error mapping accounts for Mode of Payment {mop}: {str(e)}", "SMRITI Setup Error")
+
+    frappe.db.commit()
 
 
 

@@ -359,95 +359,107 @@ def sync_supplier_address_and_credit_days(doc, method):
     """
     # 1. Sync Address (Billing)
     if doc.custom_address_text:
-        address_title = f"{doc.supplier_name} - Retail Purchase"
-        address_lines = [line.strip() for line in doc.custom_address_text.split("\n") if line.strip()]
-        
-        address_line1 = address_lines[0] if len(address_lines) > 0 else "N/A"
-        address_line2 = ", ".join(address_lines[1:]) if len(address_lines) > 1 else ""
-        
-        state = resolve_address_state(doc.gstin or doc.tax_id, doc.custom_address_text)
-        
-        gstin_state = resolve_address_state(doc.gstin or doc.tax_id)
-        resolved_gstin = (doc.gstin or doc.tax_id) if state == gstin_state else None
+        try:
+            address_title = f"{doc.supplier_name} - Retail Purchase"
+            address_lines = [line.strip() for line in doc.custom_address_text.split("\n") if line.strip()]
+            
+            address_line1 = address_lines[0] if len(address_lines) > 0 else "N/A"
+            address_line2 = ", ".join(address_lines[1:]) if len(address_lines) > 1 else ""
+            
+            state = resolve_address_state(doc.gstin or doc.tax_id, doc.custom_address_text)
+            
+            gstin_state = resolve_address_state(doc.gstin or doc.tax_id)
+            resolved_gstin = (doc.gstin or doc.tax_id) if state == gstin_state else None
 
-        existing_address = frappe.db.get_value(
-            "Address",
-            {
-                "links.link_doctype": "Supplier",
-                "links.link_name": doc.name,
-                "address_type": "Billing"
-            },
-            "name"
-        )
+            existing_address = frappe.db.get_value(
+                "Address",
+                {
+                    "links.link_doctype": "Supplier",
+                    "links.link_name": doc.name,
+                    "address_type": "Billing"
+                },
+                "name"
+            )
 
-        if existing_address:
-            addr = frappe.get_doc("Address", existing_address)
-            addr.address_line1 = address_line1[:140]
-            addr.address_line2 = address_line2[:140] if address_line2 else None
-            addr.gstin = resolved_gstin
-            addr.state = state
-            addr.save(ignore_permissions=True)
-        else:
-            addr = frappe.new_doc("Address")
-            addr.address_title = address_title[:140]
-            addr.address_type = "Billing"
-            addr.address_line1 = address_line1[:140]
-            addr.address_line2 = address_line2[:140] if address_line2 else None
-            addr.city = "Unknown"
-            addr.country = "India"
-            addr.state = state
-            addr.gstin = resolved_gstin
-            addr.append("links", {
-                "link_doctype": "Supplier",
-                "link_name": doc.name
-            })
-            addr.insert(ignore_permissions=True)
+            if existing_address:
+                addr = frappe.get_doc("Address", existing_address)
+                addr.address_line1 = address_line1[:140]
+                addr.address_line2 = address_line2[:140] if address_line2 else None
+                addr.gstin = resolved_gstin
+                addr.state = state
+                addr.save(ignore_permissions=True)
+            else:
+                addr = frappe.new_doc("Address")
+                addr.address_title = address_title[:140]
+                addr.address_type = "Billing"
+                addr.address_line1 = address_line1[:140]
+                addr.address_line2 = address_line2[:140] if address_line2 else None
+                addr.city = "Unknown"
+                addr.country = "India"
+                addr.state = state
+                addr.gstin = resolved_gstin
+                addr.append("links", {
+                    "link_doctype": "Supplier",
+                    "link_name": doc.name
+                })
+                addr.insert(ignore_permissions=True)
+        except Exception:
+            frappe.log_error(
+                title=f"SMRITI: Billing address sync failed for Supplier {doc.name}",
+                message=frappe.get_traceback()
+            )
 
     # 1b. Sync Address (Shipping)
     if doc.get("custom_shipping_address_text"):
-        address_title = f"{doc.supplier_name} - Retail Supplier Shipping"
-        address_lines = [line.strip() for line in doc.custom_shipping_address_text.split("\n") if line.strip()]
-        
-        address_line1 = address_lines[0] if len(address_lines) > 0 else "N/A"
-        address_line2 = ", ".join(address_lines[1:]) if len(address_lines) > 1 else ""
-        
-        state = resolve_address_state(doc.gstin or doc.tax_id, doc.custom_shipping_address_text)
-        
-        gstin_state = resolve_address_state(doc.gstin or doc.tax_id)
-        resolved_gstin = (doc.gstin or doc.tax_id) if state == gstin_state else None
+        try:
+            address_title = f"{doc.supplier_name} - Retail Supplier Shipping"
+            address_lines = [line.strip() for line in doc.custom_shipping_address_text.split("\n") if line.strip()]
+            
+            address_line1 = address_lines[0] if len(address_lines) > 0 else "N/A"
+            address_line2 = ", ".join(address_lines[1:]) if len(address_lines) > 1 else ""
+            
+            state = resolve_address_state(doc.gstin or doc.tax_id, doc.custom_shipping_address_text)
+            
+            gstin_state = resolve_address_state(doc.gstin or doc.tax_id)
+            resolved_gstin = (doc.gstin or doc.tax_id) if state == gstin_state else None
 
-        existing_address = frappe.db.get_value(
-            "Address",
-            {
-                "links.link_doctype": "Supplier",
-                "links.link_name": doc.name,
-                "address_type": "Shipping"
-            },
-            "name"
-        )
+            existing_address = frappe.db.get_value(
+                "Address",
+                {
+                    "links.link_doctype": "Supplier",
+                    "links.link_name": doc.name,
+                    "address_type": "Shipping"
+                },
+                "name"
+            )
 
-        if existing_address:
-            addr = frappe.get_doc("Address", existing_address)
-            addr.address_line1 = address_line1[:140]
-            addr.address_line2 = address_line2[:140] if address_line2 else None
-            addr.gstin = resolved_gstin
-            addr.state = state
-            addr.save(ignore_permissions=True)
-        else:
-            addr = frappe.new_doc("Address")
-            addr.address_title = address_title[:140]
-            addr.address_type = "Shipping"
-            addr.address_line1 = address_line1[:140]
-            addr.address_line2 = address_line2[:140] if address_line2 else None
-            addr.city = "Unknown"
-            addr.country = "India"
-            addr.state = state
-            addr.gstin = resolved_gstin
-            addr.append("links", {
-                "link_doctype": "Supplier",
-                "link_name": doc.name
-            })
-            addr.insert(ignore_permissions=True)
+            if existing_address:
+                addr = frappe.get_doc("Address", existing_address)
+                addr.address_line1 = address_line1[:140]
+                addr.address_line2 = address_line2[:140] if address_line2 else None
+                addr.gstin = resolved_gstin
+                addr.state = state
+                addr.save(ignore_permissions=True)
+            else:
+                addr = frappe.new_doc("Address")
+                addr.address_title = address_title[:140]
+                addr.address_type = "Shipping"
+                addr.address_line1 = address_line1[:140]
+                addr.address_line2 = address_line2[:140] if address_line2 else None
+                addr.city = "Unknown"
+                addr.country = "India"
+                addr.state = state
+                addr.gstin = resolved_gstin
+                addr.append("links", {
+                    "link_doctype": "Supplier",
+                    "link_name": doc.name
+                })
+                addr.insert(ignore_permissions=True)
+        except Exception:
+            frappe.log_error(
+                title=f"SMRITI: Shipping address sync failed for Supplier {doc.name}",
+                message=frappe.get_traceback()
+            )
 
     # 2. Sync Credit Days -> Payment Terms Template
     if doc.custom_credit_days:
