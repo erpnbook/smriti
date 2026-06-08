@@ -8,13 +8,7 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
-# @file: verify_security.py
-# @description: Automatic backend controller validator for SMRITI Security & Workflow Center.
-# @author: Antigravity <antigravity@google.com>
-# @version: 1.0.0
-#
+
 
 import sys
 import os

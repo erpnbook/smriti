@@ -8,14 +8,7 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
-# @file: smriti_retail_os/tests/test_item_master_api.py
-# @description: Unit tests for dedicated Sizewise Item Master CRUD APIs.
-# @author: Antigravity <antigravity@google.com>
-# @version: 1.0.0
-# @license: MIT
-#
+
 
 import frappe
 import unittest

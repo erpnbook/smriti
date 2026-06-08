@@ -8,17 +8,7 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
-# @file: smriti_retail_os/www/print_templates.py
-# @description: Python controller for the standalone SMRITI Print Templates page.
-#               - Enforces login (redirects Guests to /login)
-#               - Enforces Store Manager or System Manager role
-#               - Strips all Frappe chrome from the page context
-# @author: Antigravity AI
-# @version: 1.0.0
-# @license: MIT
-#
+
 
 import frappe
 

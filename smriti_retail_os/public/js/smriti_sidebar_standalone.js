@@ -7,13 +7,7 @@
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
-/**
- * @file: smriti_retail_os/public/js/smriti_sidebar_standalone.js
- * @description: Dynamic Flexible Layout Sidebar Engine for SMRITI Standalone Pages
- * @author: Antigravity <antigravity@google.com>
- * @version: 1.0.0
- * @license: MIT
- */
+
 
 window.SMRITI = window.SMRITI || {};
 
@@ -48,8 +42,8 @@ SMRITI.sidebarSchema = [
             { id: 'billing', label: '├─ POS Billing', url: '/billing' },
             { id: 'sales_invoices', label: '├─ Billing Invoices', url: '/sales_invoices' },
             { id: 'sizewise_invoice', label: '├─ Sizewise Tax Invoice', url: '/sizewise_invoice' },
-            { id: 'sales_return', label: '├─ Sales Return', url: '#' },
-            { id: 'delivery_challan', label: '└─ Delivery Challan', url: '#' }
+            { id: 'sales_return', label: '├─ Sales Return', url: '/app/sales-invoice?is_return=1' },
+            { id: 'delivery_challan', label: '└─ Delivery Challan', url: '/app/delivery-note' }
         ]
     },
     {
@@ -59,8 +53,8 @@ SMRITI.sidebarSchema = [
         label: 'Purchase',
         items: [
             { id: 'purchase_ops', label: '├─ Purchase Manager', url: '/purchase' },
-            { id: 'grn', label: '├─ GRN / Receipts', url: '#' },
-            { id: 'purchase_invoice', label: '└─ Purchase Invoice', url: '#' }
+            { id: 'grn', label: '├─ GRN / Receipts', url: '/app/purchase-receipt' },
+            { id: 'purchase_invoice', label: '└─ Purchase Invoice', url: '/app/purchase-invoice' }
         ]
     },
     {
@@ -72,7 +66,7 @@ SMRITI.sidebarSchema = [
             { id: 'inventory_ops', label: '├─ Stock Operations', url: '/inventory' },
             { id: 'barcode', label: '├─ Barcode Center', url: '/barcode' },
             { id: 'print_templates', label: '├─ Print Templates', url: '/print_templates' },
-            { id: 'stock_adjust', label: '└─ Stock Adjustments', url: '#' }
+            { id: 'stock_adjust', label: '└─ Stock Adjustments', url: '/app/stock-entry' }
         ]
     },
     {
@@ -81,9 +75,9 @@ SMRITI.sidebarSchema = [
         emoji: '💰',
         label: 'Finance',
         items: [
-            { id: 'receipts', label: '├─ Receipts', url: '#' },
-            { id: 'payments', label: '├─ Payments', url: '#' },
-            { id: 'credit_notes', label: '└─ Credit Notes', url: '#' }
+            { id: 'receipts', label: '├─ Receipts', url: '/app/payment-entry?payment_type=Receive' },
+            { id: 'payments', label: '├─ Payments', url: '/app/payment-entry?payment_type=Pay' },
+            { id: 'credit_notes', label: '└─ Credit Notes', url: '/app/sales-invoice?is_return=1' }
         ]
     },
     {
@@ -119,7 +113,7 @@ SMRITI.sidebarSchema = [
             { id: 'shift', label: '├─ Shifts / Register', url: '/shift' },
             { id: 'configure', label: '├─ Config Portal', url: '/configure' },
             { id: 'security', label: '├─ Security & Workflows', url: '/security' },
-            { id: 'backup', label: '└─ Backup & Restore', url: '#' }
+            { id: 'backup', label: '└─ Backup & Restore', url: '/app/smriti-backup' }
         ]
     },
     {
