@@ -291,6 +291,29 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
             invoice_doc.shipping_address_name = shipping_addr_name
             invoice_doc.shipping_address = frappe.db.get_value("Address", shipping_addr_name, "display")
 
+    # Resolve and link Company Address (mandatory for Indian GST transactions)
+    if not invoice_doc.company_address:
+        company_addr_name = frappe.db.get_value(
+            "Address",
+            {
+                "links.link_doctype": "Company",
+                "links.link_name": company,
+                "is_your_company_address": 1
+            },
+            "name"
+        )
+        if not company_addr_name:
+            company_addr_name = frappe.db.get_value(
+                "Address",
+                {
+                    "links.link_doctype": "Company",
+                    "links.link_name": company
+                },
+                "name"
+            )
+        if company_addr_name:
+            invoice_doc.company_address = company_addr_name
+
     # Resolve tax override from Customer doc if set to Default
     resolved_tax_override = tax_override
     if resolved_tax_override == "Default" and invoice_doc.customer and invoice_doc.customer != "Walk-In Customer" and frappe.db.exists("Customer", invoice_doc.customer):

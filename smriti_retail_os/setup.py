@@ -1828,6 +1828,40 @@ def create_default_admin_account():
 
 def seed_retail_defaults():
     """Seeds standard defaults for SMRITI Retail OS: Walk-In Customer and UPI Mode of Payment."""
+    # 0. Ensure all Companies have a default Address (mandatory for Indian GST transactions)
+    for comp in frappe.get_all("Company", pluck="name"):
+        has_address = frappe.db.exists("Address", {"links.link_doctype": "Company", "links.link_name": comp})
+        if not has_address:
+            try:
+                abbr = frappe.db.get_value("Company", comp, "abbr") or "CO"
+                addr_name = f"{comp}-Registered"
+                
+                if not frappe.db.exists("Address", addr_name):
+                    addr = frappe.new_doc("Address")
+                    addr.address_title = comp
+                    addr.address_type = "Office"
+                    addr.address_line1 = "Primary Office Location"
+                    addr.city = "Mumbai"
+                    addr.state = "Maharashtra"
+                    addr.country = "India"
+                    addr.pincode = "400001"
+                    addr.is_primary_address = 1
+                    addr.is_shipping_address = 1
+                    addr.is_your_company_address = 1
+                    
+                    gstin = frappe.db.get_value("Company", comp, "gstin")
+                    if gstin:
+                        addr.gstin = gstin
+                        addr.gst_category = "Registered"
+                    else:
+                        addr.gst_category = "Unregistered"
+                        
+                    addr.append("links", {"link_doctype": "Company", "link_name": comp})
+                    addr.insert(ignore_permissions=True)
+                    print(f"[SMRITI] Created default Registered Address for Company {comp}")
+            except Exception as e:
+                frappe.log_error(f"Error seeding default Address for Company {comp}: {str(e)}", "SMRITI Setup Error")
+
     # 1. Walk-In Customer
     if not frappe.db.exists("Customer", "Walk-In Customer"):
         try:
