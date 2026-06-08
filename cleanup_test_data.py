@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: cleanup_test_data.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Cleans up stale test data and temporary database entries.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

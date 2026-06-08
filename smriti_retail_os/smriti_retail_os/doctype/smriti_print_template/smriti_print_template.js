@@ -1,6 +1,6 @@
 /**
  * @file: smriti_retail_os/smriti_retail_os/doctype/smriti_print_template/smriti_print_template.js
- * @description: Handles user login, registration, and JWT token generation.
+ * @description: Form controller and event handlers for the SMRITI Print Template DocType.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
  * @version: 1.0.0
