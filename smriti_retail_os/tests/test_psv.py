@@ -15,8 +15,9 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import now_datetime, add_days, today
-from smriti_retail_os.balance_engine import get_party_balance
+from smriti_retail_os.balance_engine import get_party_balance, get_bulk_party_balances
 from smriti_retail_os.psv_service import import_opening_balances
+from smriti_retail_os.ledger_engine import make_ledger_entry
 
 class TestPSV(FrappeTestCase):
     def setUp(self):
@@ -356,3 +357,162 @@ class TestPSV(FrappeTestCase):
         # Balance must now reconcile to 90.0
         bal = get_party_balance(self.account_name, self.item)
         self.assertEqual(bal, 90.0)
+
+    def test_scale_query_count(self):
+        # 1. Bulk insert 10,000 ledger entries for 100 locations and 500 SKUs
+        # Fast direct DB SQL insert to prevent timeout, specifying the mandatory primary key 'name'
+        import uuid
+        records = []
+        for i in range(10000):
+            loc = f"Loc-{i % 100}"
+            item = f"Item-{i % 500}"
+            name = f"LE-{uuid.uuid4().hex[:10]}-{i}"
+            unique_hash = f"hash-{uuid.uuid4().hex}"
+            records.append((
+                name,
+                self.company,
+                now_datetime(),
+                loc,
+                item,
+                10.0,
+                "Dispatch",
+                "MOCK-VOUCHER",
+                unique_hash
+            ))
+            
+        # Group insert in SQL
+        frappe.db.sql("""
+            INSERT INTO `tabSMRITI Party Stock Ledger Entry` 
+            (name, company, posting_datetime, party_stock_account, item_code, qty, voucher_type, voucher_no, unique_hash)
+            VALUES """ + ", ".join(["(%s, %s, %s, %s, %s, %s, %s, %s, %s)"] * 10000), 
+            [val for rec in records for val in rec]
+        )
+
+        sku_list = [f"Item-{i}" for i in range(500)]
+        
+        # 2. Assert bulk balance query runs in exactly 1 query (eliminating N+1 query regression)
+        queries = []
+        original_execute_query = frappe.db.execute_query
+        
+        def mock_execute_query(query, values=None):
+            queries.append((query, values))
+            return original_execute_query(query, values)
+            
+        frappe.db.execute_query = mock_execute_query
+        try:
+            balances = get_bulk_party_balances("Loc-0", sku_list)
+        finally:
+            frappe.db.execute_query = original_execute_query
+        
+        self.assertEqual(len(queries), 1)
+        self.assertEqual(balances.get("Item-0"), 200.0)
+
+    def test_concurrency_ledger_entries(self):
+        # 1. Create a ledger entry
+        posting_dt = now_datetime()
+        ple = make_ledger_entry(
+            self.company, posting_dt, self.account_name, self.item, 10.0, "Dispatch", "VOUCHER-CONC"
+        )
+        self.assertIsNotNone(ple)
+
+        # 2. Assert application-level duplicate check blocks it (returns None)
+        ple_dup = make_ledger_entry(
+            self.company, posting_dt, self.account_name, self.item, 10.0, "Dispatch", "VOUCHER-CONC"
+        )
+        self.assertIsNone(ple_dup)
+
+        # 3. Assert database-level unique constraint is present and enforces integrity
+        hash_val = ple.unique_hash
+        
+        db_error_raised = False
+        try:
+            frappe.db.sql("""
+                INSERT INTO `tabSMRITI Party Stock Ledger Entry`
+                (name, company, posting_datetime, party_stock_account, item_code, qty, voucher_type, voucher_no, unique_hash)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                "duplicate-name", self.company, posting_dt, self.account_name, self.item, 10.0, "Dispatch", "VOUCHER-CONC", hash_val
+            ))
+        except Exception as e:
+            db_error_raised = True
+            err_str = str(e)
+            self.assertTrue("Duplicate entry" in err_str or "1062" in err_str or "IntegrityError" in e.__class__.__name__ or "IntegrityError" in str(type(e)))
+            
+        self.assertTrue(db_error_raised)
+
+    def test_migration_schema_integrity(self):
+        # Verify all core tables and database schema components exist
+        doctypes = [
+            "SMRITI Party Stock Account",
+            "SMRITI Party Stock Ledger Entry",
+            "SMRITI Party Sales Upload",
+            "SMRITI Party Sales Item",
+            "SMRITI Party Physical Snapshot",
+            "SMRITI Party Physical Item",
+            "SMRITI PSV Settings",
+            "SMRITI PSV Activity Log",
+            "SMRITI PSV Exception Record"
+        ]
+        for dt in doctypes:
+            if dt == "SMRITI PSV Settings":
+                self.assertTrue(frappe.db.exists("DocType", dt))
+            else:
+                self.assertTrue(frappe.db.table_exists(dt))
+            
+        # Verify unique index on unique_hash field in ledger table
+        indices = frappe.db.sql("SHOW INDEX FROM `tabSMRITI Party Stock Ledger Entry` WHERE Key_name = 'unique_hash'")
+        self.assertTrue(len(indices) > 0 or frappe.db.exists("DocField", {"parent": "SMRITI Party Stock Ledger Entry", "fieldname": "unique_hash", "unique": 1}))
+
+    def test_health_check_alerting(self):
+        from smriti_retail_os.psv_service import run_psv_daily_health_check
+        
+        # Clean existing health alerts
+        frappe.db.delete("SMRITI PSV Exception Record")
+        frappe.db.commit()
+        
+        # 1. Run health check on clean state -> Should log late upload and never audited alerts
+        run_psv_daily_health_check()
+        
+        late_upload_alert = frappe.db.get_value("SMRITI PSV Exception Record", {
+            "party_stock_account": self.account_name,
+            "alert_type": "Late Upload"
+        }, ["name", "severity", "status", "last_seen"], as_dict=True)
+        self.assertIsNotNone(late_upload_alert)
+        self.assertEqual(late_upload_alert.severity, "Warning")
+        self.assertEqual(late_upload_alert.status, "Pending Reconciliation")
+        
+        # 2. Run again -> verify alert suppression updates last_seen but doesn't duplicate
+        last_seen_before = late_upload_alert.last_seen
+        from frappe.utils import add_to_date
+        frappe.db.set_value("SMRITI PSV Exception Record", late_upload_alert.name, "last_seen", add_to_date(last_seen_before, minutes=-5))
+        
+        run_psv_daily_health_check()
+        
+        # Open alerts count remains 2 (Late Upload, Never Audited)
+        self.assertEqual(frappe.db.count("SMRITI PSV Exception Record", {"party_stock_account": self.account_name, "status": "Pending Reconciliation"}), 2)
+        
+        last_seen_after = frappe.db.get_value("SMRITI PSV Exception Record", late_upload_alert.name, "last_seen")
+        self.assertNotEqual(last_seen_before, last_seen_after)
+
+        # 3. Trigger Critical Negative Balance
+        make_ledger_entry(self.company, now_datetime(), self.account_name, self.item, -50.0, "Dispatch", "VOUCHER-NEG")
+        
+        run_psv_daily_health_check()
+        
+        neg_alert = frappe.db.get_value("SMRITI PSV Exception Record", {
+            "party_stock_account": self.account_name,
+            "alert_type": "Negative Balance"
+        }, ["name", "severity", "status"], as_dict=True)
+        self.assertIsNotNone(neg_alert)
+        self.assertEqual(neg_alert.severity, "Critical")
+        
+        # Verify location status is set to Pending Reconciliation
+        loc_status = frappe.db.get_value("SMRITI Party Stock Account", self.account_name, "status")
+        self.assertEqual(loc_status, "Pending Reconciliation")
+
+        # 4. Resolve the negative balance
+        import_opening_balances(self.company, self.account_name, [{"item_code": self.item, "qty": 100.0}])
+        run_psv_daily_health_check()
+        
+        neg_alert_status = frappe.db.get_value("SMRITI PSV Exception Record", neg_alert.name, "status")
+        self.assertEqual(neg_alert_status, "Reconciled")
