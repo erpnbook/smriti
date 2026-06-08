@@ -1439,6 +1439,13 @@ def setup_smriti_retail_os():
             "link_type": "Page",
             "link_to": "configure",
             "label_for_links": "Configure store identity, defaults, loyalty, and tax mappings."
+        },
+        {
+            "label": "POS Profiles",
+            "type": "Link",
+            "link_type": "DocType",
+            "link_to": "POS Profile",
+            "label_for_links": "Manage point-of-sale configurations, warehouses, and cashier access."
         }
     ]
 
@@ -1556,6 +1563,9 @@ def setup_smriti_retail_os():
         "Dashboard": {
             "SMRITI Cashier": {"read": 1},
             "SMRITI Store Manager": {"read": 1, "write": 1}
+        },
+        "POS Profile": {
+            "SMRITI Store Manager": {"read": 1, "write": 1, "create": 1, "delete": 1}
         }
     }
 
