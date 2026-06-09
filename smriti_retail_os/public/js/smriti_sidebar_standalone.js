@@ -30,7 +30,8 @@ SMRITI.sidebarSchema = [
             { id: 'item_master', label: '├─ Item Master', url: '/item_master' },
             { id: 'sizewise_item', label: '├─ Sizewise Creator', url: '/sizewise_item' },
             { id: 'customers', label: '├─ Customers', url: '/customers' },
-            { id: 'suppliers', label: '└─ Suppliers', url: '/suppliers' }
+            { id: 'suppliers', label: '├─ Suppliers', url: '/suppliers' },
+            { id: 'psa', label: '└─ Party Stock Accounts', url: '/psa' }
         ]
     },
     {

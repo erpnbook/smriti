@@ -449,6 +449,11 @@ website_route_rules = [
         "to_route": "suppliers"
     },
     {
+        # Standalone SMRITI Party Stock Accounts — served from www/psa.html + www/psa.py
+        "from_route": "/psa",
+        "to_route": "psa"
+    },
+    {
         # Standalone Billing Invoices — served from www/sales_invoices.html + www/sales_invoices.py
         "from_route": "/sales_invoices",
         "to_route": "sales_invoices"
