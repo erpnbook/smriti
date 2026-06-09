@@ -21,6 +21,16 @@ from smriti_retail_os.ledger_engine import make_ledger_entry
 
 class TestPSV(FrappeTestCase):
     def setUp(self):
+        # Clean up database tables for a clean slate
+        frappe.db.delete("SMRITI Party Stock Ledger Entry")
+        frappe.db.delete("SMRITI Party Sales Upload")
+        frappe.db.delete("SMRITI Party Sales Item")
+        frappe.db.delete("SMRITI Party Physical Snapshot")
+        frappe.db.delete("SMRITI Party Physical Item")
+        frappe.db.delete("SMRITI PSV Reorder Rule")
+        frappe.db.delete("SMRITI PSV Exception Record")
+        frappe.db.commit()
+
         # 1. Resolve or Create basic link dependencies
         self.uom = frappe.db.exists("UOM", "Nos") or frappe.db.get_value("UOM", {}, "name")
         if not self.uom:
@@ -144,12 +154,18 @@ class TestPSV(FrappeTestCase):
             acc.insert(ignore_permissions=True)
             self.income_account = acc.name
 
-        comp_doc = frappe.get_doc("Company", self.company)
-        if not comp_doc.round_off_cost_center:
-            comp_doc.round_off_cost_center = self.cost_center
-        if not comp_doc.round_off_account:
-            comp_doc.round_off_account = frappe.db.get_value("Account", {"company": self.company, "account_type": "Round Off"}, "name") or self.income_account
-        comp_doc.save(ignore_permissions=True)
+        round_off_cost_center = frappe.db.get_value("Company", self.company, "round_off_cost_center")
+        round_off_account = frappe.db.get_value("Company", self.company, "round_off_account")
+
+        updates = {}
+        if not round_off_cost_center:
+            updates["round_off_cost_center"] = self.cost_center
+        if not round_off_account:
+            updates["round_off_account"] = frappe.db.get_value("Account", {"company": self.company, "account_type": "Round Off"}, "name") or self.income_account
+
+        if updates:
+            frappe.db.set_value("Company", self.company, updates)
+
 
         # 3. Create a mock customer if missing
         self.customer = "Test PSV Customer"
@@ -516,3 +532,181 @@ class TestPSV(FrappeTestCase):
         
         neg_alert_status = frappe.db.get_value("SMRITI PSV Exception Record", neg_alert.name, "status")
         self.assertEqual(neg_alert_status, "Reconciled")
+
+    def test_reorder_rule_validation(self):
+        # 1. Either item_group or item_variant must be set
+        rule = frappe.new_doc("SMRITI PSV Reorder Rule")
+        rule.company = self.company
+        rule.party_stock_account = self.account_name
+        rule.lead_time_days = 7
+        rule.safety_stock = 0
+        rule.active = 1
+        self.assertRaises(frappe.ValidationError, rule.insert, ignore_permissions=True)
+
+        # 2. Lead Time (Days) must be greater than zero
+        rule2 = frappe.new_doc("SMRITI PSV Reorder Rule")
+        rule2.company = self.company
+        rule2.party_stock_account = self.account_name
+        rule2.item_variant = self.item
+        rule2.lead_time_days = 0
+        rule2.safety_stock = 0
+        rule2.active = 1
+        self.assertRaises(frappe.ValidationError, rule2.insert, ignore_permissions=True)
+
+        # 3. Safety Stock cannot be negative
+        rule3 = frappe.new_doc("SMRITI PSV Reorder Rule")
+        rule3.company = self.company
+        rule3.party_stock_account = self.account_name
+        rule3.item_variant = self.item
+        rule3.lead_time_days = 7
+        rule3.safety_stock = -5
+        rule3.active = 1
+        self.assertRaises(frappe.ValidationError, rule3.insert, ignore_permissions=True)
+
+        # 4. Maximum Stock must be greater than Minimum Stock
+        rule4 = frappe.new_doc("SMRITI PSV Reorder Rule")
+        rule4.company = self.company
+        rule4.party_stock_account = self.account_name
+        rule4.item_variant = self.item
+        rule4.lead_time_days = 7
+        rule4.safety_stock = 0
+        rule4.min_stock = 50
+        rule4.max_stock = 30
+        rule4.active = 1
+        self.assertRaises(frappe.ValidationError, rule4.insert, ignore_permissions=True)
+
+        # 5. Valid insert
+        rule5 = frappe.new_doc("SMRITI PSV Reorder Rule")
+        rule5.company = self.company
+        rule5.party_stock_account = self.account_name
+        rule5.item_variant = self.item
+        rule5.lead_time_days = 7
+        rule5.safety_stock = 10
+        rule5.min_stock = 20
+        rule5.max_stock = 100
+        rule5.active = 1
+        rule5.insert(ignore_permissions=True)
+        self.assertTrue(rule5.name)
+
+    def test_get_reorder_recommendation_and_priority_cascade(self):
+        from smriti_retail_os.balance_engine import get_reorder_recommendation
+
+        # Clean up existing rules
+        frappe.db.delete("SMRITI PSV Reorder Rule", {"company": self.company})
+        frappe.db.commit()
+
+        # Seed initial balance: 152 units (so that after 147 units of sales, 5 units remain)
+        import_opening_balances(self.company, self.account_name, [{"item_code": self.item, "qty": 152.0}])
+
+        # Seed daily sales history to establish weekly sale average
+        import uuid
+        for i in range(1, 22):
+            dt = add_days(now_datetime(), -i)
+            name = f"LE-SALE-{uuid.uuid4().hex[:10]}-{i}"
+            unique_hash = f"hash-{uuid.uuid4().hex}"
+            frappe.db.sql("""
+                INSERT INTO `tabSMRITI Party Stock Ledger Entry`
+                (name, company, posting_datetime, party_stock_account, item_code, qty, voucher_type, voucher_no, unique_hash)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (name, self.company, dt, self.account_name, self.item, -7.0, "Sales", "MOCK-SALE", unique_hash))
+        
+        frappe.db.commit()
+
+        # Set Global defaults in Settings
+        settings = frappe.get_doc("SMRITI PSV Settings")
+        settings.default_lead_time_days = 7
+        settings.default_safety_stock = 10
+        settings.default_target_days_cover = 14
+        settings.reorder_avg_weeks = 4
+        settings.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        # ─── Priority 3: Global defaults ───
+        # Weekly sale avg: 49.0 units. Daily sale: 7.0 units.
+        # lead_time_days: 7, safety_stock: 10
+        # reorder_level = (7 * 7) + 10 = 59.0
+        # raw_need = max(0, 59.0 - 5.0) = 54.0
+        # max_stock is not capped globally. recommended_qty = 54.0
+        reco = get_reorder_recommendation(self.company, self.account_name, self.item)
+        self.assertEqual(reco["weekly_sale_avg"], 49.0)
+        self.assertEqual(reco["reorder_level"], 59.0)
+        self.assertEqual(reco["recommended_qty"], 54.0)
+
+        # ─── Priority 2: Item Group-level rule ───
+        # Create group-level rule with lead_time_days = 5, safety_stock = 20, max_stock = 80
+        group_rule = frappe.new_doc("SMRITI PSV Reorder Rule")
+        group_rule.company = self.company
+        group_rule.party_stock_account = self.account_name
+        group_rule.item_group = self.item_group
+        group_rule.lead_time_days = 5
+        group_rule.safety_stock = 20
+        group_rule.max_stock = 80
+        group_rule.active = 1
+        group_rule.insert(ignore_permissions=True)
+        frappe.db.commit()
+
+        # reorder_level = (5 * 7) + 20 = 55.0
+        # raw_need = max(0, 55.0 - 5.0) = 50.0
+        # max_fillable = max(0, 80.0 - 5.0) = 75.0
+        # recommended_qty = min(50.0, 75.0) = 50.0
+        reco2 = get_reorder_recommendation(self.company, self.account_name, self.item)
+        self.assertEqual(reco2["reorder_level"], 55.0)
+        self.assertEqual(reco2["recommended_qty"], 50.0)
+
+        # ─── Priority 1: Variant-specific rule ───
+        # Create variant-specific rule with lead_time_days = 3, safety_stock = 30, max_stock = 40
+        var_rule = frappe.new_doc("SMRITI PSV Reorder Rule")
+        var_rule.company = self.company
+        var_rule.party_stock_account = self.account_name
+        var_rule.item_variant = self.item
+        var_rule.lead_time_days = 3
+        var_rule.safety_stock = 30
+        var_rule.max_stock = 40
+        var_rule.active = 1
+        var_rule.insert(ignore_permissions=True)
+        frappe.db.commit()
+
+        # reorder_level = (3 * 7) + 30 = 51.0
+        # raw_need = max(0, 51.0 - 5.0) = 46.0
+        # max_fillable = max(0, 40.0 - 5.0) = 35.0  (Capped by max_stock!)
+        # recommended_qty = min(46.0, 35.0) = 35.0
+        reco3 = get_reorder_recommendation(self.company, self.account_name, self.item)
+        self.assertEqual(reco3["reorder_level"], 51.0)
+        self.assertEqual(reco3["recommended_qty"], 35.0)
+
+    def test_dashboard_apis_and_report(self):
+        from smriti_retail_os.psv_api import get_dashboard_summary, get_party_balance_detail, get_reorder_dashboard_data
+        from smriti_retail_os.smriti_retail_os.report.psv_reorder_report.psv_reorder_report import execute as execute_reorder_report
+
+        # Seeding some balance
+        import_opening_balances(self.company, self.account_name, [{"item_code": self.item, "qty": 10.0}])
+
+        # Verify whitelisted dashboard summary
+        summary = get_dashboard_summary(self.company)
+        self.assertIn("total_units", summary)
+        self.assertIn("total_locations", summary)
+        self.assertIn("negative_count", summary)
+        self.assertIn("open_exceptions", summary)
+        self.assertIn("critical_alerts", summary)
+        self.assertGreaterEqual(summary["total_units"], 10.0)
+
+        # Verify party balance detail
+        details = get_party_balance_detail(self.company, self.account_name)
+        self.assertTrue(len(details) > 0)
+        self.assertEqual(details[0]["item_code"], self.item)
+        self.assertEqual(details[0]["balance"], 10.0)
+
+        # Verify reorder dashboard data
+        reorder_data = get_reorder_dashboard_data(self.company)
+        # Should return a list (empty if no recommendations, or list of dicts)
+        self.assertIsInstance(reorder_data, list)
+
+        # Verify report execution
+        cols, data = execute_reorder_report({
+            "company": self.company,
+            "show_zero": 1
+        })
+        self.assertTrue(len(cols) > 0)
+        self.assertIsInstance(data, list)
+
+

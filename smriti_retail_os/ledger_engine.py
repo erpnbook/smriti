@@ -56,7 +56,12 @@ def make_ledger_entry(company, posting_datetime, party_stock_account, item_code,
     })
     
     ple.flags.ignore_permissions = True
-    ple.insert()
+    try:
+        ple.insert()
+    except frappe.DuplicateEntryError:
+        # Layer 3 idempotency: DB UNIQUE constraint caught a race condition.
+        # Another concurrent request already inserted this entry — treat as success.
+        return None
     return ple
 
 def log_activity(action_type, party_stock_account=None, reference_doctype=None, reference_name=None, details=None):

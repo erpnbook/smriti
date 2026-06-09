@@ -909,6 +909,9 @@ def get_deadline_alerts():
 # ─────────────────────────────────────────────
 
 REPORT_QUERIES = {
+    "psv_reorder_report": {
+        "is_custom": True
+    },
     "item_wise_sales": {
         "base_sql": """
             SELECT 
@@ -1196,7 +1199,13 @@ class SMRITIReportEngine:
             return self._run_cash_book()
         elif self.report_key == "day_book":
             return self._run_day_book()
+        elif self.report_key == "psv_reorder_report":
+            return self._run_psv_reorder_report()
         return []
+
+    def _run_psv_reorder_report(self):
+        from smriti_retail_os.smriti_retail_os.report.psv_reorder_report.psv_reorder_report import get_data
+        return get_data(self.filters)
 
     def _run_cash_book(self):
         from frappe.utils import flt, nowdate

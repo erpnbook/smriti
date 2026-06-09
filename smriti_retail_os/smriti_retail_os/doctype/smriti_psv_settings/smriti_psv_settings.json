@@ -12,7 +12,14 @@
     "accuracy_weight",
     "discipline_weight",
     "alert_variance_percentage",
-    "allow_negative_on_snapshot"
+    "allow_negative_on_snapshot",
+    "section_break_health",
+    "health_check_enabled",
+    "section_break_reorder",
+    "default_lead_time_days",
+    "default_safety_stock",
+    "default_target_days_cover",
+    "reorder_avg_weeks"
   ],
   "fields": [
     {
@@ -57,11 +64,55 @@
       "fieldname": "allow_negative_on_snapshot",
       "fieldtype": "Check",
       "label": "Allow Negative Balances"
+    },
+    {
+      "fieldname": "section_break_health",
+      "fieldtype": "Section Break",
+      "label": "Health Monitoring"
+    },
+    {
+      "default": "1",
+      "fieldname": "health_check_enabled",
+      "fieldtype": "Check",
+      "label": "Enable Daily Health Check"
+    },
+    {
+      "fieldname": "section_break_reorder",
+      "fieldtype": "Section Break",
+      "label": "V1.1 Reorder Intelligence Defaults"
+    },
+    {
+      "default": "7",
+      "description": "Global fallback lead time when no Reorder Rule exists",
+      "fieldname": "default_lead_time_days",
+      "fieldtype": "Int",
+      "label": "Default Lead Time (Days)"
+    },
+    {
+      "default": "0",
+      "description": "Global fallback safety stock quantity",
+      "fieldname": "default_safety_stock",
+      "fieldtype": "Float",
+      "label": "Default Safety Stock"
+    },
+    {
+      "default": "14",
+      "description": "Global fallback target days of stock to maintain",
+      "fieldname": "default_target_days_cover",
+      "fieldtype": "Int",
+      "label": "Default Target Days Cover"
+    },
+    {
+      "default": "4",
+      "description": "Number of weeks of sales history used to calculate weekly sale average for reorder recommendations",
+      "fieldname": "reorder_avg_weeks",
+      "fieldtype": "Int",
+      "label": "Sale Average Lookback (Weeks)"
     }
   ],
   "index_web_pages_for_search": 0,
   "links": [],
-  "modified": "2026-06-08 12:00:00.000000",
+  "modified": "2026-06-09 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "SMRITI Retail OS",
   "name": "SMRITI PSV Settings",

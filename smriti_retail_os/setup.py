@@ -635,6 +635,37 @@ def seed_report_templates():
                 {"fieldname": "supplier", "label": "Supplier", "fieldtype": "Link", "options": "Supplier"},
                 {"fieldname": "ageing_bucket", "label": "Ageing Bucket", "fieldtype": "Select", "options": "\n1-30\n31-60\n61-90\n90+"}
             ]
+        },
+        {
+            "report_key": "psv_reorder_report",
+            "report_name": "SMRITI PSV Reorder Report",
+            "report_category": "Inventory",
+            "source_doctype": "SMRITI Party Stock Account",
+            "group_by": "",
+            "order_by": "",
+            "company_restricted": 1,
+            "branch_restricted": 0,
+            "cache_minutes": 0,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager"],
+            "columns": [
+                {"fieldname": "location", "label": "Location", "fieldtype": "Link", "options": "SMRITI Party Stock Account", "width": 180},
+                {"fieldname": "zone", "label": "Zone", "fieldtype": "Data", "width": 100},
+                {"fieldname": "item_code", "label": "Item Variant", "fieldtype": "Link", "options": "Item", "width": 150},
+                {"fieldname": "current_balance", "label": "Current Balance", "fieldtype": "Float", "width": 120},
+                {"fieldname": "weekly_sale_avg", "label": "Weekly Sale Avg", "fieldtype": "Float", "width": 120},
+                {"fieldname": "days_cover", "label": "Days Cover", "fieldtype": "Float", "width": 100},
+                {"fieldname": "reorder_level", "label": "Reorder Level", "fieldtype": "Float", "width": 120},
+                {"fieldname": "recommended_qty", "label": "Recommended Qty", "fieldtype": "Float", "width": 130},
+                {"fieldname": "priority", "label": "Priority", "fieldtype": "Data", "width": 100}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "zone", "label": "Zone", "fieldtype": "Select", "options": "\nNorth\nSouth\nEast\nWest\nCentral"},
+                {"fieldname": "priority", "label": "Priority", "fieldtype": "Select", "options": "\nCritical\nHigh\nMedium\nLow"},
+                {"fieldname": "show_zero", "label": "Show Zero Recommendations", "fieldtype": "Check"}
+            ]
         }
     ])
     

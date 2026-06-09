@@ -1086,6 +1086,15 @@
     } else if (key === 'cashier') {
       const optionsHtml = `<option value="">All Cashiers</option>` + (filterOptions.cashiers || []).map(cs => `<option value="${cs.name}">${cs.fullname}</option>`).join('');
       inputHtml = `<select id="filter-${key}" class="filter-input" data-key="${key}">${optionsHtml}</select>`;
+    } else if (filter.fieldtype === 'Select') {
+      const opts = (filter.options || '').split('\n').map(o => o.trim()).filter(o => o);
+      const optionsHtml = (filter.reqd ? '' : `<option value="">All ${label}</option>`) + opts.map(o => `<option value="${o}">${o}</option>`).join('');
+      inputHtml = `<select id="filter-${key}" class="filter-input" data-key="${key}">${optionsHtml}</select>`;
+    } else if (filter.fieldtype === 'Check') {
+      inputHtml = `<select id="filter-${key}" class="filter-input" data-key="${key}">
+        <option value="0">No</option>
+        <option value="1">Yes</option>
+      </select>`;
     } else if (filter.fieldtype === 'Date' || key.includes('date')) {
       inputHtml = `<input type="date" id="filter-${key}" class="filter-input date-input" data-key="${key}"/>`;
     } else if (filter.fieldtype === 'Int' || filter.fieldtype === 'Float') {

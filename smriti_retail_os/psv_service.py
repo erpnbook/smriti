@@ -32,104 +32,158 @@ def get_posting_datetime(doc):
     return get_datetime(doc.posting_date or today())
 
 def process_sales_invoice_submit(doc, method=None):
-    """Called on Sales Invoice on_submit hook"""
+    """
+    Called on Sales Invoice on_submit hook.
+    CRITICAL: Wrapped in try/except — PSV errors must NEVER block Sales Invoice submission.
+    """
     if not doc.get("custom_party_stock_account"):
         return
 
-    posting_dt = get_posting_datetime(doc)
-    multiplier = -1.0 if doc.is_return else 1.0
-    voucher_type = "Return" if doc.is_return else "Dispatch"
+    try:
+        posting_dt = get_posting_datetime(doc)
+        multiplier = -1.0 if doc.is_return else 1.0
+        voucher_type = "Return" if doc.is_return else "Dispatch"
 
-    for item in doc.items:
-        make_ledger_entry(
-            company=doc.company,
-            posting_datetime=posting_dt,
+        for item in doc.items:
+            make_ledger_entry(
+                company=doc.company,
+                posting_datetime=posting_dt,
+                party_stock_account=doc.custom_party_stock_account,
+                item_code=item.item_code,
+                qty=item.qty * multiplier,
+                voucher_type=voucher_type,
+                voucher_no=doc.name
+            )
+        
+        log_activity(
+            action_type="Submit Dispatch" if not doc.is_return else "Submit Return",
             party_stock_account=doc.custom_party_stock_account,
-            item_code=item.item_code,
-            qty=item.qty * multiplier,
-            voucher_type=voucher_type,
-            voucher_no=doc.name
+            reference_doctype="Sales Invoice",
+            reference_name=doc.name,
+            details=f"Auto-dispatch of {len(doc.items)} items created from invoice submission."
         )
-    
-    log_activity(
-        action_type="Submit Dispatch" if not doc.is_return else "Submit Return",
-        party_stock_account=doc.custom_party_stock_account,
-        reference_doctype="Sales Invoice",
-        reference_name=doc.name,
-        details=f"Auto-dispatch of {len(doc.items)} items created from invoice submission."
-    )
+    except Exception as e:
+        # PSV is advisory — never block core billing
+        frappe.log_error(
+            title="PSV Hook Failure: on_submit",
+            message=f"SI {doc.name} | PSA {doc.custom_party_stock_account} | Error: {str(e)}"
+        )
+        _create_hook_failure_alert(doc, "on_submit", str(e))
 
 def validate_sales_invoice_cancel(doc, method=None):
-    """Called on Sales Invoice before_cancel hook"""
+    """
+    Called on Sales Invoice before_cancel hook.
+    CRITICAL: Wrapped in try/except — PSV errors must NEVER block Sales Invoice cancellation.
+    """
     if not doc.get("custom_party_stock_account") or doc.is_return:
         return
 
-    # Check if cancellation will result in a negative balance
-    party_stock_account = doc.custom_party_stock_account
-    triggered_exceptions = []
+    try:
+        # Check if cancellation will result in a negative balance
+        party_stock_account = doc.custom_party_stock_account
+        triggered_exceptions = []
 
-    for item in doc.items:
-        current_bal = get_party_balance(party_stock_account, item.item_code)
-        # Cancelling invoice removes dispatched quantity from the location
-        new_bal = current_bal - item.qty
-        if new_bal < 0.0:
-            triggered_exceptions.append({
-                "item_code": item.item_code,
-                "missing_qty": abs(new_bal)
-            })
+        for item in doc.items:
+            current_bal = get_party_balance(party_stock_account, item.item_code)
+            # Cancelling invoice removes dispatched quantity from the location
+            new_bal = current_bal - item.qty
+            if new_bal < 0.0:
+                triggered_exceptions.append({
+                    "item_code": item.item_code,
+                    "missing_qty": abs(new_bal)
+                })
 
-    if triggered_exceptions:
-        # Instead of blocking cancellation (avoiding deadlock), allow it but generate exception records
-        frappe.db.set_value("SMRITI Party Stock Account", party_stock_account, "status", "Pending Reconciliation")
-        
-        for exc in triggered_exceptions:
-            details = f"Negative balance triggered by cancelling invoice {doc.name} for SKU {exc['item_code']}."
-            create_or_update_alert(
+        if triggered_exceptions:
+            # Instead of blocking cancellation (avoiding deadlock), allow it but generate exception records
+            frappe.db.set_value("SMRITI Party Stock Account", party_stock_account, "status", "Pending Reconciliation")
+            
+            for exc in triggered_exceptions:
+                details = f"Negative balance triggered by cancelling invoice {doc.name} for SKU {exc['item_code']}."
+                create_or_update_alert(
+                    party_stock_account=party_stock_account,
+                    alert_type="Negative Balance",
+                    severity="Critical",
+                    details=details,
+                    item_code=exc["item_code"],
+                    sales_invoice=doc.name,
+                    missing_qty=exc["missing_qty"]
+                )
+
+            log_activity(
+                action_type="Reconciliation Alert",
                 party_stock_account=party_stock_account,
-                alert_type="Negative Balance",
-                severity="Critical",
-                details=details,
-                item_code=exc["item_code"],
-                sales_invoice=doc.name,
-                missing_qty=exc["missing_qty"]
+                reference_doctype="Sales Invoice",
+                reference_name=doc.name,
+                details=f"Invoice cancellation allowed. Created {len(triggered_exceptions)} pending exception records due to negative balances."
             )
-
-        log_activity(
-            action_type="Reconciliation Alert",
-            party_stock_account=party_stock_account,
-            reference_doctype="Sales Invoice",
-            reference_name=doc.name,
-            details=f"Invoice cancellation allowed. Created {len(triggered_exceptions)} pending exception records due to negative balances."
+    except Exception as e:
+        # PSV is advisory — never block core billing
+        frappe.log_error(
+            title="PSV Hook Failure: before_cancel",
+            message=f"SI {doc.name} | PSA {doc.custom_party_stock_account} | Error: {str(e)}"
         )
+        _create_hook_failure_alert(doc, "before_cancel", str(e))
 
 def process_sales_invoice_cancel(doc, method=None):
-    """Called on Sales Invoice on_cancel hook"""
+    """
+    Called on Sales Invoice on_cancel hook.
+    CRITICAL: Wrapped in try/except — PSV errors must NEVER block Sales Invoice cancellation.
+    """
     if not doc.get("custom_party_stock_account"):
         return
 
-    posting_dt = now_datetime()
-    multiplier = 1.0 if doc.is_return else -1.0
-    voucher_type = "Dispatch" if doc.is_return else "Return"
+    try:
+        posting_dt = now_datetime()
+        multiplier = 1.0 if doc.is_return else -1.0
+        voucher_type = "Dispatch" if doc.is_return else "Return"
 
-    for item in doc.items:
-        make_ledger_entry(
-            company=doc.company,
-            posting_datetime=posting_dt,
+        for item in doc.items:
+            make_ledger_entry(
+                company=doc.company,
+                posting_datetime=posting_dt,
+                party_stock_account=doc.custom_party_stock_account,
+                item_code=item.item_code,
+                qty=item.qty * multiplier,
+                voucher_type=voucher_type,
+                voucher_no=f"VOID-{doc.name}",
+                reason=_("Sales Invoice Cancelled")
+            )
+        
+        log_activity(
+            action_type="Cancel Dispatch" if not doc.is_return else "Cancel Return",
             party_stock_account=doc.custom_party_stock_account,
-            item_code=item.item_code,
-            qty=item.qty * multiplier,
-            voucher_type=voucher_type,
-            voucher_no=f"VOID-{doc.name}",
-            reason=_("Sales Invoice Cancelled")
+            reference_doctype="Sales Invoice",
+            reference_name=doc.name,
+            details="Ledger adjustment written to reverse dispatched quantities."
         )
-    
-    log_activity(
-        action_type="Cancel Dispatch" if not doc.is_return else "Cancel Return",
-        party_stock_account=doc.custom_party_stock_account,
-        reference_doctype="Sales Invoice",
-        reference_name=doc.name,
-        details="Ledger adjustment written to reverse dispatched quantities."
-    )
+    except Exception as e:
+        # PSV is advisory — never block core billing
+        frappe.log_error(
+            title="PSV Hook Failure: on_cancel",
+            message=f"SI {doc.name} | PSA {doc.custom_party_stock_account} | Error: {str(e)}"
+        )
+        _create_hook_failure_alert(doc, "on_cancel", str(e))
+
+
+def _create_hook_failure_alert(doc, hook_name, error_msg):
+    """
+    Creates a PSV Exception Record when a hook fails, so the daily health check
+    can detect orphaned invoices and reconcile them.
+    """
+    try:
+        create_or_update_alert(
+            party_stock_account=doc.custom_party_stock_account,
+            alert_type="Hook Failure",
+            severity="Critical",
+            details=f"PSV hook '{hook_name}' failed for SI {doc.name}. Error: {error_msg}",
+            sales_invoice=doc.name
+        )
+    except Exception:
+        # Last resort — if even the alert creation fails, just log it
+        frappe.log_error(
+            title="PSV Alert Creation Failed",
+            message=f"Could not create alert for SI {doc.name} hook {hook_name}"
+        )
 
 
 # ─── WEEKLY SALES UPLOAD ──────────────────────────────────────────────────────
@@ -532,7 +586,30 @@ def run_psv_daily_health_check():
                 details="Warning: No physical stock audit has ever been recorded for this location."
             )
             
-        # 5. Alert Resolution Pass
+        # 5. Orphaned Invoice Detection (Hook Failure Recovery)
+        # Find submitted Sales Invoices linked to this PSA that have no corresponding ledger entry
+        orphaned_invoices = frappe.db.sql("""
+            SELECT si.name, si.company
+            FROM `tabSales Invoice` si
+            WHERE si.custom_party_stock_account = %s
+              AND si.docstatus = 1
+              AND NOT EXISTS (
+                  SELECT 1 FROM `tabSMRITI Party Stock Ledger Entry` le
+                  WHERE le.voucher_no = si.name
+                    AND le.party_stock_account = si.custom_party_stock_account
+              )
+        """, (loc_name,), as_dict=True)
+
+        for orphan in orphaned_invoices:
+            create_or_update_alert(
+                party_stock_account=loc_name,
+                alert_type="Hook Failure",
+                severity="Critical",
+                details=f"Orphaned Invoice: SI {orphan['name']} has PSA linked but no ledger entries. Likely hook failure during submission.",
+                sales_invoice=orphan["name"]
+            )
+
+        # 6. Alert Resolution Pass
         open_alerts = frappe.get_all(
             "SMRITI PSV Exception Record",
             filters={"party_stock_account": loc_name, "status": "Pending Reconciliation"},
@@ -568,6 +645,14 @@ def run_psv_daily_health_check():
                     days = (getdate(today()) - getdate(latest_aud)).days
                     if days <= 90:
                         should_resolve = True
+            elif alert["alert_type"] == "Hook Failure" and alert.get("sales_invoice"):
+                # Auto-resolve if ledger entries now exist for this invoice
+                has_entries = frappe.db.exists("SMRITI Party Stock Ledger Entry", {
+                    "voucher_no": alert["sales_invoice"],
+                    "party_stock_account": loc_name
+                })
+                if has_entries:
+                    should_resolve = True
                         
             if should_resolve:
                 frappe.db.set_value("SMRITI PSV Exception Record", alert["name"], {
