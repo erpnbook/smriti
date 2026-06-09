@@ -1,0 +1,98 @@
+{
+ "actions": [],
+ "autoname": "PSV-RULE-.####",
+ "creation": "2026-06-09 11:15:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "active",
+  "customer",
+  "item_template",
+  "column_break_rules",
+  "core_sizes",
+  "target_qty"
+ ],
+ "fields": [
+  {
+   "default": "1",
+   "fieldname": "active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Channel",
+   "options": "Customer",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "item_template",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Style/Template",
+   "options": "Item",
+   "reqd": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_rules",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Comma separated item variants (e.g., '7,8,9' or 'SNK-01-7,SNK-01-8')",
+   "fieldname": "core_sizes",
+   "fieldtype": "Data",
+   "label": "Core Sizes",
+   "reqd": 1
+  },
+  {
+   "fieldname": "target_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Target Quantity (Per Variant)",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 0,
+ "links": [],
+ "modified": "2026-06-09 11:15:00.000000",
+ "modified_by": "Administrator",
+ "module": "Smriti Retail OS",
+ "name": "PSV Reorder Rule",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Head",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Channel Manager"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

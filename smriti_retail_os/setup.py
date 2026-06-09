@@ -1045,6 +1045,15 @@ def setup_smriti_retail_os():
     if frappe.db.exists("DocType", "SMRITI Company Settings"):
         custom_fields["SMRITI Company Settings"] = [
             {
+                "fieldname": "custom_business_type",
+                "label": "Business Type",
+                "fieldtype": "Select",
+                "options": "Footwear\nFMCG\nGarments\nPharma\nCosmetics\nGeneral Retail",
+                "default": "Footwear",
+                "insert_after": "company",
+                "module": "SMRITI Retail OS"
+            },
+            {
                 "fieldname": "custom_print_profiles_json",
                 "label": "Print Profiles JSON",
                 "fieldtype": "Long Text",

@@ -48,6 +48,17 @@ def get_active_company():
     return company
 
 
+@frappe.whitelist(allow_guest=True)
+def get_business_type():
+    try:
+        company = frappe.defaults.get_user_default("company") or (frappe.get_all("Company", limit=1)[0].name if frappe.get_all("Company", limit=1) else None)
+        if company and frappe.db.exists("SMRITI Company Settings", company):
+            bt = frappe.db.get_value("SMRITI Company Settings", company, "custom_business_type")
+            return bt or "Footwear"
+    except Exception:
+        pass
+    return "Footwear"
+
 @frappe.whitelist()
 def list_companies():
     """Return all companies for multi-company selector UI."""

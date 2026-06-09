@@ -126,9 +126,35 @@ SMRITI.sidebarSchema = [
     }
 ];
 
-SMRITI.renderFlexibleSidebar = function(activePageId) {
+SMRITI.renderFlexibleSidebar = async function(activePageId) {
     const target = document.getElementById("smriti-sidebar-target");
     if (!target) return;
+
+    let business_type = "Footwear";
+    try {
+        if (window.frappe && frappe.boot && frappe.boot.smriti_business_type) {
+            business_type = frappe.boot.smriti_business_type;
+        } else {
+            const res = await fetch("/api/method/smriti_retail_os.company_api.get_business_type");
+            const data = await res.json();
+            if (data.message) business_type = data.message;
+        }
+    } catch(e) {}
+
+    const filteredSchema = JSON.parse(JSON.stringify(SMRITI.sidebarSchema));
+    filteredSchema.forEach(cat => {
+        if (cat.items) {
+            cat.items = cat.items.filter(item => {
+                if (business_type === "Footwear") {
+                    if (['psa', 'psv_opening_balance', 'sales_upload'].includes(item.id)) return false;
+                } else {
+                    // FMCG / Others
+                    if (['sizewise_item', 'sizewise_invoice'].includes(item.id)) return false;
+                }
+                return true;
+            });
+        }
+    });
 
     // 1. Resolve active layout preferences from localStorage
     const app = document.getElementById("app");
@@ -182,7 +208,7 @@ SMRITI.renderFlexibleSidebar = function(activePageId) {
     
     const isAdminAccount = loggedUser === 'Admin' || loggedUser === 'admin@erpnbook.com';
     
-    SMRITI.sidebarSchema.forEach(block => {
+    filteredSchema.forEach(block => {
         if (block.type === 'link') {
             if (isAdminAccount && block.id === 'security') return;
             const activeCls = block.id === activePageId ? 'active' : '';

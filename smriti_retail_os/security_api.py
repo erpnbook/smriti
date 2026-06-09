@@ -55,7 +55,10 @@ def check_store_manager_or_admin():
         )
 
 def check_administrator_protection(email):
-    """Raises PermissionError if trying to modify the Administrator account by a non-Administrator."""
+    """Raises PermissionError if trying to modify the Administrator account or any System Manager by a non-Administrator/System Manager."""
+    if frappe.session.user == "Administrator" or "System Manager" in frappe.get_roles(frappe.session.user):
+        return
+
     is_admin_target = False
     if email == "Administrator":
         is_admin_target = True
@@ -63,13 +66,16 @@ def check_administrator_protection(email):
         admin_email = frappe.db.get_value("User", "Administrator", "email")
         if admin_email and email == admin_email:
             is_admin_target = True
-            
-    if is_admin_target:
-        if frappe.session.user != "Administrator" and "Administrator" not in frappe.get_roles():
-            frappe.throw(
-                _("Access Denied: The Administrator account is a protected system account and cannot be modified by non-Administrators."),
-                frappe.PermissionError
-            )
+
+    target_roles = []
+    if frappe.db.exists("User", email):
+        target_roles = frappe.get_roles(email)
+
+    if is_admin_target or "System Manager" in target_roles or "Administrator" in target_roles:
+        frappe.throw(
+            _("Access Denied: Store Managers cannot modify System Manager or Administrator accounts."),
+            frappe.PermissionError
+        )
 
 # ─── User Management ─────────────────────────────────────────────────────────
 

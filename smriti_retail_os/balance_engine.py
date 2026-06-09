@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/balance_engine.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Stock Balance & Reorder Intelligence Engine for SMRITI PSV.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0
@@ -52,6 +52,29 @@ def get_bulk_party_balances(party_stock_account, item_codes=None):
     
     result = frappe.db.sql(query, params, as_dict=False)
     return {r[0]: float(r[1]) for r in result}
+
+
+def get_all_party_balances(company):
+    """
+    Returns a list of dicts with all non-zero balances across all PSAs for a company.
+    """
+    results = frappe.db.sql("""
+        SELECT 
+            psa.name as party_stock_account,
+            psa.location_name,
+            psa.zone,
+            ple.item_code,
+            SUM(ple.qty) as balance
+        FROM `tabSMRITI Party Stock Ledger Entry` ple
+        INNER JOIN `tabSMRITI Party Stock Account` psa ON ple.party_stock_account = psa.name
+        WHERE psa.company = %s
+        GROUP BY psa.name, ple.item_code
+        HAVING SUM(ple.qty) != 0
+    """, (company,), as_dict=True)
+
+    for r in results:
+        r["balance"] = float(r["balance"])
+    return results
 
 
 def get_reorder_recommendation(company, party_stock_account, item_code):

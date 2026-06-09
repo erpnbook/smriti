@@ -1466,7 +1466,9 @@ def reset_all_transactions():
     DANGER: Wipes all transaction history (Sales, POS, Payments, GL, Stock, Purchase)
     and resets the naming series counters to start fresh from 1.
     """
-    check_store_manager_role()
+    roles = frappe.get_roles()
+    if "System Manager" not in roles and "Administrator" not in roles:
+        frappe.throw(_("Restricted: This destructive operation requires System Manager or Administrator role."), frappe.PermissionError)
     
     tables = [
         "Sales Invoice",
@@ -1517,10 +1519,11 @@ def reset_all_transactions():
 @frappe.whitelist()
 def reset_all_items():
     """
-    DANGER: Wipes all Item Masters, dynamic size variants, barcodes, brand lists,
-    price lists, and item variant attributes cleanly from the database.
+    DANGER: Wipes ALL Item Master data, variants, barcodes, and prices.
     """
-    check_store_manager_role()
+    roles = frappe.get_roles()
+    if "System Manager" not in roles and "Administrator" not in roles:
+        frappe.throw(_("Restricted: This destructive operation requires System Manager or Administrator role."), frappe.PermissionError)
     
     tables = [
         "Item",

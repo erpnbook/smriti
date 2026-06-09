@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/smriti_retail_os/doctype/smriti_psv_reorder_rule/smriti_psv_reorder_rule.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: DocType controller for SMRITI PSV Reorder Rule.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

@@ -207,8 +207,17 @@ def extend_bootinfo(bootinfo):
     try:
         companies = frappe.get_all("Company", limit=1)
         bootinfo.has_company = len(companies) > 0
+        if bootinfo.has_company:
+            company_name = frappe.defaults.get_user_default("company") or companies[0].name
+            if frappe.db.exists("SMRITI Company Settings", company_name):
+                bootinfo.smriti_business_type = frappe.db.get_value("SMRITI Company Settings", company_name, "custom_business_type") or "Footwear"
+            else:
+                bootinfo.smriti_business_type = "Footwear"
+        else:
+            bootinfo.smriti_business_type = "Footwear"
     except Exception:
         bootinfo.has_company = True
+        bootinfo.smriti_business_type = "Footwear"
 
     # ── Role-based routing ───────────────────────────────────────────────
     user = frappe.session.user

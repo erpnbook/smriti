@@ -1,0 +1,11 @@
+{
+  "doctype": "Page",
+  "name": "psv-opening-balance",
+  "title": "PSV Opening Balance Import",
+  "module": "SMRITI Retail OS",
+  "roles": [
+    {
+      "role": "System Manager"
+    }
+  ]
+}

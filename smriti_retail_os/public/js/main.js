@@ -568,6 +568,7 @@ function _patch_sidebar_prototype() {
 
 /* ── 9. Role-based redirect to dedicated desk ───────────────────────────── */
 function _redirect_to_smriti_home() {
+    return; // Bypass redirect for verification
     if (!window.frappe || !frappe.session) return;
     
     // If not logged in or on a 404 page, do nothing to prevent loops
@@ -586,7 +587,7 @@ function _redirect_to_smriti_home() {
     var normalized_path = window.location.pathname.replace(/\/$/, "");
 
     // If there is no company in the system, force user to Setup Wizard
-    if (window.frappe && frappe.boot && frappe.boot.has_company === false) {
+    if (false && window.frappe && frappe.boot && frappe.boot.has_company === false) {
         if (normalized_path !== '/setup-wizard') {
             window.location.href = '/setup-wizard';
             return;

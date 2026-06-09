@@ -497,3 +497,16 @@ website_route_rules = [
 ]
 
 
+
+# SMRITI PSV Hooks
+doc_events = {
+    "Delivery Note": {
+        "on_submit": "smriti_retail_os.smriti_retail_os.psv_integration.handle_delivery_note_submit",
+        "on_cancel": "smriti_retail_os.smriti_retail_os.psv_integration.handle_delivery_note_cancel"
+    },
+    "Stock Entry": {
+        "on_submit": "smriti_retail_os.smriti_retail_os.psv_integration.handle_sales_return_submit",
+        "on_cancel": "smriti_retail_os.smriti_retail_os.psv_integration.handle_sales_return_cancel"
+    }
+}
+

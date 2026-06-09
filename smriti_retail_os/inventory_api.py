@@ -13,6 +13,7 @@ import frappe
 from frappe.utils import flt, cint, nowdate
 from frappe import _
 from smriti_retail_os.utils.invoice_utils import get_barcode_candidates
+from smriti_retail_os.security_api import check_administrator_only
 
 def _get_default_warehouse(company):
     """Company ke saath matching warehouse lo."""

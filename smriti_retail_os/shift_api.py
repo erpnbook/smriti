@@ -348,11 +348,9 @@ def _get_open_shift(cashier, pos_profile):
 def _validate_manager_pin(pin, action_type, reference_name=None):
     """
     Validates manager password and logs override as a Comment.
-    Checks custom_smriti_pin first, then falls back to primary password.
-    Mirrors billing_api.validate_manager_override logic.
+    Strictly requires custom_smriti_pin (no fallback to primary password).
     """
     from frappe.utils.password import check_password as check_smriti_pin
-    import frappe.auth
 
     managers = frappe.db.get_all(
         "Has Role",
@@ -363,21 +361,16 @@ def _validate_manager_pin(pin, action_type, reference_name=None):
     for mgr in set(managers):
         if not frappe.db.get_value("User", mgr, "enabled"):
             continue
-        
+
         authenticated = False
         try:
-            # 1. Try SMRITI Dedicated PIN first
+            # Strictly use SMRITI Dedicated PIN
             if frappe.db.get_value("User", mgr, "custom_smriti_pin"):
                 try:
                     check_smriti_pin(mgr, pin, fieldname="custom_smriti_pin")
                     authenticated = True
                 except frappe.AuthenticationError:
                     pass
-            
-            # 2. Fallback to primary password
-            if not authenticated:
-                frappe.auth.check_password(mgr, pin)
-                authenticated = True
 
             if authenticated:
                 roles = frappe.get_roles(mgr)

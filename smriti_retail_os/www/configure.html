@@ -961,6 +961,7 @@ function loadCompanySettings(company = null) {
 
     // Company-level fields are now embedded in the settings response
     document.getElementById('cfg-custom-store-type').value = settings.custom_smriti_store_type || '';
+      document.getElementById('cfg-custom-business-type').value = settings.custom_business_type || 'Footwear';
     document.getElementById('cfg-gstin-state').value = settings.custom_smriti_gstin_state || '';
     document.getElementById('cfg-settings-configured').checked = !!parseInt(settings.custom_smriti_settings_configured);
 
@@ -1228,6 +1229,7 @@ function saveCompanySettings() {
   if (!company) { toast('Please select a company first.', 'error'); return; }
 
   const storeType      = document.getElementById('cfg-custom-store-type').value;
+    const businessType   = document.getElementById('cfg-custom-business-type').value;
   const storeTradeName = document.getElementById('cfg-store-trade-name').value.trim();
   const storeAddressLine1 = document.getElementById('cfg-store-address-line1').value.trim();
   const storeCity    = document.getElementById('cfg-store-city').value.trim();
@@ -1258,6 +1260,7 @@ function saveCompanySettings() {
   // can write it to the Company DocType — no separate frappe.client.set_value needed.
   const settings = {
     custom_smriti_store_type: storeType,
+      custom_business_type: businessType,
     gstin: document.getElementById('cfg-company-gstin').value.trim().toUpperCase(),
     store_trade_name: storeTradeName,
     store_logo_url: document.getElementById('cfg-store-logo-url').value.trim(),

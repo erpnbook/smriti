@@ -15,7 +15,13 @@
     "mobile",
     "email",
     "active",
-    "status"
+    "status",
+    "sb_tracking",
+    "tracking_mode",
+    "pos_enabled",
+    "sales_upload_enabled",
+    "audit_enabled",
+    "auto_reorder_enabled"
   ],
   "fields": [
     {
@@ -86,6 +92,42 @@
       "label": "Status",
       "options": "\nActive\nPending Reconciliation",
       "read_only": 1
+    },
+    {
+      "fieldname": "sb_tracking",
+      "fieldtype": "Section Break",
+      "label": "Tracking Configuration"
+    },
+    {
+      "default": "Hybrid",
+      "fieldname": "tracking_mode",
+      "fieldtype": "Select",
+      "label": "Tracking Mode",
+      "options": "Sales Upload\nPOS Integrated\nPhysical Audit\nHybrid"
+    },
+    {
+      "default": "0",
+      "fieldname": "pos_enabled",
+      "fieldtype": "Check",
+      "label": "POS Integrated"
+    },
+    {
+      "default": "1",
+      "fieldname": "sales_upload_enabled",
+      "fieldtype": "Check",
+      "label": "Sales Upload Enabled"
+    },
+    {
+      "default": "1",
+      "fieldname": "audit_enabled",
+      "fieldtype": "Check",
+      "label": "Physical Audit Enabled"
+    },
+    {
+      "default": "1",
+      "fieldname": "auto_reorder_enabled",
+      "fieldtype": "Check",
+      "label": "Auto Reorder Evaluation"
     }
   ],
   "index_web_pages_for_search": 1,

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/psv_service.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Core service logic for SMRITI Party Stock Visibility.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0
@@ -21,6 +21,47 @@ from frappe.utils import get_datetime, today, now_datetime
 from smriti_retail_os.ledger_engine import make_ledger_entry, log_activity
 from smriti_retail_os.balance_engine import get_party_balance, get_bulk_party_balances
 
+
+# --- UNIVERSAL TRANSACTION ENGINE ---
+
+def create_psv_transaction(psa, transaction_type, items, company=None, reference_doctype=None, reference_name=None, remarks=None, posting_date=None):
+    if not company:
+        company = frappe.db.get_value("SMRITI Party Stock Account", psa, "company")
+        
+    fingerprint = None
+    if reference_doctype and reference_name:
+        fingerprint = f"{transaction_type}::{reference_doctype}::{reference_name}"
+        existing = frappe.db.get_value("SMRITI PSV Transaction", {"mapping_fingerprint": fingerprint, "docstatus": 1}, "name")
+        if existing:
+            return existing
+
+    doc = frappe.new_doc("SMRITI PSV Transaction")
+    doc.party_stock_account = psa
+    doc.transaction_type = transaction_type
+    doc.company = company
+    doc.reference_doctype = reference_doctype
+    doc.reference_name = reference_name
+    doc.remarks = remarks
+    if posting_date:
+        doc.posting_date = posting_date
+        
+    for item in items:
+        if not item.get("item_code") or not item.get("qty"):
+            continue
+        doc.append("items", {
+            "item_code": item.get("item_code"),
+            "qty": item.get("qty"),
+            "rate": item.get("rate") or 0.0,
+            "reason": item.get("reason") or ""
+        })
+        
+    if not doc.items:
+        return None
+        
+    doc.insert(ignore_permissions=True)
+    doc.submit()
+    return doc.name
+
 # ─── SALES INVOICE HOOKS ──────────────────────────────────────────────────────
 
 def get_posting_datetime(doc):
@@ -32,160 +73,26 @@ def get_posting_datetime(doc):
     return get_datetime(doc.posting_date or today())
 
 def process_sales_invoice_submit(doc, method=None):
-    """
-    Called on Sales Invoice on_submit hook.
-    CRITICAL: Wrapped in try/except — PSV errors must NEVER block Sales Invoice submission.
-    """
-    if not doc.get("custom_party_stock_account"):
-        return
-
+    if not doc.get("custom_party_stock_account"): return
     try:
-        posting_dt = get_posting_datetime(doc)
-        multiplier = -1.0 if doc.is_return else 1.0
-        voucher_type = "Return" if doc.is_return else "Dispatch"
-
-        for item in doc.items:
-            make_ledger_entry(
-                company=doc.company,
-                posting_datetime=posting_dt,
-                party_stock_account=doc.custom_party_stock_account,
-                item_code=item.item_code,
-                qty=item.qty * multiplier,
-                voucher_type=voucher_type,
-                voucher_no=doc.name
-            )
-        
-        log_activity(
-            action_type="Submit Dispatch" if not doc.is_return else "Submit Return",
-            party_stock_account=doc.custom_party_stock_account,
-            reference_doctype="Sales Invoice",
-            reference_name=doc.name,
-            details=f"Auto-dispatch of {len(doc.items)} items created from invoice submission."
-        )
+        tx_type = "RETURN" if doc.is_return else "TRANSFER_OUT"
+        items_data = [{"item_code": i.item_code, "qty": i.qty, "rate": i.rate} for i in doc.items]
+        if items_data:
+            create_psv_transaction(doc.custom_party_stock_account, tx_type, items_data, doc.company, doc.doctype, doc.name, "Generated from Sales Invoice", get_posting_datetime(doc))
     except Exception as e:
-        # PSV is advisory — never block core billing
-        frappe.log_error(
-            title="PSV Hook Failure: on_submit",
-            message=f"SI {doc.name} | PSA {doc.custom_party_stock_account} | Error: {str(e)}"
-        )
-        _create_hook_failure_alert(doc, "on_submit", str(e))
-
-def validate_sales_invoice_cancel(doc, method=None):
-    """
-    Called on Sales Invoice before_cancel hook.
-    CRITICAL: Wrapped in try/except — PSV errors must NEVER block Sales Invoice cancellation.
-    """
-    if not doc.get("custom_party_stock_account") or doc.is_return:
-        return
-
-    try:
-        # Check if cancellation will result in a negative balance
-        party_stock_account = doc.custom_party_stock_account
-        triggered_exceptions = []
-
-        for item in doc.items:
-            current_bal = get_party_balance(party_stock_account, item.item_code)
-            # Cancelling invoice removes dispatched quantity from the location
-            new_bal = current_bal - item.qty
-            if new_bal < 0.0:
-                triggered_exceptions.append({
-                    "item_code": item.item_code,
-                    "missing_qty": abs(new_bal)
-                })
-
-        if triggered_exceptions:
-            # Instead of blocking cancellation (avoiding deadlock), allow it but generate exception records
-            frappe.db.set_value("SMRITI Party Stock Account", party_stock_account, "status", "Pending Reconciliation")
-            
-            for exc in triggered_exceptions:
-                details = f"Negative balance triggered by cancelling invoice {doc.name} for SKU {exc['item_code']}."
-                create_or_update_alert(
-                    party_stock_account=party_stock_account,
-                    alert_type="Negative Balance",
-                    severity="Critical",
-                    details=details,
-                    item_code=exc["item_code"],
-                    sales_invoice=doc.name,
-                    missing_qty=exc["missing_qty"]
-                )
-
-            log_activity(
-                action_type="Reconciliation Alert",
-                party_stock_account=party_stock_account,
-                reference_doctype="Sales Invoice",
-                reference_name=doc.name,
-                details=f"Invoice cancellation allowed. Created {len(triggered_exceptions)} pending exception records due to negative balances."
-            )
-    except Exception as e:
-        # PSV is advisory — never block core billing
-        frappe.log_error(
-            title="PSV Hook Failure: before_cancel",
-            message=f"SI {doc.name} | PSA {doc.custom_party_stock_account} | Error: {str(e)}"
-        )
-        _create_hook_failure_alert(doc, "before_cancel", str(e))
+        frappe.log_error(title=f"PSV Error: {doc.name}", message=frappe.get_traceback())
+        frappe.get_doc({"doctype": "SMRITI PSV Exception Record", "party_stock_account": doc.custom_party_stock_account, "exception_type": "Hook Failure", "reference_doctype": doc.doctype, "reference_name": doc.name, "description": str(e), "status": "Pending Reconciliation"}).insert(ignore_permissions=True)
+        frappe.db.commit()
 
 def process_sales_invoice_cancel(doc, method=None):
-    """
-    Called on Sales Invoice on_cancel hook.
-    CRITICAL: Wrapped in try/except — PSV errors must NEVER block Sales Invoice cancellation.
-    """
-    if not doc.get("custom_party_stock_account"):
-        return
-
+    if not doc.get("custom_party_stock_account"): return
     try:
-        posting_dt = now_datetime()
-        multiplier = 1.0 if doc.is_return else -1.0
-        voucher_type = "Dispatch" if doc.is_return else "Return"
-
-        for item in doc.items:
-            make_ledger_entry(
-                company=doc.company,
-                posting_datetime=posting_dt,
-                party_stock_account=doc.custom_party_stock_account,
-                item_code=item.item_code,
-                qty=item.qty * multiplier,
-                voucher_type=voucher_type,
-                voucher_no=f"VOID-{doc.name}",
-                reason=_("Sales Invoice Cancelled")
-            )
-        
-        log_activity(
-            action_type="Cancel Dispatch" if not doc.is_return else "Cancel Return",
-            party_stock_account=doc.custom_party_stock_account,
-            reference_doctype="Sales Invoice",
-            reference_name=doc.name,
-            details="Ledger adjustment written to reverse dispatched quantities."
-        )
+        tx_name = frappe.db.get_value("SMRITI PSV Transaction", {"reference_doctype": doc.doctype, "reference_name": doc.name, "docstatus": 1})
+        if tx_name: frappe.get_doc("SMRITI PSV Transaction", tx_name).cancel()
     except Exception as e:
-        # PSV is advisory — never block core billing
-        frappe.log_error(
-            title="PSV Hook Failure: on_cancel",
-            message=f"SI {doc.name} | PSA {doc.custom_party_stock_account} | Error: {str(e)}"
-        )
-        _create_hook_failure_alert(doc, "on_cancel", str(e))
-
-
-def _create_hook_failure_alert(doc, hook_name, error_msg):
-    """
-    Creates a PSV Exception Record when a hook fails, so the daily health check
-    can detect orphaned invoices and reconcile them.
-    """
-    try:
-        create_or_update_alert(
-            party_stock_account=doc.custom_party_stock_account,
-            alert_type="Hook Failure",
-            severity="Critical",
-            details=f"PSV hook '{hook_name}' failed for SI {doc.name}. Error: {error_msg}",
-            sales_invoice=doc.name
-        )
-    except Exception:
-        # Last resort — if even the alert creation fails, just log it
-        frappe.log_error(
-            title="PSV Alert Creation Failed",
-            message=f"Could not create alert for SI {doc.name} hook {hook_name}"
-        )
-
-
+        frappe.log_error(title=f"PSV Cancel Error: {doc.name}", message=frappe.get_traceback())
+        frappe.get_doc({"doctype": "SMRITI PSV Exception Record", "party_stock_account": doc.custom_party_stock_account, "exception_type": "Hook Failure", "reference_doctype": doc.doctype, "reference_name": doc.name, "description": str(e), "status": "Pending Reconciliation"}).insert(ignore_permissions=True)
+        frappe.db.commit()
 # ─── WEEKLY SALES UPLOAD ──────────────────────────────────────────────────────
 
 def validate_sales_upload(doc):
@@ -283,31 +190,12 @@ def parse_and_populate_items(doc):
                         "qty_sold": float(row[2] or 0)
                     })
         except ImportError:
-            # Fallback mock for testing environment without openpyxl
-            pass
+            frappe.throw(_("Python library 'openpyxl' is required to parse Excel files."))
 
 def process_sales_upload_submit(doc):
-    """Inserts negative entries to Shadow Ledger"""
     frappe.db.set_value(doc.doctype, doc.name, "status", "Imported")
-    
-    for item in doc.items:
-        make_ledger_entry(
-            company=doc.company,
-            posting_datetime=get_datetime(f"{item.date} 18:00:00") if item.date else now_datetime(),
-            party_stock_account=doc.party_stock_account,
-            item_code=item.item_code,
-            qty=item.qty_sold * -1.0, # Negative for sales
-            voucher_type="Sales",
-            voucher_no=doc.name
-        )
-
-    log_activity(
-        action_type="Upload Sales",
-        party_stock_account=doc.party_stock_account,
-        reference_doctype=doc.doctype,
-        reference_name=doc.name,
-        details=f"Weekly sales file imported with {len(doc.items)} records. Shadow balance decremented."
-    )
+    items_data = [{"item_code": i.item_code, "qty": i.qty_sold} for i in doc.items]
+    create_psv_transaction(doc.party_stock_account, "SALES_UPLOAD", items_data, doc.company, doc.doctype, doc.name, f"Imported from {doc.name}")
 
 def process_sales_upload_cancel(doc):
     """Reverses weekly sales entries"""
@@ -344,96 +232,36 @@ def validate_physical_snapshot(doc):
         item.variance = item.physical_qty - item.system_qty
 
 def process_physical_snapshot_submit(doc):
-    """Writes audit variance entries to Shadow Ledger"""
     if doc.status != "Approved":
-        frappe.throw(_("Audit Snapshots must be explicitly approved by a Store Manager or Administrator before submitting."))
-
-    # Save approval details
+        frappe.throw(_("Audit Snapshots must be explicitly approved before submitting."))
     doc.approved_by = frappe.session.user
     doc.approved_on = now_datetime()
-
-    for item in doc.items:
-        if item.variance == 0.0:
-            continue
-
-        adj_type = "Surplus Correction" if item.variance > 0.0 else "Shrinkage"
-        make_ledger_entry(
-            company=doc.company,
-            posting_datetime=get_datetime(doc.audit_date),
-            party_stock_account=doc.party_stock_account,
-            item_code=item.item_code,
-            qty=item.variance, # Positive for surplus, negative for shrinkage
-            voucher_type="Adjustment",
-            voucher_no=doc.name,
-            adjustment_type=adj_type,
-            reason=item.variance_reason,
-            approved_by=doc.approved_by,
-            approved_on=doc.approved_on
-        )
-
-    log_activity(
-        action_type="Approve Snapshot",
-        party_stock_account=doc.party_stock_account,
-        reference_doctype=doc.doctype,
-        reference_name=doc.name,
-        details=f"Physical snapshot approved and adjustment ledger entries written."
-    )
+    items_data = [{"item_code": i.item_code, "qty": i.variance, "reason": i.variance_reason} for i in doc.items if i.variance != 0.0]
+    if items_data:
+        create_psv_transaction(doc.party_stock_account, "AUDIT_ADJUSTMENT", items_data, doc.company, doc.doctype, doc.name, "Physical Snapshot Approved", get_datetime(doc.audit_date))
 
 def process_physical_snapshot_cancel(doc):
-    """Reverses physical stock audit adjustments"""
     doc.approved_by = None
     doc.approved_on = None
-
-    for item in doc.items:
-        if item.variance == 0.0:
-            continue
-
-        make_ledger_entry(
-            company=doc.company,
-            posting_datetime=now_datetime(),
-            party_stock_account=doc.party_stock_account,
-            item_code=item.item_code,
-            qty=item.variance * -1.0, # Reverse entry
-            voucher_type="Adjustment",
-            voucher_no=f"VOID-{doc.name}",
-            reason=_("Snapshot Cancelled")
-        )
-
-    log_activity(
-        action_type="Cancel Dispatch",
-        party_stock_account=doc.party_stock_account,
-        reference_doctype=doc.doctype,
-        reference_name=doc.name,
-        details="Audit snapshot cancelled and adjustments reversed."
-    )
-
-
-# ─── OPENING BALANCES LOADER ──────────────────────────────────────────────────
+    tx_name = frappe.db.get_value("SMRITI PSV Transaction", {"reference_doctype": doc.doctype, "reference_name": doc.name, "docstatus": 1})
+    if tx_name:
+        frappe.get_doc("SMRITI PSV Transaction", tx_name).cancel()
 
 def import_opening_balances(company, party_stock_account, items_data):
-    """
-    Programmatic helper to seed opening stock lying at a customer outlet location.
-    items_data should be a list of dicts: [{'item_code': 'X', 'qty': 100}]
-    """
-    posting_dt = now_datetime()
-    
-    for row in items_data:
-        make_ledger_entry(
-            company=company,
-            posting_datetime=posting_dt,
-            party_stock_account=party_stock_account,
-            item_code=row["item_code"],
-            qty=row["qty"],
-            voucher_type="Opening",
-            voucher_no="OPENING-BALANCE-IMPORT"
-        )
-
-    log_activity(
-        action_type="Opening Balance Import",
-        party_stock_account=party_stock_account,
-        details=f"Imported initial opening balances for {len(items_data)} items."
+    return create_psv_transaction(
+        psa=party_stock_account,
+        transaction_type="OPENING",
+        items=items_data,
+        company=company,
+        remarks="Initial Opening Balance Import"
     )
 
+@frappe.whitelist()
+def process_opening_balance(company, party_stock_account, items):
+    if isinstance(items, str):
+        import json
+        items = json.loads(items)
+    return import_opening_balances(company, party_stock_account, items)
 
 # ─── OPERATIONAL HEALTH ALERTS & CHECKS ────────────────────────────────────────
 

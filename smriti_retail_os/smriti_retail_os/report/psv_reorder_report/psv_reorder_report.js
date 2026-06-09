@@ -1,8 +1,8 @@
 /**
  * @file: smriti_retail_os/smriti_retail_os/report/psv_reorder_report/psv_reorder_report.js
- * @description: Handles user login, registration, and JWT token generation.
+ * @description: Frontend filters for the PSV Reorder Recommendation Report.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
- * @date: 2026-05-28
+ * @date: 2026-06-09
  * @version: 1.0.0
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
