@@ -436,8 +436,6 @@ body.smriti-popout-active #smriti-sidebar,
 body.smriti-popout-active .desk-sidebar,
 body.smriti-popout-active .body-sidebar,
 body.smriti-popout-active .sidebar-left,
-body.smriti-popout-active .page-head,
-body.smriti-popout-active .layout-side-section,
 body.smriti-popout-active .sticky-top-bar {
     display: none !important;
     width: 0 !important;
@@ -459,7 +457,7 @@ body.smriti-popout-active {
     margin: 0 !important;
     padding-left: 0 !important;
     padding-top: 0 !important;
-    overflow-x: hidden !important;
+    overflow-x: visible !important;
     overflow-y: auto !important;
     --sidebar-width: 0px !important;
     --page-sidebar-width: 0px !important;
@@ -577,13 +575,13 @@ body.smriti-popout-active .modal-dialog {
 body.smriti-popout-active .modal-content {
     max-height: 85vh !important;
     overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow-x: visible !important;
 }
 
 body.smriti-popout-active .modal-body {
     max-height: calc(85vh - 120px) !important;
     overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow-x: visible !important;
 }
 
 /* Global Floating Controls for Popout windows */
@@ -709,6 +707,15 @@ body.theme-minimalist .smriti-side-theme-pill.active {
 
 #smriti-sidebar.collapsed .smriti-side-theme-pill span {
     font-size: 14px; /* show only emoji in collapsed state */
+}
+
+
+
+
+/* Targeted Chrome Cleanup for Popout Mode */
+body.smriti-popout-active .page-head .flex-column,
+body.smriti-popout-active .page-head .sidebar-toggle-btn {
+    display: none !important;
 }
 
 

@@ -2664,7 +2664,7 @@ async function executeDirectUSBPrint(checkedItems, template, usbPrinter, totalQt
 
 function downloadPreviewPDF() {
     const labelHtml = document.getElementById('confirm-preview-container').innerHTML;
-    const popup = window.open('', '_blank', 'width=800,height=600');
+    const popup = window.open('', '_blank', 'width=1000,height=700');
     popup.document.write(`
         <html>
         <head>
@@ -2789,3 +2789,4 @@ window.onload = init;
 <script>SMRITI.renderFlexibleSidebar("barcode");</script></body>
 </html>
 {% endblock %}
+
