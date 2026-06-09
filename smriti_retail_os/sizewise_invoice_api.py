@@ -398,6 +398,17 @@ def save_sizewise_invoice(payload):
     si.update_stock    = 0
     si.is_pos          = 0
 
+    # Auto-resolve SMRITI Party Stock Account for the customer
+    if not si.get("custom_party_stock_account"):
+        psa = frappe.db.get_value(
+            "SMRITI Party Stock Account",
+            {"customer": customer, "company": company, "active": 1},
+            "name"
+        )
+        if psa:
+            si.custom_party_stock_account = psa
+
+
     # Auto-resolve Company Address (Required by India Compliance)
     if not si.company_address:
         addr = frappe.get_all(
