@@ -436,14 +436,6 @@ website_route_rules = [
         "to_route": "smriti-403"
     },
     {
-        "from_route": "404",
-        "to_route": "smriti-404"
-    },
-    {
-        "from_route": "403",
-        "to_route": "smriti-403"
-    },
-    {
         "from_route": "/smriti",
         "to_route": "smriti-home"
     },
