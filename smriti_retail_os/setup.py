@@ -1002,7 +1002,24 @@ def backup_and_seed_existing_data():
                             frappe.log_error(f"Error backing up {val_clean} to {dt}: {str(e)}")
             except Exception as e:
                 frappe.log_error(f"Error reading column {field} from Item: {str(e)}")
-    frappe.db.commit()
+def setup_activity_log_options():
+    """Adds SMRITI custom operations to Activity Log's operation Select field options."""
+    try:
+        from frappe.custom.doctype.property_setter.property_setter import make_property_setter
+        options = "\nLogin\nLogout\nImpersonate\nBlocked Download Attempt\nConfig Exported"
+        make_property_setter(
+            doctype="Activity Log",
+            fieldname="operation",
+            property="options",
+            value=options,
+            property_type="Select",
+            validate_fields_for_doctype=False
+        )
+        frappe.db.commit()
+        print("[SMRITI] Updated Activity Log operation field options")
+    except Exception as e:
+        frappe.log_error(f"Error updating Activity Log options: {str(e)}")
+
 
 def setup_smriti_retail_os():
     """
@@ -1031,6 +1048,10 @@ def setup_smriti_retail_os():
     # 0c. Provision SMRITI Reporting DocTypes
     create_reporting_doctypes()
     seed_report_templates()
+
+    # 0d. Update Activity Log operation options
+    setup_activity_log_options()
+
 
     # 0b. Provision dynamic attribute Master DocTypes + preserve existing database entries
     create_master_doctypes()
