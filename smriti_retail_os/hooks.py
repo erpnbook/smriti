@@ -18,12 +18,12 @@ app_license = "mit"
 brand_html = "<b style='color:#e94560;font-family:Inter,sans-serif'>SMRITI Retail OS</b>"
 
 # Branding Configs
-app_logo_url = "/assets/smriti_retail_os/images/smriti_logo.png"
-favicon = "/assets/smriti_retail_os/images/smriti_favicon.ico"
+app_logo_url = "/assets/smriti_retail_os/images/smriti_logo.svg"
+favicon = "/assets/smriti_retail_os/images/smriti_logo.svg"
 
 # Email notifications whitelabeling
 sender_name = "SMRITI Retail OS"
-email_brand_image = "/assets/smriti_retail_os/images/smriti_logo.png"
+email_brand_image = "/assets/smriti_retail_os/images/smriti_logo.svg"
 
 # Footer suppression
 footer_items = []
@@ -54,7 +54,7 @@ required_apps = ["frappe", "erpnext", "india_compliance"]
 # add_to_apps_screen = [
 # 	{
 # 		"name": "smriti_retail_os",
-# 		"logo": "/assets/smriti_retail_os/logo.png",
+# 		"logo": "/assets/smriti_retail_os/logo.svg",
 # 		"title": "SMRITI Retail OS",
 # 		"route": "/smriti_retail_os",
 # 		"has_permission": "smriti_retail_os.api.permission.has_app_permission"

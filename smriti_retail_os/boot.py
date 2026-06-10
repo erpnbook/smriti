@@ -51,7 +51,7 @@ def extend_bootinfo(bootinfo):
         bootinfo.smriti = frappe._dict({
             "app_name":      "SMRITI Retail OS",
             "app_version":   "1.0.0",
-            "logo_url":      "/assets/smriti_retail_os/images/smriti_logo.png",
+            "logo_url":      "/assets/smriti_retail_os/images/smriti_logo.svg",
             "user_roles":    user_roles,
             "default_route": smriti_route,
             "desk_allowed":  desk_ok,
@@ -174,7 +174,7 @@ def get_smriti_session_info():
             "desk_allowed":      _is_desk_allowed(user, user_roles),
             "company":           frappe.defaults.get_user_default("Company") or "",
             "app_name":          "SMRITI Retail OS",
-            "logo_url":          "/assets/smriti_retail_os/images/smriti_logo.png",
+            "logo_url":          "/assets/smriti_retail_os/images/smriti_logo.svg",
             "frontend_enabled":  _is_smriti_frontend_enabled(),
         }
     except Exception as e:

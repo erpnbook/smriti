@@ -14,7 +14,7 @@
     'use strict';
 
     var SMRITI_NAME  = 'SMRITI Retail OS';
-    var SMRITI_LOGO  = '/assets/smriti_retail_os/images/smriti_logo.png';
+    var SMRITI_LOGO  = '/assets/smriti_retail_os/images/smriti_logo.svg';
     var SAFE_ROUTE   = '/smriti';
     var DESK_ROLES   = ['System Manager'];
     var ADMIN_USER   = 'Administrator';
@@ -48,7 +48,7 @@
             fav.rel  = 'icon';
             document.head.appendChild(fav);
         }
-        fav.href = '/assets/smriti_retail_os/images/smriti_favicon.ico';
+        fav.href = '/assets/smriti_retail_os/images/smriti_logo.svg';
 
         // Brand text — replace "Frappe" or "ERPNext" in nav
         document.querySelectorAll('.navbar-brand span, .brand-name').forEach(function(el) {
