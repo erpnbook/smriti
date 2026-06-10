@@ -1,7 +1,7 @@
 {% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
-  @file: smriti_retail_os/www/sales_invoices.html
-  @description: SMRITI Billing Transactions — Standalone UI (Zero system chrome)
+  @file: smriti_retail_os/www/delivery_challan.html
+  @description: SMRITI Delivery Challans — Standalone UI (Zero system chrome)
   @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
   @version: 1.0.0
   @license: MIT
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SMRITI Billing Transactions</title>
+<title>SMRITI Delivery Challans</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
 <style>
@@ -40,7 +40,6 @@
 
 html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
 
-/* Ambient background grid */
 .bg-grid {
     position: fixed;
     inset: 0;
@@ -52,8 +51,6 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 }
 
 #app { position:relative; z-index:1; width:100vw; height:100vh; display:flex; overflow:hidden; }
-
-/* Main Wrapper */
 .main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
 
 /* Topbar */
@@ -83,10 +80,9 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 
 .invoice-badge { font-family:monospace; font-size:0.78rem; font-weight:700; color:var(--primary-lt); background:rgba(99,102,241,0.08); padding:3px 8px; border-radius:4px; border:1px solid var(--border); }
 .status-badge { display:inline-block; padding:2px 8px; border-radius:99px; font-weight:700; font-size:0.72rem; text-transform:uppercase; }
-.status-badge.paid { background:rgba(16,185,129,0.12); color:var(--success); }
-.status-badge.unpaid { background:rgba(245,158,11,0.12); color:var(--warning); }
-.status-badge.overdue { background:rgba(239,68,68,0.12); color:var(--danger); }
+.status-badge.completed { background:rgba(16,185,129,0.12); color:var(--success); }
 .status-badge.draft { background:rgba(255,255,255,0.04); color:var(--text-muted); }
+.status-badge.submitted { background:rgba(99,102,241,0.12); color:var(--primary-lt); }
 
 /* Slide-out Drawer */
 .drawer-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(3,7,18,0.7); backdrop-filter:blur(3px); display:flex; justify-content:flex-end; opacity:0; pointer-events:none; transition:opacity 0.25s ease; }
@@ -104,7 +100,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .section-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
 .section-title { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--primary-lt); margin-bottom:12px; }
 
-.meta-row { display:flex; justify-content:between; justify-content: space-between; font-size:0.88rem; margin-bottom:8px; }
+.meta-row { display:flex; justify-content: space-between; font-size:0.88rem; margin-bottom:8px; }
 .meta-row:last-child { margin-bottom:0; }
 .meta-label { color:var(--text-muted); }
 .meta-value { font-weight:600; color:var(--text); }
@@ -118,7 +114,6 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .btn-print { flex:1; padding:10px; background:var(--primary); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.88rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; }
 .btn-print:hover { background:var(--primary-lt); }
 
-/* Toast Container */
 #toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
 .toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
 .toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
@@ -126,17 +121,9 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
 .toast span { font-size:20px; }
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
-
-/* Print Styles */
-@media print {
-    body * { visibility: hidden; }
-    #print-area, #print-area * { visibility: visible; }
-    #print-area { display: block !important; position: absolute; left: 0; top: 0; width: 80mm; background: white; color: black; font-family: monospace; font-size: 11px; padding: 4mm; }
-    .no-print { display: none !important; }
-}
 </style>
-
-<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+</head>
 <body>
 <script>
     if (new URLSearchParams(window.location.search).get('popout') === 'true') {
@@ -147,17 +134,14 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 <div class="bg-grid"></div>
 
 <div id="app">
-    <!-- Sidebar -->
     <div id="smriti-sidebar-target" class="sidebar"></div>
-
-    <!-- Main Wrapper -->
     <div class="main-wrapper">
         <!-- Topbar -->
         <div class="topbar">
             <div class="topbar-breadcrumbs">
                 <span>SMRITI</span>
                 <span class="sep">/</span>
-                <span class="active">Billing Invoices Tracker</span>
+                <span class="active">Delivery Challans Tracker</span>
             </div>
             <div class="topbar-right">
                 <button class="topbtn" onclick="history.back()" title="Go Back">
@@ -171,55 +155,49 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 
         <!-- Filter Bar -->
         <div class="filter-bar">
-            <input type="text" class="form-input search-input" id="search-box" placeholder="Search by invoice no or customer name..." oninput="handleSearch(this.value)">
+            <input type="text" class="form-input search-input" id="search-box" placeholder="Search by challan no or customer name..." oninput="handleSearch(this.value)">
             <select class="form-input filter-select" id="filter-status" onchange="applyFilters()">
                 <option value="">All Statuses</option>
-                <option value="Paid">Paid</option>
-                <option value="Unpaid">Unpaid</option>
-                <option value="Overdue">Overdue</option>
+                <option value="Submitted">Submitted</option>
                 <option value="Draft">Draft</option>
             </select>
         </div>
 
-        <!-- Transactions Table -->
+        <!-- Table -->
         <div class="table-wrap">
             <table class="smriti-table">
                 <thead>
                     <tr>
-                        <th>Invoice Number</th>
+                        <th>Challan Number</th>
                         <th>Date & Time</th>
                         <th>Customer</th>
                         <th style="text-align:right;">Grand Total</th>
-                        <th style="text-align:right;">Outstanding</th>
                         <th style="text-align:center;">Status</th>
                     </tr>
                 </thead>
-                <tbody id="invoices-tbody">
-                    <tr><td colspan="6" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading transactions...</td></tr>
+                <tbody id="challans-tbody">
+                    <tr><td colspan="5" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading Delivery Challans...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
-<!-- Slide Drawer for Detail View -->
+<!-- Slide Drawer -->
 <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()">
     <div class="drawer" onclick="event.stopPropagation()">
         <div class="drawer-header">
-            <div class="drawer-title" id="drw-id">Invoice Details</div>
+            <div class="drawer-title" id="drw-id">Challan Details</div>
             <button class="drawer-close" onclick="closeDrawer()">&times;</button>
         </div>
         <div class="drawer-body">
-            <!-- Summary card -->
             <div class="section-card">
                 <div class="section-title">General Summary</div>
                 <div class="meta-row"><span class="meta-label">Date & Time</span><span class="meta-value" id="drw-date"></span></div>
                 <div class="meta-row"><span class="meta-label">Customer</span><span class="meta-value" id="drw-customer"></span></div>
-                <div class="meta-row"><span class="meta-label">Outstanding</span><span class="meta-value" id="drw-outstanding" style="color:var(--danger);"></span></div>
                 <div class="meta-row"><span class="meta-label">Status</span><span id="drw-status"></span></div>
             </div>
 
-            <!-- Items card -->
             <div class="section-card">
                 <div class="section-title">Items Checklist</div>
                 <table class="invoice-items-table">
@@ -235,59 +213,27 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 </table>
             </div>
 
-            <!-- Totals card -->
             <div class="section-card">
-                <div class="section-title">Receipt Breakdown</div>
-                <div class="meta-row"><span class="meta-label">Net Amount</span><span class="meta-value" id="drw-net"></span></div>
-                <div class="meta-row"><span class="meta-label">Taxes (GST)</span><span class="meta-value" id="drw-tax"></span></div>
+                <div class="section-title">Breakdown</div>
                 <div class="meta-row" style="border-top:1px solid var(--border); padding-top:8px; margin-top:8px; font-size:1.05rem;"><span class="meta-label" style="color:var(--text); font-weight:700;">Grand Total</span><span class="meta-value" id="drw-grand" style="color:var(--success); font-weight:800;"></span></div>
             </div>
-
-            <!-- e-Way Bill card -->
-            <div class="section-card" id="drw-eway-card" style="display:none;">
-                <div class="section-title">e-Way Bill Generation</div>
-                <div class="meta-row" id="eway-number-row" style="display:none; justify-content:space-between;">
-                    <span class="meta-label">E-way Bill No.</span>
-                    <span class="meta-value" id="eway-number-val" style="color:var(--success); font-weight:bold;"></span>
-                </div>
-                <div id="eway-form-fields">
-                    <div style="margin-bottom:10px;">
-                        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Vehicle Number</label>
-                        <input type="text" class="form-input" id="eway-vehicle" style="width:100%; background:var(--bg);" placeholder="e.g. MH-04-GP-1234">
-                    </div>
-                    <div style="margin-bottom:10px;">
-                        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Distance (in km)</label>
-                        <input type="number" class="form-input" id="eway-distance" style="width:100%; background:var(--bg);" placeholder="e.g. 520">
-                    </div>
-                    <button class="btn-print" id="btn-generate-eway" onclick="generateEWayBill()" style="background:var(--accent); width:100%; margin-top:8px;">
-                        <span class="material-symbols-outlined">local_shipping</span> Generate e-Way Bill
-                    </button>
-                </div>
-            </div>
         </div>
-        <div class="drawer-footer" style="display:flex; flex-direction:column; gap:8px;">
-            <button class="btn-print" id="btn-print-b2b" style="display:none; background:var(--success);" onclick="printB2BInvoice()">
-                <span class="material-symbols-outlined">receipt_long</span> Print B2B Invoice
-            </button>
-            <button class="btn-print" onclick="printReceipt()">
-                <span class="material-symbols-outlined">print</span> Print POS Receipt
+        <div class="drawer-footer">
+            <button class="btn-print" onclick="printChallan()">
+                <span class="material-symbols-outlined">print</span> Print Delivery Challan
             </button>
         </div>
     </div>
 </div>
-
-<!-- Receipt print target wrapper -->
-<div id="print-area" style="display:none;"></div>
 
 <div id="toast-container"></div>
 
 <script>
 const CSRF_TOKEN = '{{ csrf_token }}';
 let loggedUser = '{{ cashier }}';
-let masterInvoicesList = [];
-let activeInvoiceDoc = null;
+let masterChallansList = [];
+let activeChallanDoc = null;
 
-// REST API
 function api(method, params = {}) {
     return fetch(`/api/method/${method}`, {
         method: 'POST',
@@ -305,11 +251,6 @@ function api(method, params = {}) {
     });
 }
 
-function doLogout() {
-    fetch('/api/method/logout', { credentials: 'include' })
-    .then(() => { window.location.href = '/login'; });
-}
-
 function toast(msg, type = 'success') {
     const cont = document.getElementById('toast-container');
     const t = document.createElement('div');
@@ -321,62 +262,44 @@ function toast(msg, type = 'success') {
 }
 
 async function init() {
-    // Set user avatar info (sidebar renders these dynamically — guard against null)
-    const _sbu = document.getElementById('sb-user'); if (_sbu) _sbu.textContent = loggedUser.split('@')[0];
-    const _sba = document.getElementById('sb-avatar'); if (_sba) _sba.textContent = loggedUser.charAt(0).toUpperCase();
-
-    const params = new URLSearchParams(window.location.search);
-    const isReturn = params.get('is_return') === '1';
-    if (isReturn) {
-        document.title = "SMRITI Sales Returns & Credit Notes";
-        const titleEl = document.querySelector('.topbar-breadcrumbs span.active');
-        if (titleEl) titleEl.textContent = "Sales Returns & Credit Notes";
-    }
-
-    await loadInvoices();
+    await loadChallans();
 }
 
-async function loadInvoices() {
+async function loadChallans() {
     try {
-        const params = new URLSearchParams(window.location.search);
-        const isReturn = params.get('is_return') === '1';
-        const filters = { is_return: isReturn ? 1 : 0 };
-
         const data = await api('frappe.client.get_list', {
-            doctype: 'Sales Invoice',
-            filters: filters,
-            fields: ['name', 'posting_date', 'posting_time', 'customer_name', 'grand_total', 'outstanding_amount', 'status'],
+            doctype: 'Delivery Note',
+            fields: ['name', 'posting_date', 'posting_time', 'customer_name', 'grand_total', 'status', 'docstatus'],
             order_by: 'posting_date desc, posting_time desc',
             limit_page_length: 150
         });
-
-        masterInvoicesList = data || [];
-        renderTable(masterInvoicesList);
+        masterChallansList = data || [];
+        renderTable(masterChallansList);
     } catch(e) {
-        toast('Failed to load transactions list: ' + e.message, 'error');
+        toast('Failed to load delivery notes: ' + e.message, 'error');
     }
 }
 
 function renderTable(list) {
-    const tbody = document.getElementById('invoices-tbody');
+    const tbody = document.getElementById('challans-tbody');
     if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-sub);padding:40px 0;">No invoices tracked.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-sub);padding:40px 0;">No Delivery Challans tracked.</td></tr>';
         return;
     }
-    tbody.innerHTML = list.map(inv => {
-        const statusCls = inv.status.toLowerCase();
+    tbody.innerHTML = list.map(ch => {
+        const statusText = ch.docstatus === 1 ? 'Submitted' : 'Draft';
+        const statusCls = statusText.toLowerCase();
         return `
-            <tr onclick="loadInvoiceDetails('${inv.name}')">
-                <td><span class="invoice-badge">${inv.name}</span></td>
+            <tr onclick="loadChallanDetails('${ch.name}')">
+                <td><span class="invoice-badge">${ch.name}</span></td>
                 <td>
-                    <div style="font-weight:600;">${inv.posting_date}</div>
-                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${inv.posting_time || ''}</div>
+                    <div style="font-weight:600;">${ch.posting_date}</div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${ch.posting_time || ''}</div>
                 </td>
-                <td style="font-weight:600; color:var(--text);">${inv.customer_name}</td>
-                <td style="text-align:right; font-weight:700; color:var(--success);">Rs. ${parseFloat(inv.grand_total).toFixed(2)}</td>
-                <td style="text-align:right; font-weight:600; color:${parseFloat(inv.outstanding_amount) > 0 ? 'var(--danger)' : 'var(--text-muted)'};">Rs. ${parseFloat(inv.outstanding_amount).toFixed(2)}</td>
+                <td style="font-weight:600; color:var(--text);">${ch.customer_name}</td>
+                <td style="text-align:right; font-weight:700; color:var(--success);">Rs. ${parseFloat(ch.grand_total).toFixed(2)}</td>
                 <td style="text-align:center;">
-                    <span class="status-badge ${statusCls}">${inv.status}</span>
+                    <span class="status-badge ${statusCls}">${statusText}</span>
                 </td>
             </tr>
         `;
@@ -390,41 +313,40 @@ function handleSearch(q) {
 function applyFilters() {
     const q = document.getElementById('search-box').value.toLowerCase();
     const status = document.getElementById('filter-status').value;
-
-    let filtered = masterInvoicesList;
+    let filtered = masterChallansList;
 
     if (q) {
-        filtered = filtered.filter(inv => 
-            inv.name.toLowerCase().includes(q) ||
-            inv.customer_name.toLowerCase().includes(q)
+        filtered = filtered.filter(ch => 
+            ch.name.toLowerCase().includes(q) ||
+            ch.customer_name.toLowerCase().includes(q)
         );
     }
     if (status) {
-        filtered = filtered.filter(inv => inv.status === status);
+        filtered = filtered.filter(ch => {
+            const statusText = ch.docstatus === 1 ? 'Submitted' : 'Draft';
+            return statusText === status;
+        });
     }
-
     renderTable(filtered);
 }
 
-async function loadInvoiceDetails(invoiceId) {
+async function loadChallanDetails(challanId) {
     try {
         const doc = await api('frappe.client.get', {
-            doctype: 'Sales Invoice',
-            name: invoiceId
+            doctype: 'Delivery Note',
+            name: challanId
         });
-
-        activeInvoiceDoc = doc;
+        activeChallanDoc = doc;
         
         document.getElementById('drw-id').textContent = doc.name;
         document.getElementById('drw-date').textContent = `${doc.posting_date} | ${doc.posting_time || ''}`;
         document.getElementById('drw-customer').textContent = doc.customer_name;
-        document.getElementById('drw-outstanding').textContent = `Rs. ${parseFloat(doc.outstanding_amount).toFixed(2)}`;
         
         const statusEl = document.getElementById('drw-status');
-        statusEl.className = `status-badge ${doc.status.toLowerCase()}`;
-        statusEl.textContent = doc.status;
+        const statusText = doc.docstatus === 1 ? 'Submitted' : 'Draft';
+        statusEl.className = `status-badge ${statusText.toLowerCase()}`;
+        statusEl.textContent = statusText;
 
-        // Render Items table
         const tbody = document.getElementById('drw-items-tbody');
         tbody.innerHTML = doc.items.map(it => `
             <tr>
@@ -438,158 +360,28 @@ async function loadInvoiceDetails(invoiceId) {
             </tr>
         `).join('');
 
-        document.getElementById('drw-net').textContent = `Rs. ${parseFloat(doc.net_total).toFixed(2)}`;
-        document.getElementById('drw-tax').textContent = `Rs. ${parseFloat(doc.total_taxes_and_charges || 0).toFixed(2)}`;
         document.getElementById('drw-grand').textContent = `Rs. ${parseFloat(doc.grand_total).toFixed(2)}`;
-
-        // e-Way Bill UI handler
-        const ewayCard = document.getElementById('drw-eway-card');
-        if (parseFloat(doc.grand_total) >= 50000) {
-            ewayCard.style.display = 'block';
-            if (doc.ewaybill) {
-                document.getElementById('eway-number-row').style.display = 'flex';
-                document.getElementById('eway-number-val').textContent = doc.ewaybill;
-                document.getElementById('eway-form-fields').style.display = 'none';
-            } else {
-                document.getElementById('eway-number-row').style.display = 'none';
-                document.getElementById('eway-form-fields').style.display = 'block';
-                document.getElementById('eway-vehicle').value = '';
-                document.getElementById('eway-distance').value = '';
-            }
-        } else {
-            ewayCard.style.display = 'none';
-        }
-
-        // Determine if it is a B2B Sizewise Invoice
-        const isB2B = doc.custom_sizewise_json || (doc.remarks && doc.remarks.includes('_sizewise_matrix'));
-        const btnB2B = document.getElementById('btn-print-b2b');
-        if (btnB2B) {
-            btnB2B.style.display = isB2B ? 'flex' : 'none';
-        }
-
-        // Open slide-drawer
         document.getElementById('drawer-backdrop').classList.add('open');
     } catch(e) {
-        toast('Failed to load transaction details: ' + e.message, 'error');
+        toast('Failed to load challan details: ' + e.message, 'error');
     }
 }
 
-function printB2BInvoice() {
-    if (!activeInvoiceDoc) return;
-    window.open(`/sizewise_invoice?invoice=${activeInvoiceDoc.name}`, '_blank');
+function printChallan() {
+    if (!activeChallanDoc) return;
+    const url = `/printview?doctype=Delivery%20Note&name=${encodeURIComponent(activeChallanDoc.name)}`;
+    window.open(url, '_blank');
 }
 
 function closeDrawer() {
     document.getElementById('drawer-backdrop').classList.remove('open');
-    activeInvoiceDoc = null;
-}
-
-function printReceipt() {
-    if (!activeInvoiceDoc) return;
-    const doc = activeInvoiceDoc;
-
-    let itemsHtml = doc.items.map(it => `
-        <tr>
-            <td style="padding:4px 0;">${it.item_name}<br><small>${it.item_code} (${it.qty} x ${parseFloat(it.rate).toFixed(2)})</small></td>
-            <td style="text-align:right;padding:4px 0;vertical-align:bottom;">Rs. ${parseFloat(it.amount).toFixed(2)}</td>
-        </tr>
-    `).join('');
-
-    const html = `
-        <div style="text-align:center;margin-bottom:6px;">
-            <h2 style="margin:0;font-size:16px;">SMRITI RETAIL</h2>
-            <div style="font-size:11px;">Standalone Receipt Voucher</div>
-        </div>
-        <hr style="border:none;border-top:1px dashed #000;margin:6px 0;">
-        <table style="width:100%;font-size:11px;">
-            <tr><td>Bill No:</td><td style="text-align:right;font-weight:700;">${doc.name}</td></tr>
-            <tr><td>Date:</td><td style="text-align:right;">${doc.posting_date} ${doc.posting_time || ''}</td></tr>
-            <tr><td>Customer:</td><td style="text-align:right;">${doc.customer_name}</td></tr>
-        </table>
-        <hr style="border:none;border-top:1px dashed #000;margin:6px 0;">
-        <table style="width:100%;font-size:11px;">
-            <thead>
-                <tr style="border-bottom:1px dashed #000;"><th style="text-align:left;">Item Description</th><th style="text-align:right;">Amount</th></tr>
-            </thead>
-            <tbody>${itemsHtml}</tbody>
-        </table>
-        <hr style="border:none;border-top:1px dashed #000;margin:6px 0;">
-        <table style="width:100%;font-size:11px;">
-            <tr><td>Net Total:</td><td style="text-align:right;">Rs. ${parseFloat(doc.net_total).toFixed(2)}</td></tr>
-            <tr><td>GST Taxes:</td><td style="text-align:right;">Rs. ${parseFloat(doc.total_taxes_and_charges || 0).toFixed(2)}</td></tr>
-            <tr style="font-size:13px;font-weight:800;"><td>Grand Total:</td><td style="text-align:right;">Rs. ${parseFloat(doc.grand_total).toFixed(2)}</td></tr>
-        </table>
-        <div style="text-align:center;margin-top:14px;font-size:10px;">
-            Thank you for shopping at SMRITI!
-        </div>
-    `;
-
-    const printArea = document.getElementById('print-area');
-    printArea.innerHTML = html;
-    window.print();
-}
-
-async function generateEWayBill() {
-    if (!activeInvoiceDoc) return;
-    const vehicle = document.getElementById('eway-vehicle').value.trim();
-    const distance = document.getElementById('eway-distance').value.trim();
-    
-    if (!vehicle) {
-        toast('Vehicle Number is required!', 'error');
-        return;
-    }
-    
-    try {
-        toast('Connecting to GST e-Way Bill System...', 'info');
-        const res = await api('smriti_retail_os.billing_api.generate_mock_eway_bill', {
-            invoice_name: activeInvoiceDoc.name,
-            vehicle_no: vehicle,
-            distance: distance
-        });
-        
-        toast('E-way Bill generated successfully!', 'success');
-        
-        // Reload details
-        await loadInvoiceDetails(activeInvoiceDoc.name);
-        
-        // Reload active table lists in background
-        await loadInvoices();
-    } catch(e) {
-        toast('Failed to generate E-way Bill: ' + e.message, 'error');
-    }
-}
-
-function openPopout(e, url) {
-    e.preventDefault();
-    e.stopPropagation();
-    let popout_url = url;
-    if (popout_url.indexOf('?') === -1) {
-        popout_url += '?popout=true';
-    } else if (popout_url.indexOf('popout=true') === -1) {
-        popout_url += '&popout=true';
-    }
-    const w = screen.width - 60;
-    const h = screen.height - 60;
-    const left = 30;
-    const top = 30;
-    const win = window.open(popout_url, "smriti-popout-window", `width=${w},height=${h},top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`);
-    if (win) {
-        win.focus();
-    }
+    activeChallanDoc = null;
 }
 
 window.onload = init;
 </script>
-
 <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
-<script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const isReturn = urlParams.get('is_return') === '1';
-    let activeSidebarId = 'sales_invoices';
-    if (isReturn) {
-        activeSidebarId = urlParams.get('sidebar_id') || 'sales_return';
-    }
-    SMRITI.renderFlexibleSidebar(activeSidebarId);
-</script></body>
+<script>SMRITI.renderFlexibleSidebar("delivery_challan");</script>
+</body>
 </html>
 {% endblock %}

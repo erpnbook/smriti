@@ -1,0 +1,618 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/backup.html
+  @description: SMRITI Standalone Backup & Restore Center (Zero system chrome)
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @version: 1.0.0
+  @license: MIT
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMRITI Backup & Restore Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg:         #0a0f1e;
+    --bg2:        #0f1629;
+    --card:       #131d35;
+    --card2:      #172040;
+    --border:     rgba(255,255,255,0.07);
+    --border2:    rgba(255,255,255,0.12);
+    --primary:    #6366f1;
+    --primary-lt: #818cf8;
+    --accent:     #f59e0b;
+    --success:    #10b981;
+    --warning:    #f59e0b;
+    --danger:     #ef4444;
+    --text:       #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-sub:   #475569;
+    --radius:     12px;
+    --radius-sm:  8px;
+    --radius-lg:  16px;
+    --t:          0.2s ease;
+}
+
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+
+.bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 0;
+}
+
+#app { position:relative; z-index:1; width:100vw; height:100vh; display:flex; overflow:hidden; }
+.main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+/* Topbar */
+.topbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
+.topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--text-muted); }
+.topbar-breadcrumbs span.sep { color:var(--text-sub); }
+.topbar-breadcrumbs span.active { color:var(--text); }
+.topbar-right { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
+.topbtn { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:var(--radius-sm); font-size:12px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); white-space:nowrap; }
+.topbtn span { font-size:16px; }
+.topbtn:hover { border-color:var(--primary); color:var(--primary-lt); }
+
+/* Main Split View */
+.content-wrapper { flex:1; display:flex; flex-direction:column; overflow-y:auto; padding:24px; gap:24px; min-height:0; }
+
+.stats-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; flex-shrink:0; }
+.stat-card { background:linear-gradient(135deg, var(--card), var(--bg2)); border:1px solid var(--border); border-radius:var(--radius); padding:16px; display:flex; align-items:center; gap:16px; position:relative; overflow:hidden; }
+.stat-icon { font-size:32px; opacity:0.85; }
+.stat-info { display:flex; flex-direction:column; }
+.stat-label { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); }
+.stat-value { font-family:'Outfit',sans-serif; font-size:1.5rem; font-weight:800; line-height:1.2; margin-top:4px; }
+
+.layout-cols { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+.panel-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; display:flex; flex-direction:column; gap:16px; }
+.panel-title { font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:800; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); padding-bottom:10px; }
+.panel-title span { color:var(--primary-lt); font-size:22px; }
+
+.form-section { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px; display:flex; flex-direction:column; gap:12px; }
+.form-section-title { font-size:0.82rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--primary-lt); margin-bottom:4px; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-group.checkbox-group { flex-direction:row; align-items:center; gap:8px; }
+.form-label { font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+.form-input { padding:8px 12px; background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.88rem; outline:none; transition:all var(--t); font-family:inherit; }
+.form-input:focus { border-color:var(--primary); }
+
+.btn-action { padding:10px 16px; border-radius:var(--radius-sm); font-size:13px; font-weight:700; border:none; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; }
+.btn-action.primary { background:linear-gradient(135deg,var(--primary),var(--primary-lt)); color:white; box-shadow:0 4px 12px rgba(99,102,241,0.25); }
+.btn-action.primary:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(99,102,241,0.4); }
+.btn-action.secondary { background:var(--card2); border:1px solid var(--border2); color:var(--text); }
+.btn-action.secondary:hover { border-color:var(--primary); color:var(--primary-lt); }
+.btn-action.danger { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:var(--danger); }
+.btn-action.danger:hover { background:rgba(239,68,68,0.2); }
+
+.console-wrapper { background:#030712; border:1px solid var(--border2); border-radius:var(--radius-sm); font-family:monospace; font-size:0.82rem; padding:12px; display:flex; flex-direction:column; gap:8px; min-height:160px; }
+.console-header { display:flex; justify-content:space-between; align-items:center; color:var(--text-muted); border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px; }
+.console-log { overflow-y:auto; max-height:140px; white-space:pre-wrap; color:#38bdf8; line-height:1.4; }
+
+.history-panel { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; display:flex; flex-direction:column; gap:16px; margin-bottom:24px; }
+.smriti-table { width:100%; border-collapse:collapse; text-align:left; }
+.smriti-table th { padding:10px 14px; background:var(--card2); color:var(--text-muted); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--border); }
+.smriti-table td { padding:12px 14px; border-bottom:1px solid var(--border); font-size:0.88rem; vertical-align:middle; }
+.smriti-table tbody tr:hover td { background:rgba(99,102,241,0.04); }
+.smriti-table tbody tr:last-child td { border-bottom:none; }
+
+.badge-archive { display:inline-block; padding:2px 8px; border-radius:99px; font-weight:700; font-size:0.72rem; }
+.badge-archive.database { background:rgba(99,102,241,0.15); color:var(--primary-lt); }
+.badge-archive.files { background:rgba(245,158,11,0.15); color:var(--accent); }
+.badge-archive.other { background:rgba(255,255,255,0.04); color:var(--text-muted); }
+
+/* Modal Verification Dialog */
+.modal-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(3,7,18,0.85); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+.modal-backdrop.open { opacity:1; pointer-events:all; }
+.modal { background:var(--card2); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px; width:100%; max-width:480px; transform:translateY(20px); transition:transform 0.2s; }
+.modal-backdrop.open .modal { transform:translateY(0); }
+.modal-title { font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:800; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+.modal-title span { color:var(--danger); font-size:22px; }
+.modal-close { margin-left:auto; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:22px; display:flex; align-items:center; }
+.modal-input { width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.9rem; outline:none; margin-bottom:16px; text-transform:uppercase; text-align:center; font-weight:bold; letter-spacing:2px; }
+
+/* Toast Container */
+#toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
+.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+.toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
+.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
+.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+.toast span { font-size:20px; }
+@keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+.spinner { width:40px; height:40px; border:4px solid rgba(99,102,241,0.1); border-left-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin:0 auto; }
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+</head>
+<body>
+<script>
+    if (new URLSearchParams(window.location.search).get('popout') === 'true') {
+        document.body.classList.add('popout-mode');
+    }
+</script>
+
+<div class="bg-grid"></div>
+
+<div id="app">
+    <div id="smriti-sidebar-target" class="sidebar"></div>
+    <div class="main-wrapper">
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-breadcrumbs">
+                <span>SMRITI</span>
+                <span class="sep">/</span>
+                <span class="active">Backup & Restore Center</span>
+            </div>
+            <div class="topbar-right">
+                <button class="topbtn" onclick="history.back()" title="Go Back">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+                <button class="topbtn" onclick="history.forward()" title="Go Forward">
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-icon">🗄️</span>
+                    <div class="stat-info">
+                        <span class="stat-label">Total Backups</span>
+                        <span class="stat-value" id="stat-count">0</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">💾</span>
+                    <div class="stat-info">
+                        <span class="stat-label">Used Storage</span>
+                        <span class="stat-value" id="stat-size">0 KB</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">📅</span>
+                    <div class="stat-info">
+                        <span class="stat-label">Last Backup Date</span>
+                        <span class="stat-value" id="stat-date">Never</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuration & Triggers -->
+            <div class="layout-cols">
+                <!-- Settings panel -->
+                <div class="panel-card">
+                    <div class="panel-title"><span class="material-symbols-outlined">settings</span> Backup Configuration</div>
+                    <form id="settings-form" onsubmit="saveSettings(event)">
+                        <!-- Local backups -->
+                        <div class="form-section">
+                            <div class="form-section-title">Local Backups</div>
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="enable-local" name="enable_local_backup" checked>
+                                <label class="form-label" style="margin-bottom:0; cursor:pointer;" for="enable-local">Enable Local Storage</label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Retention Limit (Days)</label>
+                                <input type="number" class="form-input" id="local-retention" name="local_retention_days" min="1" max="365" value="30">
+                            </div>
+                        </div>
+
+                        <!-- Email SMTP backups -->
+                        <div class="form-section">
+                            <div class="form-section-title">Email (Online) Backups</div>
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="enable-email" name="enable_email_backup" onchange="toggleEmailFields(this.checked)">
+                                <label class="form-label" style="margin-bottom:0; cursor:pointer;" for="enable-email">Enable Email Backups</label>
+                            </div>
+                            <div id="email-fields" style="display:none; flex-direction:column; gap:12px; margin-top:8px;">
+                                <div class="form-group">
+                                    <label class="form-label">Recipient Email</label>
+                                    <input type="email" class="form-input" id="email-recipient" name="email_recipient" placeholder="backup@yourdomain.com">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">SMTP Host</label>
+                                    <input type="text" class="form-input" id="smtp-host" name="smtp_host" placeholder="smtp.gmail.com">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">SMTP Port</label>
+                                    <input type="number" class="form-input" id="smtp-port" name="smtp_port" value="587">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">SMTP Username</label>
+                                    <input type="text" class="form-input" id="smtp-user" name="smtp_user" placeholder="SMTP Username">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">SMTP Password</label>
+                                    <input type="password" class="form-input" id="smtp-pass" name="smtp_password" placeholder="••••••••••••">
+                                </div>
+                                <div class="form-group checkbox-group">
+                                    <input type="checkbox" id="use-tls" name="use_tls" checked>
+                                    <label class="form-label" style="margin-bottom:0; cursor:pointer;" for="use-tls">Use SSL/TLS Secure Port</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Auto Schedule -->
+                        <div class="form-section">
+                            <div class="form-section-title">Automated Schedule</div>
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="enable-auto" name="enable_auto_backup" checked>
+                                <label class="form-label" style="margin-bottom:0; cursor:pointer;" for="enable-auto">Enable Automated Backups</label>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Backup Frequency</label>
+                                <select class="form-input" id="auto-frequency" name="auto_backup_frequency">
+                                    <option value="Daily">Daily (Every night at 2:00 AM)</option>
+                                    <option value="Weekly">Weekly (Every Sunday)</option>
+                                    <option value="Monthly">Monthly (1st of every Month)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Backup Content</label>
+                                <select class="form-input" id="backup-content-type" name="backup_type">
+                                    <option value="Database Only">Database Only</option>
+                                    <option value="Database & Files">Database & File Folders</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-action primary" style="width:100%;" id="btn-save-settings">
+                            <span class="material-symbols-outlined">save</span> Save Configuration
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Triggers & logs -->
+                <div class="panel-card">
+                    <div class="panel-title"><span class="material-symbols-outlined">bolt</span> Manual Backups</div>
+                    <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.5;">Perform immediate manual backups. Archive files will be saved in the secure local site storage, and dispatched via email if SMTP is configured.</p>
+                    <div style="display:flex; gap:12px;">
+                        <button class="btn-action secondary" style="flex:1;" onclick="triggerBackup('Database Only')">
+                            <span class="material-symbols-outlined">database</span> Backup Database
+                        </button>
+                        <button class="btn-action secondary" style="flex:1;" onclick="triggerBackup('Database & Files')">
+                            <span class="material-symbols-outlined">folder_zip</span> Backup Site Files
+                        </button>
+                    </div>
+
+                    <!-- Log Console -->
+                    <div class="console-wrapper">
+                        <div class="console-header">
+                            <span>💻 Execution Output Log</span>
+                            <span id="console-status" style="color:var(--text-muted); font-size:0.75rem;">Idle</span>
+                        </div>
+                        <div class="console-log" id="console-log">Ready. Select action to execute...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Backup archives history list -->
+            <div class="history-panel">
+                <div class="panel-title"><span class="material-symbols-outlined">history</span> Secure Backup Archives</div>
+                <div style="overflow-x:auto;">
+                    <table class="smriti-table">
+                        <thead>
+                            <tr>
+                                <th>Archive File Name</th>
+                                <th>Type</th>
+                                <th>Size</th>
+                                <th>Creation Date</th>
+                                <th style="text-align:right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-tbody">
+                            <tr><td colspan="5" style="text-align:center;color:var(--text-sub);padding:30px 0;">Loading backup history archives...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- verification guard dialog modal -->
+<div class="modal-backdrop" id="verify-modal">
+    <div class="modal">
+        <div class="modal-title">
+            <span class="material-symbols-outlined">warning</span> Destructive Restore Authorizer
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <p style="font-size:0.88rem; line-height:1.5; color:var(--text-muted); margin-bottom:14px;">
+            You are about to restore the database to archive: <strong id="modal-filename" style="color:var(--text);"></strong>.<br><br>
+            <span style="color:var(--danger); font-weight:bold;">CRITICAL: THIS WILL COMPLETELY OVERWRITE CURRENT DATABASE TABLES. All active transactions, invoice trackers, and inventory logs will be overwritten.</span><br><br>
+            Please type <strong style="color:var(--text);">RESTORE</strong> in uppercase to authorize execution.
+        </p>
+        <input type="text" class="modal-input" id="verify-input" placeholder="Type RESTORE here">
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+            <button class="btn-action secondary" onclick="closeModal()">Cancel</button>
+            <button class="btn-action danger" onclick="confirmAndExecuteRestore()">Authorize & Rebuild Database</button>
+        </div>
+    </div>
+</div>
+
+<!-- progress dialog modal -->
+<div class="modal-backdrop" id="progress-modal">
+    <div class="modal" style="text-align:center; max-width:400px; padding:32px 24px;">
+        <div class="spinner"></div>
+        <h3 style="margin-top:16px; font-family:'Outfit',sans-serif;">Restoring System...</h3>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin-top:8px;">Overwriting database tables and rebuilding sessions. Do not reload or close this browser window.</p>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+let loggedUser = '{{ cashier }}';
+let restoreTargetFile = '';
+
+function api(method, params = {}) {
+    return fetch(`/api/method/${method}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-frappe-csrf-token': CSRF_TOKEN
+        },
+        body: JSON.stringify(params)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.exc) throw new Error(d._error_message || d.exc);
+        return d.message;
+    });
+}
+
+function toast(msg, type = 'success') {
+    const cont = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icon = type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info';
+    t.innerHTML = `<span class="material-symbols-outlined">${icon}</span> <span>${msg}</span>`;
+    cont.appendChild(t);
+    setTimeout(() => { t.remove(); }, 4000);
+}
+
+function log(msg) {
+    const logEl = document.getElementById('console-log');
+    logEl.innerHTML += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
+    logEl.scrollTop = logEl.scrollHeight;
+}
+
+function clearLog() {
+    document.getElementById('console-log').innerHTML = `[${new Date().toLocaleTimeString()}] Starting execution...`;
+}
+
+function toggleEmailFields(show) {
+    document.getElementById('email-fields').style.display = show ? 'flex' : 'none';
+}
+
+async function init() {
+    await loadBackupData();
+}
+
+async function loadBackupData() {
+    try {
+        // Load settings
+        const settings = await api('smriti_retail_os.backup_api.get_settings');
+        if (settings) {
+            document.getElementById('enable-local').checked = !!settings.enable_local_backup;
+            document.getElementById('local-retention').value = settings.local_retention_days || 30;
+            document.getElementById('enable-email').checked = !!settings.enable_email_backup;
+            toggleEmailFields(!!settings.enable_email_backup);
+            document.getElementById('email-recipient').value = settings.email_recipient || '';
+            document.getElementById('smtp-host').value = settings.smtp_host || '';
+            document.getElementById('smtp-port').value = settings.smtp_port || 587;
+            document.getElementById('smtp-user').value = settings.smtp_user || '';
+            document.getElementById('smtp-pass').value = settings.smtp_password ? '••••••••••••' : '';
+            document.getElementById('use-tls').checked = !!settings.use_tls;
+            document.getElementById('enable-auto').checked = !!settings.enable_auto_backup;
+            document.getElementById('auto-frequency').value = settings.auto_backup_frequency || 'Daily';
+            document.getElementById('backup-content-type').value = settings.backup_type || 'Database Only';
+        }
+
+        // Load stats
+        const stats = await api('smriti_retail_os.backup_api.get_backup_status');
+        if (stats) {
+            document.getElementById('stat-count').textContent = stats.total_count || 0;
+            document.getElementById('stat-size').textContent = stats.total_size || '0 KB';
+            document.getElementById('stat-date').textContent = stats.last_backup_date || 'Never';
+        }
+
+        // Load history
+        const archives = await api('smriti_retail_os.backup_api.get_backup_history');
+        renderHistoryTable(archives || []);
+    } catch(e) {
+        toast('Failed to load backup dashboard data: ' + e.message, 'error');
+    }
+}
+
+function renderHistoryTable(archives) {
+    const tbody = document.getElementById('history-tbody');
+    if (!archives.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-sub);padding:30px 0;">No backup archives found. Trigger manual backup to start.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = archives.map(item => {
+        let badgeCls = 'other';
+        if (item.type === 'database') badgeCls = 'database';
+        else if (item.type === 'files' || item.type === 'private-files') badgeCls = 'files';
+
+        const showRestore = item.type === 'database';
+        const restoreBtn = showRestore ? `
+            <button class="btn-action danger" onclick="openRestoreDialog('${item.name}')" title="Restore database from this archive">
+                <span class="material-symbols-outlined" style="font-size:16px;">settings_backup_restore</span> Restore
+            </button>
+        ` : '';
+
+        return `
+            <tr>
+                <td style="font-weight:600;font-family:monospace;font-size:0.82rem;" title="${item.name}">${item.name}</td>
+                <td><span class="badge-archive ${badgeCls}">${item.type.toUpperCase()}</span></td>
+                <td style="font-weight:600;color:var(--text-muted);">${item.size}</td>
+                <td style="font-size:0.85rem;color:var(--text-muted);">${item.datetime}</td>
+                <td style="text-align:right;">
+                    <div style="display:flex; gap:8px; justify-content:flex-end;">
+                        <button class="btn-action secondary" onclick="downloadArchive('${item.name}')">
+                            <span class="material-symbols-outlined" style="font-size:16px;">download</span> Download
+                        </button>
+                        ${restoreBtn}
+                        <button class="btn-action danger" onclick="deleteArchive('${item.name}')">
+                            <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function saveSettings(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-save-settings');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const payload = {
+        enable_local_backup: document.getElementById('enable-local').checked ? 1 : 0,
+        local_retention_days: parseInt(document.getElementById('local-retention').value) || 30,
+        enable_email_backup: document.getElementById('enable-email').checked ? 1 : 0,
+        email_recipient: document.getElementById('email-recipient').value,
+        smtp_host: document.getElementById('smtp-host').value,
+        smtp_port: parseInt(document.getElementById('smtp-port').value) || 587,
+        smtp_user: document.getElementById('smtp-user').value,
+        use_tls: document.getElementById('use-tls').checked ? 1 : 0,
+        enable_auto_backup: document.getElementById('enable-auto').checked ? 1 : 0,
+        auto_backup_frequency: document.getElementById('auto-frequency').value,
+        backup_type: document.getElementById('backup-content-type').value
+    };
+
+    const rawPass = document.getElementById('smtp-pass').value;
+    if (rawPass && rawPass !== '••••••••••••') {
+        payload.smtp_password = rawPass;
+    }
+
+    try {
+        await api('smriti_retail_os.backup_api.save_settings', { settings: payload });
+        toast('Configuration saved successfully!', 'success');
+        await loadBackupData();
+    } catch(err) {
+        toast('Failed to save settings: ' + err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined">save</span> Save Configuration';
+    }
+}
+
+async function triggerBackup(backupType) {
+    clearLog();
+    document.getElementById('console-status').textContent = 'Executing';
+    log(`Connecting to SMRITI Backup System...`);
+    log(`Requested backup content: ${backupType}`);
+    log(`Spawning Backup Generator...`);
+
+    try {
+        const res = await api('smriti_retail_os.backup_api.take_backup_now', { backup_type: backupType });
+        if (res && res.status === 'success') {
+            log(`Success: Secure archive created: ${res.file}`);
+            if (res.email_sent) {
+                log(`Success: Backup file dispatched via SMTP email successfully.`);
+            } else if (res.email_error) {
+                log(`Warning: Dispatch email failed: ${res.email_error}`);
+            }
+            log(`Manual backup completed successfully.`);
+            toast('Manual Backup completed successfully!', 'success');
+        } else {
+            const err = (res && res.message) || 'Unknown error';
+            log(`Error: Backup execution failed: ${err}`);
+            toast('Backup execution failed: ' + err, 'error');
+        }
+    } catch(e) {
+        log(`Exception: ${e.message}`);
+        toast('Backup execution failed: ' + e.message, 'error');
+    } finally {
+        document.getElementById('console-status').textContent = 'Idle';
+        await loadBackupData();
+    }
+}
+
+function downloadArchive(fileName) {
+    const downloadUrl = `/private/backups/${fileName}`;
+    window.open(downloadUrl, '_blank');
+}
+
+async function deleteArchive(fileName) {
+    if (!confirm(`Are you absolutely sure you want to permanently delete the backup file: ${fileName}?`)) {
+        return;
+    }
+    try {
+        await api('smriti_retail_os.backup_api.delete_backup', { file_name: fileName });
+        toast('Backup archive deleted', 'success');
+        await loadBackupData();
+    } catch(e) {
+        toast('Failed to delete backup: ' + e.message, 'error');
+    }
+}
+
+function openRestoreDialog(fileName) {
+    restoreTargetFile = fileName;
+    document.getElementById('modal-filename').textContent = fileName;
+    document.getElementById('verify-input').value = '';
+    document.getElementById('verify-modal').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('verify-modal').classList.remove('open');
+    restoreTargetFile = '';
+}
+
+async function confirmAndExecuteRestore() {
+    const inputVal = document.getElementById('verify-input').value.trim();
+    if (inputVal !== 'RESTORE') {
+        toast('Verification failed. You must type RESTORE to authorize.', 'error');
+        return;
+    }
+
+    document.getElementById('verify-modal').classList.remove('open');
+    document.getElementById('progress-modal').classList.add('open');
+
+    try {
+        const res = await api('smriti_retail_os.backup_api.restore_backup', { file_name: restoreTargetFile });
+        document.getElementById('progress-modal').classList.remove('open');
+        
+        if (res && res.status === 'success') {
+            alert('Backup restored successfully! SMRITI will now refresh your active session.');
+            // logout to clear session
+            fetch('/api/method/logout', { credentials: 'include' })
+            .then(() => { window.location.href = '/login'; });
+        } else {
+            const err = (res && res.message) || 'Unknown error';
+            alert('Restoration Failed: ' + err);
+        }
+    } catch(e) {
+        document.getElementById('progress-modal').classList.remove('open');
+        alert('Restoration Exception: ' + e.message);
+    } finally {
+        restoreTargetFile = '';
+        await loadBackupData();
+    }
+}
+
+window.onload = init;
+</script>
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+<script>SMRITI.renderFlexibleSidebar("backup");</script>
+</body>
+</html>
+{% endblock %}

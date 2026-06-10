@@ -520,6 +520,31 @@ website_route_rules = [
         # Standalone Print Templates — served from www/print_templates.html + www/print_templates.py
         "from_route": "/print_templates",
         "to_route": "print_templates"
+    },
+    {
+        # Standalone Delivery Challans — served from www/delivery_challan.html + www/delivery_challan.py
+        "from_route": "/delivery_challan",
+        "to_route": "delivery_challan"
+    },
+    {
+        # Standalone Purchase Receipts (GRN) — served from www/purchase_receipt.html + www/purchase_receipt.py
+        "from_route": "/purchase_receipt",
+        "to_route": "purchase_receipt"
+    },
+    {
+        # Standalone Purchase Invoices — served from www/purchase_invoice.html + www/purchase_invoice.py
+        "from_route": "/purchase_invoice",
+        "to_route": "purchase_invoice"
+    },
+    {
+        # Standalone Payments / Receipts Ledger — served from www/payments.html + www/payments.py
+        "from_route": "/payments",
+        "to_route": "payments"
+    },
+    {
+        # Standalone Backup & Restore Center — served from www/backup.html + www/backup.py
+        "from_route": "/backup",
+        "to_route": "backup"
     }
 ]
 

@@ -469,6 +469,11 @@ async function init() {
         });
 
         loadLedger(document.getElementById('ledger-wh').value);
+        const params = new URLSearchParams(window.location.search);
+        const tabParam = params.get('tab');
+        if (tabParam && ['ledger', 'transfer', 'adjust', 'audit'].includes(tabParam)) {
+            switchTab(tabParam);
+        }
     } catch(e) {
         console.error(e);
         toast('Failed to initialize warehouses', 'error');
@@ -868,6 +873,14 @@ window.onload = init;
 </script>
 
 <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
-<script>SMRITI.renderFlexibleSidebar("inventory_ops");</script></body>
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('tab');
+    let activeSidebarId = 'inventory_ops';
+    if (activeTab === 'adjust') {
+        activeSidebarId = 'stock_adjust';
+    }
+    SMRITI.renderFlexibleSidebar(activeSidebarId);
+</script></body>
 </html>
 {% endblock %}
