@@ -21,8 +21,12 @@ from smriti_retail_os.billing_api import (
     load_held_invoice,
     validate_manager_override,
     submit_bill,
-    create_return_invoice
+    create_return_invoice,
+    create_custom_sales_return,
+    update_sales_return,
+    delete_sales_return
 )
+
 
 class TestSmritiRetailBillingAPI(unittest.TestCase):
     
@@ -713,4 +717,119 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         frappe.db.delete("GL Entry", {"voucher_no": invoice_name})
         frappe.db.delete("Stock Ledger Entry", {"voucher_no": invoice_name})
         frappe.db.commit()
+
+    def test_create_custom_sales_return_single(self):
+        # 1. Create a submitted Sales Invoice
+        frappe.db.delete("POS Opening Entry", {"user": frappe.session.user})
+        frappe.db.commit()
+
+        items_payload = [{
+            "item_code": "TEST-ITEM-BAR",
+            "stock_uom": self.uom,
+            "qty": 3,
+            "rate": 100.0,
+            "mrp": 150.0,
+            "gst_percentage": 18,
+            "tax_template": ""
+        }]
+        payments_payload = [{"mode_of_payment": self.mode_of_payment, "amount": 354.0}]
+        res = submit_bill(
+            cashier=frappe.session.user,
+            customer="Test Billing Customer",
+            items=frappe.as_json(items_payload),
+            payments=frappe.as_json(payments_payload)
+        )
+        invoice_name = res["invoice"]
+
+        # Test Draft Return against single bill
+        ret_res = create_custom_sales_return(
+            customer="Test Billing Customer",
+            items=frappe.as_json([{"item_code": "TEST-ITEM-BAR", "qty": 2, "rate": 100.0}]),
+            return_against_invoice=invoice_name,
+            draft=1
+        )
+        self.assertIsNotNone(ret_res)
+        draft_name = ret_res["name"]
+        self.assertTrue(frappe.db.exists("Sales Invoice", draft_name))
+        
+        draft_doc = frappe.get_doc("Sales Invoice", draft_name)
+        self.assertEqual(draft_doc.docstatus, 0)
+        self.assertEqual(cint(draft_doc.is_return), 1)
+        self.assertEqual(draft_doc.return_against, invoice_name)
+        self.assertEqual(flt(draft_doc.items[0].qty), -2.0)
+
+        # Cleanup
+        frappe.db.delete("Sales Invoice", {"name": draft_name})
+        frappe.db.delete("Sales Invoice", {"name": invoice_name})
+        frappe.db.delete("GL Entry", {"voucher_no": invoice_name})
+        frappe.db.delete("Stock Ledger Entry", {"voucher_no": invoice_name})
+        frappe.db.commit()
+
+    def test_create_custom_sales_return_standalone_and_update(self):
+        # Test creating standalone return as Draft
+        items_payload = [{
+            "item_code": "TEST-ITEM-BAR",
+            "qty": 1,
+            "rate": 100.0,
+            "mrp": 150.0,
+            "stock_uom": self.uom
+        }]
+        ret_res = create_custom_sales_return(
+            customer="Test Billing Customer",
+            items=frappe.as_json(items_payload),
+            draft=1
+        )
+        self.assertIsNotNone(ret_res)
+        ret_name = ret_res["name"]
+        self.assertEqual(ret_res["docstatus"], 0)
+
+        # Update the draft return
+        updated_items = [{
+            "item_code": "TEST-ITEM-BAR",
+            "qty": 2,
+            "rate": 90.0,
+            "mrp": 150.0,
+            "stock_uom": self.uom
+        }]
+        update_res = update_sales_return(
+            name=ret_name,
+            items=frappe.as_json(updated_items),
+            remarks="Updated qty and rate",
+            draft=1
+        )
+        self.assertEqual(update_res["name"], ret_name)
+        self.assertEqual(update_res["docstatus"], 0)
+        
+        doc = frappe.get_doc("Sales Invoice", ret_name)
+        self.assertEqual(flt(doc.items[0].qty), -2.0)
+        self.assertEqual(flt(doc.items[0].rate), 90.0)
+        self.assertEqual(doc.remarks, "Updated qty and rate")
+
+        # Submit it via update_sales_return
+        submit_res = update_sales_return(
+            name=ret_name,
+            items=frappe.as_json(updated_items),
+            remarks="Submitting return",
+            draft=0
+        )
+        self.assertEqual(submit_res["docstatus"], 1)
+
+        # Test Deletion/Cancellation with Manager Pin Override
+        mgr_user = frappe.session.user
+        from frappe.utils.password import update_password
+        update_password(mgr_user, "5555", fieldname="custom_smriti_pin")
+        frappe.db.set_value("User", mgr_user, "custom_smriti_pin", "5555")
+        frappe.db.commit()
+
+        del_res = delete_sales_return(name=ret_name, manager_pin="5555")
+        self.assertEqual(del_res["name"], ret_name)
+        self.assertTrue(frappe.db.exists("Sales Invoice", ret_name))
+        self.assertEqual(frappe.db.get_value("Sales Invoice", ret_name, "docstatus"), 2)
+
+        # Clean up
+        frappe.db.delete("Sales Invoice", {"name": ret_name})
+        frappe.db.delete("GL Entry", {"voucher_no": ret_name})
+        frappe.db.delete("Stock Ledger Entry", {"voucher_no": ret_name})
+        frappe.db.commit()
+
 

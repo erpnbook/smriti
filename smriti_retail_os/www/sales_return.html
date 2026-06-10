@@ -145,6 +145,9 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 <span class="active">Sales Returns & Credit Notes</span>
             </div>
             <div class="topbar-right">
+                <button class="topbtn" onclick="openReturnModal()" style="background:var(--primary); color:white; border-color:var(--primary);" title="Create Return">
+                    <span class="material-symbols-outlined">add</span> Create Return
+                </button>
                 <button class="topbtn" onclick="history.back()" title="Go Back">
                     <span class="material-symbols-outlined">arrow_back</span>
                 </button>
@@ -162,6 +165,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 <option value="Paid">Paid</option>
                 <option value="Unpaid">Unpaid</option>
                 <option value="Draft">Draft</option>
+                <option value="Cancelled">Cancelled</option>
             </select>
         </div>
 
@@ -224,10 +228,151 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 <div class="meta-row" style="border-top:1px solid var(--border); padding-top:8px; margin-top:8px; font-size:1.05rem;"><span class="meta-label" style="color:var(--text); font-weight:700;">Grand Total</span><span class="meta-value" id="drw-grand" style="color:var(--success); font-weight:800;"></span></div>
             </div>
         </div>
-        <div class="drawer-footer">
+        <div class="drawer-footer" id="drawer-footer-actions">
             <button class="btn-print" onclick="printReceipt()">
                 <span class="material-symbols-outlined">print</span> Print Credit Note
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Return Modal -->
+<div class="drawer-backdrop" id="modal-backdrop" onclick="closeReturnModal()">
+    <div class="drawer" style="max-width: 680px;" onclick="event.stopPropagation()">
+        <div class="drawer-header">
+            <div class="drawer-title" id="modal-title">Create Sales Return</div>
+            <button class="drawer-close" onclick="closeReturnModal()">&times;</button>
+        </div>
+        <div class="drawer-body">
+            <!-- Step 1: Mode Selection -->
+            <div class="section-card" id="mode-selection-section">
+                <div class="section-title">Return Mode</div>
+                <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                    <label style="flex:1; display:flex; flex-direction:column; gap:6px; padding:12px; border:1px solid var(--border2); border-radius:var(--radius-sm); cursor:pointer; background:rgba(255,255,255,0.02);" onclick="setReturnMode('single')">
+                        <input type="radio" name="return-mode" id="mode-single" value="single" checked style="align-self:flex-start;">
+                        <span style="font-weight:700; font-size:0.9rem;">Against Single Bill</span>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">Return items from a specific invoice</span>
+                    </label>
+                    <label style="flex:1; display:flex; flex-direction:column; gap:6px; padding:12px; border:1px solid var(--border2); border-radius:var(--radius-sm); cursor:pointer; background:rgba(255,255,255,0.02);" onclick="setReturnMode('multiple')">
+                        <input type="radio" name="return-mode" id="mode-multiple" value="multiple" style="align-self:flex-start;">
+                        <span style="font-weight:700; font-size:0.9rem;">Against Multiple Bills</span>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">Return items from multiple invoices</span>
+                    </label>
+                    <label style="flex:1; display:flex; flex-direction:column; gap:6px; padding:12px; border:1px solid var(--border2); border-radius:var(--radius-sm); cursor:pointer; background:rgba(255,255,255,0.02);" onclick="setReturnMode('standalone')">
+                        <input type="radio" name="return-mode" id="mode-standalone" value="standalone" style="align-self:flex-start;">
+                        <span style="font-weight:700; font-size:0.9rem;">Without Bill (Standalone)</span>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">Return items without prior invoice</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Customer Search (Standalone mode only) -->
+            <div class="section-card" id="customer-select-section" style="display:none;">
+                <div class="section-title">Customer Selection</div>
+                <div style="position:relative;">
+                    <input type="text" class="form-input" id="cust-search-input" placeholder="Search customer name or mobile..." style="width:100%;" oninput="handleCustomerSearch(this.value)">
+                    <div id="cust-search-results" style="position:absolute; left:0; right:0; top:40px; background:var(--card2); border:1px solid var(--border2); border-radius:var(--radius-sm); max-height:200px; overflow-y:auto; z-index:100; display:none; box-shadow:0 8px 16px rgba(0,0,0,0.5);"></div>
+                </div>
+                <div style="margin-top:10px; font-weight:600; font-size:0.85rem;" id="selected-customer-display">Selected Customer: Walk-In Customer</div>
+            </div>
+
+            <!-- Invoice Search (Single/Multiple modes) -->
+            <div class="section-card" id="bill-select-section">
+                <div class="section-title" id="bill-select-title">Select Original Bill</div>
+                <div style="position:relative; margin-bottom:12px;">
+                    <input type="text" class="form-input" id="bill-search-input" placeholder="Search original bill no. or customer..." style="width:100%;" oninput="handleBillSearch(this.value)">
+                    <div id="bill-search-results" style="position:absolute; left:0; right:0; top:40px; background:var(--card2); border:1px solid var(--border2); border-radius:var(--radius-sm); max-height:200px; overflow-y:auto; z-index:100; display:none; box-shadow:0 8px 16px rgba(0,0,0,0.5);"></div>
+                </div>
+                <div id="selected-bills-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+            </div>
+
+            <!-- Standalone Item Search (Standalone mode only) -->
+            <div class="section-card" id="item-search-section" style="display:none;">
+                <div class="section-title">Search & Add Items</div>
+                <div style="position:relative;">
+                    <input type="text" class="form-input" id="item-search-input" placeholder="Search item code, name, or barcode..." style="width:100%;" oninput="handleItemSearch(this.value)">
+                    <div id="item-search-results" style="position:absolute; left:0; right:0; top:40px; background:var(--card2); border:1px solid var(--border2); border-radius:var(--radius-sm); max-height:200px; overflow-y:auto; z-index:100; display:none; box-shadow:0 8px 16px rgba(0,0,0,0.5);"></div>
+                </div>
+            </div>
+
+            <!-- Return Cart Section -->
+            <div class="section-card">
+                <div class="section-title">Return Items List</div>
+                <div style="overflow-x:auto;">
+                    <table class="invoice-items-table" style="width:100%; min-width:450px;">
+                        <thead>
+                            <tr>
+                                <th>Product Details</th>
+                                <th style="text-align:center; width:80px;">Qty</th>
+                                <th style="text-align:right; width:90px;">Rate</th>
+                                <th style="text-align:right; width:90px;">Total</th>
+                                <th style="text-align:center; width:120px;">Warehouse</th>
+                                <th style="text-align:center; width:40px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-items-tbody">
+                            <tr><td colspan="6" style="text-align:center; color:var(--text-sub); padding:20px 0;">No items selected for return.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Warehouse, Remarks & Summary -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                <div class="section-card">
+                    <div class="section-title">Target Warehouse & Remarks</div>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <label style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Default Return Warehouse</label>
+                            <select class="form-input" id="modal-default-warehouse" onchange="updateCartWarehouses(this.value)"></select>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <label style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Remarks</label>
+                            <textarea class="form-input" id="modal-remarks" style="height:70px; resize:none; font-size:0.82rem;" placeholder="Reason for return..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+                    <div class="section-title">Return Summary</div>
+                    <div style="display:flex; flex-direction:column; gap:8px; flex:1; justify-content:center;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                            <span class="meta-label">Total Items</span>
+                            <span class="meta-value" id="summary-total-qty">0</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:1.05rem; border-top:1px solid var(--border); padding-top:8px; margin-top:8px;">
+                            <span class="meta-label" style="font-weight:700; color:var(--text);">Refund Total</span>
+                            <span class="meta-value" id="summary-grand-total" style="color:var(--success); font-weight:800; font-size:1.15rem;">Rs. 0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="drawer-footer">
+            <button class="topbtn" style="flex:1; justify-content:center; padding:10px;" onclick="closeReturnModal()">Cancel</button>
+            <button class="btn-print" style="flex:1.2; background:var(--accent); color:var(--bg);" onclick="saveReturn(true)">
+                <span class="material-symbols-outlined">drafts</span> Save Draft
+            </button>
+            <button class="btn-print" style="flex:1.5; background:var(--success);" onclick="saveReturn(false)">
+                <span class="material-symbols-outlined">check_circle</span> Submit Return
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Manager PIN Override Modal -->
+<div class="drawer-backdrop" id="pin-modal-backdrop" onclick="closePinModal()" style="z-index:99999;">
+    <div class="drawer" style="max-width:360px; height:auto; margin:auto; border-radius:var(--radius); border:1px solid var(--border2);" onclick="event.stopPropagation()">
+        <div class="drawer-header">
+            <div class="drawer-title">Manager PIN Override</div>
+            <button class="drawer-close" onclick="closePinModal()">&times;</button>
+        </div>
+        <div class="drawer-body" style="padding:20px; text-align:center;">
+            <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;" id="pin-modal-message">Enter SMRITI Manager PIN to authorize this action.</div>
+            <input type="password" class="form-input" id="manager-pin-input" placeholder="••••" style="width:120px; text-align:center; font-size:20px; letter-spacing:8px; padding:10px;" maxlength="8" onkeydown="if(event.key==='Enter') submitPinOverride()">
+        </div>
+        <div class="drawer-footer" style="padding:12px 20px;">
+            <button class="topbtn" style="flex:1; justify-content:center;" onclick="closePinModal()">Cancel</button>
+            <button class="btn-print" style="flex:1; background:var(--primary);" onclick="submitPinOverride()">Authorize</button>
         </div>
     </div>
 </div>
@@ -239,6 +384,15 @@ const CSRF_TOKEN = '{{ csrf_token }}';
 let loggedUser = '{{ cashier }}';
 let masterReturnsList = [];
 let activeReturnDoc = null;
+
+let returnMode = 'single';
+let selectedCustomer = { name: 'Walk-In Customer', customer_name: 'Walk-In Customer' };
+let selectedBills = [];
+let cartItems = [];
+let warehousesList = [];
+let defaultWarehouse = '';
+let editingReturnName = null;
+let pinModalAction = null;
 
 function api(method, params = {}) {
     return fetch(`/api/method/${method}`, {
@@ -269,6 +423,7 @@ function toast(msg, type = 'success') {
 
 async function init() {
     await loadReturns();
+    await loadWarehouses();
 }
 
 async function loadReturns() {
@@ -276,7 +431,7 @@ async function loadReturns() {
         const data = await api('frappe.client.get_list', {
             doctype: 'Sales Invoice',
             filters: { is_return: 1 },
-            fields: ['name', 'posting_date', 'posting_time', 'customer_name', 'grand_total', 'outstanding_amount', 'status'],
+            fields: ['name', 'posting_date', 'posting_time', 'customer_name', 'grand_total', 'outstanding_amount', 'status', 'docstatus'],
             order_by: 'posting_date desc, posting_time desc',
             limit_page_length: 150
         });
@@ -284,6 +439,27 @@ async function loadReturns() {
         renderTable(masterReturnsList);
     } catch(e) {
         toast('Failed to load sales returns list: ' + e.message, 'error');
+    }
+}
+
+async function loadWarehouses() {
+    try {
+        const data = await api('frappe.client.get_list', {
+            doctype: 'Warehouse',
+            filters: { is_group: 0 },
+            fields: ['name', 'warehouse_name'],
+            limit_page_length: 100
+        });
+        warehousesList = data || [];
+        if (warehousesList.length) {
+            defaultWarehouse = warehousesList[0].name;
+        }
+        const whSelect = document.getElementById('modal-default-warehouse');
+        whSelect.innerHTML = warehousesList.map(wh => `
+            <option value="${wh.name}">${wh.warehouse_name}</option>
+        `).join('');
+    } catch(e) {
+        console.error('Failed to load warehouses:', e);
     }
 }
 
@@ -358,7 +534,7 @@ async function loadReturnDetails(returnId) {
                     <div style="font-weight:600;color:var(--text);">${it.item_name}</div>
                     <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">${it.item_code}</div>
                 </td>
-                <td style="text-align:center;font-weight:600;">${it.qty}</td>
+                <td style="text-align:center;font-weight:600;">${Math.abs(it.qty)}</td>
                 <td style="text-align:right;">Rs. ${parseFloat(it.rate).toFixed(2)}</td>
                 <td style="text-align:right;font-weight:600;">Rs. ${parseFloat(it.amount).toFixed(2)}</td>
             </tr>
@@ -367,6 +543,30 @@ async function loadReturnDetails(returnId) {
         document.getElementById('drw-net').textContent = `Rs. ${parseFloat(doc.net_total).toFixed(2)}`;
         document.getElementById('drw-tax').textContent = `Rs. ${parseFloat(doc.total_taxes_and_charges || 0).toFixed(2)}`;
         document.getElementById('drw-grand').textContent = `Rs. ${parseFloat(doc.grand_total).toFixed(2)}`;
+
+        const footer = document.getElementById('drawer-footer-actions');
+        let footerHtml = `
+            <button class="btn-print" onclick="printReceipt()">
+                <span class="material-symbols-outlined">print</span> Print Credit Note
+            </button>
+        `;
+        if (doc.docstatus === 0) {
+            footerHtml += `
+                <button class="btn-print" style="background:var(--accent); color:var(--bg);" onclick="editDraftReturn('${doc.name}')">
+                    <span class="material-symbols-outlined">edit</span> Edit Return
+                </button>
+                <button class="btn-print" style="background:var(--danger);" onclick="deleteReturnPrompt('${doc.name}', true)">
+                    <span class="material-symbols-outlined">delete</span> Delete Draft
+                </button>
+            `;
+        } else if (doc.docstatus === 1) {
+            footerHtml += `
+                <button class="btn-print" style="background:var(--danger);" onclick="deleteReturnPrompt('${doc.name}', false)">
+                    <span class="material-symbols-outlined">cancel</span> Cancel Return
+                </button>
+            `;
+        }
+        footer.innerHTML = footerHtml;
 
         document.getElementById('drawer-backdrop').classList.add('open');
     } catch(e) {
@@ -384,6 +584,532 @@ function closeDrawer() {
     document.getElementById('drawer-backdrop').classList.remove('open');
     activeReturnDoc = null;
 }
+
+function openReturnModal() {
+    editingReturnName = null;
+    document.getElementById('modal-title').textContent = 'Create Sales Return';
+    document.getElementById('mode-selection-section').style.display = 'block';
+    
+    selectedBills = [];
+    cartItems = [];
+    selectedCustomer = { name: 'Walk-In Customer', customer_name: 'Walk-In Customer' };
+    document.getElementById('selected-customer-display').textContent = 'Selected Customer: Walk-In Customer';
+    document.getElementById('modal-remarks').value = '';
+    document.getElementById('bill-search-input').value = '';
+    document.getElementById('cust-search-input').value = '';
+    document.getElementById('item-search-input').value = '';
+    document.getElementById('selected-bills-list').innerHTML = '';
+    
+    document.getElementById('mode-single').checked = true;
+    setReturnMode('single');
+    
+    document.getElementById('modal-default-warehouse').value = defaultWarehouse;
+    document.getElementById('modal-backdrop').classList.add('open');
+}
+
+function closeReturnModal() {
+    document.getElementById('modal-backdrop').classList.remove('open');
+}
+
+function setReturnMode(mode) {
+    returnMode = mode;
+    selectedBills = [];
+    cartItems = [];
+    
+    document.getElementById('selected-bills-list').innerHTML = '';
+    document.getElementById('bill-search-input').value = '';
+    document.getElementById('cust-search-input').value = '';
+    document.getElementById('item-search-input').value = '';
+    
+    if (mode === 'standalone') {
+        document.getElementById('customer-select-section').style.display = 'block';
+        document.getElementById('bill-select-section').style.display = 'none';
+        document.getElementById('item-search-section').style.display = 'block';
+    } else {
+        document.getElementById('customer-select-section').style.display = 'none';
+        document.getElementById('bill-select-section').style.display = 'block';
+        document.getElementById('item-search-section').style.display = 'none';
+        
+        const titleEl = document.getElementById('bill-select-title');
+        titleEl.textContent = mode === 'single' ? 'Select Original Bill' : 'Select Original Bills (Multiple)';
+    }
+    
+    renderCart();
+}
+
+async function handleCustomerSearch(query) {
+    if (query.length < 2) {
+        document.getElementById('cust-search-results').style.display = 'none';
+        return;
+    }
+    try {
+        const list = await api('smriti_retail_os.billing_api.search_customer', { query });
+        const resultsDiv = document.getElementById('cust-search-results');
+        if (!list.length) {
+            resultsDiv.innerHTML = '<div style="padding:10px; color:var(--text-muted);">No customers found.</div>';
+        } else {
+            resultsDiv.innerHTML = list.map(c => `
+                <div style="padding:10px; border-bottom:1px solid var(--border); cursor:pointer; font-size:0.85rem;" onclick="selectCustomer(${JSON.stringify(c).replace(/"/g, '&quot;')})">
+                    <span style="font-weight:700;">${c.customer_name}</span> | 
+                    <span style="color:var(--text-muted);">${c.mobile_no || 'No Mobile'}</span>
+                </div>
+            `).join('');
+        }
+        resultsDiv.style.display = 'block';
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+function selectCustomer(cust) {
+    selectedCustomer = cust;
+    document.getElementById('selected-customer-display').textContent = `Selected Customer: ${cust.customer_name}`;
+    document.getElementById('cust-search-results').style.display = 'none';
+    document.getElementById('cust-search-input').value = '';
+}
+
+async function handleBillSearch(query) {
+    if (query.length < 2) {
+        document.getElementById('bill-search-results').style.display = 'none';
+        return;
+    }
+    try {
+        const list = await api('frappe.client.get_list', {
+            doctype: 'Sales Invoice',
+            filters: {
+                docstatus: 1,
+                is_return: 0
+            },
+            or_filters: {
+                name: ['like', '%' + query + '%'],
+                customer_name: ['like', '%' + query + '%']
+            },
+            fields: ['name', 'posting_date', 'customer_name', 'grand_total'],
+            limit_page_length: 10
+        });
+        const resultsDiv = document.getElementById('bill-search-results');
+        if (!list.length) {
+            resultsDiv.innerHTML = '<div style="padding:10px; color:var(--text-muted);">No invoices found.</div>';
+        } else {
+            resultsDiv.innerHTML = list.map(inv => `
+                <div style="padding:10px; border-bottom:1px solid var(--border); cursor:pointer; font-size:0.85rem;" onclick="selectBill('${inv.name}')">
+                    <span style="font-weight:700; color:var(--primary-lt);">${inv.name}</span> | 
+                    <span>${inv.customer_name}</span> | 
+                    <span style="color:var(--success);">Rs. ${parseFloat(inv.grand_total).toFixed(2)}</span>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">${inv.posting_date}</div>
+                </div>
+            `).join('');
+        }
+        resultsDiv.style.display = 'block';
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+async function selectBill(invoiceName) {
+    try {
+        const doc = await api('frappe.client.get', {
+            doctype: 'Sales Invoice',
+            name: invoiceName
+        });
+        
+        document.getElementById('bill-search-results').style.display = 'none';
+        document.getElementById('bill-search-input').value = '';
+        
+        if (returnMode === 'single') {
+            selectedBills = [doc];
+            cartItems = [];
+            selectedCustomer = { name: doc.customer, customer_name: doc.customer_name };
+        } else {
+            if (selectedBills.find(b => b.name === doc.name)) {
+                toast('Invoice already selected', 'info');
+                return;
+            }
+            selectedBills.push(doc);
+        }
+        
+        doc.items.forEach(it => {
+            const existing = cartItems.find(item => item.item_code === it.item_code && item.sales_invoice === doc.name);
+            if (!existing) {
+                cartItems.push({
+                    item_code: it.item_code,
+                    item_name: it.item_name,
+                    stock_uom: it.uom,
+                    qty: it.qty,
+                    rate: it.rate,
+                    mrp: it.price_list_rate || it.rate,
+                    warehouse: it.warehouse || defaultWarehouse,
+                    original_qty: it.qty,
+                    sales_invoice: doc.name,
+                    sales_invoice_item: it.name
+                });
+            }
+        });
+        
+        const billsListDiv = document.getElementById('selected-bills-list');
+        billsListDiv.innerHTML = selectedBills.map(b => `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:6px 12px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+                <div>
+                    <span class="invoice-badge">${b.name}</span>
+                    <span style="font-size:0.8rem; margin-left:8px; color:var(--text-muted);">${b.customer_name}</span>
+                </div>
+                <button style="background:none; border:none; color:var(--danger); cursor:pointer;" onclick="removeSelectedBill('${b.name}')">
+                    <span class="material-symbols-outlined" style="font-size:18px;">close</span>
+                </button>
+            </div>
+        `).join('');
+        
+        renderCart();
+    } catch(e) {
+        toast('Failed to load invoice details: ' + e.message, 'error');
+    }
+}
+
+function removeSelectedBill(invoiceName) {
+    selectedBills = selectedBills.filter(b => b.name !== invoiceName);
+    cartItems = [];
+    selectedBills.forEach(doc => {
+        doc.items.forEach(it => {
+            cartItems.push({
+                item_code: it.item_code,
+                item_name: it.item_name,
+                stock_uom: it.uom,
+                qty: it.qty,
+                rate: it.rate,
+                mrp: it.price_list_rate || it.rate,
+                warehouse: it.warehouse || defaultWarehouse,
+                original_qty: it.qty,
+                sales_invoice: doc.name,
+                sales_invoice_item: it.name
+            });
+        });
+    });
+    
+    const billsListDiv = document.getElementById('selected-bills-list');
+    billsListDiv.innerHTML = selectedBills.map(b => `
+        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:6px 12px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+            <div>
+                <span class="invoice-badge">${b.name}</span>
+                <span style="font-size:0.8rem; margin-left:8px; color:var(--text-muted);">${b.customer_name}</span>
+            </div>
+            <button style="background:none; border:none; color:var(--danger); cursor:pointer;" onclick="removeSelectedBill('${b.name}')">
+                <span class="material-symbols-outlined" style="font-size:18px;">close</span>
+            </button>
+        </div>
+    `).join('');
+    
+    renderCart();
+}
+
+async function handleItemSearch(query) {
+    if (query.length < 2) {
+        document.getElementById('item-search-results').style.display = 'none';
+        return;
+    }
+    try {
+        const list = await api('smriti_retail_os.billing_api.search_items', { query: query });
+        const resultsDiv = document.getElementById('item-search-results');
+        if (!list.length) {
+            resultsDiv.innerHTML = '<div style="padding:10px; color:var(--text-muted);">No items found.</div>';
+        } else {
+            resultsDiv.innerHTML = list.map(it => `
+                <div style="padding:10px; border-bottom:1px solid var(--border); cursor:pointer; font-size:0.85rem;" onclick="addStandaloneItem(${JSON.stringify(it).replace(/"/g, '&quot;')})">
+                    <span style="font-weight:700; color:var(--primary-lt);">${it.item_code}</span> | 
+                    <span>${it.item_name}</span> | 
+                    <span style="color:var(--success);">Rs. ${parseFloat(it.rate).toFixed(2)}</span>
+                </div>
+            `).join('');
+        }
+        resultsDiv.style.display = 'block';
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+function addStandaloneItem(it) {
+    const existing = cartItems.find(item => item.item_code === it.item_code);
+    if (existing) {
+        existing.qty += 1;
+    } else {
+        cartItems.push({
+            item_code: it.item_code,
+            item_name: it.item_name,
+            stock_uom: it.stock_uom,
+            qty: 1,
+            rate: it.rate,
+            mrp: it.mrp,
+            warehouse: defaultWarehouse
+        });
+    }
+    document.getElementById('item-search-input').value = '';
+    document.getElementById('item-search-results').style.display = 'none';
+    renderCart();
+}
+
+function renderCart() {
+    const tbody = document.getElementById('cart-items-tbody');
+    if (!cartItems.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-sub); padding:20px 0;">No items selected for return.</td></tr>';
+        updateSummary();
+        return;
+    }
+    
+    tbody.innerHTML = cartItems.map((item, index) => {
+        const warehouseOptions = warehousesList.map(wh => `
+            <option value="${wh.name}" ${wh.name === item.warehouse ? 'selected' : ''}>${wh.warehouse_name}</option>
+        `).join('');
+        
+        const origQtyHtml = item.original_qty ? `
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">
+                Original Qty: ${item.original_qty} (${item.sales_invoice})
+            </div>
+        ` : '';
+        
+        const removeButton = returnMode === 'standalone' ? `
+            <button style="background:none; border:none; color:var(--danger); cursor:pointer;" onclick="removeCartItem(${index})">
+                <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+            </button>
+        ` : '';
+
+        return `
+            <tr>
+                <td>
+                    <div style="font-weight:600; color:var(--text);">${item.item_name}</div>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">${item.item_code}</div>
+                    ${origQtyHtml}
+                </td>
+                <td style="text-align:center;">
+                    <input type="number" class="form-input" style="width:70px; text-align:center; padding:4px;" value="${item.qty}" min="0.1" step="any" 
+                        ${item.original_qty ? `max="${item.original_qty}"` : ''} 
+                        onchange="updateCartItemQty(${index}, this.value)">
+                </td>
+                <td style="text-align:right;">
+                    <input type="number" class="form-input" style="width:80px; text-align:right; padding:4px;" value="${parseFloat(item.rate).toFixed(2)}" step="any" onchange="updateCartItemRate(${index}, this.value)">
+                </td>
+                <td style="text-align:right; font-weight:600;">
+                    Rs. ${(item.qty * item.rate).toFixed(2)}
+                </td>
+                <td>
+                    <select class="form-input" style="width:100%; padding:4px; font-size:0.8rem;" onchange="updateCartItemWarehouse(${index}, this.value)">
+                        ${warehouseOptions}
+                    </select>
+                </td>
+                <td style="text-align:center;">
+                    ${removeButton}
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    updateSummary();
+}
+
+function updateCartWarehouses(whVal) {
+    cartItems.forEach(it => {
+        it.warehouse = whVal;
+    });
+    renderCart();
+}
+
+function updateCartItemQty(index, val) {
+    const qty = parseFloat(val);
+    if (isNaN(qty) || qty <= 0) return;
+    
+    const item = cartItems[index];
+    if (item.original_qty && qty > item.original_qty) {
+        toast(`Cannot return more than original quantity (${item.original_qty})`, 'error');
+        renderCart();
+        return;
+    }
+    
+    item.qty = qty;
+    renderCart();
+}
+
+function updateCartItemRate(index, val) {
+    const rate = parseFloat(val);
+    if (isNaN(rate) || rate < 0) return;
+    cartItems[index].rate = rate;
+    renderCart();
+}
+
+function updateCartItemWarehouse(index, val) {
+    cartItems[index].warehouse = val;
+}
+
+function removeCartItem(index) {
+    cartItems.splice(index, 1);
+    renderCart();
+}
+
+function updateSummary() {
+    let totalQty = 0;
+    let grandTotal = 0;
+    cartItems.forEach(it => {
+        totalQty += it.qty;
+        grandTotal += it.qty * it.rate;
+    });
+    
+    document.getElementById('summary-total-qty').textContent = totalQty.toFixed(2);
+    document.getElementById('summary-grand-total').textContent = `Rs. ${grandTotal.toFixed(2)}`;
+}
+
+async function saveReturn(draft) {
+    if (!cartItems.length) {
+        toast('Please select at least one item to return.', 'error');
+        return;
+    }
+    
+    const itemsPayload = cartItems.map(it => ({
+        item_code: it.item_code,
+        qty: it.qty,
+        rate: it.rate,
+        mrp: it.mrp,
+        stock_uom: it.stock_uom,
+        warehouse: it.warehouse,
+        sales_invoice: it.sales_invoice || null,
+        sales_invoice_item: it.sales_invoice_item || null
+    }));
+    
+    const remarks = document.getElementById('modal-remarks').value;
+    
+    try {
+        let res;
+        if (editingReturnName) {
+            res = await api('smriti_retail_os.billing_api.update_sales_return', {
+                name: editingReturnName,
+                items: JSON.stringify(itemsPayload),
+                remarks: remarks,
+                draft: draft ? 1 : 0
+            });
+        } else {
+            res = await api('smriti_retail_os.billing_api.create_custom_sales_return', {
+                customer: selectedCustomer.name,
+                items: JSON.stringify(itemsPayload),
+                return_against_invoice: (returnMode === 'single' && selectedBills.length) ? selectedBills[0].name : null,
+                remarks: remarks,
+                draft: draft ? 1 : 0
+            });
+        }
+        
+        toast(res.message);
+        closeReturnModal();
+        loadReturns();
+    } catch(e) {
+        toast(e.message, 'error');
+    }
+}
+
+async function editDraftReturn(returnName) {
+    try {
+        const doc = await api('frappe.client.get', {
+            doctype: 'Sales Invoice',
+            name: returnName
+        });
+        
+        editingReturnName = returnName;
+        document.getElementById('modal-title').textContent = `Edit Draft Return: ${returnName}`;
+        
+        document.getElementById('mode-selection-section').style.display = 'none';
+        document.getElementById('customer-select-section').style.display = 'none';
+        document.getElementById('bill-select-section').style.display = 'none';
+        document.getElementById('item-search-section').style.display = 'none';
+        
+        document.getElementById('modal-remarks').value = doc.remarks || '';
+        selectedCustomer = { name: doc.customer, customer_name: doc.customer_name };
+        
+        cartItems = doc.items.map(it => ({
+            item_code: it.item_code,
+            item_name: it.item_name,
+            stock_uom: it.uom,
+            qty: Math.abs(it.qty),
+            rate: it.rate,
+            mrp: it.price_list_rate || it.rate,
+            warehouse: it.warehouse,
+            original_qty: null,
+            sales_invoice: it.return_against || null,
+            sales_invoice_item: it.sales_invoice_item || null
+        }));
+        
+        renderCart();
+        closeDrawer();
+        document.getElementById('modal-backdrop').classList.add('open');
+    } catch(e) {
+        toast('Failed to load draft details: ' + e.message, 'error');
+    }
+}
+
+async function deleteReturnPrompt(name, isDraft) {
+    const actionText = isDraft ? 'delete draft' : 'cancel submitted';
+    if (!confirm(`Are you sure you want to ${actionText} sales return ${name}?`)) {
+        return;
+    }
+    
+    try {
+        const res = await api('smriti_retail_os.billing_api.delete_sales_return', { name: name });
+        toast(res.message);
+        closeDrawer();
+        loadReturns();
+    } catch(e) {
+        if (e.message.includes('PIN override is required')) {
+            openPinModal(e.message, async (pin) => {
+                try {
+                    const res = await api('smriti_retail_os.billing_api.delete_sales_return', {
+                        name: name,
+                        manager_pin: pin
+                    });
+                    toast(res.message);
+                    closePinModal();
+                    closeDrawer();
+                    loadReturns();
+                } catch(err) {
+                    toast(err.message, 'error');
+                }
+            });
+        } else {
+            toast(e.message, 'error');
+        }
+    }
+}
+
+function openPinModal(msg, callback) {
+    document.getElementById('pin-modal-message').textContent = msg;
+    document.getElementById('manager-pin-input').value = '';
+    pinModalAction = callback;
+    document.getElementById('pin-modal-backdrop').classList.add('open');
+    document.getElementById('manager-pin-input').focus();
+}
+
+function closePinModal() {
+    document.getElementById('pin-modal-backdrop').classList.remove('open');
+    pinModalAction = null;
+}
+
+function submitPinOverride() {
+    const pin = document.getElementById('manager-pin-input').value;
+    if (!pin) {
+        toast('PIN is required', 'error');
+        return;
+    }
+    if (pinModalAction) {
+        pinModalAction(pin);
+    }
+}
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#cust-search-input') && !e.target.closest('#cust-search-results')) {
+        const div = document.getElementById('cust-search-results');
+        if (div) div.style.display = 'none';
+    }
+    if (!e.target.closest('#bill-search-input') && !e.target.closest('#bill-search-results')) {
+        const div = document.getElementById('bill-search-results');
+        if (div) div.style.display = 'none';
+    }
+    if (!e.target.closest('#item-search-input') && !e.target.closest('#item-search-results')) {
+        const div = document.getElementById('item-search-results');
+        if (div) div.style.display = 'none';
+    }
+});
 
 window.onload = init;
 </script>

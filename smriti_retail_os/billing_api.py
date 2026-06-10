@@ -818,3 +818,241 @@ def create_return_invoice(invoice_name):
     }
 
 
+@frappe.whitelist()
+def create_custom_sales_return(customer, items, return_against_invoice=None, remarks=None, company=None, draft=0):
+    """
+    Creates a Sales Return (Sales Invoice with is_return=1 and update_stock=1).
+    Supports:
+    1. Against a single bill (if return_against_invoice is provided).
+    2. Standalone/without bills (if return_against_invoice is None).
+    3. Against multiple bills (if items specify their respective parent invoice in return_against).
+    """
+    items_list = frappe.parse_json(items)
+    draft = cint(draft)
+    
+    if not company:
+        company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
+
+    if return_against_invoice:
+        # 1. Against single bill
+        from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return
+        return_doc = make_sales_return(return_against_invoice)
+        
+        # We need to filter and adjust return_doc.items based on user input
+        matched_items = []
+        for input_item in items_list:
+            item_code = input_item.get("item_code")
+            req_qty = flt(input_item.get("qty"))
+            rate = input_item.get("rate")
+            
+            # Find matching item in return_doc.items
+            found = False
+            for row in return_doc.items:
+                if row.item_code == item_code:
+                    row.qty = -abs(req_qty)
+                    if rate is not None:
+                        row.rate = flt(rate)
+                    matched_items.append(row)
+                    found = True
+                    break
+        
+        return_doc.items = matched_items
+    else:
+        # 2. Standalone or Multiple bills
+        return_doc = frappe.new_doc("Sales Invoice")
+        return_doc.is_return = 1
+        return_doc.update_stock = 1
+        return_doc.customer = customer or "Walk-In Customer"
+        return_doc.company = company
+        return_doc.posting_date = nowdate()
+        return_doc.currency = "INR"
+        return_doc.selling_price_list = "Standard Selling"
+        
+        # Pre-resolve default warehouse
+        _fallback_wh = frappe.defaults.get_user_default("warehouse")
+        if _fallback_wh and frappe.db.get_value("Warehouse", _fallback_wh, "company") != company:
+            _fallback_wh = None
+        if not _fallback_wh:
+            _fallback_wh = (
+                frappe.db.get_value("Warehouse", {"warehouse_name": "Stores", "company": company}, "name")
+                or frappe.db.get_value("Warehouse", {"company": company, "is_group": 0}, "name")
+            )
+            
+        # Resolve default taxes template
+        default_tax_template = frappe.db.get_value(
+            "Sales Taxes and Charges Template",
+            {"company": company, "is_default": 1},
+            "name"
+        )
+        if default_tax_template:
+            return_doc.taxes_and_charges = default_tax_template
+            return_doc.run_method("set_taxes")
+            
+        company_cc = frappe.db.get_value("Company", company, "cost_center")
+        if not company_cc:
+            company_cc = frappe.db.get_value("Cost Center", {"company": company, "is_group": 0}, "name")
+            
+        for it in items_list:
+            item_code = it.get("item_code")
+            qty = flt(it.get("qty"))
+            rate = flt(it.get("rate") or 0.0)
+            mrp = flt(it.get("mrp") or rate)
+            wh = it.get("warehouse") or _fallback_wh
+            
+            item_row = {
+                "item_code": item_code,
+                "qty": -abs(qty), # Negative qty for returns
+                "rate": rate,
+                "price_list_rate": mrp,
+                "uom": it.get("stock_uom") or "Nos",
+                "warehouse": wh,
+                "cost_center": it.get("cost_center") or company_cc,
+            }
+            
+            if it.get("sales_invoice") and it.get("sales_invoice_item"):
+                item_row["sales_invoice_item"] = it.get("sales_invoice_item")
+                item_row["return_against"] = it.get("sales_invoice")
+                
+            return_doc.append("items", item_row)
+            
+    if remarks:
+        return_doc.remarks = remarks
+        
+    return_doc.flags.ignore_permissions = True
+    return_doc.insert(ignore_permissions=True)
+    
+    if not draft:
+        return_doc.submit()
+        
+    frappe.db.commit()
+    
+    return {
+        "name": return_doc.name,
+        "docstatus": return_doc.docstatus,
+        "message": _("Sales Return {0} created successfully as {1}.").format(
+            return_doc.name, 
+            "Draft" if draft else "Submitted"
+        )
+    }
+
+
+@frappe.whitelist()
+def update_sales_return(name, items, remarks=None, draft=0):
+    """
+    Updates a draft Sales Return invoice.
+    Can also submit it if draft=0.
+    """
+    draft = cint(draft)
+    if not frappe.db.exists("Sales Invoice", name):
+        frappe.throw(_("Sales Return {0} not found.").format(name))
+        
+    doc = frappe.get_doc("Sales Invoice", name)
+    if doc.docstatus != 0:
+        frappe.throw(_("Only Draft Sales Returns can be edited."))
+        
+    if not doc.is_return:
+        frappe.throw(_("Invoice {0} is not a return invoice.").format(name))
+        
+    items_list = frappe.parse_json(items)
+    
+    company = doc.company
+    _fallback_wh = frappe.defaults.get_user_default("warehouse")
+    if _fallback_wh and frappe.db.get_value("Warehouse", _fallback_wh, "company") != company:
+        _fallback_wh = None
+    if not _fallback_wh:
+        _fallback_wh = (
+            frappe.db.get_value("Warehouse", {"warehouse_name": "Stores", "company": company}, "name")
+            or frappe.db.get_value("Warehouse", {"company": company, "is_group": 0}, "name")
+        )
+        
+    company_cc = frappe.db.get_value("Company", company, "cost_center")
+    if not company_cc:
+        company_cc = frappe.db.get_value("Cost Center", {"company": company, "is_group": 0}, "name")
+
+    doc.items = []
+    for it in items_list:
+        item_code = it.get("item_code")
+        qty = flt(it.get("qty"))
+        rate = flt(it.get("rate") or 0.0)
+        mrp = flt(it.get("mrp") or rate)
+        wh = it.get("warehouse") or _fallback_wh
+        
+        item_row = {
+            "item_code": item_code,
+            "qty": -abs(qty),
+            "rate": rate,
+            "price_list_rate": mrp,
+            "uom": it.get("stock_uom") or "Nos",
+            "warehouse": wh,
+            "cost_center": it.get("cost_center") or company_cc,
+        }
+        
+        if it.get("sales_invoice") and it.get("sales_invoice_item"):
+            item_row["sales_invoice_item"] = it.get("sales_invoice_item")
+            item_row["return_against"] = it.get("sales_invoice")
+            
+        doc.append("items", item_row)
+        
+    if remarks is not None:
+        doc.remarks = remarks
+        
+    doc.flags.ignore_permissions = True
+    doc.save(ignore_permissions=True)
+    
+    if not draft:
+        doc.submit()
+        
+    frappe.db.commit()
+    
+    return {
+        "name": doc.name,
+        "docstatus": doc.docstatus,
+        "message": _("Sales Return {0} updated successfully.").format(doc.name)
+    }
+
+
+@frappe.whitelist()
+def delete_sales_return(name, manager_pin=None):
+    """
+    Deletes or cancels a Sales Return.
+    If Draft: deletes the document.
+    If Submitted: cancels the document.
+    Requires SMRITI Store Manager or System Manager role, or a valid manager PIN override.
+    """
+    if not frappe.db.exists("Sales Invoice", name):
+        frappe.throw(_("Sales Return {0} not found.").format(name))
+        
+    doc = frappe.get_doc("Sales Invoice", name)
+    if not doc.is_return:
+        frappe.throw(_("Invoice {0} is not a return invoice.").format(name))
+        
+    user = frappe.session.user
+    roles = frappe.get_roles(user)
+    has_manager_role = "SMRITI Store Manager" in roles or "System Manager" in roles
+    
+    if not has_manager_role:
+        if not manager_pin:
+            frappe.throw(_("Manager PIN override is required to cancel or delete a Sales Return."))
+            
+        override_res = validate_manager_override(manager_pin, f"Cancel/Delete Sales Return {name}", invoice_name=name)
+        if not override_res.get("authorized"):
+            frappe.throw(_("Invalid Manager PIN: Access Denied."))
+
+    doc.flags.ignore_permissions = True
+    if doc.docstatus == 0:
+        frappe.delete_doc("Sales Invoice", name, ignore_permissions=True)
+        message = _("Draft Sales Return {0} deleted successfully.").format(name)
+    elif doc.docstatus == 1:
+        doc.cancel()
+        message = _("Sales Return {0} cancelled successfully.").format(name)
+    else:
+        frappe.throw(_("Sales Return {0} is already cancelled.").format(name))
+        
+    frappe.db.commit()
+    return {
+        "name": name,
+        "message": message
+    }
+
+
+
