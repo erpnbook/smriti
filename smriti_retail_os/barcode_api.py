@@ -1259,7 +1259,7 @@ def enqueue_print_job(template_name, printer_ip, printer_port, labels_count, pay
     # Enqueue background worker
     frappe.enqueue(
         "smriti_retail_os.barcode_api._process_print_job",
-        job_id=job_id,
+        print_job_id=job_id,
         queue="barcode",
         timeout=30,
         now=frappe.flags.in_test
@@ -1269,10 +1269,11 @@ def enqueue_print_job(template_name, printer_ip, printer_port, labels_count, pay
 
 
 @frappe.whitelist()
-def _process_print_job(job_id):
+def _process_print_job(print_job_id):
     import os
     import hashlib
     
+    job_id = print_job_id
     # Correction 1 — Job Lookup Bug
     name = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "name")
     if not name:

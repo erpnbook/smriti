@@ -277,13 +277,18 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         import os
         
         payload = "^XA^FDTest Async 1^FS^XZ"
-        job_id = enqueue_print_job(
-            template_name="TEST_ZPL_TEMPLATE",
-            printer_ip="192.168.1.180",
-            printer_port=9100,
-            labels_count=2,
-            payload=payload
-        )
+        old_in_test = frappe.flags.in_test
+        frappe.flags.in_test = False
+        try:
+            job_id = enqueue_print_job(
+                template_name="TEST_ZPL_TEMPLATE",
+                printer_ip="192.168.1.180",
+                printer_port=9100,
+                labels_count=2,
+                payload=payload
+            )
+        finally:
+            frappe.flags.in_test = old_in_test
         
         self.assertTrue(frappe.db.exists("SMRITI Print Job", {"job_id": job_id}))
         status = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "status")
@@ -304,14 +309,16 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
 
     def test_async_2_process_success_deletes_prn(self):
         """test_async_2: _process_print_job sets Success, .prn file deleted after success"""
-        from smriti_retail_os.barcode_api import enqueue_print_job
+        from smriti_retail_os.barcode_api import enqueue_print_job, _process_print_job
         from unittest.mock import patch
         import os
         
         payload = "^XA^FDTest Async 2^FS^XZ"
-        frappe.flags.in_test = True
         
-        with patch('smriti_retail_os.barcode_api._send_to_printer_sync') as mock_send:
+        # Enqueue first to get job_id
+        old_in_test = frappe.flags.in_test
+        frappe.flags.in_test = False
+        try:
             job_id = enqueue_print_job(
                 template_name="TEST_ZPL_TEMPLATE",
                 printer_ip="192.168.1.180",
@@ -319,6 +326,11 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
                 labels_count=2,
                 payload=payload
             )
+        finally:
+            frappe.flags.in_test = old_in_test
+            
+        with patch('smriti_retail_os.barcode_api._send_to_printer_sync') as mock_send:
+            _process_print_job(print_job_id=job_id)
             mock_send.assert_called_once_with(payload, "192.168.1.180", 9100)
             
         status = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "status")
@@ -333,22 +345,28 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
 
     def test_async_3_process_failed_retains_prn(self):
         """test_async_3: _process_print_job sets Failed, .prn file retained on failure"""
-        from smriti_retail_os.barcode_api import enqueue_print_job
+        from smriti_retail_os.barcode_api import enqueue_print_job, _process_print_job
         from unittest.mock import patch
         import os
         
         payload = "^XA^FDTest Async 3^FS^XZ"
-        frappe.flags.in_test = True
         
+        old_in_test = frappe.flags.in_test
+        frappe.flags.in_test = False
+        try:
+            job_id = enqueue_print_job(
+                template_name="TEST_ZPL_TEMPLATE",
+                printer_ip="192.168.1.180",
+                printer_port=9100,
+                labels_count=2,
+                payload=payload
+            )
+        finally:
+            frappe.flags.in_test = old_in_test
+                
         with patch('smriti_retail_os.barcode_api._send_to_printer_sync', side_effect=Exception("Connection refused")):
             try:
-                job_id = enqueue_print_job(
-                    template_name="TEST_ZPL_TEMPLATE",
-                    printer_ip="192.168.1.180",
-                    printer_port=9100,
-                    labels_count=2,
-                    payload=payload
-                )
+                _process_print_job(print_job_id=job_id)
             except Exception:
                 pass
                 
@@ -371,13 +389,18 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         from smriti_retail_os.barcode_api import enqueue_print_job, get_print_job_status
         import os
         
-        job_id = enqueue_print_job(
-            template_name="TEST_ZPL_TEMPLATE",
-            printer_ip="192.168.1.180",
-            printer_port=9100,
-            labels_count=2,
-            payload="^XA^XZ"
-        )
+        old_in_test = frappe.flags.in_test
+        frappe.flags.in_test = False
+        try:
+            job_id = enqueue_print_job(
+                template_name="TEST_ZPL_TEMPLATE",
+                printer_ip="192.168.1.180",
+                printer_port=9100,
+                labels_count=2,
+                payload="^XA^XZ"
+            )
+        finally:
+            frappe.flags.in_test = old_in_test
         
         res = get_print_job_status(job_id)
         self.assertEqual(res.get("status"), "Queued")
@@ -398,29 +421,41 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
 
     def test_async_6_failed_job_retry(self):
         """test_async_6: Failed job retry creates new job_id with same payload content"""
-        from smriti_retail_os.barcode_api import enqueue_print_job, retry_print_job
+        from smriti_retail_os.barcode_api import enqueue_print_job, retry_print_job, _process_print_job
         from unittest.mock import patch
         import os
         
         payload = "^XA^FDTest Async 6^FS^XZ"
-        frappe.flags.in_test = True
         
+        old_in_test = frappe.flags.in_test
+        frappe.flags.in_test = False
+        try:
+            job_id = enqueue_print_job(
+                template_name="TEST_ZPL_TEMPLATE",
+                printer_ip="192.168.1.180",
+                printer_port=9100,
+                labels_count=2,
+                payload=payload
+            )
+        finally:
+            frappe.flags.in_test = old_in_test
+            
+        # Fail the job
         with patch('smriti_retail_os.barcode_api._send_to_printer_sync', side_effect=Exception("Network error")):
             try:
-                job_id = enqueue_print_job(
-                    template_name="TEST_ZPL_TEMPLATE",
-                    printer_ip="192.168.1.180",
-                    printer_port=9100,
-                    labels_count=2,
-                    payload=payload
-                )
+                _process_print_job(print_job_id=job_id)
             except Exception:
                 pass
                 
-        # Retry
+        # Retry the job
         with patch('smriti_retail_os.barcode_api._send_to_printer_sync') as mock_send_new:
-            res = retry_print_job(job_id)
-            new_job_id = res.get("job_id")
+            # We want the retry to run synchronously to verify success
+            frappe.flags.in_test = True
+            try:
+                res = retry_print_job(job_id)
+                new_job_id = res.get("job_id")
+            finally:
+                frappe.flags.in_test = old_in_test
             mock_send_new.assert_called_once_with(payload, "192.168.1.180", 9100)
             
         self.assertNotEqual(job_id, new_job_id)
@@ -447,8 +482,10 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         payload = "^XA^FDTest Async 7^FS^XZ"
         
         def run_enqueue(idx):
-            frappe.flags.in_test = True
+            frappe.init(site="smriti_retail")
+            frappe.connect()
             try:
+                frappe.flags.in_test = False
                 return enqueue_print_job(
                     template_name="TEST_ZPL_TEMPLATE",
                     printer_ip="192.168.1.180",
@@ -458,6 +495,8 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
                 )
             except Exception as e:
                 return str(e)
+            finally:
+                frappe.destroy()
                 
         with ThreadPoolExecutor(max_workers=20) as executor:
             job_ids = list(executor.map(run_enqueue, range(250)))
