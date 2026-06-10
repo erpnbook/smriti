@@ -98,14 +98,16 @@ class TestBackupSecurityHotfix(unittest.TestCase):
             any(fnmatch.fnmatch(protected_filename, pat) for pat in PROTECTED_CONFIG_PATTERNS)
         )
 
-        # Mock request as Guest user requesting a protected file
-        with patch("frappe.session") as mock_session, \
-             patch("frappe.request") as mock_request, \
-             patch("smriti_retail_os.boot._log_blocked_download") as mock_log:
+        # Create mock request — use MagicMock directly to avoid unbound LocalProxy
+        mock_session = MagicMock()
+        mock_session.user = "Guest"
+        mock_request = MagicMock()
+        mock_request.path = f"/backups/{protected_filename}"
+        mock_request.cookies = {}
 
-            mock_session.user = "Guest"
-            mock_request.path = f"/backups/{protected_filename}"
-            mock_request.cookies = {}
+        with patch.object(frappe, "session", mock_session), \
+             patch.object(frappe, "request", mock_request), \
+             patch("smriti_retail_os.boot._log_blocked_download") as mock_log:
 
             with self.assertRaises(frappe.PermissionError):
                 check_desk_access()
@@ -118,13 +120,16 @@ class TestBackupSecurityHotfix(unittest.TestCase):
 
         protected_filename = "20260610_site_config_backup.json"
 
-        with patch("frappe.session") as mock_session, \
-             patch("frappe.request") as mock_request, \
-             patch("smriti_retail_os.boot._log_blocked_download") as mock_log:
+        # Create mock request — use MagicMock directly to avoid unbound LocalProxy
+        mock_session = MagicMock()
+        mock_session.user = "Guest"
+        mock_request = MagicMock()
+        mock_request.path = f"/backups/{protected_filename}"
+        mock_request.cookies = {}
 
-            mock_session.user = "Guest"
-            mock_request.path = f"/backups/{protected_filename}"
-            mock_request.cookies = {}
+        with patch.object(frappe, "session", mock_session), \
+             patch.object(frappe, "request", mock_request), \
+             patch("smriti_retail_os.boot._log_blocked_download") as mock_log:
 
             try:
                 check_desk_access()

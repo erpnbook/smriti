@@ -10,6 +10,7 @@
 #
 import frappe
 import fnmatch
+import werkzeug.routing.exceptions
 from frappe import _
 from smriti_retail_os.security_constants import PROTECTED_CONFIG_PATTERNS
 
@@ -135,11 +136,12 @@ def check_desk_access():
 
             # Check if user is allowed to access desk
             if not _is_desk_allowed(user, user_roles):
-                import werkzeug.routing.exceptions
                 raise werkzeug.routing.exceptions.RequestRedirect("/smriti")
 
     except werkzeug.routing.exceptions.RequestRedirect:
         raise
+    except (frappe.PermissionError, frappe.AuthenticationError):
+        raise  # Intentional security responses — must not be swallowed
     except Exception as e:
         frappe.log_error(str(e), "SMRITI Desk Access Check Error")
 
