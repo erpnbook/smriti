@@ -59,6 +59,9 @@ def extend_bootinfo(bootinfo):
             "frontend_enabled": _is_smriti_frontend_enabled(),
         })
 
+        # Force setup_complete = 1 in bootinfo to prevent client-side redirect to setup-wizard
+        bootinfo.setup_complete = 1
+
         # Override Frappe default route for non-admin
         if not desk_ok:
             bootinfo.default_route = smriti_route
