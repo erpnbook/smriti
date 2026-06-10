@@ -12,6 +12,7 @@
    "printer_family",
    "raw_template",
    "custom_field_mappings_json",
+   "custom_visual_layout_json",
    "custom_version",
    "custom_active",
    "custom_is_default",
@@ -61,6 +62,12 @@
    "fieldname": "custom_field_mappings_json",
    "fieldtype": "Long Text",
    "label": "Field Mappings JSON"
+  },
+  {
+   "fieldname": "custom_visual_layout_json",
+   "fieldtype": "Long Text",
+   "hidden": 1,
+   "label": "Visual Layout JSON"
   },
   {
    "default": "1.0.0",

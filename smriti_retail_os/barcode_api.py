@@ -1090,7 +1090,7 @@ def delete_print_profile(profile_name):
 
 
 @frappe.whitelist()
-def save_print_template(template_name, label_size, printer_language, raw_template, field_mappings_json=None, printer_family=None, custom_active=1, custom_is_default=0, custom_version="1.0.0"):
+def save_print_template(template_name, label_size, printer_language, raw_template, field_mappings_json=None, printer_family=None, custom_active=1, custom_is_default=0, custom_version="1.0.0", custom_visual_layout_json=None, version_label=None):
     """
     Saves or updates a SMRITI Print Template record with size validations.
     """
@@ -1124,8 +1124,14 @@ def save_print_template(template_name, label_size, printer_language, raw_templat
     doc.printer_family = printer_family or printer_language
     doc.raw_template = raw_template
     doc.custom_field_mappings_json = field_mappings_json
+    doc.custom_visual_layout_json = custom_visual_layout_json
     doc.custom_active = int(custom_active)
-    doc.custom_version = custom_version
+
+    if custom_version and custom_version != doc.custom_version:
+        doc.custom_version = custom_version
+
+    if version_label:
+        doc.flags.version_label = version_label
 
     if int(custom_is_default) == 1:
         # Unset other defaults for the same label size
@@ -1137,8 +1143,32 @@ def save_print_template(template_name, label_size, printer_language, raw_templat
     else:
         doc.custom_is_default = int(custom_is_default)
     
-    doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    try:
+        doc.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        # Log Audit event: SMRITI Visual Template Saved
+        frappe.get_doc({
+            "doctype": "Activity Log",
+            "user": frappe.session.user,
+            "operation": "SMRITI Visual Template Saved",
+            "status": "Success",
+            "subject": f"Saved print template {template_name}",
+            "remarks": f"Template saved. Active version: {doc.custom_version}"
+        }).insert(ignore_permissions=True)
+        frappe.db.commit()
+    except Exception as e:
+        # Log Audit event: SMRITI Visual Template Compilation Failed
+        frappe.get_doc({
+            "doctype": "Activity Log",
+            "user": frappe.session.user,
+            "operation": "SMRITI Visual Template Compilation Failed",
+            "status": "Failed",
+            "subject": f"Failed to save print template {template_name}",
+            "remarks": str(e)
+        }).insert(ignore_permissions=True)
+        frappe.db.commit()
+        raise e
     
     return get_print_templates()
 
@@ -1241,6 +1271,16 @@ def enqueue_print_job(template_name, printer_ip, printer_port, labels_count, pay
         f.write(payload)
     os.chmod(prn_path, 0o600)
     
+    # Capture request ip and user agent
+    request_ip = None
+    request_user_agent = None
+    try:
+        if getattr(frappe.local, "request", None):
+            request_ip = frappe.local.ip
+            request_user_agent = frappe.local.request.headers.get("User-Agent")
+    except Exception:
+        pass
+
     # Create SMRITI Print Job record
     doc = frappe.new_doc("SMRITI Print Job")
     doc.job_id = job_id
@@ -1252,10 +1292,38 @@ def enqueue_print_job(template_name, printer_ip, printer_port, labels_count, pay
     doc.status = "Queued"
     doc.payload_hash = hashlib.sha256(payload.encode('utf-8')).hexdigest()
     doc.payload_preview = payload[:100]
+    doc.requested_by = frappe.session.user
+    doc.request_ip = request_ip
+    doc.request_user_agent = request_user_agent
     
     doc.insert(ignore_permissions=True)
     frappe.db.commit()
     
+    # Log Audit: SMRITI Print Job Queued
+    try:
+        frappe.get_doc({
+            "doctype": "Activity Log",
+            "user": doc.requested_by,
+            "operation": "SMRITI Print Job Queued",
+            "status": "Success",
+            "subject": f"Print job {job_id} queued",
+            "remarks": f"Queued {doc.labels_count} labels for template {doc.template_name}"
+        }).insert(ignore_permissions=True)
+        frappe.db.commit()
+    except Exception as e:
+        frappe.log_error(f"Error logging print job queued: {str(e)}")
+
+    # Publish realtime queued event
+    frappe.publish_realtime(
+        "smriti.barcode.print_status",
+        {
+            "event_version": 1,
+            "job_id": job_id,
+            "status": "Queued"
+        },
+        user=doc.requested_by
+    )
+
     # Enqueue background worker
     frappe.enqueue(
         "smriti_retail_os.barcode_api._process_print_job",
@@ -1274,7 +1342,6 @@ def _process_print_job(print_job_id):
     import hashlib
     
     job_id = print_job_id
-    # Correction 1 — Job Lookup Bug
     name = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "name")
     if not name:
         frappe.throw(f"Print job {job_id} not found.", frappe.DoesNotExistError)
@@ -1284,12 +1351,48 @@ def _process_print_job(print_job_id):
     doc.save(ignore_permissions=True)
     frappe.db.commit()
     
+    # Log Audit: SMRITI Print Job Sending
+    try:
+        frappe.get_doc({
+            "doctype": "Activity Log",
+            "user": doc.requested_by,
+            "operation": "SMRITI Print Job Sending",
+            "status": "Success",
+            "subject": f"Print job {job_id} is sending",
+            "remarks": f"Sending payload to {doc.printer_ip}:{doc.printer_port}"
+        }).insert(ignore_permissions=True)
+        frappe.db.commit()
+    except Exception as e:
+        frappe.log_error(f"Error logging print job sending: {str(e)}")
+
+    # Publish realtime sending event
+    frappe.publish_realtime(
+        "smriti.barcode.print_status",
+        {
+            "event_version": 1,
+            "job_id": job_id,
+            "status": "Sending"
+        },
+        user=doc.requested_by
+    )
+    
     prn_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
     if not os.path.exists(prn_path):
         doc.status = "Failed"
         doc.completed_on = frappe.utils.now_datetime()
         doc.save(ignore_permissions=True)
         frappe.db.commit()
+
+        # Publish realtime failed event
+        frappe.publish_realtime(
+            "smriti.barcode.print_status",
+            {
+                "event_version": 1,
+                "job_id": job_id,
+                "status": "Failed"
+            },
+            user=doc.requested_by
+        )
         raise FileNotFoundError(f"Payload file missing for job {job_id}")
         
     try:
@@ -1297,9 +1400,22 @@ def _process_print_job(print_job_id):
         with open(prn_path, "r", encoding="utf-8") as f:
             payload = f.read()
             
-        # Correction 2 — Verify Payload Integrity Before Printing
+        # Verify Payload Integrity
         actual_hash = hashlib.sha256(payload.encode('utf-8')).hexdigest()
         if actual_hash != doc.payload_hash:
+            # Log Audit event: SMRITI Visual Template Compilation Failed
+            try:
+                frappe.get_doc({
+                    "doctype": "Activity Log",
+                    "user": doc.requested_by,
+                    "operation": "SMRITI Visual Template Compilation Failed",
+                    "status": "Failed",
+                    "subject": f"Print job {job_id} integrity mismatch",
+                    "remarks": "Expected hash does not match actual PRN file content."
+                }).insert(ignore_permissions=True)
+                frappe.db.commit()
+            except Exception as le:
+                frappe.log_error(f"Error logging template compilation failed: {str(le)}")
             raise RuntimeError("Print payload integrity validation failed.")
             
         # Print
@@ -1310,9 +1426,34 @@ def _process_print_job(print_job_id):
         doc.save(ignore_permissions=True)
         frappe.db.commit()
         
+        # Publish realtime success event
+        frappe.publish_realtime(
+            "smriti.barcode.print_status",
+            {
+                "event_version": 1,
+                "job_id": job_id,
+                "status": "Success"
+            },
+            user=doc.requested_by
+        )
+
         # Log Success
         log_print_job(doc.template_name, doc.printer_ip, doc.labels_count, 1)
         
+        # Log Audit event: SMRITI Print Job Success
+        try:
+            frappe.get_doc({
+                "doctype": "Activity Log",
+                "user": doc.requested_by,
+                "operation": "SMRITI Print Job Success",
+                "status": "Success",
+                "subject": f"Print job {job_id} printed successfully",
+                "remarks": f"Printed {doc.labels_count} labels on {doc.printer_ip}"
+            }).insert(ignore_permissions=True)
+            frappe.db.commit()
+        except Exception as e:
+            frappe.log_error(f"Error logging print job success: {str(e)}")
+
         # Cleanup .prn file after Success
         try:
             os.unlink(prn_path)
@@ -1324,16 +1465,40 @@ def _process_print_job(print_job_id):
         doc.completed_on = frappe.utils.now_datetime()
         doc.save(ignore_permissions=True)
         frappe.db.commit()
+
+        # Publish realtime failed event
+        frappe.publish_realtime(
+            "smriti.barcode.print_status",
+            {
+                "event_version": 1,
+                "job_id": job_id,
+                "status": "Failed"
+            },
+            user=doc.requested_by
+        )
         
         # Log Failure
         log_print_job(doc.template_name, doc.printer_ip, doc.labels_count, 0, error_message=str(e))
         
+        # Log Audit event: SMRITI Print Job Failed
+        try:
+            frappe.get_doc({
+                "doctype": "Activity Log",
+                "user": doc.requested_by,
+                "operation": "SMRITI Print Job Failed",
+                "status": "Failed",
+                "subject": f"Print job {job_id} failed",
+                "remarks": str(e)
+            }).insert(ignore_permissions=True)
+            frappe.db.commit()
+        except Exception as le:
+            frappe.log_error(f"Error logging print job failed: {str(le)}")
+            
         raise e
 
 
 @frappe.whitelist()
 def get_print_job_status(job_id):
-    # Correction 1 — Job Lookup Bug
     name = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "name")
     if not name:
         frappe.throw(f"Print job {job_id} not found.", frappe.DoesNotExistError)
@@ -1345,7 +1510,6 @@ def get_print_job_status(job_id):
 @frappe.whitelist()
 def retry_print_job(job_id):
     import os
-    # Correction 1 — Job Lookup Bug
     name = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "name")
     if not name:
         frappe.throw(f"Print job {job_id} not found.", frappe.DoesNotExistError)
@@ -1376,6 +1540,76 @@ def get_recent_print_jobs(limit=20):
         order_by="creation desc",
         limit=cint(limit) or 20
     )
+
+
+@frappe.whitelist()
+def get_print_template_versions(template_name):
+    """
+    Returns linked version history for the specified template.
+    """
+    name_id = frappe.db.get_value("SMRITI Print Template", {"template_title": template_name}, "name") or template_name
+    if not frappe.db.exists("SMRITI Print Template", name_id):
+        return []
+        
+    return frappe.get_all(
+        "SMRITI Print Template Version",
+        filters={"template": name_id},
+        fields=["version_number", "version_label", "change_timestamp", "changed_by", "raw_template", "custom_field_mappings_json", "custom_visual_layout_json", "template_checksum", "restored_from_version"],
+        order_by="creation desc"
+    )
+
+
+@frappe.whitelist()
+def restore_print_template_version(template_name, version_number, expected_checksum):
+    """
+    Restores template from a specific version.
+    Includes optimistic locking to prevent overwriting intermediate changes.
+    """
+    name_id = frappe.db.get_value("SMRITI Print Template", {"template_title": template_name}, "name") or template_name
+    if not frappe.db.exists("SMRITI Print Template", name_id):
+        frappe.throw(_("Template {0} not found.").format(template_name))
+        
+    doc = frappe.get_doc("SMRITI Print Template", name_id)
+    
+    # Optimistic Lock Check
+    if doc.template_checksum != expected_checksum:
+        frappe.throw(
+            _("Template changed since loaded. Reload before restoring."),
+            frappe.ValidationError
+        )
+        
+    v_name = frappe.db.get_value("SMRITI Print Template Version", {"template": name_id, "version_number": version_number}, "name")
+    if not v_name:
+        frappe.throw(_("Version {0} of template {1} not found.").format(version_number, template_name))
+        
+    v_doc = frappe.get_doc("SMRITI Print Template Version", v_name)
+    
+    # Restore content
+    doc.raw_template = v_doc.raw_template
+    doc.custom_field_mappings_json = v_doc.custom_field_mappings_json
+    doc.custom_visual_layout_json = v_doc.custom_visual_layout_json
+    
+    # Record restored from version
+    doc.flags.restored_from_version = version_number
+    
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    
+    # Log Audit event: SMRITI Print Template Version Restored
+    try:
+        frappe.get_doc({
+            "doctype": "Activity Log",
+            "user": frappe.session.user,
+            "operation": "SMRITI Print Template Version Restored",
+            "status": "Success",
+            "subject": f"Restored print template {template_name} to version {version_number}",
+            "remarks": f"Restored from version {version_number}. New active version: {doc.custom_version}"
+        }).insert(ignore_permissions=True)
+        frappe.db.commit()
+    except Exception as e:
+        frappe.log_error(f"Error logging template version restored: {str(e)}")
+        
+    return get_print_templates()
 
 
 @frappe.whitelist()

@@ -22,15 +22,20 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        # Clean up any test templates
-        frappe.db.delete("SMRITI Print Template", {"name": ["in", ["TEST_ZPL_TEMPLATE", "TEST_TSPL_TEMPLATE", "TEST_MAPPINGS_TEMPLATE", "TEST_TOO_LARGE", "TEST_INVALID_MAPPINGS"]]})
+        # Clean up any test templates and their versions
+        test_templates = ["TEST_ZPL_TEMPLATE", "TEST_TSPL_TEMPLATE", "TEST_MAPPINGS_TEMPLATE", "TEST_TOO_LARGE", "TEST_INVALID_MAPPINGS", "TEST_RESTORE_SNAP_TEMPLATE", "TEST_LOCK_TEMPLATE", "TEST_LEGACY_TEMPLATE"]
+        frappe.db.delete("SMRITI Print Template Version", {"template": ["in", test_templates]})
+        frappe.db.delete("SMRITI Print Template", {"name": ["in", test_templates]})
         frappe.db.commit()
-        from smriti_retail_os.setup import seed_master_doctypes
+        from smriti_retail_os.setup import seed_master_doctypes, setup_activity_log_options
         seed_master_doctypes()
+        setup_activity_log_options()
 
     def tearDown(self):
-        # Clean up test templates
-        frappe.db.delete("SMRITI Print Template", {"name": ["in", ["TEST_ZPL_TEMPLATE", "TEST_TSPL_TEMPLATE", "TEST_MAPPINGS_TEMPLATE", "TEST_TOO_LARGE", "TEST_INVALID_MAPPINGS"]]})
+        # Clean up test templates and their versions
+        test_templates = ["TEST_ZPL_TEMPLATE", "TEST_TSPL_TEMPLATE", "TEST_MAPPINGS_TEMPLATE", "TEST_TOO_LARGE", "TEST_INVALID_MAPPINGS", "TEST_RESTORE_SNAP_TEMPLATE", "TEST_LOCK_TEMPLATE", "TEST_LEGACY_TEMPLATE"]
+        frappe.db.delete("SMRITI Print Template Version", {"template": ["in", test_templates]})
+        frappe.db.delete("SMRITI Print Template", {"name": ["in", test_templates]})
         frappe.db.commit()
 
     def test_print_template_lifecycle(self):
@@ -78,6 +83,7 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         self.assertNotEqual(doc.template_checksum, old_checksum)
 
         # 4. Delete Template
+        frappe.db.delete("SMRITI Print Template Version", {"template": "TEST_ZPL_TEMPLATE"})
         frappe.delete_doc("SMRITI Print Template", "TEST_ZPL_TEMPLATE")
         self.assertFalse(frappe.db.exists("SMRITI Print Template", "TEST_ZPL_TEMPLATE"))
 
@@ -575,4 +581,201 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             os.unlink(prn_path3)
         except FileNotFoundError:
             pass
+
+    def test_15_publish_realtime_targets_requested_by_user(self):
+        """test_15: publish_realtime targets correct requested_by user in enqueue and process"""
+        from smriti_retail_os.barcode_api import enqueue_print_job, _process_print_job
+        from unittest.mock import patch
+        import os
+        
+        payload = "^XA^FDTest Async 15^FS^XZ"
+        old_in_test = frappe.flags.in_test
+        frappe.flags.in_test = False
+        
+        with patch('frappe.publish_realtime') as mock_publish:
+            try:
+                job_id = enqueue_print_job(
+                    template_name="TEST_ZPL_TEMPLATE",
+                    printer_ip="192.168.1.180",
+                    printer_port=9100,
+                    labels_count=2,
+                    payload=payload
+                )
+            finally:
+                frappe.flags.in_test = old_in_test
+            
+            # Check queued event publish
+            mock_publish.assert_any_call(
+                "smriti.barcode.print_status",
+                {
+                    "event_version": 1,
+                    "job_id": job_id,
+                    "status": "Queued"
+                },
+                user=frappe.session.user
+            )
+            
+            # Check process event publish
+            with patch('smriti_retail_os.barcode_api._send_to_printer_sync') as mock_send:
+                _process_print_job(print_job_id=job_id)
+                
+            mock_publish.assert_any_call(
+                "smriti.barcode.print_status",
+                {
+                    "event_version": 1,
+                    "job_id": job_id,
+                    "status": "Success"
+                },
+                user=frappe.session.user
+            )
+            
+        # Clean up
+        frappe.db.delete("SMRITI Print Job", {"job_id": job_id})
+        frappe.db.commit()
+        prn_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
+        try:
+            os.unlink(prn_path)
+        except FileNotFoundError:
+            pass
+
+    def test_16_template_restore_inserts_history_snapshot(self):
+        """test_16: template restore inserts history snapshot of the pre-restored state"""
+        from smriti_retail_os.barcode_api import (
+            save_print_template,
+            get_print_template_versions,
+            restore_print_template_version,
+        )
+        
+        template_name = "Test Restore Snap Template"
+        frappe.db.delete("SMRITI Print Template", {"name": "TEST_RESTORE_SNAP_TEMPLATE"})
+        frappe.db.delete("SMRITI Print Template Version", {"template": "TEST_RESTORE_SNAP_TEMPLATE"})
+        frappe.db.commit()
+        
+        # 1. Create first version
+        save_print_template(
+            template_name=template_name,
+            label_size="50x25",
+            printer_language="ZPL",
+            raw_template="^XA^FDV1^XZ",
+            custom_version="1.0.0"
+        )
+        doc = frappe.get_doc("SMRITI Print Template", "TEST_RESTORE_SNAP_TEMPLATE")
+        v1_checksum = doc.template_checksum
+        
+        # 2. Modify to create V2 (this snapshots V1 as version 1.0.0 in history)
+        save_print_template(
+            template_name=template_name,
+            label_size="50x25",
+            printer_language="ZPL",
+            raw_template="^XA^FDV2^XZ",
+            custom_version="2.0.0"
+        )
+        doc.reload()
+        v2_checksum = doc.template_checksum
+        
+        versions = get_print_template_versions(template_name)
+        self.assertEqual(len(versions), 1)
+        self.assertEqual(versions[0].version_number, "1.0.0")
+        self.assertEqual(versions[0].raw_template, "^XA^FDV1^XZ")
+        
+        # 3. Restore to V1 (should snapshot V2 as version 2.0.0 in history)
+        restore_print_template_version(
+            template_name=template_name,
+            version_number="1.0.0",
+            expected_checksum=v2_checksum
+        )
+        
+        doc.reload()
+        self.assertEqual(doc.raw_template, "^XA^FDV1^XZ")
+        self.assertEqual(doc.template_checksum, v1_checksum)
+        
+        # Check versions - we should now have 2 versions in history (V1 and V2)
+        versions_after = get_print_template_versions(template_name)
+        self.assertEqual(len(versions_after), 2)
+        self.assertEqual(versions_after[0].version_number, "2.0.0")
+        self.assertEqual(versions_after[0].raw_template, "^XA^FDV2^XZ")
+        
+        # Clean up
+        frappe.db.delete("SMRITI Print Template", {"name": "TEST_RESTORE_SNAP_TEMPLATE"})
+        frappe.db.delete("SMRITI Print Template Version", {"template": "TEST_RESTORE_SNAP_TEMPLATE"})
+        frappe.db.commit()
+
+    def test_17_legacy_template_no_visual_layout_blocks_canvas(self):
+        """test_17: Legacy template has no custom_visual_layout_json"""
+        template_name = "Test Legacy Template"
+        frappe.db.delete("SMRITI Print Template", {"name": "TEST_LEGACY_TEMPLATE"})
+        frappe.db.commit()
+        
+        save_print_template(
+            template_name=template_name,
+            label_size="50x25",
+            printer_language="ZPL",
+            raw_template="^XA^FDLegacy^XZ"
+        )
+        
+        doc = frappe.get_doc("SMRITI Print Template", "TEST_LEGACY_TEMPLATE")
+        self.assertIsNone(doc.custom_visual_layout_json)
+        
+        # Clean up
+        frappe.delete_doc("SMRITI Print Template", "TEST_LEGACY_TEMPLATE")
+        frappe.db.commit()
+
+    def test_18_dpi_dot_coordinate_translation(self):
+        """test_18: DPI dot coordinate translation correctness"""
+        # dots = mm * dpi / 25.4
+        # At 203 DPI: 10mm -> 10 * 203 / 25.4 = 79.92 -> 80 dots
+        # At 300 DPI: 10mm -> 10 * 300 / 25.4 = 118.11 -> 118 dots
+        
+        def translate_mm_to_dots(mm, dpi):
+            return round(mm * dpi / 25.4)
+            
+        self.assertEqual(translate_mm_to_dots(10, 203), 80)
+        self.assertEqual(translate_mm_to_dots(10, 300), 118)
+        self.assertEqual(translate_mm_to_dots(50, 203), 400)
+        self.assertEqual(translate_mm_to_dots(50, 300), 591)
+
+    def test_19_mismatched_checksum_throws_validation_error(self):
+        """test_19: restore version with mismatched expected_checksum throws ValidationError"""
+        from smriti_retail_os.barcode_api import (
+            save_print_template,
+            restore_print_template_version,
+        )
+        
+        template_name = "Test Lock Template"
+        frappe.db.delete("SMRITI Print Template", {"name": "TEST_LOCK_TEMPLATE"})
+        frappe.db.delete("SMRITI Print Template Version", {"template": "TEST_LOCK_TEMPLATE"})
+        frappe.db.commit()
+        
+        # 1. Create version 1
+        save_print_template(
+            template_name=template_name,
+            label_size="50x25",
+            printer_language="ZPL",
+            raw_template="^XA^FDV1^XZ",
+            custom_version="1.0.0"
+        )
+        
+        # 2. Modify to version 2 (creating history snapshot for 1.0.0)
+        save_print_template(
+            template_name=template_name,
+            label_size="50x25",
+            printer_language="ZPL",
+            raw_template="^XA^FDV2^XZ",
+            custom_version="2.0.0"
+        )
+        
+        # Try to restore version 1.0.0 with a bad expected_checksum
+        self.assertRaises(
+            frappe.ValidationError,
+            restore_print_template_version,
+            template_name=template_name,
+            version_number="1.0.0",
+            expected_checksum="bad_checksum_value"
+        )
+        
+        # Clean up
+        frappe.db.delete("SMRITI Print Template", {"name": "TEST_LOCK_TEMPLATE"})
+        frappe.db.delete("SMRITI Print Template Version", {"template": "TEST_LOCK_TEMPLATE"})
+        frappe.db.commit()
+
 

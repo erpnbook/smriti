@@ -1006,7 +1006,35 @@ def setup_activity_log_options():
     """Adds SMRITI custom operations to Activity Log's operation Select field options."""
     try:
         from frappe.custom.doctype.property_setter.property_setter import make_property_setter
-        options = "\nLogin\nLogout\nImpersonate\nBlocked Download Attempt\nConfig Exported"
+        options = (
+            "\nLogin"
+            "\nLogout"
+            "\nImpersonate"
+            "\nBlocked Download Attempt"
+            "\nConfig Exported"
+            "\nCustodian Verified"
+            "\nRecovery Fragments Sent"
+            "\nPrint Job Cleanup"
+            "\nBackup Encryption Enabled"
+            "\nBackup Encryption Disabled"
+            "\nGPG Executable Missing"
+            "\nBackup Created"
+            "\nBackup Restored"
+            "\nDatabase Restore"
+            "\nSMRITI Visual Template Saved"
+            "\nSMRITI Visual Template Compilation Failed"
+            "\nSMRITI Print Template Version Created"
+            "\nSMRITI Print Template Version Restored"
+            "\nSMRITI Print Job Queued"
+            "\nSMRITI Print Job Sending"
+            "\nSMRITI Print Job Success"
+            "\nSMRITI Print Job Failed"
+            "\nSMRITI Print Job Cleanup"
+            "\nSMRITI Label Studio Print Run"
+            "\nSMRITI PSV Activity Log"
+        )
+        # Delete existing first to force update
+        frappe.db.delete("Property Setter", {"doc_type": "Activity Log", "field_name": "operation", "property": "options"})
         make_property_setter(
             doctype="Activity Log",
             fieldname="operation",
@@ -1016,6 +1044,7 @@ def setup_activity_log_options():
             validate_fields_for_doctype=False
         )
         frappe.db.commit()
+        frappe.clear_cache(doctype="Activity Log")
         print("[SMRITI] Updated Activity Log operation field options")
     except Exception as e:
         frappe.log_error(f"Error updating Activity Log options: {str(e)}")
@@ -1082,6 +1111,22 @@ def ensure_print_job_directory():
 def create_smriti_print_job_doctype():
     """Creates the SMRITI Print Job custom DocType for asynchronous print tracking."""
     if frappe.db.exists("DocType", "SMRITI Print Job"):
+        # Ensure audit fields exist on existing DocType
+        dt = frappe.get_doc("DocType", "SMRITI Print Job")
+        changed = False
+        existing_fields = [f.fieldname for f in dt.fields]
+        if "requested_by" not in existing_fields:
+            dt.append("fields", {"fieldname": "requested_by", "fieldtype": "Link", "options": "User", "label": "Requested By", "in_list_view": 1})
+            changed = True
+        if "request_ip" not in existing_fields:
+            dt.append("fields", {"fieldname": "request_ip", "fieldtype": "Data", "label": "Request IP"})
+            changed = True
+        if "request_user_agent" not in existing_fields:
+            dt.append("fields", {"fieldname": "request_user_agent", "fieldtype": "Small Text", "label": "Request User Agent"})
+            changed = True
+        if changed:
+            dt.save(ignore_permissions=True)
+            frappe.db.commit()
         return
     try:
         doc = frappe.new_doc("DocType")
@@ -1103,7 +1148,10 @@ def create_smriti_print_job_doctype():
             {"fieldname": "payload_hash", "fieldtype": "Data", "label": "Payload Hash", "read_only": 1},
             {"fieldname": "payload_preview", "fieldtype": "Data", "label": "Payload Preview", "read_only": 1},
             {"fieldname": "template_name", "fieldtype": "Data", "label": "Template Name", "in_list_view": 1},
-            {"fieldname": "labels_count", "fieldtype": "Int", "label": "Labels Count"}
+            {"fieldname": "labels_count", "fieldtype": "Int", "label": "Labels Count"},
+            {"fieldname": "requested_by", "fieldtype": "Link", "options": "User", "label": "Requested By", "in_list_view": 1},
+            {"fieldname": "request_ip", "fieldtype": "Data", "label": "Request IP"},
+            {"fieldname": "request_user_agent", "fieldtype": "Small Text", "label": "Request User Agent"}
         ]
         for f in fields:
             doc.append("fields", f)

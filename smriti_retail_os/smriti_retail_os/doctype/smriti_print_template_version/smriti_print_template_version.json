@@ -1,0 +1,113 @@
+{
+  "actions": [],
+  "creation": "2026-06-10 12:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "template",
+    "version_number",
+    "version_label",
+    "raw_template",
+    "custom_field_mappings_json",
+    "custom_visual_layout_json",
+    "template_checksum",
+    "restored_from_version",
+    "change_timestamp",
+    "changed_by"
+  ],
+  "fields": [
+    {
+      "fieldname": "template",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Parent Template",
+      "options": "SMRITI Print Template",
+      "reqd": 1
+    },
+    {
+      "fieldname": "version_number",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Version Number",
+      "reqd": 1
+    },
+    {
+      "fieldname": "version_label",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Version Label/Notes"
+    },
+    {
+      "fieldname": "raw_template",
+      "fieldtype": "Code",
+      "label": "Raw PRN Template",
+      "options": "text",
+      "reqd": 1
+    },
+    {
+      "fieldname": "custom_field_mappings_json",
+      "fieldtype": "Long Text",
+      "label": "Field Mappings JSON"
+    },
+    {
+      "fieldname": "custom_visual_layout_json",
+      "fieldtype": "Long Text",
+      "label": "Visual Layout JSON"
+    },
+    {
+      "fieldname": "template_checksum",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Template Checksum"
+    },
+    {
+      "fieldname": "restored_from_version",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Restored From Version"
+    },
+    {
+      "fieldname": "change_timestamp",
+      "fieldtype": "Datetime",
+      "in_list_view": 1,
+      "label": "Change Timestamp"
+    },
+    {
+      "fieldname": "changed_by",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Changed By",
+      "options": "User"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "modified": "2026-06-10 12:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "SMRITI Print Template Version",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "read": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "read": 1,
+      "role": "SMRITI Store Manager",
+      "share": 0,
+      "write": 0
+    }
+  ],
+  "quick_entry": 1,
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}
