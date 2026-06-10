@@ -2460,6 +2460,30 @@ function updateCanvasDimensions() {
     }
 }
 
+function parseLayoutJson(jsonStr) {
+    if (!jsonStr) return [];
+    try {
+        const parsed = JSON.parse(jsonStr);
+        if (Array.isArray(parsed)) {
+            return parsed;
+        } else if (parsed && parsed.elements) {
+            return parsed.elements;
+        }
+    } catch(e) {
+        console.error("Error parsing layout JSON:", e);
+    }
+    return [];
+}
+
+function getLayoutJsonString() {
+    if (canvasElements.length === 0) return null;
+    return JSON.stringify({
+        layout_version: 1,
+        compiler_version: 1,
+        elements: canvasElements
+    });
+}
+
 function openTemplateDesigner() {
     const template = document.getElementById('cfg-template').value;
     
@@ -2497,11 +2521,7 @@ function openTemplateDesigner() {
                 designerMappings = [];
             }
             
-            try {
-                canvasElements = found.custom_visual_layout_json ? JSON.parse(found.custom_visual_layout_json) : [];
-            } catch(e) {
-                canvasElements = [];
-            }
+            canvasElements = parseLayoutJson(found.custom_visual_layout_json);
             
             renderMappingTable();
             validateSandbox(found.raw_template || '');
@@ -2608,11 +2628,7 @@ function triggerFileImport(input) {
                         designerMappings = [];
                     }
                     
-                    try {
-                        canvasElements = parsed.custom_visual_layout_json ? JSON.parse(parsed.custom_visual_layout_json) : [];
-                    } catch(e) {
-                        canvasElements = [];
-                    }
+                    canvasElements = parseLayoutJson(parsed.custom_visual_layout_json);
                     
                     renderMappingTable();
                     renderCanvas();
@@ -2664,7 +2680,7 @@ function exportDesignerTemplate() {
         printer_language: lang,
         raw_template: raw,
         custom_field_mappings_json: mappings.length ? JSON.stringify(mappings) : null,
-        custom_visual_layout_json: canvasElements.length > 0 ? JSON.stringify(canvasElements) : null
+        custom_visual_layout_json: getLayoutJsonString()
     };
 
     const blob = new Blob([JSON.stringify(data, null, 4)], { type: 'application/json' });
@@ -3090,11 +3106,7 @@ async function restoreVersionFromHistory(versionNumber) {
             document.getElementById('design-raw').value = found.raw_template || '';
             activeTemplateChecksum = found.template_checksum;
             
-            try {
-                canvasElements = found.custom_visual_layout_json ? JSON.parse(found.custom_visual_layout_json) : [];
-            } catch(e) {
-                canvasElements = [];
-            }
+            canvasElements = parseLayoutJson(found.custom_visual_layout_json);
             
             try {
                 designerMappings = found.custom_field_mappings_json ? JSON.parse(found.custom_field_mappings_json) : [];
@@ -3157,7 +3169,7 @@ async function submitDesignerTemplate() {
             printer_language: lang,
             raw_template: raw,
             field_mappings_json: mappings.length ? JSON.stringify(mappings) : null,
-            custom_visual_layout_json: canvasElements.length > 0 ? JSON.stringify(canvasElements) : null
+            custom_visual_layout_json: getLayoutJsonString()
         });
 
         printTemplatesList = resList;
