@@ -1,10 +1,24 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/boot.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI Retail OS boot hooks — session creation, desk access
+#               guard, setup-wizard interception, and backup download protection.
+#
+# ═══════════════════════════════════════════════════════════════════
+# SMRITI ARCHITECTURE POLICY — LOCKED — DO NOT OVERRIDE
+# ═══════════════════════════════════════════════════════════════════
+# Rule 7: Every page/module exposed to users MUST be a SMRITI page.
+#
+# TRIGGER RULE (added 2026-06-10):
+#   If a browser shows /desk/setup-wizard, /desk/modules, /app, or ANY
+#   Frappe/ERPNext native UI after login, that is a POLICY VIOLATION.
+#   Correct action: intercept at before_request and redirect to /smriti.
+#   NEVER expose Frappe Desk, ERPNext forms, or setup-wizard to users.
+#   ALWAYS create a dedicated SMRITI page instead.
+#
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @date: 2026-05-28
-# @version: 1.0.0
+# @date: 2026-06-10
+# @version: 1.8.2a
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
@@ -28,6 +42,20 @@ SMRITI_ROLE_ROUTES = {
 # We check both role AND user for safety
 DESK_ALLOWED_ROLES = {"System Manager"}
 DESK_ALLOWED_USERS = {"Administrator"}
+
+# ── SMRITI Policy: Frappe-native paths ALWAYS blocked from users ──
+# These paths are NEVER shown to any user, regardless of role.
+# Any match → immediate redirect to /smriti.
+# Rule: if it appears post-login, create a SMRITI page instead.
+SMRITI_BLOCKED_DESK_PATHS = [
+    "/desk/setup-wizard",   # Frappe setup wizard — ALWAYS blocked
+    "/desk/modules",        # Frappe module list
+    "/desk#modules",        # Hash-based module route
+    "/desk#Form",           # Direct form access
+    "/desk#List",           # Direct list access
+    "/desk#query-report",   # Direct report access
+    "/desk#setup-wizard",   # Hash-based setup wizard
+]
 
 # ── Role priority for redirect ────────────────────────────────────
 ROLE_PRIORITY = [
@@ -118,12 +146,20 @@ def check_desk_access():
 
             return  # Authenticated user, non-protected file — pass through
 
-        # ─── Original desk-access guard ───────────────────────────────────────────
-        # Only restrict /desk and /app routes (including trailing slashes or subpaths)
+        # ─── SMRITI Policy: Block Frappe-owned paths unconditionally ─────────────
+        # Any path in SMRITI_BLOCKED_DESK_PATHS → redirect to /smriti.
+        # Applies to ALL users including Administrator. No exceptions.
+        # Policy: if setup-wizard appears, create a SMRITI page — never expose it.
+        for blocked in SMRITI_BLOCKED_DESK_PATHS:
+            if path.startswith(blocked):
+                raise werkzeug.routing.exceptions.RequestRedirect("/smriti")
+
+        # ─── Desk-access guard for remaining /desk and /app routes ────────────────
+        # Non-System-Manager users are redirected to /smriti.
         if path.startswith("/desk") or path.startswith("/app"):
             user = getattr(frappe.session, "user", "Guest")
-            
-            # If user is Guest but request has cookies, try validating auth to resolve actual user
+
+            # Resolve actual user if Guest + cookies present
             if user == "Guest" and frappe.request.cookies:
                 from frappe.auth import validate_auth
                 try:
@@ -134,7 +170,6 @@ def check_desk_access():
 
             user_roles = frappe.get_roles(user) if user else []
 
-            # Check if user is allowed to access desk
             if not _is_desk_allowed(user, user_roles):
                 raise werkzeug.routing.exceptions.RequestRedirect("/smriti")
 
