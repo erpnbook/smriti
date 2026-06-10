@@ -30,8 +30,20 @@ SMRITI.sidebarSchema = [
             { id: 'item_master', label: '├─ Item Master', url: '/item_master' },
             { id: 'sizewise_item', label: '├─ Sizewise Creator', url: '/sizewise_item' },
             { id: 'customers', label: '├─ Customers', url: '/customers' },
-            { id: 'suppliers', label: '├─ Suppliers', url: '/suppliers' },
-            { id: 'psa', label: '└─ Party Stock Accounts', url: '/psa' }
+            { id: 'suppliers', label: '├─ Suppliers', url: '/suppliers' }
+        ]
+    },
+    {
+        type: 'category',
+        id: 'channel_stock',
+        emoji: '🌐',
+        label: 'Channel Stock',
+        items: [
+            { id: 'psa', label: '├─ Distributor Accounts', url: '/psa' },
+            { id: 'psv_opening_balance', label: '├─ Opening Balances', url: '/app/psv-opening-balance' },
+            { id: 'sales_upload', label: '├─ Sales Uploads', url: '/app/smriti-party-sales-upload' },
+            { id: 'psv_audit', label: '├─ Stock Audits', url: '/app/smriti-party-physical-snapshot' },
+            { id: 'psv_reorder', label: '└─ Reorder Report', url: '/app/query-report/SMRITI PSV Reorder Report' }
         ]
     },
     {
@@ -145,10 +157,8 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
     filteredSchema.forEach(cat => {
         if (cat.items) {
             cat.items = cat.items.filter(item => {
-                if (business_type === "Footwear") {
-                    if (['psv_opening_balance', 'sales_upload'].includes(item.id)) return false;
-                } else {
-                    // FMCG / Others
+                if (business_type !== "Footwear") {
+                    // FMCG / Others (hide footwear size attributes)
                     if (['sizewise_item', 'sizewise_invoice'].includes(item.id)) return false;
                 }
                 return true;
