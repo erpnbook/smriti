@@ -1,222 +1,363 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
   <defs>
     <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f2042" />
-      <stop offset="50%" stop-color="#0a3244" />
-      <stop offset="100%" stop-color="#072230" />
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="60%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#134E4A" />
     </linearGradient>
-<g id="icon-footwear">
-            <path d="M 6,32 C 6,32 8,24 14,24 C 20,24 22,28 26,20 C 30,12 36,12 40,16 L 42,28 C 42,32 40,34 36,34 L 12,34 Z" />
+    <mask id="center-mask">
+      <rect width="1920" height="1080" fill="white" />
+      <rect x="610" y="190" width="700" height="700" rx="32" fill="black" />
+    </mask>
+    <g id="icon-footwear"><path d="M 6,32 C 6,32 8,24 14,24 C 20,24 22,28 26,20 C 30,12 36,12 40,16 L 42,28 C 42,32 40,34 36,34 L 12,34 Z" />
             <path d="M 28,18 L 24,26 M 32,16 L 28,26 M 36,16 L 32,26" />
-            <path d="M 12,34 L 10,38 M 20,34 L 20,38 M 30,34 L 30,38" />
-        </g>
-<g id="icon-apparel">
-            <path d="M 10,14 L 16,10 L 20,13 A 4,4 0 0 1 28,13 L 32,10 L 38,14 L 34,22 L 31,22 L 31,38 L 17,38 L 17,22 L 14,22 Z" />
-        </g>
-<g id="icon-fmcg">
-            <rect x="15" y="14" width="18" height="26" rx="2" />
+            <path d="M 12,34 L 10,38 M 20,34 L 20,38 M 30,34 L 30,38" /></g>
+    <g id="icon-apparel"><path d="M 10,14 L 16,10 L 20,13 A 4,4 0 0 1 28,13 L 32,10 L 38,14 L 34,22 L 31,22 L 31,38 L 17,38 L 17,22 L 14,22 Z" /></g>
+    <g id="icon-fmcg"><rect x="15" y="14" width="18" height="26" rx="2" />
             <path d="M 15,14 L 20,8 L 28,8 L 33,14 Z" />
             <line x1="20" y1="8" x2="28" y2="8" />
             <line x1="15" y1="22" x2="33" y2="22" />
-            <line x1="15" y1="30" x2="33" y2="30" />
-        </g>
-<g id="icon-warehouse">
-            <path d="M 8,22 L 8,38 L 40,38 L 40,22 L 24,10 Z" />
+            <line x1="15" y1="30" x2="33" y2="30" /></g>
+    <g id="icon-warehouse"><path d="M 8,22 L 8,38 L 40,38 L 40,22 L 24,10 Z" />
             <rect x="18" y="26" width="12" height="12" />
             <line x1="18" y1="30" x2="30" y2="30" />
             <line x1="18" y1="34" x2="30" y2="34" />
-            <line x1="24" y1="26" x2="24" y2="38" />
-        </g>
-<g id="icon-manufacturer">
-            <path d="M 8,38 L 8,22 L 18,14 L 18,24 L 28,14 L 28,24 L 38,14 L 38,38 Z" />
+            <line x1="24" y1="26" x2="24" y2="38" /></g>
+    <g id="icon-manufacturer"><path d="M 8,38 L 8,22 L 18,14 L 18,24 L 28,14 L 28,24 L 38,14 L 38,38 Z" />
             <rect x="14" y="30" width="6" height="8" />
             <rect x="26" y="30" width="6" height="8" />
             <line x1="32" y1="14" x2="32" y2="8" />
-            <line x1="35" y1="14" x2="35" y2="6" />
-        </g>
-<g id="icon-distributor">
-            <circle cx="24" cy="12" r="4" />
+            <line x1="35" y1="14" x2="35" y2="6" /></g>
+    <g id="icon-distributor"><circle cx="24" cy="12" r="4" />
             <circle cx="12" cy="32" r="4" />
             <circle cx="36" cy="32" r="4" />
             <circle cx="24" cy="24" r="3" />
             <line x1="24" y1="16" x2="24" y2="21" />
             <line x1="15" y1="30" x2="21" y2="26" />
-            <line x1="33" y1="30" x2="27" y2="26" />
-        </g>
-<g id="icon-truck">
-            <path d="M 6,14 L 30,14 L 30,32 L 6,32 Z" />
+            <line x1="33" y1="30" x2="27" y2="26" /></g>
+    <g id="icon-truck"><path d="M 6,14 L 30,14 L 30,32 L 6,32 Z" />
             <path d="M 30,20 L 40,20 L 42,26 L 42,32 L 30,32 Z" />
             <circle cx="15" cy="34" r="4" />
             <circle cx="33" cy="34" r="4" />
-            <line x1="37" y1="20" x2="42" y2="26" />
-        </g>
-<g id="icon-store">
-            <path d="M 10,20 L 10,38 L 38,38 L 38,20" />
+            <line x1="37" y1="20" x2="42" y2="26" /></g>
+    <g id="icon-store"><path d="M 10,20 L 10,38 L 38,38 L 38,20" />
             <path d="M 8,20 L 12,14 L 16,20 L 20,14 L 24,20 L 28,14 L 32,20 L 36,14 L 40,20 L 42,14 L 42,20 Z" />
             <rect x="16" y="28" width="8" height="10" />
-            <rect x="28" y="24" width="6" height="8" />
-        </g>
-<g id="icon-billing">
-            <rect x="12" y="8" width="24" height="32" rx="2" />
+            <rect x="28" y="24" width="6" height="8" /></g>
+    <g id="icon-billing"><rect x="12" y="8" width="24" height="32" rx="2" />
             <line x1="16" y1="14" x2="32" y2="14" />
             <line x1="16" y1="20" x2="32" y2="20" />
             <line x1="16" y1="26" x2="28" y2="26" />
-            <line x1="16" y1="32" x2="24" y2="32" />
-        </g>
-<g id="icon-barcode">
-            <rect x="8" y="10" width="32" height="28" rx="2" />
+            <line x1="16" y1="32" x2="24" y2="32" /></g>
+    <g id="icon-barcode"><rect x="8" y="10" width="32" height="28" rx="2" />
             <line x1="14" y1="16" x2="14" y2="32" stroke-width="3" />
             <line x1="18" y1="16" x2="18" y2="32" stroke-width="1" />
             <line x1="22" y1="16" x2="22" y2="32" stroke-width="2" />
             <line x1="26" y1="16" x2="26" y2="32" stroke-width="1.5" />
             <line x1="30" y1="16" x2="30" y2="32" stroke-width="3" />
-            <line x1="34" y1="16" x2="34" y2="32" stroke-width="1" />
-        </g>
-<g id="icon-analytics">
-            <path d="M 10,38 L 38,38 M 10,38 L 10,10" />
+            <line x1="34" y1="16" x2="34" y2="32" stroke-width="1" /></g>
+    <g id="icon-analytics"><path d="M 10,38 L 38,38 M 10,38 L 10,10" />
             <path d="M 12,32 L 20,20 L 28,26 L 36,12" />
             <circle cx="12" cy="32" r="2.5" />
             <circle cx="20" cy="20" r="2.5" />
             <circle cx="28" cy="26" r="2.5" />
-            <circle cx="36" cy="12" r="2.5" />
-        </g>
-<g id="icon-customer">
-            <circle cx="24" cy="16" r="6" />
-            <path d="M 12,36 C 12,28 17,26 24,26 C 31,26 36,28 36,36" />
-        </g>
-<g id="icon-payments">
-            <rect x="8" y="12" width="32" height="24" rx="2" />
+            <circle cx="36" cy="12" r="2.5" /></g>
+    <g id="icon-customer"><circle cx="24" cy="16" r="6" />
+            <path d="M 12,36 C 12,28 17,26 24,26 C 31,26 36,28 36,36" /></g>
+    <g id="icon-payments"><rect x="8" y="12" width="32" height="24" rx="2" />
             <line x1="8" y1="18" x2="40" y2="18" />
             <rect x="12" y="24" width="6" height="5" />
-            <line x1="22" y1="26" x2="34" y2="26" />
-        </g>
-<g id="icon-stock_transfer">
-            <path d="M 10,18 L 38,18 M 38,18 L 30,12 M 38,18 L 30,24" />
-            <path d="M 38,30 L 10,30 M 10,30 L 18,24 M 10,30 L 18,36" />
-        </g>
-<g id="icon-purchase_orders">
-            <path d="M 12,8 L 28,8 L 36,16 L 36,40 L 12,40 Z" />
+            <line x1="22" y1="26" x2="34" y2="26" /></g>
+    <g id="icon-stock_transfer"><path d="M 10,18 L 38,18 M 38,18 L 30,12 M 38,18 L 30,24" />
+            <path d="M 38,30 L 10,30 M 10,30 L 18,24 M 10,30 L 18,36" /></g>
+    <g id="icon-purchase_orders"><path d="M 12,8 L 28,8 L 36,16 L 36,40 L 12,40 Z" />
             <path d="M 28,8 L 28,16 L 36,16" />
             <rect x="18" y="24" width="12" height="10" rx="1" />
-            <path d="M 21,24 A 3,3 0 0 1 27,24" />
-        </g>
-<g id="icon-shopping_cart">
-            <path d="M 8,12 L 14,12 L 18,28 L 36,28 L 40,16 L 16,16" />
+            <path d="M 21,24 A 3,3 0 0 1 27,24" /></g>
+    <g id="icon-shopping_cart"><path d="M 8,12 L 14,12 L 18,28 L 36,28 L 40,16 L 16,16" />
             <circle cx="20" cy="34" r="3" />
-            <circle cx="32" cy="34" r="3" />
-        </g>
-<g id="icon-mobile_pos">
-            <rect x="15" y="8" width="18" height="32" rx="3" />
+            <circle cx="32" cy="34" r="3" /></g>
+    <g id="icon-mobile_pos"><rect x="15" y="8" width="18" height="32" rx="3" />
             <rect x="18" y="12" width="12" height="12" />
             <circle cx="20" cy="28" r="1.5" />
             <circle cx="24" cy="28" r="1.5" />
             <circle cx="28" cy="28" r="1.5" />
             <circle cx="20" cy="34" r="1.5" />
             <circle cx="24" cy="34" r="1.5" />
-            <circle cx="28" cy="34" r="1.5" />
-        </g>
+            <circle cx="28" cy="34" r="1.5" /></g>
+    <g id="icon-qr_code"><rect x="8" y="8" width="32" height="32" rx="2" />
+            <rect x="12" y="12" width="8" height="8" />
+            <rect x="14" y="14" width="4" height="4" />
+            <rect x="28" y="12" width="8" height="8" />
+            <rect x="30" y="14" width="4" height="4" />
+            <rect x="12" y="28" width="8" height="8" />
+            <rect x="14" y="30" width="4" height="4" />
+            <rect x="28" y="28" width="3" height="3" />
+            <rect x="33" y="33" width="3" height="3" />
+            <rect x="28" y="33" width="3" height="1" />
+            <rect x="33" y="28" width="1" height="3" />
+            <line x1="24" y1="16" x2="24" y2="20" />
+            <line x1="16" y1="24" x2="20" y2="24" /></g>
+    <g id="icon-pos_terminal"><rect x="12" y="8" width="24" height="32" rx="3" />
+            <rect x="15" y="11" width="18" height="10" rx="1" />
+            <line x1="17" y1="25" x2="19" y2="25" />
+            <line x1="23" y1="25" x2="25" y2="25" />
+            <line x1="29" y1="25" x2="31" y2="25" />
+            <line x1="17" y1="29" x2="19" y2="29" />
+            <line x1="23" y1="29" x2="25" y2="29" />
+            <line x1="29" y1="29" x2="31" y2="29" />
+            <line x1="17" y1="33" x2="19" y2="33" />
+            <line x1="23" y1="33" x2="25" y2="33" />
+            <line x1="29" y1="33" x2="31" y2="33" />
+            <line x1="15" y1="8" x2="33" y2="8" />
+            <path d="M 18,8 L 18,5 L 22,6 L 26,5 L 30,6 L 30,8" /></g>
+    <g id="icon-shopping_basket"><path d="M 8,18 L 40,18 L 36,36 L 12,36 Z" />
+            <path d="M 14,18 C 14,10 24,10 24,18" />
+            <path d="M 34,18 C 34,10 24,10 24,18" />
+            <line x1="16" y1="22" x2="32" y2="32" />
+            <line x1="32" y1="22" x2="16" y2="32" />
+            <line x1="24" y1="18" x2="24" y2="36" /></g>
+    <g id="icon-cash_drawer"><rect x="8" y="12" width="32" height="24" rx="2" />
+            <line x1="8" y1="28" x2="40" y2="28" />
+            <circle cx="24" cy="20" r="2" />
+            <line x1="22" y1="20" x2="26" y2="20" />
+            <line x1="16" y1="28" x2="16" y2="36" />
+            <line x1="24" y1="28" x2="24" y2="36" />
+            <line x1="32" y1="28" x2="32" y2="36" /></g>
+    <g id="icon-shelf_rack"><line x1="10" y1="8" x2="10" y2="40" />
+            <line x1="38" y1="8" x2="38" y2="40" />
+            <line x1="10" y1="16" x2="38" y2="16" />
+            <line x1="10" y1="28" x2="38" y2="28" />
+            <line x1="10" y1="40" x2="38" y2="40" />
+            <rect x="14" y="10" width="8" height="6" />
+            <rect x="26" y="20" width="8" height="8" />
+            <rect x="16" y="22" width="4" height="6" rx="1" />
+            <rect x="28" y="12" width="4" height="4" rx="1" /></g>
+    <g id="icon-price_tag"><path d="M 28,10 L 38,20 L 22,36 L 10,24 L 10,14 L 18,10 Z" />
+            <circle cx="16" cy="16" r="2" />
+            <line x1="20" y1="22" x2="30" y2="32" />
+            <line x1="24" y1="18" x2="28" y2="22" /></g>
+    <g id="icon-inventory_box"><path d="M 24,20 L 8,14 L 8,30 L 24,36 Z" />
+            <path d="M 24,20 L 40,14 L 40,30 L 24,36 Z" />
+            <path d="M 24,20 L 8,14 L 24,8 L 40,14 Z" />
+            <path d="M 24,8 L 24,20" />
+            <path d="M 16,11 L 32,17" /></g>
+    <g id="icon-scanner_gun"><path d="M 12,12 L 28,12 L 32,20 L 16,20 Z" />
+            <path d="M 18,20 L 22,36 L 28,36 L 24,20" />
+            <path d="M 16,24 C 16,26 18,28 20,28" />
+            <line x1="32" y1="16" x2="42" y2="16" stroke-dasharray="2 2" /></g>
   </defs>
   <rect width="1920" height="1080" fill="url(#bg-grad)" />
-  <g stroke="white" stroke-width="1.8" stroke-opacity="0.04" fill="none" stroke-linejoin="round" stroke-linecap="round">
-    <use href="#icon-store" transform="translate(67.0, 36.3) rotate(-28.8) scale(0.88) translate(-24, -24)" />
-    <use href="#icon-apparel" transform="translate(192.0, 62.3) rotate(-37.6) scale(0.92) translate(-24, -24)" />
-    <use href="#icon-stock_transfer" transform="translate(300.3, 36.3) rotate(-22.4) scale(1.03) translate(-24, -24)" />
-    <circle cx="435.5" cy="35.3" r="5" stroke-dasharray="2 2" />
-    <use href="#icon-analytics" transform="translate(536.1, 48.9) rotate(-31.8) scale(0.96) translate(-24, -24)" />
-    <use href="#icon-apparel" transform="translate(652.9, 52.2) rotate(18.4) scale(1.01) translate(-24, -24)" />
-    <use href="#icon-customer" transform="translate(803.7, 53.9) rotate(6.2) scale(1.06) translate(-24, -24)" />
-    <use href="#icon-fmcg" transform="translate(877.3, 46.4) rotate(28.4) scale(1.11) translate(-24, -24)" />
-    <circle cx="1014.0" cy="57.7" r="2" />
-    <use href="#icon-fmcg" transform="translate(1133.5, 45.5) rotate(8.7) scale(0.90) translate(-24, -24)" />
-    <use href="#icon-store" transform="translate(1271.5, 43.2) rotate(14.8) scale(1.10) translate(-24, -24)" />
-    <use href="#icon-analytics" transform="translate(1393.8, 46.5) rotate(-7.9) scale(0.87) translate(-24, -24)" />
-    <circle cx="1520.7" cy="63.4" r="2" />
-    <use href="#icon-billing" transform="translate(1737.9, 48.2) rotate(19.8) scale(0.98) translate(-24, -24)" />
-    <circle cx="41.9" cy="179.7" r="2" />
-    <use href="#icon-fmcg" transform="translate(162.6, 163.0) rotate(-9.2) scale(1.03) translate(-24, -24)" />
-    <use href="#icon-footwear" transform="translate(298.4, 167.6) rotate(14.4) scale(0.88) translate(-24, -24)" />
-    <line x1="435.2" y1="192.5" x2="443.2" y2="192.5" />
-    <line x1="439.2" y1="188.5" x2="439.2" y2="196.5" />
-    <use href="#icon-billing" transform="translate(520.6, 176.7) rotate(37.8) scale(1.08) translate(-24, -24)" />
-    <use href="#icon-mobile_pos" transform="translate(660.4, 160.3) rotate(8.7) scale(0.90) translate(-24, -24)" />
-    <use href="#icon-customer" transform="translate(995.0, 171.2) rotate(30.3) scale(1.10) translate(-24, -24)" />
-    <use href="#icon-fmcg" transform="translate(1282.3, 159.3) rotate(38.2) scale(1.01) translate(-24, -24)" />
-    <use href="#icon-truck" transform="translate(1483.3, 181.4) rotate(34.3) scale(1.08) translate(-24, -24)" />
-    <use href="#icon-customer" transform="translate(1629.5, 190.6) rotate(-5.0) scale(1.01) translate(-24, -24)" />
-    <use href="#icon-store" transform="translate(1721.1, 166.2) rotate(7.1) scale(0.85) translate(-24, -24)" />
-    <use href="#icon-apparel" transform="translate(1870.4, 157.9) rotate(28.8) scale(0.87) translate(-24, -24)" />
-    <use href="#icon-manufacturer" transform="translate(46.9, 308.4) rotate(17.9) scale(1.11) translate(-24, -24)" />
-    <use href="#icon-stock_transfer" transform="translate(183.8, 287.1) rotate(-24.8) scale(0.88) translate(-24, -24)" />
-    <use href="#icon-apparel" transform="translate(296.6, 296.2) rotate(13.9) scale(1.15) translate(-24, -24)" />
-    <use href="#icon-warehouse" transform="translate(399.9, 295.1) rotate(-20.1) scale(0.91) translate(-24, -24)" />
-    <use href="#icon-store" transform="translate(537.4, 296.1) rotate(30.0) scale(0.87) translate(-24, -24)" />
-    <use href="#icon-payments" transform="translate(1400.1, 283.2) rotate(-18.8) scale(1.09) translate(-24, -24)" />
-    <circle cx="1644.8" cy="302.8" r="2" />
-    <use href="#icon-apparel" transform="translate(1724.5, 285.9) rotate(19.8) scale(0.87) translate(-24, -24)" />
-    <use href="#icon-distributor" transform="translate(42.9, 443.0) rotate(-34.5) scale(0.87) translate(-24, -24)" />
-    <use href="#icon-fmcg" transform="translate(303.5, 423.9) rotate(-6.5) scale(1.03) translate(-24, -24)" />
-    <use href="#icon-analytics" transform="translate(421.1, 441.7) rotate(-20.9) scale(0.97) translate(-24, -24)" />
-    <use href="#icon-fmcg" transform="translate(548.6, 410.0) rotate(-39.3) scale(1.04) translate(-24, -24)" />
-    <use href="#icon-barcode" transform="translate(1404.2, 435.4) rotate(34.5) scale(0.88) translate(-24, -24)" />
-    <use href="#icon-truck" transform="translate(1632.1, 402.8) rotate(17.4) scale(0.91) translate(-24, -24)" />
-    <use href="#icon-apparel" transform="translate(1746.7, 408.2) rotate(-32.6) scale(0.98) translate(-24, -24)" />
-    <circle cx="1848.8" cy="395.2" r="5" stroke-dasharray="2 2" />
-    <use href="#icon-stock_transfer" transform="translate(84.0, 523.1) rotate(4.9) scale(0.88) translate(-24, -24)" />
-    <use href="#icon-apparel" transform="translate(202.3, 549.6) rotate(26.8) scale(1.02) translate(-24, -24)" />
-    <use href="#icon-apparel" transform="translate(282.4, 521.4) rotate(31.9) scale(0.91) translate(-24, -24)" />
-    <line x1="403.5" y1="520.1" x2="411.5" y2="520.1" />
-    <line x1="407.5" y1="516.1" x2="407.5" y2="524.1" />
-    <use href="#icon-apparel" transform="translate(1363.0, 550.1) rotate(28.7) scale(0.92) translate(-24, -24)" />
-    <use href="#icon-store" transform="translate(1515.8, 538.0) rotate(-22.2) scale(1.05) translate(-24, -24)" />
-    <use href="#icon-billing" transform="translate(1614.9, 528.9) rotate(-11.9) scale(1.00) translate(-24, -24)" />
-    <use href="#icon-footwear" transform="translate(1749.0, 557.2) rotate(-30.8) scale(1.14) translate(-24, -24)" />
-    <use href="#icon-warehouse" transform="translate(1843.9, 563.1) rotate(7.7) scale(0.95) translate(-24, -24)" />
-    <use href="#icon-apparel" transform="translate(160.8, 680.0) rotate(16.7) scale(0.85) translate(-24, -24)" />
-    <circle cx="321.3" cy="661.9" r="5" stroke-dasharray="2 2" />
-    <use href="#icon-analytics" transform="translate(431.9, 644.9) rotate(9.9) scale(1.05) translate(-24, -24)" />
-    <use href="#icon-stock_transfer" transform="translate(521.2, 680.0) rotate(-13.9) scale(1.06) translate(-24, -24)" />
-    <use href="#icon-truck" transform="translate(1385.3, 651.1) rotate(0.9) scale(1.09) translate(-24, -24)" />
-    <use href="#icon-barcode" transform="translate(1523.0, 671.8) rotate(1.2) scale(1.04) translate(-24, -24)" />
-    <circle cx="1611.8" cy="675.9" r="5" stroke-dasharray="2 2" />
-    <use href="#icon-apparel" transform="translate(1730.5, 675.3) rotate(-20.4) scale(0.99) translate(-24, -24)" />
-    <use href="#icon-truck" transform="translate(1877.5, 638.6) rotate(17.5) scale(0.97) translate(-24, -24)" />
-    <use href="#icon-warehouse" transform="translate(55.0, 762.4) rotate(22.3) scale(0.92) translate(-24, -24)" />
-    <use href="#icon-store" transform="translate(195.2, 789.8) rotate(33.4) scale(0.89) translate(-24, -24)" />
-    <use href="#icon-analytics" transform="translate(281.7, 778.2) rotate(36.0) scale(1.12) translate(-24, -24)" />
-    <use href="#icon-purchase_orders" transform="translate(425.6, 791.0) rotate(31.8) scale(1.07) translate(-24, -24)" />
-    <use href="#icon-billing" transform="translate(538.7, 768.0) rotate(21.3) scale(1.01) translate(-24, -24)" />
-    <use href="#icon-truck" transform="translate(1375.4, 782.1) rotate(26.6) scale(0.97) translate(-24, -24)" />
-    <use href="#icon-payments" transform="translate(1513.5, 802.3) rotate(-1.8) scale(1.13) translate(-24, -24)" />
-    <circle cx="1756.8" cy="781.9" r="5" stroke-dasharray="2 2" />
-    <use href="#icon-shopping_cart" transform="translate(1879.9, 779.4) rotate(-37.7) scale(0.95) translate(-24, -24)" />
-    <use href="#icon-purchase_orders" transform="translate(69.0, 895.2) rotate(33.6) scale(1.14) translate(-24, -24)" />
-    <use href="#icon-footwear" transform="translate(181.7, 920.3) rotate(-33.3) scale(0.98) translate(-24, -24)" />
-    <use href="#icon-analytics" transform="translate(318.3, 884.1) rotate(-23.1) scale(0.95) translate(-24, -24)" />
-    <line x1="429.1" y1="894.0" x2="437.1" y2="894.0" />
-    <line x1="433.1" y1="890.0" x2="433.1" y2="898.0" />
-    <use href="#icon-apparel" transform="translate(527.6, 879.1) rotate(40.0) scale(0.95) translate(-24, -24)" />
-    <use href="#icon-footwear" transform="translate(667.5, 914.1) rotate(36.0) scale(0.91) translate(-24, -24)" />
-    <use href="#icon-truck" transform="translate(881.3, 908.5) rotate(-2.8) scale(0.93) translate(-24, -24)" />
-    <use href="#icon-barcode" transform="translate(1150.9, 913.9) rotate(-31.4) scale(0.86) translate(-24, -24)" />
-    <use href="#icon-store" transform="translate(1374.8, 910.8) rotate(-31.8) scale(1.08) translate(-24, -24)" />
-    <use href="#icon-apparel" transform="translate(1517.5, 905.0) rotate(-12.2) scale(0.98) translate(-24, -24)" />
-    <use href="#icon-stock_transfer" transform="translate(1613.5, 900.3) rotate(25.8) scale(0.88) translate(-24, -24)" />
-    <circle cx="1763.0" cy="906.8" r="5" stroke-dasharray="2 2" />
-    <use href="#icon-billing" transform="translate(1842.6, 883.8) rotate(9.3) scale(1.13) translate(-24, -24)" />
-    <circle cx="73.7" cy="1018.2" r="5" stroke-dasharray="2 2" />
-    <circle cx="168.4" cy="1037.6" r="2" />
-    <circle cx="288.9" cy="1017.5" r="5" stroke-dasharray="2 2" />
-    <use href="#icon-analytics" transform="translate(425.5, 1013.9) rotate(-25.5) scale(0.91) translate(-24, -24)" />
-    <use href="#icon-truck" transform="translate(670.1, 1008.8) rotate(-33.2) scale(1.07) translate(-24, -24)" />
-    <use href="#icon-shopping_cart" transform="translate(779.4, 1032.9) rotate(-4.1) scale(0.86) translate(-24, -24)" />
-    <use href="#icon-customer" transform="translate(889.7, 1015.2) rotate(-2.1) scale(1.01) translate(-24, -24)" />
-    <use href="#icon-purchase_orders" transform="translate(1016.3, 1032.3) rotate(-18.3) scale(0.93) translate(-24, -24)" />
-    <use href="#icon-distributor" transform="translate(1121.0, 1004.6) rotate(-24.7) scale(1.07) translate(-24, -24)" />
-    <circle cx="1248.8" cy="1024.5" r="5" stroke-dasharray="2 2" />
-    <use href="#icon-store" transform="translate(1369.1, 1000.0) rotate(-11.1) scale(0.94) translate(-24, -24)" />
-    <use href="#icon-apparel" transform="translate(1510.4, 1001.3) rotate(4.3) scale(1.06) translate(-24, -24)" />
-    <use href="#icon-footwear" transform="translate(1601.3, 1038.4) rotate(5.9) scale(0.99) translate(-24, -24)" />
-    <use href="#icon-shopping_cart" transform="translate(1737.0, 1004.2) rotate(-30.9) scale(0.87) translate(-24, -24)" />
-    <use href="#icon-manufacturer" transform="translate(1859.6, 1023.9) rotate(-28.1) scale(1.02) translate(-24, -24)" />
+  
+  <!-- Faint supply chain network curves (connecting elements) -->
+  <!-- Flow 1 curve -->
+  <path d="M 80,120 Q 350,60 650,90 T 1200,90 T 1550,110 T 1840,130" fill="none" stroke="white" stroke-width="1.8" stroke-dasharray="4 6" stroke-opacity="0.015" />
+  <!-- Flow 2 curve -->
+  <path d="M 80,960 Q 350,1020 650,990 T 1200,990 T 1550,970 T 1840,950" fill="none" stroke="white" stroke-width="1.8" stroke-dasharray="4 6" stroke-opacity="0.015" />
+
+  <!-- Icons & Subtle Pattern Group -->
+  <g stroke="white" stroke-width="1.5" stroke-opacity="0.04" fill="none" stroke-linejoin="round" stroke-linecap="round" mask="url(#center-mask)">
+    <use href="#icon-shelf_rack" transform="translate(45.6, 20.3) rotate(-19.4) scale(1.07) translate(-24, -24)" />
+    <g transform="translate(129.6, 40.3) rotate(-32.8) scale(0.88)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <circle cx="282.4" cy="46.9" r="3" />
+    <circle cx="351.1" cy="52.8" r="3" />
+    <use href="#icon-billing" transform="translate(530.5, 23.2) rotate(-9.9) scale(0.95) translate(-24, -24)" />
+    <use href="#icon-qr_code" transform="translate(612.3, 47.4) rotate(33.1) scale(0.96) translate(-24, -24)" />
+    <circle cx="671.7" cy="43.5" r="6.5" stroke-dasharray="2.5 2.5" />
+    <circle cx="850.9" cy="57.3" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-price_tag" transform="translate(918.1, 51.5) rotate(-10.1) scale(1.05) translate(-24, -24)" />
+    <g transform="translate(1017.5, 44.3) rotate(-23.0) scale(1.07)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <circle cx="1066.5" cy="33.9" r="1.5" fill="white" stroke="none" />
+    <use href="#icon-truck" transform="translate(1251.0, 28.1) rotate(-12.9) scale(0.93) translate(-24, -24)" />
+    <circle cx="1336.5" cy="41.2" r="3" />
+    <circle cx="1465.7" cy="24.7" r="3" />
+    <use href="#icon-shopping_cart" transform="translate(1557.1, 41.8) rotate(34.8) scale(0.89) translate(-24, -24)" />
+    <use href="#icon-stock_transfer" transform="translate(1623.6, 21.1) rotate(8.9) scale(1.09) translate(-24, -24)" />
+    <circle cx="1870.1" cy="40.6" r="1.5" fill="white" stroke="none" />
+    <circle cx="55.4" cy="125.4" r="3" />
+    <use href="#icon-cash_drawer" transform="translate(298.9, 125.8) rotate(-27.6) scale(1.04) translate(-24, -24)" />
+    <use href="#icon-mobile_pos" transform="translate(360.3, 104.1) rotate(-23.7) scale(1.14) translate(-24, -24)" />
+    <circle cx="594.5" cy="134.4" r="3" />
+    <use href="#icon-distributor" transform="translate(859.1, 117.0) rotate(11.2) scale(1.13) translate(-24, -24)" />
+    <use href="#icon-inventory_box" transform="translate(910.6, 130.1) rotate(-20.2) scale(1.01) translate(-24, -24)" />
+    <use href="#icon-mobile_pos" transform="translate(1007.6, 123.9) rotate(12.0) scale(0.96) translate(-24, -24)" />
+    <use href="#icon-fmcg" transform="translate(1242.2, 119.1) rotate(14.5) scale(0.87) translate(-24, -24)" />
+    <g transform="translate(1545.3, 132.5) rotate(-1.9) scale(1.09)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <circle cx="1889.2" cy="122.4" r="1.5" fill="white" stroke="none" />
+    <use href="#icon-stock_transfer" transform="translate(33.6, 206.8) rotate(-21.7) scale(0.98) translate(-24, -24)" />
+    <circle cx="107.3" cy="191.4" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-store" transform="translate(286.1, 194.4) rotate(-28.5) scale(1.08) translate(-24, -24)" />
+    <use href="#icon-payments" transform="translate(346.7, 192.3) rotate(-6.9) scale(0.87) translate(-24, -24)" />
+    <circle cx="420.1" cy="188.6" r="1.5" fill="white" stroke="none" />
+    <circle cx="527.9" cy="201.7" r="3" />
+    <use href="#icon-analytics" transform="translate(1486.3, 195.4) rotate(-16.7) scale(1.05) translate(-24, -24)" />
+    <g transform="translate(1549.5, 188.8) rotate(-14.0) scale(0.94)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <use href="#icon-fmcg" transform="translate(1650.1, 176.4) rotate(34.9) scale(1.15) translate(-24, -24)" />
+    <use href="#icon-store" transform="translate(1721.5, 193.1) rotate(-10.6) scale(0.87) translate(-24, -24)" />
+    <circle cx="1794.8" cy="179.7" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-shelf_rack" transform="translate(1899.5, 198.8) rotate(22.2) scale(0.94) translate(-24, -24)" />
+    <use href="#icon-manufacturer" transform="translate(24.1, 284.6) rotate(27.3) scale(1.07) translate(-24, -24)" />
+    <circle cx="110.9" cy="274.0" r="3" />
+    <circle cx="190.6" cy="269.6" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-billing" transform="translate(276.9, 261.4) rotate(19.0) scale(1.04) translate(-24, -24)" />
+    <circle cx="346.5" cy="267.8" r="3" />
+    <use href="#icon-qr_code" transform="translate(457.8, 277.4) rotate(-32.5) scale(0.96) translate(-24, -24)" />
+    <use href="#icon-apparel" transform="translate(505.9, 255.6) rotate(27.9) scale(1.09) translate(-24, -24)" />
+    <circle cx="1412.4" cy="261.0" r="3" />
+    <circle cx="1494.3" cy="259.3" r="3" />
+    <use href="#icon-fmcg" transform="translate(1571.8, 259.5) rotate(-21.5) scale(0.95) translate(-24, -24)" />
+    <g transform="translate(1658.7, 261.5) rotate(-7.0) scale(1.14)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <use href="#icon-billing" transform="translate(1721.4, 286.9) rotate(32.9) scale(0.90) translate(-24, -24)" />
+    <use href="#icon-mobile_pos" transform="translate(1781.5, 273.7) rotate(20.0) scale(0.98) translate(-24, -24)" />
+    <use href="#icon-mobile_pos" transform="translate(1864.6, 285.4) rotate(-31.9) scale(0.98) translate(-24, -24)" />
+    <circle cx="57.0" cy="348.6" r="3" />
+    <g transform="translate(114.6, 330.6) rotate(-11.9) scale(0.94)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <use href="#icon-payments" transform="translate(213.9, 355.6) rotate(-13.4) scale(0.97) translate(-24, -24)" />
+    <use href="#icon-inventory_box" transform="translate(287.9, 349.2) rotate(11.5) scale(0.96) translate(-24, -24)" />
+    <use href="#icon-barcode" transform="translate(376.1, 351.6) rotate(3.4) scale(0.85) translate(-24, -24)" />
+    <g transform="translate(428.4, 358.2) rotate(-12.4) scale(0.98)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <circle cx="527.0" cy="347.6" r="3" />
+    <circle cx="1385.9" cy="354.4" r="6.5" stroke-dasharray="2.5 2.5" />
+    <circle cx="1491.1" cy="336.3" r="3" />
+    <use href="#icon-mobile_pos" transform="translate(1562.3, 363.2) rotate(-25.7) scale(0.99) translate(-24, -24)" />
+    <circle cx="1659.5" cy="350.8" r="1.5" fill="white" stroke="none" />
+    <circle cx="1728.8" cy="347.3" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-scanner_gun" transform="translate(1809.7, 346.2) rotate(-17.7) scale(1.04) translate(-24, -24)" />
+    <use href="#icon-store" transform="translate(1891.1, 346.5) rotate(-4.2) scale(1.06) translate(-24, -24)" />
+    <use href="#icon-price_tag" transform="translate(30.9, 417.3) rotate(-25.3) scale(0.92) translate(-24, -24)" />
+    <use href="#icon-apparel" transform="translate(106.1, 413.3) rotate(-11.8) scale(0.99) translate(-24, -24)" />
+    <circle cx="188.3" cy="421.2" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-scanner_gun" transform="translate(294.3, 434.5) rotate(-34.6) scale(0.96) translate(-24, -24)" />
+    <circle cx="355.6" cy="439.4" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-payments" transform="translate(452.0, 439.6) rotate(-15.9) scale(1.00) translate(-24, -24)" />
+    <use href="#icon-manufacturer" transform="translate(513.4, 431.2) rotate(-23.4) scale(0.99) translate(-24, -24)" />
+    <use href="#icon-apparel" transform="translate(1382.1, 441.7) rotate(-30.2) scale(1.14) translate(-24, -24)" />
+    <use href="#icon-manufacturer" transform="translate(1490.2, 441.6) rotate(-33.6) scale(0.90) translate(-24, -24)" />
+    <circle cx="1558.9" cy="409.4" r="1.5" fill="white" stroke="none" />
+    <circle cx="1634.8" cy="428.4" r="1.5" fill="white" stroke="none" />
+    <g transform="translate(1706.6, 417.0) rotate(30.0) scale(1.02)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <circle cx="1816.3" cy="419.5" r="1.5" fill="white" stroke="none" />
+    <g transform="translate(1893.2, 414.4) rotate(-13.9) scale(1.06)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <g transform="translate(52.2, 512.9) rotate(-32.1) scale(1.01)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <g transform="translate(126.5, 484.8) rotate(-34.1) scale(0.98)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <use href="#icon-manufacturer" transform="translate(199.6, 498.9) rotate(27.4) scale(0.99) translate(-24, -24)" />
+    <circle cx="277.4" cy="510.4" r="1.5" fill="white" stroke="none" />
+    <use href="#icon-store" transform="translate(361.5, 500.8) rotate(16.2) scale(0.93) translate(-24, -24)" />
+    <circle cx="453.2" cy="485.5" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-truck" transform="translate(524.4, 496.8) rotate(24.6) scale(0.90) translate(-24, -24)" />
+    <use href="#icon-customer" transform="translate(1394.8, 503.5) rotate(34.8) scale(1.02) translate(-24, -24)" />
+    <use href="#icon-warehouse" transform="translate(1488.1, 492.6) rotate(-26.6) scale(0.91) translate(-24, -24)" />
+    <g transform="translate(1569.7, 518.8) rotate(-21.6) scale(1.07)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <circle cx="1631.1" cy="504.9" r="3" />
+    <use href="#icon-manufacturer" transform="translate(1733.3, 493.6) rotate(-13.8) scale(1.06) translate(-24, -24)" />
+    <g transform="translate(1791.0, 519.7) rotate(13.8) scale(0.89)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <circle cx="1894.7" cy="501.1" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-fmcg" transform="translate(37.6, 566.4) rotate(30.9) scale(0.99) translate(-24, -24)" />
+    <g transform="translate(116.0, 562.1) rotate(-31.2) scale(0.89)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <circle cx="202.5" cy="571.0" r="1.5" fill="white" stroke="none" />
+    <use href="#icon-purchase_orders" transform="translate(284.3, 589.8) rotate(1.6) scale(0.99) translate(-24, -24)" />
+    <use href="#icon-inventory_box" transform="translate(351.9, 582.0) rotate(4.8) scale(0.87) translate(-24, -24)" />
+    <g transform="translate(424.0, 588.7) rotate(-16.5) scale(0.87)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <use href="#icon-shopping_cart" transform="translate(509.6, 580.6) rotate(-6.4) scale(1.06) translate(-24, -24)" />
+    <use href="#icon-billing" transform="translate(1402.8, 570.4) rotate(13.2) scale(1.06) translate(-24, -24)" />
+    <use href="#icon-analytics" transform="translate(1480.0, 578.3) rotate(-32.2) scale(0.98) translate(-24, -24)" />
+    <use href="#icon-pos_terminal" transform="translate(1564.1, 560.3) rotate(12.2) scale(1.11) translate(-24, -24)" />
+    <g transform="translate(1658.0, 597.8) rotate(-16.1) scale(0.86)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <g transform="translate(1730.3, 577.4) rotate(29.1) scale(0.90)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <use href="#icon-analytics" transform="translate(1803.4, 583.8) rotate(-28.6) scale(0.95) translate(-24, -24)" />
+    <use href="#icon-shelf_rack" transform="translate(1872.8, 563.3) rotate(-6.2) scale(1.00) translate(-24, -24)" />
+    <g transform="translate(57.8, 667.8) rotate(-3.2) scale(0.94)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <use href="#icon-shelf_rack" transform="translate(112.9, 673.8) rotate(1.0) scale(1.15) translate(-24, -24)" />
+    <use href="#icon-shopping_cart" transform="translate(214.8, 654.2) rotate(1.3) scale(1.04) translate(-24, -24)" />
+    <use href="#icon-purchase_orders" transform="translate(285.0, 665.7) rotate(3.4) scale(1.13) translate(-24, -24)" />
+    <use href="#icon-price_tag" transform="translate(375.2, 655.1) rotate(9.1) scale(1.09) translate(-24, -24)" />
+    <g transform="translate(426.3, 657.7) rotate(-28.5) scale(1.15)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <use href="#icon-price_tag" transform="translate(536.5, 654.2) rotate(23.3) scale(1.00) translate(-24, -24)" />
+    <circle cx="1403.2" cy="661.9" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-price_tag" transform="translate(1473.3, 665.9) rotate(30.3) scale(1.11) translate(-24, -24)" />
+    <circle cx="1549.6" cy="651.2" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-cash_drawer" transform="translate(1638.9, 671.7) rotate(34.2) scale(1.09) translate(-24, -24)" />
+    <use href="#icon-warehouse" transform="translate(1739.2, 655.5) rotate(0.2) scale(1.03) translate(-24, -24)" />
+    <use href="#icon-stock_transfer" transform="translate(1815.0, 653.4) rotate(-3.0) scale(1.07) translate(-24, -24)" />
+    <use href="#icon-shopping_basket" transform="translate(1894.8, 673.8) rotate(19.7) scale(0.93) translate(-24, -24)" />
+    <circle cx="47.7" cy="738.6" r="6.5" stroke-dasharray="2.5 2.5" />
+    <circle cx="115.2" cy="725.8" r="3" />
+    <g transform="translate(181.4, 716.2) rotate(29.5) scale(1.15)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <use href="#icon-purchase_orders" transform="translate(289.9, 730.3) rotate(9.4) scale(1.11) translate(-24, -24)" />
+    <use href="#icon-customer" transform="translate(346.7, 725.1) rotate(-12.3) scale(0.87) translate(-24, -24)" />
+    <use href="#icon-distributor" transform="translate(435.0, 719.2) rotate(4.6) scale(1.09) translate(-24, -24)" />
+    <use href="#icon-pos_terminal" transform="translate(507.0, 737.1) rotate(12.8) scale(1.00) translate(-24, -24)" />
+    <circle cx="1402.9" cy="735.7" r="1.5" fill="white" stroke="none" />
+    <g transform="translate(1486.3, 724.2) rotate(13.0) scale(1.07)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <use href="#icon-store" transform="translate(1542.0, 737.0) rotate(28.3) scale(0.94) translate(-24, -24)" />
+    <g transform="translate(1644.3, 727.2) rotate(8.5) scale(1.05)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <circle cx="1728.8" cy="739.0" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-fmcg" transform="translate(1805.9, 725.5) rotate(5.6) scale(1.07) translate(-24, -24)" />
+    <use href="#icon-customer" transform="translate(1896.4, 726.2) rotate(-20.9) scale(1.09) translate(-24, -24)" />
+    <circle cx="41.2" cy="825.9" r="6.5" stroke-dasharray="2.5 2.5" />
+    <circle cx="119.3" cy="821.8" r="3" />
+    <circle cx="218.5" cy="796.1" r="1.5" fill="white" stroke="none" />
+    <circle cx="299.2" cy="828.0" r="3" />
+    <use href="#icon-pos_terminal" transform="translate(340.6, 811.4) rotate(12.1) scale(1.05) translate(-24, -24)" />
+    <use href="#icon-shopping_basket" transform="translate(435.2, 815.3) rotate(12.2) scale(0.99) translate(-24, -24)" />
+    <circle cx="535.4" cy="812.4" r="6.5" stroke-dasharray="2.5 2.5" />
+    <circle cx="1399.6" cy="806.5" r="1.5" fill="white" stroke="none" />
+    <circle cx="1477.7" cy="827.4" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-warehouse" transform="translate(1561.8, 828.4) rotate(-7.1) scale(0.91) translate(-24, -24)" />
+    <use href="#icon-footwear" transform="translate(1658.0, 822.5) rotate(-20.2) scale(1.04) translate(-24, -24)" />
+    <circle cx="1702.0" cy="803.6" r="1.5" fill="white" stroke="none" />
+    <g transform="translate(1813.2, 812.1) rotate(21.9) scale(0.92)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <g transform="translate(1891.0, 821.1) rotate(-15.6) scale(1.15)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <circle cx="59.5" cy="888.7" r="3" />
+    <circle cx="105.3" cy="881.7" r="3" />
+    <use href="#icon-purchase_orders" transform="translate(190.6, 872.7) rotate(-27.0) scale(0.87) translate(-24, -24)" />
+    <use href="#icon-apparel" transform="translate(291.1, 887.7) rotate(0.3) scale(1.13) translate(-24, -24)" />
+    <g transform="translate(369.1, 902.9) rotate(-13.9) scale(1.04)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <circle cx="421.2" cy="906.4" r="6.5" stroke-dasharray="2.5 2.5" />
+    <circle cx="528.5" cy="885.0" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-stock_transfer" transform="translate(1578.1, 894.3) rotate(-28.6) scale(0.88) translate(-24, -24)" />
+    <circle cx="1623.9" cy="896.4" r="3" />
+    <use href="#icon-scanner_gun" transform="translate(1722.5, 880.6) rotate(-10.2) scale(1.05) translate(-24, -24)" />
+    <use href="#icon-manufacturer" transform="translate(1862.1, 879.0) rotate(-27.7) scale(1.00) translate(-24, -24)" />
+    <use href="#icon-scanner_gun" transform="translate(46.3, 953.6) rotate(24.2) scale(0.96) translate(-24, -24)" />
+    <g transform="translate(290.7, 969.0) rotate(4.0) scale(1.03)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <use href="#icon-analytics" transform="translate(366.3, 971.7) rotate(-15.9) scale(1.08) translate(-24, -24)" />
+    <circle cx="582.8" cy="973.6" r="1.5" fill="white" stroke="none" />
+    <use href="#icon-pos_terminal" transform="translate(675.0, 962.5) rotate(-13.2) scale(0.95) translate(-24, -24)" />
+    <use href="#icon-stock_transfer" transform="translate(902.0, 948.1) rotate(-5.3) scale(1.03) translate(-24, -24)" />
+    <use href="#icon-shelf_rack" transform="translate(990.9, 974.1) rotate(-4.9) scale(0.93) translate(-24, -24)" />
+    <use href="#icon-scanner_gun" transform="translate(1259.4, 947.1) rotate(31.2) scale(1.08) translate(-24, -24)" />
+    <use href="#icon-payments" transform="translate(1310.2, 957.7) rotate(17.3) scale(0.90) translate(-24, -24)" />
+    <circle cx="1554.2" cy="960.3" r="3" />
+    <use href="#icon-barcode" transform="translate(1623.1, 957.1) rotate(-6.7) scale(1.04) translate(-24, -24)" />
+    <circle cx="1884.7" cy="977.1" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-analytics" transform="translate(29.7, 1044.9) rotate(-7.3) scale(0.94) translate(-24, -24)" />
+    <use href="#icon-truck" transform="translate(108.9, 1052.2) rotate(9.3) scale(1.01) translate(-24, -24)" />
+    <circle cx="216.2" cy="1035.6" r="3" />
+    <use href="#icon-cash_drawer" transform="translate(269.5, 1027.8) rotate(7.2) scale(1.08) translate(-24, -24)" />
+    <g transform="translate(343.0, 1058.8) rotate(-2.5) scale(1.02)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <circle cx="619.5" cy="1034.6" r="1.5" fill="white" stroke="none" />
+    <circle cx="678.8" cy="1046.5" r="3" />
+    <use href="#icon-cash_drawer" transform="translate(743.0, 1040.0) rotate(-9.2) scale(0.94) translate(-24, -24)" />
+    <g transform="translate(854.6, 1055.1) rotate(0.5) scale(0.99)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <circle cx="922.2" cy="1052.7" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-warehouse" transform="translate(1006.1, 1034.5) rotate(-24.4) scale(0.87) translate(-24, -24)" />
+    <circle cx="1245.8" cy="1023.7" r="3" />
+    <circle cx="1324.4" cy="1036.2" r="6.5" stroke-dasharray="2.5 2.5" />
+    <use href="#icon-shopping_basket" transform="translate(1553.2, 1043.7) rotate(-17.4) scale(1.11) translate(-24, -24)" />
+    <g transform="translate(1654.9, 1035.0) rotate(-25.1) scale(0.95)"><line x1="-4" y1="0" x2="4" y2="0" /><line x1="0" y1="-4" x2="0" y2="4" /></g>
+    <use href="#icon-shelf_rack" transform="translate(1897.5, 1034.1) rotate(20.4) scale(1.09) translate(-24, -24)" />
+    <use href="#icon-manufacturer" transform="translate(180.0, 120.0) rotate(-15.0) scale(1.05) translate(-24, -24)" />
+    <use href="#icon-inventory_box" transform="translate(450.0, 85.0) rotate(10.0) scale(0.95) translate(-24, -24)" />
+    <use href="#icon-truck" transform="translate(750.0, 105.0) rotate(-5.0) scale(1.05) translate(-24, -24)" />
+    <use href="#icon-store" transform="translate(1150.0, 80.0) rotate(15.0) scale(1.00) translate(-24, -24)" />
+    <use href="#icon-billing" transform="translate(1420.0, 115.0) rotate(-10.0) scale(0.95) translate(-24, -24)" />
+    <use href="#icon-customer" transform="translate(1740.0, 100.0) rotate(5.0) scale(1.00) translate(-24, -24)" />
+    <use href="#icon-manufacturer" transform="translate(160.0, 960.0) rotate(12.0) scale(1.00) translate(-24, -24)" />
+    <use href="#icon-inventory_box" transform="translate(480.0, 985.0) rotate(-8.0) scale(1.05) translate(-24, -24)" />
+    <use href="#icon-truck" transform="translate(780.0, 955.0) rotate(15.0) scale(0.95) translate(-24, -24)" />
+    <use href="#icon-store" transform="translate(1120.0, 990.0) rotate(-12.0) scale(1.00) translate(-24, -24)" />
+    <use href="#icon-billing" transform="translate(1450.0, 955.0) rotate(8.0) scale(1.05) translate(-24, -24)" />
+    <use href="#icon-analytics" transform="translate(1760.0, 970.0) rotate(-15.0) scale(0.95) translate(-24, -24)" />
   </g>
 </svg>
