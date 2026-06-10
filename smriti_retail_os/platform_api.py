@@ -14,8 +14,10 @@ import frappe
 import os
 import json
 import subprocess
+import fnmatch
 from frappe import _
 from frappe.utils import get_site_path, now_datetime
+from smriti_retail_os.security_constants import PROTECTED_CONFIG_PATTERNS
 
 def _check_access(action):
     """
@@ -137,6 +139,9 @@ def get_backup_history():
     for f in os.listdir(backup_path):
         fpath = os.path.join(backup_path, f)
         if os.path.isfile(fpath) and (f.endswith(".gz") or f.endswith(".json")):
+            # v1.8.2a: Omit any file matching the protected config denylist
+            if any(fnmatch.fnmatch(f, pat) for pat in PROTECTED_CONFIG_PATTERNS):
+                continue
             stat = os.stat(fpath)
             backups.append({
                 "filename": f,

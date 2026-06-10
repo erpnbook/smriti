@@ -15,6 +15,7 @@ import json
 import shutil
 import smtplib
 import subprocess
+import fnmatch
 import frappe
 from frappe import _
 from email.mime.multipart import MIMEMultipart
@@ -22,6 +23,35 @@ from email.mime.base import MIMEBase
 from email import encoders
 from frappe.utils.backups import new_backup
 from frappe.utils import get_site_path
+from smriti_retail_os.security_constants import (
+    SENSITIVE_EXPORT_FIELDS,
+    PROTECTED_CONFIG_PATTERNS,
+)
+
+
+# ─── Audit Event Logger ──────────────────────────────────────────────────────
+
+def log_audit_event(event_type, message):
+    """Writes a SMRITI audit event to the Frappe Activity Log."""
+    try:
+        frappe.get_doc({
+            "doctype": "Activity Log",
+            "user": frappe.session.user,
+            "operation": event_type,
+            "subject": message,
+            "ip_address": getattr(frappe.local, "request_ip", None) or "Unknown",
+            "status": "Success",
+            "content": message,
+        }).insert(ignore_permissions=True)
+        frappe.db.commit()
+    except Exception:
+        # Never raise — audit failure must not interrupt the caller
+        frappe.log_error("SMRITI Audit Log Error", frappe.get_traceback())
+
+
+def _is_protected_file(name):
+    """Returns True if name matches any PROTECTED_CONFIG_PATTERNS denylist."""
+    return any(fnmatch.fnmatch(name, pat) for pat in PROTECTED_CONFIG_PATTERNS)
 
 
 def _validate_backup_file_path(file_name):
@@ -135,13 +165,18 @@ def get_backup_history():
         
     files = glob.glob(os.path.join(backups_dir, "*"))
     history = []
-    
+
     for f in files:
         if os.path.isfile(f):
             name = os.path.basename(f)
+
+            # v1.8.2a: Omit any file matching the protected config denylist
+            if _is_protected_file(name):
+                continue
+
             mtime = os.path.getmtime(f)
             size = os.path.getsize(f)
-            
+
             # Determine type
             ftype = "other"
             if "-database.sql.gz" in name:
@@ -150,9 +185,7 @@ def get_backup_history():
                 ftype = "files"
             elif "-private-files.tar" in name:
                 ftype = "private-files"
-            elif "-site_config_backup.json" in name:
-                ftype = "config"
-                
+
             history.append({
                 "name": name,
                 "size_bytes": size,
@@ -161,10 +194,73 @@ def get_backup_history():
                 "datetime": frappe.utils.format_datetime(frappe.utils.datetime.datetime.fromtimestamp(mtime)),
                 "type": ftype
             })
-            
+
     # Sort latest first
     history.sort(key=lambda x: x["timestamp"], reverse=True)
     return history
+
+
+# ─── Site Config Export (v1.8.2a) ────────────────────────────────────────────
+
+@frappe.whitelist()
+def export_site_config(password):
+    """
+    v1.8.2a: Streams a redacted site config as a JSON download.
+    - Sensitive fields are replaced with '*** REDACTED ***'.
+    - No file is written to the backup directory or any disk location.
+    - Requires System Manager role and password re-authentication.
+    """
+    # ADJUSTMENT 3: Guest session check before everything else
+    if frappe.session.user == "Guest":
+        frappe.throw(_("Authentication required."), frappe.PermissionError)
+
+    # Role check
+    if "System Manager" not in frappe.get_roles():
+        frappe.throw(_("System Manager role is required to export site configuration."), frappe.PermissionError)
+
+    # Password re-authentication
+    import frappe.utils.password as fup
+    try:
+        fup.check_password(frappe.session.user, password)
+    except frappe.AuthenticationError:
+        frappe.throw(_("Invalid password. Re-authentication failed."), frappe.AuthenticationError)
+
+    # Load site config and redact in memory
+    config = frappe.get_site_config()
+    redacted = dict(config)
+    for field in SENSITIVE_EXPORT_FIELDS:
+        if field in redacted:
+            redacted[field] = "*** REDACTED ***"
+
+    # Audit log
+    log_audit_event(
+        "Config Exported",
+        f"Site config exported by {frappe.session.user}. Sensitive fields redacted."
+    )
+
+    # Stream as download — no file written to disk
+    filename = "smriti-config-export-redacted.json"
+    frappe.response.filename = filename
+    frappe.response.filecontent = json.dumps(redacted, indent=2).encode("utf-8")
+    frappe.response.type = "download"
+
+
+# ─── v1.8.3 Placeholder Stubs (DO NOT IMPLEMENT HERE) ────────────────────────
+
+def verify_custodian_emails(emails):
+    """v1.8.3: Dual-custodian email verification. Not implemented in v1.8.2a."""
+    raise NotImplementedError(
+        "verify_custodian_emails() is reserved for v1.8.3 GPG key recovery workflow. "
+        "It is not available in v1.8.2a."
+    )
+
+
+def send_recovery_key(recipient_email):
+    """v1.8.3: Send encrypted key fragment to a key custodian. Not implemented in v1.8.2a."""
+    raise NotImplementedError(
+        "send_recovery_key() is reserved for v1.8.3 GPG key recovery workflow. "
+        "It is not available in v1.8.2a."
+    )
 
 
 @frappe.whitelist()

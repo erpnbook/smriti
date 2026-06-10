@@ -9,7 +9,9 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 import frappe
+import fnmatch
 from frappe import _
+from smriti_retail_os.security_constants import PROTECTED_CONFIG_PATTERNS
 
 # ── Role → SMRITI Route mapping ───────────────────────────────────
 SMRITI_ROLE_ROUTES = {
@@ -90,6 +92,7 @@ def check_desk_access():
     """
     before_request hook — fires on every request.
     Redirects non-desk users away from /desk and /app to /smriti.
+    Also blocks Guest sessions and protected config files from /backups/.
     """
     try:
         if not hasattr(frappe, "request") or not frappe.request:
@@ -97,6 +100,24 @@ def check_desk_access():
 
         path = frappe.request.path or ""
 
+        # ─── v1.8.2a: Block /backups/ direct-download for unsafe sessions / protected files
+        if path.startswith("/backups/"):
+            user = getattr(frappe.session, "user", "Guest")
+            filename = path.split("/backups/", 1)[-1].split("/")[0]  # first segment only
+
+            # Block Guest sessions outright
+            if user == "Guest":
+                _log_blocked_download(filename, user, "Guest session blocked from /backups/")
+                frappe.throw(_("Authentication required to download backup files."), frappe.PermissionError)
+
+            # Block any file matching the protected config denylist
+            if any(fnmatch.fnmatch(filename, pat) for pat in PROTECTED_CONFIG_PATTERNS):
+                _log_blocked_download(filename, user, "Protected config file download blocked.")
+                frappe.throw(_("Access denied: protected configuration files cannot be downloaded."), frappe.PermissionError)
+
+            return  # Authenticated user, non-protected file — pass through
+
+        # ─── Original desk-access guard ───────────────────────────────────────────
         # Only restrict /desk and /app routes (including trailing slashes or subpaths)
         if path.startswith("/desk") or path.startswith("/app"):
             user = getattr(frappe.session, "user", "Guest")
@@ -129,6 +150,18 @@ def _get_smriti_route(user_roles):
         if role in user_roles:
             return SMRITI_ROLE_ROUTES.get(role, "/smriti")
     return "/smriti"
+
+
+def _log_blocked_download(filename, user, reason):
+    """Logs a blocked /backups/ download attempt to the Frappe Activity Log."""
+    try:
+        from smriti_retail_os.backup_api import log_audit_event
+        log_audit_event(
+            "Blocked Download Attempt",
+            f"{reason} File='{filename}' User='{user}' IP={getattr(frappe.local, 'request_ip', 'Unknown')}"
+        )
+    except Exception:
+        frappe.log_error("SMRITI Blocked Download Log Error", frappe.get_traceback())
 
 
 def _is_desk_allowed(user, user_roles):
