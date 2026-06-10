@@ -1,0 +1,897 @@
+/**
+ * @file: smriti_retail_os/www/smriti-security-log.html
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SMRITI Security Audit Log</title>
+  <meta name="description" content="SMRITI Retail OS — Security Audit Log for blocked download attempts and config exports." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── SMRITI Design System ─────────────────────────────────────── */
+    :root {
+      --navy:        #1A2B5C;
+      --navy-deep:   #111D42;
+      --navy-light:  #243570;
+      --blue:        #2563EB;
+      --blue-light:  #3B82F6;
+      --blue-pale:   #EFF6FF;
+      --accent:      #F59E0B;
+      --red:         #EF4444;
+      --red-pale:    #FEF2F2;
+      --green:       #10B981;
+      --green-pale:  #ECFDF5;
+      --gray-50:     #F8FAFC;
+      --gray-100:    #F1F5F9;
+      --gray-200:    #E2E8F0;
+      --gray-400:    #94A3B8;
+      --gray-600:    #475569;
+      --gray-800:    #1E293B;
+      --white:       #FFFFFF;
+      --sidebar-w:   72px;
+      --topbar-h:    64px;
+      --radius:      12px;
+      --radius-sm:   8px;
+      --shadow:      0 4px 24px rgba(0,0,0,0.08);
+      --shadow-card: 0 2px 8px rgba(26,43,92,0.10);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+    }
+
+    /* ─── Sidebar ──────────────────────────────────────────────────── */
+    .s-sidebar {
+      width: var(--sidebar-w);
+      background: var(--navy-deep);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0;
+      position: fixed;
+      top: 0; left: 0;
+      height: 100vh;
+      z-index: 100;
+      box-shadow: 2px 0 16px rgba(0,0,0,0.18);
+    }
+
+    .s-logo {
+      width: 40px; height: 40px;
+      background: var(--blue);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px; color: var(--white);
+      letter-spacing: -0.5px;
+      margin-bottom: 28px;
+      box-shadow: 0 4px 12px rgba(37,99,235,0.4);
+    }
+
+    .s-nav { display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 0 10px; }
+
+    .s-nav-item {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 4px; padding: 10px 0; border-radius: var(--radius-sm);
+      color: var(--gray-400); cursor: pointer; text-decoration: none;
+      font-size: 10px; font-weight: 500; transition: all 0.2s;
+      position: relative;
+    }
+
+    .s-nav-item:hover { background: rgba(255,255,255,0.08); color: var(--white); }
+
+    .s-nav-item.active {
+      background: rgba(37,99,235,0.25);
+      color: var(--blue-light);
+    }
+
+    .s-nav-item .icon { font-size: 18px; }
+
+    .s-nav-bottom {
+      margin-top: auto; width: 100%; padding: 0 10px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+
+    /* ─── Main Content ─────────────────────────────────────────────── */
+    .s-main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ─── Topbar ───────────────────────────────────────────────────── */
+    .s-topbar {
+      height: var(--topbar-h);
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px;
+      position: sticky; top: 0; z-index: 50;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .s-topbar-left { display: flex; align-items: center; gap: 16px; }
+
+    .s-topbar-breadcrumb {
+      display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray-400);
+    }
+
+    .s-topbar-breadcrumb .page-title {
+      font-size: 16px; font-weight: 700; color: var(--navy);
+    }
+
+    .s-badge-live {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--green-pale); color: var(--green);
+      font-size: 11px; font-weight: 600; padding: 3px 10px;
+      border-radius: 20px; border: 1px solid rgba(16,185,129,0.2);
+    }
+
+    .s-badge-live::before {
+      content: '';
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+
+    .s-topbar-right { display: flex; align-items: center; gap: 12px; }
+
+    .s-user-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--gray-100); border-radius: 20px;
+      padding: 6px 14px; font-size: 13px; font-weight: 500; color: var(--gray-800);
+    }
+
+    .s-user-avatar {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--navy); color: var(--white);
+      font-size: 10px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .btn-back {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--navy); color: var(--white);
+      border: none; border-radius: var(--radius-sm);
+      padding: 8px 16px; font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .btn-back:hover { background: var(--navy-light); }
+
+    /* ─── Page Body ────────────────────────────────────────────────── */
+    .s-body { padding: 28px; flex: 1; }
+
+    /* ─── Stats Cards ──────────────────────────────────────────────── */
+    .s-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .s-stat-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--gray-200);
+      display: flex; flex-direction: column; gap: 6px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .s-stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+    .s-stat-label {
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.5px; color: var(--gray-400);
+    }
+
+    .s-stat-value {
+      font-size: 32px; font-weight: 800; color: var(--navy);
+      line-height: 1;
+    }
+
+    .s-stat-value.red  { color: var(--red); }
+    .s-stat-value.green { color: var(--green); }
+
+    .s-stat-sub {
+      font-size: 11px; color: var(--gray-400); margin-top: 2px;
+    }
+
+    /* ─── Filter Bar ───────────────────────────────────────────────── */
+    .s-filter-bar {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      box-shadow: var(--shadow-card);
+    }
+
+    .s-filter-bar label {
+      font-size: 13px; font-weight: 600; color: var(--gray-600);
+    }
+
+    .s-filter-bar select,
+    .s-filter-bar input {
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--gray-800);
+      background: var(--gray-50);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .s-filter-bar select:focus,
+    .s-filter-bar input:focus { border-color: var(--blue); background: var(--white); }
+
+    .btn-refresh {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 6px;
+      background: var(--blue); color: var(--white);
+      border: none; border-radius: var(--radius-sm);
+      padding: 8px 16px; font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-refresh:hover { background: #1D4ED8; }
+    .btn-refresh:active { transform: scale(0.97); }
+
+    .btn-refresh.spinning .icon { animation: spin 0.8s linear infinite; }
+
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* ─── Table Panel ──────────────────────────────────────────────── */
+    .s-table-panel {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .s-table-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .s-table-title {
+      font-size: 15px; font-weight: 700; color: var(--navy);
+    }
+
+    .s-record-count {
+      font-size: 12px; color: var(--gray-400); font-weight: 500;
+    }
+
+    .s-table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%; border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead {
+      background: var(--gray-50);
+      border-bottom: 2px solid var(--gray-200);
+    }
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--gray-400);
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--gray-100);
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+
+    tbody tr:hover { background: var(--blue-pale); }
+
+    tbody tr:last-child { border-bottom: none; }
+
+    td {
+      padding: 13px 16px;
+      vertical-align: middle;
+      color: var(--gray-800);
+    }
+
+    .td-timestamp {
+      font-size: 12px; color: var(--gray-400); white-space: nowrap;
+    }
+
+    .td-user { font-weight: 600; color: var(--navy); }
+
+    .td-subject {
+      max-width: 420px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--gray-600);
+    }
+
+    /* Operation badge */
+    .op-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 600; white-space: nowrap;
+    }
+
+    .op-badge.blocked {
+      background: var(--red-pale); color: var(--red);
+      border: 1px solid rgba(239,68,68,0.2);
+    }
+
+    .op-badge.exported {
+      background: var(--blue-pale); color: var(--blue);
+      border: 1px solid rgba(37,99,235,0.2);
+    }
+
+    /* ─── Empty State ──────────────────────────────────────────────── */
+    .s-empty {
+      padding: 60px 24px;
+      text-align: center;
+      color: var(--gray-400);
+    }
+
+    .s-empty .icon { font-size: 40px; margin-bottom: 12px; }
+    .s-empty h3 { font-size: 16px; color: var(--gray-600); margin-bottom: 6px; }
+    .s-empty p  { font-size: 13px; }
+
+    /* ─── Loading Skeleton ─────────────────────────────────────────── */
+    .s-skeleton {
+      background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      border-radius: 4px;
+      height: 14px;
+    }
+
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* ─── Pagination ───────────────────────────────────────────────── */
+    .s-pagination {
+      padding: 16px 24px;
+      border-top: 1px solid var(--gray-100);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+    }
+
+    .s-page-info { font-size: 13px; color: var(--gray-400); }
+
+    .s-page-controls { display: flex; gap: 6px; }
+
+    .btn-page {
+      padding: 6px 14px; border-radius: var(--radius-sm);
+      border: 1px solid var(--gray-200); background: var(--white);
+      font-size: 13px; font-weight: 500; color: var(--gray-800);
+      cursor: pointer; font-family: inherit; transition: all 0.15s;
+    }
+
+    .btn-page:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
+    .btn-page:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-page.active { background: var(--blue); color: var(--white); border-color: var(--blue); }
+
+    /* ─── Detail Modal ─────────────────────────────────────────────── */
+    .s-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(17,29,66,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center; justify-content: center;
+    }
+
+    .s-overlay.open { display: flex; }
+
+    .s-modal {
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+      width: min(640px, 95vw);
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .s-modal-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .s-modal-title { font-size: 16px; font-weight: 700; color: var(--navy); }
+
+    .btn-close {
+      width: 32px; height: 32px;
+      background: var(--gray-100); border: none;
+      border-radius: 50%; font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gray-600); transition: background 0.15s;
+    }
+
+    .btn-close:hover { background: var(--gray-200); }
+
+    .s-modal-body { padding: 20px 24px; }
+
+    .s-modal-field {
+      margin-bottom: 16px;
+    }
+
+    .s-modal-field label {
+      display: block;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--gray-400); margin-bottom: 6px;
+    }
+
+    .s-modal-field .value {
+      font-size: 13px; color: var(--gray-800);
+      background: var(--gray-50); border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm); padding: 10px 14px;
+      word-break: break-all;
+      line-height: 1.6;
+    }
+
+    /* ─── Toast ────────────────────────────────────────────────────── */
+    .s-toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--navy-deep); color: var(--white);
+      padding: 12px 20px; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 500;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      z-index: 300;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .s-toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ─── Responsive ───────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .s-stats-grid { grid-template-columns: 1fr 1fr; }
+      td.td-subject { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── Sidebar ─────────────────────────────────────────────────────── -->
+<nav class="s-sidebar" role="navigation" aria-label="SMRITI Navigation">
+  <div class="s-logo" title="SMRITI Retail OS">SR</div>
+  <div class="s-nav">
+    <a href="/smriti" class="s-nav-item" title="Dashboard">
+      <span class="icon">⊞</span><span>Dashboard</span>
+    </a>
+    <a href="/backup" class="s-nav-item" title="Backup Center">
+      <span class="icon">🗄</span><span>Backup</span>
+    </a>
+    <a href="/security" class="s-nav-item" title="Security">
+      <span class="icon">🛡</span><span>Security</span>
+    </a>
+    <a href="/smriti-security-log" class="s-nav-item active" title="Audit Log" aria-current="page">
+      <span class="icon">📋</span><span>Audit Log</span>
+    </a>
+    <a href="/platform_center" class="s-nav-item" title="Platform">
+      <span class="icon">⚙</span><span>Platform</span>
+    </a>
+  </div>
+  <div class="s-nav-bottom">
+    <a href="/smriti" class="s-nav-item" title="Home">
+      <span class="icon">←</span><span>Back</span>
+    </a>
+  </div>
+</nav>
+
+<!-- ─── Main Content ─────────────────────────────────────────────────── -->
+<div class="s-main">
+
+  <!-- Topbar -->
+  <header class="s-topbar" role="banner">
+    <div class="s-topbar-left">
+      <div class="s-topbar-breadcrumb">
+        <a href="/smriti" style="color:var(--gray-400);text-decoration:none;">SMRITI</a>
+        <span>›</span>
+        <span class="page-title">Security Audit Log</span>
+      </div>
+      <span class="s-badge-live" id="live-badge">Live</span>
+    </div>
+    <div class="s-topbar-right">
+      <div class="s-user-chip">
+        <div class="s-user-avatar" id="user-avatar">—</div>
+        <span id="user-label">{{ current_user }}</span>
+      </div>
+      <a href="/backup" class="btn-back">← Backup Center</a>
+    </div>
+  </header>
+
+  <!-- Body -->
+  <main class="s-body" id="main-body">
+
+    <!-- Stats -->
+    <section class="s-stats-grid" id="stats-grid" aria-label="Security Statistics">
+      <div class="s-stat-card">
+        <div class="s-stat-label">Blocked Downloads</div>
+        <div class="s-stat-value red" id="stat-blocked">—</div>
+        <div class="s-stat-sub">Total all time</div>
+      </div>
+      <div class="s-stat-card">
+        <div class="s-stat-label">Blocked (Last 24h)</div>
+        <div class="s-stat-value red" id="stat-blocked-24h">—</div>
+        <div class="s-stat-sub">Recent activity</div>
+      </div>
+      <div class="s-stat-card">
+        <div class="s-stat-label">Config Exports</div>
+        <div class="s-stat-value green" id="stat-exported">—</div>
+        <div class="s-stat-sub">System Manager only</div>
+      </div>
+      <div class="s-stat-card">
+        <div class="s-stat-label">Total Events</div>
+        <div class="s-stat-value" id="stat-total" style="color:var(--navy);">—</div>
+        <div class="s-stat-sub">All SMRITI security events</div>
+      </div>
+    </section>
+
+    <!-- Filter Bar -->
+    <div class="s-filter-bar" role="search" aria-label="Filter security events">
+      <label for="op-filter">Operation</label>
+      <select id="op-filter">
+        <option value="All">All Events</option>
+        <option value="Blocked Download Attempt">Blocked Download Attempts</option>
+        <option value="Config Exported">Config Exports</option>
+      </select>
+
+      <label for="page-size">Per page</label>
+      <select id="page-size">
+        <option value="25">25</option>
+        <option value="50" selected>50</option>
+        <option value="100">100</option>
+      </select>
+
+      <button class="btn-refresh" id="btn-refresh" onclick="loadEvents(1)">
+        <span class="icon" id="refresh-icon">↻</span> Refresh
+      </button>
+    </div>
+
+    <!-- Table Panel -->
+    <div class="s-table-panel" role="region" aria-label="Security Events Table">
+      <div class="s-table-header">
+        <span class="s-table-title">Security Events</span>
+        <span class="s-record-count" id="record-count">Loading…</span>
+      </div>
+      <div class="s-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Timestamp</th>
+              <th scope="col">Operation</th>
+              <th scope="col">User</th>
+              <th scope="col">Subject / Detail</th>
+              <th scope="col">IP Address</th>
+            </tr>
+          </thead>
+          <tbody id="event-table-body">
+            <!-- Filled by JS -->
+            <tr>
+              <td colspan="5">
+                <div style="padding:20px">
+                  <div class="s-skeleton" style="width:60%;margin-bottom:12px;"></div>
+                  <div class="s-skeleton" style="width:80%;margin-bottom:12px;"></div>
+                  <div class="s-skeleton" style="width:50%;"></div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="s-pagination" id="pagination-bar" style="display:none;">
+        <span class="s-page-info" id="page-info">Page 1 of 1</span>
+        <div class="s-page-controls" id="page-controls"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ─── Detail Modal ─────────────────────────────────────────────────── -->
+<div class="s-overlay" id="detail-overlay" role="dialog" aria-modal="true" aria-label="Event Detail">
+  <div class="s-modal">
+    <div class="s-modal-header">
+      <span class="s-modal-title">Event Detail</span>
+      <button class="btn-close" onclick="closeModal()" aria-label="Close">✕</button>
+    </div>
+    <div class="s-modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ─── Toast ─────────────────────────────────────────────────────────── -->
+<div class="s-toast" id="toast" role="alert" aria-live="polite"></div>
+
+<script>
+/* ─── State ──────────────────────────────────────────────────────────── */
+const csrf = '{{ csrf_token }}';
+const currentUser = '{{ current_user }}';
+let currentPage = 1;
+let totalPages  = 1;
+
+/* ─── Init ───────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  // Set user avatar initials
+  const initials = currentUser.replace(/[@.].*/, '').slice(0, 2).toUpperCase();
+  document.getElementById('user-avatar').textContent = initials;
+
+  loadStats();
+  loadEvents(1);
+
+  // Auto-refresh every 60s
+  setInterval(() => loadEvents(currentPage, true), 60000);
+
+  // Filter change → reload
+  document.getElementById('op-filter').addEventListener('change', () => loadEvents(1));
+  document.getElementById('page-size').addEventListener('change',  () => loadEvents(1));
+
+  // Close modal on overlay click
+  document.getElementById('detail-overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('detail-overlay')) closeModal();
+  });
+});
+
+/* ─── API Call ───────────────────────────────────────────────────────── */
+function smritiCall(method, args = {}) {
+  return fetch(`/api/method/${method}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Frappe-CSRF-Token': csrf,
+    },
+    body: JSON.stringify(args),
+  }).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  }).then(data => {
+    if (data.exc) throw new Error(data.exc);
+    return data.message;
+  });
+}
+
+/* ─── Load Stats ─────────────────────────────────────────────────────── */
+function loadStats() {
+  smritiCall('smriti_retail_os.api.audit_log_api.get_stats')
+    .then(s => {
+      document.getElementById('stat-blocked').textContent    = s['Blocked Download Attempt'] ?? 0;
+      document.getElementById('stat-blocked-24h').textContent = s['blocked_last_24h'] ?? 0;
+      document.getElementById('stat-exported').textContent   = s['Config Exported'] ?? 0;
+      const total = (s['Blocked Download Attempt'] ?? 0) + (s['Config Exported'] ?? 0);
+      document.getElementById('stat-total').textContent      = total;
+    })
+    .catch(err => showToast('Could not load stats: ' + err.message));
+}
+
+/* ─── Load Events ────────────────────────────────────────────────────── */
+function loadEvents(page, silent = false) {
+  currentPage = page;
+  const op       = document.getElementById('op-filter').value;
+  const pageSize = parseInt(document.getElementById('page-size').value);
+  const btn      = document.getElementById('btn-refresh');
+  const icon     = document.getElementById('refresh-icon');
+
+  if (!silent) {
+    btn.classList.add('spinning');
+    icon.style.display = 'inline-block';
+  }
+
+  smritiCall('smriti_retail_os.api.audit_log_api.get_security_events', {
+    page, page_size: pageSize, operation_filter: op
+  })
+  .then(data => {
+    renderTable(data.events);
+    renderPagination(data.page, data.total_pages, data.total);
+    totalPages = data.total_pages;
+  })
+  .catch(err => {
+    showToast('Failed to load events: ' + err.message);
+    document.getElementById('event-table-body').innerHTML = `
+      <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--red);">
+        ⚠ Could not load security events.<br>
+        <small>${err.message}</small>
+      </td></tr>`;
+    document.getElementById('pagination-bar').style.display = 'none';
+    document.getElementById('record-count').textContent = 'Error';
+  })
+  .finally(() => {
+    btn.classList.remove('spinning');
+  });
+}
+
+/* ─── Render Table ───────────────────────────────────────────────────── */
+function renderTable(events) {
+  const tbody = document.getElementById('event-table-body');
+
+  if (!events || events.length === 0) {
+    tbody.innerHTML = `
+      <tr><td colspan="5">
+        <div class="s-empty">
+          <div class="icon">✅</div>
+          <h3>No security events found</h3>
+          <p>All clear — no blocked downloads or config exports matching the current filter.</p>
+        </div>
+      </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = events.map(ev => {
+    const opBadge = ev.operation === 'Blocked Download Attempt'
+      ? `<span class="op-badge blocked">🚫 Blocked</span>`
+      : `<span class="op-badge exported">📤 Exported</span>`;
+
+    const ts = ev.creation ? formatDatetime(ev.creation) : '—';
+    const ip = ev.ip_address || '—';
+    const subject = escHtml(ev.subject || '—');
+    const user = escHtml(ev.user || '—');
+
+    return `
+      <tr onclick="loadDetail('${escAttr(ev.name)}')" title="Click for full detail">
+        <td class="td-timestamp">${ts}</td>
+        <td>${opBadge}</td>
+        <td class="td-user">${user}</td>
+        <td class="td-subject">${subject}</td>
+        <td style="font-size:12px;color:var(--gray-400);">${ip}</td>
+      </tr>`;
+  }).join('');
+}
+
+/* ─── Render Pagination ──────────────────────────────────────────────── */
+function renderPagination(page, total, recordCount) {
+  const bar = document.getElementById('pagination-bar');
+  const info = document.getElementById('page-info');
+  const controls = document.getElementById('page-controls');
+  const count = document.getElementById('record-count');
+
+  count.textContent = `${recordCount} event${recordCount !== 1 ? 's' : ''}`;
+
+  if (total <= 1) {
+    bar.style.display = 'none';
+    return;
+  }
+
+  bar.style.display = 'flex';
+  info.textContent = `Page ${page} of ${total}`;
+
+  const pages = [];
+  if (page > 1) pages.push(['‹ Prev', page - 1, false]);
+
+  const start = Math.max(1, page - 2);
+  const end   = Math.min(total, page + 2);
+  for (let i = start; i <= end; i++) {
+    pages.push([String(i), i, i === page]);
+  }
+
+  if (page < total) pages.push(['Next ›', page + 1, false]);
+
+  controls.innerHTML = pages.map(([label, p, active]) =>
+    `<button class="btn-page ${active ? 'active' : ''}"
+             onclick="loadEvents(${p})"
+             ${active ? 'aria-current="page"' : ''}>${label}</button>`
+  ).join('');
+}
+
+/* ─── Load Detail ────────────────────────────────────────────────────── */
+function loadDetail(eventName) {
+  smritiCall('smriti_retail_os.api.audit_log_api.get_event_detail', {
+    event_name: eventName
+  })
+  .then(ev => {
+    const opBadge = ev.operation === 'Blocked Download Attempt'
+      ? `<span class="op-badge blocked">🚫 Blocked Download Attempt</span>`
+      : `<span class="op-badge exported">📤 Config Exported</span>`;
+
+    document.getElementById('modal-body').innerHTML = `
+      <div class="s-modal-field">
+        <label>Operation</label>
+        <div class="value">${opBadge}</div>
+      </div>
+      <div class="s-modal-field">
+        <label>Timestamp</label>
+        <div class="value">${ev.creation || '—'}</div>
+      </div>
+      <div class="s-modal-field">
+        <label>User</label>
+        <div class="value">${escHtml(ev.user || '—')}</div>
+      </div>
+      <div class="s-modal-field">
+        <label>IP Address</label>
+        <div class="value">${escHtml(ev.ip_address || '—')}</div>
+      </div>
+      <div class="s-modal-field">
+        <label>Subject</label>
+        <div class="value">${escHtml(ev.subject || '—')}</div>
+      </div>
+      <div class="s-modal-field">
+        <label>Full Content</label>
+        <div class="value" style="white-space:pre-wrap;font-family:monospace;font-size:12px;">${escHtml(ev.content || ev.subject || '—')}</div>
+      </div>
+    `;
+    document.getElementById('detail-overlay').classList.add('open');
+  })
+  .catch(err => showToast('Could not load event detail: ' + err.message));
+}
+
+function closeModal() {
+  document.getElementById('detail-overlay').classList.remove('open');
+}
+
+/* ─── Helpers ────────────────────────────────────────────────────────── */
+function formatDatetime(dt) {
+  if (!dt) return '—';
+  try {
+    const d = new Date(dt.replace(' ', 'T'));
+    return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })
+      + ' ' + d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12: true });
+  } catch { return dt; }
+}
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function escAttr(s) {
+  return String(s).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+// Keyboard close modal
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+</script>
+</body>
+</html>
