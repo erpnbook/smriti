@@ -15,11 +15,58 @@
 import hashlib
 import os
 import csv
+import contextlib
 import frappe
 from frappe import _
 from frappe.utils import get_datetime, today, now_datetime
 from smriti_retail_os.ledger_engine import make_ledger_entry, log_activity
 from smriti_retail_os.balance_engine import get_party_balance, get_bulk_party_balances
+
+
+# ─── F4-FIX: PSV Distributed Upload Lock ─────────────────────────────────────
+# Prevents overselling race condition where two concurrent sales uploads
+# for the same Party Stock Account both pass the balance check and then
+# both commit, creating a net-negative shadow balance.
+#
+# Implementation: Redis SET NX (set-if-not-exists) via frappe.cache().
+# No new infrastructure required — Frappe already uses Redis for caching.
+# Lock is scoped per party_stock_account, so concurrent uploads for
+# DIFFERENT locations are not blocked.
+
+_PSV_LOCK_EXPIRY_SECONDS = 30   # Max seconds a single upload validation can hold the lock
+_PSV_LOCK_PREFIX = "smriti:psv:upload_lock:"
+
+
+@contextlib.contextmanager
+def _psv_upload_lock(party_stock_account):
+    """
+    Context manager that acquires a per-PSA distributed lock before
+    running the overselling check + submit sequence.
+
+    Raises frappe.ValidationError if the lock cannot be acquired
+    (meaning another upload for the same PSA is in progress).
+    """
+    lock_key = f"{_PSV_LOCK_PREFIX}{party_stock_account}"
+    cache = frappe.cache()
+
+    # Redis SET NX EX — atomic set-if-not-exists with expiry
+    acquired = cache.set(lock_key, 1, ex=_PSV_LOCK_EXPIRY_SECONDS, nx=True)
+
+    if not acquired:
+        frappe.throw(
+            _("Another sales upload for party stock account '{0}' is currently being processed. "
+              "Please wait a moment and try again.").format(party_stock_account),
+            frappe.ValidationError
+        )
+
+    try:
+        yield
+    finally:
+        # Always release the lock — even on exception
+        try:
+            cache.delete(lock_key)
+        except Exception:
+            pass  # Best-effort release; lock expires automatically after _PSV_LOCK_EXPIRY_SECONDS
 
 
 # --- UNIVERSAL TRANSACTION ENGINE ---
@@ -105,7 +152,14 @@ def process_sales_invoice_cancel(doc, method=None):
 # ─── WEEKLY SALES UPLOAD ──────────────────────────────────────────────────────
 
 def validate_sales_upload(doc):
-    """Gathers MD5 validation and period locks validation"""
+    """Gathers MD5 validation and period locks validation.
+
+    F4-FIX: Overselling check (step 5) now runs inside a per-PSA Redis lock
+    to close the race window where two concurrent uploads could both pass
+    the balance check and then both commit, resulting in a negative shadow balance.
+    The lock is acquired only during the critical section (check + submit),
+    not for the entire validate lifecycle.
+    """
     # 1. Validate Period Start/End
     if not doc.period_start_date or not doc.period_end_date:
         frappe.throw(_("Period Start Date and Period End Date are required."))
@@ -119,7 +173,7 @@ def validate_sales_upload(doc):
         file_hash = hashlib.md5(file_content).hexdigest()
 
         duplicate = frappe.db.exists(
-            "SMRITI Party Sales Upload", 
+            "SMRITI Party Sales Upload",
             {"file_hash": file_hash, "name": ["!=", doc.name]}
         )
         if duplicate:
@@ -128,9 +182,9 @@ def validate_sales_upload(doc):
 
     # 3. Period Overlap Check
     overlapping_import = frappe.db.sql("""
-        SELECT name 
+        SELECT name
         FROM `tabSMRITI Party Sales Upload`
-        WHERE party_stock_account = %s 
+        WHERE party_stock_account = %s
           AND docstatus = 1
           AND name != %s
           AND (
@@ -155,15 +209,18 @@ def validate_sales_upload(doc):
     if not doc.items and doc.excel_file:
         parse_and_populate_items(doc)
 
-    # 5. Overselling checks (Validate Qty against current balances)
-    balances = get_bulk_party_balances(doc.party_stock_account, [item.item_code for item in doc.items])
-    for item in doc.items:
-        current_bal = balances.get(item.item_code, 0.0)
-        if item.qty_sold > current_bal:
-            frappe.throw(
-                _("Row #{0}: Cannot record sales of {1} units for SKU {2}. Current available balance is only {3} units.")
-                .format(item.idx, item.qty_sold, item.item_code, current_bal)
-            )
+    # 5. Overselling check — runs inside per-PSA distributed lock to prevent
+    #    concurrent upload race condition (F4-FIX: Redis SET NX).
+    with _psv_upload_lock(doc.party_stock_account):
+        # Re-read balances INSIDE the lock to get a fresh, race-safe snapshot.
+        balances = get_bulk_party_balances(doc.party_stock_account, [item.item_code for item in doc.items])
+        for item in doc.items:
+            current_bal = balances.get(item.item_code, 0.0)
+            if item.qty_sold > current_bal:
+                frappe.throw(
+                    _("Row #{0}: Cannot record sales of {1} units for SKU {2}. Current available balance is only {3} units.")
+                    .format(item.idx, item.qty_sold, item.item_code, current_bal)
+                )
 
 def parse_and_populate_items(doc):
     """

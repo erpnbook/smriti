@@ -483,6 +483,35 @@ def _build_and_persist_doc(doctype, enriched, meta, company, action):
     """
     Constructs a Frappe document from the enriched payload, then saves or submits it.
     Handles upsert: if `name` is in payload and doc exists in Draft, updates it.
+
+    ─── Security Architecture Note — ignore_permissions=True ────────────────
+    This function uses ignore_permissions=True on doc.insert() and doc.save().
+    This is an INTENTIONAL architectural design — not a security shortcut.
+
+    Rationale:
+      1. Authentication:   @frappe.whitelist() on execute_smriti_transaction ensures
+                           the request is from an authenticated Frappe session.
+                           Anonymous/guest calls are rejected at the HTTP layer.
+
+      2. Authorization:    _check_doctype_permission(doctype, action) is called BEFORE
+                           this function is reached. It validates that the session user
+                           has read/write/submit rights on the target DocType.
+                           This is the authoritative permission gate.
+
+      3. Service-layer ownership (GEMINI.md Rule 6):
+                           The SMRITI service layer owns permission semantics.
+                           Duplicating the permission check at the document level
+                           would create a dual-gate where changes to one gate
+                           don't automatically reflect in the other, introducing
+                           inconsistency and maintenance overhead.
+
+    SECURITY INVARIANT (must be maintained by all callers):
+      _check_doctype_permission() MUST remain the first operation in
+      execute_smriti_transaction() before any data enrichment or persistence.
+      Do NOT add new callers to _build_and_persist_doc() that bypass this gate.
+
+    See also: test_transaction_kernel.py::TestKernelPermissions
+    ─────────────────────────────────────────────────────────────────────────
     """
     existing_name = enriched.get("name")
     is_update = (

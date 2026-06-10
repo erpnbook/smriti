@@ -23,6 +23,11 @@ SENSITIVE_EXPORT_FIELDS = [
     "mail_password",
     "secret_key",
     "encryption_key",
+    # v1.8.4: SMTP credentials stored in backup settings JSON are also sensitive
+    "smtp_password",
+    "smtp_user",
+    "backup_encryption_keys",          # versioned key map
+    "active_backup_encryption_key_version",
 ]
 
 PROTECTED_CONFIG_PATTERNS = [

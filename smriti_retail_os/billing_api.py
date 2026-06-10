@@ -778,7 +778,18 @@ def generate_mock_eway_bill(invoice_name, vehicle_no=None, distance=None, mode_o
         
     frappe.db.set_value("Sales Invoice", invoice_name, update_dict)
     frappe.db.commit()
-    
+
+    # Audit: db.set_value bypasses on_update hooks on submitted invoices — log explicitly
+    try:
+        from smriti_retail_os.backup_api import log_audit_event
+        action_label = "E-way Bill Updated" if existing_eway else "E-way Bill Generated"
+        log_audit_event(
+            action_label,
+            f"{action_label}: Invoice={invoice_name}, EWB={mock_no}, User={frappe.session.user}, VehicleNo={vehicle_no or '-'}"
+        )
+    except Exception:
+        frappe.log_error("SMRITI E-way Bill Audit Log Error", frappe.get_traceback())
+
     return {
         "ewaybill": mock_no,
         "message": msg

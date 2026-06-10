@@ -29,6 +29,76 @@ from smriti_retail_os.security_constants import (
 )
 
 
+# ─── SMTP Password Encryption Helpers (F3-FIX v1.8.4) ───────────────────────
+# Frappe's encrypted password store is used for SMTP credentials.
+# The password is NEVER written to tabDefaultValue (plain-text JSON blob).
+#
+# Storage key: doctype="SMRITI Backup Config", name="smtp", fieldname="smtp_password"
+# This is a virtual key — no actual SMRITI Backup Config DocType needed.
+# frappe.utils.password uses tabPassword under the hood (AES encrypted at rest).
+
+_SMTP_PWD_DOCTYPE  = "SMRITI Backup Config"
+_SMTP_PWD_DOCNAME  = "smtp"
+_SMTP_PWD_FIELD    = "smtp_password"
+
+
+def _set_smtp_password(password):
+    """
+    Stores the SMTP password in Frappe's encrypted password store.
+    The password is NEVER written to tabDefaultValue.
+    """
+    if not password:
+        return
+    from frappe.utils.password import set_encrypted_password
+    set_encrypted_password(_SMTP_PWD_DOCTYPE, _SMTP_PWD_DOCNAME, password, _SMTP_PWD_FIELD)
+
+
+def _get_smtp_password():
+    """
+    Retrieves the SMTP password from Frappe's encrypted password store.
+    Returns empty string if not set.
+    """
+    try:
+        from frappe.utils.password import get_decrypted_password
+        return get_decrypted_password(
+            _SMTP_PWD_DOCTYPE, _SMTP_PWD_DOCNAME, _SMTP_PWD_FIELD,
+            raise_exception=False
+        ) or ""
+    except Exception:
+        return ""
+
+
+def migrate_legacy_smtp_password():
+    """
+    Migration helper — call once to migrate a plain-text SMTP password
+    from the legacy tabDefaultValue JSON blob into the encrypted store.
+
+    Safe to call multiple times (idempotent).
+    Removes smtp_password from the JSON blob after migration.
+    """
+    settings_str = frappe.db.get_default("smriti_backup_settings")
+    if not settings_str:
+        return {"status": "skipped", "reason": "No legacy settings found."}
+
+    try:
+        stored = json.loads(settings_str)
+    except Exception:
+        return {"status": "skipped", "reason": "Could not parse legacy settings JSON."}
+
+    legacy_pwd = stored.pop("smtp_password", None)
+    if not legacy_pwd:
+        return {"status": "skipped", "reason": "No plain-text smtp_password in legacy settings."}
+
+    # Encrypt and store separately
+    _set_smtp_password(legacy_pwd)
+
+    # Re-save JSON without the password
+    frappe.db.set_default("smriti_backup_settings", json.dumps(stored))
+    frappe.db.commit()
+
+    return {"status": "migrated", "message": "SMTP password migrated to encrypted store and removed from plain-text blob."}
+
+
 # ─── Audit Event Logger ──────────────────────────────────────────────────────
 
 def log_audit_event(event_type, message):
@@ -95,7 +165,7 @@ DEFAULT_SETTINGS = {
 def get_settings():
     if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
         frappe.throw(_("Not authorized"), frappe.PermissionError)
-        
+
     settings_str = frappe.db.get_default("smriti_backup_settings")
     if settings_str:
         try:
@@ -103,27 +173,39 @@ def get_settings():
             # Merge to ensure any new keys are defaulted
             merged = DEFAULT_SETTINGS.copy()
             merged.update(stored)
+            # F3-FIX: smtp_password is no longer in the JSON blob — inject from encrypted store
+            merged["smtp_password"] = _get_smtp_password()
             return merged
         except Exception:
             pass
-    return DEFAULT_SETTINGS
+    result = DEFAULT_SETTINGS.copy()
+    result["smtp_password"] = _get_smtp_password()
+    return result
 
 
 @frappe.whitelist()
 def save_settings(settings):
     if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
         frappe.throw(_("Not authorized"), frappe.PermissionError)
-        
+
     if isinstance(settings, str):
         settings = json.loads(settings)
-        
+
+    # F3-FIX: Extract and separately encrypt smtp_password — NEVER store in JSON blob
+    smtp_pwd = settings.pop("smtp_password", None)
+    if smtp_pwd is not None:
+        # Only update if a non-empty password was provided
+        if smtp_pwd:
+            _set_smtp_password(smtp_pwd)
+        # If empty string passed, leave existing encrypted password intact
+
     old_settings = get_settings()
     old_enabled = old_settings.get("enable_backup_encryption", 0)
     new_enabled = settings.get("enable_backup_encryption", 0)
-    
+
     frappe.db.set_default("smriti_backup_settings", json.dumps(settings))
     frappe.db.commit()
-    
+
     if old_enabled != new_enabled:
         if new_enabled:
             from smriti_retail_os.gpg_service import get_active_key_version_and_key, get_key_fingerprint
@@ -132,7 +214,7 @@ def save_settings(settings):
             log_audit_event("Backup Encryption Enabled", f"Backup encryption enabled by {frappe.session.user}. Key version: {version} (Fingerprint: {fingerprint})")
         else:
             log_audit_event("Backup Encryption Disabled", f"Backup encryption disabled by {frappe.session.user}.")
-            
+
     return {"status": "success", "message": "Settings saved successfully."}
 
 
@@ -261,6 +343,27 @@ def export_site_config(password):
     frappe.response.filename = filename
     frappe.response.filecontent = json.dumps(redacted, indent=2).encode("utf-8")
     frappe.response.type = "download"
+
+
+# ─── v1.8.4 SMTP Password Migration Endpoint ─────────────────────────────────
+
+@frappe.whitelist()
+def run_smtp_password_migration():
+    """
+    F3-FIX v1.8.4: Migrates a plain-text SMTP password from tabDefaultValue
+    into Frappe's encrypted password store (tabPassword).
+
+    Safe to call multiple times — idempotent.
+    Restricted to System Manager only.
+    """
+    if "System Manager" not in frappe.get_roles():
+        frappe.throw(_("System Manager role is required to run SMTP password migration."), frappe.PermissionError)
+    result = migrate_legacy_smtp_password()
+    log_audit_event(
+        "SMTP Password Migration",
+        f"SMTP password migration run by {frappe.session.user}. Result: {result.get('status')}. {result.get('message', result.get('reason', ''))}"
+    )
+    return result
 
 
 # ─── v1.8.3 Real Whitelisted Key Recovery Methods ────────────────────────────
@@ -693,7 +796,10 @@ def _email_backup(file_path, settings, cloud_status=None):
     host = settings.get("smtp_host")
     port = int(settings.get("smtp_port", 587))
     user = settings.get("smtp_user")
-    pwd = settings.get("smtp_password")
+    # F3-FIX: Always read SMTP password from encrypted store — never from plain-text settings dict.
+    # settings.smtp_password may be populated by get_settings() for legacy callers,
+    # but we always prefer the encrypted store as authoritative source.
+    pwd = _get_smtp_password() or settings.get("smtp_password") or ""
     use_tls = settings.get("use_tls", 1)
 
     if not recipient or not host or not user or not pwd:
