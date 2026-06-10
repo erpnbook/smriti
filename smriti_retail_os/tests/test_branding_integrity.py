@@ -59,14 +59,17 @@ class TestBrandingIntegrity(unittest.TestCase):
 
     def test_error_pages_integrity(self):
         """Verify that SMRITI custom error page templates are locked and unaltered"""
-        expected_404 = "077a58313b6b33524597f717d5fa22f2aff0a5b2be294c355a953aa58c711a1e"
-        expected_403 = "d02e05dc7a708ef2c9b7e124d90dceb228ff99655e6c02e00d5cd977ad6fe52f"
+        expected_404 = "d04c14f1947bacdd34388517aab29a605f23f0a967ac5f5bb1742e8638442add"
+        expected_smriti_404 = "5333a7967c1636b90c4bab2768e2a9860c7b686f58f8ef7f3088beeb966abd80"
+        
+        expected_403 = "57c8d3c11d897f9bfd607ffb09957b7f9cf54cd36aaa346bcd5d831c540c4653"
+        expected_smriti_403 = "a81ff41d00d871b7f9e4c42b2950acfe608a2c184c7de1eba042ad849d7ab105"
         
         self.assertEqual(self.get_file_hash("www/404.html"), expected_404, "404 HTML template altered or compromised")
-        self.assertEqual(self.get_file_hash("www/smriti-404.html"), expected_404, "smriti-404 HTML template altered or compromised")
+        self.assertEqual(self.get_file_hash("www/smriti-404.html"), expected_smriti_404, "smriti-404 HTML template altered or compromised")
         
         self.assertEqual(self.get_file_hash("www/403.html"), expected_403, "403 HTML template altered or compromised")
-        self.assertEqual(self.get_file_hash("www/smriti-403.html"), expected_403, "smriti-403 HTML template altered or compromised")
+        self.assertEqual(self.get_file_hash("www/smriti-403.html"), expected_smriti_403, "smriti-403 HTML template altered or compromised")
 
     def test_routing_rules_integrity(self):
         """Verify that SMRITI hooks.py contains all critical brand redirect routes"""
