@@ -55,7 +55,7 @@ SMRITI.sidebarSchema = [
             { id: 'billing', label: '├─ POS Billing', url: '/billing' },
             { id: 'sales_invoices', label: '├─ Billing Invoices', url: '/sales_invoices' },
             { id: 'sizewise_invoice', label: '├─ Sizewise Tax Invoice', url: '/sizewise_invoice' },
-            { id: 'sales_return', label: '├─ Sales Return', url: '/sales_invoices?is_return=1&sidebar_id=sales_return' },
+            { id: 'sales_return', label: '├─ Sales Return', url: '/sales_return' },
             { id: 'delivery_challan', label: '└─ Delivery Challan', url: '/delivery_challan' }
         ]
     },
@@ -90,7 +90,7 @@ SMRITI.sidebarSchema = [
         items: [
             { id: 'receipts', label: '├─ Receipts', url: '/payments?payment_type=Receive' },
             { id: 'payments', label: '├─ Payments', url: '/payments?payment_type=Pay' },
-            { id: 'credit_notes', label: '└─ Credit Notes', url: '/sales_invoices?is_return=1&sidebar_id=credit_notes' }
+            { id: 'credit_notes', label: '└─ Credit Notes', url: '/sales_return?sidebar_id=credit_notes' }
         ]
     },
     {

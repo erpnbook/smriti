@@ -527,6 +527,11 @@ website_route_rules = [
         "to_route": "delivery_challan"
     },
     {
+        # Standalone Sales Return & Credit Notes — served from www/sales_return.html + www/sales_return.py
+        "from_route": "/sales_return",
+        "to_route": "sales_return"
+    },
+    {
         # Standalone Purchase Receipts (GRN) — served from www/purchase_receipt.html + www/purchase_receipt.py
         "from_route": "/purchase_receipt",
         "to_route": "purchase_receipt"
