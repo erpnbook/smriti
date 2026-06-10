@@ -17,7 +17,7 @@ Registered in hooks.py via: website_context = "smriti_retail_os.website_context.
 
 _BRAND_NAME = "SMRITI Retail OS"
 _LOGO_URL   = "/assets/smriti_retail_os/images/logo.svg"
-_FAVICON    = "/assets/smriti_retail_os/favicon.png"
+_FAVICON    = "/assets/smriti_retail_os/images/logo.svg"
 
 
 def get_context(context):
