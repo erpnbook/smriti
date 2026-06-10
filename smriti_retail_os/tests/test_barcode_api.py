@@ -780,4 +780,109 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         frappe.db.delete("SMRITI Print Template Version", {"template": "TEST_LOCK_TEMPLATE"})
         frappe.db.commit()
 
+    def test_20_print_safe_margin_boundary_detection(self):
+        """test_20: safe margin limits boundary detection (1.5mm inset)"""
+        from smriti_retail_os.barcode_api import validate_layout_diagnostics
+        # Element inside safe zone
+        layout = json.dumps([
+            {"id": "txt1", "type": "text", "x": 2.0, "y": 2.0, "w": 10.0, "h": 5.0, "content": "Hello"}
+        ])
+        res = validate_layout_diagnostics(layout, "50x25")
+        self.assertEqual(res["errors_count"], 0)
+        self.assertEqual(res["warnings_count"], 0)
+
+        # Barcode crossing 1.5mm margin (Error)
+        layout_error = json.dumps([
+            {"id": "bc1", "type": "barcode", "x": 1.0, "y": 2.0, "w": 20.0, "h": 10.0, "content": "123456"}
+        ])
+        res_error = validate_layout_diagnostics(layout_error, "50x25")
+        self.assertEqual(res_error["errors_count"], 1)
+        self.assertEqual(res_error["diagnostics"][0]["severity"], "error")
+
+        # Text crossing 1.5mm margin (Warning)
+        layout_warn = json.dumps([
+            {"id": "txt2", "type": "text", "x": 1.0, "y": 2.0, "w": 10.0, "h": 5.0, "content": "Hello"}
+        ])
+        res_warn = validate_layout_diagnostics(layout_warn, "50x25")
+        self.assertEqual(res_warn["errors_count"], 0)
+        self.assertEqual(res_warn["warnings_count"], 1)
+        self.assertEqual(res_warn["diagnostics"][0]["severity"], "warning")
+
+        # Element crossing absolute edge (Error)
+        layout_out = json.dumps([
+            {"id": "txt3", "type": "text", "x": 45.0, "y": 2.0, "w": 10.0, "h": 5.0, "content": "Hello"}
+        ])
+        res_out = validate_layout_diagnostics(layout_out, "50x25")
+        self.assertEqual(res_out["errors_count"], 1)
+        self.assertEqual(res_out["diagnostics"][0]["severity"], "error")
+
+    def test_21_text_overflow_detection(self):
+        """test_21: text bounding-box overflow calculation (short text passes, long text triggers warning)"""
+        from smriti_retail_os.barcode_api import validate_layout_diagnostics
+        # Short text, fits within w=20mm
+        layout_fit = json.dumps([
+            {"id": "txt1", "type": "text", "x": 5.0, "y": 5.0, "w": 20.0, "h": 5.0, "content": "Short"}
+        ])
+        res_fit = validate_layout_diagnostics(layout_fit, "50x25")
+        self.assertEqual(res_fit["warnings_count"], 0)
+
+        # Long text, exceeds w=5mm (estimated width is len * 1.8 = 30.6mm)
+        layout_overflow = json.dumps([
+            {"id": "txt2", "type": "text", "x": 5.0, "y": 5.0, "w": 5.0, "h": 5.0, "content": "Very Long Text Name"}
+        ])
+        res_overflow = validate_layout_diagnostics(layout_overflow, "50x25")
+        self.assertEqual(res_overflow["warnings_count"], 1)
+        self.assertEqual(res_overflow["diagnostics"][0]["severity"], "warning")
+
+    def test_22_collision_detection(self):
+        """test_22: element collision detection (overlapping fields)"""
+        from smriti_retail_os.barcode_api import validate_layout_diagnostics
+        # Overlapping text and barcode (collision)
+        layout_overlap = json.dumps([
+            {"id": "txt1", "type": "text", "x": 5.0, "y": 5.0, "w": 10.0, "h": 5.0, "content": "Text"},
+            {"id": "bc1", "type": "barcode", "x": 8.0, "y": 6.0, "w": 15.0, "h": 8.0, "content": "1234"}
+        ])
+        res_overlap = validate_layout_diagnostics(layout_overlap, "50x25")
+        self.assertEqual(res_overlap["errors_count"], 1)
+        self.assertEqual(res_overlap["diagnostics"][0]["severity"], "error")
+
+        # Non-overlapping
+        layout_ok = json.dumps([
+            {"id": "txt1", "type": "text", "x": 5.0, "y": 5.0, "w": 10.0, "h": 5.0, "content": "Text"},
+            {"id": "bc1", "type": "barcode", "x": 20.0, "y": 5.0, "w": 15.0, "h": 8.0, "content": "1234"}
+        ])
+        res_ok = validate_layout_diagnostics(layout_ok, "50x25")
+        self.assertEqual(res_ok["errors_count"], 0)
+
+        # Decorative element (box) overlap - ignored
+        layout_decor = json.dumps([
+            {"id": "box1", "type": "box", "x": 4.0, "y": 4.0, "w": 20.0, "h": 10.0},
+            {"id": "txt1", "type": "text", "x": 5.0, "y": 5.0, "w": 10.0, "h": 5.0, "content": "Text"}
+        ])
+        res_decor = validate_layout_diagnostics(layout_decor, "50x25")
+        self.assertEqual(res_decor["errors_count"], 0)
+
+    def test_23_layout_wrapper_backward_compatibility(self):
+        """test_23: wrapped/unwrapped JSON compatibility"""
+        from smriti_retail_os.barcode_api import validate_layout_diagnostics
+        
+        elements = [
+            {"id": "txt1", "type": "text", "x": 5.0, "y": 5.0, "w": 10.0, "h": 5.0, "content": "Text"}
+        ]
+        # Unwrapped array
+        layout_unwrapped = json.dumps(elements)
+        # Wrapped layout structure
+        layout_wrapped = json.dumps({
+            "layout_version": 1,
+            "compiler_version": 1,
+            "elements": elements
+        })
+        
+        res1 = validate_layout_diagnostics(layout_unwrapped, "50x25")
+        res2 = validate_layout_diagnostics(layout_wrapped, "50x25")
+        
+        self.assertEqual(res1["diagnostics"], res2["diagnostics"])
+        self.assertEqual(res1["errors_count"], res2["errors_count"])
+
+
 

@@ -1657,3 +1657,140 @@ def cleanup_old_print_jobs():
     )
 
 
+@frappe.whitelist()
+def validate_layout_diagnostics(layout_json, label_size, item_data=None):
+    """
+    Validates print template layout and returns a dictionary of diagnostics.
+    Diagnostics are categorized as 'warning' or 'error'.
+    """
+    if not layout_json:
+        return {"diagnostics": [], "errors_count": 0, "warnings_count": 0}
+
+    import json
+    
+    # 1. Handle wrapped/unwrapped compatibility
+    try:
+        parsed = json.loads(layout_json)
+        if isinstance(parsed, dict) and "elements" in parsed:
+            elements = parsed["elements"]
+        elif isinstance(parsed, list):
+            elements = parsed
+        else:
+            elements = []
+    except Exception:
+        elements = []
+
+    # Parse label dimensions (e.g. "50x25")
+    try:
+        parts = label_size.split('x')
+        lw = float(parts[0])
+        lh = float(parts[1])
+    except Exception:
+        lw = 50.0
+        lh = 25.0
+
+    diagnostics = []
+    
+    # Token resolver helper for text overflow check
+    def resolve_tokens_py(content, item):
+        if not content:
+            return ""
+        if not item:
+            item = {}
+        # standard item values
+        tokens = {
+            "barcode": item.get("barcode") or "8901234567890",
+            "item_code": item.get("item_code") or "ITEM-12345",
+            "item_name": item.get("item_name") or "Sample Item Name Description",
+            "brand": item.get("brand") or "SMRITI",
+            "mrp": str(int(item.get("mrp") or 499)),
+            "size": item.get("size") or "8",
+            "color": item.get("color") or "BLACK",
+            "style": item.get("style") or "STYLE",
+            "pkd_date": item.get("pkd_date") or "06/26"
+        }
+        res = content
+        for k, v in tokens.items():
+            res = res.replace(f"{{{k}}}", v)
+        return res
+
+    # Constant safe margin in mm
+    SAFE_MARGIN_MM = 1.5
+
+    # Check bounds
+    for elem in elements:
+        x = float(elem.get("x", 0))
+        y = float(elem.get("y", 0))
+        w = float(elem.get("w", 0))
+        h = float(elem.get("h", 0))
+        el_type = elem.get("type", "")
+        el_id = elem.get("id", "")
+        content = elem.get("content", "")
+
+        # 1. Absolute boundary check
+        if x < 0 or y < 0 or (x + w) > lw or (y + h) > lh:
+            diagnostics.append({
+                "element_id": el_id,
+                "severity": "error",
+                "message": f"Element {el_id or el_type} exceeds printable area ({lw}x{lh}mm)"
+            })
+            continue # Skip margin checks if it's already outside bounds
+
+        # 2. Safe margin boundary check (1.5mm inset)
+        # Barcode and QR code crossing 1.5mm margin is an ERROR
+        # Text/image crossing is a WARNING
+        if x < SAFE_MARGIN_MM or y < SAFE_MARGIN_MM or (x + w) > (lw - SAFE_MARGIN_MM) or (y + h) > (lh - SAFE_MARGIN_MM):
+            if el_type in ["barcode", "qrcode"]:
+                diagnostics.append({
+                    "element_id": el_id,
+                    "severity": "error",
+                    "message": f"{el_type.upper()} {el_id} overlaps print-safe margin"
+                })
+            else:
+                diagnostics.append({
+                    "element_id": el_id,
+                    "severity": "warning",
+                    "message": f"Element {el_id or el_type} overlaps print-safe margin"
+                })
+
+        # 3. Text Overflow check
+        if el_type == "text":
+            resolved = resolve_tokens_py(content, item_data)
+            # Estimate width: let's assume each char is approx 1.8mm wide for standard rendering
+            char_width_mm = 1.8
+            est_width = len(resolved) * char_width_mm
+            if est_width > w:
+                diagnostics.append({
+                    "element_id": el_id,
+                    "severity": "warning",
+                    "message": f"Text element {el_id} content may overflow designed width"
+                })
+
+    # 4. Element Collision Detection (exclude box/bar)
+    non_decorative = [e for e in elements if e.get("type") not in ["box", "bar"]]
+    for i in range(len(non_decorative)):
+        for j in range(i + 1, len(non_decorative)):
+            a = non_decorative[i]
+            b = non_decorative[j]
+            ax, ay, aw, ah = float(a.get("x", 0)), float(a.get("y", 0)), float(a.get("w", 0)), float(a.get("h", 0))
+            bx, by, bw, bh = float(b.get("x", 0)), float(b.get("y", 0)), float(b.get("w", 0)), float(b.get("h", 0))
+            
+            # AABB intersection
+            if (ax < bx + bw) and (ax + aw > bx) and (ay < by + bh) and (ay + ah > by):
+                diagnostics.append({
+                    "element_id": f"{a.get('id')}<->{b.get('id')}",
+                    "severity": "error",
+                    "message": f"Element collision detected between {a.get('id') or a.get('type')} and {b.get('id') or b.get('type')}"
+                })
+
+    errors_count = sum(1 for d in diagnostics if d["severity"] == "error")
+    warnings_count = sum(1 for d in diagnostics if d["severity"] == "warning")
+
+    return {
+        "diagnostics": diagnostics,
+        "errors_count": errors_count,
+        "warnings_count": warnings_count
+    }
+
+
+
