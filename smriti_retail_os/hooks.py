@@ -87,20 +87,7 @@ app_include_js = [
 # website page context override for whitelabel branding
 update_website_context = ["smriti_retail_os.website_context.get_context"]
 
-# ─── SMRITI Route Aliases — ARCH-004 ────────────────────────────────────────
-# All Channel Stock (PSV) pages are accessible via SMRITI-convention /smriti-*
-# routes as required by GEMINI.md Rule 7. The legacy short routes still work
-# so existing bookmarks / sidebar links are not broken.
-website_route_rules = [
-    # Channel Stock — main SMRITI-convention routes
-    {"from_route": "/smriti-channel-accounts",  "to_route": "psa"},
-    {"from_route": "/smriti-sales-upload",       "to_route": "sales-upload"},
-    {"from_route": "/smriti-opening-balance",    "to_route": "psv-opening-balance"},
-    {"from_route": "/smriti-channel-stock",      "to_route": "psa"},   # Alias entry point
-
-    # Channel Stock — canonical module landing alias
-    {"from_route": "/channel-stock",             "to_route": "psa"},
-]
+# ─── SMRITI Route Aliases — Moved to main website_route_rules block below ───
 
 
 # include js, css files in header of web template
@@ -413,6 +400,14 @@ override_whitelisted_methods = {
 
 # Login page override + Billing terminal standalone route
 website_route_rules = [
+    # ─── Channel Stock (PSV) Route Aliases ──────────────────────────
+    {"from_route": "/smriti-channel-accounts",  "to_route": "psa"},
+    {"from_route": "/smriti-sales-upload",       "to_route": "sales-upload"},
+    {"from_route": "/smriti-opening-balance",    "to_route": "psv-opening-balance"},
+    {"from_route": "/smriti-channel-stock",      "to_route": "psa"},
+    {"from_route": "/channel-stock",             "to_route": "psa"},
+
+    # ─── Core PWA & System Routes ───────────────────────────────────
     {
         # PWA Service Worker — must be served from root for full-scope control
         # sw.js lives in public/js/ but is exposed at /sw.js
@@ -451,12 +446,6 @@ website_route_rules = [
         # Zero Frappe chrome. GRN, New PO, all via REST API.
         "from_route": "/purchase",
         "to_route": "purchase"
-    },
-    {
-        # Standalone Control Center (Manager Desk) — served from www/desk.html + www/desk.py
-        # Zero Frappe chrome. Fully custom SMRITI dashboard.
-        "from_route": "/desk",
-        "to_route": "desk"
     },
     {
         # Standalone Inventory Operations — served from www/inventory.html + www/inventory.py

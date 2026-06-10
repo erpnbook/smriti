@@ -169,3 +169,45 @@ class TestSmritiRetailHooks(unittest.TestCase):
         # Check payment terms template link
         supp_reload = frappe.get_doc("Supplier", supp.name)
         self.assertEqual(supp_reload.payment_terms, "Credit Term - 60 Days")
+
+    def test_desk_access_redirection(self):
+        """
+        Tests that accessing /desk and /app routes for non-desk users
+        raises a Werkzeug RequestRedirect to /smriti.
+        """
+        import werkzeug.routing.exceptions
+        from smriti_retail_os.boot import check_desk_access
+
+        # Save current state to restore later
+        original_user = frappe.session.user
+        original_request = getattr(frappe.local, "request", None)
+
+        try:
+            # Test Guest redirection on /desk
+            frappe.session.user = "Guest"
+            req = frappe._dict({"path": "/desk", "cookies": {}})
+            frappe.local.request = req
+            with self.assertRaises(werkzeug.routing.exceptions.RequestRedirect) as context:
+                check_desk_access()
+            # In Werkzeug, the target url is stored in new_url
+            self.assertEqual(context.exception.new_url, "/smriti")
+
+            # Test Guest redirection on /app
+            req = frappe._dict({"path": "/app", "cookies": {}})
+            frappe.local.request = req
+            with self.assertRaises(werkzeug.routing.exceptions.RequestRedirect) as context:
+                check_desk_access()
+            self.assertEqual(context.exception.new_url, "/smriti")
+
+            # Test Administrator bypasses redirect (no exception raised)
+            frappe.session.user = "Administrator"
+            req = frappe._dict({"path": "/app", "cookies": {}})
+            frappe.local.request = req
+            check_desk_access()
+
+        finally:
+            frappe.session.user = original_user
+            if original_request:
+                frappe.local.request = original_request
+            else:
+                delattr(frappe.local, "request")

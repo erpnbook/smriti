@@ -88,9 +88,8 @@ def on_session_creation(login_manager):
 
 def check_desk_access():
     """
-    on_page_load hook — fires only on web page loads (not API/assets).
-    Redirects non-admin away from /desk.
-    Does NOT touch /app — reserved for future SMRITI workspace pages.
+    before_request hook — fires on every request.
+    Redirects non-desk users away from /desk and /app to /smriti.
     """
     try:
         if not hasattr(frappe, "request") or not frappe.request:
@@ -98,21 +97,27 @@ def check_desk_access():
 
         path = frappe.request.path or ""
 
-        # Only block /desk — NOT /app (future workspace use)
-        if not path.startswith("/desk"):
-            return
+        # Only restrict /desk and /app routes (including trailing slashes or subpaths)
+        if path.startswith("/desk") or path.startswith("/app"):
+            user = getattr(frappe.session, "user", "Guest")
+            
+            # If user is Guest but request has cookies, try validating auth to resolve actual user
+            if user == "Guest" and frappe.request.cookies:
+                from frappe.auth import validate_auth
+                try:
+                    validate_auth()
+                    user = getattr(frappe.session, "user", "Guest")
+                except Exception:
+                    pass
 
-        user       = frappe.session.user
-        user_roles = frappe.get_roles(user)
+            user_roles = frappe.get_roles(user) if user else []
 
-        if _is_desk_allowed(user, user_roles):
-            return  # Admin — allow through
+            # Check if user is allowed to access desk
+            if not _is_desk_allowed(user, user_roles):
+                import werkzeug.routing.exceptions
+                raise werkzeug.routing.exceptions.RequestRedirect("/smriti")
 
-        # Non-admin on /desk — redirect to SMRITI home
-        frappe.local.flags.redirect_location = "/smriti"
-        raise frappe.Redirect
-
-    except frappe.Redirect:
+    except werkzeug.routing.exceptions.RequestRedirect:
         raise
     except Exception as e:
         frappe.log_error(str(e), "SMRITI Desk Access Check Error")

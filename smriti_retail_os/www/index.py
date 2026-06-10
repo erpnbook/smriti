@@ -1,4 +1,14 @@
 # -*- coding: utf-8 -*-
+#
+# @file: smriti_retail_os/www/index.py
+# @description: Handles user login, registration, and JWT token generation.
+# @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+# @date: 2026-05-28
+# @version: 1.0.0
+# @license: MIT
+# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+#
+# -*- coding: utf-8 -*-
 # @file: smriti_retail_os/www/index.py
 # @description: Root route handler — server-side redirect based on login state and role.
 
@@ -20,9 +30,6 @@ def get_context(context):
         frappe.local.flags.redirect_location = "/setup-wizard"
         raise frappe.Redirect
 
-    if "SMRITI Cashier" in roles:
-        frappe.local.flags.redirect_location = "/billing"
-        raise frappe.Redirect
-
-    frappe.local.flags.redirect_location = "/app"
+    from smriti_retail_os.boot import _get_smriti_route
+    frappe.local.flags.redirect_location = _get_smriti_route(roles)
     raise frappe.Redirect
