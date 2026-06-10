@@ -146,7 +146,7 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
         if (cat.items) {
             cat.items = cat.items.filter(item => {
                 if (business_type === "Footwear") {
-                    if (['psa', 'psv_opening_balance', 'sales_upload'].includes(item.id)) return false;
+                    if (['psv_opening_balance', 'sales_upload'].includes(item.id)) return false;
                 } else {
                     // FMCG / Others
                     if (['sizewise_item', 'sizewise_invoice'].includes(item.id)) return false;
