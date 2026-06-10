@@ -297,6 +297,55 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 </div>
             </div>
 
+            <!-- Backup Security Section (v1.8.3) -->
+            <div class="layout-cols" id="backup-security-section" style="margin-bottom:24px;">
+                <!-- Encryption Status Card -->
+                <div class="panel-card">
+                    <div class="panel-title"><span class="material-symbols-outlined">lock</span> Backup Security & Encryption</div>
+                    <div class="form-section">
+                        <div class="form-section-title">GPG Status & Configuration</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span class="form-label" style="font-size:0.8rem;">GPG CLI Status</span>
+                            <span class="badge-archive" id="gpg-status-badge" style="font-size:0.75rem; font-weight:bold;">Checking...</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span class="form-label" style="font-size:0.8rem;">Active Key Version</span>
+                            <span style="font-weight:700; font-family:monospace; font-size:0.85rem;" id="active-key-version">None</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span class="form-label" style="font-size:0.8rem;">Active Fingerprint</span>
+                            <span style="font-weight:700; font-family:monospace; font-size:0.85rem; color:var(--primary-lt);" id="active-key-fingerprint">None</span>
+                        </div>
+                        <div class="form-group checkbox-group" style="margin-top:12px; padding-top:12px; border-top:1px solid var(--border);">
+                            <input type="checkbox" id="enable-backup-encryption" name="enable_backup_encryption" onchange="toggleBackupEncryption(this.checked)">
+                            <label class="form-label" style="margin-bottom:0; cursor:pointer;" for="enable-backup-encryption">Enable Backup Encryption (Fail Closed)</label>
+                        </div>
+                    </div>
+                    <button class="btn-action secondary" style="width:100%;" onclick="openRotateKeyModal()">
+                        <span class="material-symbols-outlined">refresh</span> Rotate Encryption Key
+                    </button>
+                </div>
+
+                <!-- Key Custodians Card -->
+                <div class="panel-card">
+                    <div class="panel-title"><span class="material-symbols-outlined">group</span> Key Custodians (Dual Custody)</div>
+                    <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.4;">Onboard exactly two custodians to split the key. Both will receive fragments by email to recover the key when dispatch is triggered.</p>
+                    
+                    <div style="display:flex; flex-direction:column; gap:12px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px;" id="custodians-list">
+                        <div style="text-align:center; color:var(--text-sub); font-size:0.82rem;">Loading custodians...</div>
+                    </div>
+                    
+                    <div style="display:flex; gap:12px; margin-top:auto;">
+                        <button class="btn-action primary" style="flex:1;" id="btn-onboard-custodian" onclick="openOnboardCustodianModal()">
+                            <span class="material-symbols-outlined">person_add</span> Onboard Custodian
+                        </button>
+                        <button class="btn-action secondary" style="flex:1;" id="btn-dispatch-fragments" onclick="dispatchFragments()" disabled>
+                            <span class="material-symbols-outlined">send</span> Send Recovery Key
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Backup archives history list -->
             <div class="history-panel">
                 <div class="panel-title"><span class="material-symbols-outlined">history</span> Secure Backup Archives</div>
@@ -337,6 +386,71 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
         <div style="display:flex; justify-content:flex-end; gap:8px;">
             <button class="btn-action secondary" onclick="closeModal()">Cancel</button>
             <button class="btn-action danger" onclick="confirmAndExecuteRestore()">Authorize & Rebuild Database</button>
+        </div>
+    </div>
+</div>
+
+<!-- Onboard Custodian Modal (v1.8.3) -->
+<div class="modal-backdrop" id="onboard-modal">
+    <div class="modal">
+        <div class="modal-title">
+            <span class="material-symbols-outlined">person_add</span> Onboard Key Custodian
+            <button class="modal-close" onclick="closeOnboardModal()">&times;</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:16px;">
+            <div class="form-group">
+                <label class="form-label">Custodian Name</label>
+                <input type="text" class="form-input" id="onboard-name" placeholder="John Doe">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-input" id="onboard-email" placeholder="john@company.com">
+            </div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+            <button class="btn-action secondary" onclick="closeOnboardModal()">Cancel</button>
+            <button class="btn-action primary" onclick="submitOnboardCustodian()">Send OTP Verification</button>
+        </div>
+    </div>
+</div>
+
+<!-- Verify Custodian OTP Modal (v1.8.3) -->
+<div class="modal-backdrop" id="otp-modal">
+    <div class="modal">
+        <div class="modal-title">
+            <span class="material-symbols-outlined">verified_user</span> Enter Verification OTP
+            <button class="modal-close" onclick="closeOtpModal()">&times;</button>
+        </div>
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:14px;">
+            Please enter the 6-digit OTP sent to the custodian: <strong id="otp-target-email" style="color:var(--text);"></strong>.<br>
+            Note: The OTP is valid for 15 minutes.
+        </p>
+        <input type="text" class="modal-input" id="otp-input" placeholder="000000" maxlength="6">
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+            <button class="btn-action secondary" onclick="closeOtpModal()">Cancel</button>
+            <button class="btn-action primary" onclick="submitVerifyOtp()">Verify OTP</button>
+        </div>
+    </div>
+</div>
+
+<!-- Rotate Key Modal (v1.8.3) -->
+<div class="modal-backdrop" id="rotate-key-modal">
+    <div class="modal">
+        <div class="modal-title">
+            <span class="material-symbols-outlined">refresh</span> Rotate Encryption Key
+            <button class="modal-close" onclick="closeRotateKeyModal()">&times;</button>
+        </div>
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:14px;">
+            Enter the new 32-character encryption key (or passphrase) to rotate keys.<br><br>
+            <span style="color:var(--warning); font-weight:bold;">Old key versions will be preserved in frappe.conf, and existing backups remain decryptable. Newer backups will use the rotated key.</span>
+        </p>
+        <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label">New Encryption Key (Min 16 chars)</label>
+            <input type="password" class="form-input" id="rotate-key-input" style="text-align:center; font-family:monospace;" placeholder="New secret encryption key">
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+            <button class="btn-action secondary" onclick="closeRotateKeyModal()">Cancel</button>
+            <button class="btn-action primary" onclick="submitRotateKey()">Rotate Key</button>
         </div>
     </div>
 </div>
@@ -400,6 +514,7 @@ function toggleEmailFields(show) {
 
 async function init() {
     await loadBackupData();
+    await loadEncryptionStatus();
 }
 
 async function loadBackupData() {
@@ -456,9 +571,15 @@ function renderHistoryTable(archives) {
             </button>
         ` : '';
 
+        // Add lock badge if encrypted (ends with .smriti.enc)
+        let nameHtml = item.name;
+        if (item.name.endsWith('.smriti.enc')) {
+            nameHtml = `<span style="display:inline-flex; align-items:center; gap:6px;">${item.name} <span class="material-symbols-outlined" style="font-size:16px; color:var(--primary-lt);" title="GPG Symmetric Encrypted Backup">lock</span></span>`;
+        }
+
         return `
             <tr>
-                <td style="font-weight:600;font-family:monospace;font-size:0.82rem;" title="${item.name}">${item.name}</td>
+                <td style="font-weight:600;font-family:monospace;font-size:0.82rem;" title="${item.name}">${nameHtml}</td>
                 <td><span class="badge-archive ${badgeCls}">${item.type.toUpperCase()}</span></td>
                 <td style="font-weight:600;color:var(--text-muted);">${item.size}</td>
                 <td style="font-size:0.85rem;color:var(--text-muted);">${item.datetime}</td>
@@ -606,6 +727,198 @@ async function confirmAndExecuteRestore() {
     } finally {
         restoreTargetFile = '';
         await loadBackupData();
+    }
+}
+
+// ─── Key Custodian & GPG UI Logics (v1.8.3) ───────────────────────────────────
+
+let currentOtpEmail = '';
+
+async function loadEncryptionStatus() {
+    try {
+        const data = await api('smriti_retail_os.backup_api.get_encryption_status');
+        if (data) {
+            // Update GPG Status badge
+            const gpgBadge = document.getElementById('gpg-status-badge');
+            if (data.gpg_available) {
+                gpgBadge.textContent = 'GPG ACTIVE';
+                gpgBadge.style.background = 'rgba(16,185,129,0.15)';
+                gpgBadge.style.color = 'var(--success)';
+            } else {
+                gpgBadge.textContent = 'GPG MISSING';
+                gpgBadge.style.background = 'rgba(239,68,68,0.15)';
+                gpgBadge.style.color = 'var(--danger)';
+            }
+
+            // Update Key details
+            document.getElementById('active-key-version').textContent = data.active_key_version || 'None';
+            document.getElementById('active-key-fingerprint').textContent = data.active_key_fingerprint || 'None';
+            document.getElementById('enable-backup-encryption').checked = !!data.encryption_enabled;
+
+            // Render Custodians List
+            renderCustodiansList(data.custodians || []);
+        }
+    } catch(e) {
+        console.error('Failed to load GPG status:', e);
+    }
+}
+
+function renderCustodiansList(custodians) {
+    const list = document.getElementById('custodians-list');
+    
+    // Key recovery needs exactly 2 verified custodians
+    const verifiedCount = custodians.filter(c => c.verified && c.status === 'Verified').length;
+    document.getElementById('btn-dispatch-fragments').disabled = (verifiedCount !== 2);
+
+    if (!custodians.length) {
+        list.innerHTML = '<div style="text-align:center; color:var(--text-sub); font-size:0.82rem; padding:10px 0;">No custodians onboarded yet. Onboard exactly 2 to split the key.</div>';
+        return;
+    }
+
+    list.innerHTML = custodians.map((c, i) => {
+        let badgeCls = 'other';
+        if (c.status === 'Verified') badgeCls = 'database';
+        else if (c.status === 'Pending') badgeCls = 'files';
+        
+        let actionBtn = '';
+        if (c.status === 'Pending') {
+            actionBtn = `
+                <button class="topbtn" style="padding:4px 8px; font-size:11px;" onclick="openOtpModal('${c.email}')">
+                    Verify OTP
+                </button>
+            `;
+        } else if (c.status === 'Verified') {
+            actionBtn = `<span class="material-symbols-outlined" style="color:var(--success); font-size:18px;">check_circle</span>`;
+        }
+
+        return `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.03);">
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span style="font-weight:600; font-size:0.88rem; color:var(--text);">${c.custodian_name}</span>
+                    <span style="font-size:0.75rem; color:var(--text-muted);">${c.email}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="badge-archive ${badgeCls}" style="font-size:0.7rem; font-weight:700;">${c.status.toUpperCase()}</span>
+                    ${actionBtn}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function toggleBackupEncryption(checked) {
+    try {
+        const settings = await api('smriti_retail_os.backup_api.get_settings');
+        settings.enable_backup_encryption = checked ? 1 : 0;
+        await api('smriti_retail_os.backup_api.save_settings', { settings: settings });
+        toast(checked ? 'Backup encryption enabled!' : 'Backup encryption disabled.', 'success');
+        await loadEncryptionStatus();
+    } catch(e) {
+        toast('Failed to update encryption setting: ' + e.message, 'error');
+        document.getElementById('enable-backup-encryption').checked = !checked;
+    }
+}
+
+// Onboarding modals
+function openOnboardCustodianModal() {
+    document.getElementById('onboard-name').value = '';
+    document.getElementById('onboard-email').value = '';
+    document.getElementById('onboard-modal').classList.add('open');
+}
+function closeOnboardModal() {
+    document.getElementById('onboard-modal').classList.remove('open');
+}
+async function submitOnboardCustodian() {
+    const name = document.getElementById('onboard-name').value.trim();
+    const email = document.getElementById('onboard-email').value.trim();
+    if (!name || !email) {
+        toast('Please enter name and email address.', 'error');
+        return;
+    }
+    closeOnboardModal();
+    try {
+        // We write the custodian record and send the verification email
+        await api('smriti_retail_os.backup_api.verify_custodian_emails', { emails: [email] });
+        // We set the custodian name (since the stub takes email only, we update name manually or key recovery takes email)
+        // Wait, send_verification_email inserts or updates. Let's make sure custodian_name is saved!
+        // Let's run a quick call to update the custodian_name directly:
+        await api('frappe.client.set_value', {
+            doctype: 'SMRITI Key Custodian',
+            name: email,
+            fieldname: 'custodian_name',
+            value: name
+        });
+        
+        toast('Verification OTP sent successfully!', 'success');
+        await loadEncryptionStatus();
+        openOtpModal(email);
+    } catch(e) {
+        toast('Failed to onboard custodian: ' + e.message, 'error');
+    }
+}
+
+// OTP verification modals
+function openOtpModal(email) {
+    currentOtpEmail = email;
+    document.getElementById('otp-target-email').textContent = email;
+    document.getElementById('otp-input').value = '';
+    document.getElementById('otp-modal').classList.add('open');
+}
+function closeOtpModal() {
+    document.getElementById('otp-modal').classList.remove('open');
+    currentOtpEmail = '';
+}
+async function submitVerifyOtp() {
+    const otp = document.getElementById('otp-input').value.trim();
+    if (!otp || otp.length !== 6) {
+        toast('Please enter a valid 6-digit OTP.', 'error');
+        return;
+    }
+    closeOtpModal();
+    try {
+        await api('smriti_retail_os.backup_api.confirm_custodian_otp', { email: currentOtpEmail, otp: otp });
+        toast('Custodian verified successfully!', 'success');
+        await loadEncryptionStatus();
+    } catch(e) {
+        toast('OTP verification failed: ' + e.message, 'error');
+    }
+}
+
+// Rotate key modals
+function openRotateKeyModal() {
+    document.getElementById('rotate-key-input').value = '';
+    document.getElementById('rotate-key-modal').classList.add('open');
+}
+function closeRotateKeyModal() {
+    document.getElementById('rotate-key-modal').classList.remove('open');
+}
+async function submitRotateKey() {
+    const newKey = document.getElementById('rotate-key-input').value.trim();
+    if (!newKey || newKey.length < 16) {
+        toast('New key must be at least 16 characters long.', 'error');
+        return;
+    }
+    closeRotateKeyModal();
+    try {
+        await api('smriti_retail_os.backup_api.rotate_encryption_key', { new_key: newKey });
+        toast('Key rotated successfully!', 'success');
+        await loadEncryptionStatus();
+    } catch(e) {
+        toast('Key rotation failed: ' + e.message, 'error');
+    }
+}
+
+// Dispatch fragments
+async function dispatchFragments() {
+    if (!confirm('Are you sure you want to dispatch key recovery fragments to the onboarded custodians?')) {
+        return;
+    }
+    try {
+        await api('smriti_retail_os.backup_api.send_recovery_key');
+        toast('Recovery key fragments dispatched successfully!', 'success');
+        await loadEncryptionStatus();
+    } catch(e) {
+        toast('Failed to dispatch recovery fragments: ' + e.message, 'error');
     }
 }
 

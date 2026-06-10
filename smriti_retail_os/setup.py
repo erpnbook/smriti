@@ -1021,6 +1021,51 @@ def setup_activity_log_options():
         frappe.log_error(f"Error updating Activity Log options: {str(e)}")
 
 
+def create_smriti_key_custodian_doctype():
+    """Creates the SMRITI Key Custodian custom DocType for metadata-only custodian storage."""
+    if frappe.db.exists("DocType", "SMRITI Key Custodian"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Key Custodian"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.autoname = "field:email"
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 1
+        doc.issingle = 0
+
+        fields = [
+            {"fieldname": "custodian_name", "fieldtype": "Data", "label": "Custodian Name", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "email", "fieldtype": "Data", "label": "Email", "reqd": 1, "unique": 1, "in_list_view": 1},
+            {"fieldname": "verified", "fieldtype": "Check", "label": "Verified", "default": "0", "read_only": 1, "in_list_view": 1},
+            {"fieldname": "verification_date", "fieldtype": "Datetime", "label": "Verification Date", "read_only": 1},
+            {"fieldname": "last_recovery_sent", "fieldtype": "Datetime", "label": "Last Recovery Sent", "read_only": 1},
+            {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Pending\nVerified\nRevoked", "default": "Pending", "in_list_view": 1},
+            {"fieldname": "otp_hash", "fieldtype": "Data", "label": "OTP Hash", "hidden": 1, "read_only": 1},
+            {"fieldname": "otp_expiry", "fieldtype": "Datetime", "label": "OTP Expiry", "hidden": 1, "read_only": 1}
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        # Do NOT assign default permissions to standard roles (restricted to programmatic access)
+        doc.append("permissions", {
+            "role": "Administrator",
+            "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+        })
+        doc.append("permissions", {
+            "role": "System Manager",
+            "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+        })
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print("[SMRITI] Created SMRITI Key Custodian DocType")
+    except Exception as e:
+        frappe.log_error(f"Error creating SMRITI Key Custodian DocType: {str(e)}")
+
+
 def setup_smriti_retail_os():
     """
     Initializes custom fields, roles, and workspaces for standard DocTypes
@@ -1044,6 +1089,9 @@ def setup_smriti_retail_os():
 
     # 0a. Provision SMRITI Address Audit Log DocType
     create_audit_log_doctype()
+
+    # 0b. Provision SMRITI Key Custodian DocType (v1.8.3)
+    create_smriti_key_custodian_doctype()
 
     # 0c. Provision SMRITI Reporting DocTypes
     create_reporting_doctypes()

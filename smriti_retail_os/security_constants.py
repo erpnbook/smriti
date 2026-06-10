@@ -33,3 +33,9 @@ PROTECTED_CONFIG_PATTERNS = [
     "*.key",
     "*.p12",
 ]
+
+GPG_CIPHER_ALGO = "AES256"
+ENCRYPTED_BACKUP_SUFFIX = ".smriti.enc"
+METADATA_SUFFIX = ".smriti.json"
+OTP_EXPIRY_MINUTES = 15
+

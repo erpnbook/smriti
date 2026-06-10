@@ -117,8 +117,22 @@ def save_settings(settings):
     if isinstance(settings, str):
         settings = json.loads(settings)
         
+    old_settings = get_settings()
+    old_enabled = old_settings.get("enable_backup_encryption", 0)
+    new_enabled = settings.get("enable_backup_encryption", 0)
+    
     frappe.db.set_default("smriti_backup_settings", json.dumps(settings))
     frappe.db.commit()
+    
+    if old_enabled != new_enabled:
+        if new_enabled:
+            from smriti_retail_os.gpg_service import get_active_key_version_and_key, get_key_fingerprint
+            version, key = get_active_key_version_and_key()
+            fingerprint = get_key_fingerprint(key) if key else "None"
+            log_audit_event("Backup Encryption Enabled", f"Backup encryption enabled by {frappe.session.user}. Key version: {version} (Fingerprint: {fingerprint})")
+        else:
+            log_audit_event("Backup Encryption Disabled", f"Backup encryption disabled by {frappe.session.user}.")
+            
     return {"status": "success", "message": "Settings saved successfully."}
 
 
@@ -174,12 +188,16 @@ def get_backup_history():
             if _is_protected_file(name):
                 continue
 
+            # Skip sidecar json files
+            if name.endswith(".json"):
+                continue
+
             mtime = os.path.getmtime(f)
             size = os.path.getsize(f)
 
             # Determine type
             ftype = "other"
-            if "-database.sql.gz" in name:
+            if "-database.sql.gz" in name or name.endswith(".smriti.enc"):
                 ftype = "database"
             elif "-files.tar" in name:
                 ftype = "files"
@@ -245,22 +263,50 @@ def export_site_config(password):
     frappe.response.type = "download"
 
 
-# ─── v1.8.3 Placeholder Stubs (DO NOT IMPLEMENT HERE) ────────────────────────
+# ─── v1.8.3 Real Whitelisted Key Recovery Methods ────────────────────────────
 
+@frappe.whitelist()
 def verify_custodian_emails(emails):
-    """v1.8.3: Dual-custodian email verification. Not implemented in v1.8.2a."""
-    raise NotImplementedError(
-        "verify_custodian_emails() is reserved for v1.8.3 GPG key recovery workflow. "
-        "It is not available in v1.8.2a."
-    )
+    """Onboards custodians and sends verification OTPs."""
+    import json
+    if isinstance(emails, str):
+        try:
+            emails = json.loads(emails)
+        except Exception:
+            emails = [emails]
+    from smriti_retail_os.key_recovery_service import send_verification_email
+    res = []
+    for email in emails:
+        res.append(send_verification_email(email))
+    return res
 
 
-def send_recovery_key(recipient_email):
-    """v1.8.3: Send encrypted key fragment to a key custodian. Not implemented in v1.8.2a."""
-    raise NotImplementedError(
-        "send_recovery_key() is reserved for v1.8.3 GPG key recovery workflow. "
-        "It is not available in v1.8.2a."
-    )
+@frappe.whitelist()
+def send_recovery_key(recipient_email=None):
+    """Delegates to key_recovery_service.send_recovery_fragments."""
+    from smriti_retail_os.key_recovery_service import send_recovery_fragments
+    return send_recovery_fragments()
+
+
+@frappe.whitelist()
+def get_encryption_status():
+    """Returns GPG status, active version, active key fingerprint and custodians."""
+    from smriti_retail_os.key_recovery_service import get_encryption_status as ges
+    return ges()
+
+
+@frappe.whitelist()
+def confirm_custodian_otp(email, otp):
+    """Verifies the custodian OTP and sets status."""
+    from smriti_retail_os.key_recovery_service import confirm_verification
+    return confirm_verification(email, otp)
+
+
+@frappe.whitelist()
+def rotate_encryption_key(new_key):
+    """Rotates the encryption key in frappe.conf and logs old/new versions."""
+    from smriti_retail_os.key_recovery_service import rotate_encryption_key as rek
+    return rek(new_key)
 
 
 @frappe.whitelist()
@@ -283,19 +329,72 @@ def take_backup_now(backup_type="Database Only"):
         # 1. Run retention cleanups
         _cleanup_old_backups()
 
+        # Encryption Logic (v1.8.3)
+        settings = get_settings()
+        encryption_enabled = bool(settings.get("enable_backup_encryption", 0))
+        target_path = db_path
+        
+        if encryption_enabled and db_path:
+            import hashlib
+            from smriti_retail_os.gpg_service import verify_gpg_available, get_active_key_version_and_key, get_key_fingerprint, encrypt_file
+            
+            if not verify_gpg_available():
+                log_audit_event("GPG Executable Missing", f"GPG is missing on site {frappe.local.site} at {frappe.utils.now()}.")
+                raise RuntimeError("GPG executable is not available on system path.")
+                
+            version, key = get_active_key_version_and_key()
+            if not key:
+                frappe.throw(_("No active encryption key configured for encrypted backup."), frappe.ValidationError)
+                
+            if db_path.endswith("-database.sql.gz"):
+                base_prefix = db_path[:-len("-database.sql.gz")]
+                enc_path = f"{base_prefix}-database-{version}.smriti.enc"
+                meta_path = f"{base_prefix}-database-{version}.smriti.json"
+            else:
+                enc_path = f"{db_path}-{version}.smriti.enc"
+                meta_path = f"{db_path}-{version}.smriti.json"
+                
+            # Perform encryption and delete plaintext original
+            encrypt_file(db_path, key, enc_path)
+            
+            # Compute SHA-256 hash of the encrypted file
+            sha256 = hashlib.sha256()
+            with open(enc_path, "rb") as f:
+                while chunk := f.read(8192):
+                    sha256.update(chunk)
+            backup_sha256 = sha256.hexdigest()
+            
+            # Write metadata sidecar file
+            meta_data = {
+                "backup_id": os.path.basename(enc_path).split("-")[0],
+                "key_version": version,
+                "encrypted": True,
+                "cipher": "AES256",
+                "backup_sha256": backup_sha256
+            }
+            with open(meta_path, "w") as f:
+                json.dump(meta_data, f, indent=2)
+                
+            # Log audit event
+            fingerprint = get_key_fingerprint(key)
+            log_audit_event(
+                "Backup Encrypted",
+                f"Database backup encrypted using key version {version} (Fingerprint: {fingerprint}). File: {os.path.basename(enc_path)}"
+            )
+            target_path = enc_path
+
         # 2. Handle Cloud Sync (Rclone) - CLD-01
         cloud_res = None
-        if db_path:
-            cloud_res = rclone_sync(db_path)
+        if target_path:
+            cloud_res = rclone_sync(target_path)
 
         # 3. Handle Email notification (Scalable) - CLD-01
-        settings = get_settings()
         email_sent = False
         email_error = None
 
-        if settings.get("email_recipient"):
+        if settings.get("email_recipient") and target_path:
             try:
-                _email_backup(db_path, settings, cloud_status=cloud_res)
+                _email_backup(target_path, settings, cloud_status=cloud_res)
                 email_sent = True
             except Exception as ex:
                 email_error = str(ex)
@@ -303,7 +402,7 @@ def take_backup_now(backup_type="Database Only"):
         return {
             "status": "success",
             "message": "Backup and sync completed.",
-            "file": os.path.basename(db_path) if db_path else "",
+            "file": os.path.basename(target_path) if target_path else "",
             "cloud_sync": cloud_res,
             "email_sent": email_sent,
             "email_error": email_error
@@ -330,6 +429,11 @@ def delete_backup(file_name):
 
     if os.path.exists(file_path):
         os.remove(file_path)
+        # Also clean up the metadata sidecar json file if deleting an encrypted backup
+        if file_name.endswith(".smriti.enc"):
+            meta_path = file_path.replace(".smriti.enc", ".smriti.json")
+            if os.path.exists(meta_path):
+                os.remove(meta_path)
         return {"status": "success", "message": f"File {file_name} deleted."}
     else:
         frappe.throw(_("File {0} not found.").format(file_name), frappe.DoesNotExistError)
@@ -348,6 +452,74 @@ def restore_backup(file_name):
     if not os.path.exists(sql_path):
         frappe.throw(_("Backup file {0} not found.").format(file_name), frappe.DoesNotExistError)
         
+    # Check if backup file is encrypted
+    is_encrypted = file_name.endswith(".smriti.enc")
+    decrypted_tmp_path = None
+    target_sql_path = sql_path
+    key_version = "None"
+    
+    if is_encrypted:
+        import re
+        import hashlib
+        from smriti_retail_os.gpg_service import verify_gpg_available, get_key_from_conf, decrypt_file
+        
+        # Verify GPG available
+        if not verify_gpg_available():
+            log_audit_event("GPG Executable Missing", f"GPG is missing on site {frappe.local.site} at {frappe.utils.now()}.")
+            raise RuntimeError("GPG executable is not available on system path.")
+            
+        # Parse version from filename
+        version_match = re.search(r"-database-(v\d+)\.smriti\.enc$", file_name)
+        if not version_match:
+            version_match = re.search(r"-(v\d+)\.smriti\.enc$", file_name)
+            
+        if not version_match:
+            version_match = re.search(r"-v(\d+)", file_name)
+            if version_match:
+                filename_version = f"v{version_match.group(1)}"
+            else:
+                raise RuntimeError(f"Could not parse key version from filename {file_name}")
+        else:
+            filename_version = version_match.group(1)
+            
+        key_version = filename_version
+            
+        # Check sidecar JSON
+        meta_file_name = file_name.replace(".smriti.enc", ".smriti.json")
+        meta_path = os.path.join(backups_dir, meta_file_name)
+        if not os.path.exists(meta_path):
+            raise RuntimeError(f"Metadata sidecar file {meta_file_name} not found.")
+            
+        with open(meta_path, "r") as f:
+            meta_data = json.load(f)
+            
+        # Validate version
+        meta_version = meta_data.get("key_version")
+        if meta_version != filename_version:
+            raise RuntimeError(f"Key version mismatch: filename version is {filename_version}, sidecar version is {meta_version}.")
+            
+        # Validate hash integrity
+        sha256 = hashlib.sha256()
+        with open(sql_path, "rb") as f:
+            while chunk := f.read(8192):
+                sha256.update(chunk)
+        actual_sha = sha256.hexdigest()
+        expected_sha = meta_data.get("backup_sha256")
+        if actual_sha != expected_sha:
+            raise RuntimeError(f"Integrity check failed: encrypted backup file SHA-256 is {actual_sha}, expected {expected_sha}.")
+            
+        # Decrypt to a temporary location
+        import tempfile
+        tmp_fd, decrypted_tmp_path = tempfile.mkstemp(suffix="-database.sql.gz", dir=backups_dir)
+        os.close(tmp_fd)
+        
+        # Get key
+        key = get_key_from_conf(filename_version)
+        
+        # Decrypt
+        decrypt_file(sql_path, key, decrypted_tmp_path)
+        target_sql_path = decrypted_tmp_path
+
     # Find matching files and private files
     prefix = file_name.split("-")[0] # E.g. "20260529_025305"
     
@@ -375,7 +547,7 @@ def restore_backup(file_name):
         "--site",
         frappe.local.site,
         "restore",
-        sql_path,
+        target_sql_path,
         "--db-root-password",
         db_root_password,
         "--force"
@@ -387,6 +559,8 @@ def restore_backup(file_name):
         cmd.extend(["--with-private-files", private_tar])
         
     # Execute restore subprocess
+    restore_succeeded = False
+    decrypted_tmp = decrypted_tmp_path
     try:
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode != 0:
@@ -395,6 +569,15 @@ def restore_backup(file_name):
                 "status": "failed",
                 "message": res.stderr or res.stdout or "Restoration process failed. Check Error Log."
             }
+            
+        restore_succeeded = True
+        
+        # Log successful restore audit event
+        if is_encrypted:
+            log_audit_event(
+                "Encrypted Restore",
+                f"Encrypted backup restored. Filename: {file_name}. Key version: {key_version}. User: {frappe.session.user}"
+            )
             
         return {
             "status": "success",
@@ -406,6 +589,14 @@ def restore_backup(file_name):
             "status": "failed",
             "message": str(e)
         }
+    finally:
+        # Secure deletion of decrypted temp file in all execution flows
+        if decrypted_tmp and os.path.exists(decrypted_tmp):
+            try:
+                os.remove(decrypted_tmp)
+            except Exception:
+                pass
+        decrypted_tmp = None
 
 
 def run_scheduled_backup():
