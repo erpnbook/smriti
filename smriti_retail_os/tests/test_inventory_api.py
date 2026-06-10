@@ -54,6 +54,15 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
         # Ensure the test company has a valid GSTIN and registered company address (Required for India Compliance)
         frappe.db.set_value("Company", self.company, "gstin", "27AAXFT2508H1ZR")
         
+        # Seed Stock Entry Types if missing in isolated test DB
+        for et in ["Material Receipt", "Material Issue", "Material Transfer"]:
+            if not frappe.db.exists("Stock Entry Type", et):
+                doc = frappe.new_doc("Stock Entry Type")
+                doc.name = et
+                doc.purpose = et
+                doc.insert(ignore_permissions=True)
+
+        
         addr_name = f"{self.company}-Registered-Test"
         if not frappe.db.exists("Address", addr_name):
             addr = frappe.new_doc("Address")

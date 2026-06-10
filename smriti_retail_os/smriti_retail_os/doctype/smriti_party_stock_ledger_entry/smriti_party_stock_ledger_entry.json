@@ -66,10 +66,11 @@
       "fieldname": "voucher_type",
       "fieldtype": "Select",
       "label": "Voucher Type",
-      "options": "\nDispatch\nSales\nAdjustment\nReturn\nOpening",
+      "options": "\nDispatch\nSales\nAdjustment\nReturn\nOpening\nTransfer",
       "reqd": 1,
       "read_only": 1
     },
+
     {
       "fieldname": "voucher_no",
       "fieldtype": "Data",

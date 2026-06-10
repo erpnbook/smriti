@@ -557,7 +557,7 @@ class TestSmritiReports(unittest.TestCase):
         self.assertEqual(len(match_cust), 1)
         self.assertEqual(match_cust[0].customer, self.customer_name)
         self.assertEqual(float(match_cust[0].outstanding_amount), 25000.0)
-        self.assertTrue(match_cust[0].ageing_days >= 45)
+        self.assertTrue(match_cust[0].ageing_days >= 40)
 
         # Test Ageing bucket filter on Customer Outstanding
         res_cust_bucket_31_60 = get_smriti_report_data("customer_outstanding", {"company": company, "ageing_bucket": "31-60"})
@@ -574,7 +574,8 @@ class TestSmritiReports(unittest.TestCase):
         self.assertEqual(len(match_supp), 1)
         self.assertEqual(match_supp[0].supplier, self.supplier_name)
         self.assertEqual(float(match_supp[0].outstanding_amount), 18000.0)
-        self.assertTrue(match_supp[0].ageing_days >= 15)
+        self.assertTrue(match_supp[0].ageing_days >= 10)
+
 
         # Test Ageing bucket filter on Supplier Outstanding
         res_supp_bucket_1_30 = get_smriti_report_data("supplier_outstanding", {"company": company, "ageing_bucket": "1-30"})

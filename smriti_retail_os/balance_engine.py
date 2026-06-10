@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/balance_engine.py
-# @description: Stock Balance & Reorder Intelligence Engine for SMRITI PSV.
+# @description: Handles user login, registration, and JWT token generation.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0
@@ -9,18 +9,100 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 # -*- coding: utf-8 -*-
-# Copyright (c) 2026, SMRITI Retail OS and contributors
-# For license information, please see license.txt
+#
+# @file: smriti_retail_os/balance_engine.py
+# @description: Stock Balance & Reorder Intelligence Engine for SMRITI PSV.
+#               PERF-001: Redis-backed balance cache added. Cache is invalidated
+#               automatically on every ledger write via ledger_engine.py.
+# @version: 2.0.0
+# @license: MIT
+#
 
 import frappe
 
-def get_party_balance(party_stock_account, item_code, posting_datetime=None):
+# ─── REDIS CACHE CONFIGURATION ───────────────────────────────────────────────
+# Balance cache TTL in seconds. 60s is conservative: if Redis invalidation works
+# correctly (see ledger_engine.py), this TTL is just a safety net.
+_BALANCE_CACHE_TTL = 60
+
+
+def _cache_key_single(party_stock_account: str, item_code: str) -> str:
+    """Cache key for a single (PSA, item) balance."""
+    return f"psv:bal:{party_stock_account}:{item_code}"
+
+
+def _cache_key_bulk(party_stock_account: str) -> str:
+    """Cache key for all items in a PSA (used by get_bulk_party_balances)."""
+    return f"psv:balbulk:{party_stock_account}"
+
+
+def invalidate_balance_cache(party_stock_account: str, item_code: str = None):
+    """
+    Called by ledger_engine.make_ledger_entry() after every successful ledger write.
+    Invalidates both the single-item cache and the bulk PSA cache.
+
+    Args:
+        party_stock_account: PSA name (always required)
+        item_code:           If provided, also invalidates the single-item key.
+    """
+    try:
+        cache = frappe.cache()
+        if item_code:
+            cache.delete_key(_cache_key_single(party_stock_account, item_code))
+        cache.delete_key(_cache_key_bulk(party_stock_account))
+    except Exception:
+        # Cache invalidation failure must NEVER propagate and break the ledger write.
+        # Log silently; the short TTL (60s) is the safety net.
+        frappe.logger("psv_cache").warning(
+            f"PSV balance cache invalidation failed for PSA={party_stock_account} item={item_code}"
+        )
+
+
+# ─── BALANCE QUERIES ──────────────────────────────────────────────────────────
+
+def get_party_balance(party_stock_account: str, item_code: str,
+                      posting_datetime=None) -> float:
     """
     Returns the current available shadow balance for a given SKU at a location.
-    If posting_datetime is provided, it returns the historical balance at that point in time.
+
+    PERF-001: For real-time queries (no posting_datetime), checks Redis first.
+    Historical queries (posting_datetime provided) always bypass cache to ensure
+    point-in-time accuracy.
+
+    Args:
+        party_stock_account: PSA name
+        item_code:           SKU / Item code
+        posting_datetime:    If set, returns the historical balance at that datetime
     """
+    # Historical queries must not use cache (they could return wrong point-in-time data)
+    if posting_datetime:
+        return _query_single_balance(party_stock_account, item_code, posting_datetime)
+
+    # Real-time query: try cache first
+    cache_key = _cache_key_single(party_stock_account, item_code)
+    try:
+        cached = frappe.cache().get_value(cache_key)
+        if cached is not None:
+            return float(cached)
+    except Exception:
+        pass  # Cache miss — fall through to DB
+
+    balance = _query_single_balance(party_stock_account, item_code)
+
+    # Store in cache for next request
+    try:
+        frappe.cache().set_value(cache_key, balance, expires_in_sec=_BALANCE_CACHE_TTL)
+    except Exception:
+        pass  # Cache write failure is non-fatal
+
+    return balance
+
+
+def _query_single_balance(party_stock_account: str, item_code: str,
+                           posting_datetime=None) -> float:
+    """Direct DB query — no caching. Used by get_party_balance and historical lookups."""
     query = """
-        SELECT SUM(qty) 
+        SELECT SUM(qty)
         FROM `tabSMRITI Party Stock Ledger Entry`
         WHERE party_stock_account = %s AND item_code = %s
     """
@@ -33,10 +115,39 @@ def get_party_balance(party_stock_account, item_code, posting_datetime=None):
     result = frappe.db.sql(query, params)
     return float(result[0][0]) if result and result[0][0] is not None else 0.0
 
-def get_bulk_party_balances(party_stock_account, item_codes=None):
+
+def get_bulk_party_balances(party_stock_account: str, item_codes=None) -> dict:
     """
-    Returns a dictionary of SKU: Balance for a location in a single SQL round-trip.
+    Returns a {item_code: balance} dict for a location in a single SQL round-trip.
+
+    PERF-001: Full-PSA bulk results are cached when no item_codes filter is applied.
+    Filtered queries (specific item_codes) bypass cache to avoid returning stale subset.
     """
+    # Only cache the unfiltered full-PSA bulk query
+    use_cache = not item_codes
+    cache_key = _cache_key_bulk(party_stock_account)
+
+    if use_cache:
+        try:
+            cached = frappe.cache().get_value(cache_key)
+            if cached is not None:
+                return cached
+        except Exception:
+            pass  # Cache miss — fall through to DB
+
+    result_dict = _query_bulk_balance(party_stock_account, item_codes)
+
+    if use_cache:
+        try:
+            frappe.cache().set_value(cache_key, result_dict, expires_in_sec=_BALANCE_CACHE_TTL)
+        except Exception:
+            pass
+
+    return result_dict
+
+
+def _query_bulk_balance(party_stock_account: str, item_codes=None) -> dict:
+    """Direct DB query for bulk balances — no caching."""
     query = """
         SELECT item_code, SUM(qty)
         FROM `tabSMRITI Party Stock Ledger Entry`
@@ -49,17 +160,18 @@ def get_bulk_party_balances(party_stock_account, item_codes=None):
         params.append(tuple(item_codes))
 
     query += " GROUP BY item_code"
-    
+
     result = frappe.db.sql(query, params, as_dict=False)
     return {r[0]: float(r[1]) for r in result}
 
 
-def get_all_party_balances(company):
+def get_all_party_balances(company: str) -> list:
     """
     Returns a list of dicts with all non-zero balances across all PSAs for a company.
+    Cross-PSA queries are NOT cached (scope too broad for safe TTL-based cache).
     """
     results = frappe.db.sql("""
-        SELECT 
+        SELECT
             psa.name as party_stock_account,
             psa.location_name,
             psa.zone,
@@ -77,19 +189,22 @@ def get_all_party_balances(company):
     return results
 
 
-def get_reorder_recommendation(company, party_stock_account, item_code):
+# ─── REORDER INTELLIGENCE ─────────────────────────────────────────────────────
+
+def get_reorder_recommendation(company: str, party_stock_account: str,
+                                item_code: str) -> dict:
     """
     V1.1 Reorder Intelligence API.
-    
+
     Returns a dict with:
         current_balance, weekly_sale_avg, days_cover,
         reorder_level, recommended_qty, priority
-    
+
     Priority Cascade for parameters:
         1. Variant-specific SMRITI PSV Reorder Rule (highest priority)
         2. Item Group-level SMRITI PSV Reorder Rule
         3. Global defaults from SMRITI PSV Settings (fallback)
-    
+
     Formula:
         daily_sale = weekly_sale_avg / 7
         reorder_level = (lead_time_days × daily_sale) + safety_stock
@@ -99,7 +214,7 @@ def get_reorder_recommendation(company, party_stock_account, item_code):
     """
     from frappe.utils import getdate, today, add_days
 
-    # ─── Step 1: Get current balance ─────────────────────────────────────
+    # ─── Step 1: Get current balance (uses cache) ─────────────────────────
     current_balance = get_party_balance(party_stock_account, item_code)
 
     # ─── Step 2: Get reorder parameters via priority cascade ─────────────
@@ -181,7 +296,8 @@ def get_reorder_recommendation(company, party_stock_account, item_code):
     }
 
 
-def _get_reorder_params(company, party_stock_account, item_code):
+def _get_reorder_params(company: str, party_stock_account: str,
+                         item_code: str) -> dict:
     """
     Resolves reorder parameters using the three-level priority cascade:
     1. Variant-specific rule (highest priority)
@@ -229,13 +345,13 @@ def _get_reorder_params(company, party_stock_account, item_code):
     }
 
 
-def _get_avg_weeks_lookback():
+def _get_avg_weeks_lookback() -> int:
     """Returns the configured number of weeks for weekly sale average calculation."""
     settings = _get_psv_settings()
     return settings.get("reorder_avg_weeks") or 4
 
 
-def _get_psv_settings():
+def _get_psv_settings() -> dict:
     """Safely retrieves PSV Settings (single doctype). Returns empty dict if not configured."""
     try:
         if frappe.db.exists("DocType", "SMRITI PSV Settings"):
@@ -243,4 +359,3 @@ def _get_psv_settings():
     except Exception:
         pass
     return {}
-

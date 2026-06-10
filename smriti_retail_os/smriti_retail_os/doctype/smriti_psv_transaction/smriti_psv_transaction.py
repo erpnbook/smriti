@@ -40,42 +40,91 @@ class SMRITIPSVTransaction(Document):
     def on_cancel(self):
         self.status = "Cancelled"
         self.update_ledger(cancel=True)
+        self.check_and_log_negative_balances()
+
+    def check_and_log_negative_balances(self):
+        from smriti_retail_os.balance_engine import get_party_balance
+        for item in self.items:
+            bal = get_party_balance(self.party_stock_account, item.item_code)
+            if bal < 0:
+                # Set PSA status to Pending Reconciliation
+                frappe.db.set_value("SMRITI Party Stock Account", self.party_stock_account, "status", "Pending Reconciliation")
+                
+                # Create exception record
+                sales_invoice = self.reference_name if self.reference_doctype == "Sales Invoice" else None
+                from smriti_retail_os.psv_service import create_or_update_alert
+                create_or_update_alert(
+                    party_stock_account=self.party_stock_account,
+                    alert_type="Negative Balance",
+                    severity="Critical",
+                    details=f"Critical: Negative shadow balance ({bal} units) detected on cancellation of {self.reference_doctype} {self.reference_name}.",
+                    item_code=item.item_code,
+                    sales_invoice=sales_invoice,
+                    missing_qty=abs(bal)
+                )
 
     def update_ledger(self, cancel=False):
         multiplier = -1 if cancel else 1
-        
+
         for item in self.items:
             qty = item.qty * multiplier
-            
-            # Reversals logic: If it's a deduction (Sales, Transfer Out), we pass negative qty to ledger
-            if self.transaction_type in ("SALES_UPLOAD", "POS_SALE", "TRANSFER_OUT", "AUDIT_ADJUSTMENT"):
-                 if self.transaction_type == "AUDIT_ADJUSTMENT":
-                     # Audit adjustment qty is the variance.
-                     # If variance is -5 (missing stock), we want to deduct 5. Ledger expects -5.
-                     # If variance is +5 (extra stock), we want to add 5. Ledger expects +5.
-                     pass # Qty is already correctly signed in the item row based on variance
-                 elif self.transaction_type == "RETURN":
-                     # Return is an addition back to stock
-                     pass
-                 else:
-                     # Normal sales/outbound are deductions
-                     qty = -qty
-            
+
+            # Sign logic (from the PSA / channel perspective):
+            # ─────────────────────────────────────────────────────────────────
+            # SALES_UPLOAD, POS_SALE — stock sold by channel → outflow (negative)
+            # RETURN           — sold goods returned to channel → inflow (positive)
+            # TRANSFER_OUT     — company dispatches stock TO channel → inflow (positive)
+            # TRANSFER_IN      — stock coming back FROM channel TO company → outflow (negative)
+            # AUDIT_ADJUSTMENT — variance already signed in the item qty field
+            # OPENING          — initial stock → inflow (positive)
+            # MANUAL_ADJUSTMENT— signed explicitly in item qty field
+            # ─────────────────────────────────────────────────────────────────
+            if self.transaction_type in ("SALES_UPLOAD", "POS_SALE", "TRANSFER_IN"):
+                qty = -qty
+
+            # BUG-003 FIX: Map every transaction type to its ledger voucher_type.
+            # Old code defaulted TRANSFER_IN and MANUAL_ADJUSTMENT to 'Adjustment',
+            # making them indistinguishable in reports and reorder intelligence.
+            v_type_map = {
+                "SALES_UPLOAD":       "Sales",
+                "POS_SALE":           "Sales",
+                "RETURN":             "Return",
+                "TRANSFER_OUT":       "Dispatch",
+                "TRANSFER_IN":        "Transfer",   # BUG-003: was 'Adjustment'
+                "OPENING":            "Opening",
+                "AUDIT_ADJUSTMENT":   "Adjustment",
+                "MANUAL_ADJUSTMENT":  "Adjustment",
+            }
+            v_type = v_type_map.get(self.transaction_type, "Adjustment")
+
             make_ledger_entry(
                 party_stock_account=self.party_stock_account,
                 item_code=item.item_code,
                 qty=qty,
-                voucher_type="PSV Transaction",
-                voucher_no=self.name,
+                voucher_type=v_type,
+                voucher_no=f"VOID-{self.name}" if cancel else self.name,
                 company=self.company,
                 posting_datetime=self.posting_date
             )
             
-        action = "Cancelled" if cancel else "Submitted"
+        # Map to allowed select options in SMRITI PSV Activity Log
+        if cancel:
+            act_type = "Cancel Dispatch"
+        else:
+            if self.transaction_type == "SALES_UPLOAD":
+                act_type = "Upload Sales"
+            elif self.transaction_type == "AUDIT_ADJUSTMENT":
+                act_type = "Approve Snapshot"
+            elif self.transaction_type == "OPENING":
+                act_type = "Opening Balance Import"
+            else:
+                act_type = "Submit Dispatch"
+
+        action_label = "Cancelled" if cancel else "Submitted"
         log_activity(
-            action_type=f"Transaction {action}",
+            action_type=act_type,
             party_stock_account=self.party_stock_account,
             reference_doctype="SMRITI PSV Transaction",
             reference_name=self.name,
-            details=f"{action} {self.transaction_type} for {len(self.items)} items."
+            details=f"{action_label} {self.transaction_type} for {len(self.items)} items."
         )

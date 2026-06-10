@@ -59,9 +59,24 @@ def ensure_test_tax_template(company):
         except Exception as e:
             print("Failed to create test tax template:", str(e))
 
+def ensure_item_group(name):
+    if not frappe.db.exists("Item Group", name):
+        try:
+            ig = frappe.new_doc("Item Group")
+            ig.item_group_name = name
+            ig.is_group = 0
+            parent = frappe.db.get_value("Item Group", {"is_group": 1}, "name")
+            if parent:
+                ig.parent_item_group = parent
+            ig.insert(ignore_permissions=True)
+            frappe.db.commit()
+        except Exception as e:
+            print("Failed to create test item group:", name, str(e))
+
 class TestSmritiRetailItemMasterAPI(unittest.TestCase):
 
     def setUp(self):
+        ensure_item_group("Products")
         # 1. Resolve basic test dependencies
         self.company = frappe.db.exists("Company", "_Test Company")
         if not self.company:
@@ -246,6 +261,8 @@ class TestPivotMatrixImport(unittest.TestCase):
 
     def setUp(self):
         """Resolve test dependencies and ensure clean state."""
+        ensure_item_group("Products")
+        ensure_item_group("SANDAL")
         self.company = frappe.db.exists("Company", "_Test Company")
         if not self.company:
             comp = frappe.new_doc("Company")
@@ -443,6 +460,7 @@ class TestPivotMatrixImport(unittest.TestCase):
 
 class TestBarcodeHardening(unittest.TestCase):
     def setUp(self):
+        ensure_item_group("Products")
         self.company = frappe.db.exists("Company", "_Test Company")
         if not self.company:
             comp = frappe.new_doc("Company")

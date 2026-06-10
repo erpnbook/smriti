@@ -356,8 +356,9 @@ function closeUploadModal() {
 async function uploadFile(file) {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('is_private', 0);
+    formData.append('is_private', 1);  // SEC-005 FIX: Distributor sales data must be private
     formData.append('folder', 'Home/Attachments');
+
 
     const res = await fetch('/api/method/upload_file', {
         method: 'POST',

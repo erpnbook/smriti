@@ -21,8 +21,8 @@ from smriti_retail_os.ledger_engine import make_ledger_entry
 
 class TestPSV(FrappeTestCase):
     def setUp(self):
-        # Clean up database tables for a clean slate
         frappe.db.delete("SMRITI Party Stock Ledger Entry")
+        frappe.db.delete("SMRITI PSV Transaction")
         frappe.db.delete("SMRITI Party Sales Upload")
         frappe.db.delete("SMRITI Party Sales Item")
         frappe.db.delete("SMRITI Party Physical Snapshot")

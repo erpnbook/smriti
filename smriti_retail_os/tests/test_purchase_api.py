@@ -40,6 +40,17 @@ class TestSmritiRetailPurchaseAPI(unittest.TestCase):
             ig.insert(ignore_permissions=True)
             self.item_group = ig.name
 
+        # Ensure Products exists for footwear matrix auto-creation fallback
+        if not frappe.db.exists("Item Group", "Products"):
+            ig = frappe.new_doc("Item Group")
+            ig.item_group_name = "Products"
+            ig.is_group = 0
+            parent = frappe.db.get_value("Item Group", {"is_group": 1}, "name")
+            if parent:
+                ig.parent_item_group = parent
+            ig.insert(ignore_permissions=True)
+            frappe.db.commit()
+
         # Resolve Company
         self.company = frappe.db.exists("Company", "_Test Company")
         if not self.company:

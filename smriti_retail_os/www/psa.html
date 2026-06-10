@@ -336,13 +336,8 @@ async function loadDashboardSummary() {
 
 async function loadPsaList() {
     try {
-        const data = await api('frappe.client.get_list', {
-            doctype: 'SMRITI Party Stock Account',
-            fields: ['name', 'company', 'customer', 'location_name', 'zone', 'region', 'area_manager', 'contact_person', 'mobile', 'email', 'active', 'status'],
-            order_by: 'modified desc',
-            limit_page_length: 200
-        });
-
+        // SEC-001 FIX: Route through SMRITI service controller, not raw frappe.client.get_list
+        const data = await api('smriti_retail_os.smriti_retail_os.psv_api.list_psas');
         masterPsaList = data || [];
         renderTable(masterPsaList);
     } catch(e) {
@@ -491,8 +486,9 @@ function openAddPsaModal() {
 async function openEditPsaModal(name) {
     try {
         toast('Fetching account details...', 'info');
-        const a = await api('frappe.client.get', { doctype: 'SMRITI Party Stock Account', name: name });
-        
+        // SEC-001 FIX: Route through SMRITI service controller, not raw frappe.client.get
+        const a = await api('smriti_retail_os.smriti_retail_os.psv_api.get_psa', { name: name });
+
         document.getElementById('modal-action-title').textContent = `Edit Account: ${a.name}`;
         document.getElementById('psa-id').value = a.name;
         document.getElementById('psa-company').value = a.company;
@@ -544,41 +540,28 @@ async function savePsaDetail() {
 
     try {
         if (!psaId) {
-            // Create
-            await api('frappe.client.insert', {
-                doc: {
-                    doctype: 'SMRITI Party Stock Account',
-                    company: company,
-                    customer: customer,
-                    location_name: location,
-                    zone: zone,
-                    region: region,
-                    area_manager: manager || null,
-                    contact_person: contact,
-                    mobile: mobile,
-                    email: email,
-                    active: active
-                }
+            // SEC-001 FIX: Use SMRITI service controller instead of raw frappe.client.insert
+            await api('smriti_retail_os.smriti_retail_os.psv_api.create_psa', {
+                company, customer,
+                location_name: location,
+                zone, region,
+                area_manager: manager || null,
+                contact_person: contact,
+                mobile, email, active
             });
             toast('Account created successfully!', 'success');
         } else {
-            // Update
-            await api('frappe.client.set_value', {
-                doctype: 'SMRITI Party Stock Account',
+            // SEC-001 FIX: Use SMRITI service controller instead of raw frappe.client.set_value
+            await api('smriti_retail_os.smriti_retail_os.psv_api.update_psa', {
                 name: psaId,
-                fieldname: {
-                    zone: zone,
-                    region: region,
-                    area_manager: manager || null,
-                    contact_person: contact,
-                    mobile: mobile,
-                    email: email,
-                    active: active
-                }
+                zone, region,
+                area_manager: manager || null,
+                contact_person: contact,
+                mobile, email, active
             });
             toast('Account settings saved successfully!', 'success');
         }
-        
+
         closePsaModal();
         await loadPsaList();
     } catch(e) {

@@ -65,7 +65,7 @@ def _validate_company_abbr(abbr, current_company=None):
         )
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_setup_wizard_initial_data():
     """
     Returns initial state for the Setup Wizard.
@@ -127,7 +127,7 @@ def get_setup_wizard_initial_data():
         "current_user": frappe.session.user
     }
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def run_setup_wizard(setup_data):
     """
     Executes setup wizard configuration programmatically.
@@ -212,6 +212,7 @@ def run_setup_wizard(setup_data):
 
         # Normalize company_name to exact database primary key representation
         company_name = co.name
+        currency = co.default_currency
 
         # Set default company globally
         frappe.defaults.set_global_default("company", company_name)
@@ -226,7 +227,7 @@ def run_setup_wizard(setup_data):
             addr.address_title = store_trade_name
             addr.address_type = "Office"
             addr.address_line1 = setup_data.get("store_address_line1") or "Primary Store Location"
-            addr.address_line2 = setup_data.get("store_address_line2")
+            addr.address_line2 = setup_data.get("store_area_locality")
             addr.city = setup_data.get("store_city") or "Mumbai"
             addr.state = state
             addr.country = country
@@ -256,7 +257,7 @@ def run_setup_wizard(setup_data):
             addr = frappe.get_doc("Address", address_name)
             addr.address_title = store_trade_name
             addr.address_line1 = setup_data.get("store_address_line1") or "Primary Store Location"
-            addr.address_line2 = setup_data.get("store_address_line2")
+            addr.address_line2 = setup_data.get("store_area_locality")
             addr.city = setup_data.get("store_city") or "Mumbai"
             addr.state = state
             addr.country = country
@@ -729,6 +730,11 @@ def run_setup_wizard(setup_data):
 
         # Set Company Settings configured flag
         frappe.db.set_value("Company", company_name, "custom_smriti_settings_configured", 1)
+
+        # Set System Settings flags
+        frappe.db.set_single_value("System Settings", "setup_complete", 1)
+        frappe.db.set_single_value("System Settings", "custom_smriti_frontend_enabled", 1)
+
         frappe.db.commit()
 
         # Clear Cache

@@ -10,3 +10,6 @@ smriti_retail_os.patches.v1_2_10.migrate_print_template_custom_fields
 smriti_retail_os.patches.v1_2_3.purge_stale_mop_and_gst_rows
 smriti_retail_os.patches.mark_setup_complete
 smriti_retail_os.patches.add_smriti_feature_flag
+
+# v1.3.0 — PERF-002/PERF-003: Composite index on PSV Ledger Entry for balance query performance
+smriti_retail_os.patches.add_psv_ledger_composite_index

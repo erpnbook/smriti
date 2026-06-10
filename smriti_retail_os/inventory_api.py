@@ -351,18 +351,19 @@ def create_stock_audit(items):
 
     items_list = frappe.parse_json(items)
     company = frappe.defaults.get_user_default("company") or frappe.get_all("Company", limit=1)[0].name
-    # Resolve asset/liability difference account for opening entries
+    # Resolve asset/liability difference account for opening entries (strictly must be Asset or Liability root type)
     difference_account = (
-        frappe.db.get_value("Account", {"account_type": "Temporary", "company": company}, "name")
-        or frappe.db.get_value("Account", {"account_name": "Temporary Opening", "company": company}, "name")
+        frappe.db.get_value("Account", {"account_type": "Temporary", "company": company, "root_type": ["in", ["Asset", "Liability"]]}, "name")
+        or frappe.db.get_value("Account", {"account_name": "Temporary Opening", "company": company, "root_type": ["in", ["Asset", "Liability"]]}, "name")
         or frappe.db.get_value("Account", {"root_type": "Asset", "company": company, "is_group": 0}, "name")
+        or frappe.db.get_value("Account", {"root_type": "Liability", "company": company, "is_group": 0}, "name")
     )
 
     sr = frappe.new_doc("Stock Reconciliation")
     sr.purpose = "Stock Reconciliation"
     sr.company = company
     sr.posting_date = nowdate()
-    sr.difference_account = difference_account
+    sr.expense_account = difference_account
 
     for it in items_list:
         item_code = it.get("item_code")

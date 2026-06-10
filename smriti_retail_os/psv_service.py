@@ -31,9 +31,17 @@ def create_psv_transaction(psa, transaction_type, items, company=None, reference
     fingerprint = None
     if reference_doctype and reference_name:
         fingerprint = f"{transaction_type}::{reference_doctype}::{reference_name}"
-        existing = frappe.db.get_value("SMRITI PSV Transaction", {"mapping_fingerprint": fingerprint, "docstatus": 1}, "name")
+        # BUG-006 FIX: Check both Draft (0) and Submitted (1) to close the race window
+        # where two concurrent requests both pass a docstatus=1-only check.
+        # Cancelled transactions (docstatus=2) are excluded — they may be legitimately reprocessed.
+        existing = frappe.db.get_value(
+            "SMRITI PSV Transaction",
+            {"mapping_fingerprint": fingerprint, "docstatus": ["in", [0, 1]]},
+            "name"
+        )
         if existing:
             return existing
+
 
     doc = frappe.new_doc("SMRITI PSV Transaction")
     doc.party_stock_account = psa
@@ -58,6 +66,7 @@ def create_psv_transaction(psa, transaction_type, items, company=None, reference
     if not doc.items:
         return None
         
+    doc.flags.ignore_links = True
     doc.insert(ignore_permissions=True)
     doc.submit()
     return doc.name
@@ -198,20 +207,46 @@ def process_sales_upload_submit(doc):
     create_psv_transaction(doc.party_stock_account, "SALES_UPLOAD", items_data, doc.company, doc.doctype, doc.name, f"Imported from {doc.name}")
 
 def process_sales_upload_cancel(doc):
-    """Reverses weekly sales entries"""
+    """
+    Reverses a weekly sales upload.
+
+    BUG-004 FIX: Previously wrote raw make_ledger_entry() calls directly, causing
+    double-reversal because the PSV Transaction's on_cancel already writes VOID entries.
+
+    Correct approach:
+    1. Find the submitted SMRITI PSV Transaction linked to this upload.
+    2. Cancel it — on_cancel() fires update_ledger(cancel=True) which writes the
+       correct VOID entries with proper sign handling.
+    3. Fallback: if no PSV Transaction exists (legacy/pre-fix data), write direct
+       reversal entries as before — but with the correct sign.
+    """
     frappe.db.set_value(doc.doctype, doc.name, "status", "Draft")
 
-    for item in doc.items:
-        make_ledger_entry(
-            company=doc.company,
-            posting_datetime=now_datetime(),
-            party_stock_account=doc.party_stock_account,
-            item_code=item.item_code,
-            qty=item.qty_sold, # Reversing positive
-            voucher_type="Sales",
-            voucher_no=f"VOID-{doc.name}",
-            reason=_("Import Cancelled")
-        )
+    # Preferred path: cancel the PSV Transaction (handles ledger reversal atomically)
+    tx_name = frappe.db.get_value(
+        "SMRITI PSV Transaction",
+        {"reference_doctype": doc.doctype, "reference_name": doc.name, "docstatus": 1},
+        "name"
+    )
+    if tx_name:
+        frappe.get_doc("SMRITI PSV Transaction", tx_name).cancel()
+    else:
+        # Fallback for historical data that was processed before the PSV Transaction
+        # document layer existed. Write direct reversal entries.
+        for item in doc.items:
+            # qty_sold is positive (e.g. 10 units sold).
+            # Original SALES_UPLOAD ledger entry was negative (-10).
+            # Reversal must be positive (+10) to restore balance.
+            make_ledger_entry(
+                company=doc.company,
+                posting_datetime=now_datetime(),
+                party_stock_account=doc.party_stock_account,
+                item_code=item.item_code,
+                qty=abs(item.qty_sold),  # Always positive — restoring stock
+                voucher_type="Sales",
+                voucher_no=f"VOID-{doc.name}",
+                reason=_("Import Cancelled — direct fallback reversal")
+            )
 
     log_activity(
         action_type="Cancel Dispatch",
@@ -220,6 +255,7 @@ def process_sales_upload_cancel(doc):
         reference_name=doc.name,
         details="Reversed weekly sales file import. Balances restored."
     )
+
 
 
 # ─── PHYSICAL STOCK RECONCILIATION SNAPSHOT ────────────────────────────────────
@@ -248,19 +284,36 @@ def process_physical_snapshot_cancel(doc):
         frappe.get_doc("SMRITI PSV Transaction", tx_name).cancel()
 
 def import_opening_balances(company, party_stock_account, items_data):
+    # INT-004 FIX: Use a date-scoped pseudo-reference as the fingerprint source so
+    # that calling this function twice for the same PSA on the same day is idempotent.
+    from frappe.utils import today
+    pseudo_ref_name = f"OPENING-{party_stock_account}-{today()}"
+
     return create_psv_transaction(
         psa=party_stock_account,
         transaction_type="OPENING",
         items=items_data,
         company=company,
+        reference_doctype="Opening Balance Import",
+        reference_name=pseudo_ref_name,
         remarks="Initial Opening Balance Import"
     )
 
 @frappe.whitelist()
 def process_opening_balance(company, party_stock_account, items):
+    """
+    SEC-004 FIX: Enforce role-based access before allowing opening balance import.
+    Previously public to any authenticated user — now restricted to store managers.
+    """
+    frappe.only_for(["System Manager", "SMRITI Store Manager"])
+
     if isinstance(items, str):
         import json
         items = json.loads(items)
+
+    if not company or not party_stock_account or not items:
+        frappe.throw(_("Company, Party Stock Account, and at least one item are required."))
+
     return import_opening_balances(company, party_stock_account, items)
 
 # ─── OPERATIONAL HEALTH ALERTS & CHECKS ────────────────────────────────────────
@@ -497,3 +550,12 @@ def run_psv_daily_health_check():
         })
         if not still_has_open_alerts and loc["status"] != "Active":
             frappe.db.set_value("SMRITI Party Stock Account", loc_name, "status", "Active")
+
+
+def validate_sales_invoice_cancel(doc, method=None):
+    """
+    Hook called before Sales Invoice cancellation.
+    SMRITI PSV allows invoice cancellation to proceed even if it causes a temporary negative balance,
+    creating an exception record downstream during on_cancel. Thus, this is a pass-through guard.
+    """
+    pass

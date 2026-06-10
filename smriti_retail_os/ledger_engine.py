@@ -62,7 +62,17 @@ def make_ledger_entry(company, posting_datetime, party_stock_account, item_code,
         # Layer 3 idempotency: DB UNIQUE constraint caught a race condition.
         # Another concurrent request already inserted this entry — treat as success.
         return None
+
+    # PERF-001: Invalidate the Redis balance cache for this (PSA, item) pair.
+    # Imported lazily to avoid circular dependency (balance_engine → ledger_engine).
+    try:
+        from smriti_retail_os.balance_engine import invalidate_balance_cache
+        invalidate_balance_cache(party_stock_account, item_code)
+    except Exception:
+        pass  # Cache invalidation failure must never break a ledger write
+
     return ple
+
 
 def log_activity(action_type, party_stock_account=None, reference_doctype=None, reference_name=None, details=None):
     """
