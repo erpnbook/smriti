@@ -1,0 +1,223 @@
+/**
+ * @file: smriti_retail_os/www/smriti-coming-soon.html
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coming Soon — SMRITI Retail OS</title>
+    <link rel="icon" href="/assets/smriti_retail_os/images/smriti_favicon.ico">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #F8FAFC;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 64px 48px;
+            max-width: 520px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 4px 32px rgba(37,99,235,0.08);
+            border-top: 4px solid #2563EB;
+        }
+
+        .logo {
+            height: 48px;
+            margin-bottom: 32px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #EFF6FF;
+            color: #2563EB;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 16px;
+            border-radius: 999px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1A2B5C;
+            margin-bottom: 12px;
+        }
+
+        .feature-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2563EB;
+            margin-bottom: 16px;
+        }
+
+        p {
+            font-size: 15px;
+            color: #6B7280;
+            line-height: 1.7;
+            margin-bottom: 32px;
+        }
+
+        /* Progress bar */
+        .progress-wrap {
+            background: #F1F5F9;
+            border-radius: 999px;
+            height: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #2563EB, #60A5FA);
+            border-radius: 999px;
+            transition: width 1.2s ease;
+            width: 0%;
+        }
+        .progress-label {
+            font-size: 12px;
+            color: #94A3B8;
+            margin-bottom: 32px;
+        }
+
+        /* Buttons */
+        .btn-home {
+            display: inline-block;
+            background: #2563EB;
+            color: #fff;
+            padding: 13px 32px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+            transition: background 0.2s;
+            margin-bottom: 16px;
+        }
+        .btn-home:hover { background: #1D4ED8; }
+
+        .back-link {
+            display: block;
+            color: #94A3B8;
+            font-size: 13px;
+            text-decoration: none;
+            margin-top: 8px;
+        }
+        .back-link:hover { color: #2563EB; }
+
+        /* Dots animation */
+        .dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+        .dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #DBEAFE;
+            animation: pulse 1.4s ease-in-out infinite;
+        }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pulse {
+            0%, 80%, 100% { transform: scale(1); background: #DBEAFE; }
+            40%            { transform: scale(1.4); background: #2563EB; }
+        }
+
+        .footer {
+            margin-top: 40px;
+            font-size: 12px;
+            color: #CBD5E1;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <img src="/assets/smriti_retail_os/images/smriti_logo.png"
+         alt="SMRITI" class="logo"
+         onerror="this.style.display='none'">
+
+    <div class="badge">Coming Soon</div>
+
+    <h1>Feature Under Development</h1>
+
+    <div class="feature-name" id="feature-title">
+        <!-- Populated by JS from URL param -->
+    </div>
+
+    <p>
+        Our team is building this feature with the same care and
+        quality you expect from SMRITI Retail OS.<br>
+        It will be available in an upcoming release.
+    </p>
+
+    <div class="dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+
+    <div class="progress-wrap">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="progress-label" id="progress-label">
+        Building...
+    </div>
+
+    <a href="/smriti" class="btn-home">← Return to Dashboard</a>
+    <a href="javascript:history.back()" class="back-link">
+        Go back to previous page
+    </a>
+
+    <div class="footer">
+        SMRITI Retail OS — PrathamOne / AITDL
+    </div>
+</div>
+
+<script>
+(function () {
+    // Read URL params: /smriti-coming-soon?feature=Purchase+Orders&progress=60
+    var params  = new URLSearchParams(window.location.search);
+    var feature  = params.get('feature')  || 'This Feature';
+    var progress = parseInt(params.get('progress') || '45', 10);
+    var eta      = params.get('eta')      || '';
+
+    // Set feature name
+    document.getElementById('feature-title').textContent = feature;
+
+    // Animate progress bar
+    setTimeout(function () {
+        document.getElementById('progress-bar').style.width = progress + '%';
+        document.getElementById('progress-label').textContent =
+            progress + '% complete' + (eta ? ' — Expected: ' + eta : '');
+    }, 300);
+
+    // If back route specified
+    var backRoute = params.get('back');
+    if (backRoute) {
+        var backLink = document.querySelector('.back-link');
+        backLink.href = backRoute;
+        backLink.textContent = '← Back';
+    }
+})();
+</script>
+</body>
+</html>
