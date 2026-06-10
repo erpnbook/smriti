@@ -482,6 +482,7 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         """test_async_7: Enqueue 250 jobs simultaneously using ThreadPoolExecutor. Verify unique IDs and no duplicates."""
         from smriti_retail_os.barcode_api import enqueue_print_job
         from concurrent.futures import ThreadPoolExecutor
+        from unittest.mock import patch
         import os
         
         job_ids = []
@@ -504,8 +505,9 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             finally:
                 frappe.destroy()
                 
-        with ThreadPoolExecutor(max_workers=20) as executor:
-            job_ids = list(executor.map(run_enqueue, range(250)))
+        with patch("frappe.enqueue") as mock_enqueue:
+            with ThreadPoolExecutor(max_workers=20) as executor:
+                job_ids = list(executor.map(run_enqueue, range(250)))
             
         self.assertEqual(len(job_ids), 250)
         for j in job_ids:
