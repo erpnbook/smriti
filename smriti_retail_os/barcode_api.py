@@ -1215,3 +1215,210 @@ def search_barcode_items(txt):
     return results
 
 
+def _send_to_printer_sync(payload, printer_ip, printer_port):
+    import socket
+    port = int(printer_port) or 9100
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(10)
+        s.connect((printer_ip.strip(), port))
+        s.sendall(payload.encode("utf-8", errors="replace"))
+
+
+@frappe.whitelist()
+def enqueue_print_job(template_name, printer_ip, printer_port, labels_count, payload):
+    import hashlib
+    import os
+    
+    # Generate unique job ID
+    job_id = f"JOB-{frappe.generate_hash(length=12).upper()}"
+    
+    # Write payload to file
+    prn_dir = frappe.get_site_path('private', 'print_jobs')
+    os.makedirs(prn_dir, exist_ok=True)
+    
+    prn_path = os.path.join(prn_dir, f"{job_id}.prn")
+    with open(prn_path, 'w', encoding='utf-8') as f:
+        f.write(payload)
+    os.chmod(prn_path, 0o600)
+    
+    # Create SMRITI Print Job record
+    doc = frappe.new_doc("SMRITI Print Job")
+    doc.job_id = job_id
+    doc.name = job_id
+    doc.template_name = template_name
+    doc.printer_ip = printer_ip
+    doc.printer_port = int(printer_port) or 9100
+    doc.labels_count = int(labels_count) or 1
+    doc.status = "Queued"
+    doc.payload_hash = hashlib.sha256(payload.encode('utf-8')).hexdigest()
+    doc.payload_preview = payload[:100]
+    
+    doc.insert(ignore_permissions=True)
+    frappe.db.commit()
+    
+    # Enqueue background worker
+    frappe.enqueue(
+        "smriti_retail_os.barcode_api._process_print_job",
+        job_id=job_id,
+        queue="barcode",
+        timeout=30,
+        now=frappe.flags.in_test
+    )
+    
+    return job_id
+
+
+@frappe.whitelist()
+def _process_print_job(job_id):
+    import os
+    import hashlib
+    
+    # Correction 1 — Job Lookup Bug
+    name = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "name")
+    if not name:
+        frappe.throw(f"Print job {job_id} not found.", frappe.DoesNotExistError)
+        
+    doc = frappe.get_doc("SMRITI Print Job", name)
+    doc.status = "Sending"
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    
+    prn_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
+    if not os.path.exists(prn_path):
+        doc.status = "Failed"
+        doc.completed_on = frappe.utils.now_datetime()
+        doc.save(ignore_permissions=True)
+        frappe.db.commit()
+        raise FileNotFoundError(f"Payload file missing for job {job_id}")
+        
+    try:
+        # Read payload
+        with open(prn_path, "r", encoding="utf-8") as f:
+            payload = f.read()
+            
+        # Correction 2 — Verify Payload Integrity Before Printing
+        actual_hash = hashlib.sha256(payload.encode('utf-8')).hexdigest()
+        if actual_hash != doc.payload_hash:
+            raise RuntimeError("Print payload integrity validation failed.")
+            
+        # Print
+        _send_to_printer_sync(payload, doc.printer_ip, doc.printer_port)
+        
+        doc.status = "Success"
+        doc.completed_on = frappe.utils.now_datetime()
+        doc.save(ignore_permissions=True)
+        frappe.db.commit()
+        
+        # Log Success
+        log_print_job(doc.template_name, doc.printer_ip, doc.labels_count, 1)
+        
+        # Cleanup .prn file after Success
+        try:
+            os.unlink(prn_path)
+        except FileNotFoundError:
+            pass
+            
+    except Exception as e:
+        doc.status = "Failed"
+        doc.completed_on = frappe.utils.now_datetime()
+        doc.save(ignore_permissions=True)
+        frappe.db.commit()
+        
+        # Log Failure
+        log_print_job(doc.template_name, doc.printer_ip, doc.labels_count, 0, error_message=str(e))
+        
+        raise e
+
+
+@frappe.whitelist()
+def get_print_job_status(job_id):
+    # Correction 1 — Job Lookup Bug
+    name = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "name")
+    if not name:
+        frappe.throw(f"Print job {job_id} not found.", frappe.DoesNotExistError)
+        
+    status = frappe.db.get_value("SMRITI Print Job", name, "status")
+    return {"status": status}
+
+
+@frappe.whitelist()
+def retry_print_job(job_id):
+    import os
+    # Correction 1 — Job Lookup Bug
+    name = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "name")
+    if not name:
+        frappe.throw(f"Print job {job_id} not found.", frappe.DoesNotExistError)
+        
+    old_doc = frappe.get_doc("SMRITI Print Job", name)
+    old_prn_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
+    if not os.path.exists(old_prn_path):
+        frappe.throw(_("Original payload no longer available. Re-print from worksheet."))
+        
+    with open(old_prn_path, 'r', encoding='utf-8') as f:
+        payload = f.read()
+        
+    new_job_id = enqueue_print_job(
+        template_name=old_doc.template_name,
+        printer_ip=old_doc.printer_ip,
+        printer_port=old_doc.printer_port,
+        labels_count=old_doc.labels_count,
+        payload=payload
+    )
+    return {"job_id": new_job_id}
+
+
+@frappe.whitelist()
+def get_recent_print_jobs(limit=20):
+    return frappe.get_all(
+        "SMRITI Print Job",
+        fields=["job_id", "status", "template_name", "labels_count", "creation", "printer_ip"],
+        order_by="creation desc",
+        limit=cint(limit) or 20
+    )
+
+
+@frappe.whitelist()
+def cleanup_old_print_jobs():
+    import os
+    from frappe.utils import add_days, now_datetime
+    from smriti_retail_os.backup_api import log_audit_event
+    
+    cutoff_success = add_days(now_datetime(), -30)
+    cutoff_failed = add_days(now_datetime(), -90)
+    
+    # Delete Success jobs older than 30 days
+    success_jobs = frappe.get_all(
+        "SMRITI Print Job",
+        filters={
+            "status": "Success",
+            "completed_on": ["<", cutoff_success]
+        },
+        fields=["job_id", "name"]
+    )
+    for job in success_jobs:
+        frappe.delete_doc("SMRITI Print Job", job.name, ignore_permissions=True)
+        
+    # Delete Failed jobs older than 90 days
+    failed_jobs = frappe.get_all(
+        "SMRITI Print Job",
+        filters={
+            "status": "Failed",
+            "completed_on": ["<", cutoff_failed]
+        },
+        fields=["job_id", "name"]
+    )
+    for job in failed_jobs:
+        prn_path = frappe.get_site_path('private', 'print_jobs', f"{job.job_id}.prn")
+        try:
+            os.unlink(prn_path)
+        except FileNotFoundError:
+            pass
+        frappe.delete_doc("SMRITI Print Job", job.name, ignore_permissions=True)
+        
+    frappe.db.commit()
+    log_audit_event(
+        "Print Job Cleanup",
+        f"Deleted {len(success_jobs)} success jobs and {len(failed_jobs)} failed jobs"
+    )
+
+

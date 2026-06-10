@@ -308,7 +308,8 @@ doc_events = {
 scheduler_events = {
     "daily": [
         "smriti_retail_os.backup_api.run_scheduled_backup",
-        "smriti_retail_os.psv_service.run_psv_daily_health_check"
+        "smriti_retail_os.psv_service.run_psv_daily_health_check",
+        "smriti_retail_os.barcode_api.cleanup_old_print_jobs"
     ]
 }
 

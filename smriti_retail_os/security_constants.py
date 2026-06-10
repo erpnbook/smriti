@@ -32,6 +32,7 @@ PROTECTED_CONFIG_PATTERNS = [
     "*.pem",
     "*.key",
     "*.p12",
+    "private/print_jobs/*",
 ]
 
 GPG_CIPHER_ALGO = "AES256"

@@ -1066,6 +1066,64 @@ def create_smriti_key_custodian_doctype():
         frappe.log_error(f"Error creating SMRITI Key Custodian DocType: {str(e)}")
 
 
+def ensure_print_job_directory():
+    import os
+    path = frappe.get_site_path("private", "print_jobs")
+    os.makedirs(path, exist_ok=True)
+    test_file = os.path.join(path, ".healthcheck")
+    try:
+        with open(test_file, "w") as f:
+            f.write("ok")
+        os.unlink(test_file)
+    except Exception:
+        raise RuntimeError("SMRITI print_jobs directory is not writable.")
+
+
+def create_smriti_print_job_doctype():
+    """Creates the SMRITI Print Job custom DocType for asynchronous print tracking."""
+    if frappe.db.exists("DocType", "SMRITI Print Job"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Print Job"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.autoname = "Prompt"
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 1
+        doc.issingle = 0
+
+        fields = [
+            {"fieldname": "job_id", "fieldtype": "Data", "label": "Job ID", "reqd": 1, "unique": 1, "in_list_view": 1},
+            {"fieldname": "printer_ip", "fieldtype": "Data", "label": "Printer IP", "in_list_view": 1},
+            {"fieldname": "printer_port", "fieldtype": "Int", "label": "Printer Port", "default": "9100"},
+            {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Queued\nSending\nSuccess\nFailed", "default": "Queued", "in_list_view": 1},
+            {"fieldname": "completed_on", "fieldtype": "Datetime", "label": "Completed On", "in_list_view": 1},
+            {"fieldname": "payload_hash", "fieldtype": "Data", "label": "Payload Hash", "read_only": 1},
+            {"fieldname": "payload_preview", "fieldtype": "Data", "label": "Payload Preview", "read_only": 1},
+            {"fieldname": "template_name", "fieldtype": "Data", "label": "Template Name", "in_list_view": 1},
+            {"fieldname": "labels_count", "fieldtype": "Int", "label": "Labels Count"}
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {
+            "role": "Administrator",
+            "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+        })
+        doc.append("permissions", {
+            "role": "System Manager",
+            "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+        })
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print("[SMRITI] Created SMRITI Print Job DocType")
+    except Exception as e:
+        frappe.log_error(f"Error creating SMRITI Print Job DocType: {str(e)}")
+
+
 def setup_smriti_retail_os():
     """
     Initializes custom fields, roles, and workspaces for standard DocTypes
@@ -1092,6 +1150,10 @@ def setup_smriti_retail_os():
 
     # 0b. Provision SMRITI Key Custodian DocType (v1.8.3)
     create_smriti_key_custodian_doctype()
+
+    # 0e. Provision SMRITI Print Job DocType (V2.1)
+    create_smriti_print_job_doctype()
+    ensure_print_job_directory()
 
     # 0c. Provision SMRITI Reporting DocTypes
     create_reporting_doctypes()
@@ -1127,6 +1189,39 @@ def setup_smriti_retail_os():
                 "label": "Print Profiles JSON",
                 "fieldtype": "Long Text",
                 "insert_after": "backup_settings_json",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "default_printer_ip",
+                "label": "Default Printer IP",
+                "fieldtype": "Data",
+                "insert_after": "custom_print_profiles_json",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "default_printer_port",
+                "label": "Default Printer Port",
+                "fieldtype": "Int",
+                "default": "9100",
+                "insert_after": "default_printer_ip",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "default_printer_lang",
+                "label": "Default Printer Language",
+                "fieldtype": "Select",
+                "options": "ZPL\nTSPL",
+                "default": "ZPL",
+                "insert_after": "default_printer_port",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "default_label_size",
+                "label": "Default Label Size",
+                "fieldtype": "Select",
+                "options": "50x25\n50x30\n75x50\n100x50\n106x55",
+                "default": "50x25",
+                "insert_after": "default_printer_lang",
                 "module": "SMRITI Retail OS"
             }
         ]

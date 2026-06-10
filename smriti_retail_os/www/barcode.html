@@ -591,6 +591,16 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 <button class="btn-search" style="background:transparent; border:1px solid var(--primary); color:var(--primary-lt); font-weight:600;" onclick="openProfileSaveModal()">
                     <span class="material-symbols-outlined">save</span> Save Current Settings Preset
                 </button>
+
+                <!-- Print Queue Dashboard Card -->
+                <div class="preview-card" style="margin-top: 10px;">
+                    <div class="preview-header">
+                        <span class="material-symbols-outlined">queue</span> Async Print Queue
+                    </div>
+                    <div style="padding: 12px; display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto;" id="dashboard-queue-list">
+                        <div style="color:var(--text-sub); text-align:center; padding: 10px;">No recent jobs</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1157,6 +1167,42 @@ async function init() {
         document.getElementById('design-raw').addEventListener('input', function() {
             validateSandbox(this.value);
         });
+
+        // Fetch Company settings and pre-fill printer configuration
+        try {
+            const settings = await api('smriti_retail_os.company_api.get_company_settings');
+            if (settings) {
+                if (settings.default_printer_ip) {
+                    document.getElementById('cfg-ip').value = settings.default_printer_ip;
+                }
+                if (settings.default_printer_port) {
+                    document.getElementById('cfg-port').value = settings.default_printer_port;
+                }
+                if (settings.default_printer_lang) {
+                    activePrinterLanguage = settings.default_printer_lang;
+                    if (activePrinterLanguage === "TSPL") {
+                        document.getElementById('cfg-capability').value = "TSC TE244";
+                        activeDPI = 203;
+                    } else {
+                        document.getElementById('cfg-capability').value = "Zebra GK420D";
+                        activeDPI = 203;
+                    }
+                    checkPrinterTemplateMismatch();
+                }
+                if (settings.default_label_size) {
+                    const custPreset = document.getElementById('cust-size-preset');
+                    if (custPreset) custPreset.value = settings.default_label_size;
+                    const fltSize = document.getElementById('flt-size');
+                    if (fltSize) fltSize.value = settings.default_label_size;
+                }
+            }
+        } catch (err) {
+            console.error("Failed to load company settings for pre-fill", err);
+        }
+
+        // Initialize dashboard and auto-refresh loop
+        refreshPrintJobsDashboard();
+        setInterval(refreshPrintJobsDashboard, 5000);
 
     } catch(e) {
         console.error(e);
@@ -2550,54 +2596,38 @@ async function executeDirectLANPrint(checkedItems, template, ip, port, totalQty)
     }
     
     try {
-        toast('Testing printer socket connection...', 'info');
-        const pingRes = await api('smriti_retail_os.barcode_api.test_printer_connection', {
-            printer_ip: ip,
-            printer_port: port
+        toast('Generating ZPL/TSPL print commands...', 'info');
+        const prnContent = await api('smriti_retail_os.barcode_api.generate_prn', {
+            items: JSON.stringify(checkedItems),
+            template_name: template || null
         });
         
-        if (!pingRes || !pingRes.success) {
-            throw new Error(`Connection test failed: ${pingRes.message}`);
+        if (!prnContent) {
+            throw new Error('No print payload generated.');
         }
 
-        toast(`Streaming raw print script to LAN Printer (${totalQty} labels)...`, 'info');
-        const res = await api('smriti_retail_os.barcode_api.send_to_network_printer', {
-            items: JSON.stringify(checkedItems),
-            template_name: template || null,
+        toast(`Queueing print job (${totalQty} labels)...`, 'info');
+        const res = await api('smriti_retail_os.barcode_api.enqueue_print_job', {
+            template_name: template || 'Built-in Default',
             printer_ip: ip,
-            printer_port: port
+            printer_port: port,
+            labels_count: totalQty,
+            payload: prnContent
         });
 
-        if (res && res.success) {
-            toast(res.message, 'success');
-            logSessionPrint(ip, `DIRECT LAN SUCCESS (${totalQty} labels)`, true);
+        if (res && res.job_id) {
+            toast(`Print job queued successfully: ${res.job_id}`, 'success');
+            logSessionPrint(ip, `DIRECT LAN QUEUED (${res.job_id})`, true);
             
-            // Log to backend print audit log
-            await api('smriti_retail_os.barcode_api.log_print_job', {
-                template_name: template || 'Built-in Default',
-                printer_ip: ip,
-                labels_count: totalQty,
-                success: 1,
-                print_profile: document.getElementById('cfg-profile').value || null,
-                details: JSON.stringify(checkedItems.map(i => ({ code: i.item_code, qty: i.print_qty })))
-            });
+            // Poll for job status and refresh dashboard
+            pollPrintJobStatus(res.job_id);
+            refreshPrintJobsDashboard();
         } else {
-            throw new Error('LAN direct print failed');
+            throw new Error('Failed to enqueue print job.');
         }
     } catch(e) {
         toast(e.message, 'error');
         logSessionPrint(ip, 'LAN DIRECT FAIL: ' + e.message, false);
-        
-        // Log failure to backend
-        await api('smriti_retail_os.barcode_api.log_print_job', {
-            template_name: template || 'Built-in Default',
-            printer_ip: ip,
-            labels_count: totalQty,
-            success: 0,
-            error_message: e.message,
-            print_profile: document.getElementById('cfg-profile').value || null,
-            details: JSON.stringify(checkedItems.map(i => ({ code: i.item_code, qty: i.print_qty })))
-        });
     }
 }
 
@@ -2780,6 +2810,86 @@ async function loadTokenReference() {
 
 function openTokenHelp() {
     openModal('token-modal');
+}
+
+function pollPrintJobStatus(jobId, attemptsLeft = 15) {
+    if (attemptsLeft <= 0) {
+        toast(`Print job ${jobId} status polling timed out. Check dashboard queue.`, 'info');
+        return;
+    }
+    setTimeout(async () => {
+        try {
+            const res = await api('smriti_retail_os.barcode_api.get_print_job_status', { job_id: jobId });
+            if (res && res.status) {
+                refreshPrintJobsDashboard();
+                if (res.status === 'Success') {
+                    toast(`Print job ${jobId} successfully sent to printer!`, 'success');
+                } else if (res.status === 'Failed') {
+                    toast(`Print job ${jobId} failed to print.`, 'error');
+                } else {
+                    pollPrintJobStatus(jobId, attemptsLeft - 1);
+                }
+            }
+        } catch (err) {
+            console.error("Error polling print job status", err);
+            pollPrintJobStatus(jobId, attemptsLeft - 1);
+        }
+    }, 2000);
+}
+
+async function refreshPrintJobsDashboard() {
+    try {
+        const jobs = await api('smriti_retail_os.barcode_api.get_recent_print_jobs', { limit: 20 });
+        const listContainer = document.getElementById('dashboard-queue-list');
+        if (!listContainer) return;
+        
+        if (!jobs || jobs.length === 0) {
+            listContainer.innerHTML = '<div style="color:var(--text-sub); text-align:center; padding: 10px;">No recent jobs</div>';
+            return;
+        }
+        
+        listContainer.innerHTML = jobs.map(j => {
+            let badgeColor = 'var(--text-muted)';
+            if (j.status === 'Queued') badgeColor = 'var(--accent)';
+            else if (j.status === 'Sending') badgeColor = 'var(--primary-lt)';
+            else if (j.status === 'Success') badgeColor = 'var(--success)';
+            else if (j.status === 'Failed') badgeColor = 'var(--danger)';
+            
+            const showRetry = j.status === 'Failed';
+            const actionBtn = showRetry 
+                ? `<button class="topbtn" onclick="triggerRetryPrintJob('${j.job_id}')" style="padding: 2px 6px; font-size: 10px; margin-left: auto; border-color: var(--danger); color: var(--danger);"><span class="material-symbols-outlined" style="font-size: 12px;">replay</span> Retry</button>` 
+                : (j.status === 'Success' 
+                   ? `<span style="font-size: 10px; color: var(--text-muted); margin-left: auto; font-style: italic;">Success</span>` 
+                   : `<span style="font-size: 10px; color: var(--text-muted); margin-left: auto; font-style: italic;">Processing</span>`);
+
+            return `
+                <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 6px; font-size: 0.8rem; gap: 6px;">
+                    <div style="display: flex; flex-direction: column; gap: 2px; width: 60%;">
+                        <div style="font-weight: 600; font-family: 'JetBrains Mono', monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${j.job_id}</div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${j.template_name || 'Built-in Default'} (${j.labels_count} qty)</div>
+                    </div>
+                    <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background: rgba(255,255,255,0.05); color: ${badgeColor}; border: 1px solid ${badgeColor}40;">${j.status}</span>
+                    ${actionBtn}
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error("Error refreshing print queue dashboard", err);
+    }
+}
+
+async function triggerRetryPrintJob(jobId) {
+    try {
+        toast(`Retrying print job ${jobId}...`, 'info');
+        const res = await api('smriti_retail_os.barcode_api.retry_print_job', { job_id: jobId });
+        if (res && res.job_id) {
+            toast(`New print job enqueued: ${res.job_id}`, 'success');
+            pollPrintJobStatus(res.job_id);
+            refreshPrintJobsDashboard();
+        }
+    } catch (err) {
+        toast(`Retry failed: ${err.message || err}`, 'error');
+    }
 }
 
 window.onload = init;

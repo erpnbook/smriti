@@ -271,3 +271,269 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         self.assertEqual(doc.label_size, "100x50")
         self.assertIn("IMPACT by Honeywell", doc.template_title)
 
+    def test_async_1_enqueue_creates_job_and_prn(self):
+        """test_async_1: enqueue creates job with status Queued + .prn file exists"""
+        from smriti_retail_os.barcode_api import enqueue_print_job
+        import os
+        
+        payload = "^XA^FDTest Async 1^FS^XZ"
+        job_id = enqueue_print_job(
+            template_name="TEST_ZPL_TEMPLATE",
+            printer_ip="192.168.1.180",
+            printer_port=9100,
+            labels_count=2,
+            payload=payload
+        )
+        
+        self.assertTrue(frappe.db.exists("SMRITI Print Job", {"job_id": job_id}))
+        status = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "status")
+        self.assertEqual(status, "Queued")
+        
+        prn_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
+        self.assertTrue(os.path.exists(prn_path))
+        with open(prn_path, 'r', encoding='utf-8') as f:
+            self.assertEqual(f.read(), payload)
+            
+        # Clean up
+        frappe.db.delete("SMRITI Print Job", {"job_id": job_id})
+        frappe.db.commit()
+        try:
+            os.unlink(prn_path)
+        except FileNotFoundError:
+            pass
+
+    def test_async_2_process_success_deletes_prn(self):
+        """test_async_2: _process_print_job sets Success, .prn file deleted after success"""
+        from smriti_retail_os.barcode_api import enqueue_print_job
+        from unittest.mock import patch
+        import os
+        
+        payload = "^XA^FDTest Async 2^FS^XZ"
+        frappe.flags.in_test = True
+        
+        with patch('smriti_retail_os.barcode_api._send_to_printer_sync') as mock_send:
+            job_id = enqueue_print_job(
+                template_name="TEST_ZPL_TEMPLATE",
+                printer_ip="192.168.1.180",
+                printer_port=9100,
+                labels_count=2,
+                payload=payload
+            )
+            mock_send.assert_called_once_with(payload, "192.168.1.180", 9100)
+            
+        status = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "status")
+        self.assertEqual(status, "Success")
+        
+        prn_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
+        self.assertFalse(os.path.exists(prn_path))
+        
+        # Clean up database
+        frappe.db.delete("SMRITI Print Job", {"job_id": job_id})
+        frappe.db.commit()
+
+    def test_async_3_process_failed_retains_prn(self):
+        """test_async_3: _process_print_job sets Failed, .prn file retained on failure"""
+        from smriti_retail_os.barcode_api import enqueue_print_job
+        from unittest.mock import patch
+        import os
+        
+        payload = "^XA^FDTest Async 3^FS^XZ"
+        frappe.flags.in_test = True
+        
+        with patch('smriti_retail_os.barcode_api._send_to_printer_sync', side_effect=Exception("Connection refused")):
+            try:
+                job_id = enqueue_print_job(
+                    template_name="TEST_ZPL_TEMPLATE",
+                    printer_ip="192.168.1.180",
+                    printer_port=9100,
+                    labels_count=2,
+                    payload=payload
+                )
+            except Exception:
+                pass
+                
+        status = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "status")
+        self.assertEqual(status, "Failed")
+        
+        prn_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
+        self.assertTrue(os.path.exists(prn_path))
+        
+        # Clean up
+        frappe.db.delete("SMRITI Print Job", {"job_id": job_id})
+        frappe.db.commit()
+        try:
+            os.unlink(prn_path)
+        except FileNotFoundError:
+            pass
+
+    def test_async_4_get_status_known_job(self):
+        """test_async_4: get_print_job_status returns correct status for known job_id"""
+        from smriti_retail_os.barcode_api import enqueue_print_job, get_print_job_status
+        import os
+        
+        job_id = enqueue_print_job(
+            template_name="TEST_ZPL_TEMPLATE",
+            printer_ip="192.168.1.180",
+            printer_port=9100,
+            labels_count=2,
+            payload="^XA^XZ"
+        )
+        
+        res = get_print_job_status(job_id)
+        self.assertEqual(res.get("status"), "Queued")
+        
+        # Clean up
+        frappe.db.delete("SMRITI Print Job", {"job_id": job_id})
+        frappe.db.commit()
+        prn_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
+        try:
+            os.unlink(prn_path)
+        except FileNotFoundError:
+            pass
+
+    def test_async_5_get_status_unknown_job_throws(self):
+        """test_async_5: get_print_job_status throws for unknown job_id"""
+        from smriti_retail_os.barcode_api import get_print_job_status
+        self.assertRaises(frappe.DoesNotExistError, get_print_job_status, "JOB-NONEXISTENT")
+
+    def test_async_6_failed_job_retry(self):
+        """test_async_6: Failed job retry creates new job_id with same payload content"""
+        from smriti_retail_os.barcode_api import enqueue_print_job, retry_print_job
+        from unittest.mock import patch
+        import os
+        
+        payload = "^XA^FDTest Async 6^FS^XZ"
+        frappe.flags.in_test = True
+        
+        with patch('smriti_retail_os.barcode_api._send_to_printer_sync', side_effect=Exception("Network error")):
+            try:
+                job_id = enqueue_print_job(
+                    template_name="TEST_ZPL_TEMPLATE",
+                    printer_ip="192.168.1.180",
+                    printer_port=9100,
+                    labels_count=2,
+                    payload=payload
+                )
+            except Exception:
+                pass
+                
+        # Retry
+        with patch('smriti_retail_os.barcode_api._send_to_printer_sync') as mock_send_new:
+            res = retry_print_job(job_id)
+            new_job_id = res.get("job_id")
+            mock_send_new.assert_called_once_with(payload, "192.168.1.180", 9100)
+            
+        self.assertNotEqual(job_id, new_job_id)
+        new_status = frappe.db.get_value("SMRITI Print Job", {"job_id": new_job_id}, "status")
+        self.assertEqual(new_status, "Success")
+        
+        # Clean up both jobs
+        frappe.db.delete("SMRITI Print Job", {"job_id": ["in", [job_id, new_job_id]]})
+        frappe.db.commit()
+        for j in [job_id, new_job_id]:
+            prn_path = frappe.get_site_path('private', 'print_jobs', f"{j}.prn")
+            try:
+                os.unlink(prn_path)
+            except FileNotFoundError:
+                pass
+
+    def test_async_7_concurrency_no_collisions(self):
+        """test_async_7: Enqueue 250 jobs simultaneously using ThreadPoolExecutor. Verify unique IDs and no duplicates."""
+        from smriti_retail_os.barcode_api import enqueue_print_job
+        from concurrent.futures import ThreadPoolExecutor
+        import os
+        
+        job_ids = []
+        payload = "^XA^FDTest Async 7^FS^XZ"
+        
+        def run_enqueue(idx):
+            frappe.flags.in_test = True
+            try:
+                return enqueue_print_job(
+                    template_name="TEST_ZPL_TEMPLATE",
+                    printer_ip="192.168.1.180",
+                    printer_port=9100,
+                    labels_count=1,
+                    payload=f"{payload} - {idx}"
+                )
+            except Exception as e:
+                return str(e)
+                
+        with ThreadPoolExecutor(max_workers=20) as executor:
+            job_ids = list(executor.map(run_enqueue, range(250)))
+            
+        self.assertEqual(len(job_ids), 250)
+        for j in job_ids:
+            self.assertTrue(j.startswith("JOB-"))
+            
+        self.assertEqual(len(set(job_ids)), 250)
+        
+        db_count = frappe.db.count("SMRITI Print Job", {"job_id": ["in", job_ids]})
+        self.assertEqual(db_count, 250)
+        
+        # Clean up
+        frappe.db.delete("SMRITI Print Job", {"job_id": ["in", job_ids]})
+        frappe.db.commit()
+        for j in job_ids:
+            prn_path = frappe.get_site_path('private', 'print_jobs', f"{j}.prn")
+            try:
+                os.unlink(prn_path)
+            except FileNotFoundError:
+                pass
+
+    def test_async_8_cleanup_retention(self):
+        """test_async_8: cleanup_old_print_jobs() deletes Success jobs older than 30d, Failed older than 90d, leaves recent."""
+        from smriti_retail_os.barcode_api import cleanup_old_print_jobs
+        from frappe.utils import add_days, now_datetime
+        import os
+        
+        # Create 3 test jobs
+        doc1 = frappe.new_doc("SMRITI Print Job")
+        doc1.job_id = "JOB-TEST-S-OLD"
+        doc1.name = "JOB-TEST-S-OLD"
+        doc1.status = "Success"
+        doc1.completed_on = add_days(now_datetime(), -31)
+        doc1.insert(ignore_permissions=True)
+        
+        doc2 = frappe.new_doc("SMRITI Print Job")
+        doc2.job_id = "JOB-TEST-F-OLD"
+        doc2.name = "JOB-TEST-F-OLD"
+        doc2.status = "Failed"
+        doc2.completed_on = add_days(now_datetime(), -91)
+        doc2.insert(ignore_permissions=True)
+        
+        prn_dir = frappe.get_site_path('private', 'print_jobs')
+        os.makedirs(prn_dir, exist_ok=True)
+        prn_path2 = os.path.join(prn_dir, "JOB-TEST-F-OLD.prn")
+        with open(prn_path2, "w") as f:
+            f.write("failed old payload")
+            
+        doc3 = frappe.new_doc("SMRITI Print Job")
+        doc3.job_id = "JOB-TEST-F-NEW"
+        doc3.name = "JOB-TEST-F-NEW"
+        doc3.status = "Failed"
+        doc3.completed_on = add_days(now_datetime(), -10)
+        doc3.insert(ignore_permissions=True)
+        prn_path3 = os.path.join(prn_dir, "JOB-TEST-F-NEW.prn")
+        with open(prn_path3, "w") as f:
+            f.write("failed new payload")
+            
+        frappe.db.commit()
+        
+        cleanup_old_print_jobs()
+        
+        self.assertFalse(frappe.db.exists("SMRITI Print Job", "JOB-TEST-S-OLD"))
+        self.assertFalse(frappe.db.exists("SMRITI Print Job", "JOB-TEST-F-OLD"))
+        self.assertFalse(os.path.exists(prn_path2))
+        
+        self.assertTrue(frappe.db.exists("SMRITI Print Job", "JOB-TEST-F-NEW"))
+        self.assertTrue(os.path.exists(prn_path3))
+        
+        # Clean up doc3 and file3
+        frappe.delete_doc("SMRITI Print Job", "JOB-TEST-F-NEW", ignore_permissions=True)
+        frappe.db.commit()
+        try:
+            os.unlink(prn_path3)
+        except FileNotFoundError:
+            pass
+
