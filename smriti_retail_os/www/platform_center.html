@@ -1078,7 +1078,7 @@ function fetchBackupHistory() {
             <td>${b.modified}</td>
             <td style="text-align:right;">
               <div class="flex-row-end">
-                <a href="/private/backups/${b.filename}" class="btn btn-secondary btn-sm" download style="text-decoration:none;">⬇ Download</a>
+                <a href="/backups/${b.filename}" class="btn btn-secondary btn-sm" download style="text-decoration:none;">⬇ Download</a>
                 ${isDatabase ? `<button class="btn btn-danger btn-sm" onclick="openRestoreModal('${b.filename}')">🛡️ Restore</button>` : ''}
               </div>
             </td>

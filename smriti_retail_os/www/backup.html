@@ -548,7 +548,7 @@ async function triggerBackup(backupType) {
 }
 
 function downloadArchive(fileName) {
-    const downloadUrl = `/private/backups/${fileName}`;
+    const downloadUrl = `/backups/${fileName}`;
     window.open(downloadUrl, '_blank');
 }
 

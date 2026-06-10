@@ -277,7 +277,7 @@ class SmritiBackupController {
         $(this.wrapper).on('click', '.btn-sbc-download', function() {
             const fileName = $(this).data('name');
             // Frappe downloads private files relative to site root via site path wrapper
-            const downloadUrl = `/private/backups/${fileName}`;
+            const downloadUrl = `/backups/${fileName}`;
             window.open(downloadUrl, '_blank');
         });
 
