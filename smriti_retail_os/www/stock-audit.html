@@ -1,0 +1,612 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/stock-audit.html
+  @description: SMRITI PSV Stock Audits — Standalone UI
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @version: 1.0.0
+  @license: MIT
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMRITI Stock Audits</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg:         #0a0f1e;
+    --bg2:        #0f1629;
+    --card:       #131d35;
+    --card2:      #172040;
+    --border:     rgba(255,255,255,0.07);
+    --border2:    rgba(255,255,255,0.12);
+    --primary:    #6366f1;
+    --primary-lt: #818cf8;
+    --accent:     #10b981;
+    --success:    #10b981;
+    --warning:    #f59e0b;
+    --danger:     #ef4444;
+    --text:       #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-sub:   #475569;
+    --radius:     12px;
+    --radius-sm:  8px;
+    --radius-lg:  16px;
+    --t:          0.2s ease;
+}
+
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+
+.bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 0;
+}
+
+#app { position:relative; z-index:1; width:100vw; height:100vh; display:flex; overflow:hidden; }
+
+.main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+.topbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
+.topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--text-muted); }
+.topbar-breadcrumbs span.sep { color:var(--text-sub); }
+.topbar-breadcrumbs span.active { color:var(--text); }
+.topbar-right { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
+.topbtn { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:var(--radius-sm); font-size:12px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); white-space:nowrap; }
+.topbtn span { font-size:16px; }
+.topbtn:hover { border-color:var(--primary); color:var(--primary-lt); }
+
+.filter-bar { padding:14px 24px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; gap:16px; align-items:center; flex-shrink:0; }
+.form-input { padding:8px 12px; background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.88rem; outline:none; transition:all var(--t); font-family:inherit; }
+.form-input:focus { border-color:var(--primary); }
+.search-input { width:320px; }
+
+.table-wrap { flex:1; overflow:auto; padding:24px; }
+.smriti-table { width:100%; border-collapse:collapse; text-align:left; background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; }
+.smriti-table th { padding:14px 16px; background:var(--card2); color:var(--text-muted); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1; }
+.smriti-table td { padding:14px 16px; border-bottom:1px solid var(--border); font-size:0.88rem; vertical-align:middle; }
+.smriti-table tbody tr:hover td { background:rgba(99,102,241,0.02); }
+.smriti-table tbody tr:last-child td { border-bottom:none; }
+
+.status-badge { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:700; }
+.status-badge.approved { background:rgba(16,185,129,0.1); color:var(--success); border:1px solid rgba(16,185,129,0.2); }
+.status-badge.pending { background:rgba(245,158,11,0.1); color:var(--warning); border:1px solid rgba(245,158,11,0.2); }
+
+/* Modals */
+.modal-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(3,7,18,0.85); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+.modal-backdrop.open { opacity:1; pointer-events:all; }
+.modal { background:var(--card2); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px; width:100%; max-width:850px; transform:translateY(20px); transition:transform 0.2s; display:flex; flex-direction:column; max-height: 90vh; }
+.modal-backdrop.open .modal { transform:translateY(0); }
+.modal-header { display:flex; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:12px; }
+.modal-title { font-family:'Outfit',sans-serif; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px; }
+.modal-title span { color:var(--primary-lt); font-size:22px; }
+.modal-close { margin-left:auto; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:22px; display:flex; align-items:center; }
+.modal-close:hover { color:var(--text); }
+.modal-body { display:flex; flex-direction:column; gap:14px; overflow-y:auto; padding-right:4px; }
+
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-label { font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+.btn-submit { width:100%; padding:11px; background:linear-gradient(135deg,var(--accent),#059669); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.92rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 12px rgba(16,185,129,0.2); margin-top:10px; }
+.btn-submit:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(16,185,129,0.35); }
+.btn-submit:disabled { opacity:0.4; cursor:not-allowed; transform:none !important; }
+
+/* Table edit inputs */
+.table-input { padding:4px 8px; background:rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:4px; color:var(--text); width:100%; font-family:inherit; outline:none; }
+.table-input:focus { border-color:var(--primary); }
+.qty-input { width:80px; text-align:center; }
+.reason-input { width:150px; }
+
+/* Search dropdown inside modal */
+.search-row { display:flex; gap:12px; margin-bottom:14px; background:rgba(255,255,255,0.01); padding:10px; border-radius:var(--radius-sm); border:1px solid var(--border); }
+.search-box-wrap { flex:1; position:relative; }
+.search-results { position:absolute; left:0; right:0; top:100%; background:var(--card2); border:1px solid var(--border2); border-radius:0 0 var(--radius-sm) var(--radius-sm); z-index:100; max-height:200px; overflow-y:auto; display:none; }
+.search-item { padding:8px 12px; cursor:pointer; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; }
+.search-item:hover { background:rgba(99,102,241,0.1); }
+
+/* Toast Container */
+#toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
+.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+.toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
+.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
+.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+.toast span { font-size:20px; }
+@keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+</style>
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
+<body>
+
+<div class="bg-grid"></div>
+
+<div id="app">
+    <div id="smriti-sidebar-target" class="sidebar"></div>
+
+    <div class="main-wrapper">
+        <div class="topbar">
+            <div class="topbar-breadcrumbs">
+                <span>SMRITI</span>
+                <span class="sep">/</span>
+                <span>Channel Stock</span>
+                <span class="sep">/</span>
+                <span class="active">Stock Audits</span>
+            </div>
+            <div class="topbar-right">
+                <button class="topbtn" onclick="history.back()"><span class="material-symbols-outlined">arrow_back</span></button>
+                <button class="topbtn" onclick="history.forward()"><span class="material-symbols-outlined">arrow_forward</span></button>
+                <button class="topbtn" onclick="openAuditModal()" style="border-color:var(--primary);color:var(--primary-lt);"><span class="material-symbols-outlined">assignment_turned_in</span> New Stock Audit</button>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <input type="text" class="form-input search-input" id="search-box" placeholder="Search audits by Distributor Account..." oninput="handleSearch(this.value)">
+        </div>
+
+        <div class="table-wrap">
+            <table class="smriti-table">
+                <thead>
+                    <tr>
+                        <th>Audit ID</th>
+                        <th>Account</th>
+                        <th>Audit Date</th>
+                        <th>Status</th>
+                        <th>Approved By</th>
+                        <th>Date Approved</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="audits-tbody">
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading audits...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Audit Wizard Modal -->
+<div class="modal-backdrop" id="audit-modal" onclick="closeAuditModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title"><span class="material-symbols-outlined">assignment_turned_in</span> <span>New Physical Stock Audit</span></div>
+            <button class="modal-close" onclick="closeAuditModal()">&times;</button>
+        </div>
+        
+        <div class="modal-body" id="wizard-step-1">
+            <div class="form-group">
+                <label class="form-label">Company *</label>
+                <select class="form-input" id="aud-company" onchange="onCompanyChange()">
+                    <!-- Dynamic -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Distributor / Account *</label>
+                <select class="form-input" id="aud-psa">
+                    <!-- Dynamic -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Audit Date *</label>
+                <input type="date" class="form-input" id="aud-date">
+            </div>
+            <button class="btn-submit" onclick="startAuditGrid()">
+                <span class="material-symbols-outlined">play_arrow</span> Start Physical Count
+            </button>
+        </div>
+
+        <div class="modal-body" id="wizard-step-2" style="display:none;">
+            <div style="font-size:0.9rem; margin-bottom:10px; background:rgba(255,255,255,0.02); padding:10px; border-radius:4px; border:1px solid var(--border); display:flex; justify-content:space-between;">
+                <div>Account: <strong id="lbl-audit-psa"></strong></div>
+                <div>Date: <strong id="lbl-audit-date"></strong></div>
+            </div>
+
+            <div class="search-row">
+                <div class="search-box-wrap">
+                    <input type="text" class="form-input" style="width:100%;" id="search-item-box" placeholder="Search and add other items..." oninput="searchItems(this.value)" autocomplete="off">
+                    <div class="search-results" id="search-results-box"></div>
+                </div>
+            </div>
+
+            <div style="max-height: 40vh; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 15px;">
+                <table class="smriti-table">
+                    <thead>
+                        <tr>
+                            <th>SKU Code</th>
+                            <th style="text-align:center; width:90px;">System</th>
+                            <th style="text-align:center; width:95px;">Physical</th>
+                            <th style="text-align:center; width:90px;">Variance</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody id="audit-grid-tbody">
+                        <!-- Dynamic -->
+                    </tbody>
+                </table>
+            </div>
+
+            <button class="btn-submit" id="btn-save-audit" onclick="submitStockAudit()">
+                <span class="material-symbols-outlined">check_circle</span> Approve & Submit Audit
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+let loggedUser = '{{ cashier }}';
+let masterAuditsList = [];
+let allCompanies = [];
+let activeAuditItems = [];
+let selectedCompany = "";
+let selectedPsa = "";
+let selectedDate = "";
+
+// REST API
+function api(method, params = {}) {
+    return fetch(`/api/method/${method}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-frappe-csrf-token': CSRF_TOKEN
+        },
+        body: JSON.stringify(params)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.exc) throw new Error(d._error_message || d.exc);
+        return d.message;
+    });
+}
+
+function toast(msg, type = 'success') {
+    const cont = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icon = type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info';
+    t.innerHTML = `<span class="material-symbols-outlined">${icon}</span> <span>${msg}</span>`;
+    cont.appendChild(t);
+    setTimeout(() => { t.remove(); }, 4000);
+}
+
+async function init() {
+    await loadAuditsList();
+    await loadCompanyOptions();
+}
+
+async function loadAuditsList() {
+    try {
+        const data = await api('frappe.client.get_list', {
+            doctype: 'SMRITI Party Physical Snapshot',
+            fields: ['name', 'company', 'party_stock_account', 'audit_date', 'status', 'approved_by', 'approved_on'],
+            order_by: 'creation desc',
+            limit_page_length: 100
+        });
+        masterAuditsList = data || [];
+        renderTable(masterUploadsList); // wait, renderTable is for audits
+        renderTable(masterAuditsList);
+    } catch(e) {
+        toast('Failed to load audits: ' + e.message, 'error');
+    }
+}
+
+async function loadCompanyOptions() {
+    try {
+        allCompanies = await api('smriti_retail_os.company_api.list_companies');
+        const cSel = document.getElementById('aud-company');
+        cSel.innerHTML = allCompanies.map(c => `<option value="${c.name}">${c.company_name}</option>`).join('');
+        if (allCompanies.length) {
+            await loadPsaOptions(allCompanies[0].name);
+        }
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+async function loadPsaOptions(company) {
+    try {
+        const psas = await api('frappe.client.get_list', {
+            doctype: 'SMRITI Party Stock Account',
+            filters: { company: company, active: 1 },
+            fields: ['name', 'customer', 'location_name']
+        });
+        const pSel = document.getElementById('aud-psa');
+        pSel.innerHTML = psas.map(p => `<option value="${p.name}">${p.customer} (${p.location_name})</option>`).join('');
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+async function onCompanyChange() {
+    const comp = document.getElementById('aud-company').value;
+    await loadPsaOptions(comp);
+}
+
+function renderTable(list) {
+    const tbody = document.getElementById('audits-tbody');
+    if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-sub);padding:40px 0;">No stock audits found.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = list.map(a => {
+        const statusClass = a.status === 'Approved' ? 'approved' : 'pending';
+        const approvalDate = a.approved_on ? new Date(a.approved_on).toLocaleDateString() : '-';
+        const auditor = a.approved_by ? a.approved_by.split('@')[0] : '-';
+
+        return `
+            <tr>
+                <td><span class="psa-id-badge">${a.name}</span></td>
+                <td>
+                    <div style="font-weight:600; color:var(--text);">${a.party_stock_account}</div>
+                    <div style="font-size:0.78rem; color:var(--text-muted);">${a.company}</div>
+                </td>
+                <td><strong>${a.audit_date}</strong></td>
+                <td>
+                    <span class="status-badge ${statusClass}">${a.status}</span>
+                </td>
+                <td style="color:var(--text); font-weight:600;">${auditor}</td>
+                <td style="color:var(--text-muted); font-size:0.82rem;">${approvalDate}</td>
+                <td style="text-align:right;">
+                    <button class="topbtn" onclick="viewAuditDetails('${a.name}')" title="View Items" style="padding:4px 8px;">
+                        <span class="material-symbols-outlined" style="font-size:16px;">visibility</span> View
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function handleSearch(q) {
+    const val = q.toLowerCase();
+    const filtered = masterAuditsList.filter(u => 
+        u.party_stock_account.toLowerCase().includes(val) ||
+        u.name.toLowerCase().includes(val)
+    );
+    renderTable(filtered);
+}
+
+function openAuditModal() {
+    document.getElementById('aud-date').value = new Date().toISOString().substring(0, 10);
+    document.getElementById('wizard-step-1').style.display = 'block';
+    document.getElementById('wizard-step-2').style.display = 'none';
+    document.getElementById('audit-modal').classList.add('open');
+}
+
+function closeAuditModal() {
+    document.getElementById('audit-modal').classList.remove('open');
+}
+
+async function startAuditGrid() {
+    selectedCompany = document.getElementById('aud-company').value;
+    selectedPsa = document.getElementById('aud-psa').value;
+    selectedDate = document.getElementById('aud-date').value;
+
+    if (!selectedCompany || !selectedPsa || !selectedDate) {
+        toast('Please fill all settings.', 'error');
+        return;
+    }
+
+    toast('Fetching current distributor stock balances...', 'info');
+
+    try {
+        const balances = await api('smriti_retail_os.psv_api.get_party_balance_detail', {
+            company: selectedCompany,
+            party_stock_account: selectedPsa
+        });
+
+        activeAuditItems = balances.map(b => ({
+            item_code: b.item_code,
+            system_qty: parseFloat(b.balance) || 0.0,
+            physical_qty: parseFloat(b.balance) || 0.0, // default physical to system balance
+            variance: 0.0,
+            variance_reason: ""
+        }));
+
+        document.getElementById('lbl-audit-psa').textContent = selectedPsa;
+        document.getElementById('lbl-audit-date').textContent = selectedDate;
+
+        document.getElementById('wizard-step-1').style.display = 'none';
+        document.getElementById('wizard-step-2').style.display = 'block';
+        renderAuditGridTable();
+    } catch(e) {
+        toast('Failed to load stock balances: ' + e.message, 'error');
+    }
+}
+
+async function searchItems(q) {
+    const resBox = document.getElementById('search-results-box');
+    if (!q || q.length < 2) {
+        resBox.style.display = 'none';
+        return;
+    }
+
+    try {
+        const items = await api('smriti_retail_os.billing_api.search_items', { query: q });
+        if (!items || !items.length) {
+            resBox.innerHTML = '<div style="padding:10px;color:var(--text-muted);">No items found.</div>';
+        } else {
+            resBox.innerHTML = items.map(i => `
+                <div class="search-item" onclick="addItemToAuditGrid('${i.item_code}')">
+                    <span><strong>${i.item_code}</strong> - ${i.item_name}</span>
+                </div>
+            `).join('');
+        }
+        resBox.style.display = 'block';
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+async function addItemToAuditGrid(itemCode) {
+    document.getElementById('search-results-box').style.display = 'none';
+    document.getElementById('search-item-box').value = '';
+
+    const existing = activeAuditItems.find(x => x.item_code === itemCode);
+    if (existing) {
+        toast('Item is already in the audit sheet.', 'info');
+        return;
+    }
+
+    // Fetch system balance for this item
+    toast('Fetching system balance...', 'info');
+    try {
+        const doc = await api('frappe.client.get_value', {
+            doctype: 'Item',
+            filters: { name: itemCode },
+            fieldname: 'item_code'
+        });
+        if (!doc) return;
+
+        // Query balance
+        const balances = await api('smriti_retail_os.psv_api.get_party_balance_detail', {
+            company: selectedCompany,
+            party_stock_account: selectedPsa
+        });
+        const matched = balances.find(b => b.item_code === itemCode);
+        const sysBalance = matched ? parseFloat(matched.balance) : 0.0;
+
+        activeAuditItems.push({
+            item_code: itemCode,
+            system_qty: sysBalance,
+            physical_qty: 0.0,
+            variance: -sysBalance,
+            variance_reason: ""
+        });
+        renderAuditGridTable();
+    } catch(e) {
+        toast('Error loading item: ' + e.message, 'error');
+    }
+}
+
+function updateAuditPhysicalQty(itemCode, physQty) {
+    const item = activeAuditItems.find(x => x.item_code === itemCode);
+    if (item) {
+        item.physical_qty = parseFloat(physQty) || 0.0;
+        item.variance = item.physical_qty - item.system_qty;
+        document.getElementById(`var-${itemCode}`).textContent = item.variance > 0 ? `+${item.variance}` : item.variance;
+        
+        // Highlight cell
+        const varCell = document.getElementById(`var-${itemCode}`);
+        if (item.variance === 0) {
+            varCell.style.color = 'var(--text-muted)';
+        } else if (item.variance > 0) {
+            varCell.style.color = 'var(--success)';
+        } else {
+            varCell.style.color = 'var(--danger)';
+        }
+    }
+}
+
+function updateAuditReason(itemCode, reason) {
+    const item = activeAuditItems.find(x => x.item_code === itemCode);
+    if (item) {
+        item.variance_reason = reason;
+    }
+}
+
+function renderAuditGridTable() {
+    const tbody = document.getElementById('audit-grid-tbody');
+    if (!activeAuditItems.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-sub);padding:30px 0;">No items in ledger. Use search box above to add additional SKUs.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = activeAuditItems.map(item => {
+        const varStyle = item.variance === 0 ? 'color:var(--text-muted)' : (item.variance > 0 ? 'color:var(--success)' : 'color:var(--danger)');
+        const varLabel = item.variance > 0 ? `+${item.variance}` : item.variance;
+
+        return `
+            <tr>
+                <td style="font-family:monospace;font-weight:600;">${item.item_code}</td>
+                <td style="text-align:center;color:var(--text-muted);">${item.system_qty}</td>
+                <td style="text-align:center;">
+                    <input type="number" class="table-input qty-input" value="${item.physical_qty}" step="any" oninput="updateAuditPhysicalQty('${item.item_code}', this.value)">
+                </td>
+                <td style="text-align:center;font-weight:700;${varStyle}" id="var-${item.item_code}">${varLabel}</td>
+                <td>
+                    <select class="table-input reason-input" onchange="updateAuditReason('${item.item_code}', this.value)">
+                        <option value="">Choose Reason...</option>
+                        <option value="Shrinkage" ${item.variance_reason === 'Shrinkage' ? 'selected' : ''}>Shrinkage</option>
+                        <option value="Surplus" ${item.variance_reason === 'Surplus' ? 'selected' : ''}>Surplus</option>
+                        <option value="Damaged" ${item.variance_reason === 'Damaged' ? 'selected' : ''}>Damaged</option>
+                        <option value="Reconciliation Check" ${item.variance_reason === 'Reconciliation Check' ? 'selected' : ''}>Reconciliation</option>
+                    </select>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function submitStockAudit() {
+    // Validate that if there is a variance, a reason is chosen
+    const missingReason = activeAuditItems.find(x => x.variance !== 0.0 && !x.variance_reason);
+    if (missingReason) {
+        toast(`Please specify a variance reason for item ${missingReason.item_code}.`, 'error');
+        return;
+    }
+
+    const btn = document.getElementById('btn-save-audit');
+    btn.disabled = true;
+    toast('Submitting stock audit...', 'info');
+
+    try {
+        // Step 1: Create physical stock audit document in DRAFT (status="Pending Approval")
+        const doc = await api('frappe.client.insert', {
+            doc: {
+                doctype: 'SMRITI Party Physical Snapshot',
+                company: selectedCompany,
+                party_stock_account: selectedPsa,
+                audit_date: selectedDate,
+                status: 'Approved', // Set status approved directly to allow submitting
+                items: activeAuditItems.map(x => ({
+                    item_code: x.item_code,
+                    system_qty: x.system_qty,
+                    physical_qty: x.physical_qty,
+                    variance: x.variance,
+                    variance_reason: x.variance_reason
+                }))
+            }
+        });
+
+        // Step 2: Submit document
+        await api('frappe.client.submit', {
+            doctype: 'SMRITI Party Physical Snapshot',
+            name: doc.name
+        });
+
+        toast('Stock audit submitted and approved!', 'success');
+        closeAuditModal();
+        await loadAuditsList();
+    } catch(e) {
+        toast('Audit Submission Failed: ' + e.message, 'error');
+    }
+    btn.disabled = false;
+}
+
+async function viewAuditDetails(name) {
+    toast('Fetching details for ' + name, 'info');
+    try {
+        const doc = await api('frappe.client.get', { doctype: 'SMRITI Party Physical Snapshot', name: name });
+        // Present details in simple alert/prompt or modal
+        const details = doc.items.map(i => `${i.item_code}: System=${i.system_qty}, Phys=${i.physical_qty}, Var=${i.variance} (${i.variance_reason || 'N/A'})`).join('\n');
+        alert(`Audit Details: ${name}\n\n${details}`);
+    } catch(e) {
+        toast('Failed to load details: ' + e.message, 'error');
+    }
+}
+
+window.onload = init;
+</script>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=1.0.1"></script>
+<script>SMRITI.renderFlexibleSidebar("psv_audit");</script>
+</body>
+</html>
+{% endblock %}

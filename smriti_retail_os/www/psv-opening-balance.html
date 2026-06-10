@@ -1,0 +1,421 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/psv-opening-balance.html
+  @description: SMRITI PSV Opening Balances — Standalone UI
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @version: 1.0.0
+  @license: MIT
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMRITI Opening Balances</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg:         #0a0f1e;
+    --bg2:        #0f1629;
+    --card:       #131d35;
+    --card2:      #172040;
+    --border:     rgba(255,255,255,0.07);
+    --border2:    rgba(255,255,255,0.12);
+    --primary:    #6366f1;
+    --primary-lt: #818cf8;
+    --accent:     #10b981;
+    --accent-glow: rgba(16,185,129,0.2);
+    --warning:    #f59e0b;
+    --danger:     #ef4444;
+    --text:       #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-sub:   #475569;
+    --radius:     12px;
+    --radius-sm:  8px;
+    --radius-lg:  16px;
+    --t:          0.2s ease;
+}
+
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+
+.bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 0;
+}
+
+#app { position:relative; z-index:1; width:100vw; height:100vh; display:flex; overflow:hidden; }
+
+.main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+.topbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
+.topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--text-muted); }
+.topbar-breadcrumbs span.sep { color:var(--text-sub); }
+.topbar-breadcrumbs span.active { color:var(--text); }
+.topbar-right { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
+.topbtn { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:var(--radius-sm); font-size:12px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); white-space:nowrap; }
+.topbtn span { font-size:16px; }
+.topbtn:hover { border-color:var(--primary); color:var(--primary-lt); }
+
+.setup-panel { padding:20px 24px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; gap:16px; align-items:flex-end; flex-shrink:0; flex-wrap: wrap; }
+.form-group { display:flex; flex-direction:column; gap:6px; }
+.form-label { font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+.form-input { padding:8px 12px; background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.88rem; outline:none; transition:all var(--t); font-family:inherit; }
+.form-input:focus { border-color:var(--primary); }
+.select-input { width:220px; }
+
+.split-layout { flex:1; display:flex; overflow:hidden; padding:24px; gap:24px; }
+.left-card { flex: 2; background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); display:flex; flex-direction:column; overflow:hidden; }
+.right-card { flex: 1.2; background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px; display:flex; flex-direction:column; gap:16px; overflow-y:auto; }
+
+.card-title { font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:10px; }
+.card-title span { color:var(--primary-lt); font-size:20px; }
+
+/* Item Search Area */
+.search-row { padding:14px 20px; display:flex; gap:12px; border-bottom:1px solid var(--border); background:rgba(0,0,0,0.1); }
+.search-box-wrap { flex:1; position:relative; }
+.search-results { position:absolute; left:0; right:0; top:100%; background:var(--card2); border:1px solid var(--border2); border-radius:0 0 var(--radius-sm) var(--radius-sm); z-index:100; max-height:240px; overflow-y:auto; display:none; box-shadow:0 8px 24px rgba(0,0,0,0.5); }
+.search-item { padding:10px 14px; cursor:pointer; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; }
+.search-item:hover { background:rgba(99,102,241,0.1); }
+.search-item-code { font-weight:600; }
+.search-item-name { color:var(--text-muted); font-size:0.85rem; }
+
+/* Table styles */
+.table-wrap { flex:1; overflow:auto; }
+.smriti-table { width:100%; border-collapse:collapse; text-align:left; }
+.smriti-table th { padding:12px 16px; background:var(--card2); color:var(--text-muted); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1; }
+.smriti-table td { padding:12px 16px; border-bottom:1px solid var(--border); font-size:0.88rem; vertical-align:middle; }
+.smriti-table tr:hover td { background:rgba(99,102,241,0.02); }
+
+.qty-input { width:80px; text-align:center; padding:4px 8px; }
+
+.btn-action { padding:6px 12px; background:transparent; border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text-muted); cursor:pointer; font-size:12px; display:inline-flex; align-items:center; gap:4px; transition:all var(--t); }
+.btn-action:hover { border-color:var(--danger); color:var(--danger); background:rgba(239,68,68,0.05); }
+
+.btn-primary { padding:10px 18px; background:linear-gradient(135deg,var(--accent),#059669); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.9rem; cursor:pointer; transition:all var(--t); display:inline-flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 12px var(--accent-glow); }
+.btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(16,185,129,0.35); }
+.btn-primary:disabled { opacity:0.4; cursor:not-allowed; transform:none !important; }
+
+/* Toast Container */
+#toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
+.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+.toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
+.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
+.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+.toast span { font-size:20px; }
+@keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+</style>
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
+<body>
+
+<div class="bg-grid"></div>
+
+<div id="app">
+    <div id="smriti-sidebar-target" class="sidebar"></div>
+
+    <div class="main-wrapper">
+        <div class="topbar">
+            <div class="topbar-breadcrumbs">
+                <span>SMRITI</span>
+                <span class="sep">/</span>
+                <span>Channel Stock</span>
+                <span class="sep">/</span>
+                <span class="active">Opening Balances</span>
+            </div>
+            <div class="topbar-right">
+                <button class="topbtn" onclick="history.back()"><span class="material-symbols-outlined">arrow_back</span></button>
+                <button class="topbtn" onclick="history.forward()"><span class="material-symbols-outlined">arrow_forward</span></button>
+            </div>
+        </div>
+
+        <div class="setup-panel">
+            <div class="form-group">
+                <label class="form-label">Company</label>
+                <select class="form-input select-input" id="sel-company" onchange="onCompanyChange()">
+                    <!-- Dynamic -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Distributor / Party Stock Account</label>
+                <select class="form-input select-input" style="width: 300px;" id="sel-psa" onchange="onPsaChange()">
+                    <!-- Dynamic -->
+                </select>
+            </div>
+        </div>
+
+        <div class="split-layout">
+            <div class="left-card">
+                <div class="search-row">
+                    <div class="search-box-wrap">
+                        <input type="text" class="form-input" style="width:100%;" id="search-item-box" placeholder="Scan barcode or type SKU name..." oninput="searchItems(this.value)" autocomplete="off">
+                        <div class="search-results" id="search-results-box"></div>
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="smriti-table">
+                        <thead>
+                            <tr>
+                                <th>Item Code</th>
+                                <th>Item Name</th>
+                                <th>MRP</th>
+                                <th style="text-align:center; width:120px;">Qty</th>
+                                <th style="text-align:right; width:100px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="items-tbody">
+                            <tr><td colspan="5" style="text-align:center;color:var(--text-sub);padding:40px 0;">No items added. Use the search box above to add opening stock items.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="right-card">
+                <div class="card-title">
+                    <span class="material-symbols-outlined">info</span> Summary & Submit
+                </div>
+                <div style="display:flex; flex-direction:column; gap:14px; flex:1;">
+                    <div style="background:rgba(255,255,255,0.02); padding:14px; border-radius:var(--radius-sm); border:1px solid var(--border); display:flex; flex-direction:column; gap:8px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                            <span style="color:var(--text-muted);">Total SKUs:</span>
+                            <span id="summary-skus" style="font-weight:700;">0</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                            <span style="color:var(--text-muted);">Total Quantity:</span>
+                            <span id="summary-qty" style="font-weight:700;">0</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: auto;">
+                        <button class="btn-primary" id="btn-submit" onclick="submitOpeningBalances()" disabled>
+                            <span class="material-symbols-outlined">cloud_upload</span> Process Opening Balances
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+let loggedUser = '{{ cashier }}';
+let selectedCompany = "";
+let selectedPsa = "";
+let activeItemsList = [];
+
+// REST API
+function api(method, params = {}) {
+    return fetch(`/api/method/${method}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-frappe-csrf-token': CSRF_TOKEN
+        },
+        body: JSON.stringify(params)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.exc) throw new Error(d._error_message || d.exc);
+        return d.message;
+    });
+}
+
+function toast(msg, type = 'success') {
+    const cont = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icon = type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info';
+    t.innerHTML = `<span class="material-symbols-outlined">${icon}</span> <span>${msg}</span>`;
+    cont.appendChild(t);
+    setTimeout(() => { t.remove(); }, 4000);
+}
+
+async function init() {
+    try {
+        // Load Companies
+        const companies = await api('smriti_retail_os.company_api.list_companies');
+        const cSel = document.getElementById('sel-company');
+        cSel.innerHTML = companies.map(c => `<option value="${c.name}">${c.company_name}</option>`).join('');
+        
+        // Trigger select first company
+        if (companies.length) {
+            selectedCompany = companies[0].name;
+            await loadPsaAccounts();
+        }
+    } catch(e) {
+        toast('Setup Error: ' + e.message, 'error');
+    }
+}
+
+async function loadPsaAccounts() {
+    try {
+        const psas = await api('frappe.client.get_list', {
+            doctype: 'SMRITI Party Stock Account',
+            filters: { company: selectedCompany, active: 1 },
+            fields: ['name', 'location_name', 'customer']
+        });
+        const pSel = document.getElementById('sel-psa');
+        if (!psas.length) {
+            pSel.innerHTML = '<option value="">No Active accounts found</option>';
+            selectedPsa = "";
+        } else {
+            pSel.innerHTML = psas.map(p => `<option value="${p.name}">${p.customer} (${p.location_name})</option>`).join('');
+            selectedPsa = psas[0].name;
+        }
+    } catch(e) {
+        toast('Failed to load Distributor Accounts', 'error');
+    }
+}
+
+async function onCompanyChange() {
+    selectedCompany = document.getElementById('sel-company').value;
+    await loadPsaAccounts();
+    activeItemsList = [];
+    renderItemsTable();
+}
+
+function onPsaChange() {
+    selectedPsa = document.getElementById('sel-psa').value;
+    activeItemsList = [];
+    renderItemsTable();
+}
+
+async function searchItems(q) {
+    const resBox = document.getElementById('search-results-box');
+    if (!q || q.length < 2) {
+        resBox.style.display = 'none';
+        return;
+    }
+
+    try {
+        const items = await api('smriti_retail_os.billing_api.search_items', { query: q });
+        if (!items || !items.length) {
+            resBox.innerHTML = '<div style="padding:10px;color:var(--text-muted);">No items found.</div>';
+        } else {
+            resBox.innerHTML = items.map(i => `
+                <div class="search-item" onclick="addItemFromSearch(${JSON.stringify(i).replace(/"/g, '&quot;')})">
+                    <span class="search-item-code">${i.item_code}</span>
+                    <span class="search-item-name">${i.item_name} ${i.custom_mrp ? ' - ₹' + i.custom_mrp : ''}</span>
+                </div>
+            `).join('');
+        }
+        resBox.style.display = 'block';
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+function addItemFromSearch(i) {
+    document.getElementById('search-results-box').style.display = 'none';
+    document.getElementById('search-item-box').value = '';
+
+    const existing = activeItemsList.find(x => x.item_code === i.item_code);
+    if (existing) {
+        existing.qty += 1;
+    } else {
+        activeItemsList.push({
+            item_code: i.item_code,
+            item_name: i.item_name,
+            mrp: i.custom_mrp || 0.0,
+            qty: 1
+        });
+    }
+    renderItemsTable();
+}
+
+function updateItemQty(itemCode, qty) {
+    const item = activeItemsList.find(x => x.item_code === itemCode);
+    if (item) {
+        item.qty = parseFloat(qty) || 0;
+        updateSummary();
+    }
+}
+
+function removeItem(itemCode) {
+    activeItemsList = activeItemsList.filter(x => x.item_code !== itemCode);
+    renderItemsTable();
+}
+
+function renderItemsTable() {
+    const tbody = document.getElementById('items-tbody');
+    if (!activeItemsList.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-sub);padding:40px 0;">No items added. Use the search box above to add opening stock items.</td></tr>';
+        updateSummary();
+        return;
+    }
+
+    tbody.innerHTML = activeItemsList.map(item => `
+        <tr>
+            <td style="font-family:monospace;font-weight:600;">${item.item_code}</td>
+            <td>${item.item_name}</td>
+            <td>₹${Number(item.mrp).toFixed(2)}</td>
+            <td style="text-align:center;">
+                <input type="number" class="form-input qty-input" value="${item.qty}" min="0.1" step="any" oninput="updateItemQty('${item.item_code}', this.value)">
+            </td>
+            <td style="text-align:right;">
+                <button class="btn-action" onclick="removeItem('${item.item_code}')">
+                    <span class="material-symbols-outlined">delete</span> Remove
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    updateSummary();
+}
+
+function updateSummary() {
+    let skus = activeItemsList.length;
+    let qty = activeItemsList.reduce((acc, x) => acc + x.qty, 0);
+
+    document.getElementById('summary-skus').textContent = skus;
+    document.getElementById('summary-qty').textContent = qty;
+    
+    const submitBtn = document.getElementById('btn-submit');
+    submitBtn.disabled = !selectedPsa || skus === 0 || qty <= 0;
+}
+
+async function submitOpeningBalances() {
+    if (!selectedPsa) return;
+    
+    const submitBtn = document.getElementById('btn-submit');
+    submitBtn.disabled = true;
+    toast('Processing opening stock balances...', 'info');
+
+    try {
+        const payload = activeItemsList.map(x => ({
+            item_code: x.item_code,
+            qty: x.qty
+        }));
+
+        await api('smriti_retail_os.psv_service.process_opening_balance', {
+            company: selectedCompany,
+            party_stock_account: selectedPsa,
+            items: JSON.stringify(payload)
+        });
+
+        toast('Opening balances successfully committed!', 'success');
+        activeItemsList = [];
+        renderItemsTable();
+    } catch(e) {
+        toast('Commit Failed: ' + e.message, 'error');
+        submitBtn.disabled = false;
+    }
+}
+
+window.onload = init;
+</script>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=1.0.1"></script>
+<script>SMRITI.renderFlexibleSidebar("psv_opening_balance");</script>
+</body>
+</html>
+{% endblock %}

@@ -40,10 +40,10 @@ SMRITI.sidebarSchema = [
         label: 'Channel Stock',
         items: [
             { id: 'psa', label: '├─ Distributor Accounts', url: '/psa' },
-            { id: 'psv_opening_balance', label: '├─ Opening Balances', url: '/app/psv-opening-balance' },
-            { id: 'sales_upload', label: '├─ Sales Uploads', url: '/app/smriti-party-sales-upload' },
-            { id: 'psv_audit', label: '├─ Stock Audits', url: '/app/smriti-party-physical-snapshot' },
-            { id: 'psv_reorder', label: '└─ Reorder Report', url: '/app/query-report/SMRITI PSV Reorder Report' }
+            { id: 'psv_opening_balance', label: '├─ Opening Balances', url: '/psv-opening-balance' },
+            { id: 'sales_upload', label: '├─ Sales Uploads', url: '/sales-upload' },
+            { id: 'psv_audit', label: '├─ Stock Audits', url: '/stock-audit' },
+            { id: 'psv_reorder', label: '└─ Reorder Report', url: '/reports?report=psv_reorder_report' }
         ]
     },
     {
