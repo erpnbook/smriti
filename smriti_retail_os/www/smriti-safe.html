@@ -1,0 +1,48 @@
+/**
+ * @file: smriti_retail_os/www/smriti-safe.html
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>SMRITI Safe Mode</title>
+    <style>
+        body { font-family:Arial,sans-serif; background:#1A2B5C;
+               display:flex; align-items:center; justify-content:center;
+               min-height:100vh; margin:0; }
+        .card { background:#fff; border-radius:12px; padding:48px 40px;
+                width:440px; text-align:center; }
+        h2 { color:#1A2B5C; margin-bottom:8px; }
+        p  { color:#6B7280; margin-bottom:28px; font-size:14px; }
+        .btn { display:block; padding:12px 20px; border-radius:8px;
+               text-decoration:none; font-weight:600; margin-bottom:12px;
+               font-size:14px; }
+        .btn-desk  { background:#1A2B5C; color:#fff; }
+        .btn-smriti{ background:#2563EB; color:#fff; }
+        .btn-flag  { background:#DC2626; color:#fff; }
+        .warning { background:#FEF2F2; border:1px solid #FECACA;
+                   color:#991B1B; padding:12px; border-radius:8px;
+                   margin-bottom:20px; font-size:13px; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>SMRITI Safe Mode</h2>
+    <div class="warning">
+        ⚠ This page is for administrators only.<br>
+        Use if SMRITI frontend is broken.
+    </div>
+    <p>Choose where to go:</p>
+    <a href="/desk" class="btn btn-desk">→ Frappe Desk (Admin)</a>
+    <a href="/smriti" class="btn btn-smriti">→ SMRITI Home</a>
+    <a href="/api/method/smriti_retail_os.boot.health_check"
+       class="btn btn-flag" target="_blank">→ Health Check API</a>
+</div>
+</body>
+</html>

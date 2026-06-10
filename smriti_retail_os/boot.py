@@ -1,255 +1,205 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/boot.py
-# @description: Frappe boot session -- injects SMRITI config into every desk boot.
+# @description: Handles user login, registration, and JWT token generation.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-
 import frappe
-import re
+from frappe import _
 
-# ── Constants ──────────────────────────────────────────────────────────────────
-_BRAND_NAME = "SMRITI Retail OS"
-_LOGO_URL   = "/assets/smriti_retail_os/images/logo.svg"
-_BRAND_HTML = (
-    '<img src="{logo}" style="height:32px;width:auto;display:block;" '
-    'alt="{name}">'
-).format(logo=_LOGO_URL, name=_BRAND_NAME)
-
-# ERPNext / Frappe app names whose titles we override
-_REBRAND_APPS = {"erpnext", "frappe"}
-_APP_TITLE_OVERRIDES = {
-    "erpnext": _BRAND_NAME,
-    "frappe":  "SMRITI Framework",
+# ── Role → SMRITI Route mapping ───────────────────────────────────
+SMRITI_ROLE_ROUTES = {
+    "System Manager":          "/smriti",
+    "SMRITI Store Manager":    "/smriti",
+    "SMRITI Inventory User":   "/inventory",
+    "SMRITI Reports User":     "/reports",
+    "SMRITI Cashier":          "/billing",
 }
 
-# Regex to detect any ERPNext / Frappe branding in string values
-_BRAND_RE = re.compile(
-    r"ERPNext|Frappe\s+(Technologies|Framework)|Built\s+with\s+Frappe|Powered\s+by\s+Frappe",
-    re.IGNORECASE,
-)
+# ── Roles allowed to access /desk ────────────────────────────────
+# Note: "Administrator" is a USER not a role in Frappe
+# We check both role AND user for safety
+DESK_ALLOWED_ROLES = {"System Manager"}
+DESK_ALLOWED_USERS = {"Administrator"}
 
-
-def _replace(text: str) -> str:
-    """Replace all ERPNext/Frappe references with SMRITI branding."""
-    text = re.sub(r"ERPNext\s*[—\-]\s*", _BRAND_NAME + " — ", text)
-    text = re.sub(r"[—\-]\s*ERPNext", "— " + _BRAND_NAME, text)
-    text = re.sub(r"ERPNext", _BRAND_NAME, text)
-    text = re.sub(r"Frappe Technologies", "SMRITI", text)
-    text = re.sub(r"Frappe Framework", _BRAND_NAME, text)
-    text = re.sub(r"Built with Frappe", _BRAND_NAME, text)
-    text = re.sub(r"Powered by Frappe", _BRAND_NAME, text)
-    return text
-
-
-def _patch_page(page: dict) -> None:
-    """Patch a single workspace/sidebar page dict in-place."""
-    if not isinstance(page, dict):
-        return
-    # app_title is what Frappe renders as subtitle below workspace name in sidebar
-    if page.get("app_title") and _BRAND_RE.search(page["app_title"]):
-        page["app_title"] = _replace(page["app_title"])
-    # If the page belongs to erpnext, override its app_title
-    if (page.get("app") or "").lower() in _REBRAND_APPS:
-        page["app_title"] = _BRAND_NAME
-    # Also patch label/title fields
-    for key in ("label", "title", "module_name", "subtitle"):
-        if page.get(key) and _BRAND_RE.search(str(page[key])):
-            page[key] = _replace(str(page[key]))
-
-
-def _apply_branding(bootinfo):
-    """
-    Server-side hook: override ALL branding-related bootinfo keys so that
-    Frappe renders the navbar, page titles, sidebar, and About dialog with
-    SMRITI branding *before* any HTML is sent to the browser.
-    """
-
-    # 1. App name (browser <title> tag, breadcrumbs, system headers)
-    bootinfo.app_name = _BRAND_NAME
-
-    # 2. Navbar brand HTML — rendered top-left in the desk
-    bootinfo.brand_html = _BRAND_HTML
-
-    # 3. App logo URL
-    bootinfo.app_logo_url = _LOGO_URL
-
-    # 4. Splash / loading image
-    bootinfo.splash_image = _LOGO_URL
-
-    # 5. Favicon
-    bootinfo.favicon = "/assets/smriti_retail_os/favicon.png"
-
-    # 6. System defaults (used by Frappe templates and some desk JS)
-    if isinstance(bootinfo.get("sysdefaults"), dict):
-        bootinfo.sysdefaults["app_name"] = _BRAND_NAME
-        # Also scrub any ERPNext strings in sysdefaults
-        for k, v in list(bootinfo.sysdefaults.items()):
-            if isinstance(v, str) and _BRAND_RE.search(v):
-                bootinfo.sysdefaults[k] = _replace(v)
-
-    # 7. Installed apps list shown in Help → About
-    installed = bootinfo.get("installed_apps") or []
-    for app in installed:
-        if not isinstance(app, dict):
-            continue
-        name = (app.get("name") or "").lower()
-        if name in _APP_TITLE_OVERRIDES:
-            app["title"]       = _APP_TITLE_OVERRIDES[name]
-            app["description"] = "Smarter Retail. Built for India."
-
-    # 8. ── CRITICAL: sidebar_pages & workspaces ────────────────────────────────
-    # Frappe builds the workspace sidebar from bootinfo.sidebar_pages or bootinfo.workspaces.
-    # Each entry has { name, title, app, app_title, ... }
-    # "app_title" is what appears as the subtitle under each workspace link.
-    sidebar_pages = bootinfo.get("sidebar_pages") or {}
-    if isinstance(sidebar_pages, dict):
-        for key in ("pages", "public_pages", "private_pages"):
-            pages = sidebar_pages.get(key) or []
-            for page in pages:
-                _patch_page(page)
-    elif isinstance(sidebar_pages, list):
-        for page in sidebar_pages:
-            _patch_page(page)
-
-    workspaces = bootinfo.get("workspaces")
-    if isinstance(workspaces, dict):
-        pages = workspaces.get("pages") or []
-        for page in pages:
-            _patch_page(page)
-
-    # 9. Also patch top-level workspace_sidebar_items / workspace_sidebar_item if present
-    for key in (
-        "workspace_sidebar_items",
-        "workspace_sidebar_item",
-        "allowed_pages",
-        "module_wise_workspaces",
-    ):
-        val = bootinfo.get(key)
-        if isinstance(val, list):
-            for page in val:
-                _patch_page(page)
-        elif isinstance(val, dict):
-            for page in val.values():
-                if isinstance(page, list):
-                    for p in page:
-                        _patch_page(p)
-                elif isinstance(page, dict):
-                    _patch_page(page)
-            # If key is workspace_sidebar_item, also patch its values/items dicts
-            if key == "workspace_sidebar_item":
-                for ws_name, ws_data in val.items():
-                    if isinstance(ws_data, dict):
-                        _patch_page(ws_data)
-                        items = ws_data.get("items") or []
-                        for item in items:
-                            _patch_page(item)
-
-    # 10. nav_items (top navbar links that may carry ERPNext labels)
-    nav_items = bootinfo.get("nav_items") or []
-    for item in nav_items:
-        if isinstance(item, dict):
-            for k in ("label", "title"):
-                if item.get(k) and _BRAND_RE.search(str(item[k])):
-                    item[k] = _replace(str(item[k]))
-
-    # 11. Module info dicts
-    module_info = bootinfo.get("module_info") or {}
-    if isinstance(module_info, dict):
-        for mod_name, mod_data in module_info.items():
-            if isinstance(mod_data, dict):
-                for k in ("label", "title", "app_title"):
-                    if mod_data.get(k) and _BRAND_RE.search(str(mod_data[k])):
-                        mod_data[k] = _replace(str(mod_data[k]))
-
-    # 12. desk_settings / user_settings strings
-    for key in ("desk_settings", "user_info"):
-        val = bootinfo.get(key)
-        if isinstance(val, dict):
-            for k, v in val.items():
-                if isinstance(v, str) and _BRAND_RE.search(v):
-                    val[k] = _replace(v)
+# ── Role priority for redirect ────────────────────────────────────
+ROLE_PRIORITY = [
+    "System Manager",
+    "SMRITI Store Manager",
+    "SMRITI Inventory User",
+    "SMRITI Reports User",
+    "SMRITI Cashier",
+]
 
 
 def extend_bootinfo(bootinfo):
     """
-    Main bootinfo extension hook registered in hooks.py.
-    Applies branding for ALL users, then handles role-based routing.
-
-    NOTE ON PORT ROUTING:
-    - Port 8080: Standard ERPNext Desk. No forced redirection for managers.
-                 They land on the ERPNext home workspace as normal.
-    - Port 9000: SMRITI Retail POS. Nginx root block redirects / → /billing.
-                 Only Cashiers who access port 8080 are redirected to /billing
-                 via bootinfo.default_route below (they have no desk access anyway).
-
-    NOTE ON SETUP WIZARD ROUTING:
-    - If no Company exists in the system (fresh install), ALL privileged users
-      (Administrator + System Manager) are redirected to /setup-wizard.
-    - website_context.py handles the same redirect for non-Desk (web) routes.
-    - This bootinfo hook covers the /app SPA entry point which bypasses
-      website_context entirely.
+    Frappe v16 correct hook: extend_bootinfo
+    Called after standard bootinfo is built.
+    Injects SMRITI config into every page load.
     """
-
-    # ── Always apply branding ────────────────────────────────────────────
-    # L-15: Wrapped in try/except — branding is cosmetic; an exception here
-    # must NEVER block desk logins for all users.
     try:
-        _apply_branding(bootinfo)
-    except Exception:
-        frappe.log_error(title="SMRITI: _apply_branding() failed", message=frappe.get_traceback())
+        user        = frappe.session.user
+        user_roles  = frappe.get_roles(user)
+        desk_ok     = _is_desk_allowed(user, user_roles)
+        smriti_route = _get_smriti_route(user_roles)
 
-    # ── Check if any company exists in the system ──────────────────────────
+        bootinfo.smriti = frappe._dict({
+            "app_name":      "SMRITI Retail OS",
+            "app_version":   "1.0.0",
+            "logo_url":      "/assets/smriti_retail_os/images/smriti_logo.png",
+            "user_roles":    user_roles,
+            "default_route": smriti_route,
+            "desk_allowed":  desk_ok,
+            "company":       frappe.defaults.get_user_default("Company") or "",
+            "frontend_enabled": _is_smriti_frontend_enabled(),
+        })
+
+        # Override Frappe default route for non-admin
+        if not desk_ok:
+            bootinfo.default_route = smriti_route
+
+    except Exception as e:
+        frappe.log_error(str(e), "SMRITI extend_bootinfo Error")
+
+
+def on_session_creation(login_manager):
+    """
+    Frappe v16 hook: on_session_creation
+    Called after successful login.
+    Sets home_page for redirect.
+    """
     try:
-        companies = frappe.get_all("Company", limit=1)
-        bootinfo.has_company = len(companies) > 0
-        if bootinfo.has_company:
-            company_name = frappe.defaults.get_user_default("company") or companies[0].name
-            if frappe.db.exists("SMRITI Company Settings", company_name):
-                bootinfo.smriti_business_type = frappe.db.get_value("SMRITI Company Settings", company_name, "custom_business_type") or "Footwear"
-            else:
-                bootinfo.smriti_business_type = "Footwear"
-        else:
-            bootinfo.smriti_business_type = "Footwear"
-    except Exception:
-        bootinfo.has_company = True
-        bootinfo.smriti_business_type = "Footwear"
+        user       = frappe.session.user
+        user_roles = frappe.get_roles(user)
+        route      = _get_smriti_route(user_roles)
+        frappe.local.response["home_page"] = route
+    except Exception as e:
+        frappe.log_error(str(e), "SMRITI on_session_creation Error")
+        frappe.local.response["home_page"] = "/smriti"
 
-    # ── Role-based routing ───────────────────────────────────────────────
-    user = frappe.session.user
-    roles = frappe.get_roles(user)
 
-    # ── Setup Wizard redirect (fresh install, no company yet) ───────────────
-    # When no Company document exists, privileged desk users are redirected to
-    # the Setup Wizard instead of landing on a blank/broken ERPNext workspace.
-    # Cashiers are excluded — they have no desk access and are handled below.
-    if not bootinfo.has_company:
-        is_privileged = (
-            user == "Administrator"
-            or "System Manager" in roles
-            or "SMRITI Store Manager" in roles
+def check_desk_access():
+    """
+    on_page_load hook — fires only on web page loads (not API/assets).
+    Redirects non-admin away from /desk.
+    Does NOT touch /app — reserved for future SMRITI workspace pages.
+    """
+    try:
+        if not hasattr(frappe, "request") or not frappe.request:
+            return
+
+        path = frappe.request.path or ""
+
+        # Only block /desk — NOT /app (future workspace use)
+        if not path.startswith("/desk"):
+            return
+
+        user       = frappe.session.user
+        user_roles = frappe.get_roles(user)
+
+        if _is_desk_allowed(user, user_roles):
+            return  # Admin — allow through
+
+        # Non-admin on /desk — redirect to SMRITI home
+        frappe.local.flags.redirect_location = "/smriti"
+        raise frappe.Redirect
+
+    except frappe.Redirect:
+        raise
+    except Exception as e:
+        frappe.log_error(str(e), "SMRITI Desk Access Check Error")
+
+
+def _get_smriti_route(user_roles):
+    """Return SMRITI route for highest-priority role."""
+    for role in ROLE_PRIORITY:
+        if role in user_roles:
+            return SMRITI_ROLE_ROUTES.get(role, "/smriti")
+    return "/smriti"
+
+
+def _is_desk_allowed(user, user_roles):
+    """
+    Desk allowed for System Manager role OR Administrator user.
+    Administrator is a special USER in Frappe, not always a role.
+    """
+    if user in DESK_ALLOWED_USERS:
+        return True
+    return bool(set(user_roles) & DESK_ALLOWED_ROLES)
+
+
+def _is_smriti_frontend_enabled():
+    """
+    Feature flag — check System Settings for SMRITI frontend toggle.
+    Returns True if enabled or flag doesn't exist yet (default on).
+    """
+    try:
+        val = frappe.db.get_single_value(
+            "System Settings", "custom_smriti_frontend_enabled"
         )
-        if is_privileged:
-            bootinfo.default_route = "/setup-wizard"
-            # Also expose the wizard URL to the frontend for any JS that needs it
-            bootinfo.smriti_setup_wizard_url = "/setup-wizard"
-            return  # Skip all other routing — wizard takes priority
-
-    # ── Cashier redirect ────────────────────────────────────────────────
-    # Cashiers have no ERPNext desk access, so redirect them to the standalone
-    # billing terminal on either port.
-    if "SMRITI Cashier" in roles:
-        bootinfo.default_route = "/billing"
-
-    # Store Managers and System Managers: let ERPNext desk handle routing normally.
-    # On port 8080 they land on the standard ERPNext workspace.
-    # On port 9000, Nginx redirects root → /billing regardless.
+        return val != 0  # None or 1 = enabled, 0 = disabled
+    except Exception:
+        return True  # Default: enabled
 
 
-def boot_session(bootinfo):
-    extend_bootinfo(bootinfo)
+@frappe.whitelist()
+def get_smriti_session_info():
+    """
+    Whitelisted API — called by SMRITI frontend on load.
+    Returns session info for UI initialization.
+    """
+    try:
+        user       = frappe.session.user
+        user_roles = frappe.get_roles(user)
+        return {
+            "user":              user,
+            "full_name":         frappe.db.get_value(
+                                     "User", user, "full_name"
+                                 ) or user,
+            "roles":             user_roles,
+            "default_route":     _get_smriti_route(user_roles),
+            "desk_allowed":      _is_desk_allowed(user, user_roles),
+            "company":           frappe.defaults.get_user_default("Company") or "",
+            "app_name":          "SMRITI Retail OS",
+            "logo_url":          "/assets/smriti_retail_os/images/smriti_logo.png",
+            "frontend_enabled":  _is_smriti_frontend_enabled(),
+        }
+    except Exception as e:
+        frappe.log_error(str(e), "SMRITI Session Info Error")
+        return {"error": str(e)}
 
+
+@frappe.whitelist(allow_guest=True)
+def health_check():
+    """
+    Health check endpoint.
+    GET /api/method/smriti_retail_os.boot.health_check
+    Returns system status — useful during deployments.
+    """
+    status = {"status": "ok", "app": "SMRITI Retail OS", "version": "1.0.0"}
+    try:
+        # Check DB connection
+        frappe.db.sql("SELECT 1")
+        status["db"] = "ok"
+    except Exception as e:
+        status["db"] = f"error: {e}"
+
+    try:
+        # Check boot module imports
+        from smriti_retail_os import psv_service  # noqa
+        status["psv_service"] = "ok"
+    except Exception as e:
+        status["psv_service"] = f"error: {e}"
+
+    try:
+        # Check frontend flag
+        status["frontend_enabled"] = _is_smriti_frontend_enabled()
+    except Exception:
+        status["frontend_enabled"] = "unknown"
+
+    return status

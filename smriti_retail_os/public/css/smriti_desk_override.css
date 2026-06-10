@@ -1,0 +1,57 @@
+/**
+ * @file: smriti_retail_os/public/css/smriti_desk_override.css
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+/* ── SMRITI Desk Override — Admin Desk Branded ─────────────────── */
+
+/* SMRITI Navy navbar */
+.navbar.navbar-default,
+.main-bar,
+.navbar-header {
+    background-color: #1A2B5C !important;
+    border-bottom: 2px solid #2563EB !important;
+}
+
+.navbar .navbar-nav > li > a,
+.navbar .navbar-brand,
+.main-bar .navbar-nav > li > a {
+    color: #FFFFFF !important;
+}
+
+/* Hide Frappe/ERPNext text brand */
+.frappe-brand-name {
+    display: none !important;
+}
+
+/* Replace Frappe logo image via filter/visibility */
+.navbar-brand img {
+    filter: brightness(0) invert(1);  /* fallback if asset not loaded */
+}
+
+/* Setup Wizard — hidden always */
+.setup-wizard-container,
+[data-page="setup-wizard"],
+.setup-wizard-slide {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* Module list — SMRITI color accent */
+.module-box:hover {
+    border-color: #2563EB !important;
+}
+
+/* Primary buttons — SMRITI blue */
+.btn-primary {
+    background-color: #2563EB !important;
+    border-color: #1D4ED8 !important;
+}
+.btn-primary:hover {
+    background-color: #1D4ED8 !important;
+}

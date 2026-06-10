@@ -69,6 +69,15 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         # Ensure the test company has a valid GSTIN and registered company address (Required for India Compliance)
         frappe.db.set_value("Company", self.company, "gstin", "27AAXFT2508H1ZR")
         
+        # Seed Stock Entry Types if missing in isolated test DB
+        for et in ["Material Receipt", "Material Issue", "Material Transfer"]:
+            if not frappe.db.exists("Stock Entry Type", et):
+                doc = frappe.new_doc("Stock Entry Type")
+                doc.name = et
+                doc.purpose = et
+                doc.insert(ignore_permissions=True)
+
+        
         addr_name = f"{self.company}-Registered-Test"
         if not frappe.db.exists("Address", addr_name):
             addr = frappe.new_doc("Address")
@@ -162,6 +171,18 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         comp_doc.round_off_cost_center = self.cost_center
         comp_doc.round_off_account = frappe.db.get_value("Account", {"company": self.company, "account_type": "Round Off"}, "name") or self.income_account
         comp_doc.default_cash_account = frappe.db.get_value("Account", {"company": self.company, "account_type": "Cash"}, "name") or frappe.db.get_value("Account", {"company": self.company, "account_name": "Cash"}, "name")
+        
+        # Clean up any invalid account/cost center references to prevent LinkValidationErrors due to test DB pollution
+        for field in ["stock_received_but_not_billed", "default_inventory_account", 
+                      "stock_adjustment_account", "default_expense_account", 
+                      "round_off_account", "default_cash_account", "default_bank_account",
+                      "round_off_cost_center", "cost_center"]:
+            val = comp_doc.get(field)
+            if val:
+                doctype = "Cost Center" if "cost_center" in field else "Account"
+                if not frappe.db.exists(doctype, val):
+                    comp_doc.set(field, None)
+                    
         comp_doc.save(ignore_permissions=True)
         frappe.db.commit()
 
@@ -348,7 +369,8 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         # 4. Setup a test Manager PIN / Password
         # Assign Password to current user so we can test validation easily
         from frappe.utils.password import update_password
-        update_password(frappe.session.user, "4321")
+        update_password(frappe.session.user, "4321", fieldname="custom_smriti_pin")
+        frappe.db.set_value("User", frappe.session.user, "custom_smriti_pin", "4321")
         
         # Ensure current user has SMRITI Store Manager role in DB
         if not frappe.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):

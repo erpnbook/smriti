@@ -8,3 +8,5 @@ smriti_retail_os.patches.v1_2_10.migrate_print_template_custom_fields
 
 # v1.2.3 — BUG-001: Purge stale MoP + GST Account rows for deleted companies
 smriti_retail_os.patches.v1_2_3.purge_stale_mop_and_gst_rows
+smriti_retail_os.patches.mark_setup_complete
+smriti_retail_os.patches.add_smriti_feature_flag

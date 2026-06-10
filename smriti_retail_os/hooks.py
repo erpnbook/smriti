@@ -11,19 +11,19 @@
 
 app_name = "smriti_retail_os"
 app_title = "SMRITI Retail OS"
-app_publisher = "SMRITI Retail OS"
-app_description = "Retail Experience Layer"
+app_publisher = "PrathamOne / AITDL"
+app_description = "SMRITI Retail OS — Intelligent Indian Retail Platform"
 app_email = "support@erpnbook.com"
 app_license = "mit"
 brand_html = "<b style='color:#e94560;font-family:Inter,sans-serif'>SMRITI Retail OS</b>"
 
 # Branding Configs
-app_logo_url = "/assets/smriti_retail_os/images/logo.svg"
-favicon = "/assets/smriti_retail_os/images/logo.svg"
+app_logo_url = "/assets/smriti_retail_os/images/smriti_logo.png"
+favicon = "/assets/smriti_retail_os/images/smriti_favicon.ico"
 
 # Email notifications whitelabeling
 sender_name = "SMRITI Retail OS"
-email_brand_image = "/assets/smriti_retail_os/images/logo.svg"
+email_brand_image = "/assets/smriti_retail_os/images/smriti_logo.png"
 
 # Footer suppression
 footer_items = []
@@ -38,6 +38,12 @@ help_links = [
     {"title": "SMRITI Support Desk", "url": "https://support.erpnbook.com"},
     {"title": "User Manual", "url": "/app/smriti_desk#user-manual"}
 ]
+
+# ── Setup Wizard — Bypass completely ─────────────────────────────
+setup_wizard_requires_login = True
+setup_wizard_complete       = True      # Frappe v14+ supported
+setup_wizard_stages         = []        # Empty list = no stages
+
 
 # Apps
 # ------------------
@@ -64,7 +70,8 @@ app_include_css = [
     "/assets/smriti_retail_os/css/smriti_sidebar.css",
     "/assets/smriti_retail_os/css/smriti_branding.css",
     "/assets/smriti_retail_os/css/smriti-reports.css",
-    "/assets/smriti_retail_os/css/smriti_sales_invoice.css"
+    "/assets/smriti_retail_os/css/smriti_sales_invoice.css",
+    "/assets/smriti_retail_os/css/smriti_desk_override.css",
 ]
 app_include_js = [
     "/assets/smriti_retail_os/js/smriti_sidebar.js",
@@ -74,19 +81,24 @@ app_include_js = [
     # PWA — Service Worker registration, install prompt, offline detection
     "/assets/smriti_retail_os/js/smriti_offline_store.js",
     "/assets/smriti_retail_os/js/smriti_pwa.js",
+    "/assets/smriti_retail_os/js/smriti_boot.js",
 ]
 
 # website page context override for whitelabel branding
 update_website_context = ["smriti_retail_os.website_context.get_context"]
 
 # include js, css files in header of web template
-web_include_css = "/assets/smriti_retail_os/css/smriti_branding.css"
+web_include_css = [
+    "/assets/smriti_retail_os/css/smriti_branding.css",
+    "/assets/smriti_retail_os/css/smriti_web.css",
+]
 web_include_js = [
     "/assets/smriti_retail_os/js/main.js",
     "/assets/smriti_retail_os/js/smriti_payload_bridge.js",
     # PWA — load on every SMRITI web page
     "/assets/smriti_retail_os/js/smriti_offline_store.js",
     "/assets/smriti_retail_os/js/smriti_pwa.js",
+    "/assets/smriti_retail_os/js/smriti_web_boot.js",
 ]
 
 # include custom scss in every website theme (without file extension ".scss")
@@ -164,8 +176,9 @@ after_migrate = [
     "smriti_retail_os.sync_assets.sync_assets",
 ]
 
-boot_session = "smriti_retail_os.boot.boot_session"
 extend_bootinfo = "smriti_retail_os.boot.extend_bootinfo"
+on_session_creation = "smriti_retail_os.boot.on_session_creation"
+before_request = ["smriti_retail_os.boot.check_desk_access"]
 
 # Uninstallation
 # ------------
@@ -262,7 +275,13 @@ doc_events = {
         "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details"
     },
     "Delivery Note": {
-        "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details"
+        "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
+        "on_submit": "smriti_retail_os.smriti_retail_os.psv_integration.handle_delivery_note_submit",
+        "on_cancel": "smriti_retail_os.smriti_retail_os.psv_integration.handle_delivery_note_cancel"
+    },
+    "Stock Entry": {
+        "on_submit": "smriti_retail_os.smriti_retail_os.psv_integration.handle_sales_return_submit",
+        "on_cancel": "smriti_retail_os.smriti_retail_os.psv_integration.handle_sales_return_cancel"
     },
     "Quotation": {
         "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details"
@@ -395,7 +414,15 @@ website_route_rules = [
     },
     {
         "from_route": "/login",
-        "to_route": "login"
+        "to_route": "smriti-login"
+    },
+    {
+        "from_route": "/smriti",
+        "to_route": "smriti-home"
+    },
+    {
+        "from_route": "/smriti/<path:subpath>",
+        "to_route": "smriti-home"
     },
     {
         # Standalone billing terminal — served from www/billing.html + www/billing.py
@@ -498,15 +525,4 @@ website_route_rules = [
 
 
 
-# SMRITI PSV Hooks
-doc_events = {
-    "Delivery Note": {
-        "on_submit": "smriti_retail_os.smriti_retail_os.psv_integration.handle_delivery_note_submit",
-        "on_cancel": "smriti_retail_os.smriti_retail_os.psv_integration.handle_delivery_note_cancel"
-    },
-    "Stock Entry": {
-        "on_submit": "smriti_retail_os.smriti_retail_os.psv_integration.handle_sales_return_submit",
-        "on_cancel": "smriti_retail_os.smriti_retail_os.psv_integration.handle_sales_return_cancel"
-    }
-}
 

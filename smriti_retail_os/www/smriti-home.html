@@ -1,27 +1,85 @@
-<!--
+/**
  * @file: smriti_retail_os/www/smriti-home.html
- * @description: Home dashboard template for SMRITI portal..
+ * @description: Handles user login, registration, and JWT token generation.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
  * @version: 1.0.0
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
--->
-
+ */
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMRITI Retail OS</title>
-    <script>
-        // Automatic redirect to app if logged in
-        if (document.cookie.includes("sid") && !document.cookie.includes("sid=Guest")) {
-            window.location.href = "/app";
-        } else {
-            window.location.href = "/login";
+    <link rel="icon" href="/assets/smriti_retail_os/images/smriti_favicon.ico">
+    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_web.css">
+    <style>
+        *    { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Arial',sans-serif; background:#F8FAFC;
+               min-height:100vh; }
+        #smriti-root { min-height:100vh; }
+        .smriti-loading {
+            display:flex; align-items:center; justify-content:center;
+            height:100vh; flex-direction:column; gap:16px;
         }
-    </script>
+        .smriti-loading img { height:56px; }
+        .smriti-loading p   { color:#6B7280; font-size:14px; }
+        .smriti-spinner {
+            width:32px; height:32px;
+            border:3px solid #E2E8F0;
+            border-top-color:#2563EB;
+            border-radius:50%;
+            animation:spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform:rotate(360deg); } }
+    </style>
 </head>
 <body>
-    <p>Loading SMRITI Retail OS...</p>
+<div id="smriti-root">
+    <div class="smriti-loading" id="smriti-loader">
+        <img src="/assets/smriti_retail_os/images/smriti_logo.png"
+             alt="SMRITI" onerror="this.style.display='none'">
+        <div class="smriti-spinner"></div>
+        <p>Loading SMRITI Retail OS...</p>
+    </div>
+</div>
+
+<script>
+(function () {
+    // Fetch SMRITI session — route-check user
+    fetch('/api/method/smriti_retail_os.boot.get_smriti_session_info', {
+        credentials: 'include'
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (!data.message || data.message.error) {
+            window.location.href = '/login';
+            return;
+        }
+        window.SMRITI_SESSION = data.message;
+
+        // Check feature flag
+        if (data.message.frontend_enabled === false) {
+            window.location.href = '/desk';
+            return;
+        }
+
+        // Load SMRITI app bundle
+        var s = document.createElement('script');
+        s.src = '/assets/smriti_retail_os/js/smriti_app.js';
+        s.onerror = function() {
+            document.getElementById('smriti-loader').innerHTML =
+                '<p style="color:#DC2626">SMRITI app failed to load. '
+                + '<a href="/smriti-safe">Safe Mode</a></p>';
+        };
+        document.body.appendChild(s);
+    })
+    .catch(function() {
+        window.location.href = '/login';
+    });
+})();
+</script>
 </body>
 </html>
