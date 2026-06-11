@@ -82,17 +82,21 @@ def ensure_attribute_values(attribute, values):
         doc.attribute_name = attribute
         doc.numeric_values = 0
         doc.insert(ignore_permissions=True)
-    
-    # Clean up conflicting case-mismatched attribute values (e.g. 'Black' vs 'BLACK')
-    for val in values:
-        frappe.db.sql(
-            "DELETE FROM `tabItem Attribute Value` WHERE parent = %s AND LOWER(attribute_value) = LOWER(%s) AND attribute_value != %s",
-            (attribute, val, val)
-        )
-    frappe.db.commit()
-    frappe.clear_document_cache("Item Attribute", attribute)
+        frappe.db.commit()
     
     doc = frappe.get_doc("Item Attribute", attribute)
+    
+    # Clean up conflicting case-mismatched attribute values in memory
+    rows_to_remove = []
+    for row in doc.item_attribute_values:
+        for val in values:
+            if row.attribute_value.lower() == val.lower() and row.attribute_value != val:
+                rows_to_remove.append(row)
+                break
+                
+    for row in rows_to_remove:
+        doc.remove(row)
+    
     existing_values = {v.attribute_value for v in doc.item_attribute_values}
     
     updated = False
@@ -101,7 +105,7 @@ def ensure_attribute_values(attribute, values):
             doc.append("item_attribute_values", {"attribute_value": val, "abbr": val})
             updated = True
             
-    if updated:
+    if updated or rows_to_remove:
         doc.save(ignore_permissions=True)
         frappe.db.commit()
 
