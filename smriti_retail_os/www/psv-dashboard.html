@@ -474,6 +474,15 @@ function renderTrendChart(trend) {
     svg.innerHTML = '';
     
     if (!trend || trend.length === 0) {
+        const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        txt.setAttribute("x", "400");
+        txt.setAttribute("y", "120");
+        txt.setAttribute("text-anchor", "middle");
+        txt.setAttribute("fill", "var(--text-sub)");
+        txt.setAttribute("font-size", "14px");
+        txt.setAttribute("font-weight", "600");
+        txt.textContent = "No PSV data available";
+        svg.appendChild(txt);
         return;
     }
     

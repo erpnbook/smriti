@@ -1453,14 +1453,6 @@ def get_channel_stock_trend(company):
                 "date": str(date_val),
                 "value": round(total_val, 2)
             })
-    else:
-        from frappe.utils import add_days
-        for i in range(5, -1, -1):
-            d = add_days(today(), -i * 7)
-            trend.append({
-                "date": str(d),
-                "value": 150000.0 + (i * 1250.0)
-            })
             
     return trend
 
