@@ -163,6 +163,14 @@ def _ensure_prerequisites():
             "currency": "INR"
         }).insert(ignore_permissions=True)
 
+    # PSV System Settings
+    settings = frappe.get_single("PSV System Settings")
+    settings.channel_health_enabled = 1
+    settings.weeks_of_cover_critical = 2
+    settings.weeks_of_cover_warning = 4
+    settings.weeks_of_cover_healthy = 8
+    settings.save(ignore_permissions=True)
+
     frappe.db.commit()
     _log("  ✓ All prerequisites satisfied")
     return ig_name, hsn_code
