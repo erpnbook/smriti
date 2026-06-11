@@ -909,6 +909,9 @@ def get_deadline_alerts():
 # ─────────────────────────────────────────────
 
 REPORT_QUERIES = {
+    "inventory_productivity": {
+        "is_custom": True
+    },
     "psv_reorder_report": {
         "is_custom": True
     },
@@ -1201,7 +1204,19 @@ class SMRITIReportEngine:
             return self._run_day_book()
         elif self.report_key == "psv_reorder_report":
             return self._run_psv_reorder_report()
+        elif self.report_key == "inventory_productivity":
+            return self._run_inventory_productivity()
         return []
+
+    def _run_inventory_productivity(self):
+        company = self.filters.get("company")
+        if not company:
+            company = frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+        timespan_days = self.filters.get("timespan_days") or 30
+        
+        from smriti_retail_os.psv_service import get_inventory_productivity_metrics
+        res = get_inventory_productivity_metrics(company, timespan_days=timespan_days)
+        return res.get("all_items") or []
 
     def _run_psv_reorder_report(self):
         from smriti_retail_os.smriti_retail_os.report.psv_reorder_report.psv_reorder_report import get_data

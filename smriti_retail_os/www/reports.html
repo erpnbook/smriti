@@ -635,6 +635,12 @@
                 </button>
               </div>
 
+              <!-- Include Methodology Appendix option -->
+              <div id="methodology-appendix-container" style="display: none; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 600; color: var(--text-2); margin-right: 12px;">
+                <input type="checkbox" id="methodology-checkbox" style="cursor: pointer; width: 14px; height: 14px;">
+                <label for="methodology-checkbox" style="cursor: pointer; user-select: none;">Include Methodology Appendix</label>
+              </div>
+
               <!-- Export Actions -->
               <div class="btn-group">
                 <button class="btn-export" onclick="exportExcel()" title="Export to Excel">
@@ -935,6 +941,17 @@
     hiddenColumns = [];
     currentSortCol = null;
     currentSortDesc = false;
+
+    // Toggle methodology checkbox visibility
+    const methodologyContainer = document.getElementById('methodology-appendix-container');
+    if (methodologyContainer) {
+      if (key === 'inventory_productivity') {
+        methodologyContainer.style.display = 'flex';
+      } else {
+        methodologyContainer.style.display = 'none';
+        document.getElementById('methodology-checkbox').checked = false;
+      }
+    }
 
     // Set active class in Explorer
     document.querySelectorAll('.report-item-link').forEach(link => {
@@ -1460,15 +1477,73 @@
   }
 
   // Exports handlers
+  // Exports handlers
   window.exportExcel = function() {
     if (!activeReportKey || activeReportData.length === 0) {
       toast('No data to export.', 'error');
       return;
     }
-    const table = document.getElementById('generic-grid-table');
-    const wb = XLSX.utils.table_to_book(table, { sheet: "SMRITI Report" });
-    XLSX.writeFile(wb, `SMRITI_${activeReportKey}_${formatDateLocal(new Date())}.xlsx`);
-    toast('Excel export complete!', 'success');
+    
+    const includeMethodology = document.getElementById('methodology-checkbox') && document.getElementById('methodology-checkbox').checked;
+    
+    const doStandardExcelExport = () => {
+      const table = document.getElementById('generic-grid-table');
+      const wb = XLSX.utils.table_to_book(table, { sheet: "SMRITI Report" });
+      XLSX.writeFile(wb, `SMRITI_${activeReportKey}_${formatDateLocal(new Date())}.xlsx`);
+      toast('Excel export complete!', 'success');
+    };
+
+    if (includeMethodology && activeReportKey === 'inventory_productivity') {
+      api('smriti_retail_os.psv_service.get_inventory_productivity_methodology').then(methodology => {
+        if (methodology) {
+          const table = document.getElementById('generic-grid-table');
+          const wb = XLSX.utils.table_to_book(table, { sheet: "Productivity Data" });
+          
+          // Build methodology rows
+          const rows = [
+            [methodology.title],
+            ["Category", methodology.category],
+            ["Methodology Version", methodology.version],
+            ["Effective Date", methodology.effective_date],
+            ["OS Version", "v" + methodology.smriti_version],
+            ["Author", methodology.author.name + ", " + methodology.author.title + " (" + methodology.author.org + ")"],
+            [""],
+            ["Summary", methodology.summary],
+            [""],
+            ["Calculations & Formulas"],
+            ["Metric Name", "Formula", "Explanation"]
+          ];
+          
+          methodology.formulas.forEach(f => {
+            rows.push([f.name, f.formula, f.explanation]);
+          });
+          
+          rows.push([""]);
+          rows.push(["Classification Matrix"]);
+          rows.push(["Category", "Velocity Rule", "GMROI Rule", "Action", "Description"]);
+          
+          methodology.classification_rules.forEach(r => {
+            rows.push([r.category, r.velocity, r.gmroi, r.action, r.description]);
+          });
+          
+          rows.push([""]);
+          rows.push(["About This Methodology"]);
+          rows.push([methodology.about]);
+          
+          const ws = XLSX.utils.aoa_to_sheet(rows);
+          XLSX.utils.book_append_sheet(wb, ws, "Methodology Appendix");
+          XLSX.writeFile(wb, `SMRITI_${activeReportKey}_${formatDateLocal(new Date())}.xlsx`);
+          toast('Excel export with methodology complete!', 'success');
+        } else {
+          doStandardExcelExport();
+        }
+      }).catch(err => {
+        console.error(err);
+        doStandardExcelExport();
+      });
+    } else {
+      doStandardExcelExport();
+    }
   };
 
   window.exportCSV = function() {
@@ -1476,28 +1551,84 @@
       toast('No data to export.', 'error');
       return;
     }
-    const table = document.getElementById('generic-grid-table');
-    let csv = [];
-    const rows = table.querySelectorAll('tr');
     
-    for (let i = 0; i < rows.length; i++) {
-      const row = [], cols = rows[i].querySelectorAll('td, th');
-      for (let j = 0; j < cols.length; j++) {
-        let text = cols[j].innerText.trim().replace(/"/g, '""');
-        row.push('"' + text + '"');
+    const includeMethodology = document.getElementById('methodology-checkbox') && document.getElementById('methodology-checkbox').checked;
+    
+    const generateBaseCSV = () => {
+      const table = document.getElementById('generic-grid-table');
+      let csv = [];
+      const rows = table.querySelectorAll('tr');
+      
+      for (let i = 0; i < rows.length; i++) {
+        const row = [], cols = rows[i].querySelectorAll('td, th');
+        for (let j = 0; j < cols.length; j++) {
+          let text = cols[j].innerText.trim().replace(/"/g, '""');
+          row.push('"' + text + '"');
+        }
+        csv.push(row.join(','));
       }
-      csv.push(row.join(','));
-    }
+      return csv;
+    };
     
-    const csvContent = "data:text/csv;charset=utf-8," + csv.join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `SMRITI_${activeReportKey}_${formatDateLocal(new Date())}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast('CSV export complete!', 'success');
+    const downloadCSVFile = (csvLines) => {
+      const csvContent = "data:text/csv;charset=utf-8," + csvLines.join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `SMRITI_${activeReportKey}_${formatDateLocal(new Date())}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast('CSV export complete!', 'success');
+    };
+
+    if (includeMethodology && activeReportKey === 'inventory_productivity') {
+      api('smriti_retail_os.psv_service.get_inventory_productivity_methodology').then(methodology => {
+        if (methodology) {
+          let csv = generateBaseCSV();
+          
+          csv.push("");
+          csv.push("");
+          csv.push(`"--- Methodology Appendix ---"`);
+          csv.push(`"Title","${methodology.title.replace(/"/g, '""')}"`);
+          csv.push(`"Category","${methodology.category.replace(/"/g, '""')}"`);
+          csv.push(`"Methodology Version","${methodology.version}"`);
+          csv.push(`"Effective Date","${methodology.effective_date}"`);
+          csv.push(`"OS Version","v${methodology.smriti_version}"`);
+          csv.push(`"Author","${methodology.author.name.replace(/"/g, '""')} (${methodology.author.title.replace(/"/g, '""')})"`);
+          csv.push("");
+          csv.push(`"Summary","${methodology.summary.replace(/"/g, '""')}"`);
+          csv.push("");
+          csv.push(`"Calculations & Formulas"`);
+          csv.push(`"Metric Name","Formula","Explanation"`);
+          
+          methodology.formulas.forEach(f => {
+            csv.push(`"${f.name.replace(/"/g, '""')}","${f.formula.replace(/"/g, '""')}","${f.explanation.replace(/"/g, '""')}"`);
+          });
+          
+          csv.push("");
+          csv.push(`"Classification Matrix"`);
+          csv.push(`"Category","Velocity Rule","GMROI Rule","Action","Description"`);
+          
+          methodology.classification_rules.forEach(r => {
+            csv.push(`"${r.category.replace(/"/g, '""')}","${r.velocity.replace(/"/g, '""')}","${r.gmroi.replace(/"/g, '""')}","${r.action.replace(/"/g, '""')}","${r.description.replace(/"/g, '""')}"`);
+          });
+          
+          csv.push("");
+          csv.push(`"About This Methodology"`);
+          csv.push(`"${methodology.about.replace(/"/g, '""')}"`);
+          
+          downloadCSVFile(csv);
+        } else {
+          downloadCSVFile(generateBaseCSV());
+        }
+      }).catch(err => {
+        console.error(err);
+        downloadCSVFile(generateBaseCSV());
+      });
+    } else {
+      downloadCSVFile(generateBaseCSV());
+    }
   };
 
   window.printReport = function() {
@@ -1505,7 +1636,92 @@
       toast('No data to print.', 'error');
       return;
     }
-    window.print();
+    
+    const includeMethodology = document.getElementById('methodology-checkbox') && document.getElementById('methodology-checkbox').checked;
+    
+    if (includeMethodology && activeReportKey === 'inventory_productivity') {
+      api('smriti_retail_os.psv_service.get_inventory_productivity_methodology').then(methodology => {
+        if (methodology) {
+          const printSection = document.createElement('div');
+          printSection.id = 'print-methodology-appendix';
+          printSection.style.marginTop = '40px';
+          printSection.style.borderTop = '2px solid #333';
+          printSection.style.paddingTop = '20px';
+          printSection.style.color = '#000';
+          printSection.style.fontFamily = 'Arial, sans-serif';
+          
+          let formulasHtml = '';
+          methodology.formulas.forEach(f => {
+            formulasHtml += `
+              <div style="margin-bottom:12px;">
+                <strong>${f.name}</strong>: <code>${f.formula}</code><br>
+                <span style="font-size:0.85rem;color:#555;">${f.explanation}</span>
+              </div>
+            `;
+          });
+          
+          let rulesHtml = `
+            <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:0.85rem;">
+              <thead>
+                <tr style="border-bottom:1px solid #333;">
+                  <th style="text-align:left; padding:4px;">Category</th>
+                  <th style="text-align:left; padding:4px;">Velocity</th>
+                  <th style="text-align:left; padding:4px;">GMROI</th>
+                  <th style="text-align:left; padding:4px;">Action</th>
+                  <th style="text-align:left; padding:4px;">Description</th>
+                </tr>
+              </thead>
+              <tbody>
+          `;
+          methodology.classification_rules.forEach(r => {
+            rulesHtml += `
+              <tr style="border-bottom:1px dotted #ccc;">
+                <td style="padding:4px; font-weight:bold;">${r.category}</td>
+                <td style="padding:4px;">${r.velocity}</td>
+                <td style="padding:4px;">${r.gmroi}</td>
+                <td style="padding:4px; font-weight:bold;">${r.action}</td>
+                <td style="padding:4px; color:#555;">${r.description}</td>
+              </tr>
+            `;
+          });
+          rulesHtml += '</tbody></table>';
+
+          printSection.innerHTML = `
+            <div style="page-break-before: always; height: 1px;"></div>
+            <h2 style="font-size:1.4rem; margin-bottom:10px;">${methodology.title}</h2>
+            <div style="font-size:0.82rem; margin-bottom:15px; font-style:italic; color:#666;">
+              Methodology Version: ${methodology.version} | Effective: ${methodology.effective_date} | OS Version: v${methodology.smriti_version}<br>
+              Author: ${methodology.author.name} (${methodology.author.title} - ${methodology.author.org})
+            </div>
+            <p style="font-size:0.9rem; margin-bottom:20px; line-height:1.5;">${methodology.summary}</p>
+            
+            <h3 style="font-size:1.1rem; margin-bottom:10px; border-bottom:1px solid #666; padding-bottom:4px;">Calculations & Formulas</h3>
+            ${formulasHtml}
+            
+            <h3 style="font-size:1.1rem; margin-top:20px; margin-bottom:10px; border-bottom:1px solid #666; padding-bottom:4px;">Classification Matrix</h3>
+            ${rulesHtml}
+            
+            <div style="margin-top:30px; font-size:0.82rem; border-top:1px solid #ccc; padding-top:10px; font-style:italic; color:#666;">
+              ${methodology.about}
+            </div>
+          `;
+          
+          document.body.appendChild(printSection);
+          
+          setTimeout(() => {
+            window.print();
+            document.body.removeChild(printSection);
+          }, 100);
+        } else {
+          window.print();
+        }
+      }).catch(err => {
+        console.error(err);
+        window.print();
+      });
+    } else {
+      window.print();
+    }
   };
 </script>
 

@@ -14,7 +14,8 @@
     "weeks_of_cover_critical",
     "weeks_of_cover_warning",
     "weeks_of_cover_healthy",
-    "channel_health_enabled"
+    "channel_health_enabled",
+    "star_velocity_threshold"
   ],
   "fields": [
     {
@@ -71,6 +72,12 @@
       "fieldname": "channel_health_enabled",
       "fieldtype": "Check",
       "label": "Enable Channel Health (Phase 1.2)"
+    },
+    {
+      "default": "1.0",
+      "fieldname": "star_velocity_threshold",
+      "fieldtype": "Float",
+      "label": "Star Velocity Threshold (Units/Week)"
     }
   ],
   "index_web_pages_for_search": 0,

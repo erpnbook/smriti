@@ -123,7 +123,7 @@ def create_reporting_doctypes():
             fields = [
                 {"fieldname": "report_key", "fieldtype": "Data", "label": "Report Key", "reqd": 1, "unique": 1, "in_list_view": 1},
                 {"fieldname": "report_name", "fieldtype": "Data", "label": "Report Name", "reqd": 1, "in_list_view": 1},
-                {"fieldname": "report_category", "fieldtype": "Select", "label": "Report Category", "options": "Sales\nInventory\nCash\nPurchase\nFinance\nAnalytics\nAccounting\nCustom", "reqd": 1, "in_list_view": 1},
+                {"fieldname": "report_category", "fieldtype": "Select", "label": "Report Category", "options": "Sales\nInventory Analytics\nCash\nPurchase\nFinance\nAnalytics\nAccounting\nCustom", "reqd": 1, "in_list_view": 1},
                 {"fieldname": "source_doctype", "fieldtype": "Link", "options": "DocType", "label": "Source DocType"},
                 {"fieldname": "columns_json", "fieldtype": "Long Text", "label": "Columns JSON"},
                 {"fieldname": "filters_json", "fieldtype": "Long Text", "label": "Filters JSON"},
@@ -165,9 +165,9 @@ def create_reporting_doctypes():
             for f in dt.fields:
                 if f.fieldname == "report_category":
                     options_list = [opt.strip() for opt in (f.options or "").split("\n") if opt.strip()]
-                    if "Accounting" not in options_list:
+                    if "Accounting" not in options_list or "Inventory Analytics" not in options_list:
                         # Rebuild with standard categories to match new definition
-                        f.options = "Sales\nInventory\nCash\nPurchase\nFinance\nAnalytics\nAccounting\nCustom"
+                        f.options = "Sales\nInventory Analytics\nCash\nPurchase\nFinance\nAnalytics\nAccounting\nCustom"
                         dt.save(ignore_permissions=True)
                         frappe.db.commit()
                         print("[SMRITI] Updated SMRITI Report Template report_category options")
@@ -351,7 +351,7 @@ def seed_report_templates():
         {
             "report_key": "current_stock_position",
             "report_name": "SMRITI Current Stock Position",
-            "report_category": "Inventory",
+            "report_category": "Inventory Analytics",
             "source_doctype": "Bin",
             "group_by": "",
             "order_by": "b.item_code ASC",
@@ -383,7 +383,7 @@ def seed_report_templates():
         {
             "report_key": "style_wise_stock",
             "report_name": "SMRITI Style-wise Stock Position",
-            "report_category": "Inventory",
+            "report_category": "Inventory Analytics",
             "source_doctype": "Bin",
             "group_by": "style_code",
             "order_by": "actual_qty DESC",
@@ -410,7 +410,7 @@ def seed_report_templates():
         {
             "report_key": "size_wise_stock",
             "report_name": "SMRITI Variant Stock Position",
-            "report_category": "Inventory",
+            "report_category": "Inventory Analytics",
             "source_doctype": "Bin",
             "group_by": "style_code, color, size, b.warehouse",
             "order_by": "style_code ASC",
@@ -639,7 +639,7 @@ def seed_report_templates():
         {
             "report_key": "psv_reorder_report",
             "report_name": "SMRITI PSV Reorder Report",
-            "report_category": "Inventory",
+            "report_category": "Inventory Analytics",
             "source_doctype": "SMRITI Party Stock Account",
             "group_by": "",
             "order_by": "",
@@ -665,6 +665,37 @@ def seed_report_templates():
                 {"fieldname": "zone", "label": "Zone", "fieldtype": "Select", "options": "\nNorth\nSouth\nEast\nWest\nCentral"},
                 {"fieldname": "priority", "label": "Priority", "fieldtype": "Select", "options": "\nCritical\nHigh\nMedium\nLow"},
                 {"fieldname": "show_zero", "label": "Show Zero Recommendations", "fieldtype": "Check"}
+            ]
+        },
+        {
+            "report_key": "inventory_productivity",
+            "report_name": "SMRITI Inventory Productivity & SKU Rationalization",
+            "report_category": "Inventory Analytics",
+            "source_doctype": "Bin",
+            "group_by": "",
+            "order_by": "score DESC",
+            "company_restricted": 1,
+            "branch_restricted": 0,
+            "cache_minutes": 5,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager"],
+            "columns": [
+                {"fieldname": "item_code", "label": "Item Code", "fieldtype": "Link", "options": "Item", "width": 120},
+                {"fieldname": "sales_qty", "label": "Sales Qty", "fieldtype": "Float", "width": 100},
+                {"fieldname": "velocity", "label": "Weekly Velocity", "fieldtype": "Float", "width": 120},
+                {"fieldname": "cost", "label": "Landing Cost", "fieldtype": "Currency", "width": 110},
+                {"fieldname": "price", "label": "Avg Realized Price", "fieldtype": "Currency", "width": 130},
+                {"fieldname": "gross_margin", "label": "Gross Margin", "fieldtype": "Currency", "width": 120},
+                {"fieldname": "inventory_value", "label": "Inventory Value", "fieldtype": "Currency", "width": 120},
+                {"fieldname": "gmroi", "label": "GMROI", "fieldtype": "Float", "width": 100},
+                {"fieldname": "category", "label": "Category", "fieldtype": "Data", "width": 120},
+                {"fieldname": "score", "label": "Productivity Score", "fieldtype": "Float", "width": 120},
+                {"fieldname": "action", "label": "Action Recommendation", "fieldtype": "Data", "width": 150}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "timespan_days", "label": "Timespan (Days)", "fieldtype": "Int"}
             ]
         }
     ])

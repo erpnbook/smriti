@@ -1457,3 +1457,348 @@ def get_channel_stock_trend(company):
     return trend
 
 
+# Action Recommendation Constants
+ACTION_INCREASE_STOCK = "Increase Stock"
+ACTION_MAINTAIN = "Maintain"
+ACTION_IMPROVE_MARGIN = "Improve Margin"
+ACTION_LIQUIDATE = "Liquidate / Review"
+ACTION_REPLENISH_URGENT = "Replenish Urgent"
+
+
+@frappe.whitelist()
+def get_inventory_productivity_metrics(company, timespan_days=30):
+    """
+    Computes GMROI and SKU Rationalization metrics in bulk.
+    Returns: {
+        "summary": {
+            "star": int,
+            "cash_cow": int,
+            "underperformer": int,
+            "slow_mover": int,
+            "stockout_winner": int
+        },
+        "top_skus": list of dicts,
+        "all_items": list of dicts
+    }
+    """
+    from frappe.utils import add_days, now_datetime
+    
+    timespan_days = int(timespan_days or 30)
+    start_date = add_days(now_datetime(), -timespan_days)
+    
+    # 1. Fetch velocity threshold
+    star_velocity_threshold = float(frappe.db.get_single_value("PSV System Settings", "star_velocity_threshold") or 1.0)
+    
+    # Check if new schema/ledger exists
+    use_new = frappe.db.exists("PSV Ledger Entry", {"company": company})
+    
+    # 2. Get current stock balances
+    if use_new:
+        bal_res = frappe.db.sql("""
+            SELECT item_variant, SUM(qty) as balance
+            FROM `tabPSV Ledger Entry`
+            WHERE company = %s
+            GROUP BY item_variant
+        """, (company,), as_dict=True)
+    else:
+        bal_res = frappe.db.sql("""
+            SELECT item_code as item_variant, SUM(qty) as balance
+            FROM `tabSMRITI Party Stock Ledger Entry`
+            WHERE company = %s
+            GROUP BY item_code
+        """, (company,), as_dict=True)
+        
+    balances = {r["item_variant"]: float(r["balance"] or 0.0) for r in bal_res}
+    
+    # 3. Get sales quantities and transaction counts
+    if use_new:
+        sales_res = frappe.db.sql("""
+            SELECT item_variant, SUM(ABS(qty)) as sales_qty, COUNT(DISTINCT voucher_no) as txn_count
+            FROM `tabPSV Ledger Entry`
+            WHERE company = %s AND qty < 0 AND posting_datetime >= %s
+              AND (transaction_type = 'Sales' OR transaction_type = 'Sales Upload' OR voucher_type = 'Sales')
+            GROUP BY item_variant
+        """, (company, start_date), as_dict=True)
+    else:
+        sales_res = frappe.db.sql("""
+            SELECT item_code as item_variant, SUM(ABS(qty)) as sales_qty, COUNT(DISTINCT voucher_no) as txn_count
+            FROM `tabSMRITI Party Stock Ledger Entry`
+            WHERE company = %s AND qty < 0 AND posting_datetime >= %s
+              AND (voucher_type = 'Sales' OR voucher_type = 'Sales Upload')
+            GROUP BY item_code
+        """, (company, start_date), as_dict=True)
+        
+    sales = {r["item_variant"]: float(r["sales_qty"] or 0.0) for r in sales_res}
+    sales_txns = {r["item_variant"]: int(r["txn_count"] or 0) for r in sales_res}
+    
+    # Get all distinct SKUs that have either stock or sales
+    all_skus = set(balances.keys()).union(sales.keys())
+    if not all_skus:
+        return {
+            "summary": {"star": 0, "cash_cow": 0, "underperformer": 0, "slow_mover": 0, "stockout_winner": 0},
+            "top_skus": [],
+            "all_items": []
+        }
+        
+    # 4. Get realized selling prices in bulk
+    realized_prices_res = frappe.db.sql("""
+        SELECT item_code as item_variant, SUM(base_amount) as total_amount, SUM(qty) as total_qty
+        FROM `tabSales Invoice Item`
+        WHERE docstatus = 1 AND parent IN (
+            SELECT name FROM `tabSales Invoice` WHERE company = %s
+        )
+        GROUP BY item_code
+    """, (company,), as_dict=True)
+    
+    realized_prices = {}
+    for r in realized_prices_res:
+        if r["total_qty"] and float(r["total_qty"]) > 0:
+            realized_prices[r["item_variant"]] = float(r["total_amount"]) / float(r["total_qty"])
+            
+    # 5. Get standard prices in bulk
+    std_prices_res = frappe.db.sql("""
+        SELECT item_code as item_variant, price_list_rate
+        FROM `tabItem Price`
+        WHERE price_list = 'Standard Selling'
+    """, as_dict=True)
+    std_prices = {r["item_variant"]: float(r["price_list_rate"] or 0.0) for r in std_prices_res}
+    
+    # 6. Get item costs and templates in bulk
+    item_info_res = frappe.db.sql("""
+        SELECT name, valuation_rate, standard_rate, variant_of
+        FROM `tabItem`
+    """, as_dict=True)
+    item_info = {r["name"]: r for r in item_info_res}
+    
+    # Helper to resolve cost (valuation/landing cost)
+    def resolve_cost(sku):
+        info = item_info.get(sku)
+        if not info:
+            return 0.0
+        if info.get("valuation_rate"):
+            return float(info["valuation_rate"])
+        if info.get("standard_rate"):
+            return float(info["standard_rate"])
+        if info.get("variant_of"):
+            p_info = item_info.get(info["variant_of"])
+            if p_info:
+                if p_info.get("valuation_rate"):
+                    return float(p_info["valuation_rate"])
+                if p_info.get("standard_rate"):
+                    return float(p_info["standard_rate"])
+        return 0.0
+
+    # Helper to resolve price with fallbacks
+    def resolve_price(sku):
+        if sku in realized_prices:
+            return realized_prices[sku]
+        if sku in std_prices and std_prices[sku] > 0:
+            return std_prices[sku]
+        info = item_info.get(sku)
+        if info and info.get("standard_rate"):
+            return float(info["standard_rate"])
+        if info and info.get("variant_of"):
+            p_info = item_info.get(info["variant_of"])
+            if p_info and p_info.get("standard_rate"):
+                return float(p_info["standard_rate"])
+        c = resolve_cost(sku)
+        return c * 1.5
+        
+    # 7. Compute metrics for each SKU
+    items_metrics = []
+    summary_counts = {"star": 0, "cash_cow": 0, "underperformer": 0, "slow_mover": 0, "stockout_winner": 0}
+    
+    for sku in all_skus:
+        bal = balances.get(sku, 0.0)
+        s_qty = sales.get(sku, 0.0)
+        s_txn = sales_txns.get(sku, 0)
+        cost = resolve_cost(sku)
+        price = resolve_price(sku)
+        
+        # Calculate velocity (units per week)
+        weeks = timespan_days / 7.0
+        velocity = s_qty / weeks if weeks > 0 else 0.0
+        
+        gross_margin = s_qty * (price - cost)
+        inventory_value = bal * cost
+        
+        # Data Quality Warnings
+        warnings = []
+        if cost <= 0:
+            warnings.append("Cost Data Missing")
+        if sku not in realized_prices:
+            warnings.append("Using Fallback Selling Price")
+        if bal < 0:
+            warnings.append("Inventory Adjustment Required")
+            
+        # Confidence Indicator
+        if s_qty >= 20 and s_txn >= 5:
+            confidence = "High"
+        elif s_qty > 0 and s_txn > 0:
+            confidence = "Medium"
+        else:
+            confidence = "Low"
+            
+        # GMROI calculation with empty/depleted stockout winner check
+        is_depleted = (bal <= 0) and (s_qty > 0)
+        
+        if is_depleted:
+            gmroi = None
+            category = "Stockout Winner"
+            action = ACTION_REPLENISH_URGENT
+            summary_counts["stockout_winner"] += 1
+        else:
+            if inventory_value > 0:
+                gmroi = gross_margin / inventory_value
+            else:
+                gmroi = 0.0
+                
+            # Classify based on velocity threshold and GMROI >= 2.0
+            if velocity >= star_velocity_threshold:
+                if gmroi >= 2.0:
+                    category = "Star"
+                    action = ACTION_INCREASE_STOCK
+                    summary_counts["star"] += 1
+                else:
+                    category = "Underperformer"
+                    action = ACTION_IMPROVE_MARGIN
+                    summary_counts["underperformer"] += 1
+            else:
+                if gmroi >= 2.0:
+                    category = "Cash Cow"
+                    action = ACTION_MAINTAIN
+                    summary_counts["cash_cow"] += 1
+                else:
+                    category = "Slow Mover"
+                    action = ACTION_LIQUIDATE
+                    summary_counts["slow_mover"] += 1
+                    
+        # Compute Inventory Productivity Score (0-100)
+        g_val = gmroi if gmroi is not None else 3.0  # Give Stockout Winners top score for GMROI
+        norm_gmroi = min(g_val / 3.0, 1.0) * 100.0
+        norm_vel = min(velocity / 5.0, 1.0) * 100.0
+        productivity_score = round((0.6 * norm_gmroi) + (0.4 * norm_vel), 2)
+        
+        items_metrics.append({
+            "item_code": sku,
+            "sales_qty": s_qty,
+            "txn_count": s_txn,
+            "velocity": round(velocity, 2),
+            "cost": round(cost, 2),
+            "price": round(price, 2),
+            "gross_margin": round(gross_margin, 2),
+            "inventory_value": round(inventory_value, 2),
+            "current_stock": round(bal, 2),
+            "gmroi": round(gmroi, 2) if gmroi is not None else None,
+            "category": category,
+            "action": action,
+            "score": productivity_score,
+            "confidence": confidence,
+            "warnings": warnings
+        })
+        
+    # Sort: productivity score descending
+    items_metrics.sort(key=lambda x: x["score"], reverse=True)
+    
+    return {
+        "summary": summary_counts,
+        "top_skus": items_metrics[:10],
+        "all_items": items_metrics
+    }
+
+
+@frappe.whitelist()
+def get_inventory_productivity_methodology():
+    """
+    Returns the central, single source of truth for inventory productivity formulas,
+    classification rules, and score explanations in SMRITI Retail OS.
+    """
+    import smriti_retail_os
+    smriti_version = getattr(smriti_retail_os, "__version__", "1.2.10")
+    
+    return {
+        "title": _("Inventory Productivity & SKU Rationalization"),
+        "category": _("Analytics Guides"),
+        "version": "1.0",
+        "effective_date": "2026-06-11",
+        "smriti_version": smriti_version,
+        "author": {
+            "name": "Jawahar R. Mallah",
+            "title": "Founder, AITDL (AI Technology & Development Lab)",
+            "org": "SMRITI Retail OS"
+        },
+        "summary": _("This guide explains the analytical framework used to calculate and classify inventory productivity and SKU performance in SMRITI Retail OS."),
+        "formulas": [
+            {
+                "name": "GMROI (Gross Margin Return on Investment)",
+                "formula": "GMROI = Gross Margin / Current Inventory Value",
+                "explanation": _("Measures how many rupees of gross margin are generated for every rupee invested in inventory. A standard threshold of 2.0 (200%) is used to classify Star SKUs.")
+            },
+            {
+                "name": "Gross Margin",
+                "formula": "Gross Margin = Sales Qty * (Average Realized Price - Landing Cost)",
+                "explanation": _("Calculated using the average realized price from actual sales invoices and the item's landing cost (valuation rate/standard rate).")
+            },
+            {
+                "name": "Inventory Value",
+                "formula": "Inventory Value = Current Stock Balance * Landing Cost",
+                "explanation": _("The total capital locked in current stock of the SKU.")
+            },
+            {
+                "name": "Weekly Velocity",
+                "formula": "Weekly Velocity = Sales Qty / (Timespan Days / 7)",
+                "explanation": _("The rate at which the item is sold per week.")
+            },
+            {
+                "name": "Productivity Score",
+                "formula": "Productivity Score = (0.6 * Normalized GMROI) + (0.4 * Normalized Velocity)",
+                "explanation": _("A composite index from 0 to 100 to rank SKUs. Normalized GMROI = min(GMROI/3.0, 1.0) * 100. Normalized Velocity = min(Weekly Velocity/5.0, 1.0) * 100.")
+            }
+        ],
+        "classification_rules": [
+            {
+                "category": "Star (Core SKU)",
+                "velocity": ">= star_velocity_threshold (Default 1.0/wk)",
+                "gmroi": ">= 2.0 (200%)",
+                "action": ACTION_INCREASE_STOCK,
+                "description": _("High margin and high volume items. Ensure maximum stock availability.")
+            },
+            {
+                "category": "Cash Cow",
+                "velocity": "< star_velocity_threshold",
+                "gmroi": ">= 2.0 (200%)",
+                "action": ACTION_MAINTAIN,
+                "description": _("High margin but low volume. Maintain steady inventory levels.")
+            },
+            {
+                "category": "Underperformer",
+                "velocity": ">= star_velocity_threshold",
+                "gmroi": "< 2.0 (200%)",
+                "action": ACTION_IMPROVE_MARGIN,
+                "description": _("Low margin but high volume. Negotiate better buying rates or increase selling price.")
+            },
+            {
+                "category": "Slow Mover",
+                "velocity": "< star_velocity_threshold",
+                "gmroi": "< 2.0 (200%)",
+                "action": ACTION_LIQUIDATE,
+                "description": _("Low margin and low volume. Liquidate excess stock or rationalize SKU from catalog.")
+            },
+            {
+                "category": "Stockout Winner",
+                "velocity": "Any",
+                "gmroi": "Depleted (Stock <= 0 & Margin > 0)",
+                "action": ACTION_REPLENISH_URGENT,
+                "description": _("High-demand items currently out of stock. Replenish immediately to capture demand.")
+            }
+        ],
+        "about": _(
+            "This analytical framework is part of SMRITI Retail OS. "
+            "Designed by Jawahar R. Mallah, Founder, AITDL (AI Technology & Development Lab). "
+            "Built from practical business operations, inventory management experience, "
+            "retail workflows, implementation learnings, and real-world business requirements."
+        )
+    }
+
+
+

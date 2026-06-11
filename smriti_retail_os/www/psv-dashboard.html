@@ -162,6 +162,47 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .toast.info    { background:#1e1b4b; border:1px solid rgba(37,99,235,0.3); }
 .toast span { font-size:20px; }
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+/* Modals & Dialogs */
+.modal-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(3,7,18,0.85); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+.modal-backdrop.open { opacity:1; pointer-events:all; }
+.modal { background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px; width:100%; max-width:640px; transform:translateY(20px); transition:transform 0.2s; display:flex; flex-direction:column; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+.modal-backdrop.open .modal { transform:translateY(0); }
+.modal-header { display:flex; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:12px; }
+.modal-title { font-family:'Outfit',sans-serif; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px; color:var(--text); }
+.modal-title span.icon { color:var(--primary-lt); font-size:22px; }
+.modal-close { margin-left:auto; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:22px; display:flex; align-items:center; }
+.modal-close:hover { color:var(--text); }
+.modal-body { display:flex; flex-direction:column; gap:14px; overflow-y:auto; max-height:70vh; padding-right:4px; }
+
+/* SKU Drilldown Side Drawer / Panel */
+.drawer-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(3,7,18,0.6); backdrop-filter:blur(3px); opacity:0; pointer-events:none; transition:opacity 0.3s; }
+.drawer-backdrop.open { opacity:1; pointer-events:all; }
+.drawer { position:fixed; right:0; top:0; bottom:0; width:100%; max-width:540px; background:var(--card); border-left:1px solid var(--border2); z-index:9001; transform:translateX(100%); transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display:flex; flex-direction:column; box-shadow: -10px 0 40px rgba(0,0,0,0.5); }
+.drawer-backdrop.open + .drawer, .drawer.open { transform:translateX(0); }
+.drawer-header { display:flex; align-items:center; padding:24px; border-bottom:1px solid var(--border); }
+.drawer-title { font-family:'Outfit',sans-serif; font-size:1.25rem; font-weight:800; display:flex; align-items:center; gap:8px; color:var(--text); }
+.drawer-close { margin-left:auto; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:22px; display:flex; align-items:center; }
+.drawer-close:hover { color:var(--text); }
+.drawer-body { flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:20px; }
+
+/* Collapsible section */
+.collapsible-trigger { background:var(--card2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:space-between; font-size:0.88rem; transition: background var(--t); }
+.collapsible-trigger:hover { background:var(--border); }
+.collapsible-content { display:none; padding:12px; border:1px solid var(--border); border-top:none; border-bottom-left-radius:var(--radius-sm); border-bottom-right-radius:var(--radius-sm); background:rgba(255,255,255,0.01); font-family:monospace; font-size:0.82rem; line-height:1.5; color:var(--text-muted); }
+.collapsible-content.open { display:block; }
+
+/* Warnings & Badges */
+.dq-warning { display:flex; align-items:center; gap:8px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.25); border-radius:var(--radius-sm); padding:10px 14px; font-size:0.82rem; color:var(--danger); font-weight:600; }
+.dq-warning span { font-size:18px; }
+.confidence-badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:10px; font-size:0.72rem; font-weight:700; text-transform:uppercase; }
+.confidence-badge.high { background:rgba(16,185,129,0.15); color:var(--success); border:1px solid rgba(16,185,129,0.25); }
+.confidence-badge.medium { background:rgba(245,158,11,0.15); color:var(--warning); border:1px solid rgba(245,158,11,0.25); }
+.confidence-badge.low { background:rgba(239,68,68,0.15); color:var(--danger); border:1px solid rgba(239,68,68,0.25); }
+
+/* Clickable table rows */
+#productivity-tbody tr { cursor:pointer; }
+#productivity-tbody tr:hover td { background:rgba(37,99,235,0.08); color:var(--text); }
 </style>
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
 </head>
@@ -306,11 +347,63 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                     </div>
                 </div>
 
-                <!-- Placeholder: Inventory Productivity -->
-                <div class="widget-card span-full" style="min-height:220px; align-items:center; justify-content:center; border-style:dashed;">
-                    <div class="coming-soon-badge">Coming in Phase 1.2</div>
-                    <div class="coming-soon-title" style="margin-top:8px;">Inventory Productivity Metric</div>
-                    <div class="coming-soon-desc">Advanced GMROI (Gross Margin Return on Investment) and SKU rationalization analytics.</div>
+                <!-- Widget 12: Inventory Productivity & SKU Rationalization -->
+                <div class="widget-card span-full" id="widget-productivity">
+                    <div class="widget-title" style="display:flex; align-items:center; gap:8px;">
+                        <span class="material-symbols-outlined icon">analytics</span>
+                        <span>Widget 12: Inventory Productivity & SKU Rationalization</span>
+                        <span class="material-symbols-outlined" id="info-logic-trigger" style="font-size:18px; cursor:pointer; color:var(--primary-lt); margin-left:4px; display:inline-flex; align-items:center; justify-content:center;" title="Calculation Logic">info</span>
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:16px;">
+                        <div class="kpi-card" style="height:90px; padding:12px; background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.15);">
+                            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--success); font-weight:700;">Stars (Core SKUs)</div>
+                            <div id="prod-star-count" style="font-size:1.6rem; font-weight:800; font-family:'Outfit',sans-serif; margin-top:2px;">0</div>
+                            <div style="font-size:0.7rem; color:var(--text-sub);">High Margin & Velocity</div>
+                        </div>
+                        <div class="kpi-card" style="height:90px; padding:12px; background:rgba(37,99,235,0.05); border:1px solid rgba(37,99,235,0.15);">
+                            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--primary-lt); font-weight:700;">Cash Cows</div>
+                            <div id="prod-cow-count" style="font-size:1.6rem; font-weight:800; font-family:'Outfit',sans-serif; margin-top:2px;">0</div>
+                            <div style="font-size:0.7rem; color:var(--text-sub);">High Margin, Low Velocity</div>
+                        </div>
+                        <div class="kpi-card" style="height:90px; padding:12px; background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.15);">
+                            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--warning); font-weight:700;">Underperformers</div>
+                            <div id="prod-under-count" style="font-size:1.6rem; font-weight:800; font-family:'Outfit',sans-serif; margin-top:2px;">0</div>
+                            <div style="font-size:0.7rem; color:var(--text-sub);">Low Margin, High Velocity</div>
+                        </div>
+                        <div class="kpi-card" style="height:90px; padding:12px; background:rgba(239,68,68,0.05); border:1px solid rgba(239,68,68,0.15);">
+                            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--danger); font-weight:700;">Slow Movers</div>
+                            <div id="prod-slow-count" style="font-size:1.6rem; font-weight:800; font-family:'Outfit',sans-serif; margin-top:2px;">0</div>
+                            <div style="font-size:0.7rem; color:var(--text-sub);">Low Margin & Velocity</div>
+                        </div>
+                        <div class="kpi-card" style="height:90px; padding:12px; background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.15); position:relative; overflow:hidden;">
+                            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--accent); font-weight:700; display:flex; align-items:center; gap:4px;">Stockout Winners <span class="material-symbols-outlined" style="font-size:12px;">bolt</span></div>
+                            <div id="prod-winner-count" style="font-size:1.6rem; font-weight:800; font-family:'Outfit',sans-serif; margin-top:2px;">0</div>
+                            <div style="font-size:0.7rem; color:var(--text-sub);">Depleted High-Demand</div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                        <div style="font-size:0.92rem; font-weight:700; color:var(--text-muted); padding-left:4px;">Top 10 SKU Productivity Leaders</div>
+                        <div class="table-wrap">
+                            <table class="risk-table">
+                                <thead>
+                                    <tr>
+                                        <th>Item Variant</th>
+                                        <th>Sales Velocity</th>
+                                        <th>GMROI</th>
+                                        <th>Avg Realized Price</th>
+                                        <th>Category</th>
+                                        <th>Productivity Score</th>
+                                        <th>Action Recommendation</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productivity-tbody">
+                                    <tr><td colspan="7" style="text-align:center;color:var(--text-sub);padding:40px 0;">No productivity data available</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -323,6 +416,31 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 </div>
 
 <div id="toast-container"></div>
+
+<!-- Calculation Logic Modal -->
+<div class="modal-backdrop" id="logic-modal" onclick="closeLogicModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title" style="display:flex; align-items:center; gap:8px;"><span class="material-symbols-outlined icon">calculate</span> Calculation Methodology</div>
+            <button class="modal-close" onclick="closeLogicModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="logic-modal-body" style="max-height: 70vh; overflow-y: auto;">
+            <!-- Dynamically populated -->
+        </div>
+    </div>
+</div>
+
+<!-- SKU Drill-down Drawer -->
+<div class="drawer-backdrop" id="sku-drawer-backdrop" onclick="closeSkuDrawer()"></div>
+<div class="drawer" id="sku-drawer">
+    <div class="drawer-header">
+        <div class="drawer-title" style="display:flex; align-items:center; gap:8px;"><span class="material-symbols-outlined" style="color:var(--primary-lt);">analytics</span> SKU Detailed Analysis</div>
+        <button class="drawer-close" onclick="closeSkuDrawer()">&times;</button>
+    </div>
+    <div class="drawer-body" id="sku-drawer-body">
+        <!-- Dynamically populated -->
+    </div>
+</div>
 
 <script>
 const CSRF_TOKEN = '{{ csrf_token }}';
@@ -421,9 +539,316 @@ async function loadDashboardData(company) {
             maximumFractionDigits: 2
         });
         
+        // Render Inventory Productivity & SKU Rationalization (Widget 12)
+        const prod = await api('smriti_retail_os.psv_service.get_inventory_productivity_metrics', { company });
+        renderProductivityWidget(prod);
+        
     } catch (e) {
         console.error('Failed to load PSV Dashboard:', e);
         toast('Error loading dashboard statistics', 'error');
+    }
+}
+
+function renderProductivityWidget(prod) {
+    const summary = prod.summary || { star: 0, cash_cow: 0, underperformer: 0, slow_mover: 0, stockout_winner: 0 };
+    document.getElementById('prod-star-count').textContent = summary.star;
+    document.getElementById('prod-cow-count').textContent = summary.cash_cow;
+    document.getElementById('prod-under-count').textContent = summary.underperformer;
+    document.getElementById('prod-slow-count').textContent = summary.slow_mover;
+    document.getElementById('prod-winner-count').textContent = summary.stockout_winner;
+    
+    const tbody = document.getElementById('productivity-tbody');
+    tbody.innerHTML = '';
+    
+    const topSkus = prod.top_skus || [];
+    if (topSkus.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-sub);padding:40px 0;">No productivity data available</td></tr>`;
+        return;
+    }
+    
+    topSkus.forEach(s => {
+        const tr = document.createElement('tr');
+        
+        let catColor = 'var(--text-muted)';
+        if (s.category === 'Star') catColor = 'var(--success)';
+        else if (s.category === 'Cash Cow') catColor = 'var(--primary-lt)';
+        else if (s.category === 'Underperformer') catColor = 'var(--warning)';
+        else if (s.category === 'Slow Mover') catColor = 'var(--danger)';
+        else if (s.category === 'Stockout Winner') catColor = 'var(--accent)';
+        
+        const gmroiText = s.gmroi !== null ? (s.gmroi * 100).toFixed(0) + '%' : '<span class="risk-badge warning" style="font-size:0.7rem;">DEPLETED</span>';
+        
+        let actionBadge = 'warning';
+        if (s.action === 'Increase Stock') actionBadge = 'critical';
+        else if (s.action === 'Maintain') actionBadge = 'warning';
+        else if (s.action === 'Improve Margin') actionBadge = 'warning';
+        else if (s.action === 'Liquidate / Review') actionBadge = 'critical';
+        else if (s.action === 'Replenish Urgent') actionBadge = 'critical';
+        
+        tr.innerHTML = `
+            <td style="font-weight:600; color:var(--text);">${s.item_code}</td>
+            <td>${s.velocity.toFixed(2)} units/wk</td>
+            <td style="font-weight:700;">${gmroiText}</td>
+            <td>₹${s.price.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+            <td style="font-weight:700; color:${catColor};">${s.category}</td>
+            <td style="font-weight:700; font-family:'Outfit',sans-serif; font-size:1.1rem; color:var(--primary-lt);">${s.score}</td>
+            <td><span class="risk-badge ${actionBadge}">${s.action}</span></td>
+        `;
+        tr.onclick = () => openSkuDrawer(s);
+        tbody.appendChild(tr);
+    });
+}
+
+let logicMethodologyData = null;
+
+async function openLogicModal() {
+    const modal = document.getElementById('logic-modal');
+    const body = document.getElementById('logic-modal-body');
+    modal.classList.add('open');
+    
+    if (!logicMethodologyData) {
+        body.innerHTML = `
+            <div style="display:flex; justify-content:center; align-items:center; height:150px; color:var(--text-muted);">
+                <span class="material-symbols-outlined" style="animation: spin 1s linear infinite; margin-right:8px;">sync</span> Loading methodology...
+            </div>
+        `;
+        try {
+            const data = await api('smriti_retail_os.psv_service.get_inventory_productivity_methodology');
+            if (data) {
+                logicMethodologyData = data;
+            }
+        } catch (err) {
+            body.innerHTML = `<div style="color:var(--danger); padding:10px;">Failed to load methodology.</div>`;
+            return;
+        }
+    }
+    
+    if (logicMethodologyData) {
+        let formulasHtml = '<div style="display:flex; flex-direction:column; gap:12px; margin-bottom:16px;">';
+        logicMethodologyData.formulas.forEach(f => {
+            formulasHtml += `
+                <div style="background:var(--card2); border:1px solid var(--border); padding:12px; border-radius:var(--radius-sm);">
+                    <div style="font-weight:700; color:var(--text); font-size:0.9rem;">${f.name}</div>
+                    <div style="font-family:monospace; background:rgba(0,0,0,0.2); padding:6px 8px; border-radius:4px; margin:6px 0; color:var(--primary-lt); font-size:0.85rem; border-left: 2px solid var(--primary-lt);">${f.formula}</div>
+                    <div style="font-size:0.78rem; color:var(--text-muted);">${f.explanation}</div>
+                </div>
+            `;
+        });
+        formulasHtml += '</div>';
+
+        let rulesHtml = `
+            <div style="margin-top:16px;">
+                <div style="font-weight:700; color:var(--text); margin-bottom:10px; font-size:0.95rem;">SKU Classification Matrix</div>
+                <div class="table-wrap" style="max-height: 250px;">
+                    <table class="risk-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Velocity</th>
+                                <th>GMROI</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+        logicMethodologyData.classification_rules.forEach(r => {
+            rulesHtml += `
+                <tr>
+                    <td style="font-weight:700; color:var(--text);">${r.category}</td>
+                    <td><code style="font-family:monospace; background:rgba(0,0,0,0.2); padding:2px 4px; border-radius:2px; font-size:0.75rem; color:var(--primary-lt);">${r.velocity}</code></td>
+                    <td><code style="font-family:monospace; background:rgba(0,0,0,0.2); padding:2px 4px; border-radius:2px; font-size:0.75rem; color:var(--primary-lt);">${r.gmroi}</code></td>
+                    <td style="font-weight:700; color:var(--primary-lt);">${r.action}</td>
+                </tr>
+            `;
+        });
+        rulesHtml += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        body.innerHTML = `
+            <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
+                ${logicMethodologyData.summary}
+            </div>
+            ${formulasHtml}
+            ${rulesHtml}
+            <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--border); padding-top:16px;">
+                <div style="font-size:0.75rem; color:var(--text-sub);">
+                    Methodology Version: ${logicMethodologyData.version} | Effective: ${logicMethodologyData.effective_date}<br>
+                    OS Version: v${logicMethodologyData.smriti_version}
+                </div>
+                <a href="/smriti-help?article=inventory_productivity" class="company-select" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px; font-size:0.8rem; background:var(--primary); color:white; border:none; padding:8px 12px; border-radius:var(--radius-sm);" onclick="closeLogicModal()">
+                    Open Analytics Guide <span class="material-symbols-outlined" style="font-size:14px;">arrow_forward</span>
+                </a>
+            </div>
+        `;
+    }
+}
+
+function closeLogicModal() {
+    document.getElementById('logic-modal').classList.remove('open');
+}
+
+function openSkuDrawer(s) {
+    const backdrop = document.getElementById('sku-drawer-backdrop');
+    const drawer = document.getElementById('sku-drawer');
+    const body = document.getElementById('sku-drawer-body');
+    
+    backdrop.classList.add('open');
+    drawer.classList.add('open');
+    
+    // Prepare Data Quality Warnings HTML
+    let warningsHtml = '';
+    if (s.warnings && s.warnings.length > 0) {
+        warningsHtml = '<div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">';
+        s.warnings.forEach(w => {
+            warningsHtml += `
+                <div class="dq-warning">
+                    <span class="material-symbols-outlined">warning</span>
+                    <span>⚠ ${w}</span>
+                </div>
+            `;
+        });
+        warningsHtml += '</div>';
+    }
+    
+    // Prepare Confidence Badge color
+    let confClass = 'low';
+    if (s.confidence === 'High') confClass = 'high';
+    else if (s.confidence === 'Medium') confClass = 'medium';
+    
+    // Category Colors
+    let catColor = 'var(--text-muted)';
+    if (s.category === 'Star') catColor = 'var(--success)';
+    else if (s.category === 'Cash Cow') catColor = 'var(--primary-lt)';
+    else if (s.category === 'Underperformer') catColor = 'var(--warning)';
+    else if (s.category === 'Slow Mover') catColor = 'var(--danger)';
+    else if (s.category === 'Stockout Winner') catColor = 'var(--accent)';
+    
+    // GMROI Format
+    const gmroiPercent = s.gmroi !== null ? (s.gmroi * 100).toFixed(0) + '%' : 'DEPLETED';
+    const gmroiVal = s.gmroi !== null ? s.gmroi.toFixed(2) : '0.00 (DEPLETED)';
+    
+    // Explanation Text
+    let explanationText = '';
+    const star_threshold = 1.0; // velocity threshold default
+    if (s.category === 'Stockout Winner') {
+        explanationText = `Classified as <strong>Stockout Winner</strong> because current stock is depleted (<strong>${s.current_stock}</strong> units) while historical demand is active (<strong>${s.sales_qty}</strong> units sold). Replenishment is urgently recommended.`;
+    } else if (s.category === 'Star') {
+        explanationText = `Classified as a <strong>Star SKU</strong> because weekly sales velocity (<strong>${s.velocity.toFixed(2)}/wk</strong>) meets or exceeds the threshold (<strong>>= ${star_threshold}/wk</strong>) and GMROI (<strong>${gmroiPercent}</strong>) meets or exceeds the target (<strong>>= 200%</strong>). Keep high availability.`;
+    } else if (s.category === 'Cash Cow') {
+        explanationText = `Classified as a <strong>Cash Cow</strong> because weekly sales velocity (<strong>${s.velocity.toFixed(2)}/wk</strong>) is below the threshold (<strong>< ${star_threshold}/wk</strong>), but GMROI remains high (<strong>${gmroiPercent} >= 200%</strong>). Maintain steady stock.`;
+    } else if (s.category === 'Underperformer') {
+        explanationText = `Classified as an <strong>Underperformer</strong> because weekly sales velocity is active (<strong>${s.velocity.toFixed(2)}/wk >= ${star_threshold}/wk</strong>), but GMROI is low (<strong>${gmroiPercent} < 200%</strong>). Improve buying cost or selling price.`;
+    } else if (s.category === 'Slow Mover') {
+        explanationText = `Classified as a <strong>Slow Mover</strong> because both weekly sales velocity (<strong>${s.velocity.toFixed(2)}/wk < ${star_threshold}/wk</strong>) and GMROI (<strong>${gmroiPercent} < 200%</strong>) are below target. Consider liquidation.`;
+    }
+
+    body.innerHTML = `
+        <div style="font-size:0.95rem; font-weight:700; color:var(--text); margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+            Item Code: <span style="font-family:monospace; color:var(--primary-lt); font-size:1.1rem; padding-left:4px;">${s.item_code}</span>
+        </div>
+        
+        ${warningsHtml}
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div style="background:var(--card2); border:1px solid var(--border); padding:10px; border-radius:var(--radius-sm);">
+                <div style="font-size:0.72rem; text-transform:uppercase; color:var(--text-sub);">Productivity Score</div>
+                <div style="font-size:1.35rem; font-weight:800; color:var(--primary-lt); font-family:'Outfit',sans-serif; margin-top:2px;">${s.score}</div>
+            </div>
+            <div style="background:var(--card2); border:1px solid var(--border); padding:10px; border-radius:var(--radius-sm);">
+                <div style="font-size:0.72rem; text-transform:uppercase; color:var(--text-sub);">Confidence Level</div>
+                <div style="margin-top:4px;"><span class="confidence-badge ${confClass}">${s.confidence}</span></div>
+            </div>
+            <div style="background:var(--card2); border:1px solid var(--border); padding:10px; border-radius:var(--radius-sm);">
+                <div style="font-size:0.72rem; text-transform:uppercase; color:var(--text-sub);">Category</div>
+                <div style="font-size:1.15rem; font-weight:800; color:${catColor}; margin-top:2px;">${s.category}</div>
+            </div>
+            <div style="background:var(--card2); border:1px solid var(--border); padding:10px; border-radius:var(--radius-sm);">
+                <div style="font-size:0.72rem; text-transform:uppercase; color:var(--text-sub);">Recommendation</div>
+                <div style="font-size:1.0rem; font-weight:700; color:var(--text); margin-top:4px;">${s.action}</div>
+            </div>
+        </div>
+
+        <div style="background:var(--card2); border:1px solid var(--border); padding:16px; border-radius:var(--radius-sm); margin-bottom:16px;">
+            <div style="font-size:0.82rem; font-weight:700; color:var(--text); text-transform:uppercase; margin-bottom:6px; display:flex; align-items:center; gap:4px;">
+                <span class="material-symbols-outlined" style="font-size:16px; color:var(--accent);">help</span> Why am I seeing this recommendation?
+            </div>
+            <div style="font-size:0.82rem; color:var(--text-muted); line-height:1.5;">
+                ${explanationText}
+            </div>
+        </div>
+
+        <!-- Metric Details Table -->
+        <div class="table-wrap" style="max-height:none; margin-bottom:16px;">
+            <table class="risk-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th style="text-align:right;">Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Sales Quantity</td><td style="text-align:right; font-weight:700; color:var(--text);">${s.sales_qty}</td></tr>
+                    <tr><td>Transaction Count</td><td style="text-align:right; font-weight:700; color:var(--text);">${s.txn_count || 0}</td></tr>
+                    <tr><td>Weekly Velocity</td><td style="text-align:right; font-weight:700; color:var(--text);">${s.velocity.toFixed(2)}/wk</td></tr>
+                    <tr><td>Avg Realized Price</td><td style="text-align:right; font-weight:700; color:var(--text);">₹${s.price.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td></tr>
+                    <tr><td>Landing Cost</td><td style="text-align:right; font-weight:700; color:var(--text);">₹${s.cost.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td></tr>
+                    <tr><td>Gross Margin</td><td style="text-align:right; font-weight:700; color:var(--text);">₹${s.gross_margin.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td></tr>
+                    <tr><td>Current Stock</td><td style="text-align:right; font-weight:700; color:var(--text);">${s.current_stock}</td></tr>
+                    <tr><td>Inventory Value</td><td style="text-align:right; font-weight:700; color:var(--text);">₹${s.inventory_value.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td></tr>
+                    <tr><td>GMROI</td><td style="text-align:right; font-weight:700; color:var(--text);">${gmroiPercent} (${gmroiVal})</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Collapsible Breakdown section -->
+        <div style="display:flex; flex-direction:column; border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden;">
+            <div class="collapsible-trigger" onclick="toggleCollapsible(this)">
+                <span>Show Calculation Breakdown</span>
+                <span class="material-symbols-outlined" style="font-size:16px;">expand_more</span>
+            </div>
+            <div class="collapsible-content">
+                <strong>1. Weekly Velocity</strong><br>
+                Sales Qty (${s.sales_qty}) &divide; (30 Days &divide; 7)<br>
+                = ${s.velocity.toFixed(2)} units/week<br><br>
+                
+                <strong>2. Gross Margin</strong><br>
+                Sales Qty (${s.sales_qty}) &times; (Price ₹${s.price.toFixed(2)} - Cost ₹${s.cost.toFixed(2)})<br>
+                = ₹${s.gross_margin.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br><br>
+                
+                <strong>3. Inventory Value</strong><br>
+                Current Stock (${s.current_stock}) &times; Cost ₹${s.cost.toFixed(2)}<br>
+                = ₹${s.inventory_value.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}<br><br>
+                
+                <strong>4. GMROI</strong><br>
+                ${s.gmroi !== null ? `Gross Margin ₹${s.gross_margin.toFixed(2)} &divide; Inventory Value ₹${s.inventory_value.toFixed(2)}<br>= ${s.gmroi.toFixed(2)} (${gmroiPercent})` : 'DEPLETED (Stock <= 0, Margin > 0)'}<br><br>
+                
+                <strong>5. Productivity Score (0-100)</strong><br>
+                (0.6 &times; Normalized GMROI) + (0.4 &times; Normalized Velocity)<br>
+                Normalized GMROI = min(${s.gmroi !== null ? s.gmroi.toFixed(2) : '3.0'} / 3.0, 1.0) &times; 100 = ${(Math.min((s.gmroi !== null ? s.gmroi : 3.0) / 3.0, 1.0) * 100).toFixed(1)}<br>
+                Normalized Velocity = min(${s.velocity.toFixed(2)} / 5.0, 1.0) &times; 100 = ${(Math.min(s.velocity / 5.0, 1.0) * 100).toFixed(1)}<br>
+                Score = (0.6 &times; ${(Math.min((s.gmroi !== null ? s.gmroi : 3.0) / 3.0, 1.0) * 100).toFixed(1)}) + (0.4 &times; ${(Math.min(s.velocity / 5.0, 1.0) * 100).toFixed(1)}) = ${s.score}
+            </div>
+        </div>
+    `;
+}
+
+function closeSkuDrawer() {
+    document.getElementById('sku-drawer-backdrop').classList.remove('open');
+    document.getElementById('sku-drawer').classList.remove('open');
+}
+
+function toggleCollapsible(trigger) {
+    const content = trigger.nextElementSibling;
+    const icon = trigger.querySelector('.material-symbols-outlined');
+    content.classList.toggle('open');
+    if (content.classList.contains('open')) {
+        icon.textContent = 'expand_less';
+    } else {
+        icon.textContent = 'expand_more';
     }
 }
 
@@ -634,6 +1059,12 @@ window.onload = () => {
         loadDashboardData(selector.value);
     } else {
         toast('No companies configured in SMRITI', 'error');
+    }
+    
+    // Bind info logic trigger click
+    const trigger = document.getElementById('info-logic-trigger');
+    if (trigger) {
+        trigger.onclick = openLogicModal;
     }
 };
 </script>
