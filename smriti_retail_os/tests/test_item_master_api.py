@@ -89,7 +89,7 @@ def ensure_attribute_values(attribute, values):
     updated = False
     for val in values:
         if val not in existing_values:
-            doc.append("item_attribute_values", {"attribute_value": val})
+            doc.append("item_attribute_values", {"attribute_value": val, "abbr": val})
             updated = True
             
     if updated:
