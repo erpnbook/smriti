@@ -110,6 +110,18 @@ def confirm_verification(email, otp):
     
     return {"status": "success", "message": f"Custodian {email} verified successfully."}
 
+def mask_email(email):
+    """Masks email address for display and auditing."""
+    if not email or "@" not in email:
+        return "***"
+    parts = email.split("@")
+    if len(parts) != 2:
+        return "***"
+    name, domain = parts[0], parts[1]
+    if len(name) <= 3:
+        return "***@" + domain
+    return name[:3] + "***@" + domain
+
 def send_recovery_fragments():
     """Midpoint splits the active key and sends parts to the two custodians."""
     check_manager_role()
@@ -143,16 +155,6 @@ def send_recovery_fragments():
         doc.last_recovery_sent = now_datetime()
         doc.save(ignore_permissions=True)
         
-    # Mask emails for audit trail
-    def mask_email(e):
-        parts = e.split("@")
-        if len(parts) != 2:
-            return "***"
-        name, domain = parts[0], parts[1]
-        if len(name) <= 3:
-            return "***@" + domain
-        return name[:3] + "***@" + domain
-        
     masked_c1 = mask_email(c1)
     masked_c2 = mask_email(c2)
     
@@ -160,6 +162,7 @@ def send_recovery_fragments():
     log_audit_event("Recovery Fragments Sent", f"Recovery key fragments for version {version} sent to {masked_c1} and {masked_c2}.")
     
     return {"status": "success", "message": f"Fragments for version {version} sent successfully."}
+
 
 def rotate_encryption_key(new_key):
     """Rotates the encryption key in frappe.conf and logs the versions and fingerprints."""

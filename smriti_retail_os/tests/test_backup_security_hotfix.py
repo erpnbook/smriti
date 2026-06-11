@@ -40,9 +40,23 @@ class TestBackupSecurityHotfix(unittest.TestCase):
         setup_smriti_retail_os()
         frappe.db.commit()
 
+    def clean_test_temp_files(self):
+        import glob
+        from frappe.utils import get_site_path
+        backups_dir = os.path.join(get_site_path(), "private", "backups")
+        if os.path.exists(backups_dir):
+            for pattern in ("*tmp*", "*temp*"):
+                for p in glob.glob(os.path.join(backups_dir, pattern)):
+                    if os.path.isfile(p):
+                        try:
+                            os.unlink(p)
+                        except Exception:
+                            pass
+
     def setUp(self):
         """Inject a test-only encryption key into frappe.conf (NEVER used in prod)."""
         frappe.conf.backup_encryption_key = "dGVzdGtleWZvcnVuaXR0ZXN0aW5nb25seQ=="
+        self.clean_test_temp_files()
 
     def tearDown(self):
         """Remove test-only encryption keys and custodian records."""
@@ -52,6 +66,7 @@ class TestBackupSecurityHotfix(unittest.TestCase):
         if frappe.db.exists("DocType", "SMRITI Key Custodian"):
             frappe.db.delete("SMRITI Key Custodian")
         frappe.db.commit()
+        self.clean_test_temp_files()
 
     # ─── test_1 ──────────────────────────────────────────────────────────────
 
@@ -555,6 +570,7 @@ class TestBackupSecurityHotfix(unittest.TestCase):
         """Restore must fail closed with RuntimeError if sidecar version does not match filename or sidecar is missing/invalid."""
         from smriti_retail_os.backup_api import restore_backup
         from frappe.utils import get_site_path
+        import json
         
         backups_dir = os.path.join(get_site_path(), "private", "backups")
         os.makedirs(backups_dir, exist_ok=True)
@@ -607,3 +623,213 @@ class TestBackupSecurityHotfix(unittest.TestCase):
             for p in (enc_path, meta_path):
                 if os.path.exists(p): os.unlink(p)
 
+    # ─── test_16 ─────────────────────────────────────────────────────────────
+
+    @patch("smriti_retail_os.gpg_service.verify_gpg_available", return_value=False)
+    @patch("frappe.installer.update_site_config")
+    def test_16_gpg_missing_enable_fails_closed(self, mock_update, mock_gpg_ok):
+        """If GPG is missing, enabling encryption must raise RuntimeError and not touch site_config/generate keys."""
+        from smriti_retail_os.backup_api import save_settings
+        
+        orig_user = frappe.session.user
+        try:
+            frappe.session.user = "Administrator"
+            
+            # Clear keys from conf for testing
+            backup_keys = frappe.conf.get("backup_encryption_keys")
+            active_ver = frappe.conf.get("active_backup_encryption_key_version")
+            frappe.conf.pop("backup_encryption_keys", None)
+            frappe.conf.pop("active_backup_encryption_key_version", None)
+            
+            with self.assertRaises(RuntimeError):
+                save_settings({"enable_backup_encryption": 1})
+                
+            # Verify update_site_config was never called
+            mock_update.assert_not_called()
+            
+            # Verify no key generated in frappe.conf
+            self.assertIsNone(frappe.conf.get("backup_encryption_keys"))
+            self.assertIsNone(frappe.conf.get("active_backup_encryption_key_version"))
+            
+            # Restore conf
+            if backup_keys:
+                frappe.conf.backup_encryption_keys = backup_keys
+            if active_ver:
+                frappe.conf.active_backup_encryption_key_version = active_ver
+        finally:
+            frappe.session.user = orig_user
+
+    # ─── test_17 ─────────────────────────────────────────────────────────────
+
+    def test_17_restore_with_wrong_key_fails(self):
+        """Decryption failure due to incorrect key version/value must raise RuntimeError and clean up temp files without restoring."""
+        from smriti_retail_os.backup_api import restore_backup
+        from smriti_retail_os.gpg_service import encrypt_file
+        from frappe.utils import get_site_path
+        from unittest.mock import MagicMock, patch
+        import json, os, subprocess
+        
+        backups_dir = os.path.join(get_site_path(), "private", "backups")
+        os.makedirs(backups_dir, exist_ok=True)
+        
+        enc_file = "20260610_025305-database-v1.smriti.enc"
+        enc_path = os.path.join(backups_dir, enc_file)
+        meta_file = "20260610_025305-database-v1.smriti.json"
+        meta_path = os.path.join(backups_dir, meta_file)
+        
+        # Clean leftovers
+        for p in (enc_path, meta_path):
+            if os.path.exists(p): os.unlink(p)
+            
+        # Write plaintext file first
+        plain_tmp = os.path.join(backups_dir, "plain_temp.sql.gz")
+        with open(plain_tmp, "w") as f:
+            f.write("SECRET DATA")
+            
+        # Encrypt plain_tmp using key_A
+        key_A = "secret_passphrase_A"
+        encrypt_file(plain_tmp, key_A, enc_path)
+        
+        # Write meta
+        meta_data = {
+            "backup_id": "20260610_025305",
+            "key_version": "v1",
+            "encrypted": True,
+            "cipher": "AES256",
+            "backup_sha256": "dummy_hash"
+        }
+        with open(meta_path, "w") as f:
+            json.dump(meta_data, f)
+            
+        orig_user = frappe.session.user
+        try:
+            frappe.session.user = "Administrator"
+            # Set active key version to v1, but set key to key_B (wrong key)
+            key_B = "wrong_passphrase_B"
+            frappe.conf.backup_encryption_keys = {"v1": key_B}
+            frappe.conf.active_backup_encryption_key_version = "v1"
+            
+            # Compute actual sha
+            import hashlib
+            sha256 = hashlib.sha256()
+            with open(enc_path, "rb") as f:
+                while chunk := f.read(8192):
+                    sha256.update(chunk)
+            meta_data["backup_sha256"] = sha256.hexdigest()
+            with open(meta_path, "w") as f:
+                json.dump(meta_data, f)
+            
+            original_run = subprocess.run
+            bench_calls = []
+            
+            def mock_sub_run(cmd, *args, **kwargs):
+                if isinstance(cmd, list) and cmd[0] == "bench":
+                    bench_calls.append(cmd)
+                    mock_res = MagicMock()
+                    mock_res.returncode = 0
+                    return mock_res
+                return original_run(cmd, *args, **kwargs)
+                
+            with patch("subprocess.run", side_effect=mock_sub_run):
+                # Attempt restore and expect RuntimeError (from decryption failure)
+                with self.assertRaises(RuntimeError) as context:
+                    restore_backup(enc_file)
+                self.assertIn("decryption failed", str(context.exception).lower())
+            
+            # Verify no subprocess run for bench restore was called
+            self.assertEqual(len(bench_calls), 0, "No bench restore subprocess should have been executed")
+            
+            # Verify no decrypted temp files left on disk
+            import glob
+            temp_files = glob.glob(os.path.join(backups_dir, "*tmp*")) + glob.glob(os.path.join(backups_dir, "*temp*"))
+            for tf in temp_files:
+                if tf not in (enc_path, meta_path, plain_tmp):
+                    self.assertFalse(os.path.exists(tf), f"Temp file {tf} was not cleaned up!")
+                    
+        finally:
+            frappe.session.user = orig_user
+            for p in (enc_path, meta_path, plain_tmp):
+                if os.path.exists(p): os.unlink(p)
+
+    # ─── test_18 ─────────────────────────────────────────────────────────────
+
+    @patch("subprocess.run")
+    @patch("shutil.which")
+    def test_18_shred_cleanup_verified_after_restore(self, mock_which, mock_sub_run):
+        """Verify shred cleanup removes decrypted temp file. Test both shred-available and shred-absent (zero-overwrite fallback) paths."""
+        from smriti_retail_os.backup_api import restore_backup
+        from frappe.utils import get_site_path
+        import json, os
+        
+        # Mock subprocess.run for bench restore to return success
+        mock_sub_run.return_value.returncode = 0
+        
+        # Setup mock files
+        backups_dir = os.path.join(get_site_path(), "private", "backups")
+        os.makedirs(backups_dir, exist_ok=True)
+        
+        enc_file = "20260610_025305-database-v1.smriti.enc"
+        enc_path = os.path.join(backups_dir, enc_file)
+        meta_file = "20260610_025305-database-v1.smriti.json"
+        meta_path = os.path.join(backups_dir, meta_file)
+        
+        # Clean leftovers
+        for p in (enc_path, meta_path):
+            if os.path.exists(p): os.unlink(p)
+            
+        with open(enc_path, "w") as f: f.write("MOCK ENCRYPTED")
+        
+        # Compute sha
+        import hashlib
+        sha256 = hashlib.sha256()
+        with open(enc_path, "rb") as f:
+            while chunk := f.read(8192):
+                sha256.update(chunk)
+        
+        meta_data = {
+            "backup_id": "20260610_025305",
+            "key_version": "v1",
+            "encrypted": True,
+            "cipher": "AES256",
+            "backup_sha256": sha256.hexdigest()
+        }
+        with open(meta_path, "w") as f:
+            json.dump(meta_data, f)
+            
+        orig_user = frappe.session.user
+        try:
+            frappe.session.user = "Administrator"
+            frappe.conf.backup_encryption_keys = {"v1": "testkey"}
+            frappe.conf.active_backup_encryption_key_version = "v1"
+            
+            # PATH A: Shred is available
+            mock_which.return_value = "/usr/bin/shred"
+            
+            def fake_decrypt(enc_path, passphrase, dest_path):
+                with open(dest_path, "w") as f:
+                    f.write("DECRYPTED SQL DATA")
+                    
+            with patch("smriti_retail_os.gpg_service.decrypt_file", side_effect=fake_decrypt):
+                res = restore_backup(enc_file)
+                self.assertEqual(res["status"], "success")
+                
+            # Check that shred was executed (in subprocess.run)
+            shred_calls = [c for c in mock_sub_run.call_args_list if len(c[0]) > 0 and isinstance(c[0][0], list) and any("shred" in str(x) for x in c[0][0])]
+            self.assertTrue(len(shred_calls) >= 1, "Shred subprocess should have been executed")
+            
+            # PATH B: Shred is absent (fallback zero-overwrite)
+            mock_which.return_value = None
+            mock_sub_run.reset_mock()
+            
+            with patch("smriti_retail_os.gpg_service.decrypt_file", side_effect=fake_decrypt):
+                res = restore_backup(enc_file)
+                self.assertEqual(res["status"], "success")
+                
+            # Check that shred was NOT executed
+            shred_calls = [c for c in mock_sub_run.call_args_list if len(c[0]) > 0 and isinstance(c[0][0], list) and any("shred" in str(x) for x in c[0][0])]
+            self.assertEqual(len(shred_calls), 0, "Shred subprocess should NOT have been executed when shred is absent")
+            
+        finally:
+            frappe.session.user = orig_user
+            for p in (enc_path, meta_path):
+                if os.path.exists(p): os.unlink(p)

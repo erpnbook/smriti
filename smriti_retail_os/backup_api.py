@@ -203,6 +203,28 @@ def save_settings(settings):
     old_enabled = old_settings.get("enable_backup_encryption", 0)
     new_enabled = settings.get("enable_backup_encryption", 0)
 
+    if new_enabled:
+        from smriti_retail_os.gpg_service import verify_gpg_available
+        if not verify_gpg_available():
+            raise RuntimeError("GPG executable is not available on system path.")
+
+    if old_enabled != new_enabled:
+        if "System Manager" not in frappe.get_roles():
+            frappe.throw(_("System Manager role is required to modify encryption settings."), frappe.PermissionError)
+
+        if new_enabled:
+            from smriti_retail_os.gpg_service import get_active_key_version_and_key
+            version, key = get_active_key_version_and_key()
+            if not key:
+                # Generate key on enable
+                new_key = frappe.generate_hash(length=32)
+                keys = {"v1": new_key}
+                from frappe.installer import update_site_config
+                update_site_config("backup_encryption_keys", keys)
+                update_site_config("active_backup_encryption_key_version", "v1")
+                frappe.conf.backup_encryption_keys = keys
+                frappe.conf.active_backup_encryption_key_version = "v1"
+
     frappe.db.set_default("smriti_backup_settings", json.dumps(settings))
     frappe.db.commit()
 
@@ -216,6 +238,7 @@ def save_settings(settings):
             log_audit_event("Backup Encryption Disabled", f"Backup encryption disabled by {frappe.session.user}.")
 
     return {"status": "success", "message": "Settings saved successfully."}
+
 
 
 @frappe.whitelist()
@@ -554,152 +577,190 @@ def restore_backup(file_name):
     
     if not os.path.exists(sql_path):
         frappe.throw(_("Backup file {0} not found.").format(file_name), frappe.DoesNotExistError)
-        
+
+    # Helper function to publish progress
+    def publish_progress(message, percent):
+        frappe.publish_realtime(
+            "smriti.backup.progress",
+            {"message": message, "percent": percent},
+            user=frappe.session.user
+        )
+
     # Check if backup file is encrypted
     is_encrypted = file_name.endswith(".smriti.enc")
     decrypted_tmp_path = None
     target_sql_path = sql_path
     key_version = "None"
     
-    if is_encrypted:
-        import re
-        import hashlib
-        from smriti_retail_os.gpg_service import verify_gpg_available, get_key_from_conf, decrypt_file
-        
-        # Verify GPG available
-        if not verify_gpg_available():
-            log_audit_event("GPG Executable Missing", f"GPG is missing on site {frappe.local.site} at {frappe.utils.now()}.")
-            raise RuntimeError("GPG executable is not available on system path.")
-            
-        # Parse version from filename
-        version_match = re.search(r"-database-(v\d+)\.smriti\.enc$", file_name)
-        if not version_match:
-            version_match = re.search(r"-(v\d+)\.smriti\.enc$", file_name)
-            
-        if not version_match:
-            version_match = re.search(r"-v(\d+)", file_name)
-            if version_match:
-                filename_version = f"v{version_match.group(1)}"
-            else:
-                raise RuntimeError(f"Could not parse key version from filename {file_name}")
-        else:
-            filename_version = version_match.group(1)
-            
-        key_version = filename_version
-            
-        # Check sidecar JSON
-        meta_file_name = file_name.replace(".smriti.enc", ".smriti.json")
-        meta_path = os.path.join(backups_dir, meta_file_name)
-        if not os.path.exists(meta_path):
-            raise RuntimeError(f"Metadata sidecar file {meta_file_name} not found.")
-            
-        with open(meta_path, "r") as f:
-            meta_data = json.load(f)
-            
-        # Validate version
-        meta_version = meta_data.get("key_version")
-        if meta_version != filename_version:
-            raise RuntimeError(f"Key version mismatch: filename version is {filename_version}, sidecar version is {meta_version}.")
-            
-        # Validate hash integrity
-        sha256 = hashlib.sha256()
-        with open(sql_path, "rb") as f:
-            while chunk := f.read(8192):
-                sha256.update(chunk)
-        actual_sha = sha256.hexdigest()
-        expected_sha = meta_data.get("backup_sha256")
-        if actual_sha != expected_sha:
-            raise RuntimeError(f"Integrity check failed: encrypted backup file SHA-256 is {actual_sha}, expected {expected_sha}.")
-            
-        # Decrypt to a temporary location
-        import tempfile
-        tmp_fd, decrypted_tmp_path = tempfile.mkstemp(suffix="-database.sql.gz", dir=backups_dir)
-        os.close(tmp_fd)
-        
-        # Get key
-        key = get_key_from_conf(filename_version)
-        
-        # Decrypt
-        decrypt_file(sql_path, key, decrypted_tmp_path)
-        target_sql_path = decrypted_tmp_path
-
-    # Find matching files and private files
-    prefix = file_name.split("-")[0] # E.g. "20260529_025305"
-    
-    # Try different suffix formats to be safe
-    files_tar = None
-    private_tar = None
-    
-    for suffix in ["files.tar", "frontend-files.tar", "frontend-public_files.tar"]:
-        test_path = os.path.join(backups_dir, f"{prefix}-{suffix}")
-        if os.path.exists(test_path):
-            files_tar = test_path
-            break
-            
-    for suffix in ["private-files.tar", "frontend-private-files.tar", "frontend-private_files.tar"]:
-        test_path = os.path.join(backups_dir, f"{prefix}-{suffix}")
-        if os.path.exists(test_path):
-            private_tar = test_path
-            break
-            
-    # Retrieve MariaDB root password
-    db_root_password = os.environ.get("MARIADB_ROOT_PASSWORD") or os.environ.get("MYSQL_ROOT_PASSWORD") or "admin"
-    
-    cmd = [
-        "bench",
-        "--site",
-        frappe.local.site,
-        "restore",
-        target_sql_path,
-        "--db-root-password",
-        db_root_password,
-        "--force"
-    ]
-    
-    if files_tar:
-        cmd.extend(["--with-public-files", files_tar])
-    if private_tar:
-        cmd.extend(["--with-private-files", private_tar])
-        
-    # Execute restore subprocess
-    restore_succeeded = False
-    decrypted_tmp = decrypted_tmp_path
     try:
-        res = subprocess.run(cmd, capture_output=True, text=True)
-        if res.returncode != 0:
-            frappe.log_error("SMRITI Backup Restore Failure", f"Command: {' '.join(cmd)}\nStderr: {res.stderr}\nStdout: {res.stdout}")
+        if is_encrypted:
+            import re
+            import hashlib
+            import tempfile
+            from smriti_retail_os.gpg_service import verify_gpg_available, get_key_from_conf, decrypt_file
+            
+            # Verify GPG available
+            if not verify_gpg_available():
+                log_audit_event("GPG Executable Missing", f"GPG is missing on site {frappe.local.site} at {frappe.utils.now()}.")
+                raise RuntimeError("GPG executable is not available on system path.")
+                
+            # Parse version from filename
+            version_match = re.search(r"-database-(v\d+)\.smriti\.enc$", file_name)
+            if not version_match:
+                version_match = re.search(r"-(v\d+)\.smriti\.enc$", file_name)
+                
+            if not version_match:
+                version_match = re.search(r"-v(\d+)", file_name)
+                if version_match:
+                    filename_version = f"v{version_match.group(1)}"
+                else:
+                    raise RuntimeError(f"Could not parse key version from filename {file_name}")
+            else:
+                filename_version = version_match.group(1)
+                
+            key_version = filename_version
+                
+            # Check sidecar JSON
+            meta_file_name = file_name.replace(".smriti.enc", ".smriti.json")
+            meta_path = os.path.join(backups_dir, meta_file_name)
+            if not os.path.exists(meta_path):
+                raise RuntimeError(f"Metadata sidecar file {meta_file_name} not found.")
+                
+            with open(meta_path, "r") as f:
+                meta_data = json.load(f)
+                
+            # Validate version
+            meta_version = meta_data.get("key_version")
+            if meta_version != filename_version:
+                raise RuntimeError(f"Key version mismatch: filename version is {filename_version}, sidecar version is {meta_version}.")
+                
+            # Validate hash integrity
+            sha256 = hashlib.sha256()
+            with open(sql_path, "rb") as f:
+                while chunk := f.read(8192):
+                    sha256.update(chunk)
+            actual_sha = sha256.hexdigest()
+            expected_sha = meta_data.get("backup_sha256")
+            if actual_sha != expected_sha:
+                raise RuntimeError(f"Integrity check failed: encrypted backup file SHA-256 is {actual_sha}, expected {expected_sha}.")
+                
+            # 1. Progress: Decrypting backup...
+            publish_progress("Decrypting backup...", 20)
+            
+            # Decrypt to a temporary location
+            tmp_fd, decrypted_tmp_path = tempfile.mkstemp(suffix="-database.sql.gz", dir=backups_dir)
+            os.close(tmp_fd)
+            
+            # Get key
+            key = get_key_from_conf(filename_version)
+            
+            # Decrypt
+            decrypt_file(sql_path, key, decrypted_tmp_path)
+            target_sql_path = decrypted_tmp_path
+
+        # 2. Progress: Verifying decrypted file...
+        publish_progress("Verifying decrypted file...", 40)
+
+        # Find matching files and private files
+        prefix = file_name.split("-")[0] # E.g. "20260529_025305"
+        
+        # Try different suffix formats to be safe
+        files_tar = None
+        private_tar = None
+        
+        for suffix in ["files.tar", "frontend-files.tar", "frontend-public_files.tar"]:
+            test_path = os.path.join(backups_dir, f"{prefix}-{suffix}")
+            if os.path.exists(test_path):
+                files_tar = test_path
+                break
+                
+        for suffix in ["private-files.tar", "frontend-private-files.tar", "frontend-private_files.tar"]:
+            test_path = os.path.join(backups_dir, f"{prefix}-{suffix}")
+            if os.path.exists(test_path):
+                private_tar = test_path
+                break
+                
+        # Retrieve MariaDB root password
+        db_root_password = os.environ.get("MARIADB_ROOT_PASSWORD") or os.environ.get("MYSQL_ROOT_PASSWORD") or "admin"
+        
+        cmd = [
+            "bench",
+            "--site",
+            frappe.local.site,
+            "restore",
+            target_sql_path,
+            "--db-root-password",
+            db_root_password,
+            "--force"
+        ]
+        
+        if files_tar:
+            cmd.extend(["--with-public-files", files_tar])
+        if private_tar:
+            cmd.extend(["--with-private-files", private_tar])
+            
+        # 3. Progress: Restoring database...
+        publish_progress("Restoring database...", 60)
+
+        # Execute restore subprocess
+        try:
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            if res.returncode != 0:
+                frappe.log_error("SMRITI Backup Restore Failure", f"Command: {' '.join(cmd)}\nStderr: {res.stderr}\nStdout: {res.stdout}")
+                return {
+                    "status": "failed",
+                    "message": res.stderr or res.stdout or "Restoration process failed. Check Error Log."
+                }
+                
+            # Log successful restore audit event
+            if is_encrypted:
+                log_audit_event(
+                    "Encrypted Restore",
+                    f"Encrypted backup restored. Filename: {file_name}. Key version: {key_version}. User: {frappe.session.user}"
+                )
+                
+            # 4. Progress: Restore complete.
+            publish_progress("Restore complete.", 100)
+
+            return {
+                "status": "success",
+                "message": "Backup restored successfully. Logging out to reload session database."
+            }
+        except Exception as e:
+            frappe.log_error("SMRITI Backup Restore Exception", str(e))
             return {
                 "status": "failed",
-                "message": res.stderr or res.stdout or "Restoration process failed. Check Error Log."
+                "message": str(e)
             }
-            
-        restore_succeeded = True
-        
-        # Log successful restore audit event
-        if is_encrypted:
-            log_audit_event(
-                "Encrypted Restore",
-                f"Encrypted backup restored. Filename: {file_name}. Key version: {key_version}. User: {frappe.session.user}"
-            )
-            
-        return {
-            "status": "success",
-            "message": "Backup restored successfully. Logging out to reload session database."
-        }
-    except Exception as e:
-        frappe.log_error("SMRITI Backup Restore Exception", str(e))
-        return {
-            "status": "failed",
-            "message": str(e)
-        }
     finally:
-        # Secure deletion of decrypted temp file in all execution flows
-        if decrypted_tmp and os.path.exists(decrypted_tmp):
-            try:
-                os.remove(decrypted_tmp)
-            except Exception:
-                pass
-        decrypted_tmp = None
+        # 5. Progress: Cleaning temporary files...
+        publish_progress("Cleaning temporary files...", 80)
+        
+        # Secure deletion of decrypted temp file in all execution flows (shred / zero-overwrite fallback)
+        if decrypted_tmp_path and os.path.exists(decrypted_tmp_path):
+            import shutil
+            shred_path = shutil.which("shred")
+            if shred_path:
+                try:
+                    subprocess.run([shred_path, "-u", "-z", "-n", "1", decrypted_tmp_path], check=True, capture_output=True)
+                except Exception:
+                    try:
+                        os.remove(decrypted_tmp_path)
+                    except Exception:
+                        pass
+            else:
+                try:
+                    # Fallback zero-overwrite
+                    size = os.path.getsize(decrypted_tmp_path)
+                    with open(decrypted_tmp_path, "r+b") as f:
+                        f.write(b"\x00" * size)
+                    os.remove(decrypted_tmp_path)
+                except Exception:
+                    try:
+                        os.remove(decrypted_tmp_path)
+                    except Exception:
+                        pass
+        decrypted_tmp_path = None
 
 
 def run_scheduled_backup():
