@@ -74,6 +74,7 @@ app_include_css = [
     "/assets/smriti_retail_os/css/smriti_desk_override.css",
 ]
 app_include_js = [
+    "/assets/smriti_retail_os/js/smriti_nav_config.js",
     "/assets/smriti_retail_os/js/smriti_sidebar.js",
     "/assets/smriti_retail_os/js/smriti_reports.js",
     "/assets/smriti_retail_os/js/main.js",
@@ -403,6 +404,9 @@ override_whitelisted_methods = {
 
 # Login page override + Billing terminal standalone route
 website_route_rules = [
+    # ─── Coming Soon Route Alias ────────────────────────────────────
+    {"from_route": "/coming-soon", "to_route": "smriti-coming-soon"},
+
     # ─── Channel Stock (PSV) Route Aliases ──────────────────────────
     {"from_route": "/smriti-channel-accounts",  "to_route": "psa"},
     {"from_route": "/smriti-sales-upload",       "to_route": "sales-upload"},

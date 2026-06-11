@@ -14,203 +14,23 @@
 
 window.SMRITI = window.SMRITI || {};
 
-SMRITI.sidebarSchema = [
-    {
-        type: 'link',
-        id: 'desk',
-        emoji: '🏠',
-        label: 'Dashboard',
-        url: '/smriti'
-    },
-    {
-        type: 'category',
-        id: 'masters',
-        emoji: '📦',
-        label: 'Masters',
-        items: [
-            { type: 'subheader', label: 'Product Masters' },
-            { id: 'products', label: '├─ Product Catalog', url: '/products' },
-            { id: 'item_master', label: '├─ Item Master', url: '/item_master' },
-            { id: 'sizewise_item', label: '├─ Sizewise Creator', url: '/sizewise_item' },
-            { id: 'brand_master', label: '├─ Brand Master', url: '/smriti-coming-soon?feature=Brand+Master&progress=60&eta=Q3+2026' },
-            { id: 'item_group', label: '├─ Item Group', url: '/smriti-coming-soon?feature=Item+Group&progress=45&eta=Q3+2026' },
-            { id: 'category_hierarchy', label: '├─ Category Hierarchy', url: '/smriti-coming-soon?feature=Category+Hierarchy&progress=50&eta=Q3+2026' },
-            { id: 'season_collection', label: '├─ Season / Collection', url: '/smriti-coming-soon?feature=Season+/+Collection&progress=40&eta=Q3+2026' },
-            { id: 'uom_master', label: '└─ UOM Master', url: '/smriti-coming-soon?feature=UOM+Master&progress=70&eta=Q3+2026' },
-            
-            { type: 'subheader', label: 'Party Masters' },
-            { id: 'customers', label: '├─ Customers', url: '/customers' },
-            { id: 'customer_group', label: '├─ Customer Group', url: '/smriti-coming-soon?feature=Customer+Group&progress=30&eta=Q4+2026' },
-            { id: 'territory_zone', label: '├─ Territory / Zone', url: '/smriti-coming-soon?feature=Territory+/+Zone&progress=20&eta=Q4+2026' },
-            { id: 'suppliers', label: '├─ Suppliers', url: '/suppliers' },
-            { id: 'supplier_group', label: '├─ Supplier Group', url: '/smriti-coming-soon?feature=Supplier+Group&progress=30&eta=Q4+2026' },
-            { id: 'salespersons', label: '└─ Salespersons', url: '/smriti-coming-soon?feature=Salespersons&progress=15&eta=Q4+2026' },
-            
-            { type: 'subheader', label: 'Compliance Masters' },
-            { id: 'hsn_master', label: '├─ HSN Master', url: '/smriti-coming-soon?feature=HSN+Master&progress=75&eta=Q3+2026' },
-            { id: 'tax_templates', label: '├─ Tax Templates', url: '/smriti-coming-soon?feature=Tax+Templates&progress=65&eta=Q3+2026' },
-            { id: 'gst_configuration', label: '└─ GST Configuration', url: '/smriti-coming-soon?feature=GST+Configuration&progress=80&eta=Q3+2026' },
-            
-            { type: 'subheader', label: 'System Masters' },
-            { id: 'warehouses', label: '├─ Warehouses', url: '/smriti-coming-soon?feature=Warehouses&progress=70&eta=Q3+2026' },
-            { id: 'payment_terms', label: '├─ Payment Terms', url: '/smriti-coming-soon?feature=Payment+Terms&progress=50&eta=Q4+2026' },
-            { id: 'shipping_courier', label: '├─ Shipping / Courier', url: '/smriti-coming-soon?feature=Shipping+/+Courier&progress=40&eta=Q4+2026' },
-            { id: 'reason_codes', label: '└─ Reason Codes', url: '/smriti-coming-soon?feature=Reason+Codes&progress=85&eta=Q3+2026' }
-        ]
-    },
-    {
-        type: 'category',
-        id: 'pricing',
-        emoji: '💰',
-        label: 'Pricing',
-        items: [
-            { id: 'price_lists', label: '├─ Price Lists', url: '/smriti-coming-soon?feature=Price+Lists&progress=80&eta=Q3+2026' },
-            { id: 'customer_pricing', label: '├─ Customer Pricing', url: '/smriti-coming-soon?feature=Customer+Pricing&progress=65&eta=Q3+2026' },
-            { id: 'scheme_discount', label: '├─ Scheme / Discount', url: '/smriti-coming-soon?feature=Scheme+/+Discount&progress=50&eta=Q4+2026' },
-            { id: 'promotions', label: '├─ Promotions', url: '/smriti-coming-soon?feature=Promotions&progress=45&eta=Q4+2026' },
-            { id: 'price_revision', label: '├─ Price Revision', url: '/smriti-coming-soon?feature=Price+Revision&progress=30&eta=Q4+2026' },
-            { id: 'price_audit', label: '└─ Price Audit History', url: '/smriti-coming-soon?feature=Price+Audit+History&progress=25&eta=Q4+2026' }
-        ]
-    },
-    {
-        type: 'category',
-        id: 'channel_stock',
-        emoji: '🌐',
-        label: 'Party Stock Visibility',
-        items: [
-            { id: 'psv_dashboard', label: '├─ PSV Dashboard', url: '/psv-dashboard' },
-            { id: 'psa', label: '├─ Distributor Accounts', url: '/psa' },
-            { id: 'psv_opening_balance', label: '├─ Opening Balances', url: '/psv-opening-balance' },
-            { id: 'sales_upload', label: '├─ Sales Uploads', url: '/sales-upload' },
-            { id: 'psv_audit', label: '├─ Stock Audits', url: '/stock-audit' },
-            { id: 'replenishment_insights', label: '└─ Replenishment Insights', url: '/smriti-coming-soon?feature=Replenishment+Insights&progress=35&eta=Q4+2026' }
-        ]
-    },
-    {
-        type: 'category',
-        id: 'sales',
-        emoji: '🛒',
-        label: 'Sales',
-        items: [
-            { id: 'day_open', label: '├─ Day Open', url: '/shift' },
-            { id: 'sales_order', label: '├─ Sales Order', url: '/smriti-coming-soon?feature=Sales+Order&progress=80&eta=Q3+2026' },
-            { id: 'proforma_invoice', label: '├─ Proforma Invoice', url: '/smriti-coming-soon?feature=Proforma+Invoice&progress=70&eta=Q3+2026' },
-            { id: 'billing', label: '├─ POS Billing', url: '/billing' },
-            { id: 'sales_invoices', label: '├─ Tax Invoice', url: '/sales_invoices' },
-            { id: 'sales_return', label: '├─ Sales Return', url: '/sales_return' },
-            { id: 'delivery_challan', label: '├─ Delivery Challan', url: '/delivery_challan' },
-            { id: 'customer_outward', label: '├─ Customer Outward', url: '/smriti-coming-soon?feature=Customer+Outward&progress=45&eta=Q4+2026' },
-            { id: 'day_close', label: '└─ Day Close', url: '/shift' }
-        ]
-    },
-    {
-        type: 'category',
-        id: 'purchase',
-        emoji: '📥',
-        label: 'Purchase',
-        items: [
-            { id: 'purchase_order', label: '├─ Purchase Order', url: '/smriti-coming-soon?feature=Purchase+Order&progress=85&eta=Q3+2026' },
-            { id: 'grn', label: '├─ GRN / Receipts', url: '/purchase_receipt' },
-            { id: 'purchase_invoice', label: '├─ Purchase Invoice', url: '/purchase_invoice' },
-            { id: 'landed_cost', label: '├─ Landed Cost Voucher', url: '/smriti-coming-soon?feature=Landed+Cost+Voucher&progress=30&eta=Q4+2026' },
-            { id: 'supplier_return', label: '├─ Supplier Return', url: '/smriti-coming-soon?feature=Supplier+Return&progress=50&eta=Q3+2026' },
-            { id: 'cost_adjustments', label: '└─ Cost Adjustments', url: '/smriti-coming-soon?feature=Cost+Adjustments&progress=40&eta=Q4+2026' }
-        ]
-    },
-    {
-        type: 'category',
-        id: 'inventory',
-        emoji: '🏬',
-        label: 'Inventory',
-        items: [
-            { id: 'inventory_ops', label: '├─ Stock Ledger', url: '/inventory' },
-            { id: 'stock_transfer', label: '├─ Stock Transfer', url: '/inventory?tab=transfer' },
-            { id: 'stock_adjust', label: '├─ Stock Adjustment', url: '/inventory?tab=adjust' },
-            { id: 'stock_audit_wh', label: '├─ Stock Audit', url: '/smriti-coming-soon?feature=Stock+Audit&progress=60&eta=Q3+2026' },
-            { id: 'barcode', label: '├─ Barcode Center', url: '/barcode' },
-            { id: 'print_templates', label: '├─ Print Templates', url: '/print_templates' },
-            { id: 'batch_management', label: '├─ Batch Management', url: '/smriti-coming-soon?feature=Batch+Management&progress=50&eta=Q4+2026' },
-            { id: 'reorder_planning', label: '└─ Reorder Planning', url: '/smriti-coming-soon?feature=Reorder+Planning&progress=45&eta=Q4+2026' }
-        ]
-    },
-    {
-        type: 'category',
-        id: 'intelligence',
-        emoji: '📊',
-        label: 'Intelligence',
-        items: [
-            { id: 'exec_dashboard', label: '├─ Executive Dashboard', url: '/smriti-coming-soon?feature=Executive+Dashboard&progress=30&eta=Q4+2026', feature_flag: 'exec_dashboard_enabled' },
-            { id: 'gmroi', label: '├─ GMROI', url: '/smriti-coming-soon?feature=GMROI&progress=40&eta=Q4+2026', feature_flag: 'gmroi_enabled' },
-            { id: 'sell_through', label: '├─ Sell Through', url: '/smriti-coming-soon?feature=Sell+Through&progress=35&eta=Q4+2026', feature_flag: 'sell_through_enabled' },
-            { id: 'coverage_days', label: '├─ Coverage Days', url: '/smriti-coming-soon?feature=Coverage+Days&progress=20&eta=Q4+2026', feature_flag: 'coverage_days_enabled' },
-            { id: 'inventory_aging', label: '├─ Inventory Aging', url: '/smriti-coming-soon?feature=Inventory+Aging&progress=25&eta=Q4+2026', feature_flag: 'inventory_aging_enabled' },
-            { id: 'capital_locked', label: '├─ Capital Locked', url: '/smriti-coming-soon?feature=Capital+Locked&progress=15&eta=Q4+2026', feature_flag: 'capital_locked_enabled' },
-            { id: 'dead_stock', label: '└─ Dead Stock Recovery', url: '/smriti-coming-soon?feature=Dead+Stock+Recovery&progress=10&eta=Q4+2026', feature_flag: 'dead_stock_enabled' }
-        ]
-    },
-    {
-        type: 'category',
-        id: 'ai_hub',
-        emoji: '🤖',
-        label: 'AI Hub',
-        items: [
-            { id: 'demand_forecast', label: '├─ Demand Forecast', url: '/smriti-coming-soon?feature=Demand+Forecast&progress=30&eta=Q4+2026', feature_flag: 'demand_forecast_enabled' },
-            { id: 'slow_mover', label: '├─ Slow Mover Detection', url: '/smriti-coming-soon?feature=Slow+Mover+Detection&progress=35&eta=Q4+2026', feature_flag: 'slow_mover_enabled' },
-            { id: 'purchase_suggestions', label: '├─ Purchase Suggestions', url: '/smriti-coming-soon?feature=Purchase+Suggestions&progress=40&eta=Q4+2026', feature_flag: 'purchase_suggestions_enabled' },
-            { id: 'promo_suggestions', label: '├─ Promotion Suggestions', url: '/smriti-coming-soon?feature=Promotion+Suggestions&progress=45&eta=Q4+2026', feature_flag: 'promo_suggestions_enabled' },
-            { id: 'stock_risk_alerts', label: '└─ Stock Risk Alerts', url: '/smriti-coming-soon?feature=Stock+Risk+Alerts&progress=50&eta=Q4+2026', feature_flag: 'stock_risk_alerts_enabled' }
-        ]
-    },
-    {
-        type: 'category',
-        id: 'reports',
-        emoji: '📑',
-        label: 'Reports',
-        items: [
-            { id: 'sales_reports', label: '├─ Sales Reports', url: '/reports?category=Sales' },
-            { id: 'purchase_reports', label: '├─ Purchase Reports', url: '/reports?category=Purchase' },
-            { id: 'inventory_reports', label: '├─ Inventory Reports', url: '/reports?category=Inventory' },
-            { id: 'psv_reports', label: '├─ PSV Reports', url: '/reports?category=PSV' },
-            { id: 'pricing_reports', label: '├─ Pricing Reports', url: '/reports?category=Pricing' },
-            { id: 'saved_reports', label: '└─ Saved Reports', url: '/reports?category=Saved' }
-        ]
-    },
-    {
-        type: 'category',
-        id: 'integrations',
-        emoji: '🔄',
-        label: 'Integrations',
-        items: [
-            { id: 'tally_sync', label: '├─ TallyPrime Sync', url: '/smriti-coming-soon?feature=TallyPrime+Sync&progress=85&eta=Q3+2026' },
-            { id: 'export_center', label: '├─ Export Center', url: '/smriti-coming-soon?feature=Export+Center&progress=60&eta=Q3+2026' },
-            { id: 'import_center', label: '├─ Import Center', url: '/smriti-coming-soon?feature=Import+Center&progress=70&eta=Q3+2026' },
-            { id: 'sync_history', label: '├─ Sync History', url: '/smriti-coming-soon?feature=Sync+History&progress=40&eta=Q3+2026' },
-            { id: 'integration_settings', label: '└─ Integration Settings', url: '/smriti-coming-soon?feature=Integration+Settings&progress=50&eta=Q3+2026' }
-        ]
-    },
-    {
-        type: 'category',
-        id: 'admin',
-        emoji: '⚙️',
-        label: 'Administration',
-        items: [
-            { id: 'users', label: '├─ Users', url: '/smriti-coming-soon?feature=Users+Management&progress=80&eta=Q3+2026' },
-            { id: 'roles', label: '├─ Roles', url: '/smriti-coming-soon?feature=Roles+Management&progress=75&eta=Q3+2026' },
-            { id: 'security', label: '├─ Security & Workflow', url: '/security' },
-            { id: 'audit_logs', label: '├─ Audit Logs', url: '/smriti-coming-soon?feature=Audit+Logs&progress=90&eta=Q3+2026' },
-            { id: 'activity_logs', label: '├─ Activity Logs', url: '/smriti-coming-soon?feature=Activity+Logs&progress=85&eta=Q3+2026' },
-            { id: 'backup', label: '├─ Backup Center', url: '/backup' },
-            { id: 'configure', label: '└─ System Settings', url: '/configure' }
-        ]
-    },
-    {
-        type: 'link',
-        id: 'help',
-        emoji: '🆘',
-        label: 'Help Desk',
-        url: '/smriti-coming-soon?feature=Help+Desk&progress=80&eta=Q3+2026'
+SMRITI.handleItemClick = function(route) {
+    if (route.startsWith("/app/")) {
+        const clean = route.replace("/app/", "");
+        const parts = clean.split("?");
+        const routeParts = parts[0].split("/");
+        if (parts[1]) {
+            window.location.href = route;
+        } else {
+            frappe.set_route(routeParts);
+        }
+    } else {
+        window.location.href = route;
     }
-];
+};
+
+SMRITI.sidebarSchema = [];
+
 
 SMRITI.renderSidebar = function(active_page) {
     var sidebar = document.getElementById("smriti-sidebar");
@@ -386,134 +206,148 @@ SMRITI._buildSidebarDOM = function(active_page, shift) {
         </div>
     `;
 
-    // Feature Flag Policy
-    function isFeatureEnabled(flag) {
-        if (!flag) return true;
-        const SMRITI_FEATURE_FLAGS = {
-            "intelligence_enabled": false,
-            "ai_hub_enabled": false,
-            "coverage_days_enabled": false,
-            "exec_dashboard_enabled": false,
-            "gmroi_enabled": false,
-            "sell_through_enabled": false,
-            "inventory_aging_enabled": false,
-            "capital_locked_enabled": false,
-            "dead_stock_enabled": false,
-            "demand_forecast_enabled": false,
-            "slow_mover_enabled": false,
-            "purchase_suggestions_enabled": false,
-            "promo_suggestions_enabled": false,
-            "stock_risk_alerts_enabled": false
+    // SECTION EMOJIS
+    const SECTION_EMOJIS = {
+        "masters": "📦",
+        "psv": "🌐",
+        "sales": "🛒",
+        "purchase": "📥",
+        "inventory": "🏬",
+        "finance": "💰",
+        "reports": "📑",
+        "administration": "⚙️",
+        "help_desk": "🆘",
+        "ai_hub": "🤖"
+    };
+
+    // Site Config feature flags check
+    const siteConfig = Object.assign({
+        "ai_hub_enabled": false,
+        "intelligence_enabled": false
+    }, (frappe.boot && frappe.boot.smriti_site_config) || {});
+
+    // Role restrictions for sections
+    const user_roles = (frappe.boot && frappe.boot.smriti && frappe.boot.smriti.user_roles) || frappe.user_roles || [];
+    const is_admin_account = frappe.session.user === "Admin" || frappe.session.user === "admin@erpnbook.com";
+    
+    function hasRoleAccess(sectionId) {
+        const SECTION_ROLE_RESTRICTIONS = {
+            "psv": ["System Manager", "SMRITI Store Manager"],
+            "finance": ["System Manager", "SMRITI Store Manager"],
+            "administration": ["System Manager", "SMRITI Store Manager"]
         };
-        return !!SMRITI_FEATURE_FLAGS[flag];
+        const allowed = SECTION_ROLE_RESTRICTIONS[sectionId];
+        if (!allowed) return true;
+        return allowed.some(role => user_roles.includes(role));
     }
 
-    let business_type = "Footwear";
-    if (window.frappe && frappe.boot && frappe.boot.smriti_business_type) {
-        business_type = frappe.boot.smriti_business_type;
+    function isItemActive(item, active_page) {
+        if (item.id === active_page) return true;
+        const pathname = window.location.pathname;
+        if (item.route && item.route === pathname) return true;
+        if (item.route && pathname.startsWith(item.route + "/")) return true;
+
+        const hash = window.location.hash;
+        if (item.route && item.route.startsWith("/app/") && hash) {
+            const deskRoute = item.route.replace("/app/", "");
+            const cleanHash = hash.replace("#", "").toLowerCase();
+            const cleanRoute = deskRoute.toLowerCase();
+            if (cleanHash.startsWith("list/" + cleanRoute) || 
+                cleanHash.startsWith("form/" + cleanRoute) ||
+                cleanHash === cleanRoute || 
+                cleanHash === "workspace/" + cleanRoute) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    const filteredSchema = JSON.parse(JSON.stringify(SMRITI.sidebarSchema));
-    const renderedSchema = [];
-
-    filteredSchema.forEach(cat => {
-        // Exclude category by feature flag
-        if (cat.feature_flag && !isFeatureEnabled(cat.feature_flag)) {
-            return;
-        }
-
-        if (cat.type === 'category') {
-            if (cat.items) {
-                cat.items = cat.items.filter(item => {
-                    // Exclude items by feature flag
-                    if (item.feature_flag && !isFeatureEnabled(item.feature_flag)) {
-                        return false;
-                    }
-                    if (business_type !== "Footwear") {
-                        // FMCG / Others (hide footwear size attributes)
-                        if (['sizewise_item', 'sizewise_invoice'].includes(item.id)) return false;
-                    }
-                    return true;
-                });
-            }
-            // AUTO-HIDE POLICY: Hide category if no child items or only subheaders are rendered
-            const hasClickableItems = cat.items && cat.items.some(item => item.type !== 'subheader');
-            if (!hasClickableItems) {
-                return;
-            }
-        } else if (cat.type === 'link') {
-            // Exclude links by feature flag
-            if (cat.feature_flag && !isFeatureEnabled(cat.feature_flag)) {
-                return;
-            }
-        }
-        renderedSchema.push(cat);
-    });
+    const navConfig = typeof SMRITI_NAV !== 'undefined' ? SMRITI_NAV : { sections: [] };
 
     var menu_html = '<div class="smriti-side-menu">';
-    
-    var is_admin_account = frappe.session.user === "Admin" || frappe.session.user === "admin@erpnbook.com";
 
-    renderedSchema.forEach(block => {
-        if (block.type === 'link') {
-            if (is_admin_account && block.id === 'security') return;
-            const activeCls = block.id === active_page ? 'active' : '';
-            menu_html += `
-                <a class="smriti-side-item ${activeCls}" data-id="${block.id}" href="${block.url}">
-                    <span class="side-item-emoji">${block.emoji}</span>
-                    <span class="side-item-label">${block.label}</span>
-                    <button class="smriti-side-item-popout" title="Open in Popout Window" data-url="${block.url}">
-                        <span class="material-symbols-outlined">open_in_new</span>
-                    </button>
+    navConfig.sections.forEach(section => {
+        // 1. Hidden sections never render
+        if (section.status === "hidden") return;
+
+        // 2. Feature flag check
+        const flagKey = section.id + "_enabled";
+        if (siteConfig.hasOwnProperty(flagKey) && !siteConfig[flagKey]) return;
+
+        // 3. Role Access check
+        if (!hasRoleAccess(section.id)) return;
+
+        // 4. Filter non-hidden items
+        const visibleItems = (section.items || []).filter(item => item.status !== "hidden");
+
+        // 5. Auto-hide section if no visible items
+        if (visibleItems.length === 0) return;
+
+        const isCatOpen = localStorage.getItem(`smriti-sidebar-cat-${section.id}`) !== 'closed';
+        const openCls = isCatOpen ? 'open' : '';
+
+        let isSubActive = false;
+        let subItemsHtml = '';
+
+        visibleItems.forEach(item => {
+            if (is_admin_account && (item.id === 'security' || item.id === 'security_workflows')) return;
+
+            const isItemActiveFlag = isItemActive(item, active_page);
+            if (isItemActiveFlag) isSubActive = true;
+
+            const subActiveCls = isItemActiveFlag ? 'active' : '';
+
+            let item_url = "";
+            let item_onclick = "";
+            let item_style = "";
+            let badge_html = "";
+
+            if (item.status === "active") {
+                item_url = item.route;
+                item_style = "opacity: 1; cursor: pointer;";
+                item_onclick = `event.preventDefault(); SMRITI.handleItemClick('${item.route}');`;
+            } else if (item.status === "coming_soon") {
+                const comingSoonUrl = "/coming-soon?feature=" +
+                    encodeURIComponent(item.label) +
+                    "&progress=" + (item.progress || 0) +
+                    "&eta=" + encodeURIComponent(item.eta || "Coming Soon");
+                item_url = comingSoonUrl;
+                item_style = "opacity: 0.6; cursor: pointer;";
+                item_onclick = `event.preventDefault(); SMRITI.handleItemClick('${comingSoonUrl}');`;
+                badge_html = `<span class="smriti-soon-badge" style="margin-left:auto; background:#EFF6FF; color:#2563EB; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px;">Soon</span>`;
+            } else if (item.status === "disabled") {
+                item_url = "#";
+                item_style = "opacity: 0.4; cursor: not-allowed;";
+                item_onclick = "event.preventDefault();";
+            }
+
+            subItemsHtml += `
+                <a class="smriti-side-sub-item ${subActiveCls}" data-nav-id="${item.id}" data-status="${item.status}" style="${item_style}" href="${item_url}" onclick="${item_onclick}">
+                    <span class="side-item-label">${item.label}</span>
+                    ${badge_html}
+                    ${item.status === 'active' ? `
+                    <button class="smriti-side-item-popout" title="Open in Popout Window" onclick="event.preventDefault(); event.stopPropagation(); SMRITI.openPopout('${item_url}');">
+                        <span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span>
+                    </button>` : ''}
                 </a>
             `;
-        } else if (block.type === 'category') {
-            const isCatOpen = localStorage.getItem(`smriti-sidebar-cat-${block.id}`) !== 'closed';
-            const openCls = isCatOpen ? 'open' : '';
-            
-            // Check if any sub-item is active to highlight parent category
-            let isSubActive = false;
-            let subItemsHtml = '';
-            
-            block.items.forEach(sub => {
-                if (is_admin_account && sub.id === 'security') return;
-                
-                if (sub.type === 'subheader') {
-                    subItemsHtml += `
-                        <div class="sidebar-sub-header smriti-side-sub-header">
-                            <span>${sub.label}</span>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                const subActiveCls = sub.id === active_page ? 'active' : '';
-                if (sub.id === active_page) isSubActive = true;
-                subItemsHtml += `
-                    <a class="smriti-side-sub-item ${subActiveCls}" data-id="${sub.id}" href="${sub.url}">
-                        <span class="side-item-label">${sub.label}</span>
-                        <button class="smriti-side-item-popout" title="Open in Popout Window" data-url="${sub.url}">
-                            <span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span>
-                        </button>
-                    </a>
-                `;
-            });
+        });
 
-            const headerActiveCls = isSubActive ? 'active' : '';
-            
-            menu_html += `
-                <div class="smriti-side-category ${openCls}" id="cat-block-${block.id}">
-                    <div class="smriti-side-category-header ${headerActiveCls}" onclick="SMRITI.toggleCategory('${block.id}')">
-                        <span class="side-item-emoji">${block.emoji}</span>
-                        <span class="side-item-label">${block.label}</span>
-                        <span class="material-symbols-outlined arrow">chevron_right</span>
-                    </div>
-                    <div class="smriti-side-category-body">
-                        ${subItemsHtml}
-                    </div>
+        const headerActiveCls = isSubActive ? 'active' : '';
+        const emoji = SECTION_EMOJIS[section.id] || "📁";
+
+        menu_html += `
+            <div class="smriti-side-category ${openCls}" id="cat-block-${section.id}" data-nav-id="${section.id}">
+                <div class="smriti-side-category-header ${headerActiveCls}" onclick="SMRITI.toggleCategory('${section.id}')">
+                    <span class="side-item-emoji">${emoji}</span>
+                    <span class="side-item-label">${section.label}</span>
+                    <span class="material-symbols-outlined arrow">chevron_right</span>
                 </div>
-            `;
-        }
+                <div class="smriti-side-category-body">
+                    ${subItemsHtml}
+                </div>
+            </div>
+        `;
     });
     menu_html += '</div>';
 
