@@ -90,6 +90,7 @@ def ensure_attribute_values(attribute, values):
             (attribute, val, val)
         )
     frappe.db.commit()
+    frappe.clear_document_cache("Item Attribute", attribute)
     
     doc = frappe.get_doc("Item Attribute", attribute)
     existing_values = {v.attribute_value for v in doc.item_attribute_values}
