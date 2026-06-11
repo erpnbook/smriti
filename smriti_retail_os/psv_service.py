@@ -1844,6 +1844,42 @@ def get_inventory_productivity_methodology():
                 "action": _("A stock reconciliation or transaction correction is required to fix the negative balance.")
             }
         ],
+        "interpretation_guide": [
+            {
+                "title": _("Star (Core SKU)"),
+                "guidance": _("High margin and high volume. Focus on maximizing stock availability, reducing reorder lead times, and giving them priority placement in warehouses.")
+            },
+            {
+                "title": _("Cash Cow"),
+                "guidance": _("High margin but low volume. Maintain a steady stock level to capture profit but avoid over-ordering, as velocity is slow.")
+            },
+            {
+                "title": _("Underperformer"),
+                "guidance": _("Low margin but high volume. Focus on improving gross margin by negotiating bulk discounts with vendors or increasing selling prices.")
+            },
+            {
+                "title": _("Slow Mover"),
+                "guidance": _("Low margin and low volume. Avoid replenishment. Run promotions, bundle deals, or liquidation campaigns to recover locked capital.")
+            },
+            {
+                "title": _("Stockout Winner"),
+                "guidance": _("Out of stock but has active demand. Place replenishment orders immediately to prevent lost sales and capture active market demand.")
+            }
+        ],
+        "faqs": [
+            {
+                "question": _("Why is my GMROI shown as None / DEPLETED?"),
+                "answer": _("If the current stock balance of a SKU is zero or negative, the inventory value is zero. Dividing gross margin by zero is mathematically undefined. If the item has sales history during this period, it is classified as a 'Stockout Winner' with GMROI set to None.")
+            },
+            {
+                "question": _("What timespan is used for calculations?"),
+                "answer": _("By default, the dashboard calculates velocity and margin metrics over a trailing 30-day window. You can change this period in the dashboard filters or system settings.")
+            },
+            {
+                "question": _("How is the Normalized GMROI calculated?"),
+                "answer": _("To prevent extreme GMROI values from distorting the composite score, GMROI is normalized on a scale from 0 to 100, where a GMROI of 3.0 (300%) or above receives the maximum score of 100.")
+            }
+        ],
         "about": _(
             "This analytical framework is part of SMRITI Retail OS. "
             "Designed by Jawahar R. Mallah, Founder – AITDL (AI Technology & Development Lab). "
