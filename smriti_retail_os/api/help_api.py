@@ -74,11 +74,17 @@ HELP_CENTER_REGISTRY = {
 }
 
 @frappe.whitelist()
-def get_help_article(article_key):
+def get_help_article(article_key=None):
     """
     Returns structured article content for SMRITI Help Center.
     If 'provider' is specified, calls the provider function to get content.
     """
+    if not article_key:
+        article_key = frappe.form_dict.get("article_key") or frappe.form_dict.get("article")
+
+    if not article_key:
+        frappe.throw(_("Help article key is required"), frappe.ValidationError)
+
     article = HELP_CENTER_REGISTRY.get(article_key)
     if not article:
         frappe.throw(_("Help article '{0}' not found").format(article_key), frappe.DoesNotExistError)

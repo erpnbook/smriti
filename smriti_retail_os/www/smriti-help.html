@@ -411,7 +411,10 @@
         const CSRF_TOKEN = '{{ csrf_token }}';
 
         // Active article key parsed from context or URL query parameter
-        let activeArticleKey = '{{ article_key or "" }}' || new URLSearchParams(window.location.search).get('article') || 'inventory_productivity';
+        let activeArticleKey = '{{ article_key or "" }}';
+        if (!activeArticleKey || activeArticleKey === 'None') {
+            activeArticleKey = new URLSearchParams(window.location.search).get('article') || 'inventory_productivity';
+        }
 
         document.addEventListener('DOMContentLoaded', function () {
             loadTOC();
@@ -421,6 +424,7 @@
             try {
                 const response = await fetch(`/api/method/${method}`, {
                     method: 'POST',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
