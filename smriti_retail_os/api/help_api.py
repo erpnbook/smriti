@@ -70,6 +70,34 @@ HELP_CENTER_REGISTRY = {
         "category": "Administration Guides",
         "description": _("Customizing store themes, logos, receipt templates, and local branding settings."),
         "content": _("Coming Soon: Guide on custom CSS injection, receipt print formatting, logo uploads, and multi-tenant branding settings.")
+    },
+    "backup_security": {
+        "title": _("Backup Security & Key Recovery"),
+        "category": "Administration Guides",
+        "description": _("Guide to GPG AES-256 backup encryption, security banners, and dual-custodian recovery."),
+        "content": _(
+            "SMRITI Retail OS v1.8.3 features an enterprise-grade Backup Security system to ensure database backups are encrypted at rest and protected against unauthorized access.\n\n"
+            "1. AES-256 Symmetric Encryption\n"
+            "All database backups are encrypted symmetrically using GPG with a strong 32-character key generated when the feature is enabled. Passphrases are piped to GPG via secure input streams rather than CLI arguments, preventing process sniffing.\n\n"
+            "2. Dual-Custodian Split Key Recovery\n"
+            "To prevent single-point-of-failure or unauthorized restores, encryption recovery is governed by two registered Key Custodians. The system splits the active key at its midpoint and sends the individual fragments to the verified custodians' emails only when SMTP outgoing is properly configured and custodians are verified.\n\n"
+            "3. Real-time Restoration Logs\n"
+            "When restoring a backup, Socket.io events stream live decryption and database rebuilding progress directly to the administrator's restore modal, keeping operations fully transparent."
+        ),
+        "faqs": [
+            {
+                "question": _("What do the different Security Banner colors mean?"),
+                "answer": _("RED: Backup encryption is disabled (Vulnerable).\nAMBER: Encryption is enabled, but dual-custodian recovery is not fully verified (Partially Secured).\nGREEN: Encryption is enabled and dual-custodian recovery is configured and verified (Fully Secured).")
+            },
+            {
+                "question": _("How is the decryption temporary file handled?"),
+                "answer": _("During restore, the encrypted backup is decrypted to a temporary location. Upon success or failure, the system securely overwrites and deletes the file using the UNIX 'shred' utility (with a zero-overwrite fallback if shred is absent) to leave zero traces on disk.")
+            },
+            {
+                "question": _("Can I rotate the encryption key safely?"),
+                "answer": _("Yes. The system supports key versioning. Previous keys are retained in the system configuration, allowing historical backups postfixed with key version (e.g. '-v1.smriti.enc') to be decrypted seamlessly.")
+            }
+        ]
     }
 }
 
