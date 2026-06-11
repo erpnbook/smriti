@@ -495,7 +495,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     # REL-02: Move non-critical post-billing tasks to background workers
     # This prevents UI blocking and DB lock contention
     frappe.enqueue(
-        "smriti_retail_os.smriti_retail_os.billing_api.process_post_billing_tasks",
+        "smriti_retail_os.billing_api.process_post_billing_tasks",
         invoice_name=invoice_doc.name,
         doctype=doctype,
         payments_list=payments_list,
@@ -686,6 +686,12 @@ def validate_manager_override(pin, action_type, invoice_name=None):
     if not pin:
         return {"authorized": False, "message": _("PIN is required.")}
 
+    # Redis rate limit check
+    rate_limit_key = f"smriti_pin_attempts:{frappe.session.user}"
+    attempts = frappe.cache().get(rate_limit_key)
+    if attempts and int(attempts) >= 5:
+        frappe.throw(_("Too many failed PIN attempts. Please try again in 10 minutes."), frappe.PermissionError)
+
     from frappe.utils.password import check_password as check_smriti_pin
 
     # Find users with manager roles
@@ -695,50 +701,57 @@ def validate_manager_override(pin, action_type, invoice_name=None):
         pluck="parent"
     )
 
+    authenticated = False
+    auth_manager = None
     for mgr in set(managers):
         # Only active users
         if not frappe.db.get_value("User", mgr, "enabled"):
             continue
 
-        authenticated = False
         try:
             # Strictly use SMRITI Dedicated PIN
             if frappe.db.get_value("User", mgr, "custom_smriti_pin"):
                 try:
                     check_smriti_pin(mgr, pin, fieldname="custom_smriti_pin")
-                    authenticated = True
+                    # Verify manager role after auth
+                    roles = frappe.get_roles(mgr)
+                    if "SMRITI Store Manager" in roles or "System Manager" in roles:
+                        authenticated = True
+                        auth_manager = mgr
+                        break
                 except frappe.AuthenticationError:
                     pass
+        except Exception:
+            frappe.log_error(title="SMRITI Manager Override Error", message=frappe.get_traceback())
 
-            if authenticated:
-                # Verify manager role after auth
-                roles = frappe.get_roles(mgr)
-                if "SMRITI Store Manager" in roles or "System Manager" in roles:
-                    # Log override action using standard Comment
-                    if invoice_name:
-                        frappe.get_doc({
-                            "doctype": "Comment",
-                            "comment_type": "Comment",
-                            "reference_doctype": "POS Invoice",
-                            "reference_name": invoice_name,
-                            "content": f"Manager Override approved by {mgr} for action: {action_type}",
-                            "comment_email": frappe.session.user,
-                            "comment_by": frappe.session.user
-                        }).insert(ignore_permissions=True)
-                    else:
-                        # Generic Comment / Log
-                        frappe.logger().info(f"SMRITI: Manager Override approved by {mgr} for action: {action_type}")
+    if authenticated and auth_manager:
+        # Clear attempts on success
+        frappe.cache().delete(rate_limit_key)
+        # Log override action using standard Comment
+        if invoice_name:
+            frappe.get_doc({
+                "doctype": "Comment",
+                "comment_type": "Comment",
+                "reference_doctype": "POS Invoice",
+                "reference_name": invoice_name,
+                "content": f"Manager Override approved by {auth_manager} for: {action_type}",
+                "comment_email": frappe.session.user,
+                "comment_by": frappe.session.user
+            }).insert(ignore_permissions=True)
+        return {"authorized": True, "manager": auth_manager}
 
-                    return {
-                        "authorized": True,
-                        "manager": mgr
-                    }
-        except frappe.AuthenticationError:
-            pass
-        except Exception as e:
-            frappe.log_error(title="SMRITI Manager Password Authentication Error", message=frappe.get_traceback())
+    # Increment failed attempts
+    if attempts:
+        frappe.cache().incr(rate_limit_key)
+    else:
+        frappe.cache().set(rate_limit_key, 1, ex=600)
 
-    return {"authorized": False, "message": _("Invalid PIN Code or unauthorized role.")}
+    # Log failed PIN attempt to Error Log
+    frappe.log_error(
+        title="SMRITI Failed PIN Override Attempt",
+        message=f"Failed PIN override attempt by user {frappe.session.user} for action {action_type}."
+    )
+    return {"authorized": False, "message": _("Manager authorization failed. Invalid PIN.")}
 
 @frappe.whitelist()
 def generate_mock_eway_bill(invoice_name, vehicle_no=None, distance=None, mode_of_transport=None, gst_vehicle_type=None, transporter_name=None):

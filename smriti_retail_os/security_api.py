@@ -218,8 +218,8 @@ def reset_user_password(email, password):
                     frappe.PermissionError
                 )
 
-    if not password or len(password) < 6:
-        frappe.throw(_("Password must be at least 6 characters long."))
+    if not password or len(password) < 8:
+        frappe.throw(_("Password must be at least 8 characters long."))
 
     update_password(email, password)
     frappe.db.commit()

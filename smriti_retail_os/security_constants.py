@@ -1,20 +1,12 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/security_constants.py
-# @description: Handles user login, registration, and JWT token generation.
-# @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @date: 2026-05-28
-# @version: 1.0.0
-# @license: MIT
-# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
-#
-# -*- coding: utf-8 -*-
-#
-# @file: smriti_retail_os/security_constants.py
 # @description: Security constants for SMRITI Retail OS backup and config exports.
-# @author: Antigravity AI
+# @author: Jawahar R Mallah <jawahar.mallah@gmail.com> & Antigravity AI
 # @date: 2026-06-10
 # @version: 1.8.2a
+# @license: MIT
+# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
 SENSITIVE_EXPORT_FIELDS = [

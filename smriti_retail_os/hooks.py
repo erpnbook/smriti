@@ -36,7 +36,7 @@ email_footer = "smriti_retail_os/templates/emails/smriti_email_footer.html"
 # Support Link Overrides
 help_links = [
     {"title": "SMRITI Support Desk", "url": "https://support.erpnbook.com"},
-    {"title": "User Manual", "url": "/app/smriti_desk#user-manual"}
+    {"title": "User Manual", "url": "/smriti-help#user-manual"}
 ]
 
 # ── Setup Wizard — Bypass completely ─────────────────────────────
@@ -147,7 +147,7 @@ home_page = "index"
 # Cashiers land on SMRITI Billing terminal. Port 9000 root redirects to /billing via Nginx.
 role_home_page = {
     "SMRITI Cashier": "billing",          # → Standalone billing terminal at /billing
-    "SMRITI Store Manager": "app",        # → ERPNext Desk on port 8080
+    "SMRITI Store Manager": "smriti",     # → SMRITI Control Center
     "System Manager": "app"               # → ERPNext Desk on port 8080
 }
 

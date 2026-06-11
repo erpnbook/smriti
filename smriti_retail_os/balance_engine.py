@@ -1,21 +1,14 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/balance_engine.py
-# @description: Handles user login, registration, and JWT token generation.
-# @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @date: 2026-05-28
-# @version: 1.0.0
-# @license: MIT
-# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
-#
-# -*- coding: utf-8 -*-
-#
-# @file: smriti_retail_os/balance_engine.py
 # @description: Stock Balance & Reorder Intelligence Engine for SMRITI PSV.
 #               PERF-001: Redis-backed balance cache added. Cache is invalidated
 #               automatically on every ledger write via ledger_engine.py.
+# @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+# @date: 2026-05-28
 # @version: 2.0.0
 # @license: MIT
+# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
 import frappe

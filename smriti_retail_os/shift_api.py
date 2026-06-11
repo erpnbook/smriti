@@ -350,6 +350,12 @@ def _validate_manager_pin(pin, action_type, reference_name=None):
     Validates manager password and logs override as a Comment.
     Strictly requires custom_smriti_pin (no fallback to primary password).
     """
+    # Redis rate limit check
+    rate_limit_key = f"smriti_pin_attempts:{frappe.session.user}"
+    attempts = frappe.cache().get(rate_limit_key)
+    if attempts and int(attempts) >= 5:
+        frappe.throw(_("Too many failed PIN attempts. Please try again in 10 minutes."), frappe.PermissionError)
+
     from frappe.utils.password import check_password as check_smriti_pin
 
     managers = frappe.db.get_all(
@@ -358,39 +364,53 @@ def _validate_manager_pin(pin, action_type, reference_name=None):
         pluck="parent"
     )
 
+    authenticated = False
+    auth_manager = None
     for mgr in set(managers):
         if not frappe.db.get_value("User", mgr, "enabled"):
             continue
 
-        authenticated = False
         try:
             # Strictly use SMRITI Dedicated PIN
             if frappe.db.get_value("User", mgr, "custom_smriti_pin"):
                 try:
                     check_smriti_pin(mgr, pin, fieldname="custom_smriti_pin")
-                    authenticated = True
+                    roles = frappe.get_roles(mgr)
+                    if "SMRITI Store Manager" in roles or "System Manager" in roles:
+                        authenticated = True
+                        auth_manager = mgr
+                        break
                 except frappe.AuthenticationError:
                     pass
-
-            if authenticated:
-                roles = frappe.get_roles(mgr)
-                if "SMRITI Store Manager" in roles or "System Manager" in roles:
-                    if reference_name:
-                        frappe.get_doc({
-                            "doctype": "Comment",
-                            "comment_type": "Comment",
-                            "reference_doctype": "POS Opening Entry",
-                            "reference_name": reference_name,
-                            "content": f"Manager Override approved by {mgr} for: {action_type}",
-                            "comment_email": frappe.session.user,
-                            "comment_by": frappe.session.user
-                        }).insert(ignore_permissions=True)
-                    return {"authorized": True, "manager": mgr}
-        except frappe.AuthenticationError:
-            pass
         except Exception:
             frappe.log_error(title="SMRITI Shift Manager Override Error", message=frappe.get_traceback())
 
+    if authenticated and auth_manager:
+        # Clear attempts on success
+        frappe.cache().delete(rate_limit_key)
+        if reference_name:
+            frappe.get_doc({
+                "doctype": "Comment",
+                "comment_type": "Comment",
+                "reference_doctype": "POS Opening Entry",
+                "reference_name": reference_name,
+                "content": f"Manager Override approved by {auth_manager} for: {action_type}",
+                "comment_email": frappe.session.user,
+                "comment_by": frappe.session.user
+            }).insert(ignore_permissions=True)
+        return {"authorized": True, "manager": auth_manager}
+
+    # Increment failed attempts
+    if attempts:
+        frappe.cache().incr(rate_limit_key)
+    else:
+        frappe.cache().set(rate_limit_key, 1, ex=600)
+
+    # Log failed PIN attempt to Error Log
+    frappe.log_error(
+        title="SMRITI Failed Shift PIN Override Attempt",
+        message=f"Failed shift PIN override attempt by user {frappe.session.user} for action {action_type}."
+    )
     return {"authorized": False}
 
 

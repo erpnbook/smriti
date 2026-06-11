@@ -543,7 +543,7 @@ def _build_and_persist_doc(doctype, enriched, meta, company, action):
         if fieldname in field_names or hasattr(doc, fieldname):
             try:
                 setattr(doc, fieldname, value)
-            except Exception:
+            except (AttributeError, TypeError):
                 pass  # silently skip unrecognised field overrides
 
     # ── Populate child tables ────────────────────────────────────────────────

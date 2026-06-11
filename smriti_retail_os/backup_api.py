@@ -546,9 +546,7 @@ def delete_backup(file_name):
     if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
         frappe.throw(_("Not authorized"), frappe.PermissionError)
 
-    # Prevent directory traversal
-    if "/" in file_name or "\\" in file_name or ".." in file_name:
-        frappe.throw(_("Invalid file name"), frappe.ValidationError)
+    _validate_backup_file_path(file_name)
         
     backups_dir = os.path.join(get_site_path(), "private", "backups")
     file_path = os.path.join(backups_dir, file_name)
@@ -681,7 +679,9 @@ def restore_backup(file_name):
                 break
                 
         # Retrieve MariaDB root password
-        db_root_password = os.environ.get("MARIADB_ROOT_PASSWORD") or os.environ.get("MYSQL_ROOT_PASSWORD") or "admin"
+        db_root_password = os.environ.get("MARIADB_ROOT_PASSWORD") or os.environ.get("MYSQL_ROOT_PASSWORD")
+        if not db_root_password:
+            frappe.throw(_("MARIADB_ROOT_PASSWORD or MYSQL_ROOT_PASSWORD environment variable is not set. Restore cannot proceed."), frappe.ValidationError)
         
         cmd = [
             "bench",

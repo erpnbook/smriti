@@ -491,7 +491,6 @@ def initialize_item_wise_tax_details(doc, method=None):
 # --- POS Invoice / Sales Invoice Hooks ---
 
 def validate_and_reconcile_retail_invoice(doc, method):
-    initialize_item_wise_tax_details(doc)
     """
     Triggers before_validate on POS Invoice and Sales Invoice.
     Validates loyalty redemption credits against database ledgers to prevent margin leaks.
@@ -504,6 +503,7 @@ def validate_and_reconcile_retail_invoice(doc, method):
     - It bypassed all permissions with ignore_permissions=True
     Use ERPNext standard negative stock control or a manager-approved Stock Entry instead.
     """
+    initialize_item_wise_tax_details(doc)
     if doc.docstatus != 0:
         # Only run on Draft documents (before_validate context)
         # docstatus=0: Draft being saved/validated
