@@ -180,7 +180,7 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
             let badge_html = "";
 
             if (item.status === "active") {
-                item_url = item.route;
+                item_url = item.standalone_route || item.route;
                 item_style = "opacity: 1; cursor: pointer;";
             } else if (item.status === "coming_soon") {
                 const comingSoonUrl = "/coming-soon?feature=" +

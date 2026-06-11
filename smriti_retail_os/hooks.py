@@ -407,12 +407,6 @@ website_route_rules = [
     # ─── Coming Soon Route Alias ────────────────────────────────────
     {"from_route": "/coming-soon", "to_route": "smriti-coming-soon"},
 
-    # ─── Channel Stock (PSV) Route Aliases ──────────────────────────
-    {"from_route": "/smriti-channel-accounts",  "to_route": "psa"},
-    {"from_route": "/smriti-sales-upload",       "to_route": "sales-upload"},
-    {"from_route": "/smriti-opening-balance",    "to_route": "psv-opening-balance"},
-    {"from_route": "/smriti-channel-stock",      "to_route": "psa"},
-    {"from_route": "/channel-stock",             "to_route": "psa"},
 
     # ─── Core PWA & System Routes ───────────────────────────────────
     {
