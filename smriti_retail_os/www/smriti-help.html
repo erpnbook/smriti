@@ -407,8 +407,11 @@
     </div>
 
     <script>
+        // CSRF Token injected by Frappe server-side template (same pattern as all SMRITI pages)
+        const CSRF_TOKEN = '{{ csrf_token }}';
+
         // Active article key parsed from context or URL query parameter
-        let activeArticleKey = "{{ article_key or '' }}" || new URLSearchParams(window.location.search).get('article') || 'inventory_productivity';
+        let activeArticleKey = '{{ article_key or "" }}' || new URLSearchParams(window.location.search).get('article') || 'inventory_productivity';
 
         document.addEventListener('DOMContentLoaded', function () {
             loadTOC();
@@ -421,7 +424,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-Frappe-CSRF-Token': window.csrf_token || ''
+                        'x-frappe-csrf-token': CSRF_TOKEN
                     },
                     body: JSON.stringify(args)
                 });
@@ -529,10 +532,28 @@
                     `;
                     doc.formulas.forEach(f => {
                         html += `
-                            <div class="formula-card">
-                                <div class="formula-name">${f.name}</div>
-                                <div class="formula-math">${f.formula}</div>
-                                <div class="formula-explanation">${f.explanation}</div>
+                            <div class="formula-card" style="margin-bottom: 24px; border: 1px solid var(--border-glass); border-radius: 12px; padding: 24px; background: #FFFFFF; box-shadow: 0 4px 12px rgba(26, 43, 92, 0.02);">
+                                <div class="formula-name" style="font-size: 18px; font-weight: 700; color: var(--primary-navy); margin-bottom: 16px; border-bottom: 1px solid var(--border-glass); padding-bottom: 8px;">${f.name}</div>
+                                
+                                <div style="margin-bottom: 12px;">
+                                    <strong style="color: var(--text-dark); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Business Meaning:</strong>
+                                    <p style="font-size: 14px; color: var(--text-main); margin-top: 4px;">${f.business_meaning}</p>
+                                </div>
+                                
+                                <div style="margin-bottom: 16px;">
+                                    <strong style="color: var(--text-dark); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Formula:</strong>
+                                    <div class="formula-math" style="font-family: monospace; background: #F8FAFC; padding: 12px 16px; border-radius: 8px; color: var(--primary-blue); font-size: 15px; font-weight: 600; margin-top: 6px; border-left: 4px solid var(--primary-blue);">${f.formula}</div>
+                                </div>
+                                
+                                <div style="margin-bottom: 12px;">
+                                    <strong style="color: var(--text-dark); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Worked Example:</strong>
+                                    <p style="font-size: 14px; font-family: monospace; color: #D97706; background: #FFFBEB; padding: 8px 12px; border-radius: 6px; margin-top: 4px; border-left: 3px solid #F59E0B;">${f.example}</p>
+                                </div>
+                                
+                                <div>
+                                    <strong style="color: var(--text-dark); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Interpretation:</strong>
+                                    <p style="font-size: 14px; color: var(--text-main); margin-top: 4px; font-style: italic;">${f.interpretation}</p>
+                                </div>
                             </div>
                         `;
                     });
@@ -579,6 +600,78 @@
                     `;
                 }
 
+                // Render Confidence Levels if present
+                if (doc.confidence_levels && doc.confidence_levels.length > 0) {
+                    html += `
+                        <div class="doc-section">
+                            <h2 class="doc-section-title"><span class="material-symbols-outlined">verified</span> Confidence Indicators</h2>
+                            <div class="doc-table-wrapper">
+                                <table class="doc-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Confidence Level</th>
+                                            <th>Validation Criteria</th>
+                                            <th>Reliability Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                    `;
+                    doc.confidence_levels.forEach(c => {
+                        let levelColor = "var(--text-muted)";
+                        if (c.level === "High") levelColor = "var(--accent-green)";
+                        else if (c.level === "Medium") levelColor = "var(--accent-yellow)";
+                        
+                        html += `
+                            <tr>
+                                <td style="font-weight:700; color:${levelColor};">${c.level}</td>
+                                <td><code>${c.criteria}</code></td>
+                                <td style="color:var(--text-main);">${c.description}</td>
+                            </tr>
+                        `;
+                    });
+                    html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Render Data Quality Warnings if present
+                if (doc.data_quality_warnings && doc.data_quality_warnings.length > 0) {
+                    html += `
+                        <div class="doc-section">
+                            <h2 class="doc-section-title"><span class="material-symbols-outlined">warning</span> Data Quality Warnings</h2>
+                            <div class="doc-table-wrapper">
+                                <table class="doc-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Warning Alert</th>
+                                            <th>Trigger Condition</th>
+                                            <th>Resolution Action Required</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                    `;
+                    doc.data_quality_warnings.forEach(w => {
+                        html += `
+                            <tr>
+                                <td style="font-weight:700; color:#EF4444; display:flex; align-items:center; gap:6px;">
+                                    <span class="material-symbols-outlined" style="font-size:18px;">warning</span> ${w.warning}
+                                </td>
+                                <td><code>${w.trigger}</code></td>
+                                <td style="color:var(--text-main);">${w.action}</td>
+                            </tr>
+                        `;
+                    });
+                    html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                }
+
                 // Render plain content if no formulas or tables (e.g. placeholder coming soon articles)
                 if (doc.content) {
                     html += `
@@ -588,13 +681,40 @@
                     `;
                 }
 
+                // Render About SMRITI Section
+                if (doc.about_smriti) {
+                    html += `
+                        <div class="doc-section" style="margin-top: 48px; padding-top: 32px; border-top: 2px solid var(--border-glass);">
+                            <h2 class="doc-section-title"><span class="material-symbols-outlined">info</span> About SMRITI</h2>
+                            <p style="font-size: 15px; color: var(--text-main); line-height: 1.8; font-style: italic; background: rgba(26, 43, 92, 0.02); padding: 20px; border-radius: 12px; border: 1px dashed var(--border-glass);">
+                                ${doc.about_smriti.replace(/\n/g, '<br>')}
+                            </p>
+                        </div>
+                    `;
+                }
+
                 // Render About Attribution Footer Card
                 if (doc.about) {
                     html += `
-                        <div class="attribution-card">
-                            <div class="attribution-title">About This Methodology</div>
-                            <div class="attribution-details">${doc.about}</div>
-                            ${doc.author ? `<div class="attribution-signature">${doc.author.name}, ${doc.author.title}</div>` : ''}
+                        <div class="attribution-card" style="margin-top: 40px; padding: 24px; background: linear-gradient(135deg, rgba(26,43,92,0.02) 0%, rgba(37,99,235,0.02) 100%); border: 1px solid var(--border-glass); border-radius: 12px;">
+                            <div class="attribution-title" style="font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--primary-navy); border-bottom: 1px solid var(--border-glass); padding-bottom: 8px; margin-bottom: 12px;">About This Methodology</div>
+                            <div class="attribution-details" style="font-size: 14px; color: var(--text-main); line-height: 1.6; margin-bottom: 16px;">${doc.about}</div>
+                            ${doc.author ? `
+                                <div class="attribution-signature" style="border-top: 1px solid var(--border-glass); padding-top: 12px;">
+                                    <strong style="color:var(--primary-navy); font-size:15px;">${doc.author.name}</strong><br>
+                                    <span style="color:var(--text-muted); font-size:13px; font-weight:600;">${doc.author.title}</span>
+                                    ${doc.author.quote ? `
+                                        <blockquote style="font-style: italic; margin-top: 10px; border-left: 3px solid var(--primary-blue); padding-left: 12px; color: var(--text-main); font-size: 14px;">
+                                            "${doc.author.quote}"
+                                        </blockquote>
+                                    ` : ''}
+                                </div>
+                            ` : ''}
+                            ${doc.generated_datetime ? `
+                                <div style="margin-top: 16px; font-size: 11px; color: var(--text-muted); text-align: right;">
+                                    Last Updated: ${doc.generated_datetime}
+                                </div>
+                            ` : ''}
                         </div>
                     `;
                 }

@@ -13,6 +13,7 @@ import frappe
 from frappe import _
 
 HELP_CENTER_REGISTRY = {
+    # Analytics Guides
     "inventory_productivity": {
         "title": _("Inventory Productivity & SKU Rationalization"),
         "category": "Analytics Guides",
@@ -36,6 +37,39 @@ HELP_CENTER_REGISTRY = {
         "category": "Analytics Guides",
         "description": _("Strategies and system tools to recover capital locked in dead inventory."),
         "content": _("Coming Soon: Dead Stock Recovery Workflows details liquidation workflows and promotions for slow-moving stock.")
+    },
+    # Operations Guides
+    "store_opening_closing": {
+        "title": _("Store Opening & Closing Checklist"),
+        "category": "Operations Guides",
+        "description": _("Daily operational procedures for opening and closing store registers."),
+        "content": _("Coming Soon: Detailed guide on cash drawer reconciliation, store opening checks, end-of-day register closure, and store manager checklists.")
+    },
+    "billing_cashier_workflows": {
+        "title": _("Billing & Cashier Workflows"),
+        "category": "Operations Guides",
+        "description": _("Standard operating procedures for billing, POS operations, and customer checkouts."),
+        "content": _("Coming Soon: Learn how to scan items, apply discounts, select loyalty cards, handle payments, and issue bills.")
+    },
+    # Purchasing Guides
+    "vendor_management_po": {
+        "title": _("Vendor Management & Purchase Orders"),
+        "category": "Purchasing Guides",
+        "description": _("How to manage vendors, purchase agreements, and issue Purchase Orders."),
+        "content": _("Coming Soon: Guide explaining supplier onboarding, price catalogs, auto PO generation, and purchase cycle verification.")
+    },
+    # Administration Guides
+    "user_roles_permissions": {
+        "title": _("User Roles & Operational Permissions"),
+        "category": "Administration Guides",
+        "description": _("Managing users, roles, and functional permissions in SMRITI OS."),
+        "content": _("Coming Soon: System administrator guide for setting up roles, branch restrictions, custom approval limits, and security controls.")
+    },
+    "branding_theme_setup": {
+        "title": _("Branding & Store Theme Setup"),
+        "category": "Administration Guides",
+        "description": _("Customizing store themes, logos, receipt templates, and local branding settings."),
+        "content": _("Coming Soon: Guide on custom CSS injection, receipt print formatting, logo uploads, and multi-tenant branding settings.")
     }
 }
 
@@ -72,4 +106,16 @@ def get_help_toc():
             "title": article["title"],
             "description": article.get("description", "")
         })
-    return categories
+    
+    # Sort categories to match the requested architecture order
+    ordered_categories = {}
+    preferred_order = ["Analytics Guides", "Operations Guides", "Purchasing Guides", "Administration Guides"]
+    for cat in preferred_order:
+        if cat in categories:
+            ordered_categories[cat] = categories[cat]
+            
+    for cat in sorted(categories.keys()):
+        if cat not in ordered_categories:
+            ordered_categories[cat] = categories[cat]
+            
+    return ordered_categories
