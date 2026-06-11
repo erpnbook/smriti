@@ -1,6 +1,6 @@
 # Footwear UAT Report
 > **Status**: ✅ PASSED
-> Generated: 2026-06-11 09:24:52.357104
+> Generated: 2026-06-11 10:11:54.684294
 
 ## Dataset Summary
 | Metric | Value |
@@ -14,7 +14,7 @@
 ## Size Curve Analytics
 | Size | Units Dispatched | Units Sold | Sell Rate % |
 |------|----------------|-----------|-------------|
-| ? | 7404.0 | 3444.0 | 46.5% |
+| ? | 7788.0 | 3636.0 | 46.7% |
 
 ## Redistribution Suggestions (Top 10)
 | Item | Source Partner | Target Partner | Transfer Qty | Source WOC | Target WOC |

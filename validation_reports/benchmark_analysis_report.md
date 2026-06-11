@@ -1,6 +1,6 @@
 # Benchmark Analysis Report — Index Validation
 > **Status**: ✅ PASSED
-> Generated: 2026-06-11 09:24:52.366827
+> Generated: 2026-06-11 10:11:54.701672
 
 ## Summary
 > [!NOTE]
@@ -14,7 +14,7 @@
 
 | Table | Type | Key Used | Rows Est | Extra |
 |-------|------|----------|----------|-------|
-| tabPSV Ledger Entry | `all` | `None` | 2080 | using where; using temporary; using filesort |
+| tabPSV Ledger Entry | `all` | `None` | 2122 | using where; using temporary; using filesort |
 
 ### ✅ Sell-out filter with posting_datetime range
 - Table row count: `2167`
@@ -22,7 +22,7 @@
 
 | Table | Type | Key Used | Rows Est | Extra |
 |-------|------|----------|----------|-------|
-| tabPSV Ledger Entry | `range` | `posting_datetime_index` | 97 | using index condition; using where; using temporary; using filesort |
+| tabPSV Ledger Entry | `range` | `posting_datetime` | 97 | using index condition; using where; using temporary; using filesort |
 
 ### ✅ Single channel partner balance query
 - Table row count: `2167`
@@ -30,7 +30,7 @@
 
 | Table | Type | Key Used | Rows Est | Extra |
 |-------|------|----------|----------|-------|
-| tabPSV Ledger Entry | `all` | `None` | 2080 | using where; using temporary; using filesort |
+| tabPSV Ledger Entry | `all` | `None` | 2122 | using where; using temporary; using filesort |
 
 ### ✅ Aging snapshot lookup by channel_partner
 - Table row count: `88`

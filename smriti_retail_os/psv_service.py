@@ -1434,6 +1434,7 @@ def get_channel_stock_trend(company):
     
     trend = []
     if dates:
+        dates = list(dates)
         dates.reverse()
         for row in dates:
             date_val = row[0]
