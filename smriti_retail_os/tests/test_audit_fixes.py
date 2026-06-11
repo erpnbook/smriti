@@ -19,6 +19,7 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
+import os
 import unittest
 from unittest.mock import patch, MagicMock
 import frappe
@@ -136,6 +137,22 @@ class TestAuditFixes(unittest.TestCase):
         with self.assertRaises(frappe.PermissionError):
             _validate_manager_pin("999999", "Test Shift Action")
 
+    def test_pin_failure_error_logging(self):
+        """Failed PIN override attempts must create records in Frappe's Error Log."""
+        from smriti_retail_os.billing_api import validate_manager_override
+
+        # Clear existing logs for testing clean state
+        frappe.db.delete("Error Log", {"method": "SMRITI Failed PIN Override Attempt"})
+        frappe.db.commit()
+
+        # Submit wrong PIN
+        res = validate_manager_override("wrongpin", "Test Action")
+        self.assertFalse(res.get("authorized"))
+
+        # Verify entry created in Error Log
+        logs = frappe.get_all("Error Log", filters={"method": "SMRITI Failed PIN Override Attempt"})
+        self.assertTrue(len(logs) >= 1)
+
     # ─── Password Length Test ─────────────────────────────────────────────────
 
     def test_password_minimum_length_enforcement(self):
@@ -188,3 +205,27 @@ class TestAuditFixes(unittest.TestCase):
             self.assertTrue(callable(process_post_billing_tasks))
         except ImportError:
             self.fail("Could not import process_post_billing_tasks from smriti_retail_os.billing_api")
+
+    # ─── Restore Validation (Unset Env Vars) Test ─────────────────────────────
+
+    def test_restore_validation_raised_on_unset_env(self):
+        """restore_backup must fail with ValidationError if MARIADB_ROOT_PASSWORD is unset."""
+        from smriti_retail_os.backup_api import restore_backup
+
+        orig_user = frappe.session.user
+        try:
+            frappe.session.user = "Administrator"
+            
+            # Use a dummy file that passes regex path checks
+            dummy_filename = "20260610_025305-database.sql.gz"
+
+            # Mock os.path.exists and get_site_path
+            with patch("os.path.exists", return_value=True), \
+                 patch.dict(os.environ, {}, clear=True):
+
+                with self.assertRaises(frappe.ValidationError) as context:
+                    restore_backup(dummy_filename)
+
+                self.assertIn("environment variable is not set", str(context.exception))
+        finally:
+            frappe.session.user = orig_user

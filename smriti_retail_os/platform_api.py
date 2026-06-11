@@ -459,7 +459,9 @@ def execute_restore(file_name, confirm_text, password):
             break
             
     # Retrieve root password
-    db_root_password = os.environ.get("MARIADB_ROOT_PASSWORD") or os.environ.get("MYSQL_ROOT_PASSWORD") or "admin"
+    db_root_password = os.environ.get("MARIADB_ROOT_PASSWORD") or os.environ.get("MYSQL_ROOT_PASSWORD")
+    if not db_root_password:
+        frappe.throw(_("MARIADB_ROOT_PASSWORD or MYSQL_ROOT_PASSWORD environment variable is not set. Restore cannot proceed."), frappe.ValidationError)
     
     cmd = [
         "bench",
