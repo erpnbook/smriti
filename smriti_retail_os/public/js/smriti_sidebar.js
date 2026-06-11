@@ -1,9 +1,9 @@
 /**
  * @file: smriti_retail_os/public/js/smriti_sidebar.js
- * @description: Frontend controller for SMRITI responsive sidebar toggle..
+ * @description: Frontend controller for SMRITI responsive sidebar toggle.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
- * @date: 2026-05-28
- * @version: 1.0.0
+ * @date: 2026-06-12
+ * @version: 1.9.1
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */

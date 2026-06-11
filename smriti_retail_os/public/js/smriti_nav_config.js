@@ -1,9 +1,9 @@
 /**
  * @file: smriti_retail_os/public/js/smriti_nav_config.js
- * @description: Handles user login, registration, and JWT token generation.
+ * @description: SMRITI Navigation Configuration — Single source of truth for all sidebar items.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
- * @date: 2026-05-28
- * @version: 1.0.0
+ * @date: 2026-06-12
+ * @version: 1.9.1
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
