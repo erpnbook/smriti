@@ -286,13 +286,14 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         old_in_test = frappe.flags.in_test
         frappe.flags.in_test = False
         try:
-            job_id = enqueue_print_job(
+            res = enqueue_print_job(
                 template_name="TEST_ZPL_TEMPLATE",
                 printer_ip="192.168.1.180",
                 printer_port=9100,
                 labels_count=2,
                 payload=payload
             )
+            job_id = res["job_id"]
         finally:
             frappe.flags.in_test = old_in_test
         
@@ -325,13 +326,14 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         old_in_test = frappe.flags.in_test
         frappe.flags.in_test = False
         try:
-            job_id = enqueue_print_job(
+            res = enqueue_print_job(
                 template_name="TEST_ZPL_TEMPLATE",
                 printer_ip="192.168.1.180",
                 printer_port=9100,
                 labels_count=2,
                 payload=payload
             )
+            job_id = res["job_id"]
         finally:
             frappe.flags.in_test = old_in_test
             
@@ -357,16 +359,18 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         
         payload = "^XA^FDTest Async 3^FS^XZ"
         
+        # Enqueue first to get job_id
         old_in_test = frappe.flags.in_test
         frappe.flags.in_test = False
         try:
-            job_id = enqueue_print_job(
+            res = enqueue_print_job(
                 template_name="TEST_ZPL_TEMPLATE",
                 printer_ip="192.168.1.180",
                 printer_port=9100,
                 labels_count=2,
                 payload=payload
             )
+            job_id = res["job_id"]
         finally:
             frappe.flags.in_test = old_in_test
                 
@@ -398,13 +402,14 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         old_in_test = frappe.flags.in_test
         frappe.flags.in_test = False
         try:
-            job_id = enqueue_print_job(
+            res = enqueue_print_job(
                 template_name="TEST_ZPL_TEMPLATE",
                 printer_ip="192.168.1.180",
                 printer_port=9100,
                 labels_count=2,
                 payload="^XA^XZ"
             )
+            job_id = res["job_id"]
         finally:
             frappe.flags.in_test = old_in_test
         
@@ -436,13 +441,14 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         old_in_test = frappe.flags.in_test
         frappe.flags.in_test = False
         try:
-            job_id = enqueue_print_job(
+            res = enqueue_print_job(
                 template_name="TEST_ZPL_TEMPLATE",
                 printer_ip="192.168.1.180",
                 printer_port=9100,
                 labels_count=2,
                 payload=payload
             )
+            job_id = res["job_id"]
         finally:
             frappe.flags.in_test = old_in_test
             
@@ -493,13 +499,14 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             frappe.connect()
             try:
                 frappe.flags.in_test = False
-                return enqueue_print_job(
+                res = enqueue_print_job(
                     template_name="TEST_ZPL_TEMPLATE",
                     printer_ip="192.168.1.180",
                     printer_port=9100,
                     labels_count=1,
                     payload=f"{payload} - {idx}"
                 )
+                return res["job_id"]
             except Exception as e:
                 return str(e)
             finally:
@@ -596,13 +603,14 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         
         with patch('frappe.publish_realtime') as mock_publish:
             try:
-                job_id = enqueue_print_job(
+                res = enqueue_print_job(
                     template_name="TEST_ZPL_TEMPLATE",
                     printer_ip="192.168.1.180",
                     printer_port=9100,
                     labels_count=2,
                     payload=payload
                 )
+                job_id = res["job_id"]
             finally:
                 frappe.flags.in_test = old_in_test
             

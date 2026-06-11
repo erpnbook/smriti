@@ -1245,20 +1245,30 @@ def search_barcode_items(txt):
     return results
 
 
-def _send_to_printer_sync(payload, printer_ip, printer_port):
+def _send_to_printer_sync(payload, printer_ip, printer_port=9100):
     import socket
-    port = int(printer_port) or 9100
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.settimeout(10)
-        s.connect((printer_ip.strip(), port))
-        s.sendall(payload.encode("utf-8", errors="replace"))
+    port = cint(printer_port) or 9100
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(10)
+            s.connect((printer_ip.strip(), port))
+            s.sendall(payload.encode("utf-8", errors="replace"))
+    except socket.timeout:
+        frappe.throw(_("Connection timed out. Verify printer IP {0} and port {1} are reachable.").format(printer_ip, port))
+    except ConnectionRefusedError:
+        frappe.throw(_("Printer at {0}:{1} refused the connection. Ensure the printer is online and raw TCP port is enabled.").format(printer_ip, port))
+    except Exception as e:
+        frappe.throw(_("Printer error: {0}").format(str(e)))
 
 
 @frappe.whitelist()
-def enqueue_print_job(template_name, printer_ip, printer_port, labels_count, payload):
+def enqueue_print_job(template_name, printer_ip, printer_port, payload, print_qty=1, labels_count=None, item_code=None, barcode=None):
     import hashlib
     import os
     
+    if labels_count is not None:
+        print_qty = labels_count
+
     # Generate unique job ID
     job_id = f"JOB-{frappe.generate_hash(length=12).upper()}"
     
@@ -1285,16 +1295,17 @@ def enqueue_print_job(template_name, printer_ip, printer_port, labels_count, pay
     doc = frappe.new_doc("SMRITI Print Job")
     doc.job_id = job_id
     doc.name = job_id
+    doc.item_code = item_code
+    doc.barcode = barcode
     doc.template_name = template_name
     doc.printer_ip = printer_ip
-    doc.printer_port = int(printer_port) or 9100
-    doc.labels_count = int(labels_count) or 1
+    doc.printer_port = cint(printer_port) or 9100
+    doc.print_qty = cint(print_qty) or 1
     doc.status = "Queued"
     doc.payload_hash = hashlib.sha256(payload.encode('utf-8')).hexdigest()
     doc.payload_preview = payload[:100]
-    doc.requested_by = frappe.session.user
-    doc.request_ip = request_ip
-    doc.request_user_agent = request_user_agent
+    doc.created_by = frappe.session.user
+    doc.created_on = frappe.utils.now_datetime()
     
     doc.insert(ignore_permissions=True)
     frappe.db.commit()
@@ -1303,11 +1314,11 @@ def enqueue_print_job(template_name, printer_ip, printer_port, labels_count, pay
     try:
         frappe.get_doc({
             "doctype": "Activity Log",
-            "user": doc.requested_by,
+            "user": doc.created_by,
             "operation": "SMRITI Print Job Queued",
             "status": "Success",
             "subject": f"Print job {job_id} queued",
-            "remarks": f"Queued {doc.labels_count} labels for template {doc.template_name}"
+            "remarks": f"Queued {doc.print_qty} labels for template {doc.template_name}"
         }).insert(ignore_permissions=True)
         frappe.db.commit()
     except Exception as e:
@@ -1321,7 +1332,7 @@ def enqueue_print_job(template_name, printer_ip, printer_port, labels_count, pay
             "job_id": job_id,
             "status": "Queued"
         },
-        user=doc.requested_by
+        user=doc.created_by
     )
 
     # Enqueue background worker
@@ -1333,15 +1344,17 @@ def enqueue_print_job(template_name, printer_ip, printer_port, labels_count, pay
         now=frappe.flags.in_test
     )
     
-    return job_id
+    return {"job_id": job_id, "status": "Queued"}
 
 
 @frappe.whitelist()
-def _process_print_job(print_job_id):
+def _process_print_job(job_id=None, print_job_id=None):
     import os
     import hashlib
     
-    job_id = print_job_id
+    if job_id is None:
+        job_id = print_job_id
+
     name = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "name")
     if not name:
         frappe.throw(f"Print job {job_id} not found.", frappe.DoesNotExistError)
@@ -1355,7 +1368,7 @@ def _process_print_job(print_job_id):
     try:
         frappe.get_doc({
             "doctype": "Activity Log",
-            "user": doc.requested_by,
+            "user": doc.created_by or "System",
             "operation": "SMRITI Print Job Sending",
             "status": "Success",
             "subject": f"Print job {job_id} is sending",
@@ -1373,29 +1386,15 @@ def _process_print_job(print_job_id):
             "job_id": job_id,
             "status": "Sending"
         },
-        user=doc.requested_by
+        user=doc.created_by or "Administrator"
     )
     
     prn_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
-    if not os.path.exists(prn_path):
-        doc.status = "Failed"
-        doc.completed_on = frappe.utils.now_datetime()
-        doc.save(ignore_permissions=True)
-        frappe.db.commit()
-
-        # Publish realtime failed event
-        frappe.publish_realtime(
-            "smriti.barcode.print_status",
-            {
-                "event_version": 1,
-                "job_id": job_id,
-                "status": "Failed"
-            },
-            user=doc.requested_by
-        )
-        raise FileNotFoundError(f"Payload file missing for job {job_id}")
-        
+    
     try:
+        if not os.path.exists(prn_path):
+            raise FileNotFoundError(f"Payload file missing for job {job_id}")
+            
         # Read payload
         with open(prn_path, "r", encoding="utf-8") as f:
             payload = f.read()
@@ -1407,7 +1406,7 @@ def _process_print_job(print_job_id):
             try:
                 frappe.get_doc({
                     "doctype": "Activity Log",
-                    "user": doc.requested_by,
+                    "user": doc.created_by or "System",
                     "operation": "SMRITI Visual Template Compilation Failed",
                     "status": "Failed",
                     "subject": f"Print job {job_id} integrity mismatch",
@@ -1434,21 +1433,21 @@ def _process_print_job(print_job_id):
                 "job_id": job_id,
                 "status": "Success"
             },
-            user=doc.requested_by
+            user=doc.created_by or "Administrator"
         )
 
         # Log Success
-        log_print_job(doc.template_name, doc.printer_ip, doc.labels_count, 1)
+        log_print_job(doc.template_name, doc.printer_ip, doc.print_qty, 1)
         
         # Log Audit event: SMRITI Print Job Success
         try:
             frappe.get_doc({
                 "doctype": "Activity Log",
-                "user": doc.requested_by,
+                "user": doc.created_by or "System",
                 "operation": "SMRITI Print Job Success",
                 "status": "Success",
                 "subject": f"Print job {job_id} printed successfully",
-                "remarks": f"Printed {doc.labels_count} labels on {doc.printer_ip}"
+                "remarks": f"Printed {doc.print_qty} labels on {doc.printer_ip}"
             }).insert(ignore_permissions=True)
             frappe.db.commit()
         except Exception as e:
@@ -1462,6 +1461,7 @@ def _process_print_job(print_job_id):
             
     except Exception as e:
         doc.status = "Failed"
+        doc.error_message = str(e)
         doc.completed_on = frappe.utils.now_datetime()
         doc.save(ignore_permissions=True)
         frappe.db.commit()
@@ -1474,17 +1474,17 @@ def _process_print_job(print_job_id):
                 "job_id": job_id,
                 "status": "Failed"
             },
-            user=doc.requested_by
+            user=doc.created_by or "Administrator"
         )
         
         # Log Failure
-        log_print_job(doc.template_name, doc.printer_ip, doc.labels_count, 0, error_message=str(e))
+        log_print_job(doc.template_name, doc.printer_ip, doc.print_qty, 0, error_message=str(e))
         
         # Log Audit event: SMRITI Print Job Failed
         try:
             frappe.get_doc({
                 "doctype": "Activity Log",
-                "user": doc.requested_by,
+                "user": doc.created_by or "System",
                 "operation": "SMRITI Print Job Failed",
                 "status": "Failed",
                 "subject": f"Print job {job_id} failed",
@@ -1495,6 +1495,9 @@ def _process_print_job(print_job_id):
             frappe.log_error(f"Error logging print job failed: {str(le)}")
             
         raise e
+    finally:
+        # always runs cleanup
+        pass
 
 
 @frappe.whitelist()
@@ -1503,8 +1506,12 @@ def get_print_job_status(job_id):
     if not name:
         frappe.throw(f"Print job {job_id} not found.", frappe.DoesNotExistError)
         
-    status = frappe.db.get_value("SMRITI Print Job", name, "status")
-    return {"status": status}
+    doc = frappe.get_doc("SMRITI Print Job", name)
+    return {
+        "status": doc.status,
+        "error_message": doc.error_message or "",
+        "completed_on": doc.completed_on
+    }
 
 
 @frappe.whitelist()
@@ -1522,14 +1529,14 @@ def retry_print_job(job_id):
     with open(old_prn_path, 'r', encoding='utf-8') as f:
         payload = f.read()
         
-    new_job_id = enqueue_print_job(
+    res = enqueue_print_job(
         template_name=old_doc.template_name,
         printer_ip=old_doc.printer_ip,
         printer_port=old_doc.printer_port,
-        labels_count=old_doc.labels_count,
+        print_qty=old_doc.print_qty,
         payload=payload
     )
-    return {"job_id": new_job_id}
+    return {"job_id": res["job_id"]}
 
 
 @frappe.whitelist()
@@ -1791,6 +1798,74 @@ def validate_layout_diagnostics(layout_json, label_size, item_data=None):
         "errors_count": errors_count,
         "warnings_count": warnings_count
     }
+
+
+def cleanup_old_print_jobs():
+    """
+    Success jobs older than 30 days → delete
+    Failed jobs older than 90 days → delete .prn + record
+    Log audit event with counts
+    Wrap in try/except — never raise
+    """
+    try:
+        from frappe.utils import add_days, now_datetime
+        import os
+        
+        success_cutoff = add_days(now_datetime(), -30)
+        failed_cutoff = add_days(now_datetime(), -90)
+        
+        # 1. Success jobs older than 30 days -> delete record
+        success_jobs = frappe.get_all(
+            "SMRITI Print Job",
+            filters={
+                "status": "Success",
+                "completed_on": ["<", success_cutoff]
+            },
+            fields=["name", "job_id"]
+        )
+        
+        success_deleted = 0
+        for job in success_jobs:
+            prn_path = frappe.get_site_path('private', 'print_jobs', f"{job.job_id}.prn")
+            if os.path.exists(prn_path):
+                try:
+                    os.remove(prn_path)
+                except Exception:
+                    pass
+            frappe.delete_doc("SMRITI Print Job", job.name, ignore_permissions=True)
+            success_deleted += 1
+            
+        # 2. Failed jobs older than 90 days -> delete .prn + record
+        failed_jobs = frappe.get_all(
+            "SMRITI Print Job",
+            filters={
+                "status": "Failed",
+                "completed_on": ["<", failed_cutoff]
+            },
+            fields=["name", "job_id"]
+        )
+        
+        failed_deleted = 0
+        for job in failed_jobs:
+            prn_path = frappe.get_site_path('private', 'print_jobs', f"{job.job_id}.prn")
+            if os.path.exists(prn_path):
+                try:
+                    os.remove(prn_path)
+                except Exception:
+                    pass
+            frappe.delete_doc("SMRITI Print Job", job.name, ignore_permissions=True)
+            failed_deleted += 1
+            
+        if success_deleted or failed_deleted:
+            frappe.db.commit()
+            
+        from smriti_retail_os.backup_api import log_audit_event
+        log_audit_event(
+            "SMRITI Print Job Cleanup",
+            f"Cleaned up {success_deleted} success jobs (>30d) and {failed_deleted} failed jobs (>90d)."
+        )
+    except Exception as e:
+        frappe.log_error("SMRITI Print Job Cleanup Error", str(e))
 
 
 

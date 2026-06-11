@@ -16,7 +16,23 @@ from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 def create_smriti_company_settings_doctype():
     """Creates the SMRITI Company Settings custom DocType for per-company retail configuration."""
     if frappe.db.exists("DocType", "SMRITI Company Settings"):
-        # If exists, we can still ensure standard fields exist if necessary, but keep it clean
+        dt = frappe.get_doc("DocType", "SMRITI Company Settings")
+        existing_fields = [f.fieldname for f in dt.fields]
+        changed = False
+        new_fields = [
+            {"fieldname": "default_printer_ip", "fieldtype": "Data", "label": "Default Printer IP"},
+            {"fieldname": "default_printer_port", "fieldtype": "Int", "label": "Default Printer Port", "default": 9100},
+            {"fieldname": "default_printer_lang", "fieldtype": "Select", "options": "ZPL\nTSPL", "label": "Default Printer Language", "default": "ZPL"},
+            {"fieldname": "default_label_size", "fieldtype": "Select", "options": "50x25\n50x30\n75x50\n100x50\n106x55", "label": "Default Label Size", "default": "50x25"}
+        ]
+        for f in new_fields:
+            if f["fieldname"] not in existing_fields:
+                dt.append("fields", f)
+                changed = True
+        if changed:
+            dt.save(ignore_permissions=True)
+            frappe.db.commit()
+            print("[SMRITI] Appended printer fields to existing SMRITI Company Settings DocType")
         return
     try:
         doc = frappe.new_doc("DocType")
@@ -60,6 +76,12 @@ def create_smriti_company_settings_doctype():
             {"fieldname": "size_groups_json", "fieldtype": "Long Text", "label": "Size Groups JSON", "hidden": 1},
             {"fieldname": "destinationwise_taxes_json", "fieldtype": "Long Text", "label": "Destinationwise Taxes JSON", "hidden": 1},
             {"fieldname": "backup_settings_json", "fieldtype": "Long Text", "label": "Backup Settings JSON", "hidden": 1},
+            {"fieldname": "sb_printer", "fieldtype": "Section Break", "label": "Printer Profile"},
+            {"fieldname": "default_printer_ip", "fieldtype": "Data", "label": "Default Printer IP"},
+            {"fieldname": "default_printer_port", "fieldtype": "Int", "label": "Default Printer Port", "default": 9100},
+            {"fieldname": "cb_printer", "fieldtype": "Column Break"},
+            {"fieldname": "default_printer_lang", "fieldtype": "Select", "options": "ZPL\nTSPL", "label": "Default Printer Language", "default": "ZPL"},
+            {"fieldname": "default_label_size", "fieldtype": "Select", "options": "50x25\n50x30\n75x50\n100x50\n106x55", "label": "Default Label Size", "default": "50x25"}
         ]
         for f in fields:
             doc.append("fields", f)
@@ -1141,48 +1163,36 @@ def ensure_print_job_directory():
 
 def create_smriti_print_job_doctype():
     """Creates the SMRITI Print Job custom DocType for asynchronous print tracking."""
-    if frappe.db.exists("DocType", "SMRITI Print Job"):
-        # Ensure audit fields exist on existing DocType
-        dt = frappe.get_doc("DocType", "SMRITI Print Job")
-        changed = False
-        existing_fields = [f.fieldname for f in dt.fields]
-        if "requested_by" not in existing_fields:
-            dt.append("fields", {"fieldname": "requested_by", "fieldtype": "Link", "options": "User", "label": "Requested By", "in_list_view": 1})
-            changed = True
-        if "request_ip" not in existing_fields:
-            dt.append("fields", {"fieldname": "request_ip", "fieldtype": "Data", "label": "Request IP"})
-            changed = True
-        if "request_user_agent" not in existing_fields:
-            dt.append("fields", {"fieldname": "request_user_agent", "fieldtype": "Small Text", "label": "Request User Agent"})
-            changed = True
-        if changed:
-            dt.save(ignore_permissions=True)
-            frappe.db.commit()
-        return
     try:
+        if frappe.db.exists("DocType", "SMRITI Print Job"):
+            frappe.delete_doc("DocType", "SMRITI Print Job", ignore_missing=True, force=True)
+            frappe.db.commit()
+
         doc = frappe.new_doc("DocType")
         doc.name = "SMRITI Print Job"
         doc.module = "SMRITI Retail OS"
         doc.custom = 1
-        doc.autoname = "Prompt"
+        doc.autoname = "field:job_id"
         doc.editable_grid = 0
         doc.quick_entry = 0
         doc.track_changes = 1
         doc.issingle = 0
 
         fields = [
-            {"fieldname": "job_id", "fieldtype": "Data", "label": "Job ID", "reqd": 1, "unique": 1, "in_list_view": 1},
+            {"fieldname": "job_id", "fieldtype": "Data", "label": "Job ID", "read_only": 1, "unique": 1, "in_list_view": 1},
+            {"fieldname": "item_code", "fieldtype": "Link", "options": "Item", "label": "Item Code", "in_list_view": 1},
+            {"fieldname": "barcode", "fieldtype": "Data", "label": "Barcode", "in_list_view": 1},
+            {"fieldname": "template_name", "fieldtype": "Data", "label": "Template Name", "in_list_view": 1},
             {"fieldname": "printer_ip", "fieldtype": "Data", "label": "Printer IP", "in_list_view": 1},
-            {"fieldname": "printer_port", "fieldtype": "Int", "label": "Printer Port", "default": "9100"},
-            {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Queued\nSending\nSuccess\nFailed", "default": "Queued", "in_list_view": 1},
-            {"fieldname": "completed_on", "fieldtype": "Datetime", "label": "Completed On", "in_list_view": 1},
+            {"fieldname": "printer_port", "fieldtype": "Int", "label": "Printer Port", "default": 9100},
+            {"fieldname": "print_qty", "fieldtype": "Int", "label": "Print Qty", "in_list_view": 1},
             {"fieldname": "payload_hash", "fieldtype": "Data", "label": "Payload Hash", "read_only": 1},
             {"fieldname": "payload_preview", "fieldtype": "Data", "label": "Payload Preview", "read_only": 1},
-            {"fieldname": "template_name", "fieldtype": "Data", "label": "Template Name", "in_list_view": 1},
-            {"fieldname": "labels_count", "fieldtype": "Int", "label": "Labels Count"},
-            {"fieldname": "requested_by", "fieldtype": "Link", "options": "User", "label": "Requested By", "in_list_view": 1},
-            {"fieldname": "request_ip", "fieldtype": "Data", "label": "Request IP"},
-            {"fieldname": "request_user_agent", "fieldtype": "Small Text", "label": "Request User Agent"}
+            {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Queued\nSending\nSuccess\nFailed", "default": "Queued", "in_list_view": 1},
+            {"fieldname": "error_message", "fieldtype": "Text", "label": "Error Message", "read_only": 1},
+            {"fieldname": "created_by", "fieldtype": "Data", "label": "Created By", "read_only": 1},
+            {"fieldname": "created_on", "fieldtype": "Datetime", "label": "Created On", "read_only": 1},
+            {"fieldname": "completed_on", "fieldtype": "Datetime", "label": "Completed On", "read_only": 1}
         ]
         for f in fields:
             doc.append("fields", f)
