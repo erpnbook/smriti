@@ -1,0 +1,152 @@
+{
+  "actions": [],
+  "creation": "2026-06-11 02:20:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 0,
+  "engine": "InnoDB",
+  "autoname": "PSV-.########",
+  "field_order": [
+    "company",
+    "posting_datetime",
+    "channel_partner",
+    "item_variant",
+    "qty",
+    "transaction_type",
+    "voucher_type",
+    "voucher_no",
+    "unique_hash",
+    "reversal_of",
+    "reversal_reason",
+    "warehouse",
+    "currency",
+    "fiscal_year",
+    "hash_version"
+  ],
+  "fields": [
+    {
+      "fieldname": "company",
+      "fieldtype": "Link",
+      "label": "Company",
+      "options": "Company",
+      "reqd": 1,
+      "in_list_view": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "posting_datetime",
+      "fieldtype": "Datetime",
+      "label": "Posting Datetime",
+      "reqd": 1,
+      "in_list_view": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "channel_partner",
+      "fieldtype": "Link",
+      "label": "Channel Partner",
+      "options": "PSV Channel Partner",
+      "reqd": 1,
+      "in_list_view": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "item_variant",
+      "fieldtype": "Link",
+      "label": "Item Variant",
+      "options": "Item",
+      "reqd": 1,
+      "in_list_view": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "qty",
+      "fieldtype": "Float",
+      "label": "Quantity",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "transaction_type",
+      "fieldtype": "Select",
+      "label": "Transaction Type",
+      "options": "\nOpening\nDispatch\nSales\nAdjustment\nReturn\nReversal",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "voucher_type",
+      "fieldtype": "Data",
+      "label": "Voucher Type"
+    },
+    {
+      "fieldname": "voucher_no",
+      "fieldtype": "Data",
+      "label": "Voucher No"
+    },
+    {
+      "fieldname": "unique_hash",
+      "fieldtype": "Data",
+      "label": "Unique Hash",
+      "unique": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "reversal_of",
+      "fieldtype": "Link",
+      "label": "Reversal Of",
+      "options": "PSV Ledger Entry"
+    },
+    {
+      "fieldname": "reversal_reason",
+      "fieldtype": "Small Text",
+      "label": "Reversal Reason"
+    },
+    {
+      "fieldname": "warehouse",
+      "fieldtype": "Link",
+      "label": "Warehouse",
+      "options": "Warehouse"
+    },
+    {
+      "fieldname": "currency",
+      "fieldtype": "Link",
+      "label": "Currency",
+      "options": "Currency"
+    },
+    {
+      "fieldname": "fiscal_year",
+      "fieldtype": "Link",
+      "label": "Fiscal Year",
+      "options": "Fiscal Year"
+    },
+    {
+      "default": "1",
+      "fieldname": "hash_version",
+      "fieldtype": "Int",
+      "label": "Hash Version",
+      "read_only": 1
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "links": [],
+  "modified": "2026-06-11 02:20:00.000000",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "PSV Ledger Entry",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "read": 1,
+      "role": "System Manager"
+    },
+    {
+      "read": 1,
+      "role": "SMRITI Store Manager"
+    }
+  ],
+  "quick_entry": 0,
+  "sort_field": "posting_datetime",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 0
+}

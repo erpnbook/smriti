@@ -1,0 +1,127 @@
+{
+  "actions": [],
+  "creation": "2026-06-11 02:20:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "snapshot_date",
+    "channel_partner",
+    "item_variant",
+    "qty",
+    "brand_name",
+    "item_group_name",
+    "territory_name",
+    "qty_0_30",
+    "qty_31_60",
+    "qty_61_90",
+    "qty_91_180",
+    "qty_180_plus",
+    "aging_alert"
+  ],
+  "fields": [
+    {
+      "fieldname": "snapshot_date",
+      "fieldtype": "Date",
+      "label": "Snapshot Date",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "channel_partner",
+      "fieldtype": "Link",
+      "label": "Channel Partner",
+      "options": "PSV Channel Partner",
+      "reqd": 1,
+      "in_list_view": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "item_variant",
+      "fieldtype": "Link",
+      "label": "Item Variant",
+      "options": "Item",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "qty",
+      "fieldtype": "Float",
+      "label": "Total Quantity",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "brand_name",
+      "fieldtype": "Data",
+      "label": "Brand Name",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "item_group_name",
+      "fieldtype": "Data",
+      "label": "Item Group Name"
+    },
+    {
+      "fieldname": "territory_name",
+      "fieldtype": "Data",
+      "label": "Territory Name"
+    },
+    {
+      "default": "0",
+      "fieldname": "qty_0_30",
+      "fieldtype": "Float",
+      "label": "0-30 Days Qty"
+    },
+    {
+      "default": "0",
+      "fieldname": "qty_31_60",
+      "fieldtype": "Float",
+      "label": "31-60 Days Qty"
+    },
+    {
+      "default": "0",
+      "fieldname": "qty_61_90",
+      "fieldtype": "Float",
+      "label": "61-90 Days Qty"
+    },
+    {
+      "default": "0",
+      "fieldname": "qty_91_180",
+      "fieldtype": "Float",
+      "label": "91-180 Days Qty"
+    },
+    {
+      "default": "0",
+      "fieldname": "qty_180_plus",
+      "fieldtype": "Float",
+      "label": "180+ Days Qty"
+    },
+    {
+      "fieldname": "aging_alert",
+      "fieldtype": "Data",
+      "label": "Aging Alert"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "links": [],
+  "modified": "2026-06-11 02:20:00.000000",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "PSV Stock Aging Snapshot",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "read": 1,
+      "role": "System Manager"
+    },
+    {
+      "read": 1,
+      "role": "SMRITI Store Manager"
+    }
+  ],
+  "quick_entry": 0,
+  "sort_field": "snapshot_date",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 0
+}

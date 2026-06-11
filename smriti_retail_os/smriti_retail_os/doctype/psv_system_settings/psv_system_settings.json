@@ -1,0 +1,100 @@
+{
+  "actions": [],
+  "creation": "2026-06-11 02:20:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 0,
+  "engine": "InnoDB",
+  "issingle": 1,
+  "field_order": [
+    "last_snapshot_run",
+    "last_checkpoint",
+    "last_processed_partner",
+    "snapshot_batch_size",
+    "redistribution_scope",
+    "weeks_of_cover_critical",
+    "weeks_of_cover_warning",
+    "weeks_of_cover_healthy",
+    "channel_health_enabled"
+  ],
+  "fields": [
+    {
+      "fieldname": "last_snapshot_run",
+      "fieldtype": "Datetime",
+      "label": "Last Snapshot Run",
+      "read_only": 1
+    },
+    {
+      "fieldname": "last_checkpoint",
+      "fieldtype": "Data",
+      "label": "Last Checkpoint Partner",
+      "read_only": 1
+    },
+    {
+      "fieldname": "last_processed_partner",
+      "fieldtype": "Data",
+      "label": "Last Processed Partner",
+      "read_only": 1
+    },
+    {
+      "default": "500",
+      "fieldname": "snapshot_batch_size",
+      "fieldtype": "Int",
+      "label": "Snapshot Batch Size"
+    },
+    {
+      "default": "Same Territory",
+      "fieldname": "redistribution_scope",
+      "fieldtype": "Select",
+      "label": "Redistribution Scope",
+      "options": "Same Territory\nSame Region\nAll"
+    },
+    {
+      "default": "2",
+      "fieldname": "weeks_of_cover_critical",
+      "fieldtype": "Int",
+      "label": "Weeks of Cover (Critical)"
+    },
+    {
+      "default": "4",
+      "fieldname": "weeks_of_cover_warning",
+      "fieldtype": "Int",
+      "label": "Weeks of Cover (Warning)"
+    },
+    {
+      "default": "8",
+      "fieldname": "weeks_of_cover_healthy",
+      "fieldtype": "Int",
+      "label": "Weeks of Cover (Healthy)"
+    },
+    {
+      "default": "0",
+      "fieldname": "channel_health_enabled",
+      "fieldtype": "Check",
+      "label": "Enable Channel Health (Phase 1.2)"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "links": [],
+  "modified": "2026-06-11 02:20:00.000000",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "PSV System Settings",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "read": 1,
+      "role": "System Manager",
+      "write": 1
+    },
+    {
+      "read": 1,
+      "role": "SMRITI Store Manager",
+      "write": 1
+    }
+  ],
+  "quick_entry": 0,
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

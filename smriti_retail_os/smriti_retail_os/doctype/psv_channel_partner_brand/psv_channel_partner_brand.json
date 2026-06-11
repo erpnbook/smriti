@@ -1,0 +1,42 @@
+{
+  "actions": [],
+  "creation": "2026-06-11 02:20:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "istable": 1,
+  "field_order": [
+    "brand",
+    "is_primary"
+  ],
+  "fields": [
+    {
+      "fieldname": "brand",
+      "fieldtype": "Link",
+      "label": "Brand",
+      "options": "Brand",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "is_primary",
+      "fieldtype": "Check",
+      "label": "Is Primary",
+      "in_list_view": 1
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "links": [],
+  "modified": "2026-06-11 02:20:00.000000",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "PSV Channel Partner Brand",
+  "owner": "Administrator",
+  "permissions": [],
+  "quick_entry": 0,
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 0
+}

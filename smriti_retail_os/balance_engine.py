@@ -101,11 +101,19 @@ def get_party_balance(party_stock_account: str, item_code: str,
 def _query_single_balance(party_stock_account: str, item_code: str,
                            posting_datetime=None) -> float:
     """Direct DB query — no caching. Used by get_party_balance and historical lookups."""
-    query = """
-        SELECT SUM(qty)
-        FROM `tabSMRITI Party Stock Ledger Entry`
-        WHERE party_stock_account = %s AND item_code = %s
-    """
+    use_new = frappe.db.exists("PSV Ledger Entry", {"channel_partner": party_stock_account})
+    if use_new:
+        query = """
+            SELECT SUM(qty)
+            FROM `tabPSV Ledger Entry`
+            WHERE channel_partner = %s AND item_variant = %s
+        """
+    else:
+        query = """
+            SELECT SUM(qty)
+            FROM `tabSMRITI Party Stock Ledger Entry`
+            WHERE party_stock_account = %s AND item_code = %s
+        """
     params = [party_stock_account, item_code]
 
     if posting_datetime:
@@ -148,18 +156,32 @@ def get_bulk_party_balances(party_stock_account: str, item_codes=None) -> dict:
 
 def _query_bulk_balance(party_stock_account: str, item_codes=None) -> dict:
     """Direct DB query for bulk balances — no caching."""
-    query = """
-        SELECT item_code, SUM(qty)
-        FROM `tabSMRITI Party Stock Ledger Entry`
-        WHERE party_stock_account = %s
-    """
+    use_new = frappe.db.exists("PSV Ledger Entry", {"channel_partner": party_stock_account})
+    if use_new:
+        query = """
+            SELECT item_variant, SUM(qty)
+            FROM `tabPSV Ledger Entry`
+            WHERE channel_partner = %s
+        """
+    else:
+        query = """
+            SELECT item_code, SUM(qty)
+            FROM `tabSMRITI Party Stock Ledger Entry`
+            WHERE party_stock_account = %s
+        """
     params = [party_stock_account]
 
     if item_codes:
-        query += " AND item_code IN %s"
+        if use_new:
+            query += " AND item_variant IN %s"
+        else:
+            query += " AND item_code IN %s"
         params.append(tuple(item_codes))
 
-    query += " GROUP BY item_code"
+    if use_new:
+        query += " GROUP BY item_variant"
+    else:
+        query += " GROUP BY item_code"
 
     result = frappe.db.sql(query, params, as_dict=False)
     return {r[0]: float(r[1]) for r in result}
@@ -170,19 +192,35 @@ def get_all_party_balances(company: str) -> list:
     Returns a list of dicts with all non-zero balances across all PSAs for a company.
     Cross-PSA queries are NOT cached (scope too broad for safe TTL-based cache).
     """
-    results = frappe.db.sql("""
-        SELECT
-            psa.name as party_stock_account,
-            psa.location_name,
-            psa.zone,
-            ple.item_code,
-            SUM(ple.qty) as balance
-        FROM `tabSMRITI Party Stock Ledger Entry` ple
-        INNER JOIN `tabSMRITI Party Stock Account` psa ON ple.party_stock_account = psa.name
-        WHERE psa.company = %s
-        GROUP BY psa.name, ple.item_code
-        HAVING SUM(ple.qty) != 0
-    """, (company,), as_dict=True)
+    use_new = frappe.db.exists("PSV Ledger Entry", {"company": company})
+    if use_new:
+        results = frappe.db.sql("""
+            SELECT
+                psa.name as party_stock_account,
+                psa.location_name,
+                psa.zone,
+                ple.item_variant as item_code,
+                SUM(ple.qty) as balance
+            FROM `tabPSV Ledger Entry` ple
+            INNER JOIN `tabPSV Channel Partner` psa ON ple.channel_partner = psa.name
+            WHERE psa.company = %s
+            GROUP BY psa.name, ple.item_variant
+            HAVING SUM(ple.qty) != 0
+        """, (company,), as_dict=True)
+    else:
+        results = frappe.db.sql("""
+            SELECT
+                psa.name as party_stock_account,
+                psa.location_name,
+                psa.zone,
+                ple.item_code,
+                SUM(ple.qty) as balance
+            FROM `tabSMRITI Party Stock Ledger Entry` ple
+            INNER JOIN `tabSMRITI Party Stock Account` psa ON ple.party_stock_account = psa.name
+            WHERE psa.company = %s
+            GROUP BY psa.name, ple.item_code
+            HAVING SUM(ple.qty) != 0
+        """, (company,), as_dict=True)
 
     for r in results:
         r["balance"] = float(r["balance"])

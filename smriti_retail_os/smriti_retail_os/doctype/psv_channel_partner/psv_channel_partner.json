@@ -1,0 +1,158 @@
+{
+  "actions": [],
+  "creation": "2026-06-11 02:20:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 0,
+  "engine": "InnoDB",
+  "autoname": "format:{customer}-{location_name}",
+  "title_field": "location_name",
+  "search_fields": "customer,location_name,zone,territory",
+  "field_order": [
+    "company",
+    "customer",
+    "location_name",
+    "territory",
+    "zone",
+    "region",
+    "area_manager",
+    "effective_from",
+    "effective_to",
+    "contact_person",
+    "mobile",
+    "email",
+    "active",
+    "status",
+    "primary_brand",
+    "brands"
+  ],
+  "fields": [
+    {
+      "fieldname": "company",
+      "fieldtype": "Link",
+      "label": "Company",
+      "options": "Company",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "customer",
+      "fieldtype": "Link",
+      "label": "Customer",
+      "options": "Customer",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "location_name",
+      "fieldtype": "Data",
+      "label": "Location Name",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "territory",
+      "fieldtype": "Link",
+      "label": "Territory",
+      "options": "Territory",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "zone",
+      "fieldtype": "Select",
+      "label": "Zone",
+      "options": "\nNorth\nSouth\nEast\nWest\nCentral"
+    },
+    {
+      "fieldname": "region",
+      "fieldtype": "Data",
+      "label": "Region"
+    },
+    {
+      "fieldname": "area_manager",
+      "fieldtype": "Link",
+      "label": "Area Manager",
+      "options": "User"
+    },
+    {
+      "fieldname": "effective_from",
+      "fieldtype": "Date",
+      "label": "Effective From"
+    },
+    {
+      "fieldname": "effective_to",
+      "fieldtype": "Date",
+      "label": "Effective To"
+    },
+    {
+      "fieldname": "contact_person",
+      "fieldtype": "Data",
+      "label": "Contact Person"
+    },
+    {
+      "fieldname": "mobile",
+      "fieldtype": "Data",
+      "label": "Mobile"
+    },
+    {
+      "fieldname": "email",
+      "fieldtype": "Data",
+      "label": "Email"
+    },
+    {
+      "default": "1",
+      "fieldname": "active",
+      "fieldtype": "Check",
+      "label": "Active"
+    },
+    {
+      "default": "Active",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "\nActive\nPending Reconciliation",
+      "read_only": 1
+    },
+    {
+      "fieldname": "primary_brand",
+      "fieldtype": "Data",
+      "label": "Primary Brand",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "brands",
+      "fieldtype": "Table",
+      "label": "Brands",
+      "options": "PSV Channel Partner Brand"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-06-11 02:20:00.000000",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "PSV Channel Partner",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "read": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "read": 1,
+      "role": "SMRITI Store Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "quick_entry": 1,
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

@@ -39,6 +39,7 @@ SMRITI.sidebarSchema = [
         emoji: '🌐',
         label: 'Channel Stock',
         items: [
+            { id: 'psv_dashboard', label: '├─ PSV Dashboard', url: '/psv-dashboard' },
             { id: 'psa', label: '├─ Distributor Accounts', url: '/psa' },
             { id: 'psv_opening_balance', label: '├─ Opening Balances', url: '/psv-opening-balance' },
             { id: 'sales_upload', label: '├─ Sales Uploads', url: '/sales-upload' },
