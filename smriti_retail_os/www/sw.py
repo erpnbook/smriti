@@ -31,7 +31,8 @@ def get_context(context):
         'filename': 'sw.js',
         'content':  sw_content.encode('utf-8') if isinstance(sw_content, str) else sw_content,
     })
-    frappe.local.response.headers['Content-Type']  = 'application/javascript; charset=utf-8'
+    frappe.local.response.setdefault('headers', {})
+    frappe.local.response.headers['Content-Type'] = 'application/javascript; charset=utf-8'
     frappe.local.response.headers['Service-Worker-Allowed'] = '/'
     frappe.local.response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     context.no_cache = 1

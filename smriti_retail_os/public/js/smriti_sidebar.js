@@ -14,59 +14,205 @@
 
 window.SMRITI = window.SMRITI || {};
 
+SMRITI.sidebarSchema = [
+    {
+        type: 'link',
+        id: 'desk',
+        emoji: '🏠',
+        label: 'Dashboard',
+        url: '/smriti'
+    },
+    {
+        type: 'category',
+        id: 'masters',
+        emoji: '📦',
+        label: 'Masters',
+        items: [
+            { type: 'subheader', label: 'Product Masters' },
+            { id: 'products', label: '├─ Product Catalog', url: '/products' },
+            { id: 'item_master', label: '├─ Item Master', url: '/item_master' },
+            { id: 'sizewise_item', label: '├─ Sizewise Creator', url: '/sizewise_item' },
+            { id: 'brand_master', label: '├─ Brand Master', url: '/smriti-coming-soon?feature=Brand+Master&progress=60&eta=Q3+2026' },
+            { id: 'item_group', label: '├─ Item Group', url: '/smriti-coming-soon?feature=Item+Group&progress=45&eta=Q3+2026' },
+            { id: 'category_hierarchy', label: '├─ Category Hierarchy', url: '/smriti-coming-soon?feature=Category+Hierarchy&progress=50&eta=Q3+2026' },
+            { id: 'season_collection', label: '├─ Season / Collection', url: '/smriti-coming-soon?feature=Season+/+Collection&progress=40&eta=Q3+2026' },
+            { id: 'uom_master', label: '└─ UOM Master', url: '/smriti-coming-soon?feature=UOM+Master&progress=70&eta=Q3+2026' },
+            
+            { type: 'subheader', label: 'Party Masters' },
+            { id: 'customers', label: '├─ Customers', url: '/customers' },
+            { id: 'customer_group', label: '├─ Customer Group', url: '/smriti-coming-soon?feature=Customer+Group&progress=30&eta=Q4+2026' },
+            { id: 'territory_zone', label: '├─ Territory / Zone', url: '/smriti-coming-soon?feature=Territory+/+Zone&progress=20&eta=Q4+2026' },
+            { id: 'suppliers', label: '├─ Suppliers', url: '/suppliers' },
+            { id: 'supplier_group', label: '├─ Supplier Group', url: '/smriti-coming-soon?feature=Supplier+Group&progress=30&eta=Q4+2026' },
+            { id: 'salespersons', label: '└─ Salespersons', url: '/smriti-coming-soon?feature=Salespersons&progress=15&eta=Q4+2026' },
+            
+            { type: 'subheader', label: 'Compliance Masters' },
+            { id: 'hsn_master', label: '├─ HSN Master', url: '/smriti-coming-soon?feature=HSN+Master&progress=75&eta=Q3+2026' },
+            { id: 'tax_templates', label: '├─ Tax Templates', url: '/smriti-coming-soon?feature=Tax+Templates&progress=65&eta=Q3+2026' },
+            { id: 'gst_configuration', label: '└─ GST Configuration', url: '/smriti-coming-soon?feature=GST+Configuration&progress=80&eta=Q3+2026' },
+            
+            { type: 'subheader', label: 'System Masters' },
+            { id: 'warehouses', label: '├─ Warehouses', url: '/smriti-coming-soon?feature=Warehouses&progress=70&eta=Q3+2026' },
+            { id: 'payment_terms', label: '├─ Payment Terms', url: '/smriti-coming-soon?feature=Payment+Terms&progress=50&eta=Q4+2026' },
+            { id: 'shipping_courier', label: '├─ Shipping / Courier', url: '/smriti-coming-soon?feature=Shipping+/+Courier&progress=40&eta=Q4+2026' },
+            { id: 'reason_codes', label: '└─ Reason Codes', url: '/smriti-coming-soon?feature=Reason+Codes&progress=85&eta=Q3+2026' }
+        ]
+    },
+    {
+        type: 'category',
+        id: 'pricing',
+        emoji: '💰',
+        label: 'Pricing',
+        items: [
+            { id: 'price_lists', label: '├─ Price Lists', url: '/smriti-coming-soon?feature=Price+Lists&progress=80&eta=Q3+2026' },
+            { id: 'customer_pricing', label: '├─ Customer Pricing', url: '/smriti-coming-soon?feature=Customer+Pricing&progress=65&eta=Q3+2026' },
+            { id: 'scheme_discount', label: '├─ Scheme / Discount', url: '/smriti-coming-soon?feature=Scheme+/+Discount&progress=50&eta=Q4+2026' },
+            { id: 'promotions', label: '├─ Promotions', url: '/smriti-coming-soon?feature=Promotions&progress=45&eta=Q4+2026' },
+            { id: 'price_revision', label: '├─ Price Revision', url: '/smriti-coming-soon?feature=Price+Revision&progress=30&eta=Q4+2026' },
+            { id: 'price_audit', label: '└─ Price Audit History', url: '/smriti-coming-soon?feature=Price+Audit+History&progress=25&eta=Q4+2026' }
+        ]
+    },
+    {
+        type: 'category',
+        id: 'channel_stock',
+        emoji: '🌐',
+        label: 'Party Stock Visibility',
+        items: [
+            { id: 'psv_dashboard', label: '├─ PSV Dashboard', url: '/psv-dashboard' },
+            { id: 'psa', label: '├─ Distributor Accounts', url: '/psa' },
+            { id: 'psv_opening_balance', label: '├─ Opening Balances', url: '/psv-opening-balance' },
+            { id: 'sales_upload', label: '├─ Sales Uploads', url: '/sales-upload' },
+            { id: 'psv_audit', label: '├─ Stock Audits', url: '/stock-audit' },
+            { id: 'replenishment_insights', label: '└─ Replenishment Insights', url: '/smriti-coming-soon?feature=Replenishment+Insights&progress=35&eta=Q4+2026' }
+        ]
+    },
+    {
+        type: 'category',
+        id: 'sales',
+        emoji: '🛒',
+        label: 'Sales',
+        items: [
+            { id: 'day_open', label: '├─ Day Open', url: '/shift' },
+            { id: 'sales_order', label: '├─ Sales Order', url: '/smriti-coming-soon?feature=Sales+Order&progress=80&eta=Q3+2026' },
+            { id: 'proforma_invoice', label: '├─ Proforma Invoice', url: '/smriti-coming-soon?feature=Proforma+Invoice&progress=70&eta=Q3+2026' },
+            { id: 'billing', label: '├─ POS Billing', url: '/billing' },
+            { id: 'sales_invoices', label: '├─ Tax Invoice', url: '/sales_invoices' },
+            { id: 'sales_return', label: '├─ Sales Return', url: '/sales_return' },
+            { id: 'delivery_challan', label: '├─ Delivery Challan', url: '/delivery_challan' },
+            { id: 'customer_outward', label: '├─ Customer Outward', url: '/smriti-coming-soon?feature=Customer+Outward&progress=45&eta=Q4+2026' },
+            { id: 'day_close', label: '└─ Day Close', url: '/shift' }
+        ]
+    },
+    {
+        type: 'category',
+        id: 'purchase',
+        emoji: '📥',
+        label: 'Purchase',
+        items: [
+            { id: 'purchase_order', label: '├─ Purchase Order', url: '/smriti-coming-soon?feature=Purchase+Order&progress=85&eta=Q3+2026' },
+            { id: 'grn', label: '├─ GRN / Receipts', url: '/purchase_receipt' },
+            { id: 'purchase_invoice', label: '├─ Purchase Invoice', url: '/purchase_invoice' },
+            { id: 'landed_cost', label: '├─ Landed Cost Voucher', url: '/smriti-coming-soon?feature=Landed+Cost+Voucher&progress=30&eta=Q4+2026' },
+            { id: 'supplier_return', label: '├─ Supplier Return', url: '/smriti-coming-soon?feature=Supplier+Return&progress=50&eta=Q3+2026' },
+            { id: 'cost_adjustments', label: '└─ Cost Adjustments', url: '/smriti-coming-soon?feature=Cost+Adjustments&progress=40&eta=Q4+2026' }
+        ]
+    },
+    {
+        type: 'category',
+        id: 'inventory',
+        emoji: '🏬',
+        label: 'Inventory',
+        items: [
+            { id: 'inventory_ops', label: '├─ Stock Ledger', url: '/inventory' },
+            { id: 'stock_transfer', label: '├─ Stock Transfer', url: '/inventory?tab=transfer' },
+            { id: 'stock_adjust', label: '├─ Stock Adjustment', url: '/inventory?tab=adjust' },
+            { id: 'stock_audit_wh', label: '├─ Stock Audit', url: '/smriti-coming-soon?feature=Stock+Audit&progress=60&eta=Q3+2026' },
+            { id: 'barcode', label: '├─ Barcode Center', url: '/barcode' },
+            { id: 'print_templates', label: '├─ Print Templates', url: '/print_templates' },
+            { id: 'batch_management', label: '├─ Batch Management', url: '/smriti-coming-soon?feature=Batch+Management&progress=50&eta=Q4+2026' },
+            { id: 'reorder_planning', label: '└─ Reorder Planning', url: '/smriti-coming-soon?feature=Reorder+Planning&progress=45&eta=Q4+2026' }
+        ]
+    },
+    {
+        type: 'category',
+        id: 'intelligence',
+        emoji: '📊',
+        label: 'Intelligence',
+        items: [
+            { id: 'exec_dashboard', label: '├─ Executive Dashboard', url: '/smriti-coming-soon?feature=Executive+Dashboard&progress=30&eta=Q4+2026', feature_flag: 'exec_dashboard_enabled' },
+            { id: 'gmroi', label: '├─ GMROI', url: '/smriti-coming-soon?feature=GMROI&progress=40&eta=Q4+2026', feature_flag: 'gmroi_enabled' },
+            { id: 'sell_through', label: '├─ Sell Through', url: '/smriti-coming-soon?feature=Sell+Through&progress=35&eta=Q4+2026', feature_flag: 'sell_through_enabled' },
+            { id: 'coverage_days', label: '├─ Coverage Days', url: '/smriti-coming-soon?feature=Coverage+Days&progress=20&eta=Q4+2026', feature_flag: 'coverage_days_enabled' },
+            { id: 'inventory_aging', label: '├─ Inventory Aging', url: '/smriti-coming-soon?feature=Inventory+Aging&progress=25&eta=Q4+2026', feature_flag: 'inventory_aging_enabled' },
+            { id: 'capital_locked', label: '├─ Capital Locked', url: '/smriti-coming-soon?feature=Capital+Locked&progress=15&eta=Q4+2026', feature_flag: 'capital_locked_enabled' },
+            { id: 'dead_stock', label: '└─ Dead Stock Recovery', url: '/smriti-coming-soon?feature=Dead+Stock+Recovery&progress=10&eta=Q4+2026', feature_flag: 'dead_stock_enabled' }
+        ]
+    },
+    {
+        type: 'category',
+        id: 'ai_hub',
+        emoji: '🤖',
+        label: 'AI Hub',
+        items: [
+            { id: 'demand_forecast', label: '├─ Demand Forecast', url: '/smriti-coming-soon?feature=Demand+Forecast&progress=30&eta=Q4+2026', feature_flag: 'demand_forecast_enabled' },
+            { id: 'slow_mover', label: '├─ Slow Mover Detection', url: '/smriti-coming-soon?feature=Slow+Mover+Detection&progress=35&eta=Q4+2026', feature_flag: 'slow_mover_enabled' },
+            { id: 'purchase_suggestions', label: '├─ Purchase Suggestions', url: '/smriti-coming-soon?feature=Purchase+Suggestions&progress=40&eta=Q4+2026', feature_flag: 'purchase_suggestions_enabled' },
+            { id: 'promo_suggestions', label: '├─ Promotion Suggestions', url: '/smriti-coming-soon?feature=Promotion+Suggestions&progress=45&eta=Q4+2026', feature_flag: 'promo_suggestions_enabled' },
+            { id: 'stock_risk_alerts', label: '└─ Stock Risk Alerts', url: '/smriti-coming-soon?feature=Stock+Risk+Alerts&progress=50&eta=Q4+2026', feature_flag: 'stock_risk_alerts_enabled' }
+        ]
+    },
+    {
+        type: 'category',
+        id: 'reports',
+        emoji: '📑',
+        label: 'Reports',
+        items: [
+            { id: 'sales_reports', label: '├─ Sales Reports', url: '/reports?category=Sales' },
+            { id: 'purchase_reports', label: '├─ Purchase Reports', url: '/reports?category=Purchase' },
+            { id: 'inventory_reports', label: '├─ Inventory Reports', url: '/reports?category=Inventory' },
+            { id: 'psv_reports', label: '├─ PSV Reports', url: '/reports?category=PSV' },
+            { id: 'pricing_reports', label: '├─ Pricing Reports', url: '/reports?category=Pricing' },
+            { id: 'saved_reports', label: '└─ Saved Reports', url: '/reports?category=Saved' }
+        ]
+    },
+    {
+        type: 'category',
+        id: 'integrations',
+        emoji: '🔄',
+        label: 'Integrations',
+        items: [
+            { id: 'tally_sync', label: '├─ TallyPrime Sync', url: '/smriti-coming-soon?feature=TallyPrime+Sync&progress=85&eta=Q3+2026' },
+            { id: 'export_center', label: '├─ Export Center', url: '/smriti-coming-soon?feature=Export+Center&progress=60&eta=Q3+2026' },
+            { id: 'import_center', label: '├─ Import Center', url: '/smriti-coming-soon?feature=Import+Center&progress=70&eta=Q3+2026' },
+            { id: 'sync_history', label: '├─ Sync History', url: '/smriti-coming-soon?feature=Sync+History&progress=40&eta=Q3+2026' },
+            { id: 'integration_settings', label: '└─ Integration Settings', url: '/smriti-coming-soon?feature=Integration+Settings&progress=50&eta=Q3+2026' }
+        ]
+    },
+    {
+        type: 'category',
+        id: 'admin',
+        emoji: '⚙️',
+        label: 'Administration',
+        items: [
+            { id: 'users', label: '├─ Users', url: '/smriti-coming-soon?feature=Users+Management&progress=80&eta=Q3+2026' },
+            { id: 'roles', label: '├─ Roles', url: '/smriti-coming-soon?feature=Roles+Management&progress=75&eta=Q3+2026' },
+            { id: 'security', label: '├─ Security & Workflow', url: '/security' },
+            { id: 'audit_logs', label: '├─ Audit Logs', url: '/smriti-coming-soon?feature=Audit+Logs&progress=90&eta=Q3+2026' },
+            { id: 'activity_logs', label: '├─ Activity Logs', url: '/smriti-coming-soon?feature=Activity+Logs&progress=85&eta=Q3+2026' },
+            { id: 'backup', label: '├─ Backup Center', url: '/backup' },
+            { id: 'configure', label: '└─ System Settings', url: '/configure' }
+        ]
+    },
+    {
+        type: 'link',
+        id: 'help',
+        emoji: '🆘',
+        label: 'Help Desk',
+        url: '/smriti-coming-soon?feature=Help+Desk&progress=80&eta=Q3+2026'
+    }
+];
+
 SMRITI.renderSidebar = function(active_page) {
-    const is_manager = frappe.user.has_role("SMRITI Store Manager") || frappe.user.has_role("System Manager");
-    const is_admin_account = frappe.session.user === "Admin" || frappe.session.user === "admin@erpnbook.com";
-
-    const nav_items = [
-        {id:"billing",    icon:"💳", label:"Billing",
-         url:"/billing"},   // Standalone billing terminal — zero Frappe chrome
-        {id:"shift",      icon:"🌅", label:"Shift Management",
-         url:"/shift"},
-        {id:"inventory",  icon:"📦", label:"Inventory",
-         url:"/inventory"},
-        {id:"products",   icon:"🛍️", label:"Products",
-         url:"/products"},
-        {id:"barcode",    icon:"🏷️",  label:"Barcode Printing",
-         url:"/barcode"},
-        {id:"customers",  icon:"👥", label:"Customers",
-         url:"/customers"},
-        {id:"sales_invoices", icon:"📄", label:"Sales Invoices",
-         url:"/sales_invoices"},
-        {id:"purchase",   icon:"🛒", label:"Purchase Manager",
-         url:"/purchase"},
-        ...(is_manager ? [
-            {id:"item_import", icon:"📥", label:"Item Master Import",
-             url:"/app/smriti-item-master"},
-            {id:"print_templates", icon:"📐", label:"Print Templates",
-             url:"/print_templates"},
-            {id:"purchase_orders", icon:"📝", label:"Purchase Orders",
-             url:"/app/purchase-order"},
-            {id:"purchase_receipts", icon:"🚚", label:"Purchase Receipts",
-             url:"/app/purchase-receipt"},
-            {id:"suppliers",   icon:"🏢", label:"Suppliers",
-             url:"/suppliers"},
-            {id:"reports", icon:"📊", label:"Reports",
-             url:"/reports"},
-            {id:"loyalty", icon:"🎁", label:"Loyalty & Promotions",
-             url:"/app/smriti-loyalty"},
-            {id:"backup", icon:"🔄", label:"Backup & Restore",
-             url:"/app/smriti-backup"},
-            {id:"configure", icon:"⚙️", label:"Config Portal",
-             url:"/configure"},
-            ...(!is_admin_account ? [
-                {id:"security", icon:"🔒", label:"Security & Workflows",
-                 url:"/security"}
-            ] : []),
-            {id:"desk",    icon:"🏠", label:"Control Center",
-             url:"/app/smriti-desk"}
-        ] : []),
-        ...((frappe.session.user === "Administrator" || frappe.session.user === "Admin") ? [
-            {id:"platform_center", icon:"🛠️", label:"Platform Center",
-             url:"/platform_center"}
-        ] : [])
-    ];
-
     var sidebar = document.getElementById("smriti-sidebar");
     if (sidebar) {
         // If sidebar is already present, just update active states and close mobile drawer
@@ -85,7 +231,7 @@ SMRITI.renderSidebar = function(active_page) {
                 status: "Closed", cashier: frappe.session.user
             };
             SMRITI._buildSidebarDOM(
-                nav_items, active_page, status
+                active_page, status
             );
         }
     });
@@ -112,7 +258,7 @@ SMRITI._updateSidebarActiveState = function(active_page) {
     if (!sidebar) return;
     
     // Update active class on items
-    sidebar.querySelectorAll(".smriti-side-item").forEach(function(item) {
+    sidebar.querySelectorAll(".smriti-side-item, .smriti-side-sub-item").forEach(function(item) {
         if (item.getAttribute("data-id") === active_page) {
             item.classList.add("active");
         } else {
@@ -204,7 +350,7 @@ SMRITI.setupMobileToggle = function() {
     }
 };
 
-SMRITI._buildSidebarDOM = function(nav_items, active_page, shift) {
+SMRITI._buildSidebarDOM = function(active_page, shift) {
     // Double check that we don't have multiple sidebars
     document.getElementById("smriti-sidebar")?.remove();
 
@@ -240,18 +386,134 @@ SMRITI._buildSidebarDOM = function(nav_items, active_page, shift) {
         </div>
     `;
 
+    // Feature Flag Policy
+    function isFeatureEnabled(flag) {
+        if (!flag) return true;
+        const SMRITI_FEATURE_FLAGS = {
+            "intelligence_enabled": false,
+            "ai_hub_enabled": false,
+            "coverage_days_enabled": false,
+            "exec_dashboard_enabled": false,
+            "gmroi_enabled": false,
+            "sell_through_enabled": false,
+            "inventory_aging_enabled": false,
+            "capital_locked_enabled": false,
+            "dead_stock_enabled": false,
+            "demand_forecast_enabled": false,
+            "slow_mover_enabled": false,
+            "purchase_suggestions_enabled": false,
+            "promo_suggestions_enabled": false,
+            "stock_risk_alerts_enabled": false
+        };
+        return !!SMRITI_FEATURE_FLAGS[flag];
+    }
+
+    let business_type = "Footwear";
+    if (window.frappe && frappe.boot && frappe.boot.smriti_business_type) {
+        business_type = frappe.boot.smriti_business_type;
+    }
+
+    const filteredSchema = JSON.parse(JSON.stringify(SMRITI.sidebarSchema));
+    const renderedSchema = [];
+
+    filteredSchema.forEach(cat => {
+        // Exclude category by feature flag
+        if (cat.feature_flag && !isFeatureEnabled(cat.feature_flag)) {
+            return;
+        }
+
+        if (cat.type === 'category') {
+            if (cat.items) {
+                cat.items = cat.items.filter(item => {
+                    // Exclude items by feature flag
+                    if (item.feature_flag && !isFeatureEnabled(item.feature_flag)) {
+                        return false;
+                    }
+                    if (business_type !== "Footwear") {
+                        // FMCG / Others (hide footwear size attributes)
+                        if (['sizewise_item', 'sizewise_invoice'].includes(item.id)) return false;
+                    }
+                    return true;
+                });
+            }
+            // AUTO-HIDE POLICY: Hide category if no child items or only subheaders are rendered
+            const hasClickableItems = cat.items && cat.items.some(item => item.type !== 'subheader');
+            if (!hasClickableItems) {
+                return;
+            }
+        } else if (cat.type === 'link') {
+            // Exclude links by feature flag
+            if (cat.feature_flag && !isFeatureEnabled(cat.feature_flag)) {
+                return;
+            }
+        }
+        renderedSchema.push(cat);
+    });
+
     var menu_html = '<div class="smriti-side-menu">';
-    nav_items.forEach(function(item) {
-        var active_class = item.id === active_page ? 'active' : '';
-        menu_html += `
-            <a class="smriti-side-item ${active_class}" data-id="${item.id}" href="${item.url}">
-                <span class="side-item-emoji">${item.icon}</span>
-                <span class="side-item-label">${item.label}</span>
-                <button class="smriti-side-item-popout" title="Open in Popout Window" data-url="${item.url}">
-                    <span class="material-symbols-outlined">open_in_new</span>
-                </button>
-            </a>
-        `;
+    
+    var is_admin_account = frappe.session.user === "Admin" || frappe.session.user === "admin@erpnbook.com";
+
+    renderedSchema.forEach(block => {
+        if (block.type === 'link') {
+            if (is_admin_account && block.id === 'security') return;
+            const activeCls = block.id === active_page ? 'active' : '';
+            menu_html += `
+                <a class="smriti-side-item ${activeCls}" data-id="${block.id}" href="${block.url}">
+                    <span class="side-item-emoji">${block.emoji}</span>
+                    <span class="side-item-label">${block.label}</span>
+                    <button class="smriti-side-item-popout" title="Open in Popout Window" data-url="${block.url}">
+                        <span class="material-symbols-outlined">open_in_new</span>
+                    </button>
+                </a>
+            `;
+        } else if (block.type === 'category') {
+            const isCatOpen = localStorage.getItem(`smriti-sidebar-cat-${block.id}`) !== 'closed';
+            const openCls = isCatOpen ? 'open' : '';
+            
+            // Check if any sub-item is active to highlight parent category
+            let isSubActive = false;
+            let subItemsHtml = '';
+            
+            block.items.forEach(sub => {
+                if (is_admin_account && sub.id === 'security') return;
+                
+                if (sub.type === 'subheader') {
+                    subItemsHtml += `
+                        <div class="sidebar-sub-header smriti-side-sub-header">
+                            <span>${sub.label}</span>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const subActiveCls = sub.id === active_page ? 'active' : '';
+                if (sub.id === active_page) isSubActive = true;
+                subItemsHtml += `
+                    <a class="smriti-side-sub-item ${subActiveCls}" data-id="${sub.id}" href="${sub.url}">
+                        <span class="side-item-label">${sub.label}</span>
+                        <button class="smriti-side-item-popout" title="Open in Popout Window" data-url="${sub.url}">
+                            <span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span>
+                        </button>
+                    </a>
+                `;
+            });
+
+            const headerActiveCls = isSubActive ? 'active' : '';
+            
+            menu_html += `
+                <div class="smriti-side-category ${openCls}" id="cat-block-${block.id}">
+                    <div class="smriti-side-category-header ${headerActiveCls}" onclick="SMRITI.toggleCategory('${block.id}')">
+                        <span class="side-item-emoji">${block.emoji}</span>
+                        <span class="side-item-label">${block.label}</span>
+                        <span class="material-symbols-outlined arrow">chevron_right</span>
+                    </div>
+                    <div class="smriti-side-category-body">
+                        ${subItemsHtml}
+                    </div>
+                </div>
+            `;
+        }
     });
     menu_html += '</div>';
 
@@ -285,7 +547,7 @@ SMRITI._buildSidebarDOM = function(nav_items, active_page, shift) {
                     <span>🖥️ Minimal</span>
                 </button>
             </div>
-
+ 
             <div class="smriti-side-cashier">
                 <div class="smriti-side-avatar" id="smriti-cashier-avatar">${first_letter}</div>
                 <div class="smriti-side-info">
@@ -396,9 +658,21 @@ SMRITI.openPopout = function(url) {
     }
 };
 
+SMRITI.toggleCategory = function(catId) {
+    const block = document.getElementById(`cat-block-${catId}`);
+    if (!block) return;
+    
+    block.classList.toggle("open");
+    const isOpen = block.classList.contains("open");
+    try {
+        localStorage.setItem(`smriti-sidebar-cat-${catId}`, isOpen ? "open" : "closed");
+    } catch (e) {}
+};
+
 // Handle resize events to dynamically add or remove the mobile hamburger menu
 window.addEventListener("resize", function() {
     if (document.body.classList.contains("smriti-sidebar-active")) {
         SMRITI.setupMobileToggle();
     }
 });
+

@@ -718,4 +718,104 @@ body.smriti-popout-active .page-head .sidebar-toggle-btn {
     display: none !important;
 }
 
+/* Accordion Folders for SMRITI Sidebar */
+.smriti-side-category {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 2px;
+}
+.smriti-side-category-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--text-muted, #475467) !important;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    user-select: none;
+}
+.smriti-side-category-header span.side-item-emoji {
+    font-size: 20px;
+    flex-shrink: 0;
+    width: 24px;
+    text-align: center;
+    display: inline-block;
+}
+.smriti-side-category-header:hover {
+    background: var(--bg-light-gray, #f8f9fc) !important;
+    color: var(--text-color, #1d2939) !important;
+}
+.smriti-side-category-header .arrow {
+    margin-left: auto;
+    font-size: 16px !important;
+    transition: transform 0.2s ease;
+}
+.smriti-side-category.open .smriti-side-category-header .arrow {
+    transform: rotate(90deg);
+}
+.smriti-side-category-body {
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    padding-left: 28px;
+    overflow: hidden;
+}
+.smriti-side-category.open .smriti-side-category-body {
+    display: flex;
+}
+.smriti-side-sub-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    color: var(--text-muted, #475467) !important;
+    text-decoration: none !important;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+    min-height: 36px;
+}
+.smriti-side-sub-item:hover, .smriti-side-sub-item.active {
+    color: var(--text-color, #1d2939) !important;
+    background: var(--bg-light-gray, #f8f9fc) !important;
+}
+.smriti-side-sub-item.active {
+    color: var(--primary-color, #6941c6) !important;
+    font-weight: 700;
+}
+.sidebar-sub-header,
+.smriti-side-sub-header {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--text-muted, #94a3b8);
+    padding: 10px 10px 4px 6px;
+    letter-spacing: 0.8px;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.75;
+    border-top: 1px dashed var(--border-color, rgba(0,0,0,0.05));
+    margin-top: 6px;
+}
+.sidebar-sub-header:first-child,
+.smriti-side-sub-header:first-child {
+    border-top: none;
+    margin-top: 0;
+}
+
+/* Collapsed state overrides for categories */
+#smriti-sidebar.collapsed .smriti-side-category-header span:not(.side-item-emoji),
+#smriti-sidebar.collapsed .smriti-side-category-header .arrow,
+#smriti-sidebar.collapsed .smriti-side-category-body {
+    display: none !important;
+}
+#smriti-sidebar.collapsed .smriti-side-category-header {
+    justify-content: center;
+}
+
+
 
