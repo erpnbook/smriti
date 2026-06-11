@@ -252,13 +252,14 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
             it.valuation_rate = 150.0
             it.insert(ignore_permissions=True)
             
-            # Create barcode
-            bc = frappe.new_doc("Item Barcode")
-            bc.parent = self.item_code
-            bc.parenttype = "Item"
-            bc.parentfield = "barcodes"
-            bc.barcode = "9876543210"
-            bc.insert(ignore_permissions=True)
+        # ALWAYS recreate the barcode record since we deleted it above
+        bc = frappe.new_doc("Item Barcode")
+        bc.parent = self.item_code
+        bc.parenttype = "Item"
+        bc.parentfield = "barcodes"
+        bc.barcode = "9876543210"
+        bc.insert(ignore_permissions=True)
+        frappe.db.commit()
 
         # Set user as Administrator to bypass manager role check in tests
         frappe.set_user("Administrator")
