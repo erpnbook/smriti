@@ -333,7 +333,7 @@ class TestPSVPhase1_2(FrappeTestCase):
         self.assertEqual(methodology["effective_date"], "2026-06-11")
         self.assertIn("smriti_version", methodology)
         self.assertEqual(methodology["author"]["name"], "Jawahar R. Mallah")
-        self.assertEqual(methodology["author"]["title"], "Founder, AITDL (AI Technology & Development Lab)")
+        self.assertEqual(methodology["author"]["title"], "Founder – AITDL (AI Technology & Development Lab)")
         
         # 2. Test metrics returns warnings, confidence, and txn_count
         item_code = "ITEM-METADATA-TEST"

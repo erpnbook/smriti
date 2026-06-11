@@ -1714,6 +1714,7 @@ def get_inventory_productivity_methodology():
     classification rules, and score explanations in SMRITI Retail OS.
     """
     import smriti_retail_os
+    from frappe.utils import now_datetime
     smriti_version = getattr(smriti_retail_os, "__version__", "1.2.10")
     
     return {
@@ -1722,37 +1723,54 @@ def get_inventory_productivity_methodology():
         "version": "1.0",
         "effective_date": "2026-06-11",
         "smriti_version": smriti_version,
+        "generated_datetime": now_datetime().strftime("%Y-%m-%d %H:%M:%S"),
         "author": {
             "name": "Jawahar R. Mallah",
-            "title": "Founder, AITDL (AI Technology & Development Lab)",
-            "org": "SMRITI Retail OS"
+            "title": "Founder – AITDL (AI Technology & Development Lab)",
+            "quote": _("Software should not merely record transactions. It should help businesses make better decisions.")
         },
+        "about_smriti": _(
+            "SMRITI Retail OS was created from decades of observation, implementation experience, "
+            "operational learning, business process analysis, and real-world retail challenges.\n\n"
+            "The platform has been shaped through continuous interaction with retailers, distributors, "
+            "warehouse operators, accountants, store managers, and business owners."
+        ),
         "summary": _("This guide explains the analytical framework used to calculate and classify inventory productivity and SKU performance in SMRITI Retail OS."),
         "formulas": [
             {
                 "name": "GMROI (Gross Margin Return on Investment)",
+                "business_meaning": _("Measures the profitability of inventory. Tells you how many rupees of gross margin are generated for every rupee invested in stock."),
                 "formula": "GMROI = Gross Margin / Current Inventory Value",
-                "explanation": _("Measures how many rupees of gross margin are generated for every rupee invested in inventory. A standard threshold of 2.0 (200%) is used to classify Star SKUs.")
+                "example": _("Gross Margin = ₹46,680, Inventory Value = ₹27,450. GMROI = 46,680 / 27,450 = 1.70"),
+                "interpretation": _("A GMROI of 1.70 means every ₹1.00 invested in inventory generated ₹1.70 of gross margin. GMROI >= 2.0 is considered high-performing.")
             },
             {
                 "name": "Gross Margin",
-                "formula": "Gross Margin = Sales Qty * (Average Realized Price - Landing Cost)",
-                "explanation": _("Calculated using the average realized price from actual sales invoices and the item's landing cost (valuation rate/standard rate).")
+                "business_meaning": _("The net profit made from selling the item after subtracting its cost."),
+                "formula": "Gross Margin = Sales Qty * (Average Realized Selling Price - Landing Cost)",
+                "example": _("Sales Qty = 120, Price = ₹999, Cost = ₹610. Gross Margin = 120 * (999 - 610) = ₹46,680"),
+                "interpretation": _("The total direct profit contributed by the SKU to the business.")
             },
             {
                 "name": "Inventory Value",
-                "formula": "Inventory Value = Current Stock Balance * Landing Cost",
-                "explanation": _("The total capital locked in current stock of the SKU.")
+                "business_meaning": _("The total capital tied up in the stock of this SKU."),
+                "formula": "Inventory Value = Current Stock * Landing Cost",
+                "example": _("Current Stock = 45, Cost = ₹610. Inventory Value = 45 * 610 = ₹27,450"),
+                "interpretation": _("Represents the opportunity cost of locked capital in warehouse/store inventory.")
             },
             {
                 "name": "Weekly Velocity",
+                "business_meaning": _("The rate at which the item sells per week."),
                 "formula": "Weekly Velocity = Sales Qty / (Timespan Days / 7)",
-                "explanation": _("The rate at which the item is sold per week.")
+                "example": _("Sales Qty = 120, Timespan = 30 Days. Weekly Velocity = 120 / (30 / 7) = 28.0 units/week"),
+                "interpretation": _("Measures product demand speed. Compared against the velocity threshold (default 1.0/wk) to classify demand speed.")
             },
             {
                 "name": "Productivity Score",
+                "business_meaning": _("A composite index (0-100) combining profitability (60% weight) and demand speed (40% weight)."),
                 "formula": "Productivity Score = (0.6 * Normalized GMROI) + (0.4 * Normalized Velocity)",
-                "explanation": _("A composite index from 0 to 100 to rank SKUs. Normalized GMROI = min(GMROI/3.0, 1.0) * 100. Normalized Velocity = min(Weekly Velocity/5.0, 1.0) * 100.")
+                "example": _("Normalized GMROI = min(1.70 / 3.0, 1.0) * 100 = 56.7. Normalized Velocity = min(28.0 / 5.0, 1.0) * 100 = 100.0. Score = (0.6 * 56.7) + (0.4 * 100.0) = 74.0"),
+                "interpretation": _("A single unified ranking to compare SKU efficiency across different categories and items.")
             }
         ],
         "classification_rules": [
@@ -1792,9 +1810,43 @@ def get_inventory_productivity_methodology():
                 "description": _("High-demand items currently out of stock. Replenish immediately to capture demand.")
             }
         ],
+        "confidence_levels": [
+            {
+                "level": "High",
+                "criteria": _("Sales Qty >= 20 and Transaction Count >= 5"),
+                "description": _("Indicates highly reliable historical demand trends.")
+            },
+            {
+                "level": "Medium",
+                "criteria": _("Sales Qty > 0 and Transaction Count > 0 (excluding High)"),
+                "description": _("Moderate reliability. The SKU has transaction history but limited volume.")
+            },
+            {
+                "level": "Low",
+                "criteria": _("No sales or transaction history"),
+                "description": _("Low reliability. The metrics are mostly based on opening stock or standard rates without sales validation.")
+            }
+        ],
+        "data_quality_warnings": [
+            {
+                "warning": "Cost Data Missing",
+                "trigger": _("Item valuation rate and standard rate are both zero"),
+                "action": _("Update the item cost in Item master or purchase transaction to ensure accurate margin calculations.")
+            },
+            {
+                "warning": "Using Fallback Selling Price",
+                "trigger": _("No sales invoices found for the item during the period"),
+                "action": _("The system uses Item standard selling price list or markup rates as a fallback realized price.")
+            },
+            {
+                "warning": "Inventory Adjustment Required",
+                "trigger": _("Current stock balance in shadow ledger is negative"),
+                "action": _("A stock reconciliation or transaction correction is required to fix the negative balance.")
+            }
+        ],
         "about": _(
             "This analytical framework is part of SMRITI Retail OS. "
-            "Designed by Jawahar R. Mallah, Founder, AITDL (AI Technology & Development Lab). "
+            "Designed by Jawahar R. Mallah, Founder – AITDL (AI Technology & Development Lab). "
             "Built from practical business operations, inventory management experience, "
             "retail workflows, implementation learnings, and real-world business requirements."
         )
