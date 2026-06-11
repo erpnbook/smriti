@@ -73,10 +73,35 @@ def ensure_item_group(name):
         except Exception as e:
             print("Failed to create test item group:", name, str(e))
 
+def ensure_attribute_values(attribute, values):
+    """
+    Ensures that the Item Attribute exists and has the specified values.
+    """
+    if not frappe.db.exists("Item Attribute", attribute):
+        doc = frappe.new_doc("Item Attribute")
+        doc.attribute_name = attribute
+        doc.numeric_values = 0
+        doc.insert(ignore_permissions=True)
+    
+    doc = frappe.get_doc("Item Attribute", attribute)
+    existing_values = {v.attribute_value for v in doc.item_attribute_values}
+    
+    updated = False
+    for val in values:
+        if val not in existing_values:
+            doc.append("item_attribute_values", {"attribute_value": val})
+            updated = True
+            
+    if updated:
+        doc.save(ignore_permissions=True)
+        frappe.db.commit()
+
 class TestSmritiRetailItemMasterAPI(unittest.TestCase):
 
     def setUp(self):
         ensure_item_group("Products")
+        ensure_attribute_values("Color", ["RED"])
+        ensure_attribute_values("Size", ["8", "9", "10", "11"])
         # 1. Resolve basic test dependencies
         self.company = frappe.db.exists("Company", "_Test Company")
         if not self.company:
@@ -263,6 +288,8 @@ class TestPivotMatrixImport(unittest.TestCase):
         """Resolve test dependencies and ensure clean state."""
         ensure_item_group("Products")
         ensure_item_group("SANDAL")
+        ensure_attribute_values("Color", ["BLACK", "BEIGE", "RED"])
+        ensure_attribute_values("Size", ["38", "39", "40", "41", "42"])
         self.company = frappe.db.exists("Company", "_Test Company")
         if not self.company:
             comp = frappe.new_doc("Company")
@@ -461,6 +488,8 @@ class TestPivotMatrixImport(unittest.TestCase):
 class TestBarcodeHardening(unittest.TestCase):
     def setUp(self):
         ensure_item_group("Products")
+        ensure_attribute_values("Color", ["BLK"])
+        ensure_attribute_values("Size", ["8"])
         self.company = frappe.db.exists("Company", "_Test Company")
         if not self.company:
             comp = frappe.new_doc("Company")

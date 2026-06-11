@@ -235,8 +235,11 @@ class TestSmritiRetailInventoryAPI(unittest.TestCase):
             hsn.insert(ignore_permissions=True)
             self.hsn_code = hsn.name
 
-        # Create active item
+        # Clean up any orphaned test item or barcode records to avoid duplicate key errors
         self.item_code = "SM-TEST-INV-ITEM"
+        frappe.db.sql("DELETE FROM `tabItem Barcode` WHERE parent = %s OR barcode = %s", (self.item_code, "9876543210"))
+        frappe.db.commit()
+
         if not frappe.db.exists("Item", self.item_code):
             it = frappe.new_doc("Item")
             it.item_code = self.item_code
