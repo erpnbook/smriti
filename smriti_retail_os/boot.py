@@ -22,6 +22,7 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
+# TODO: [Jawahar] Verify POS printer connection on startup
 import frappe
 import fnmatch
 import werkzeug.routing.exceptions
