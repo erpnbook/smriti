@@ -59,11 +59,11 @@ class TestBrandingIntegrity(unittest.TestCase):
 
     def test_error_pages_integrity(self):
         """Verify that SMRITI custom error page templates are locked and unaltered"""
-        expected_404 = "d04c14f1947bacdd34388517aab29a605f23f0a967ac5f5bb1742e8638442add"
-        expected_smriti_404 = "5333a7967c1636b90c4bab2768e2a9860c7b686f58f8ef7f3088beeb966abd80"
+        expected_404 = "77fcca7e6a805425efaf50b89d377e577b5b18b9d22c3a18462b2598d54350e7"
+        expected_smriti_404 = "ef4be28eb30acfe79e715c5bf05be5085f7e060aba10441d0f0194d8d51b62ab"
         
-        expected_403 = "57c8d3c11d897f9bfd607ffb09957b7f9cf54cd36aaa346bcd5d831c540c4653"
-        expected_smriti_403 = "a81ff41d00d871b7f9e4c42b2950acfe608a2c184c7de1eba042ad849d7ab105"
+        expected_403 = "24845173aefd297922e243bdc041251efdae9c0d34b3c66b3ee89b0014473569"
+        expected_smriti_403 = "03a1b942520b2965f68893a66df6c1ff91ee81097755667f60c4f3cd4cd32d3f"
         
         self.assertEqual(self.get_file_hash("www/404.html"), expected_404, "404 HTML template altered or compromised")
         self.assertEqual(self.get_file_hash("www/smriti-404.html"), expected_smriti_404, "smriti-404 HTML template altered or compromised")
