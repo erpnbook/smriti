@@ -65,12 +65,28 @@ def _run_sync():
                 subprocess.run(["rsync", "-a", "--delay-updates", src + "/", dst], check=True)
                 print(f"  - Atomic sync: {subdir}/")
             else:
-                if os.path.islink(dst):
-                    os.unlink(dst)
-                elif os.path.isdir(dst):
-                    shutil.rmtree(dst, ignore_errors=True)
-                shutil.copytree(src, dst, symlinks=False, dirs_exist_ok=True, ignore_dangling_symlinks=True)
-                print(f"  - Copied {subdir}/")
+                # Atomic swap fallback when rsync is not available
+                dst_temp = dst + "_temp_swap"
+                if os.path.exists(dst_temp):
+                    shutil.rmtree(dst_temp, ignore_errors=True)
+                
+                shutil.copytree(src, dst_temp, symlinks=False, ignore_dangling_symlinks=True)
+                
+                dst_old = dst + "_old_swap"
+                if os.path.exists(dst_old):
+                    shutil.rmtree(dst_old, ignore_errors=True)
+                
+                if os.path.exists(dst):
+                    if os.path.islink(dst):
+                        os.unlink(dst)
+                    else:
+                        os.rename(dst, dst_old)
+                
+                os.rename(dst_temp, dst)
+                
+                if os.path.exists(dst_old):
+                    shutil.rmtree(dst_old, ignore_errors=True)
+                print(f"  - Copied {subdir}/ (Atomic Temp Swap)")
 
     # ── Step 3: Copy each app's assets from bench/assets/<app>/ ──
     for app in apps:
@@ -100,22 +116,36 @@ def _run_sync():
             ], check=True)
             print(f"    Done (Atomic): {app}")
         else:
-            # Remove stale destination
-            if os.path.islink(dst_dir):
-                os.unlink(dst_dir)
-            elif os.path.isdir(dst_dir):
-                shutil.rmtree(dst_dir, ignore_errors=True)
+            # Atomic swap fallback when rsync is not available
+            dst_dir_temp = dst_dir + "_temp_swap"
+            if os.path.exists(dst_dir_temp):
+                shutil.rmtree(dst_dir_temp, ignore_errors=True)
 
-            print(f"  - Copying {app} assets from {src_dir}...")
+            print(f"  - Copying {app} assets to temp folder from {src_dir}...")
             shutil.copytree(
-                src_dir, dst_dir,
+                src_dir, dst_dir_temp,
                 symlinks=False,
                 ignore_dangling_symlinks=True,
                 ignore=shutil.ignore_patterns(
                     "node_modules", "*.pyc", "__pycache__", ".git", ".github"
                 ),
             )
-            print(f"    Done: {app}")
+
+            dst_dir_old = dst_dir + "_old_swap"
+            if os.path.exists(dst_dir_old):
+                shutil.rmtree(dst_dir_old, ignore_errors=True)
+
+            if os.path.exists(dst_dir):
+                if os.path.islink(dst_dir):
+                    os.unlink(dst_dir)
+                else:
+                    os.rename(dst_dir, dst_dir_old)
+
+            os.rename(dst_dir_temp, dst_dir)
+
+            if os.path.exists(dst_dir_old):
+                shutil.rmtree(dst_dir_old, ignore_errors=True)
+            print(f"    Done (Atomic Temp Swap): {app}")
 
     # ── Step 4: Build assets.json by merging bench manifest + auto-discovery ──
     _build_assets_json(sites_assets_dir, bench_assets_dir, apps)
