@@ -450,7 +450,7 @@ bench --site yoursite run-tests \
 
 ### 1. Create POS Profile
 ```
-ERPNext → Point of Sale → POS Profile → New
+SMRITI → Configure → POS Profiles → New
 - Company: Your Company
 - Warehouse: Your Store Warehouse
 - Currency: INR
@@ -459,7 +459,7 @@ ERPNext → Point of Sale → POS Profile → New
 
 ### 2. Create Walk-In Customer
 ```
-ERPNext → CRM → Customer → New
+SMRITI → Masters → Customer → New
 - Customer Name: Walk-In Customer
 - Customer Type: Individual
 ```
@@ -474,7 +474,7 @@ India Compliance → Settings
 
 ### 4. Assign Roles to Users
 ```
-ERPNext → Users → [Select User]
+SMRITI → Security → Users → [Select User]
 - Add Role: SMRITI Cashier
   OR
 - Add Role: SMRITI Store Manager

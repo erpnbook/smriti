@@ -491,8 +491,6 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 <script>
 const CSRF_TOKEN = '{{ csrf_token }}';
 let currentCompany = '';
-
-// API helper
 function api(method, params = {}) {
     return fetch(`/api/method/${method}`, {
         method: 'POST',
@@ -519,34 +517,21 @@ function toast(msg, type = 'success') {
     cont.appendChild(t);
     setTimeout(() => { t.remove(); }, 4000);
 }
-
-// Load dashboard data
 async function loadDashboardData(company) {
     if (!company) return;
     currentCompany = company;
     
     try {
-        // 1. Get overall summary
         const summary = await api('smriti_retail_os.psv_api.get_dashboard_summary', { company });
-        
-        // 2. Query System Settings to find config status
         const settings = await api('frappe.client.get_value', {
             doctype: 'PSV System Settings',
             fieldname: ['channel_health_enabled', 'weeks_of_cover_critical', 'weeks_of_cover_warning']
         });
-        
-        // Render KPIs
         document.getElementById('kpi-locations').textContent = summary.total_locations || 0;
         document.getElementById('kpi-negatives').textContent = summary.negative_count || 0;
         document.getElementById('kpi-exceptions').textContent = summary.open_exceptions || 0;
-        
-        // Get stock value and calculate total stock value across partners
         const risks = await api('smriti_retail_os.psv_service.get_stock_cover_risks', { company });
-        
-        // Render Stock Cover Table (Widget 10)
         renderStockCoverTable(risks);
-        
-        // Render Health score (Widget 9)
         const healthEnabled = settings && parseInt(settings.channel_health_enabled) === 1;
         if (!healthEnabled) {
             document.getElementById('health-overlay').style.display = 'flex';
@@ -554,8 +539,6 @@ async function loadDashboardData(company) {
         } else {
             document.getElementById('health-overlay').style.display = 'none';
             document.getElementById('health-content').style.opacity = '1';
-            
-            // Call API
             const partnerList = await api('frappe.client.get_list', {
                 doctype: 'PSV Channel Partner',
                 filters: { company, active: 1 },
@@ -570,12 +553,8 @@ async function loadDashboardData(company) {
                 renderHealthScore(100, 'HEALTHY', 'No active partners to grade');
             }
         }
-        
-        // Render Stock Value Trend (Widget 11)
         const trend = await api('smriti_retail_os.psv_service.get_channel_stock_trend', { company });
         renderTrendChart(trend);
-        
-        // Calculate and render current total stock value
         let currentVal = 0;
         if (trend && trend.length > 0) {
             currentVal = trend[trend.length - 1].value;
@@ -584,8 +563,6 @@ async function loadDashboardData(company) {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
-        
-        // Render Inventory Productivity & SKU Rationalization (Widget 12)
         const prod = await api('smriti_retail_os.psv_service.get_inventory_productivity_metrics', { company });
         renderProductivityWidget(prod);
         
@@ -744,8 +721,6 @@ function openSkuDrawer(s) {
     
     backdrop.classList.add('open');
     drawer.classList.add('open');
-    
-    // Prepare Data Quality Warnings HTML
     let warningsHtml = '';
     if (s.warnings && s.warnings.length > 0) {
         warningsHtml = '<div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">';
@@ -759,25 +734,17 @@ function openSkuDrawer(s) {
         });
         warningsHtml += '</div>';
     }
-    
-    // Prepare Confidence Badge color
     let confClass = 'low';
     if (s.confidence === 'High') confClass = 'high';
     else if (s.confidence === 'Medium') confClass = 'medium';
-    
-    // Category Colors
     let catColor = 'var(--text-muted)';
     if (s.category === 'Star') catColor = 'var(--success)';
     else if (s.category === 'Cash Cow') catColor = 'var(--primary-lt)';
     else if (s.category === 'Underperformer') catColor = 'var(--warning)';
     else if (s.category === 'Slow Mover') catColor = 'var(--danger)';
     else if (s.category === 'Stockout Winner') catColor = 'var(--accent)';
-    
-    // GMROI Format
     const gmroiPercent = s.gmroi !== null ? (s.gmroi * 100).toFixed(0) + '%' : 'DEPLETED';
     const gmroiVal = s.gmroi !== null ? s.gmroi.toFixed(2) : '0.00 (DEPLETED)';
-    
-    // Explanation Text
     let explanationText = '';
     const star_threshold = 1.0; // velocity threshold default
     if (s.category === 'Stockout Winner') {
@@ -907,8 +874,6 @@ function renderHealthScore(score, status, message) {
     valText.textContent = Math.round(score) + '%';
     label.textContent = status;
     desc.textContent = message;
-    
-    // Conic gradient color scheme based on score
     let color = 'var(--success)';
     if (score < 50) color = 'var(--danger)';
     else if (score < 80) color = 'var(--warning)';
@@ -960,8 +925,6 @@ function renderTrendChart(trend) {
     const width = 800;
     const height = 200;
     const padding = 40;
-    
-    // Find min/max values
     const values = trend.map(t => t.value);
     const maxVal = Math.max(...values, 1000) * 1.1;
     const minVal = Math.min(...values, 0) * 0.9;
@@ -972,14 +935,10 @@ function renderTrendChart(trend) {
         const y = height - padding - ((t.value - minVal) * (height - 2 * padding) / (range || 1));
         return { x, y, date: t.date, value: t.value };
     });
-    
-    // Draw grid lines and labels
     const gridLines = 4;
     for (let i = 0; i <= gridLines; i++) {
         const y = padding + (i * (height - 2 * padding) / gridLines);
         const val = maxVal - (i * range / gridLines);
-        
-        // Grid line
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line.setAttribute("x1", padding);
         line.setAttribute("y1", y);
@@ -988,8 +947,6 @@ function renderTrendChart(trend) {
         line.setAttribute("stroke", "rgba(255,255,255,0.04)");
         line.setAttribute("stroke-dasharray", "4 4");
         svg.appendChild(line);
-        
-        // Label
         const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
         txt.setAttribute("x", padding - 8);
         txt.setAttribute("y", y + 4);
@@ -999,15 +956,11 @@ function renderTrendChart(trend) {
         txt.textContent = '₹' + Math.round(val).toLocaleString('en-IN');
         svg.appendChild(txt);
     }
-    
-    // Draw chart path
     let d = '';
     points.forEach((p, idx) => {
         if (idx === 0) d += `M ${p.x} ${p.y}`;
         else d += ` L ${p.x} ${p.y}`;
     });
-    
-    // Line Path
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", d);
     path.setAttribute("fill", "none");
@@ -1016,10 +969,7 @@ function renderTrendChart(trend) {
     path.setAttribute("stroke-linecap", "round");
     path.setAttribute("stroke-linejoin", "round");
     svg.appendChild(path);
-    
-    // Area Path (gradient fill)
     if (points.length > 0) {
-        // Create Gradient
         const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
         const grad = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
         grad.setAttribute("id", "areaGrad");
@@ -1040,10 +990,7 @@ function renderTrendChart(trend) {
         areaPath.setAttribute("fill", "url(#areaGrad)");
         svg.appendChild(areaPath);
     }
-    
-    // Draw dots and interactive trigger
     points.forEach((p, idx) => {
-        // Circle dot
         const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         dot.setAttribute("cx", p.x);
         dot.setAttribute("cy", p.y);
@@ -1052,8 +999,6 @@ function renderTrendChart(trend) {
         dot.setAttribute("stroke", "var(--primary-lt)");
         dot.setAttribute("stroke-width", "2");
         svg.appendChild(dot);
-        
-        // Date Label
         const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
         txt.setAttribute("x", p.x);
         txt.setAttribute("y", height - padding + 18);
@@ -1062,8 +1007,6 @@ function renderTrendChart(trend) {
         txt.setAttribute("font-size", "10px");
         txt.textContent = p.date.split('-').slice(1).join('/'); // MM/DD format
         svg.appendChild(txt);
-        
-        // Interactive hit area
         const hit = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         hit.setAttribute("cx", p.x);
         hit.setAttribute("cy", p.y);
@@ -1074,8 +1017,6 @@ function renderTrendChart(trend) {
         hit.addEventListener('mouseenter', (e) => {
             dot.setAttribute("r", "7");
             dot.setAttribute("fill", "var(--primary-lt)");
-            
-            // Show tooltip
             tooltip.style.opacity = '1';
             tooltip.textContent = `${p.date}: ₹${p.value.toLocaleString('en-IN', {minimumFractionDigits:2})}`;
             
@@ -1098,8 +1039,6 @@ function refreshDashboard() {
     loadDashboardData(currentCompany);
     toast('Dashboard refreshed', 'info');
 }
-
-// Dashboard Drag and Drop Customizer
 let dashboardEditMode = false;
 
 function toggleDashboardEditMode() {
@@ -1218,15 +1157,13 @@ window.onload = () => {
     } else {
         toast('No companies configured in SMRITI', 'error');
     }
-    
-    // Bind info logic trigger click
     const trigger = document.getElementById('info-logic-trigger');
     if (trigger) {
         trigger.onclick = openLogicModal;
     }
 };
 </script>
-<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.2"></script>
 <script>SMRITI.renderFlexibleSidebar("psv_dashboard");</script>
 </body>
 </html>

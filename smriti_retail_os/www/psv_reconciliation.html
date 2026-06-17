@@ -1,0 +1,319 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/psv_reconciliation.html
+  @description: SMRITI PSV Stock Reconciliation — System vs Physical stock comparison
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @version: 1.0.0
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMRITI PSV Reconciliation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0f1e;--bg2:#0f1629;--card:#131d35;--card2:#172040;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --primary:#6366f1;--primary-lt:#818cf8;--accent:#10b981;
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;
+  --text:#e2e8f0;--text-muted:#94a3b8;--text-sub:#475569;
+  --radius:12px;--radius-sm:8px;--radius-lg:16px;--t:0.2s ease;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;font-size:14px}
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(99,102,241,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,0.015) 1px,transparent 1px);background-size:50px 50px;z-index:0}
+#app{position:relative;z-index:1;width:100vw;height:100vh;display:flex;overflow:hidden}
+.main-wrapper{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:52px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:14px;flex-shrink:0}
+.topbar-breadcrumbs{display:flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:600;color:var(--text-muted)}
+.topbar-breadcrumbs span.sep{color:var(--text-sub)}
+.topbar-breadcrumbs span.active{color:var(--text)}
+.topbar-right{margin-left:auto;display:flex;gap:8px}
+.topbtn{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;border:1px solid var(--border2);background:transparent;color:var(--text-muted);cursor:pointer;transition:all var(--t)}
+.topbtn:hover{border-color:var(--primary);color:var(--primary-lt)}
+.topbtn.primary{border-color:var(--primary);color:var(--primary-lt)}
+
+.filter-bar{padding:14px 24px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-shrink:0;flex-wrap:wrap}
+.form-input{padding:8px 12px;background:var(--card);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:0.88rem;outline:none;transition:all var(--t);font-family:inherit}
+.form-input:focus{border-color:var(--primary)}
+
+.split-view{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;gap:0}
+.panel{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+.panel:last-child{border-right:none}
+.panel-header{padding:14px 20px;background:var(--card2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-weight:700;font-size:0.88rem;flex-shrink:0}
+.panel-header .material-symbols-outlined{font-size:18px}
+.panel-header.sys{color:var(--primary-lt)}
+.panel-header.phys{color:var(--accent)}
+.panel-scroll{flex:1;overflow-y:auto}
+.smriti-table{width:100%;border-collapse:collapse}
+.smriti-table th{padding:10px 16px;background:var(--card2);color:var(--text-muted);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1}
+.smriti-table td{padding:10px 16px;border-bottom:1px solid var(--border);font-size:0.88rem;vertical-align:middle}
+.smriti-table tbody tr:hover td{background:rgba(99,102,241,0.02)}
+
+.summary-bar{padding:12px 24px;background:var(--card);border-top:1px solid var(--border);display:flex;gap:24px;flex-shrink:0}
+.sum-item{display:flex;flex-direction:column;gap:2px}
+.sum-label{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-sub);font-weight:700}
+.sum-val{font-size:1rem;font-weight:700}
+.sum-val.ok{color:var(--success)}
+.sum-val.warn{color:var(--warning)}
+.sum-val.bad{color:var(--danger)}
+
+.diff-badge{display:inline-flex;padding:2px 7px;border-radius:4px;font-size:0.78rem;font-weight:700}
+.diff-badge.pos{background:rgba(239,68,68,0.12);color:var(--danger)}
+.diff-badge.neg{background:rgba(16,185,129,0.12);color:var(--success)}
+.diff-badge.zero{background:rgba(255,255,255,0.06);color:var(--text-sub)}
+
+.upload-zone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:40px;text-align:center;border:2px dashed var(--border2);margin:20px;border-radius:var(--radius-lg);cursor:pointer;transition:all var(--t)}
+.upload-zone:hover{border-color:var(--accent);background:rgba(16,185,129,0.03)}
+.upload-zone .material-symbols-outlined{font-size:48px;color:var(--text-sub)}
+.upload-zone h3{font-size:1rem;font-weight:700;color:var(--text)}
+.upload-zone p{font-size:0.82rem;color:var(--text-muted)}
+.btn-upload{padding:9px 20px;background:linear-gradient(135deg,var(--accent),#059669);border:none;border-radius:var(--radius-sm);color:white;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all var(--t)}
+.btn-upload:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(16,185,129,0.3)}
+
+#toast-container{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:99999}
+.toast{padding:12px 18px;border-radius:var(--radius);font-size:0.88rem;font-weight:600;color:white;min-width:220px;display:flex;align-items:center;gap:10px;animation:toast-in 0.3s ease;box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+.toast.success{background:#065f46;border:1px solid rgba(16,185,129,0.3)}
+.toast.error{background:#7f1d1d;border:1px solid rgba(239,68,68,0.3)}
+.toast.info{background:#1e1b4b;border:1px solid rgba(99,102,241,0.3)}
+@keyframes toast-in{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+</style>
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
+<body>
+<div class="bg-grid"></div>
+<div id="app">
+  <div id="smriti-sidebar-target" class="sidebar"></div>
+  <div class="main-wrapper">
+    <div class="topbar">
+      <div class="topbar-breadcrumbs">
+        <span>SMRITI</span><span class="sep">/</span>
+        <span>PSV</span><span class="sep">/</span>
+        <span class="active">Stock Reconciliation</span>
+      </div>
+      <div class="topbar-right">
+        <button class="topbtn" onclick="history.back()"><span class="material-symbols-outlined">arrow_back</span></button>
+        <button class="topbtn primary" onclick="runReconciliation()" id="btn-reconcile"><span class="material-symbols-outlined">sync</span> Run Reconciliation</button>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <select class="form-input" id="sel-company" onchange="onCompanyChange()" style="min-width:180px">
+        <option value="">Loading companies...</option>
+      </select>
+      <select class="form-input" id="sel-psa" style="min-width:220px">
+        <option value="">Select Channel Partner...</option>
+      </select>
+      <input type="date" class="form-input" id="sel-date" style="min-width:140px">
+      <button class="topbtn primary" onclick="runReconciliation()"><span class="material-symbols-outlined">play_arrow</span> Run</button>
+    </div>
+
+    <!-- Split view: system vs physical -->
+    <div class="split-view" id="split-view" style="display:none">
+      <!-- System Ledger Panel -->
+      <div class="panel">
+        <div class="panel-header sys"><span class="material-symbols-outlined">storage</span> System Ledger (PSV Shadow)</div>
+        <div class="panel-scroll">
+          <table class="smriti-table">
+            <thead><tr><th>Item Code</th><th style="text-align:right">System Qty</th><th style="text-align:right">Diff</th></tr></thead>
+            <tbody id="sys-tbody"><tr><td colspan="3" style="text-align:center;color:var(--text-sub);padding:40px 0">Run reconciliation to load data</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Physical Upload Panel -->
+      <div class="panel">
+        <div class="panel-header phys"><span class="material-symbols-outlined">inventory_2</span> Physical Count</div>
+        <div class="panel-scroll" id="physical-panel">
+          <div class="upload-zone" onclick="document.getElementById('csv-input').click()">
+            <span class="material-symbols-outlined">upload_file</span>
+            <h3>Upload Physical Count CSV</h3>
+            <p>Format: item_code, physical_qty<br>First row = header</p>
+            <button class="btn-upload" onclick="event.stopPropagation(); document.getElementById('csv-input').click()">Choose File</button>
+          </div>
+          <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="handleCsvUpload(this)">
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state before running -->
+    <div id="empty-state" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:40px;text-align:center">
+      <span class="material-symbols-outlined" style="font-size:64px;color:var(--text-sub)">balance</span>
+      <h2 style="font-family:'Outfit',sans-serif;font-size:1.4rem;font-weight:800;color:var(--text)">PSV Stock Reconciliation</h2>
+      <p style="color:var(--text-muted);max-width:400px;line-height:1.6">Select a company, channel partner, and reference date — then click <strong>Run</strong> to compare the PSV system ledger against a physical count upload.</p>
+    </div>
+
+    <!-- Summary bar -->
+    <div class="summary-bar" id="summary-bar" style="display:none">
+      <div class="sum-item"><div class="sum-label">Total SKUs</div><div class="sum-val" id="sum-skus">—</div></div>
+      <div class="sum-item"><div class="sum-label">Matched</div><div class="sum-val ok" id="sum-match">—</div></div>
+      <div class="sum-item"><div class="sum-label">Variance</div><div class="sum-val warn" id="sum-var">—</div></div>
+      <div class="sum-item"><div class="sum-label">Missing in Physical</div><div class="sum-val bad" id="sum-miss">—</div></div>
+      <div style="margin-left:auto">
+        <button class="topbtn" onclick="exportCsv()" id="btn-export" disabled><span class="material-symbols-outlined">download</span> Export</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+let systemData = [];
+let physicalData = {};
+let reconciled = [];
+
+function api(method, params={}) {
+  return fetch(`/api/method/${method}`, {
+    method:'POST', credentials:'include',
+    headers:{'Content-Type':'application/json','x-frappe-csrf-token':CSRF_TOKEN},
+    body:JSON.stringify(params)
+  }).then(r=>r.json()).then(d=>{
+    if(d.exc) throw new Error(d._error_message||d.exc);
+    return d.message;
+  });
+}
+
+function toast(msg, type='info') {
+  const cont=document.getElementById('toast-container');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  const icon=type==='success'?'check_circle':type==='error'?'error':'info';
+  t.innerHTML=`<span class="material-symbols-outlined">${icon}</span><span>${msg}</span>`;
+  cont.appendChild(t);
+  setTimeout(()=>t.remove(),4000);
+}
+
+async function init() {
+  const today = new Date().toISOString().substring(0,10);
+  document.getElementById('sel-date').value = today;
+  try {
+    const companies = await api('smriti_retail_os.company_api.list_companies');
+    const sel = document.getElementById('sel-company');
+    sel.innerHTML = companies.map(c=>`<option value="${c.name}">${c.company_name}</option>`).join('');
+    if(companies.length) await loadPsa(companies[0].name);
+  } catch(e) { console.error(e); }
+}
+
+async function loadPsa(company) {
+  try {
+    const psas = await api('frappe.client.get_list',{
+      doctype:'SMRITI Party Stock Account',
+      filters:{company,active:1},
+      fields:['name','customer','location_name']
+    });
+    document.getElementById('sel-psa').innerHTML =
+      '<option value="">Select Channel Partner...</option>' +
+      psas.map(p=>`<option value="${p.name}">${p.customer} (${p.location_name})</option>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function onCompanyChange() {
+  await loadPsa(document.getElementById('sel-company').value);
+}
+
+async function runReconciliation() {
+  const company = document.getElementById('sel-company').value;
+  const psa = document.getElementById('sel-psa').value;
+  if(!company || !psa) { toast('Please select Company and Channel Partner.','error'); return; }
+  toast('Loading system ledger...','info');
+  try {
+    const balances = await api('smriti_retail_os.psv_api.get_party_balance_detail',{company,party_stock_account:psa});
+    systemData = balances || [];
+    document.getElementById('empty-state').style.display='none';
+    document.getElementById('split-view').style.display='grid';
+    document.getElementById('summary-bar').style.display='flex';
+    renderSystemPanel();
+    mergeAndRender();
+    toast(`Loaded ${systemData.length} SKUs from system ledger.`,'success');
+  } catch(e) { toast('Failed to load system data: '+e.message,'error'); }
+}
+
+function renderSystemPanel() {
+  const tbody = document.getElementById('sys-tbody');
+  if(!systemData.length) {
+    tbody.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--text-sub);padding:40px 0">No balances found for this account.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = systemData.map(r => {
+    const phys = physicalData[r.item_code];
+    const diff = phys !== undefined ? (phys - parseFloat(r.balance||0)) : null;
+    const diffHtml = diff === null ? '<span style="color:var(--text-sub)">—</span>' :
+      diff === 0 ? '<span class="diff-badge zero">✓ Match</span>' :
+      diff > 0 ? `<span class="diff-badge pos">+${diff.toFixed(2)}</span>` :
+      `<span class="diff-badge neg">${diff.toFixed(2)}</span>`;
+    return `<tr>
+      <td style="font-family:monospace;font-weight:600">${r.item_code}</td>
+      <td style="text-align:right;color:var(--text)">${parseFloat(r.balance||0).toFixed(2)}</td>
+      <td style="text-align:right">${diffHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+function handleCsvUpload(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.split('\n').filter(l=>l.trim());
+    physicalData = {};
+    let parsed = 0;
+    lines.forEach((line,i)=>{
+      if(i===0 && isNaN(line.split(',')[1])) return; // skip header
+      const [code,...rest] = line.split(',');
+      const qty = parseFloat(rest[rest.length-1]);
+      if(code && !isNaN(qty)) { physicalData[code.trim()] = qty; parsed++; }
+    });
+    toast(`Loaded ${parsed} items from physical count.`,'success');
+    // Replace upload zone with table
+    const panel = document.getElementById('physical-panel');
+    panel.innerHTML = `
+      <table class="smriti-table">
+        <thead><tr><th>Item Code</th><th style="text-align:right">Physical Qty</th></tr></thead>
+        <tbody>${Object.entries(physicalData).map(([k,v])=>`<tr><td style="font-family:monospace;font-weight:600">${k}</td><td style="text-align:right;color:var(--accent)">${v.toFixed(2)}</td></tr>`).join('')}</tbody>
+      </table>`;
+    renderSystemPanel();
+    mergeAndRender();
+    document.getElementById('btn-export').disabled = false;
+  };
+  reader.readAsText(file);
+}
+
+function mergeAndRender() {
+  const total = systemData.length;
+  let matched=0, variances=0, missing=0;
+  systemData.forEach(r => {
+    const phys = physicalData[r.item_code];
+    if(phys === undefined) missing++;
+    else if(Math.abs(phys - parseFloat(r.balance||0)) < 0.001) matched++;
+    else variances++;
+  });
+  document.getElementById('sum-skus').textContent = total;
+  document.getElementById('sum-match').textContent = matched;
+  document.getElementById('sum-var').textContent = variances;
+  document.getElementById('sum-miss').textContent = missing;
+}
+
+function exportCsv() {
+  let csv = 'Item Code,System Qty,Physical Qty,Difference\n';
+  systemData.forEach(r => {
+    const sys = parseFloat(r.balance||0);
+    const phys = physicalData[r.item_code] !== undefined ? physicalData[r.item_code] : '';
+    const diff = phys !== '' ? (phys - sys).toFixed(2) : '';
+    csv += `"${r.item_code}",${sys.toFixed(2)},${phys},${diff}\n`;
+  });
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'psv_reconciliation_' + new Date().toISOString().substring(0,10) + '.csv';
+  a.click();
+}
+
+window.onload = init;
+</script>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.2"></script>
+<script>SMRITI.renderFlexibleSidebar("reconciliation");</script>
+</body>
+</html>
+{% endblock %}

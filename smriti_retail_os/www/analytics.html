@@ -1,0 +1,542 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/analytics.html
+  @description: SMRITI Analytics Dashboard — KPI cards, trend charts, rankings.
+                All data from analytics_api.py (Rule 2 compliant).
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @version: 1.0.0
+  @license: MIT
+  * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMRITI Analytics Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+    --bg:         #0a0f1e;
+    --bg2:        #0f1629;
+    --card:       #131d35;
+    --card2:      #172040;
+    --border:     rgba(255,255,255,0.07);
+    --border2:    rgba(255,255,255,0.12);
+    --primary:    #6366f1;
+    --primary-lt: #818cf8;
+    --primary-bg: rgba(99,102,241,0.08);
+    --success:    #10b981;
+    --success-bg: rgba(16,185,129,0.08);
+    --warning:    #f59e0b;
+    --warning-bg: rgba(245,158,11,0.08);
+    --danger:     #ef4444;
+    --danger-bg:  rgba(239,68,68,0.08);
+    --cyan:       #06b6d4;
+    --cyan-bg:    rgba(6,182,212,0.08);
+    --text:       #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-sub:   #475569;
+    --radius:     14px;
+    --radius-sm:  8px;
+    --shadow:     0 8px 32px rgba(0,0,0,0.4);
+    --t:          0.25s ease;
+    --font-mono:  'JetBrains Mono', monospace;
+}
+
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+
+.bg-grid { position:fixed; inset:0; background-image:linear-gradient(rgba(99,102,241,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,0.012) 1px,transparent 1px); background-size:50px 50px; z-index:0; }
+
+#app { position:relative; z-index:1; width:100vw; height:100vh; display:flex; overflow:hidden; }
+.main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+/* Topbar */
+.topbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
+.topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--text-muted); }
+.topbar-breadcrumbs span.sep { color:var(--text-sub); }
+.topbar-breadcrumbs span.active { color:var(--text); }
+.topbar-right { margin-left:auto; display:flex; gap:8px; }
+.topbtn { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:var(--radius-sm); font-size:12px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); white-space:nowrap; }
+.topbtn span { font-size:16px; }
+.topbtn:hover { border-color:var(--primary); color:var(--primary-lt); }
+.topbtn.active { background:var(--primary-bg); border-color:var(--primary); color:var(--primary-lt); }
+
+/* Dashboard scroll area */
+.dashboard-scroll { flex:1; overflow-y:auto; padding:20px 24px 40px; }
+.dashboard-scroll::-webkit-scrollbar { width:6px; }
+.dashboard-scroll::-webkit-scrollbar-track { background:transparent; }
+.dashboard-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:3px; }
+
+/* Section titles */
+.section-label { font-family:'Outfit',sans-serif; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--text-sub); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+.section-label .material-symbols-outlined { font-size:16px; }
+
+/* ─── KPI Cards ─── */
+.kpi-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:28px; }
+.kpi-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; position:relative; overflow:hidden; transition:all var(--t); }
+.kpi-card:hover { border-color:var(--border2); transform:translateY(-2px); box-shadow:var(--shadow); }
+.kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; border-radius:var(--radius) var(--radius) 0 0; }
+.kpi-card.indigo::before { background:linear-gradient(90deg,var(--primary),var(--primary-lt)); }
+.kpi-card.emerald::before { background:linear-gradient(90deg,#059669,var(--success)); }
+.kpi-card.amber::before { background:linear-gradient(90deg,#d97706,var(--warning)); }
+.kpi-card.rose::before { background:linear-gradient(90deg,#dc2626,var(--danger)); }
+.kpi-card.cyan::before { background:linear-gradient(90deg,#0891b2,var(--cyan)); }
+.kpi-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
+.kpi-icon span { font-size:20px; }
+.kpi-card.indigo .kpi-icon { background:var(--primary-bg); color:var(--primary-lt); }
+.kpi-card.emerald .kpi-icon { background:var(--success-bg); color:var(--success); }
+.kpi-card.amber .kpi-icon { background:var(--warning-bg); color:var(--warning); }
+.kpi-card.rose .kpi-icon { background:var(--danger-bg); color:var(--danger); }
+.kpi-card.cyan .kpi-icon { background:var(--cyan-bg); color:var(--cyan); }
+.kpi-label { font-size:0.72rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-sub); margin-bottom:6px; }
+.kpi-value { font-family:var(--font-mono); font-size:1.5rem; font-weight:800; color:var(--text); line-height:1; margin-bottom:8px; }
+.kpi-sub { font-size:0.78rem; color:var(--text-muted); display:flex; align-items:center; gap:4px; }
+.kpi-badge { display:inline-flex; align-items:center; gap:2px; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:700; }
+.kpi-badge.up { background:var(--success-bg); color:var(--success); }
+.kpi-badge.down { background:var(--danger-bg); color:var(--danger); }
+.kpi-badge.neutral { background:rgba(255,255,255,0.04); color:var(--text-muted); }
+.kpi-badge span { font-size:14px; }
+
+/* ─── Chart Panels ─── */
+.charts-grid { display:grid; grid-template-columns:2fr 1fr; gap:16px; margin-bottom:28px; }
+.chart-panel { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+.chart-title { font-family:'Outfit',sans-serif; font-size:0.88rem; font-weight:700; color:var(--text); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.chart-title .material-symbols-outlined { font-size:18px; color:var(--primary-lt); }
+
+/* SVG chart area */
+.chart-area { width:100%; height:220px; position:relative; }
+.chart-area svg { width:100%; height:100%; }
+
+/* Donut chart */
+.donut-wrap { display:flex; align-items:center; gap:20px; }
+.donut-svg { width:160px; height:160px; flex-shrink:0; }
+.donut-legend { flex:1; display:flex; flex-direction:column; gap:8px; }
+.legend-item { display:flex; align-items:center; gap:8px; font-size:0.82rem; }
+.legend-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+.legend-label { color:var(--text-muted); flex:1; }
+.legend-value { font-family:var(--font-mono); font-weight:700; color:var(--text); }
+
+/* ─── Rankings ─── */
+.rankings-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:28px; }
+.rank-panel { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+
+/* Horizontal bar chart */
+.hbar-list { display:flex; flex-direction:column; gap:10px; }
+.hbar-item { display:flex; align-items:center; gap:10px; }
+.hbar-rank { width:22px; height:22px; border-radius:6px; background:var(--primary-bg); color:var(--primary-lt); font-size:0.72rem; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.hbar-label { flex:1; font-size:0.82rem; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hbar-bar-wrap { width:120px; height:8px; background:rgba(255,255,255,0.04); border-radius:4px; overflow:hidden; flex-shrink:0; }
+.hbar-bar { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--primary),var(--primary-lt)); transition:width 0.6s ease; }
+.hbar-value { font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--text-muted); width:60px; text-align:right; flex-shrink:0; }
+
+/* Cashier table */
+.mini-table { width:100%; border-collapse:collapse; }
+.mini-table th { text-align:left; padding:8px 10px; font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-sub); border-bottom:1px solid var(--border); }
+.mini-table td { padding:10px; font-size:0.82rem; border-bottom:1px solid rgba(255,255,255,0.03); }
+.mini-table tr:last-child td { border-bottom:none; }
+.mini-table td.mono { font-family:var(--font-mono); font-weight:600; }
+
+/* Quick actions */
+.quick-actions { display:flex; gap:10px; flex-wrap:wrap; }
+.qa-btn { display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border-radius:var(--radius-sm); border:1px solid var(--border2); background:var(--card); color:var(--text-muted); font-size:0.82rem; font-weight:600; cursor:pointer; transition:all var(--t); text-decoration:none; }
+.qa-btn span { font-size:18px; }
+.qa-btn:hover { border-color:var(--primary); color:var(--primary-lt); background:var(--primary-bg); transform:translateY(-1px); }
+
+/* Loading skeleton */
+.skeleton { background:linear-gradient(90deg,var(--card2) 25%,rgba(255,255,255,0.04) 50%,var(--card2) 75%); background-size:200% 100%; animation:shimmer 1.5s ease infinite; border-radius:6px; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.sk-value { height:28px; width:140px; margin-bottom:8px; }
+.sk-sub { height:14px; width:100px; }
+.sk-chart { height:220px; width:100%; }
+
+/* Toast */
+#toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
+.toast { padding:12px 18px; border-radius:var(--radius-sm); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+.toast.error { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
+.toast.info  { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+@keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+@media (max-width: 1200px) {
+    .kpi-grid { grid-template-columns:repeat(2,1fr); }
+    .charts-grid { grid-template-columns:1fr; }
+    .rankings-grid { grid-template-columns:1fr; }
+}
+</style>
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+</head>
+<body>
+<div class="bg-grid"></div>
+<div id="app">
+    <div id="smriti-sidebar-target" class="sidebar"></div>
+    <div class="main-wrapper">
+
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-breadcrumbs">
+                <span>SMRITI</span>
+                <span class="sep">/</span>
+                <span class="active">Analytics Dashboard</span>
+            </div>
+            <div class="topbar-right">
+                <button class="topbtn active" data-period="30" onclick="setPeriod(30)">30 Days</button>
+                <button class="topbtn" data-period="7" onclick="setPeriod(7)">7 Days</button>
+                <button class="topbtn" data-period="90" onclick="setPeriod(90)">90 Days</button>
+                <button class="topbtn" onclick="refreshAll()" title="Refresh">
+                    <span class="material-symbols-outlined">refresh</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard content -->
+        <div class="dashboard-scroll">
+
+            <!-- KPI Cards -->
+            <div class="section-label"><span class="material-symbols-outlined">monitoring</span> Today's Pulse</div>
+            <div class="kpi-grid" id="kpi-grid">
+                <div class="kpi-card indigo">
+                    <div class="kpi-icon"><span class="material-symbols-outlined">point_of_sale</span></div>
+                    <div class="kpi-label">Today's Sales</div>
+                    <div class="kpi-value" id="kpi-today-sales"><div class="skeleton sk-value"></div></div>
+                    <div class="kpi-sub" id="kpi-today-sub"><div class="skeleton sk-sub"></div></div>
+                </div>
+                <div class="kpi-card emerald">
+                    <div class="kpi-icon"><span class="material-symbols-outlined">calendar_month</span></div>
+                    <div class="kpi-label">Month-to-Date</div>
+                    <div class="kpi-value" id="kpi-mtd-sales"><div class="skeleton sk-value"></div></div>
+                    <div class="kpi-sub" id="kpi-mtd-sub"><div class="skeleton sk-sub"></div></div>
+                </div>
+                <div class="kpi-card cyan">
+                    <div class="kpi-icon"><span class="material-symbols-outlined">inventory_2</span></div>
+                    <div class="kpi-label">Stock Value</div>
+                    <div class="kpi-value" id="kpi-stock"><div class="skeleton sk-value"></div></div>
+                    <div class="kpi-sub" id="kpi-stock-sub"><div class="skeleton sk-sub"></div></div>
+                </div>
+                <div class="kpi-card rose">
+                    <div class="kpi-icon"><span class="material-symbols-outlined">account_balance_wallet</span></div>
+                    <div class="kpi-label">Outstanding</div>
+                    <div class="kpi-value" id="kpi-outstanding"><div class="skeleton sk-value"></div></div>
+                    <div class="kpi-sub" id="kpi-outstanding-sub"><div class="skeleton sk-sub"></div></div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="section-label"><span class="material-symbols-outlined">insert_chart</span> Trends &amp; Distribution</div>
+            <div class="charts-grid">
+                <div class="chart-panel">
+                    <div class="chart-title"><span class="material-symbols-outlined">trending_up</span> Sales Trend</div>
+                    <div class="chart-area" id="trend-chart"><div class="skeleton sk-chart"></div></div>
+                </div>
+                <div class="chart-panel">
+                    <div class="chart-title"><span class="material-symbols-outlined">pie_chart</span> Payment Mix</div>
+                    <div id="payment-mix-area" style="min-height:200px;display:flex;align-items:center;justify-content:center;">
+                        <div class="skeleton" style="width:160px;height:160px;border-radius:50%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rankings -->
+            <div class="section-label"><span class="material-symbols-outlined">leaderboard</span> Performance Rankings</div>
+            <div class="rankings-grid">
+                <div class="rank-panel">
+                    <div class="chart-title"><span class="material-symbols-outlined">star</span> Top Selling Items</div>
+                    <div id="top-items-area" class="hbar-list">
+                        <div class="skeleton" style="height:24px;width:100%;margin-bottom:6px;"></div>
+                        <div class="skeleton" style="height:24px;width:90%;margin-bottom:6px;"></div>
+                        <div class="skeleton" style="height:24px;width:75%;"></div>
+                    </div>
+                </div>
+                <div class="rank-panel">
+                    <div class="chart-title"><span class="material-symbols-outlined">group</span> Cashier Performance</div>
+                    <div id="cashier-area">
+                        <div class="skeleton" style="height:160px;width:100%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="section-label"><span class="material-symbols-outlined">bolt</span> Quick Actions</div>
+            <div class="quick-actions">
+                <a class="qa-btn" href="/reports"><span class="material-symbols-outlined">summarize</span> Reports Center</a>
+                <a class="qa-btn" href="/billing"><span class="material-symbols-outlined">point_of_sale</span> Billing</a>
+                <a class="qa-btn" href="/inventory"><span class="material-symbols-outlined">inventory</span> Inventory</a>
+                <a class="qa-btn" href="/payments?payment_type=Receive"><span class="material-symbols-outlined">payments</span> Receipts</a>
+                <a class="qa-btn" href="/payments?payment_type=Pay"><span class="material-symbols-outlined">send_money</span> Payments</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const CSRF = '{{ csrf_token }}';
+const API = 'smriti_retail_os.api.analytics_api';
+let currentPeriod = 30;
+
+// ─── API Helper ──────────────────────────────────────────────────────────────
+function api(method, params = {}) {
+    return fetch(`/api/method/${method}`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'x-frappe-csrf-token': CSRF },
+        body: JSON.stringify(params)
+    }).then(r => r.json()).then(d => {
+        if (d.exc) throw new Error(d._error_message || 'Server error');
+        return d.message;
+    });
+}
+
+function toast(msg, type = 'info') {
+    const c = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span class="material-symbols-outlined" style="font-size:18px;">${type === 'error' ? 'error' : 'info'}</span>${msg}`;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+}
+
+function fmt(n) { return '₹' + parseFloat(n || 0).toLocaleString('en-IN', {maximumFractionDigits:0}); }
+function fmtDec(n) { return '₹' + parseFloat(n || 0).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+// ─── Period Switcher ─────────────────────────────────────────────────────────
+function setPeriod(days) {
+    currentPeriod = days;
+    document.querySelectorAll('.topbtn[data-period]').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.period) === days);
+    });
+    loadTrend();
+    loadPaymentMix();
+    loadTopItems();
+    loadCashiers();
+}
+
+// ─── Load All ────────────────────────────────────────────────────────────────
+async function refreshAll() {
+    loadKPIs();
+    loadTrend();
+    loadPaymentMix();
+    loadTopItems();
+    loadCashiers();
+}
+
+// ─── 1. KPIs ─────────────────────────────────────────────────────────────────
+async function loadKPIs() {
+    try {
+        const d = await api(`${API}.get_dashboard_kpis`);
+
+        // Today's Sales
+        document.getElementById('kpi-today-sales').textContent = fmt(d.today_sales);
+        document.getElementById('kpi-today-sub').innerHTML = badge(d.sales_growth) +
+            ` <span style="color:var(--text-sub);margin-left:4px;">${d.today_bills} bills · Avg ${fmt(d.avg_ticket_today)}</span>`;
+
+        // MTD
+        document.getElementById('kpi-mtd-sales').textContent = fmt(d.mtd_sales);
+        document.getElementById('kpi-mtd-sub').innerHTML = badge(d.mtd_growth) +
+            ` <span style="color:var(--text-sub);margin-left:4px;">${d.mtd_bills} bills · Avg ${fmt(d.avg_ticket_mtd)}</span>`;
+
+        // Stock
+        document.getElementById('kpi-stock').textContent = fmt(d.stock_value);
+        document.getElementById('kpi-stock-sub').innerHTML =
+            `<span>${d.total_skus} SKUs</span>` +
+            (d.low_stock_count > 0 ? ` · <span style="color:var(--warning);">${d.low_stock_count} low stock</span>` : '');
+
+        // Outstanding
+        document.getElementById('kpi-outstanding').textContent = fmt(d.outstanding);
+        document.getElementById('kpi-outstanding-sub').innerHTML = '<span>Receivables</span>';
+    } catch(e) {
+        toast('Failed to load KPIs: ' + e.message, 'error');
+    }
+}
+
+function badge(pct) {
+    if (pct > 0) return `<span class="kpi-badge up"><span class="material-symbols-outlined">trending_up</span>${pct}%</span>`;
+    if (pct < 0) return `<span class="kpi-badge down"><span class="material-symbols-outlined">trending_down</span>${Math.abs(pct)}%</span>`;
+    return `<span class="kpi-badge neutral">—</span>`;
+}
+
+// ─── 2. Sales Trend (SVG Area Chart) ─────────────────────────────────────────
+async function loadTrend() {
+    const container = document.getElementById('trend-chart');
+    try {
+        const data = await api(`${API}.get_sales_trend`, { days: currentPeriod });
+        if (!data.length) {
+            container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-sub);">No sales data for this period</div>';
+            return;
+        }
+        renderTrendChart(container, data);
+    } catch(e) {
+        container.innerHTML = '<div style="color:var(--danger);padding:20px;">Failed to load trend</div>';
+    }
+}
+
+function renderTrendChart(container, data) {
+    const W = container.clientWidth || 600;
+    const H = 220;
+    const pad = { top: 20, right: 16, bottom: 30, left: 60 };
+    const cw = W - pad.left - pad.right;
+    const ch = H - pad.top - pad.bottom;
+
+    const maxSales = Math.max(...data.map(d => d.sales)) || 1;
+    const points = data.map((d, i) => ({
+        x: pad.left + (i / Math.max(data.length - 1, 1)) * cw,
+        y: pad.top + ch - (d.sales / maxSales) * ch,
+        sales: d.sales,
+        date: d.date,
+        bills: d.bills
+    }));
+
+    const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+    const areaD = pathD + ` L${points[points.length-1].x},${pad.top+ch} L${points[0].x},${pad.top+ch} Z`;
+
+    // Y-axis labels
+    const ySteps = 4;
+    let yLabels = '';
+    for (let i = 0; i <= ySteps; i++) {
+        const val = (maxSales / ySteps) * (ySteps - i);
+        const y = pad.top + (i / ySteps) * ch;
+        yLabels += `<text x="${pad.left-8}" y="${y+4}" text-anchor="end" fill="var(--text-sub)" font-size="10" font-family="JetBrains Mono">${val >= 100000 ? (val/100000).toFixed(1)+'L' : val >= 1000 ? (val/1000).toFixed(0)+'K' : val.toFixed(0)}</text>`;
+        yLabels += `<line x1="${pad.left}" y1="${y}" x2="${W-pad.right}" y2="${y}" stroke="var(--border)" stroke-dasharray="3,3"/>`;
+    }
+
+    // X-axis labels (show ~6 evenly spaced)
+    let xLabels = '';
+    const step = Math.max(1, Math.floor(data.length / 6));
+    for (let i = 0; i < data.length; i += step) {
+        const p = points[i];
+        const label = data[i].date.slice(5); // MM-DD
+        xLabels += `<text x="${p.x}" y="${H-4}" text-anchor="middle" fill="var(--text-sub)" font-size="10" font-family="JetBrains Mono">${label}</text>`;
+    }
+
+    // Dots with hover titles
+    const dots = points.map(p =>
+        `<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="var(--primary)" stroke="var(--bg)" stroke-width="2" opacity="0.8">
+            <title>${p.date}: ${fmt(p.sales)} (${p.bills} bills)</title>
+        </circle>`
+    ).join('');
+
+    container.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+        <defs>
+            <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.3"/>
+                <stop offset="100%" stop-color="var(--primary)" stop-opacity="0.02"/>
+            </linearGradient>
+        </defs>
+        ${yLabels}
+        ${xLabels}
+        <path d="${areaD}" fill="url(#areaGrad)"/>
+        <path d="${pathD}" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        ${dots}
+    </svg>`;
+}
+
+// ─── 3. Payment Mix (SVG Donut) ──────────────────────────────────────────────
+const DONUT_COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#06b6d4','#8b5cf6','#ec4899','#14b8a6'];
+
+async function loadPaymentMix() {
+    const area = document.getElementById('payment-mix-area');
+    try {
+        const data = await api(`${API}.get_payment_mix`, { days: currentPeriod });
+        if (!data.length) {
+            area.innerHTML = '<div style="color:var(--text-sub);">No payment data</div>';
+            return;
+        }
+        renderDonut(area, data);
+    } catch(e) {
+        area.innerHTML = '<div style="color:var(--danger);">Failed to load</div>';
+    }
+}
+
+function renderDonut(container, data) {
+    const total = data.reduce((s, d) => s + d.total, 0);
+    const R = 60, r = 40, cx = 80, cy = 80;
+    let cumAngle = -90;
+
+    let paths = '';
+    data.forEach((d, i) => {
+        const pct = d.total / total;
+        const angle = pct * 360;
+        const startRad = (cumAngle * Math.PI) / 180;
+        const endRad = ((cumAngle + angle) * Math.PI) / 180;
+        const largeArc = angle > 180 ? 1 : 0;
+        const x1 = cx + R * Math.cos(startRad), y1 = cy + R * Math.sin(startRad);
+        const x2 = cx + R * Math.cos(endRad), y2 = cy + R * Math.sin(endRad);
+        const ix1 = cx + r * Math.cos(endRad), iy1 = cy + r * Math.sin(endRad);
+        const ix2 = cx + r * Math.cos(startRad), iy2 = cy + r * Math.sin(startRad);
+        paths += `<path d="M${x1},${y1} A${R},${R} 0 ${largeArc},1 ${x2},${y2} L${ix1},${iy1} A${r},${r} 0 ${largeArc},0 ${ix2},${iy2} Z" fill="${DONUT_COLORS[i % DONUT_COLORS.length]}" opacity="0.85"><title>${d.mode}: ${fmtDec(d.total)} (${(pct*100).toFixed(1)}%)</title></path>`;
+        cumAngle += angle;
+    });
+
+    const legend = data.map((d, i) => `
+        <div class="legend-item">
+            <div class="legend-dot" style="background:${DONUT_COLORS[i % DONUT_COLORS.length]};"></div>
+            <span class="legend-label">${d.mode}</span>
+            <span class="legend-value">${(d.total/total*100).toFixed(0)}%</span>
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+    <div class="donut-wrap">
+        <svg class="donut-svg" viewBox="0 0 160 160">${paths}
+            <text x="${cx}" y="${cy-4}" text-anchor="middle" fill="var(--text-sub)" font-size="9" font-weight="600">TOTAL</text>
+            <text x="${cx}" y="${cy+12}" text-anchor="middle" fill="var(--text)" font-size="13" font-weight="800" font-family="JetBrains Mono">${fmt(total)}</text>
+        </svg>
+        <div class="donut-legend">${legend}</div>
+    </div>`;
+}
+
+// ─── 4. Top Items ────────────────────────────────────────────────────────────
+async function loadTopItems() {
+    const area = document.getElementById('top-items-area');
+    try {
+        const data = await api(`${API}.get_top_items`, { days: currentPeriod, limit: 8 });
+        if (!data.length) { area.innerHTML = '<div style="color:var(--text-sub);padding:20px;">No item data</div>'; return; }
+        const maxQty = Math.max(...data.map(d => d.qty));
+        area.innerHTML = data.map((d, i) => `
+            <div class="hbar-item">
+                <div class="hbar-rank">${i+1}</div>
+                <div class="hbar-label" title="${d.item_code}">${d.item_name || d.item_code}</div>
+                <div class="hbar-bar-wrap"><div class="hbar-bar" style="width:${(d.qty/maxQty*100).toFixed(1)}%"></div></div>
+                <div class="hbar-value">${d.qty} pcs</div>
+            </div>
+        `).join('');
+    } catch(e) {
+        area.innerHTML = '<div style="color:var(--danger);">Failed to load</div>';
+    }
+}
+
+// ─── 5. Cashier Performance ──────────────────────────────────────────────────
+async function loadCashiers() {
+    const area = document.getElementById('cashier-area');
+    try {
+        const data = await api(`${API}.get_cashier_performance`, { days: currentPeriod });
+        if (!data.length) { area.innerHTML = '<div style="color:var(--text-sub);padding:20px;">No cashier data</div>'; return; }
+        area.innerHTML = `<table class="mini-table">
+            <thead><tr><th>Cashier</th><th>Bills</th><th>Sales</th><th>Avg Ticket</th></tr></thead>
+            <tbody>${data.map(d => `
+                <tr>
+                    <td>${d.cashier.split('@')[0]}</td>
+                    <td class="mono">${d.bills}</td>
+                    <td class="mono" style="color:var(--success);">${fmt(d.total_sales)}</td>
+                    <td class="mono">${fmt(d.avg_ticket)}</td>
+                </tr>`).join('')}
+            </tbody>
+        </table>`;
+    } catch(e) {
+        area.innerHTML = '<div style="color:var(--danger);">Failed to load</div>';
+    }
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+window.onload = refreshAll;
+window.addEventListener('resize', () => { loadTrend(); });
+</script>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.2"></script>
+<script>SMRITI.renderFlexibleSidebar('analytics');</script>
+</body>
+</html>
+{% endblock %}

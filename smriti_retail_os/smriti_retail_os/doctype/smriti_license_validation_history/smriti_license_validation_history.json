@@ -1,0 +1,31 @@
+{
+ "actions": [],
+ "creation": "2026-06-17 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["timestamp", "validation_type", "result", "signature_check_result", "remarks"],
+ "fields": [
+  {"fieldname": "timestamp", "fieldtype": "Datetime", "label": "Timestamp", "in_list_view": 1},
+  {
+   "fieldname": "validation_type",
+   "fieldtype": "Select",
+   "label": "Validation Type",
+   "options": "Online\nOffline",
+   "in_list_view": 1
+  },
+  {"fieldname": "result", "fieldtype": "Data", "label": "Result", "in_list_view": 1},
+  {
+   "fieldname": "signature_check_result",
+   "fieldtype": "Select",
+   "label": "Signature Check Result",
+   "options": "Not Checked\nValid\nInvalid",
+   "default": "Not Checked",
+   "in_list_view": 1
+  },
+  {"fieldname": "remarks", "fieldtype": "Small Text", "label": "Remarks"}
+ ],
+ "istable": 1,
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI License Validation History",
+ "permissions": []
+}

@@ -455,6 +455,24 @@
             </div>
           </div>
 
+          <div class="grid-2 mb-8">
+            <div>
+              <label class="lbl">Business Type</label>
+              <select id="cfg-custom-business-type">
+                <option value="Footwear">Footwear</option>
+                <option value="Apparel">Apparel</option>
+                <option value="FMCG">FMCG</option>
+                <option value="Electronics">Electronics</option>
+                <option value="General Retail">General Retail</option>
+                <option value="Pharmacy">Pharmacy</option>
+                <option value="Supermarket">Supermarket</option>
+              </select>
+            </div>
+            <div style="display:flex;align-items:flex-end;padding-bottom:2px;">
+              <span style="font-size:.8rem;color:var(--text-3);line-height:1.5;">Business type controls PSV module visibility and industry-specific workflows throughout SMRITI.</span>
+            </div>
+          </div>
+
           <div class="grid-2 mt-12">
              <div>
                <label class="lbl">Company GSTIN</label>
@@ -960,10 +978,10 @@ function loadCompanySettings(company = null) {
     currentCompanySettings = settings || {};
 
     // Company-level fields are now embedded in the settings response
-    document.getElementById('cfg-custom-store-type').value = settings.custom_smriti_store_type || '';
-      document.getElementById('cfg-custom-business-type').value = settings.custom_business_type || 'Footwear';
-    document.getElementById('cfg-gstin-state').value = settings.custom_smriti_gstin_state || '';
-    document.getElementById('cfg-settings-configured').checked = !!parseInt(settings.custom_smriti_settings_configured);
+    const _stEl = document.getElementById('cfg-custom-store-type'); if (_stEl) _stEl.value = settings.custom_smriti_store_type || '';
+    const _btEl = document.getElementById('cfg-custom-business-type'); if (_btEl) _btEl.value = settings.custom_business_type || 'Footwear';
+    const _gsEl = document.getElementById('cfg-gstin-state'); if (_gsEl) _gsEl.value = settings.custom_smriti_gstin_state || '';
+    const _cfEl = document.getElementById('cfg-settings-configured'); if (_cfEl) _cfEl.checked = !!parseInt(settings.custom_smriti_settings_configured);
 
     updateDropdown('cfg-default-warehouse', warehouses, 'name', 'warehouse_name', '-- Select Warehouse --');
     updateDropdown('cfg-default-pos-profile', posProfiles, 'name', 'name', '-- Select POS Profile --');
@@ -1228,8 +1246,8 @@ function saveCompanySettings() {
   const company = document.getElementById('cfg-company-select').value;
   if (!company) { toast('Please select a company first.', 'error'); return; }
 
-  const storeType      = document.getElementById('cfg-custom-store-type').value;
-    const businessType   = document.getElementById('cfg-custom-business-type').value;
+  const storeType    = (document.getElementById('cfg-custom-store-type') || {}).value || '';
+  const businessType = (document.getElementById('cfg-custom-business-type') || {}).value || 'General Retail';
   const storeTradeName = document.getElementById('cfg-store-trade-name').value.trim();
   const storeAddressLine1 = document.getElementById('cfg-store-address-line1').value.trim();
   const storeCity    = document.getElementById('cfg-store-city').value.trim();

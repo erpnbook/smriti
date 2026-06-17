@@ -224,6 +224,72 @@ def reset_user_password(email, password):
     update_password(email, password)
     frappe.db.commit()
     return {"success": True, "message": _("Password reset successfully for {0}.").format(email)}
+
+@frappe.whitelist()
+def set_user_pin(email, pin):
+    """Sets the dedicated SMRITI POS PIN for a manager user.
+
+    SEC-02: Managers use this 4–6 digit PIN for POS override actions, keeping
+    their full login password hidden from cashiers at the counter.
+
+    Rules:
+    - Caller must be a Store Manager or Administrator.
+    - PIN must be 4–6 numeric digits only.
+    - Target user must have SMRITI Store Manager or System Manager role.
+    - The Administrator account itself cannot have a PIN set via this endpoint.
+    """
+    check_store_manager_or_admin()
+    check_administrator_protection(email)
+
+    if not frappe.db.exists("User", email):
+        frappe.throw(_("User {0} not found.").format(email))
+
+    # Validate PIN format: 4–6 numeric digits
+    import re
+    if not pin or not re.fullmatch(r"\d{4,6}", str(pin)):
+        frappe.throw(_("PIN must be 4 to 6 numeric digits only (e.g. 1234 or 123456)."))
+
+    # Ensure target user is a manager (PINs are only for manager override accounts)
+    target_roles = frappe.get_roles(email)
+    if "SMRITI Store Manager" not in target_roles and "System Manager" not in target_roles:
+        frappe.throw(
+            _("POS Override PIN can only be set for users with SMRITI Store Manager or System Manager role."),
+            frappe.PermissionError
+        )
+
+    from frappe.utils.password import update_password as _update_pw
+    _update_pw(email, pin, fieldname="custom_smriti_pin")
+    frappe.db.commit()
+
+    frappe.log_error(
+        title="SMRITI: Manager PIN Set",
+        message=f"POS Override PIN was set for '{email}' by '{frappe.session.user}'."
+    )
+    return {"success": True, "message": _("POS Override PIN set successfully for {0}.").format(email)}
+
+@frappe.whitelist()
+def clear_user_pin(email):
+    """Clears the SMRITI POS PIN for a manager user.
+
+    Use this to revoke a manager's PIN access without changing their login password.
+    Restricted to Administrator.
+    """
+    check_administrator_only()
+    check_administrator_protection(email)
+
+    if not frappe.db.exists("User", email):
+        frappe.throw(_("User {0} not found.").format(email))
+
+    # Clear the password hash by setting an empty sentinel value via DB
+    frappe.db.set_value("User", email, "custom_smriti_pin", "")
+    frappe.db.commit()
+
+    frappe.log_error(
+        title="SMRITI: Manager PIN Cleared",
+        message=f"POS Override PIN was cleared for '{email}' by '{frappe.session.user}'."
+    )
+    return {"success": True, "message": _("POS Override PIN cleared for {0}.").format(email)}
+
 @frappe.whitelist()
 def get_user_metrics():
     """
@@ -671,3 +737,71 @@ def apply_workflow_action(doctype, docname, action):
     apply_workflow(doc, action)
     frappe.db.commit()
     return {"success": True, "message": _("Action '{0}' successfully applied.").format(action)}
+
+
+# ── Session Lock: Password Verification ──────────────────────────────────────
+
+@frappe.whitelist()
+def verify_user_password(password):
+    """
+    Verifies the current session user's login password.
+    Used by the SMRITI Session Lock overlay to allow the cashier to unlock
+    the terminal with their own credentials.
+
+    Returns { success: True } on match, raises PermissionError on failure.
+    Intentionally uses Frappe's check_password() for constant-time comparison.
+    """
+    if not password:
+        frappe.throw(_("Password is required."), frappe.ValidationError)
+
+    user = frappe.session.user
+    if user in ("Guest", ""):
+        frappe.throw(_("Not authenticated."), frappe.PermissionError)
+
+    try:
+        from frappe.utils.password import check_password
+        check_password(user, password)
+        return {"success": True}
+    except frappe.AuthenticationError:
+        # Do not reveal whether user exists — just reject
+        frappe.throw(
+            _("Incorrect password. Please try again or use manager PIN override."),
+            frappe.AuthenticationError
+        )
+
+
+# ── Session Lock: Manager List for Dropdown ───────────────────────────────────
+
+@frappe.whitelist()
+def get_managers_list():
+    """
+    Returns a list of active users with SMRITI Store Manager or System Manager roles
+    who have a POS Override PIN set. Used to populate the manager dropdown on the
+    Session Lock overlay.
+    """
+    manager_roles = ["SMRITI Store Manager", "System Manager"]
+
+    users = frappe.db.get_all(
+        "Has Role",
+        filters={"role": ["in", manager_roles]},
+        pluck="parent"
+    )
+    unique_users = list(set(users) - {"Administrator", "Guest"})
+
+    result = []
+    for u in unique_users:
+        user_doc = frappe.db.get_value(
+            "User",
+            u,
+            ["name", "full_name", "enabled", "custom_smriti_pin"],
+            as_dict=True
+        )
+        if user_doc and user_doc.get("enabled") and user_doc.get("custom_smriti_pin"):
+            result.append({
+                "name":      user_doc["name"],
+                "full_name": user_doc.get("full_name") or user_doc["name"],
+            })
+
+    result.sort(key=lambda x: x["full_name"])
+    return result
+

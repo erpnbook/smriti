@@ -3,7 +3,7 @@
  * @description: SMRITI Navigation Configuration — Single source of truth for all sidebar items.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-06-12
- * @version: 1.9.1
+ * @version: 2.0.2
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
@@ -13,43 +13,42 @@
 // ─────────────────────────────────────────
 
 const SMRITI_NAV_META = {
-  version: "1.9.1",
-  updated_at: "2026-06-12",
-  source: "SMRITI Sidebar Restructure v1.9.1"
+  version: "2.0.1",
+  updated_at: "2026-06-17",
+  source: "SMRITI Sidebar — www-first routing (no Frappe Desk)"
 };
 
 // ─────────────────────────────────────────
 // Route Resolver — SMRITI COMPLIANT
 // ─────────────────────────────────────────
 // POLICY (AITDL Rule 7 + GEMINI.md Rule 7):
-//   ALL routes must point to SMRITI www pages (/smriti_retail_os/www/).
-//   Raw ERPNext /app/ DocType routes FORBIDDEN for end users.
+//   ALL routes MUST point to SMRITI www pages (/smriti_retail_os/www/).
+//   /app/ and /desk/ routes are FORBIDDEN for end users.
 //   Unbuilt pages → /smriti-coming-soon?feature=...
 // ─────────────────────────────────────────
 
 const SMRITI_ROUTE_MAP = {
-  // ── Built SMRITI www pages (files exist in www/) ────────────────────
-  "customers":              "/customers",         // www/customers.html ✅
-  "suppliers":              "/suppliers",         // www/suppliers.html ✅
-  "sales_invoice":          "/sales_invoices",    // www/sales_invoices.html ✅
-  "sales_return":           "/sales_return",      // www/sales_return.html ✅
-  "credit_note":            "/sales_invoices",    // www/sales_invoices.html ✅
-  "delivery_note":          "/delivery_challan",  // www/delivery_challan.html ✅
-  "purchase_receipt":       "/purchase_receipt",  // www/purchase_receipt.html ✅
-  "purchase_invoice":       "/purchase_invoice",  // www/purchase_invoice.html ✅
-  "payment_entry_receipt":  "/payments",          // www/payments.html ✅
-  "payment_entry_payment":  "/payments",          // www/payments.html ✅
-  "advance":                "/payments",          // www/payments.html ✅
-  "stock_entry":            "/inventory",         // www/inventory.html ✅
-  "warehouse":              "/inventory",         // www/inventory.html ✅
-  "supplier_returns":       "/supplier-returns",  // www/supplier_returns.html ✅
+  // ── Built SMRITI www pages (files exist in www/) ─────────────────────
+  "customers":              "/customers",           // www/customers.html ✅
+  "suppliers":              "/suppliers",           // www/suppliers.html ✅
+  "sales_invoice":          "/sales-invoices",      // www/sales_invoices.html ✅
+  "sales_return":           "/sales-return",        // www/sales_return.html ✅
+  "credit_note":            "/sales-invoices",      // same as sales_invoice
+  "delivery_note":          "/delivery-challan",    // www/delivery_challan.html ✅
+  "purchase_receipt":       "/purchase-receipt",    // www/purchase_receipt.html ✅
+  "purchase_invoice":       "/purchase-invoice",    // www/purchase_invoice.html ✅
+  "payment_entry_receipt":  "/payments",            // www/payments.html ✅
+  "payment_entry_payment":  "/payments",            // www/payments.html ✅
+  "advance":                "/payments",            // www/payments.html ✅
+  "stock_entry":            "/inventory",           // www/inventory.html ✅
+  "warehouse":              "/inventory",           // www/inventory.html ✅
+  "supplier_returns":       "/supplier-returns",    // www/supplier_returns.html ✅
   "audit_reports":          "/reports?report=security_audit_log",
-
 };
 
 function resolveSmritiRoute(key) {
   if (SMRITI_ROUTE_MAP[key]) return SMRITI_ROUTE_MAP[key];
-  // Safety net: unknown key → coming-soon, NEVER raw /app/ route
+  // Safety net: unknown key → coming-soon, NEVER raw /app/ or /desk/ route
   console.warn("[SMRITI] No route for key:", key, "→ coming-soon");
   return "/smriti-coming-soon?feature=" + encodeURIComponent(key.replace(/_/g, " "));
 }
@@ -78,8 +77,8 @@ const SMRITI_NAV = {
           status: "active" },
         { id: "item_master",
           label: "Item Master",
-          route: "/app/smriti-item-master",
-          standalone_route: "/item_master",
+          route: "/item-master",
+          standalone_route: "/item-master",
           status: "active" },
         { id: "category_master",
           label: "Category Master",
@@ -125,9 +124,9 @@ const SMRITI_NAV = {
           status: "active" },
         { id: "reconciliation",
           label: "Reconciliation",
-          status: "coming_soon",
-          progress: 0,
-          eta: "PSV Phase 1.3" },
+          route: "/psv-reconciliation",
+          standalone_route: "/psv-reconciliation",
+          status: "active" },
         { id: "psv_dashboard",
           label: "Dashboard",
           route: "/psv-dashboard",
@@ -140,9 +139,9 @@ const SMRITI_NAV = {
           status: "active" },
         { id: "exception_analysis",
           label: "Exception Analysis",
-          status: "coming_soon",
-          progress: 0,
-          eta: "PSV Phase 1.3" }
+          route: "/psv-exception-analysis",
+          standalone_route: "/psv-exception-analysis",
+          status: "active" }
       ]
     },
     {
@@ -162,23 +161,23 @@ const SMRITI_NAV = {
           status: "active" },
         { id: "tax_invoice",
           label: "Tax Invoice",
-          route: resolveSmritiRoute("sales_invoice"),
+          route: "/sales-invoices",
           standalone_route: "/sales-invoices",
           status: "active" },
         { id: "sales_return",
           label: "Sales Return",
-          route: resolveSmritiRoute("sales_return"),
+          route: "/sales-returns",
           standalone_route: "/sales-returns",
           status: "active" },
         { id: "delivery_challan",
           label: "Delivery Challan",
-          route: resolveSmritiRoute("delivery_note"),
+          route: "/delivery-challans",
           standalone_route: "/delivery-challans",
           status: "active" },
         { id: "credit_notes",
           label: "Credit Notes",
-          route: resolveSmritiRoute("credit_note"),
-          standalone_route: "/credit-notes",
+          route: "/sales-invoices",
+          standalone_route: "/sales-invoices",
           status: "active" }
       ]
     },
@@ -194,17 +193,17 @@ const SMRITI_NAV = {
           status: "active" },
         { id: "grn_receipts",
           label: "GRN / Receipts",
-          route: resolveSmritiRoute("purchase_receipt"),
+          route: "/grn-receipts",
           standalone_route: "/grn-receipts",
           status: "active" },
         { id: "purchase_invoice",
           label: "Purchase Invoice",
-          route: resolveSmritiRoute("purchase_invoice"),
+          route: "/purchase-invoices",
           standalone_route: "/purchase-invoices",
           status: "active" },
         { id: "supplier_returns",
           label: "Supplier Returns",
-          route: resolveSmritiRoute("supplier_returns"),
+          route: "/supplier-returns",
           standalone_route: "/supplier-returns",
           status: "active" }
       ]
@@ -216,8 +215,8 @@ const SMRITI_NAV = {
       items: [
         { id: "warehouses",
           label: "Warehouses",
-          route: resolveSmritiRoute("warehouse"),
-          standalone_route: "/warehouses",
+          route: "/inventory?tab=warehouses",
+          standalone_route: "/inventory?tab=warehouses",
           status: "active" },
         { id: "opening_stock",
           label: "Opening Stock",
@@ -236,8 +235,8 @@ const SMRITI_NAV = {
           status: "active" },
         { id: "stock_adjustments",
           label: "Stock Adjustments",
-          route: resolveSmritiRoute("stock_entry"),
-          standalone_route: "/stock-adjustments",
+          route: "/inventory?tab=adjustments",
+          standalone_route: "/inventory?tab=adjustments",
           status: "active" },
         { id: "stock_audit",
           label: "Stock Audit",
@@ -263,17 +262,17 @@ const SMRITI_NAV = {
       items: [
         { id: "receipts",
           label: "Receipts",
-          route: resolveSmritiRoute("payment_entry_receipt"),
+          route: "/receipts",
           standalone_route: "/receipts",
           status: "active" },
         { id: "payments",
           label: "Payments",
-          route: resolveSmritiRoute("payment_entry_payment"),
+          route: "/payments",
           standalone_route: "/payments",
           status: "active" },
         { id: "advances",
           label: "Advances",
-          route: resolveSmritiRoute("advance"),
+          route: "/advances",
           standalone_route: "/advances",
           status: "active" }
       ]
@@ -365,6 +364,11 @@ const SMRITI_NAV = {
           route: "/smriti-security-log",
           standalone_route: "/smriti-security-log",
           status: "active" },
+        { id: "smriti_license",
+          label: "License & Registration",
+          route: "/smriti-license",
+          standalone_route: "/smriti-license",
+          status: "active" },
         { id: "backup_restore",
           label: "Backup & Restore",
           route: "/backup",
@@ -384,14 +388,14 @@ const SMRITI_NAV = {
           status: "active" },
         { id: "release_notes",
           label: "Release Notes",
-          status: "coming_soon",
-          progress: 0,
-          eta: "Q3 2026" },
+          route: "/release-notes",
+          standalone_route: "/release-notes",
+          status: "active" },
         { id: "support",
           label: "Support",
-          status: "coming_soon",
-          progress: 0,
-          eta: "Q3 2026" }
+          route: "/support",
+          standalone_route: "/support",
+          status: "active" }
       ]
     },
     {

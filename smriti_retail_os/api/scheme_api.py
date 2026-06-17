@@ -68,7 +68,7 @@ def get_schemes(search_txt=None):
 @frappe.whitelist()
 def create_scheme(title, apply_on, applied_to, discount_type, value, valid_from=None, valid_upto=None, company=None):
     """
-    Creates a standard ERPNext Pricing Rule representing a retail scheme.
+    Creates a SMRITI Pricing Rule representing a retail scheme.
     """
     check_manager_permission()
     
@@ -109,7 +109,7 @@ def create_scheme(title, apply_on, applied_to, discount_type, value, valid_from=
 @frappe.whitelist()
 def update_scheme(name, title, apply_on, applied_to, discount_type, value, valid_from=None, valid_upto=None):
     """
-    Updates an existing ERPNext Pricing Rule details.
+    Updates an existing SMRITI Pricing Rule details.
     """
     check_manager_permission()
     
@@ -150,7 +150,7 @@ def delete_scheme(name):
 def _set_pricing_rule_links(doc, apply_on, applied_to):
     """
     Helper to set the linked fields/child tables in Pricing Rule
-    supporting different ERPNext versions.
+    supporting different ERPNbook versions.
     """
     meta = frappe.get_meta("Pricing Rule")
     

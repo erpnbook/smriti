@@ -1,0 +1,242 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/release_notes.html
+  @description: SMRITI Release Notes — Version History
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @version: 1.0.0
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMRITI Release Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+    --bg:#0a0f1e; --bg2:#0f1629; --card:#131d35; --card2:#172040;
+    --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.12);
+    --primary:#6366f1; --primary-lt:#818cf8; --accent:#10b981;
+    --success:#10b981; --warning:#f59e0b; --danger:#ef4444;
+    --text:#e2e8f0; --text-muted:#94a3b8; --text-sub:#475569;
+    --radius:12px; --radius-sm:8px; --radius-lg:16px; --t:0.2s ease;
+}
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+.bg-grid { position:fixed; inset:0; background-image:linear-gradient(rgba(99,102,241,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,0.015) 1px,transparent 1px); background-size:50px 50px; z-index:0; }
+#app { position:relative; z-index:1; width:100vw; height:100vh; display:flex; overflow:hidden; }
+.main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.topbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
+.topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--text-muted); }
+.topbar-breadcrumbs span.sep { color:var(--text-sub); }
+.topbar-breadcrumbs span.active { color:var(--text); }
+.topbar-right { margin-left:auto; display:flex; gap:8px; }
+.topbtn { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:var(--radius-sm); font-size:12px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); }
+.topbtn:hover { border-color:var(--primary); color:var(--primary-lt); }
+.content-scroll { flex:1; overflow-y:auto; padding:32px 40px; }
+
+/* Timeline */
+.timeline { max-width:800px; margin:0 auto; }
+.release-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:28px 32px; margin-bottom:24px; position:relative; transition:all var(--t); }
+.release-card:hover { border-color:var(--primary); box-shadow:0 0 30px rgba(99,102,241,0.08); }
+.release-card.latest { border-color:var(--primary); background:linear-gradient(135deg, var(--card), rgba(99,102,241,0.05)); }
+.release-card.latest::before { content:"LATEST"; position:absolute; top:12px; right:16px; background:linear-gradient(135deg,var(--primary),#8b5cf6); color:white; font-size:10px; font-weight:800; padding:3px 10px; border-radius:12px; letter-spacing:1px; }
+.release-header { display:flex; align-items:baseline; gap:14px; margin-bottom:16px; }
+.release-version { font-family:'Outfit',sans-serif; font-size:1.5rem; font-weight:800; background:linear-gradient(135deg,var(--primary-lt),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.release-date { font-size:0.82rem; color:var(--text-muted); font-weight:500; }
+.release-subtitle { font-size:0.95rem; color:var(--text); font-weight:600; margin-bottom:14px; }
+.change-list { list-style:none; padding:0; }
+.change-list li { padding:6px 0; font-size:0.88rem; color:var(--text-muted); display:flex; align-items:flex-start; gap:8px; line-height:1.5; }
+.change-list li span.icon { font-size:16px; flex-shrink:0; margin-top:2px; }
+.change-list li span.icon.feat { color:var(--accent); }
+.change-list li span.icon.fix { color:var(--warning); }
+.change-list li span.icon.perf { color:var(--primary-lt); }
+.change-list li span.icon.break { color:var(--danger); }
+.tag { display:inline-flex; padding:2px 7px; border-radius:4px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-right:6px; }
+.tag.feat { background:rgba(16,185,129,0.1); color:var(--accent); }
+.tag.fix  { background:rgba(245,158,11,0.1); color:var(--warning); }
+.tag.perf { background:rgba(99,102,241,0.1); color:var(--primary-lt); }
+.tag.break{ background:rgba(239,68,68,0.1); color:var(--danger); }
+</style>
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
+<body>
+<div class="bg-grid"></div>
+<div id="app">
+    <div id="smriti-sidebar-target" class="sidebar"></div>
+    <div class="main-wrapper">
+        <div class="topbar">
+            <div class="topbar-breadcrumbs">
+                <span>SMRITI</span><span class="sep">/</span>
+                <span>Help Desk</span><span class="sep">/</span>
+                <span class="active">Release Notes</span>
+            </div>
+            <div class="topbar-right">
+                <button class="topbtn" onclick="history.back()"><span class="material-symbols-outlined">arrow_back</span></button>
+                <button class="topbtn" onclick="history.forward()"><span class="material-symbols-outlined">arrow_forward</span></button>
+            </div>
+        </div>
+
+        <div class="content-scroll">
+            <div class="timeline">
+
+                <div class="release-card latest">
+                    <div class="release-header">
+                        <span class="release-version">v1.2.14</span>
+                        <span class="release-date">June 17, 2026</span>
+                    </div>
+                    <div class="release-subtitle">Licensing Phase-1 — License &amp; Registration Module</div>
+                    <ul class="change-list">
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>SMRITI License Single DocType — all fields per architecture v1.0 (installation_id, checksum_hash, grace/warning thresholds)</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>3 child tables: Feature Entitlements, Activity Log, Validation History</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>LicenseManager + check_feature() — single gating authority (Rule 2 compliant, architecture §7)</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Full §6 state machine: Unregistered → Active → Warning → Grace Period → Expired → Suspended → Tampered</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>HMAC-SHA256 integrity checksum (installation_id as key) per architecture §5</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>license_api.py — 7 whitelisted endpoints (status, activate, sync, features, logs, history, check_feature)</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>/smriti-license — 6-tab UI (Overview, Registration, Features, Validation History, Activity Log, Support)</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Daily scheduler: evaluate_license_status — architecture §6a Trigger A</span></li>
+                        <li><span class="material-symbols-outlined icon fix">build</span><span><span class="tag fix">Arch</span>Hybrid evaluation: scheduler + on-save + lightweight check_feature() — real-time enforcement guaranteed</span></li>
+                    </ul>
+                </div>
+
+                <div class="release-card">
+                    <div class="release-header">
+                        <span class="release-version">v1.2.13</span>
+                        <span class="release-date">June 17, 2026</span>
+                    </div>
+                    <div class="release-subtitle">Analytics Dashboard — Visual KPIs, Charts &amp; Rankings</div>
+                    <ul class="change-list">
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>analytics_api.py — 6 whitelisted dashboard methods (KPIs, trends, payment mix, top items, cashier rankings, aging)</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>KPI cards — Today's Sales, MTD, Stock Value, Outstanding with period-over-period % change</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>SVG area chart — 7/30/90-day sales trend with interactive period switcher</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>SVG donut chart — payment mode distribution with legend</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Top items horizontal bar chart + cashier performance table</span></li>
+                        <li><span class="material-symbols-outlined icon fix">build</span><span><span class="tag fix">Fix</span>Pure CSS/SVG charts — zero external charting library dependencies</span></li>
+                        <li><span class="material-symbols-outlined icon fix">build</span><span><span class="tag fix">Fix</span>Advanced Analytics removed from coming-soon registry — feature is now live</span></li>
+                    </ul>
+                </div>
+
+                <div class="release-card">
+                    <div class="release-header">
+                        <span class="release-version">v1.2.12</span>
+                        <span class="release-date">June 17, 2026</span>
+                    </div>
+                    <div class="release-subtitle">Payment Module — Receipts, Payments &amp; Advances</div>
+                    <ul class="change-list">
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>payment_api.py — full SMRITI service controller for Payment Entries (Rule 2 compliant)</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>New Payment modal — create Receipts/Payments with party search, outstanding invoice allocation</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Date range filters, summary bar (total submitted + record count)</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Detail drawer with full invoice allocation breakdown</span></li>
+                        <li><span class="material-symbols-outlined icon fix">build</span><span><span class="tag fix">Fix</span>Replaced direct frappe.client.get_list calls with SMRITI payment_api.py (was Rule 2 violation)</span></li>
+                        <li><span class="material-symbols-outlined icon fix">build</span><span><span class="tag fix">Fix</span>Print URL corrected to use /api/method/frappe.utils.print_format (was using /printview)</span></li>
+                        <li><span class="material-symbols-outlined icon fix">build</span><span><span class="tag fix">Fix</span>Supplier Payments removed from coming-soon registry — feature is now live</span></li>
+                    </ul>
+                </div>
+
+                <div class="release-card">
+                    <div class="release-header">
+                        <span class="release-version">v1.2.11</span>
+                        <span class="release-date">June 17, 2026</span>
+                    </div>
+                    <div class="release-subtitle">Branding Compliance, Route Hardening &amp; Security Fixes</div>
+                    <ul class="change-list">
+                        <li><span class="material-symbols-outlined icon fix">build</span><span><span class="tag fix">Fix</span>Zero legacy branding in all user-facing files — GSTR-1 note, inventory messages, billing labels fully cleaned</span></li>
+                        <li><span class="material-symbols-outlined icon fix">build</span><span><span class="tag fix">Fix</span>BRANDING_POLICY.md — added Section 5 with canonical branding replacement map (→ ERPNbook / SMRITI)</span></li>
+                        <li><span class="material-symbols-outlined icon fix">build</span><span><span class="tag fix">Fix</span>README.md — nav instructions now use SMRITI routes (no more legacy Desk navigation patterns)</span></li>
+                        <li><span class="material-symbols-outlined icon fix">build</span><span><span class="tag fix">Fix</span>coming_soon_api.py — removed 4 stale entries for features now live (reconciliation, exception analysis, release notes, support)</span></li>
+                        <li><span class="material-symbols-outlined icon fix">build</span><span><span class="tag fix">Fix</span>hooks.py — added 5 missing /reports/sales, /reports/inventory, /reports/finance, /reports/gst, /reports/psv route aliases (prevented 404s)</span></li>
+                        <li><span class="material-symbols-outlined icon fix">build</span><span><span class="tag fix">Fix</span>Security: created 4 hyphenated .py context files (psv-dashboard, psv-opening-balance, sales-upload, stock-audit) — pages were running without auth check</span></li>
+                        <li><span class="material-symbols-outlined icon fix">build</span><span><span class="tag fix">Fix</span>Removed orphan desk.py.bak from www directory</span></li>
+                    </ul>
+                </div>
+
+                <div class="release-card">
+                    <div class="release-header">
+                        <span class="release-version">v1.2.10</span>
+                        <span class="release-date">June 17, 2026</span>
+                    </div>
+                    <div class="release-subtitle">SMRITI www-First Route Migration</div>
+                    <ul class="change-list">
+
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>All 54 sidebar links now use clean SMRITI www routes — zero /app/ or /desk/ exposure</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>24 new website_route_rules for hyphenated sidebar URLs</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Release Notes page (this page!)</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Support Center page with contact and system diagnostics</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>PSV Reconciliation page for system vs physical stock comparison</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>PSV Exception Analysis dashboard for anomaly detection</span></li>
+                        <li><span class="material-symbols-outlined icon fix">build</span><span><span class="tag fix">Fix</span>Fixed stock-audit.html copy-paste bug (masterUploadsList not defined)</span></li>
+                        <li><span class="material-symbols-outlined icon fix">build</span><span><span class="tag fix">Fix</span>Added ?v=2.0.0 cache-bust to all 33 www page script tags</span></li>
+                        <li><span class="material-symbols-outlined icon perf">speed</span><span><span class="tag perf">Perf</span>Sidebar nav_config loaded with version-keyed cache busting</span></li>
+                    </ul>
+                </div>
+
+                <div class="release-card">
+                    <div class="release-header">
+                        <span class="release-version">v1.2.9</span>
+                        <span class="release-date">June 16, 2026</span>
+                    </div>
+                    <div class="release-subtitle">PSV Dashboard & Help Center Enhancements</div>
+                    <ul class="change-list">
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>PSV Dashboard drag-and-drop card reordering with localStorage persistence</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Help Center with searchable guides and interactive walkthroughs</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Pivot Table reporting for PSV dashboard</span></li>
+                        <li><span class="material-symbols-outlined icon fix">build</span><span><span class="tag fix">Fix</span>Fixed boot.py setup_complete enforcement for all users</span></li>
+                    </ul>
+                </div>
+
+                <div class="release-card">
+                    <div class="release-header">
+                        <span class="release-version">v1.2.8</span>
+                        <span class="release-date">June 12, 2026</span>
+                    </div>
+                    <div class="release-subtitle">Flexible Sidebar & Navigation Overhaul</div>
+                    <ul class="change-list">
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Flexible sidebar — position swap, top bar transform, collapse/expand</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Unified smriti_nav_config.js — single source of truth for all navigation</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Popout mode — open any page in a separate window</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Coming Soon page with feature registry</span></li>
+                    </ul>
+                </div>
+
+                <div class="release-card">
+                    <div class="release-header">
+                        <span class="release-version">v1.2.0</span>
+                        <span class="release-date">May 30, 2026</span>
+                    </div>
+                    <div class="release-subtitle">PSV Phase 1.0 — Party Stock Visibility</div>
+                    <ul class="change-list">
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>PSV Dashboard with stock aging, capital locked, and coverage days</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Party Stock Accounts (PSA) management</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Sales Upload and Stock Audit for channel partners</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Shadow ledger architecture — separate from SMRITI Stock Ledger</span></li>
+                    </ul>
+                </div>
+
+                <div class="release-card">
+                    <div class="release-header">
+                        <span class="release-version">v1.0.0</span>
+                        <span class="release-date">May 2026</span>
+                    </div>
+                    <div class="release-subtitle">SMRITI Retail OS — Initial Launch</div>
+                    <ul class="change-list">
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Retail POS Billing Terminal with barcode scanning</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Customer & Supplier Directory</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Purchase Orders, GRN, Purchase Invoices</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Sales Invoices, Returns, Delivery Challans</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Inventory Operations — stock transfer, adjustments, audit</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Reports Dashboard with 18+ report templates</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Shift Management — cashier open/close/register</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Barcode Center — generate and print barcode labels</span></li>
+                        <li><span class="material-symbols-outlined icon feat">check_circle</span><span><span class="tag feat">Feature</span>Security & Workflow Center — users, roles, permissions</span></li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.2"></script>
+<script>SMRITI.renderFlexibleSidebar("release_notes");</script>
+</body>
+</html>
+{% endblock %}

@@ -1081,7 +1081,7 @@ class SmritiItemMasterController {
 
         $(this.wrapper).on('click', '#sim-download-tpl, #sim-download-tpl2', () => self._download_template());
         $(this.wrapper).on('click', '#sim-view-items', () => {
-            // SMRITI Policy (AITDL Rule 7): Navigate to SMRITI Products page, never to ERPNext /app/item list
+            // SMRITI Policy (AITDL Rule 7): Navigate to SMRITI Products page, never to ERPNbook /app/item list
             window.location.href = '/products';
         });
     }
@@ -1330,7 +1330,7 @@ $(document).ready(function() {
 });
 </script>
 
-<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.2"></script>
 <script>SMRITI.renderFlexibleSidebar("item_master");</script></body>
 </html>
 {% endblock %}

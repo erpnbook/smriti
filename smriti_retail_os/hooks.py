@@ -4,7 +4,7 @@
 # @description: Frappe application hooks — event bindings, scheduler jobs, and app metadata.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.2.10
+# @version: 1.2.14
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
@@ -83,6 +83,8 @@ app_include_js = [
     "/assets/smriti_retail_os/js/smriti_offline_store.js",
     "/assets/smriti_retail_os/js/smriti_pwa.js",
     "/assets/smriti_retail_os/js/smriti_boot.js",
+    # Session Lock — auto-lock POS terminal on idle (billing pages only)
+    "/assets/smriti_retail_os/js/smriti_session_lock.js",
 ]
 
 # website page context override for whitelabel branding
@@ -414,6 +416,46 @@ website_route_rules = [
     {"from_route": "/scheme-creator", "to_route": "scheme_creator"},
     {"from_route": "/supplier-returns", "to_route": "supplier_returns"},
 
+    # ─── SMRITI Sidebar Canonical Routes (hyphenated, user-facing) ───
+    # These map modern sidebar standalone_route values to existing www pages.
+    # Every sidebar link MUST have a matching alias here.
+    {"from_route": "/sales-invoices",    "to_route": "sales_invoices"},    # www/sales_invoices.html
+    {"from_route": "/sales-returns",     "to_route": "sales_return"},      # www/sales_return.html
+    {"from_route": "/delivery-challans", "to_route": "delivery_challan"},  # www/delivery_challan.html
+    {"from_route": "/grn-receipts",      "to_route": "purchase_receipt"},  # www/purchase_receipt.html
+    {"from_route": "/purchase-invoices", "to_route": "purchase_invoice"},  # www/purchase_invoice.html
+    {"from_route": "/receipts",          "to_route": "payments"},          # www/payments.html (Receive mode)
+    {"from_route": "/advances",          "to_route": "payments"},          # www/payments.html (Advance mode)
+    {"from_route": "/barcode-center",    "to_route": "barcode"},           # www/barcode.html
+    {"from_route": "/print-templates",   "to_route": "print_templates"},   # www/print_templates.html
+    {"from_route": "/config-portal",     "to_route": "configure"},         # www/configure.html
+    {"from_route": "/opening-stock",     "to_route": "inventory"},         # www/inventory.html (opening stock tab)
+    {"from_route": "/inventory-ops",     "to_route": "inventory"},         # www/inventory.html (ops tab)
+    {"from_route": "/stock-adjustments", "to_route": "inventory"},         # www/inventory.html (adjustments tab)
+    {"from_route": "/warehouses",        "to_route": "inventory"},         # www/inventory.html (warehouses tab)
+    {"from_route": "/billing-metrics",   "to_route": "reports"},           # www/reports.html (metrics tab)
+    {"from_route": "/psv-aging",         "to_route": "psv-dashboard"},     # www/psv-dashboard.html (aging tab)
+    {"from_route": "/psv-channel-partner", "to_route": "psa"},             # www/psa.html
+    {"from_route": "/sales-upload",      "to_route": "sales-upload"},      # www/sales-upload.html
+    {"from_route": "/stock-audit",       "to_route": "stock-audit"},       # www/stock-audit.html
+    {"from_route": "/item-master",       "to_route": "item_master"},       # www/item_master.html
+    {"from_route": "/credit-notes",      "to_route": "sales_invoices"},    # www/sales_invoices.html (credit note mode)
+    {"from_route": "/psv-dashboard",     "to_route": "psv-dashboard"},     # www/psv-dashboard.html
+    {"from_route": "/psv-opening-balance","to_route": "psv-opening-balance"}, # www/psv-opening-balance.html
+    {"from_route": "/release-notes",          "to_route": "release_notes"},       # www/release_notes.html
+    {"from_route": "/support",                 "to_route": "smriti_support"},       # www/smriti_support.html
+    {"from_route": "/psv-reconciliation",      "to_route": "psv_reconciliation"},   # www/psv_reconciliation.html
+    {"from_route": "/psv-exception-analysis",  "to_route": "psv_exception_analysis"}, # www/psv_exception_analysis.html
+    {"from_route": "/exception-analysis",      "to_route": "psv_exception_analysis"}, # alias
+
+    # ─── Report Sub-Routes (tab aliases) ────────────────────────────
+    {"from_route": "/reports/sales",      "to_route": "reports"},  # www/reports.html?tab=sales
+    {"from_route": "/reports/inventory",  "to_route": "reports"},  # www/reports.html?tab=inventory
+    {"from_route": "/reports/finance",    "to_route": "reports"},  # www/reports.html?tab=finance
+    {"from_route": "/reports/gst",        "to_route": "reports"},  # www/reports.html?tab=gst
+    {"from_route": "/reports/psv",        "to_route": "reports"},  # www/reports.html?tab=psv
+
+
 
     # ─── Core PWA & System Routes ───────────────────────────────────
     {
@@ -576,9 +618,25 @@ website_route_rules = [
         # Standalone Backup & Restore Center — served from www/backup.html + www/backup.py
         "from_route": "/backup",
         "to_route": "backup"
+    },
+    {
+        # Analytics Dashboard — served from www/analytics.html + www/analytics.py
+        "from_route": "/analytics",
+        "to_route": "analytics"
+    },
+    {
+        # License & Registration — served from www/smriti-license.html + www/smriti-license.py
+        "from_route": "/smriti-license",
+        "to_route": "smriti-license"
     }
 ]
 
 
+# ── Scheduler Events ──────────────────────────────────────────────────────────
 
-
+scheduler_events = {
+    "daily": [
+        # SMRITI License: daily state evaluation (architecture §6a Trigger A)
+        "smriti_retail_os.license.tasks.evaluate_license_status",
+    ]
+}

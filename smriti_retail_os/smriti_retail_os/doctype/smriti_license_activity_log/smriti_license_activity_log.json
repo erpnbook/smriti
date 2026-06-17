@@ -1,0 +1,24 @@
+{
+ "actions": [],
+ "creation": "2026-06-17 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["timestamp", "action", "performed_by", "result", "remarks"],
+ "fields": [
+  {"fieldname": "timestamp", "fieldtype": "Datetime", "label": "Timestamp", "in_list_view": 1},
+  {
+   "fieldname": "action",
+   "fieldtype": "Select",
+   "label": "Action",
+   "options": "Activated\nRenewed\nChanged\nSynced\nExported\nSupport Contacted\nManual Override\nIntegrity Check",
+   "in_list_view": 1
+  },
+  {"fieldname": "performed_by", "fieldtype": "Link", "label": "Performed By", "options": "User", "in_list_view": 1},
+  {"fieldname": "result", "fieldtype": "Data", "label": "Result", "in_list_view": 1},
+  {"fieldname": "remarks", "fieldtype": "Small Text", "label": "Remarks"}
+ ],
+ "istable": 1,
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI License Activity Log",
+ "permissions": []
+}

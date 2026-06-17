@@ -48,7 +48,7 @@ class SmritiBillingController {
             // Apply a class to document body to trigger whitelabeling
             $('body').addClass('smriti-popout-active');
             
-            // Hide ERPNext standard elements
+            // Hide ERPNbook standard elements
             setTimeout(() => {
                 $('.navbar').hide();
                 $('#smriti-sidebar, .desk-sidebar, .layout-side-section').hide();

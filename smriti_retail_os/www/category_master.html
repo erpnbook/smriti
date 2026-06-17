@@ -316,9 +316,6 @@
   function populateParentDropdown(excludeName = null) {
     const select = document.getElementById('cat-parent');
     select.innerHTML = '<option value="All Item Groups">All Item Groups</option>';
-    
-    // Parent categories must be Groups, but standard Item Groups can also be used.
-    // We filter out excludeName to prevent circular hierarchy
     categoriesData.forEach(c => {
       if (c.is_group && c.name !== 'All Item Groups' && c.name !== excludeName) {
         select.insertAdjacentHTML('beforeend', `<option value="${c.name}">${c.name}</option>`);
@@ -416,7 +413,7 @@
   };
 </script>
 
-<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=1.9.1"></script>
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.2"></script>
 <script>SMRITI.renderFlexibleSidebar("category_master");</script>
 </body>
 </html>

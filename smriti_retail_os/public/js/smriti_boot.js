@@ -19,10 +19,43 @@
     var DESK_ROLES   = ['System Manager'];
     var ADMIN_USER   = 'Administrator';
 
+    // ─── CRITICAL: Override frappe.boot.setup_complete ASAP ──────────────────
+    // Frappe's router.js checks frappe.boot.setup_complete and redirects to setup-wizard
+    // if it's falsy. We must override it before frappe.ready() fires.
+    // This is a client-side safety net complementing the server-side boot hook.
+    (function forceSetupComplete() {
+        if (typeof frappe !== 'undefined' && frappe.boot) {
+            frappe.boot.setup_complete = true;
+            frappe.boot.sysdefaults = frappe.boot.sysdefaults || {};
+            frappe.boot.sysdefaults.setup_complete = true;
+        }
+    })();
+
+    // Override frappe.set_route to intercept setup-wizard navigation
+    var _originalSetRoute = (typeof frappe !== 'undefined' && frappe.set_route) ? frappe.set_route.bind(frappe) : null;
+    if (_originalSetRoute) {
+        frappe.set_route = function() {
+            var args = Array.prototype.slice.call(arguments);
+            var firstArg = args[0];
+            // Block any attempt to route to setup-wizard
+            if (firstArg === 'setup-wizard' ||
+                (Array.isArray(firstArg) && firstArg[0] === 'setup-wizard') ||
+                (typeof firstArg === 'string' && firstArg.includes('setup-wizard'))) {
+                console.warn('[SMRITI] Blocked frappe.set_route to setup-wizard. Staying on SMRITI.');
+                return;
+            }
+            return _originalSetRoute.apply(frappe, args);
+        };
+    }
+
     function init() {
         applyBranding();
         enforceDesktopAccess();
         hideSetupWizard();
+        // Re-apply the boot override after frappe is fully loaded
+        if (typeof frappe !== 'undefined' && frappe.boot) {
+            frappe.boot.setup_complete = true;
+        }
     }
 
     function applyBranding() {

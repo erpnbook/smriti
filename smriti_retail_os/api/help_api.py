@@ -287,7 +287,16 @@ HELP_CENTER_REGISTRY = {
             "- Opening Balances and Security settings are restricted to Store Managers and System Managers.\n"
             "If an unauthorized user attempts to access these routes, the system intercepts the request and displays an 'Access Denied' alert.\n\n"
             "3. Manager PIN Controls (`custom_smriti_pin`)\n"
-            "Instead of sharing accounts, SMRITI implements manager PIN verification. Store Managers set a dedicated 4-digit PIN on their User profile. When a cashier performs a restricted action (e.g. voiding a row or closing a shift with a large variance), the manager enters their PIN. The action is authorized and logged with the manager's ID, preserving individual accountability."
+            "Instead of sharing login passwords at the POS terminal, SMRITI implements dedicated manager PIN verification. Store Managers and System Managers set a 4\u20136 digit numeric PIN via the Security Center (/security → Users tab → \ud83d\udd22 Set PIN button). This PIN is used exclusively for POS override actions (voiding rows, applying discounts, closing shifts with variance). The PIN is:\n"
+            "- Stored as a hashed credential in the Frappe __Auth table (fieldname: custom_smriti_pin), separate from the login password.\n"
+            "- Validated using Frappe's check_password() with constant-time comparison.\n"
+            "- Rate-limited to 5 failed attempts per 10-minute window (Redis-backed).\n"
+            "- Audited: every successful override is logged as a Comment on the target invoice with the manager's identity.\n\n"
+            "4. PIN Management in Security Center\n"
+            "The Security Center (Administration → Security & Workflow Center → Users tab) provides three action buttons per user row:\n"
+            "- \u270f\ufe0f Edit Roles: Modify role assignments and role profiles.\n"
+            "- \ud83d\udd11 Reset Login Password: Change the user's login password.\n"
+            "- \ud83d\udd22 Set POS Override PIN: Opens a dedicated modal with PIN entry, confirmation, and show/hide toggle. Only visible for users with SMRITI Store Manager or System Manager roles. Administrators can also clear a manager's PIN to revoke override access."
         ),
         "faqs": [
             {
@@ -295,8 +304,12 @@ HELP_CENTER_REGISTRY = {
                 "answer": _("System Managers can open the User master page in the system console, select the user account, and check the desired role (e.g., 'SMRITI Cashier' or 'SMRITI Store Manager') in the Roles table.")
             },
             {
-                "question": _("Can a manager change their security PIN?"),
-                "answer": _("Yes. Users with manager roles can update their security PIN directly via their User Profile settings in SMRITI, which securely hashes and updates the 'custom_smriti_pin' field.")
+                "question": _("How does a manager set or change their POS Override PIN?"),
+                "answer": _("Go to Security & Workflow Center → Users tab. Find the manager's row and click the \ud83d\udd22 (PIN) button. Enter a 4\u20136 digit numeric PIN, confirm it, and click 'Set PIN'. The PIN is hashed and stored securely. Only users with SMRITI Store Manager or System Manager roles will see the PIN button.")
+            },
+            {
+                "question": _("Can an Administrator revoke a manager's PIN?"),
+                "answer": _("Yes. Administrators can click the \ud83d\udd22 PIN button on any manager row and use the 'Clear PIN' option in the modal footer. This removes the PIN hash, preventing the manager from performing PIN-based overrides until a new PIN is set.")
             },
             {
                 "question": _("How are unauthorized page access attempts handled?"),
@@ -323,7 +336,7 @@ HELP_CENTER_REGISTRY = {
             "- Footers and links: External platform footer references are completely disabled.\n\n"
             "2. Versioning and About Dialog Overrides (`branding_api.py`)\n"
             "To prevent exposure in support dialogues, server-side methods intercept version queries. It maps default system modules to SMRITI product names:\n"
-            "- ERPNext is displayed as: 'SMRITI Retail OS'.\n"
+            "- ERPNbook is displayed as: 'SMRITI Retail OS'.\n"
             "- Frappe Framework is displayed as: 'SMRITI Framework'.\n"
             "- HRMS is displayed as: 'SMRITI HR'.\n"
             "- Payments is displayed as: 'SMRITI Payments'.\n\n"
@@ -412,6 +425,62 @@ HELP_CENTER_REGISTRY = {
             {
                 "question": _("Can I export these logs for external auditing?"),
                 "answer": _("Yes, you can click the 'Export' button on the SMRITI Reports toolbar to download the current filtered view in CSV or Excel format.")
+            }
+        ]
+    },
+    "license_key_management": {
+        "title": _("License Key Management & Activation"),
+        "category": "Administration Guides",
+        "description": _("How SMRITI license keys work, offline validation, and the activation workflow."),
+        "about": _("This guide explains the SMRITI License Key format (SMRT keys), offline HMAC-SHA256 validation, tier extraction, and the Registration tab activation flow."),
+        "author": {
+            "name": "Jawahar R Mallah",
+            "title": _("Lead Architect & SMRITI Licensing Authority"),
+            "quote": _("Self-describing signed keys eliminate server dependencies while maintaining cryptographic integrity.")
+        },
+        "content": _(
+            "SMRITI Retail OS uses structured, self-describing license keys that embed all activation metadata and are cryptographically signed for offline validation.\n\n"
+            "1. SMRITI Key Format\n"
+            "License keys follow the format: SMRT-{VERSION}-{PAYLOAD}-{SIGNATURE}\n"
+            "- VERSION: Key format version (currently '1').\n"
+            "- PAYLOAD: Base64URL-encoded JSON containing: customer_id (cid), license tier (tier: Starter/Professional/Enterprise), expiry date (exp: YYYY-MM-DD), installation binding (iid: UUID or '*' for floating), and issuer tag (iss: ERPNBOOK).\n"
+            "- SIGNATURE: First 16 hex characters of HMAC-SHA256(secret, 'SMRT|version|payload').\n\n"
+            "2. Offline Validation Flow\n"
+            "When a key is entered in the Registration tab and 'Activate License' is clicked:\n"
+            "- Step 1: Format check — key must match the SMRT-{v}-{payload}-{sig} regex pattern.\n"
+            "- Step 2: Signature verification — HMAC-SHA256 is computed using the server's license secret and compared (constant-time) to the embedded signature.\n"
+            "- Step 3: Payload decode — the base64url JSON is decoded and validated (required fields, valid tier, ERPNBOOK issuer).\n"
+            "- Step 4: Expiry check — the embedded expiry date is compared against today's date.\n"
+            "- Step 5: Installation binding — if the key specifies a UUID (not '*'), it must match this installation's installation_id.\n"
+            "- Step 6: Metadata extraction — tier, expiry_date, and customer_id are extracted from the key and applied to the license record, overriding form fields.\n\n"
+            "3. Secret Management\n"
+            "The HMAC signing secret is resolved in order:\n"
+            "- Production: 'smriti_license_secret' in site_config.json (recommended).\n"
+            "- Container/CI: SMRITI_LICENSE_SECRET environment variable.\n"
+            "- Development: Built-in fallback secret (logged as a warning).\n\n"
+            "4. Activation Results\n"
+            "On successful activation, the license record is updated with the embedded tier, expiry, and customer_id. The state machine recalculates license_status (Active/Warning/Grace Period) and license_health automatically. Activity and validation history entries are appended for audit."
+        ),
+        "faqs": [
+            {
+                "question": _("Where do I get a SMRITI license key?"),
+                "answer": _("License keys are issued by ERPNBook.com. Contact support@erpnbook.com or your account manager to receive a signed key for your subscription tier.")
+            },
+            {
+                "question": _("Can I use the same license key on multiple installations?"),
+                "answer": _("Only if the key was issued as a floating key (installation binding = '*'). Keys bound to a specific installation UUID will be rejected on other installations.")
+            },
+            {
+                "question": _("What happens if my license key expires?"),
+                "answer": _("The system enters a Grace Period (default 7 days) with restricted feature access. After the grace period, the license status changes to 'Expired' and full system access is blocked until a renewed key is activated.")
+            },
+            {
+                "question": _("How do I set the production license secret?"),
+                "answer": _("Add 'smriti_license_secret' to your site_config.json file: {\"smriti_license_secret\": \"your-secret-here\"}. This must match the secret used by ERPNBook to generate your keys.")
+            },
+            {
+                "question": _("Is an internet connection required for license activation?"),
+                "answer": _("No. Phase-1 validation is entirely offline. The HMAC signature is verified locally using the shared secret. Phase-2 will add optional online PKI verification for enhanced security.")
             }
         ]
     },

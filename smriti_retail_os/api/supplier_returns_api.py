@@ -62,7 +62,7 @@ def get_receipt_details(receipt_name):
     
     for item in pr.items:
         # Calculate maximum possible return quantity
-        # In ERPNext, Purchase Receipt Item has returned_qty tracking returns
+        # Purchase Receipt Item has returned_qty tracking returns
         returned = flt(item.returned_qty)
         max_return = flt(item.qty) - returned
         

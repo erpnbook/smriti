@@ -1,41 +1,44 @@
 # -*- coding: utf-8 -*-
 #
-# @file: smriti_retail_os/www/desk.py
-# @description: Python controller for the standalone SMRITI Control Center.
+# @file: smriti_retail_os/www/sales-upload.py
+# @description: Python controller for the standalone SMRITI PSV Sales Upload page.
 #               - Enforces login (redirects Guests to /login)
 #               - Enforces Store Manager or System Manager role
 #               - Strips all Frappe chrome from the page context
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.0.0
+# @version: 1.0.1
 # @license: MIT
+# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+#
+# NOTE: This file MUST be named sales-upload.py (hyphenated) to match
+#       www/sales-upload.html. Frappe resolves .py by exact filename.
+#       The underscore variant sales_upload.py is kept as a legacy stub.
 #
 
 import frappe
 
 no_cache = 1
-title = "SMRITI Control Center"
+title = "SMRITI Sales Uploads"
 
 def get_context(context):
     """
-    Called by Frappe before rendering www/desk.html.
+    Called by Frappe before rendering www/sales-upload.html.
     - Redirects Guest users to /login
-    - Ensures only Store Managers / System Managers can access
-    - Strips all Frappe chrome (navbar, sidebar, web includes)
+    - Ensures Store Managers / System Managers can access
+    - Strips all Frappe chrome
     """
-    # Redirect unauthenticated users
     if frappe.session.user == "Guest":
         frappe.local.flags.redirect_location = "/login"
         raise frappe.Redirect
 
-    # Role guard — Control center is manager-only
     roles = frappe.get_roles(frappe.session.user)
-    if "SMRITI Store Manager" not in roles and "System Manager" not in roles:
+    allowed_roles = ["SMRITI Store Manager", "System Manager"]
+    if not any(r in roles for r in allowed_roles):
         frappe.throw(
-            "Access Denied: Control Center is restricted to Store Managers and System Managers.",
+            "Access Denied: Sales Uploads management is restricted to Store Managers and System Managers.",
             frappe.PermissionError
         )
 
-    # Strip ALL Frappe web includes — this page is 100% standalone
     context.web_include_js  = []
     context.web_include_css = []
 
@@ -47,6 +50,5 @@ def get_context(context):
 
     context.cashier    = frappe.session.user
     context.csrf_token = frappe.sessions.get_csrf_token()
-    context.app_version = frappe.get_attr("smriti_retail_os.__version__")
 
     return context

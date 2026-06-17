@@ -613,6 +613,73 @@
   </div>
 </div>
 
+<!-- Modal: Set POS Override PIN -->
+<div class="modal-backdrop" id="modal-pin">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-title">
+      <span class="material-symbols-outlined">pin</span> Set POS Override PIN
+      <button class="modal-close" onclick="closeModal('modal-pin')"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:16px;">
+
+      <!-- Context banner -->
+      <div style="background:rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.25); border-radius:8px; padding:12px 14px; font-size:0.82rem; color:var(--text-2); line-height:1.5;">
+        <span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle; color:var(--accent);">info</span>
+        This <strong style="color:var(--accent);">4–6 digit PIN</strong> is used for manager overrides at the POS terminal (void, discount, shift close).
+        The manager's login password is <strong>never</strong> entered on a customer-facing screen.
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Manager</label>
+        <input type="text" id="pin-email-display" readonly style="background:rgba(0,0,0,0.15); cursor:not-allowed; font-weight:600;">
+        <input type="hidden" id="pin-email">
+      </div>
+
+      <!-- OTP-style PIN input -->
+      <div class="form-group">
+        <label class="form-label">New PIN <span style="color:var(--text-3); font-weight:400;">(4–6 digits)</span></label>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="password" id="pin-new"
+            placeholder="e.g. 1234"
+            maxlength="6"
+            inputmode="numeric"
+            pattern="[0-9]{4,6}"
+            style="font-size:1.4rem; letter-spacing:0.3em; text-align:center; max-width:160px;"
+            oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+          <button type="button"
+            style="background:none; border:none; cursor:pointer; color:var(--text-3); padding:4px;"
+            onclick="const f=document.getElementById('pin-new'); f.type=f.type==='password'?'text':'password';" title="Show/Hide PIN">
+            <span class="material-symbols-outlined" style="font-size:18px;">visibility</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Confirm PIN</label>
+        <input type="password" id="pin-confirm"
+          placeholder="Re-enter PIN"
+          maxlength="6"
+          inputmode="numeric"
+          pattern="[0-9]{4,6}"
+          style="font-size:1.4rem; letter-spacing:0.3em; text-align:center; max-width:160px;"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+        <button class="btn btn-secondary" id="btn-clear-pin" onclick="submitClearPin()" style="font-size:0.78rem; color:var(--danger); border-color:rgba(239,68,68,0.3);">
+          <span class="material-symbols-outlined" style="font-size:14px;">delete</span> Clear PIN
+        </button>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-secondary" onclick="closeModal('modal-pin')">Cancel</button>
+          <button class="btn btn-primary" onclick="submitPinSet()" id="btn-set-pin">
+            <span class="material-symbols-outlined" style="font-size:16px;">lock</span> Set PIN
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: Add Role (Admin Only) -->
 <div class="modal-backdrop" id="modal-role">
   <div class="modal">
@@ -1037,7 +1104,8 @@ function renderUsersTable(users) {
         <td>
           <div style="display:flex; gap:6px;">
             <button class="btn btn-secondary btn-sm btn-icon-only" onclick="editUser('${u.email}')" title="Edit Roles"><span class="material-symbols-outlined" style="font-size:16px;">edit</span></button>
-            <button class="btn btn-secondary btn-sm btn-icon-only" onclick="triggerPasswordReset('${u.email}')" title="Reset Password" style="color:var(--warning);"><span class="material-symbols-outlined" style="font-size:16px;">key</span></button>
+            <button class="btn btn-secondary btn-sm btn-icon-only" onclick="triggerPasswordReset('${u.email}')" title="Reset Login Password" style="color:var(--warning);"><span class="material-symbols-outlined" style="font-size:16px;">key</span></button>
+            ${(u.roles.includes('SMRITI Store Manager') || u.roles.includes('System Manager')) ? `<button class="btn btn-secondary btn-sm btn-icon-only" onclick="triggerPinSet('${u.email}', '${u.first_name} ${u.last_name || ''}')" title="Set POS Override PIN" style="color:var(--accent);"><span class="material-symbols-outlined" style="font-size:16px;">pin</span></button>` : ''}
           </div>
         </td>
       </tr>
@@ -1185,6 +1253,68 @@ function submitPasswordReset() {
     })
     .catch(e => {
       toast("Failed to reset password: " + e.message, "error");
+    });
+}
+
+// ─── Manager POS PIN Management ──────────────────────────────────────────────
+
+function triggerPinSet(email, displayName) {
+  document.getElementById('pin-email').value = email;
+  document.getElementById('pin-email-display').value = displayName.trim() + '  <' + email + '>';
+  document.getElementById('pin-new').value = '';
+  document.getElementById('pin-confirm').value = '';
+  // Show Clear PIN button only for Administrators
+  document.getElementById('btn-clear-pin').style.display = IS_ADMIN ? 'inline-flex' : 'none';
+  openModal('modal-pin');
+  setTimeout(() => document.getElementById('pin-new').focus(), 200);
+}
+
+function submitPinSet() {
+  const email = document.getElementById('pin-email').value;
+  const pin   = document.getElementById('pin-new').value.trim();
+  const conf  = document.getElementById('pin-confirm').value.trim();
+
+  if (!pin || !/^\d{4,6}$/.test(pin)) {
+    toast('PIN must be 4 to 6 numeric digits only.', 'error');
+    document.getElementById('pin-new').focus();
+    return;
+  }
+  if (pin !== conf) {
+    toast('PINs do not match. Please re-enter.', 'error');
+    document.getElementById('pin-confirm').focus();
+    return;
+  }
+
+  const btn = document.getElementById('btn-set-pin');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  API.call('set_user_pin', { email: email, pin: pin })
+    .then(r => {
+      toast(r.message || 'POS Override PIN set successfully!', 'success');
+      closeModal('modal-pin');
+    })
+    .catch(e => {
+      toast('Failed to set PIN: ' + e.message, 'error');
+    })
+    .finally(() => {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">lock</span> Set PIN';
+    });
+}
+
+function submitClearPin() {
+  const email = document.getElementById('pin-email').value;
+  const name  = document.getElementById('pin-email-display').value;
+  if (!confirm(`Clear POS Override PIN for ${name}?\n\nThe manager will not be able to use PIN-based overrides until a new PIN is set.`)) return;
+
+  API.call('clear_user_pin', { email: email })
+    .then(r => {
+      toast(r.message || 'PIN cleared.', 'success');
+      closeModal('modal-pin');
+    })
+    .catch(e => {
+      toast('Failed to clear PIN: ' + e.message, 'error');
     });
 }
 
@@ -1861,7 +1991,7 @@ function cint(v) {
 }
 </script>
 
-<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.2"></script>
 <script>SMRITI.renderFlexibleSidebar("security");</script>
 </body>
 </html>

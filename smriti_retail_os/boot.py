@@ -55,6 +55,10 @@ SMRITI_BLOCKED_DESK_PATHS = [
     "/desk#List",           # Direct list access
     "/desk#query-report",   # Direct report access
     "/desk#setup-wizard",   # Hash-based setup wizard
+    # ── SMRITI Desk Pages — blocked: use www routes instead ──────────
+    # These Frappe Desk pages (/desk/smriti-*) must NEVER reach users.
+    # Canonical user routes are www pages: /customers, /suppliers, etc.
+    "/desk/smriti-",        # ALL /desk/smriti-* pages (prefix match)
 ]
 
 # ── Role priority for redirect ────────────────────────────────────
@@ -73,6 +77,10 @@ def extend_bootinfo(bootinfo):
     Called after standard bootinfo is built.
     Injects SMRITI config into every page load.
     """
+    # ALWAYS set setup_complete = 1 first, unconditionally, so client-side
+    # SPA never redirects to /desk/setup-wizard regardless of any errors below.
+    bootinfo.setup_complete = 1
+
     try:
         user        = frappe.session.user
         user_roles  = frappe.get_roles(user)
@@ -89,9 +97,6 @@ def extend_bootinfo(bootinfo):
             "company":       frappe.defaults.get_user_default("Company") or "",
             "frontend_enabled": _is_smriti_frontend_enabled(),
         })
-
-        # Force setup_complete = 1 in bootinfo to prevent client-side redirect to setup-wizard
-        bootinfo.setup_complete = 1
 
         # Override Frappe default route for non-admin
         if not desk_ok:
@@ -217,10 +222,13 @@ def _is_smriti_frontend_enabled():
     Returns True if enabled or flag doesn't exist yet (default on).
     """
     try:
-        val = frappe.db.get_single_value(
-            "System Settings", "custom_smriti_frontend_enabled"
+        # Use db.sql to avoid exceptions when the custom field doesn't exist yet
+        result = frappe.db.sql(
+            "SELECT value FROM `tabSingles` WHERE doctype='System Settings' AND field='custom_smriti_frontend_enabled'"
         )
-        return val != 0  # None or 1 = enabled, 0 = disabled
+        if result:
+            return result[0][0] != 0
+        return True  # Field not present → default enabled
     except Exception:
         return True  # Default: enabled
 

@@ -23,7 +23,8 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
     if (typeof SMRITI_NAV === 'undefined') {
         await new Promise((resolve, reject) => {
             const script = document.createElement('script');
-            script.src = '/assets/smriti_retail_os/js/smriti_nav_config.js';
+            // Cache-bust: version 2.0.0 forces fresh load after route changes
+            script.src = '/assets/smriti_retail_os/js/smriti_nav_config.js?v=2.0.3';
             script.onload = resolve;
             script.onerror = reject;
             document.head.appendChild(script);

@@ -1,0 +1,602 @@
+/**
+ * @file: smriti_retail_os/www/smriti-license.html
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/smriti-license.html
+  @description: SMRITI License & Registration — 6-tab management interface.
+                All operations via license_api.py (Rule 2 compliant).
+  @authority: docs/architecture/licensing/SMRITI_LICENSE_ARCHITECTURE_V1.md §9
+  @version: 1.0.0
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>License &amp; Registration — SMRITI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+    --bg:          #0a0f1e;
+    --bg2:         #0f1629;
+    --card:        #131d35;
+    --card2:       #172040;
+    --border:      rgba(255,255,255,0.07);
+    --border2:     rgba(255,255,255,0.13);
+    --primary:     #6366f1;
+    --primary-lt:  #818cf8;
+    --primary-bg:  rgba(99,102,241,0.1);
+    --success:     #10b981;
+    --success-bg:  rgba(16,185,129,0.1);
+    --warning:     #f59e0b;
+    --warning-bg:  rgba(245,158,11,0.1);
+    --danger:      #ef4444;
+    --danger-bg:   rgba(239,68,68,0.1);
+    --cyan:        #06b6d4;
+    --cyan-bg:     rgba(6,182,212,0.1);
+    --amber:       #f59e0b;
+    --text:        #e2e8f0;
+    --text-muted:  #94a3b8;
+    --text-sub:    #475569;
+    --radius:      14px;
+    --radius-sm:   8px;
+    --shadow:      0 8px 32px rgba(0,0,0,0.4);
+    --t:           0.22s ease;
+    --mono:        'JetBrains Mono', monospace;
+}
+html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+.bg-grid { position:fixed; inset:0; background-image:linear-gradient(rgba(99,102,241,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,0.012) 1px,transparent 1px); background-size:50px 50px; z-index:0; }
+#app { position:relative; z-index:1; width:100vw; height:100vh; display:flex; overflow:hidden; }
+.main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+/* Topbar */
+.topbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
+.topbar-bc { display:flex; align-items:center; gap:6px; font-size:.85rem; font-weight:600; color:var(--text-muted); }
+.topbar-bc .sep { color:var(--text-sub); }
+.topbar-bc .active { color:var(--text); }
+.topbar-right { margin-left:auto; display:flex; gap:8px; align-items:center; }
+
+/* License badge */
+.license-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:20px; font-size:.75rem; font-weight:700; border:1px solid; }
+.badge-Unregistered { background:var(--danger-bg); border-color:rgba(239,68,68,.25); color:var(--danger); }
+.badge-Active       { background:var(--success-bg); border-color:rgba(16,185,129,.25); color:var(--success); }
+.badge-Warning      { background:var(--warning-bg); border-color:rgba(245,158,11,.25); color:var(--warning); }
+.badge-Grace        { background:var(--warning-bg); border-color:rgba(245,158,11,.25); color:var(--warning); }
+.badge-Expired      { background:var(--danger-bg);  border-color:rgba(239,68,68,.25);  color:var(--danger); }
+.badge-Suspended    { background:var(--danger-bg);  border-color:rgba(239,68,68,.25);  color:var(--danger); }
+.badge-Tampered     { background:var(--danger-bg);  border-color:rgba(239,68,68,.25);  color:var(--danger); }
+
+/* Tab nav */
+.tab-nav { display:flex; gap:2px; padding:0 24px; background:var(--bg2); border-bottom:1px solid var(--border); flex-shrink:0; }
+.tab-btn { padding:10px 16px; font-size:.82rem; font-weight:600; color:var(--text-sub); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; transition:all var(--t); display:flex; align-items:center; gap:6px; white-space:nowrap; }
+.tab-btn span { font-size:16px; }
+.tab-btn:hover { color:var(--text-muted); }
+.tab-btn.active { color:var(--primary-lt); border-bottom-color:var(--primary); }
+
+/* Content scroll */
+.content-scroll { flex:1; overflow-y:auto; padding:24px; }
+.content-scroll::-webkit-scrollbar { width:5px; }
+.content-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.07); border-radius:3px; }
+.tab-pane { display:none; }
+.tab-pane.active { display:block; }
+
+/* Cards */
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; margin-bottom:20px; }
+.card-title { font-family:'Outfit',sans-serif; font-size:.95rem; font-weight:700; color:var(--text); margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+.card-title span { font-size:20px; color:var(--primary-lt); }
+
+/* KPI row */
+.kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+.kpi { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px; position:relative; overflow:hidden; }
+.kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; border-radius:var(--radius) var(--radius) 0 0; }
+.kpi.indigo::before { background:linear-gradient(90deg,var(--primary),var(--primary-lt)); }
+.kpi.emerald::before { background:linear-gradient(90deg,#059669,var(--success)); }
+.kpi.amber::before { background:linear-gradient(90deg,#d97706,var(--warning)); }
+.kpi.rose::before { background:linear-gradient(90deg,#dc2626,var(--danger)); }
+.kpi-label { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--text-sub); margin-bottom:6px; }
+.kpi-val { font-family:var(--mono); font-size:1.1rem; font-weight:800; color:var(--text); }
+
+/* Form grid */
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-group.full { grid-column:1/-1; }
+.form-label { font-size:.75rem; font-weight:600; color:var(--text-sub); text-transform:uppercase; letter-spacing:.3px; }
+.form-input { background:var(--bg2); border:1px solid var(--border2); border-radius:var(--radius-sm); padding:9px 12px; color:var(--text); font-family:'Inter',sans-serif; font-size:.88rem; outline:none; transition:border-color var(--t); }
+.form-input:focus { border-color:var(--primary); }
+.form-input[readonly] { opacity:.6; cursor:default; }
+select.form-input option { background:var(--card); }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:9px 18px; border-radius:var(--radius-sm); font-size:.84rem; font-weight:600; cursor:pointer; border:none; transition:all var(--t); }
+.btn span { font-size:17px; }
+.btn-primary { background:var(--primary); color:white; }
+.btn-primary:hover { background:var(--primary-lt); transform:translateY(-1px); }
+.btn-success { background:var(--success); color:white; }
+.btn-success:hover { filter:brightness(1.1); }
+.btn-outline { background:transparent; border:1px solid var(--border2); color:var(--text-muted); }
+.btn-outline:hover { border-color:var(--primary); color:var(--primary-lt); }
+.btn-row { display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+
+/* Table */
+.smriti-table { width:100%; border-collapse:collapse; }
+.smriti-table th { text-align:left; padding:9px 12px; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--text-sub); border-bottom:1px solid var(--border); white-space:nowrap; }
+.smriti-table td { padding:10px 12px; font-size:.84rem; border-bottom:1px solid rgba(255,255,255,.03); vertical-align:middle; }
+.smriti-table tr:last-child td { border-bottom:none; }
+.smriti-table tr:hover td { background:rgba(255,255,255,.015); }
+.mono { font-family:var(--mono); }
+
+/* Feature entitlement chips */
+.chip { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px; font-size:.72rem; font-weight:700; }
+.chip-none     { background:var(--success-bg); color:var(--success); }
+.chip-readonly { background:var(--warning-bg); color:var(--warning); }
+.chip-blocked  { background:var(--danger-bg);  color:var(--danger); }
+.chip-enabled  { background:var(--primary-bg); color:var(--primary-lt); }
+
+/* Alert banner */
+.alert { border-radius:var(--radius-sm); padding:12px 16px; font-size:.84rem; font-weight:500; display:flex; align-items:flex-start; gap:10px; margin-bottom:16px; }
+.alert span { font-size:20px; flex-shrink:0; margin-top:1px; }
+.alert-warn { background:var(--warning-bg); border:1px solid rgba(245,158,11,.2); color:var(--warning); }
+.alert-danger { background:var(--danger-bg); border:1px solid rgba(239,68,68,.2); color:var(--danger); }
+.alert-info  { background:var(--primary-bg); border:1px solid rgba(99,102,241,.2); color:var(--primary-lt); }
+
+/* Toast */
+#toast-cnt { position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+.toast { padding:12px 18px; border-radius:var(--radius-sm); font-size:.88rem; font-weight:600; min-width:220px; display:flex; align-items:center; gap:10px; animation:t-in .25s ease; box-shadow:0 8px 24px rgba(0,0,0,.4); }
+.toast.ok  { background:#064e3b; border:1px solid rgba(16,185,129,.3); color:#6ee7b7; }
+.toast.err { background:#7f1d1d; border:1px solid rgba(239,68,68,.3); color:#fca5a5; }
+@keyframes t-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+@media(max-width:900px){
+    .kpi-row { grid-template-columns:repeat(2,1fr); }
+    .form-grid { grid-template-columns:1fr; }
+}
+</style>
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+</head>
+<body>
+<div class="bg-grid"></div>
+<div id="app">
+    <div id="smriti-sidebar-target" class="sidebar"></div>
+    <div class="main-wrapper">
+
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-bc">
+                <span>SMRITI</span><span class="sep">/</span>
+                <span>Settings</span><span class="sep">/</span>
+                <span class="active">License &amp; Registration</span>
+            </div>
+            <div class="topbar-right">
+                <div id="status-badge" class="license-badge badge-Unregistered">
+                    <span class="material-symbols-outlined" style="font-size:14px;">shield</span>
+                    <span id="badge-text">Loading…</span>
+                </div>
+                <button class="btn btn-outline" onclick="syncFromCompany()" title="Sync from Company">
+                    <span class="material-symbols-outlined">sync</span> Sync Company
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab nav -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('overview')" id="tab-overview">
+                <span class="material-symbols-outlined">dashboard</span> Overview
+            </button>
+            <button class="tab-btn" onclick="switchTab('registration')" id="tab-registration">
+                <span class="material-symbols-outlined">badge</span> Registration
+            </button>
+            <button class="tab-btn" onclick="switchTab('features')" id="tab-features">
+                <span class="material-symbols-outlined">extension</span> Features
+            </button>
+            <button class="tab-btn" onclick="switchTab('validation')" id="tab-validation">
+                <span class="material-symbols-outlined">verified</span> Validation History
+            </button>
+            <button class="tab-btn" onclick="switchTab('activity')" id="tab-activity">
+                <span class="material-symbols-outlined">history</span> Activity Log
+            </button>
+            <button class="tab-btn" onclick="switchTab('support')" id="tab-support">
+                <span class="material-symbols-outlined">support_agent</span> Support
+            </button>
+        </div>
+
+        <!-- Content -->
+        <div class="content-scroll">
+
+            <!-- ── Tab: Overview ── -->
+            <div class="tab-pane active" id="pane-overview">
+                <div id="system-alert"></div>
+                <div class="kpi-row">
+                    <div class="kpi indigo">
+                        <div class="kpi-label">License Status</div>
+                        <div class="kpi-val" id="ov-status">—</div>
+                    </div>
+                    <div class="kpi emerald">
+                        <div class="kpi-label">License Health</div>
+                        <div class="kpi-val" id="ov-health">—</div>
+                    </div>
+                    <div class="kpi amber">
+                        <div class="kpi-label">Days Remaining</div>
+                        <div class="kpi-val" id="ov-days">—</div>
+                    </div>
+                    <div class="kpi rose">
+                        <div class="kpi-label">License Type</div>
+                        <div class="kpi-val" id="ov-type">—</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span class="material-symbols-outlined">business</span> Organization</div>
+                    <div class="form-grid">
+                        <div class="form-group"><div class="form-label">Organization</div><div id="ov-org" class="mono" style="color:var(--text-muted);font-size:.9rem;">—</div></div>
+                        <div class="form-group"><div class="form-label">Store</div><div id="ov-store" class="mono" style="color:var(--text-muted);font-size:.9rem;">—</div></div>
+                        <div class="form-group"><div class="form-label">GSTIN</div><div id="ov-gstin" class="mono" style="color:var(--text-muted);font-size:.9rem;">—</div></div>
+                        <div class="form-group"><div class="form-label">Customer ID</div><div id="ov-cid" class="mono" style="color:var(--text-muted);font-size:.9rem;">—</div></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span class="material-symbols-outlined">calendar_today</span> License Dates</div>
+                    <div class="form-grid">
+                        <div class="form-group"><div class="form-label">Activation Date</div><div id="ov-act" class="mono" style="color:var(--text-muted);font-size:.9rem;">—</div></div>
+                        <div class="form-group"><div class="form-label">Expiry Date</div><div id="ov-exp" class="mono" style="color:var(--text-muted);font-size:.9rem;">—</div></div>
+                        <div class="form-group"><div class="form-label">Grace Period</div><div id="ov-grace" class="mono" style="color:var(--text-muted);font-size:.9rem;">—</div></div>
+                        <div class="form-group"><div class="form-label">Last Sync</div><div id="ov-sync" class="mono" style="color:var(--text-muted);font-size:.9rem;">—</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Tab: Registration ── -->
+            <div class="tab-pane" id="pane-registration">
+                <div class="card">
+                    <div class="card-title"><span class="material-symbols-outlined">key</span> Activate / Renew License</div>
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <div class="form-label">License Key *</div>
+                            <input class="form-input" id="reg-key" type="password" placeholder="Enter your SMRITI License Key">
+                        </div>
+                        <div class="form-group">
+                            <div class="form-label">License Type</div>
+                            <select class="form-input" id="reg-type">
+                                <option value="Starter">Starter</option>
+                                <option value="Professional">Professional</option>
+                                <option value="Enterprise">Enterprise</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <div class="form-label">Organization Name</div>
+                            <input class="form-input" id="reg-org" type="text" placeholder="Your organization">
+                        </div>
+                        <div class="form-group">
+                            <div class="form-label">Owner Name</div>
+                            <input class="form-input" id="reg-owner" type="text" placeholder="Owner / Director">
+                        </div>
+                        <div class="form-group">
+                            <div class="form-label">Registered Email</div>
+                            <input class="form-input" id="reg-email" type="email" placeholder="contact@yourbusiness.com">
+                        </div>
+                        <div class="form-group">
+                            <div class="form-label">Registered Mobile</div>
+                            <input class="form-input" id="reg-mobile" type="tel" placeholder="+91 98765 43210">
+                        </div>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn btn-primary" onclick="activateLicense()">
+                            <span class="material-symbols-outlined">verified</span> Activate License
+                        </button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span class="material-symbols-outlined">fingerprint</span> Installation Identity</div>
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <div class="form-label">Installation ID (Immutable)</div>
+                            <input class="form-input mono" id="reg-install-id" type="text" readonly placeholder="Generated on first install">
+                        </div>
+                        <div class="form-group full">
+                            <div class="form-label">License Key (masked)</div>
+                            <input class="form-input mono" id="reg-key-masked" type="text" readonly placeholder="****">
+                        </div>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn btn-outline" onclick="syncFromCompany()">
+                            <span class="material-symbols-outlined">sync</span> Sync from Company Master
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Tab: Features ── -->
+            <div class="tab-pane" id="pane-features">
+                <div class="card">
+                    <div class="card-title"><span class="material-symbols-outlined">extension</span> Feature Entitlements</div>
+                    <div class="alert alert-info">
+                        <span class="material-symbols-outlined">info</span>
+                        <span>Restriction Level applies during Grace Period only. Expired / Suspended / Tampered = full system lock regardless of feature settings.</span>
+                    </div>
+                    <table class="smriti-table">
+                        <thead><tr>
+                            <th>Feature Code</th><th>Feature</th><th>Enabled</th>
+                            <th>Tier Minimum</th><th>Grace Period Mode</th>
+                        </tr></thead>
+                        <tbody id="features-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ── Tab: Validation History ── -->
+            <div class="tab-pane" id="pane-validation">
+                <div class="card">
+                    <div class="card-title"><span class="material-symbols-outlined">verified</span> Validation History</div>
+                    <table class="smriti-table">
+                        <thead><tr>
+                            <th>Timestamp</th><th>Type</th><th>Result</th>
+                            <th>Signature Check</th><th>Remarks</th>
+                        </tr></thead>
+                        <tbody id="validation-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ── Tab: Activity Log ── -->
+            <div class="tab-pane" id="pane-activity">
+                <div class="card">
+                    <div class="card-title"><span class="material-symbols-outlined">history</span> Activity Log</div>
+                    <table class="smriti-table">
+                        <thead><tr>
+                            <th>Timestamp</th><th>Action</th><th>Performed By</th>
+                            <th>Result</th><th>Remarks</th>
+                        </tr></thead>
+                        <tbody id="activity-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ── Tab: Support ── -->
+            <div class="tab-pane" id="pane-support">
+                <div class="card">
+                    <div class="card-title"><span class="material-symbols-outlined">support_agent</span> Support Information</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <div class="form-label">Support Contract Status</div>
+                            <div id="sup-contract" class="mono" style="color:var(--text-muted);font-size:.9rem;">—</div>
+                        </div>
+                        <div class="form-group">
+                            <div class="form-label">AMC Status</div>
+                            <div id="sup-amc" class="mono" style="color:var(--text-muted);font-size:.9rem;">—</div>
+                        </div>
+                        <div class="form-group">
+                            <div class="form-label">Registered Email</div>
+                            <div id="sup-email" class="mono" style="color:var(--text-muted);font-size:.9rem;">—</div>
+                        </div>
+                        <div class="form-group">
+                            <div class="form-label">Registered Mobile</div>
+                            <div id="sup-mobile" class="mono" style="color:var(--text-muted);font-size:.9rem;">—</div>
+                        </div>
+                    </div>
+                    <div class="btn-row">
+                        <a class="btn btn-primary" href="https://support.erpnbook.com" target="_blank">
+                            <span class="material-symbols-outlined">open_in_new</span> Open Support Desk
+                        </a>
+                        <a class="btn btn-outline" href="mailto:support@erpnbook.com">
+                            <span class="material-symbols-outlined">mail</span> Email Support
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /content-scroll -->
+    </div><!-- /main-wrapper -->
+</div><!-- /app -->
+
+<div id="toast-cnt"></div>
+
+<script>
+// CSRF token: prefer dynamic fetch from Frappe session cookie/bootinfo,
+// fall back to Jinja-rendered value.
+let CSRF = '{{ csrf_token }}';
+const API  = 'smriti_retail_os.api.license_api';
+
+// Refresh CSRF from Frappe's ping endpoint (sets/confirms session cookies)
+async function refreshCsrf() {
+    try {
+        const r = await fetch('/api/method/frappe.auth.get_logged_user', { credentials: 'include' });
+        // Frappe sets X-Frappe-CSRF-Token response header on auth endpoints
+        const hdr = r.headers.get('X-Frappe-CSRF-Token');
+        if (hdr && hdr.length > 10) { CSRF = hdr; return; }
+        // Also check if cookie was set
+        const cookieMatch = document.cookie.match(/csrf_token=([^;]+)/);
+        if (cookieMatch) { CSRF = decodeURIComponent(cookieMatch[1]); }
+    } catch (e) { /* keep Jinja token */ }
+}
+
+function api(method, params = {}) {
+    return fetch(`/api/method/${method}`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'x-frappe-csrf-token': CSRF },
+        body: JSON.stringify(params)
+    }).then(r => r.json()).then(d => {
+        if (d.exc || d.exc_type) throw new Error(d._error_message || d.exc_type || 'Server error');
+        return d.message;
+    });
+}
+
+function toast(msg, type = 'ok') {
+    const c = document.getElementById('toast-cnt');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span class="material-symbols-outlined" style="font-size:18px;">${type === 'ok' ? 'check_circle' : 'error'}</span>${msg}`;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+}
+
+// ── Tab switching ──────────────────────────────────────────────────
+function switchTab(name) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.getElementById(`tab-${name}`).classList.add('active');
+    document.getElementById(`pane-${name}`).classList.add('active');
+    if (name === 'features')   loadFeatures();
+    if (name === 'validation') loadValidation();
+    if (name === 'activity')   loadActivity();
+}
+
+// ── Badge ──────────────────────────────────────────────────────────
+function setBadge(status, health) {
+    const b = document.getElementById('status-badge');
+    const t = document.getElementById('badge-text');
+    b.className = 'license-badge badge-' + (status === 'Grace Period' ? 'Grace' : status);
+    t.textContent = health || status;
+}
+
+// ── System alert ───────────────────────────────────────────────────
+function setAlert(status, days) {
+    const el = document.getElementById('system-alert');
+    if (status === 'Unregistered') {
+        el.innerHTML = `<div class="alert alert-danger"><span class="material-symbols-outlined">warning</span><span>License not registered. Please activate your license in the <b>Registration</b> tab.</span></div>`;
+    } else if (status === 'Expired') {
+        el.innerHTML = `<div class="alert alert-danger"><span class="material-symbols-outlined">error</span><span>License expired. System access is blocked. Please renew immediately.</span></div>`;
+    } else if (status === 'Grace Period') {
+        el.innerHTML = `<div class="alert alert-warn"><span class="material-symbols-outlined">schedule</span><span>License in Grace Period. Some features may be restricted. Renew now to restore full access.</span></div>`;
+    } else if (status === 'Warning' || (days !== null && days <= 14 && days >= 0)) {
+        el.innerHTML = `<div class="alert alert-warn"><span class="material-symbols-outlined">notifications</span><span>License expires in <b>${days} days</b>. Please renew soon.</span></div>`;
+    } else if (status === 'Tampered') {
+        el.innerHTML = `<div class="alert alert-danger"><span class="material-symbols-outlined">gpp_bad</span><span>License integrity violation detected. Contact SMRITI Support immediately.</span></div>`;
+    } else {
+        el.innerHTML = '';
+    }
+}
+
+// ── Load status ────────────────────────────────────────────────────
+async function loadStatus() {
+    try {
+        const d = await api(`${API}.get_license_status`);
+        setBadge(d.status, d.health);
+        setAlert(d.health || d.status, d.days_remaining);
+
+        document.getElementById('ov-status').textContent  = d.status || '—';
+        document.getElementById('ov-health').textContent  = d.health || '—';
+        document.getElementById('ov-days').textContent    = d.days_remaining !== null && d.days_remaining !== undefined ? `${d.days_remaining}d` : '—';
+        document.getElementById('ov-type').textContent    = d.license_type || '—';
+        document.getElementById('ov-org').textContent     = d.organization_name || '—';
+        document.getElementById('ov-store').textContent   = d.store_name || '—';
+        document.getElementById('ov-gstin').textContent   = d.gstin || '—';
+        document.getElementById('ov-cid').textContent     = d.customer_id || '—';
+        document.getElementById('ov-act').textContent     = d.activation_date || '—';
+        document.getElementById('ov-exp').textContent     = d.expiry_date || '—';
+        document.getElementById('ov-grace').textContent   = d.grace_period_days ? `${d.grace_period_days} days` : '—';
+        document.getElementById('ov-sync').textContent    = d.last_sync || '—';
+        document.getElementById('reg-install-id').value  = d.installation_id || '';
+        document.getElementById('reg-key-masked').value  = d.license_key_masked || '';
+        document.getElementById('reg-org').value         = d.organization_name || '';
+        document.getElementById('reg-email').value       = d.registered_email || '';
+        document.getElementById('reg-mobile').value      = d.registered_mobile || '';
+        document.getElementById('sup-contract').textContent = d.support_contract_status || '—';
+        document.getElementById('sup-amc').textContent      = d.amc_status || '—';
+        document.getElementById('sup-email').textContent    = d.registered_email || '—';
+        document.getElementById('sup-mobile').textContent   = d.registered_mobile || '—';
+    } catch(e) {
+        toast('Failed to load license status: ' + e.message, 'err');
+    }
+}
+
+// ── Activate ───────────────────────────────────────────────────────
+async function activateLicense() {
+    const key = document.getElementById('reg-key').value.trim();
+    if (!key) { toast('License Key is required.', 'err'); return; }
+    try {
+        const r = await api(`${API}.activate_license`, {
+            license_key:      key,
+            license_type:     document.getElementById('reg-type').value,
+            organization_name: document.getElementById('reg-org').value,
+            registered_email: document.getElementById('reg-email').value,
+            registered_mobile: document.getElementById('reg-mobile').value,
+        });
+        toast(`License activated — Status: ${r.status}`, 'ok');
+        await loadStatus();
+    } catch(e) {
+        toast('Activation failed: ' + e.message, 'err');
+    }
+}
+
+// ── Sync company ──────────────────────────────────────────────────
+async function syncFromCompany() {
+    try {
+        const r = await api(`${API}.sync_from_company`);
+        toast(`Synced: ${r.organization_name}`, 'ok');
+        await loadStatus();
+    } catch(e) {
+        toast('Sync failed: ' + e.message, 'err');
+    }
+}
+
+// ── Features tab ──────────────────────────────────────────────────
+async function loadFeatures() {
+    try {
+        const rows = await api(`${API}.get_feature_entitlements`);
+        const CHIP = { NONE: 'chip-none', READ_ONLY: 'chip-readonly', BLOCKED: 'chip-blocked' };
+        const LABEL = { NONE: 'Full Access', READ_ONLY: 'Read-Only', BLOCKED: 'Blocked' };
+        document.getElementById('features-tbody').innerHTML = rows.map(r => `
+            <tr>
+                <td class="mono" style="font-size:.8rem;color:var(--text-sub);">${r.feature_code}</td>
+                <td>${r.feature_name}</td>
+                <td><span class="chip ${r.enabled ? 'chip-enabled' : 'chip-blocked'}">${r.enabled ? 'Enabled' : 'Disabled'}</span></td>
+                <td><span style="color:var(--text-muted);">${r.tier_minimum}</span></td>
+                <td><span class="chip ${CHIP[r.restriction_level] || 'chip-none'}">${LABEL[r.restriction_level] || r.restriction_level}</span></td>
+            </tr>`).join('');
+    } catch(e) {
+        toast('Failed to load features', 'err');
+    }
+}
+
+// ── Validation History ────────────────────────────────────────────
+async function loadValidation() {
+    try {
+        const rows = await api(`${API}.get_validation_history`, { limit: 50 });
+        const SIG_COLOR = { Valid: 'color:var(--success)', Invalid: 'color:var(--danger)', 'Not Checked': 'color:var(--text-sub)' };
+        document.getElementById('validation-tbody').innerHTML = rows.length
+            ? rows.map(r => `<tr>
+                <td class="mono" style="font-size:.78rem;">${r.timestamp}</td>
+                <td>${r.validation_type}</td>
+                <td><b>${r.result}</b></td>
+                <td style="${SIG_COLOR[r.signature_check_result] || ''}">${r.signature_check_result}</td>
+                <td style="color:var(--text-muted);font-size:.8rem;">${r.remarks || '—'}</td>
+              </tr>`).join('')
+            : '<tr><td colspan="5" style="text-align:center;color:var(--text-sub);padding:24px;">No validation history yet.</td></tr>';
+    } catch(e) {
+        toast('Failed to load validation history', 'err');
+    }
+}
+
+// ── Activity Log ──────────────────────────────────────────────────
+async function loadActivity() {
+    try {
+        const rows = await api(`${API}.get_activity_log`, { limit: 50 });
+        const ACT_COLOR = { Activated: 'color:var(--success)', Renewed: 'color:var(--success)', Changed: 'color:var(--warning)', Synced: 'color:var(--cyan)', Suspended: 'color:var(--danger)' };
+        document.getElementById('activity-tbody').innerHTML = rows.length
+            ? rows.map(r => `<tr>
+                <td class="mono" style="font-size:.78rem;">${r.timestamp}</td>
+                <td style="${ACT_COLOR[r.action] || 'color:var(--text-muted)'};font-weight:600;">${r.action}</td>
+                <td style="color:var(--text-muted);">${r.performed_by || '—'}</td>
+                <td>${r.result || '—'}</td>
+                <td style="color:var(--text-sub);font-size:.8rem;">${r.remarks || '—'}</td>
+              </tr>`).join('')
+            : '<tr><td colspan="5" style="text-align:center;color:var(--text-sub);padding:24px;">No activity yet.</td></tr>';
+    } catch(e) {
+        toast('Failed to load activity log', 'err');
+    }
+}
+
+window.onload = async () => { await refreshCsrf(); await loadStatus(); };
+</script>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.3"></script>
+<script>SMRITI.renderFlexibleSidebar('smriti-license');</script>
+</body>
+</html>
+{% endblock %}

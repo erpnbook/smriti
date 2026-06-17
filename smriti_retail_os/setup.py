@@ -2375,7 +2375,45 @@ def seed_retail_defaults():
         except Exception as e:
             frappe.log_error(f"Error mapping accounts for Mode of Payment {mop}: {str(e)}", "SMRITI Setup Error")
 
+    # ── Ensure Frappe SPA setup_complete is always true ──────────────────────
+    # Frappe's is_setup_complete() checks Installed Application.is_setup_complete
+    # for frappe and erpnext. If either is 0, the client SPA redirects to setup-wizard.
+    # SMRITI overrides this in extend_bootinfo, but we also enforce it here for robustness.
+    ensure_installed_applications_setup_complete()
+
     frappe.db.commit()
 
 
+def ensure_installed_applications_setup_complete():
+    """
+    Marks all installed apps (especially 'frappe' and 'smriti_retail_os') as
+    setup_complete=1 in the Installed Application table.
 
+    This prevents Frappe's client-side SPA from redirecting to /desk/setup-wizard
+    when any SMRITI Desk Page (e.g. /app/smriti-customers) is navigated to directly.
+
+    Root cause: frappe.is_setup_complete() checks if ALL installed apps have
+    is_setup_complete=1. If any is 0, bootinfo.setup_complete becomes false, and
+    the Frappe router JS calls frappe.set_route(['setup-wizard']).
+
+    This runs after every bench migrate to prevent regressions.
+    """
+    try:
+        if not frappe.db.table_exists("Installed Application"):
+            return
+
+        apps_needing_fix = frappe.db.get_list(
+            "Installed Application",
+            filters={"is_setup_complete": 0},
+            pluck="app_name"
+        )
+        if apps_needing_fix:
+            frappe.db.sql(
+                "UPDATE `tabInstalled Application` SET `is_setup_complete` = 1"
+            )
+            frappe.db.commit()
+            print(f"[SMRITI] Marked {len(apps_needing_fix)} app(s) as setup_complete: {apps_needing_fix}")
+        else:
+            print("[SMRITI] All installed apps already marked as setup_complete.")
+    except Exception as e:
+        frappe.log_error(f"Error in ensure_installed_applications_setup_complete: {str(e)}")

@@ -289,7 +289,6 @@ async function loadAuditsList() {
             limit_page_length: 100
         });
         masterAuditsList = data || [];
-        renderTable(masterUploadsList); // wait, renderTable is for audits
         renderTable(masterAuditsList);
     } catch(e) {
         toast('Failed to load audits: ' + e.message, 'error');
@@ -605,7 +604,7 @@ async function viewAuditDetails(name) {
 window.onload = init;
 </script>
 
-<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=1.0.1"></script>
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.2"></script>
 <script>SMRITI.renderFlexibleSidebar("psv_audit");</script>
 </body>
 </html>

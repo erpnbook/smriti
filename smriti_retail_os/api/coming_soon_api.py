@@ -18,42 +18,19 @@ import frappe
 # Registry of features under development
 # Add new features here as they are planned
 COMING_SOON_REGISTRY = {
-    "reconciliation": {
-        "title":    "Reconciliation",
-        "progress": 0,
-        "eta":      "PSV Phase 1.3",
-    },
-    "exception_analysis": {
-        "title":    "Exception Analysis",
-        "progress": 0,
-        "eta":      "PSV Phase 1.3",
-    },
-
-    "release_notes": {
-        "title":    "Release Notes",
-        "progress": 0,
-        "eta":      "Q3 2026",
-    },
-    "support": {
-        "title":    "Support",
-        "progress": 0,
-        "eta":      "Q3 2026",
-    },
-    "supplier_payments": {
-        "title":    "Supplier Payments",
-        "progress": 20,
-        "eta":      "Q3 2026",
-    },
+    # Features below are genuinely planned — pages do NOT yet exist
     "crm": {
         "title":    "CRM & Customer Insights",
         "progress": 10,
         "eta":      "Q4 2026",
     },
-    "analytics": {
-        "title":    "Advanced Analytics",
-        "progress": 30,
-        "eta":      "Q3 2026",
-    },
+    # ── Features below are LIVE — removed from registry ──────────────────
+    # analytics          → /analytics (live since v1.2.13)
+    # supplier_payments  → /payments (live since v1.2.12)
+    # reconciliation     → /psv_reconciliation  (live since v1.2.10)
+    # exception_analysis → /psv_exception_analysis (live since v1.2.10)
+    # release_notes      → /release_notes        (live since v1.2.10)
+    # support            → /smriti_support        (live since v1.2.10)
 }
 
 
