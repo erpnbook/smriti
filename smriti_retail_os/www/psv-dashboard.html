@@ -203,6 +203,45 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 /* Clickable table rows */
 #productivity-tbody tr { cursor:pointer; }
 #productivity-tbody tr:hover td { background:rgba(37,99,235,0.08); color:var(--text); }
+
+/* Dashboard Edit Mode Styles */
+.widgets-grid.edit-mode .widget-card {
+    border: 2px dashed var(--primary);
+    position: relative;
+    cursor: move;
+    background: rgba(37,99,235,0.03);
+    transition: background var(--t);
+}
+.widgets-grid.edit-mode .widget-card:hover {
+    background: rgba(37,99,235,0.07);
+}
+.widgets-grid.edit-mode .widget-card.dragging {
+    opacity: 0.4;
+    border-color: var(--accent);
+}
+.widgets-grid.edit-mode .widget-card.drag-over {
+    border: 2px solid var(--accent) !important;
+    background: rgba(245,158,11,0.05);
+}
+.widget-card-handle {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary-lt);
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 100;
+}
+.widgets-grid.edit-mode .widget-card-handle {
+    display: block;
+}
 </style>
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
 </head>
@@ -240,6 +279,9 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 </select>
                 <button class="topbtn" onclick="refreshDashboard()" title="Refresh Dashboard">
                     <span class="material-symbols-outlined">refresh</span>
+                </button>
+                <button class="topbtn" onclick="toggleDashboardEditMode()" title="Customize Layout" id="btn-edit-layout">
+                    <span class="material-symbols-outlined">dashboard_customize</span>
                 </button>
             </div>
         </div>
@@ -293,6 +335,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
             <div class="widgets-grid">
                 <!-- Widget 9: Channel Health Score -->
                 <div class="widget-card" id="widget-health">
+                    <div class="widget-card-handle">⠿ Health Score</div>
                     <div class="widget-title">
                         <span class="material-symbols-outlined icon">health_and_safety</span> Widget 9: Channel Health Score
                     </div>
@@ -314,6 +357,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 
                 <!-- Widget 10: Stock Cover Risk -->
                 <div class="widget-card" id="widget-cover-risk">
+                    <div class="widget-card-handle">⠿ Cover Risk</div>
                     <div class="widget-title">
                         <span class="material-symbols-outlined icon">inventory_2</span> Widget 10: Stock Cover Risk
                     </div>
@@ -336,6 +380,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 
                 <!-- Widget 11: Channel Stock Value Trend -->
                 <div class="widget-card span-full" id="widget-trend">
+                    <div class="widget-card-handle">⠿ Stock Trend</div>
                     <div class="widget-title">
                         <span class="material-symbols-outlined icon">trending_up</span> Widget 11: Channel Stock Value Trend
                     </div>
@@ -349,6 +394,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 
                 <!-- Widget 12: Inventory Productivity & SKU Rationalization -->
                 <div class="widget-card span-full" id="widget-productivity">
+                    <div class="widget-card-handle">⠿ Productivity</div>
                     <div class="widget-title" style="display:flex; align-items:center; gap:8px;">
                         <span class="material-symbols-outlined icon">analytics</span>
                         <span>Widget 12: Inventory Productivity & SKU Rationalization</span>
@@ -1053,7 +1099,119 @@ function refreshDashboard() {
     toast('Dashboard refreshed', 'info');
 }
 
+// Dashboard Drag and Drop Customizer
+let dashboardEditMode = false;
+
+function toggleDashboardEditMode() {
+    dashboardEditMode = !dashboardEditMode;
+    const grid = document.querySelector('.widgets-grid');
+    const btn = document.getElementById('btn-edit-layout');
+    
+    if (dashboardEditMode) {
+        grid.classList.add('edit-mode');
+        btn.style.borderColor = 'var(--primary)';
+        btn.style.color = 'var(--primary-lt)';
+        toast('Layout customization enabled. Drag widgets to reorder.', 'info');
+        enableDashboardDrag();
+    } else {
+        grid.classList.remove('edit-mode');
+        btn.style.borderColor = '';
+        btn.style.color = '';
+        disableDashboardDrag();
+        toast('Custom layout saved!', 'success');
+    }
+}
+
+function enableDashboardDrag() {
+    const cards = document.querySelectorAll('.widgets-grid .widget-card');
+    cards.forEach((card) => {
+        card.setAttribute('draggable', 'true');
+        
+        card.ondragstart = (e) => {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', card.id);
+            card.classList.add('dragging');
+        };
+        
+        card.ondragover = (e) => {
+            e.preventDefault();
+            card.classList.add('drag-over');
+        };
+        
+        card.ondragleave = () => {
+            card.classList.remove('drag-over');
+        };
+        
+        card.ondrop = (e) => {
+            e.preventDefault();
+            card.classList.remove('drag-over');
+            const draggedId = e.dataTransfer.getData('text/plain');
+            const targetId = card.id;
+            
+            if (draggedId !== targetId) {
+                const grid = document.querySelector('.widgets-grid');
+                const draggedEl = document.getElementById(draggedId);
+                
+                const children = Array.from(grid.children);
+                const draggedIdx = children.indexOf(draggedEl);
+                const targetIdx = children.indexOf(card);
+                
+                if (draggedIdx < targetIdx) {
+                    grid.insertBefore(draggedEl, card.nextSibling);
+                } else {
+                    grid.insertBefore(draggedEl, card);
+                }
+                
+                saveDashboardLayout();
+            }
+        };
+        
+        card.ondragend = () => {
+            card.classList.remove('dragging');
+        };
+    });
+}
+
+function disableDashboardDrag() {
+    const cards = document.querySelectorAll('.widgets-grid .widget-card');
+    cards.forEach(card => {
+        card.removeAttribute('draggable');
+        card.ondragstart = null;
+        card.ondragover = null;
+        card.ondragleave = null;
+        card.ondrop = null;
+        card.ondragend = null;
+    });
+}
+
+function saveDashboardLayout() {
+    const grid = document.querySelector('.widgets-grid');
+    const cards = Array.from(grid.querySelectorAll('.widget-card'));
+    const ids = cards.map(card => card.id);
+    localStorage.setItem('smriti-psv-dashboard-layout', JSON.stringify(ids));
+}
+
+function loadDashboardLayout() {
+    const saved = localStorage.getItem('smriti-psv-dashboard-layout');
+    if (!saved) return;
+    
+    try {
+        const ids = JSON.parse(saved);
+        const grid = document.querySelector('.widgets-grid');
+        
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.parentElement === grid) {
+                grid.appendChild(el);
+            }
+        });
+    } catch(e) {
+        console.error("Failed to load dashboard layout", e);
+    }
+}
+
 window.onload = () => {
+    loadDashboardLayout();
     const selector = document.getElementById('company-filter');
     if (selector && selector.options.length > 0) {
         loadDashboardData(selector.value);

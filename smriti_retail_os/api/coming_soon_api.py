@@ -18,12 +18,28 @@ import frappe
 # Registry of features under development
 # Add new features here as they are planned
 COMING_SOON_REGISTRY = {
-    "purchase-orders": {
-        "title":    "Purchase Orders",
-        "progress": 40,
+    "reconciliation": {
+        "title":    "Reconciliation",
+        "progress": 0,
+        "eta":      "PSV Phase 1.3",
+    },
+    "exception_analysis": {
+        "title":    "Exception Analysis",
+        "progress": 0,
+        "eta":      "PSV Phase 1.3",
+    },
+
+    "release_notes": {
+        "title":    "Release Notes",
+        "progress": 0,
         "eta":      "Q3 2026",
     },
-    "supplier-payments": {
+    "support": {
+        "title":    "Support",
+        "progress": 0,
+        "eta":      "Q3 2026",
+    },
+    "supplier_payments": {
         "title":    "Supplier Payments",
         "progress": 20,
         "eta":      "Q3 2026",

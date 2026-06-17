@@ -145,7 +145,7 @@ def create_reporting_doctypes():
             fields = [
                 {"fieldname": "report_key", "fieldtype": "Data", "label": "Report Key", "reqd": 1, "unique": 1, "in_list_view": 1},
                 {"fieldname": "report_name", "fieldtype": "Data", "label": "Report Name", "reqd": 1, "in_list_view": 1},
-                {"fieldname": "report_category", "fieldtype": "Select", "label": "Report Category", "options": "Sales\nInventory Analytics\nCash\nPurchase\nFinance\nAnalytics\nAccounting\nCustom", "reqd": 1, "in_list_view": 1},
+                {"fieldname": "report_category", "fieldtype": "Select", "label": "Report Category", "options": "Sales\nInventory Analytics\nCash\nPurchase\nFinance\nAnalytics\nAccounting\nAudit\nCustom", "reqd": 1, "in_list_view": 1},
                 {"fieldname": "source_doctype", "fieldtype": "Link", "options": "DocType", "label": "Source DocType"},
                 {"fieldname": "columns_json", "fieldtype": "Long Text", "label": "Columns JSON"},
                 {"fieldname": "filters_json", "fieldtype": "Long Text", "label": "Filters JSON"},
@@ -187,9 +187,9 @@ def create_reporting_doctypes():
             for f in dt.fields:
                 if f.fieldname == "report_category":
                     options_list = [opt.strip() for opt in (f.options or "").split("\n") if opt.strip()]
-                    if "Accounting" not in options_list or "Inventory Analytics" not in options_list:
+                    if "Audit" not in options_list or "Accounting" not in options_list or "Inventory Analytics" not in options_list:
                         # Rebuild with standard categories to match new definition
-                        f.options = "Sales\nInventory Analytics\nCash\nPurchase\nFinance\nAnalytics\nAccounting\nCustom"
+                        f.options = "Sales\nInventory Analytics\nCash\nPurchase\nFinance\nAnalytics\nAccounting\nAudit\nCustom"
                         dt.save(ignore_permissions=True)
                         frappe.db.commit()
                         print("[SMRITI] Updated SMRITI Report Template report_category options")
@@ -718,6 +718,60 @@ def seed_report_templates():
             "filters": [
                 {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
                 {"fieldname": "timespan_days", "label": "Timespan (Days)", "fieldtype": "Int"}
+            ]
+        },
+        {
+            "report_key": "security_audit_log",
+            "report_name": "SMRITI Security Audit Log",
+            "report_category": "Audit",
+            "source_doctype": "Activity Log",
+            "group_by": "",
+            "order_by": "creation DESC",
+            "company_restricted": 0,
+            "branch_restricted": 0,
+            "cache_minutes": 0,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager"],
+            "columns": [
+                {"fieldname": "creation", "label": "Date", "fieldtype": "Datetime", "width": 160},
+                {"fieldname": "user", "label": "User", "fieldtype": "Link", "options": "User", "width": 150},
+                {"fieldname": "operation", "label": "Operation", "fieldtype": "Data", "width": 150},
+                {"fieldname": "subject", "label": "Subject", "fieldtype": "Data", "width": 300},
+                {"fieldname": "ip_address", "label": "IP Address", "fieldtype": "Data", "width": 120}
+            ],
+            "filters": [
+                {"fieldname": "from_date", "label": "From Date", "fieldtype": "Date"},
+                {"fieldname": "to_date", "label": "To Date", "fieldtype": "Date"},
+                {"fieldname": "user", "label": "User", "fieldtype": "Link", "options": "User"}
+            ]
+        },
+        {
+            "report_key": "address_change_log",
+            "report_name": "SMRITI Address Change Log",
+            "report_category": "Audit",
+            "source_doctype": "SMRITI Address Audit Log",
+            "group_by": "",
+            "order_by": "changed_at DESC",
+            "company_restricted": 1,
+            "branch_restricted": 0,
+            "cache_minutes": 0,
+            "schema_version": 1,
+            "is_public": 1,
+            "roles": ["System Manager", "SMRITI Store Manager"],
+            "columns": [
+                {"fieldname": "changed_at", "label": "Date", "fieldtype": "Datetime", "width": 160},
+                {"fieldname": "changed_by", "label": "Changed By", "fieldtype": "Link", "options": "User", "width": 150},
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "width": 120},
+                {"fieldname": "field_name", "label": "Field Name", "fieldtype": "Data", "width": 120},
+                {"fieldname": "old_value", "label": "Old Value", "fieldtype": "Data", "width": 200},
+                {"fieldname": "new_value", "label": "New Value", "fieldtype": "Data", "width": 200}
+            ],
+            "filters": [
+                {"fieldname": "company", "label": "Company", "fieldtype": "Link", "options": "Company", "reqd": 1},
+                {"fieldname": "from_date", "label": "From Date", "fieldtype": "Date"},
+                {"fieldname": "to_date", "label": "To Date", "fieldtype": "Date"},
+                {"fieldname": "changed_by", "label": "Changed By", "fieldtype": "Link", "options": "User"}
             ]
         }
     ])

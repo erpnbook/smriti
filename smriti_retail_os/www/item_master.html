@@ -1081,7 +1081,8 @@ class SmritiItemMasterController {
 
         $(this.wrapper).on('click', '#sim-download-tpl, #sim-download-tpl2', () => self._download_template());
         $(this.wrapper).on('click', '#sim-view-items', () => {
-            frappe.set_route('List', 'Item');
+            // SMRITI Policy (AITDL Rule 7): Navigate to SMRITI Products page, never to ERPNext /app/item list
+            window.location.href = '/products';
         });
     }
 

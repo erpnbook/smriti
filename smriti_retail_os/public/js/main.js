@@ -611,7 +611,9 @@ function _redirect_to_smriti_home() {
             if (roles.includes('SMRITI Cashier')) {
                 if (normalized_path !== '/billing') window.location.href = '/billing';
             } else if (roles.includes('SMRITI Store Manager') || roles.includes('System Manager')) {
-                if (normalized_path !== '/desk') window.location.href = '/desk';
+                // SMRITI Policy (AITDL Rule 7 / GEMINI.md Rule 8):
+                // NEVER redirect to /desk — always route to SMRITI.
+                if (normalized_path !== '/smriti') window.location.href = '/smriti';
             }
         }
     } 
@@ -621,7 +623,9 @@ function _redirect_to_smriti_home() {
         if (roles.includes('SMRITI Cashier')) {
             if (normalized_path !== '/billing') window.location.href = '/billing';
         } else if (roles.includes('SMRITI Store Manager') || roles.includes('System Manager')) {
-            if (normalized_path !== '/desk') window.location.href = '/desk';
+            // SMRITI Policy (AITDL Rule 7 / GEMINI.md Rule 8):
+            // NEVER redirect to /desk — always route to SMRITI.
+            if (normalized_path !== '/smriti') window.location.href = '/smriti';
         }
     }
 }

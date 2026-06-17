@@ -452,7 +452,7 @@ class SmritiItemMasterController {
 
         // ── View Items ───────────────────────────────────────────────────
         $(this.wrapper).on('click', '#sim-view-items', () => {
-            frappe.set_route('List', 'Item');
+            window.location.href = '/products';
         });
     }
 

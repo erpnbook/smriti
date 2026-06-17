@@ -98,6 +98,80 @@ HELP_CENTER_REGISTRY = {
                 "answer": _("Yes. The system supports key versioning. Previous keys are retained in the system configuration, allowing historical backups postfixed with key version (e.g. '-v1.smriti.enc') to be decrypted seamlessly.")
             }
         ]
+    },
+    "audit_reports_guide": {
+        "title": _("System Security & Audit Reports"),
+        "category": "Administration Guides",
+        "description": _("How to access and interpret SMRITI Security Audit Logs and Address Change Logs."),
+        "content": _(
+            "SMRITI Retail OS v1.9.2 includes a dedicated Audit Reports module under Administration to track security events and metadata changes without exposing raw backend tables.\n\n"
+            "1. SMRITI Security Audit Log\n"
+            "This log records all high-impact actions taken by users in SMRITI. It tracks the creation datetime, user account, specific operation (e.g. template changes, print queue cleanup), subject/details of the change, and source IP address. Security logs are fetched directly from the Activity Log system of record.\n\n"
+            "2. SMRITI Address Change Log\n"
+            "Tracks changes to warehouse, customer, supplier, and company addresses. It records the date/time of modification, the user who changed it, the company, the specific field modified, and a clear comparison of the old value vs the new value."
+        ),
+        "faqs": [
+            {
+                "question": _("Who has permission to view these audit logs?"),
+                "answer": _("Only users assigned the 'System Manager' or 'SMRITI Store Manager' roles are permitted to access SMRITI Audit Reports.")
+            },
+            {
+                "question": _("How far back do the logs query by default?"),
+                "answer": _("You can filter logs by any date range using the 'From Date' and 'To Date' selectors. The page includes standard presets ('Today', 'This Week', 'This Month', 'Last Month') for quick querying, capped at a maximum retrieval limit of 10,000 records for performance protection.")
+            }
+        ]
+    },
+    "pivot_matrix_builder": {
+        "title": _("Pivot Matrix Builder & Custom Reports"),
+        "category": "Analytics Guides",
+        "description": _("Guide to using the drag-and-drop Pivot Matrix Builder and column reordering in SMRITI Reports."),
+        "content": _(
+            "SMRITI Retail OS features a dynamic drag-and-drop reporting workspace designed to give users maximum control over data visualization.\n\n"
+            "1. Column Reordering\n"
+            "In any standard report, columns can be rearranged dynamically by clicking and dragging the column headers left or right. Once the desired sequence is established, click 'Save View' to persist this layout in the database under your customized SMRITI Saved Views.\n\n"
+            "2. Pivot Matrix Builder\n"
+            "Toggle the 'Pivot View' button next to the filter bar to open the Pivot Builder panel. This workspace contains: \n"
+            "- Available Fields: A list of tags representing all columns present in the report.\n"
+            "- Rows Zone: Drag field tags here to define the row-wise categories of your matrix.\n"
+            "- Columns Zone: Drag field tags here to define the column-wise headers of your matrix.\n"
+            "- Values Zone: Drag field tags here to choose the numeric metrics. Each metric can be aggregated using Sum, Count, or Average functions.\n\n"
+            "3. Dynamic Re-aggregation\n"
+            "The client-side rendering engine automatically aggregates raw data, merges headers, and computes row and column Grand Totals in real-time."
+        ),
+        "faqs": [
+            {
+                "question": _("Can I save a pivot configuration for future use?"),
+                "answer": _("Pivot matrix configurations are currently temporary. To save a column sequence for standard reports, use the 'Save View' feature.")
+            },
+            {
+                "question": _("Which fields can be used in the Values zone?"),
+                "answer": _("While any field can be dragged into the Values zone, numeric fields (such as Quantities, Values, and Amounts) default to the 'Sum' aggregation, while text or status fields default to 'Count'.")
+            }
+        ]
+    },
+    "dashboard_customization": {
+        "title": _("Dashboard Customization & Layouts"),
+        "category": "Analytics Guides",
+        "description": _("Learn how to personalize your SMRITI Home and PSV dashboards using drag-and-drop layouts."),
+        "content": _(
+            "SMRITI Retail OS provides a customizable dashboard framework where users can reorder widgets to prioritize their primary business metrics.\n\n"
+            "1. Toggling Edit Mode\n"
+            "Click the 'Customize Layout' (dashboard icon) button in the topbar of the SMRITI Home or PSV Dashboard. This activates the layout customizer, displaying dashed blue borders and '⠿' drag handles on all adjustable widget cards.\n\n"
+            "2. Drag-and-Drop Reordering\n"
+            "Hover over any widget card's drag handle or title, click and drag it to a new location within the grid. The other cards will dynamically shift to accommodate the new placement.\n\n"
+            "3. Layout Persistence\n"
+            "After rearranging cards, click 'Customize Layout' again to exit edit mode and save. The custom layout sequence is serialized and saved in your browser's local storage (`localStorage`), meaning your personalized layout will persist across page reloads and browser sessions."
+        ),
+        "faqs": [
+            {
+                "question": _("Why do some widgets take up the full width?"),
+                "answer": _("Specific widgets, such as the Trend Chart or SKU Productivity matrix, are designated as 'span-full' to render wide charts and detailed tables properly. These can be reordered vertically but will always occupy the full grid width.")
+            },
+            {
+                "question": _("Is my custom layout shared with other users?"),
+                "answer": _("No. Since dashboard layout configurations are stored in the browser's local storage (`localStorage`), the customization is user-specific and device-specific.")
+            }
+        ]
     }
 }
 

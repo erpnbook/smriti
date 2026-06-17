@@ -46,9 +46,10 @@ const CACHE_STRATEGIES = {
     // Network first — live API data; fall back to cache if offline
     networkFirst:         ['/api/', '/method/'],
     // Stale While Revalidate — SMRITI pages: serve cached instantly, update in background
+    // POLICY: /desk is NOT a SMRITI route and must NOT be cached by the service worker.
     staleWhileRevalidate: [
         '/billing', '/sizewise_invoice', '/purchase', '/sizewise_item',
-        '/desk', '/inventory', '/eway_bill', '/customers', '/suppliers',
+        '/smriti', '/inventory', '/eway_bill', '/customers', '/suppliers',
         '/item_master', '/security', '/platform_center', '/shift', '/barcode',
         '/products', '/sales_invoices', '/configure'
     ],
@@ -251,7 +252,7 @@ self.addEventListener('push', event => {
             body:  data.body  || 'You have a new notification',
             icon:  '/assets/smriti_retail_os/images/icon-192.png',
             badge: '/assets/smriti_retail_os/images/icon-192.png',
-            data:  { url: data.url || '/desk' },
+            data:  { url: data.url || '/smriti' }, // POLICY: never /desk as fallback
             vibrate: [200, 100, 200],
             tag: data.tag || 'smriti-notification'
         })
@@ -263,7 +264,8 @@ self.addEventListener('notificationclick', event => {
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true })
             .then(clientList => {
-                const target = event.notification.data?.url || '/desk';
+                // POLICY (AITDL Rule 7): push notification target must be a SMRITI page, never /desk
+                const target = event.notification.data?.url || '/smriti';
                 for (const client of clientList) {
                     if (client.url.includes(target) && 'focus' in client) {
                         return client.focus();

@@ -208,6 +208,48 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
 .toast span { font-size:20px; }
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+/* Dashboard Edit Mode Styles */
+.dashboard-container.edit-mode .dashboard-section {
+    border: 2px dashed var(--primary);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin: -8px 0;
+    position: relative;
+    cursor: move;
+    background: rgba(99,102,241,0.03);
+    transition: background var(--t);
+}
+.dashboard-container.edit-mode .dashboard-section:hover {
+    background: rgba(99,102,241,0.07);
+}
+.dashboard-container.edit-mode .dashboard-section.dragging {
+    opacity: 0.4;
+    border-color: var(--accent);
+}
+.dashboard-container.edit-mode .dashboard-section.drag-over {
+    border-top: 4px solid var(--accent) !important;
+    background: rgba(245,158,11,0.05);
+}
+.dashboard-section-handle {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary-lt);
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 10;
+}
+.dashboard-container.edit-mode .dashboard-section-handle {
+    display: block;
+}
 </style>
 
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
@@ -241,6 +283,9 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 <button class="topbtn" onclick="history.forward()" title="Go Forward">
                     <span class="material-symbols-outlined">arrow_forward</span>
                 </button>
+                <button class="topbtn" onclick="toggleDashboardEditMode()" title="Customize Layout" id="btn-edit-layout">
+                    <span class="material-symbols-outlined">dashboard_customize</span>
+                </button>
                 <div class="topbar-badge closed" id="shift-badge">
                     <div class="dot"></div>
                     <span id="shift-badge-text">No Active Shift</span>
@@ -257,37 +302,41 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
             </div>
 
             <!-- KPI Grid -->
-            <div class="kpi-grid">
-                <div class="kpi-card">
-                    <div class="kpi-hdr">
-                        <span>Live Shift Sales</span>
-                        <span class="kpi-icon">📈</span>
+            <div class="dashboard-section" data-id="kpis">
+                <div class="dashboard-section-handle">⠿ KPI Stats</div>
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-hdr">
+                            <span>Live Shift Sales</span>
+                            <span class="kpi-icon">📈</span>
+                        </div>
+                        <div class="kpi-value" id="kpi-sales">₹0.00</div>
+                        <div class="kpi-ftr" id="kpi-sales-ftr">No active cashier shift</div>
                     </div>
-                    <div class="kpi-value" id="kpi-sales">₹0.00</div>
-                    <div class="kpi-ftr" id="kpi-sales-ftr">No active cashier shift</div>
-                </div>
 
-                <div class="kpi-card">
-                    <div class="kpi-hdr">
-                        <span>Invoices Issued</span>
-                        <span class="kpi-icon">🧾</span>
+                    <div class="kpi-card">
+                        <div class="kpi-hdr">
+                            <span>Invoices Issued</span>
+                            <span class="kpi-icon">🧾</span>
+                        </div>
+                        <div class="kpi-value" id="kpi-invoices">0</div>
+                        <div class="kpi-ftr" id="kpi-invoices-ftr">During this session</div>
                     </div>
-                    <div class="kpi-value" id="kpi-invoices">0</div>
-                    <div class="kpi-ftr" id="kpi-invoices-ftr">During this session</div>
-                </div>
 
-                <div class="kpi-card">
-                    <div class="kpi-hdr">
-                        <span>Shift Profile</span>
-                        <span class="kpi-icon">🕒</span>
+                    <div class="kpi-card">
+                        <div class="kpi-hdr">
+                            <span>Shift Profile</span>
+                            <span class="kpi-icon">🕒</span>
+                        </div>
+                        <div class="kpi-value" style="font-size: 20px; line-height:38px;" id="kpi-profile">Inactive</div>
+                        <div class="kpi-ftr" id="kpi-profile-ftr">Open a shift to track time</div>
                     </div>
-                    <div class="kpi-value" style="font-size: 20px; line-height:38px;" id="kpi-profile">Inactive</div>
-                    <div class="kpi-ftr" id="kpi-profile-ftr">Open a shift to track time</div>
                 </div>
             </div>
 
             <!-- Quick Actions -->
-            <div>
+            <div class="dashboard-section" data-id="actions">
+                <div class="dashboard-section-handle">⠿ Quick Actions</div>
                 <div class="sec-title" style="margin-bottom: 16px;">⚡ Quick Actions</div>
                 <div class="action-grid">
                     <!-- Billing -->
@@ -359,7 +408,8 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
             </div>
 
             <!-- Quick Masters -->
-            <div>
+            <div class="dashboard-section" data-id="masters">
+                <div class="dashboard-section-handle">⠿ Quick Masters</div>
                 <div class="sec-title" style="margin-bottom: 16px;">📖 Quick Masters</div>
                 <div class="master-grid">
                     <div class="master-card" onclick="openModal('modal-item')">
@@ -389,38 +439,41 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
             </div>
 
             <!-- Bottom Panels -->
-            <div class="bottom-grid">
-                <div class="bottom-panel">
-                    <div class="sec-title">🔔 Operations Alert Feed</div>
-                    <div class="alert-feed" id="alerts-feed">
-                        <div class="alert-item info">
-                            <div class="alert-icon">💡</div>
-                            <div class="alert-content">
-                                Welcome to SMRITI Retail OS Control Center! Use the actions above to navigate.
-                                <div class="alert-time">Just now</div>
+            <div class="dashboard-section" data-id="bottom-panels">
+                <div class="dashboard-section-handle">⠿ System Panels</div>
+                <div class="bottom-grid">
+                    <div class="bottom-panel">
+                        <div class="sec-title">🔔 Operations Alert Feed</div>
+                        <div class="alert-feed" id="alerts-feed">
+                            <div class="alert-item info">
+                                <div class="alert-icon">💡</div>
+                                <div class="alert-content">
+                                    Welcome to SMRITI Retail OS Control Center! Use the actions above to navigate.
+                                    <div class="alert-time">Just now</div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="bottom-panel">
-                    <div class="sec-title">⚙️ System Diagnostics</div>
-                    <div class="diag-list">
-                        <div class="diag-row">
-                            <div class="diag-lbl">Retail OS Version</div>
-                            <div class="diag-val">v{{ app_version }} (Stable)</div>
-                        </div>
-                        <div class="diag-row">
-                            <div class="diag-lbl">Database Connection</div>
-                            <div class="diag-val ok">● Nominal</div>
-                        </div>
-                        <div class="diag-row">
-                            <div class="diag-lbl">Tax Engine (GST)</div>
-                            <div class="diag-val ok">● Active</div>
-                        </div>
-                        <div class="diag-row">
-                            <div class="diag-lbl">Active Terminal Profile</div>
-                            <div class="diag-val" id="diag-terminal">Checking…</div>
+                    <div class="bottom-panel">
+                        <div class="sec-title">⚙️ System Diagnostics</div>
+                        <div class="diag-list">
+                            <div class="diag-row">
+                                <div class="diag-lbl">Retail OS Version</div>
+                                <div class="diag-val">v{{ app_version }} (Stable)</div>
+                            </div>
+                            <div class="diag-row">
+                                <div class="diag-lbl">Database Connection</div>
+                                <div class="diag-val ok">● Nominal</div>
+                            </div>
+                            <div class="diag-row">
+                                <div class="diag-lbl">Tax Engine (GST)</div>
+                                <div class="diag-val ok">● Active</div>
+                            </div>
+                            <div class="diag-row">
+                                <div class="diag-lbl">Active Terminal Profile</div>
+                                <div class="diag-val" id="diag-terminal">Checking…</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -746,7 +799,124 @@ function openPopout(e, url) {
     }
 }
 
-window.onload = loadDashboard;
+// Dashboard Drag and Drop Customizer
+let dashboardEditMode = false;
+
+function toggleDashboardEditMode() {
+    dashboardEditMode = !dashboardEditMode;
+    const container = document.querySelector('.dashboard-container');
+    const btn = document.getElementById('btn-edit-layout');
+    
+    if (dashboardEditMode) {
+        container.classList.add('edit-mode');
+        btn.style.borderColor = 'var(--primary)';
+        btn.style.color = 'var(--primary-lt)';
+        toast('Layout customization enabled. Drag sections to reorder.', 'info');
+        enableDashboardDrag();
+    } else {
+        container.classList.remove('edit-mode');
+        btn.style.borderColor = '';
+        btn.style.color = '';
+        disableDashboardDrag();
+        toast('Custom layout saved!', 'success');
+    }
+}
+
+function enableDashboardDrag() {
+    const sections = document.querySelectorAll('.dashboard-section');
+    sections.forEach((sec) => {
+        sec.setAttribute('draggable', 'true');
+        
+        sec.ondragstart = (e) => {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', sec.getAttribute('data-id'));
+            sec.classList.add('dragging');
+        };
+        
+        sec.ondragover = (e) => {
+            e.preventDefault();
+            sec.classList.add('drag-over');
+        };
+        
+        sec.ondragleave = () => {
+            sec.classList.remove('drag-over');
+        };
+        
+        sec.ondrop = (e) => {
+            e.preventDefault();
+            sec.classList.remove('drag-over');
+            const draggedId = e.dataTransfer.getData('text/plain');
+            const targetId = sec.getAttribute('data-id');
+            
+            if (draggedId !== targetId) {
+                const container = document.querySelector('.dashboard-container');
+                const draggedEl = container.querySelector(`[data-id="${draggedId}"]`);
+                
+                const children = Array.from(container.children);
+                const draggedIdx = children.indexOf(draggedEl);
+                const targetIdx = children.indexOf(sec);
+                
+                if (draggedIdx < targetIdx) {
+                    container.insertBefore(draggedEl, sec.nextSibling);
+                } else {
+                    container.insertBefore(draggedEl, sec);
+                }
+                
+                saveDashboardLayout();
+            }
+        };
+        
+        sec.ondragend = () => {
+            sec.classList.remove('dragging');
+        };
+    });
+}
+
+function disableDashboardDrag() {
+    const sections = document.querySelectorAll('.dashboard-section');
+    sections.forEach(sec => {
+        sec.removeAttribute('draggable');
+        sec.ondragstart = null;
+        sec.ondragover = null;
+        sec.ondragleave = null;
+        sec.ondrop = null;
+        sec.ondragend = null;
+    });
+}
+
+function saveDashboardLayout() {
+    const container = document.querySelector('.dashboard-container');
+    const sections = Array.from(container.querySelectorAll('.dashboard-section'));
+    const ids = sections.map(sec => sec.getAttribute('data-id'));
+    localStorage.setItem('smriti-dashboard-layout', JSON.stringify(ids));
+}
+
+function loadDashboardLayout() {
+    const saved = localStorage.getItem('smriti-dashboard-layout');
+    if (!saved) return;
+    
+    try {
+        const ids = JSON.parse(saved);
+        const container = document.querySelector('.dashboard-container');
+        
+        ids.forEach(id => {
+            const el = container.querySelector(`[data-id="${id}"]`);
+            if (el) {
+                container.appendChild(el);
+            }
+        });
+        
+        const footer = container.querySelector('.footer');
+        if (footer) container.appendChild(footer);
+    } catch(e) {
+        console.error("Failed to load dashboard layout", e);
+    }
+}
+
+window.onload = function() {
+    loadDashboardLayout();
+    loadDashboard();
+};
 </script>
 
 <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>

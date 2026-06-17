@@ -1,0 +1,600 @@
+/**
+ * @file: smriti_retail_os/www/scheme_creator.html
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/scheme_creator.html
+  @description: SMRITI Scheme Creator — Standalone UI
+  @author: Antigravity AI
+  @version: 1.0.0
+  @license: MIT
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMRITI Scheme Creator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-base:     #0a0f1e;
+      --bg-surface:  #0f1629;
+      --bg-card:     #131d35;
+      --bg-input:    #172040;
+      --border:      rgba(255,255,255,0.07);
+      --border-glow: rgba(99,102,241,0.2);
+      --accent:      #6366f1;
+      --accent-glow: rgba(99,102,241,0.5);
+      --accent-2:    #818cf8;
+      --success:     #10b981;
+      --warning:     #f59e0b;
+      --danger:     #ef4444;
+      --text-1:      #e2e8f0;
+      --text-2:      #94a3b8;
+      --text-3:      #475569;
+      --radius:      12px;
+      --radius-sm:   8px;
+      --radius-lg:   16px;
+      --shadow:      0 8px 32px rgba(0,0,0,0.5);
+      --t:           0.2s ease;
+    }
+
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg-base); color: var(--text-1); font-family: 'Inter', sans-serif; font-size: 14px; }
+
+    .bg-grid {
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+      background-size: 50px 50px;
+      z-index: 0;
+    }
+    .bg-glow {
+      position: fixed; width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,0.04) 0%, transparent 70%);
+      top: -100px; left: -100px; z-index: 0; filter: blur(40px);
+    }
+
+    #app { position: relative; z-index: 1; width: 100vw; height: 100vh; display: flex; overflow: hidden; }
+
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    .topbar { height: 56px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0; }
+    .topbar-breadcrumbs { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-2); }
+    .topbar-breadcrumbs span.sep { color: var(--text-3); }
+    .topbar-breadcrumbs span.active { color: var(--text-1); }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .topbtn { background: none; border: none; color: var(--text-2); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all var(--t); }
+    .topbtn:hover { background: rgba(255,255,255,0.05); color: var(--text-1); }
+
+    .filter-bar { padding: 16px 24px; background: var(--bg-surface); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; gap: 16px; }
+    .search-wrap { position: relative; flex: 1; max-width: 400px; }
+    .search-input { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-1); font-size: 0.88rem; padding: 10px 14px 10px 38px; outline: none; transition: all var(--t); }
+    .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--border-glow); }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
+
+    .content-area { flex: 1; overflow-y: auto; padding: 24px; }
+    .table-container { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-surface); }
+    .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
+    .data-table th { background: rgba(0,0,0,0.15); padding: 14px 16px; font-weight: 700; color: var(--text-2); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
+    .data-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); color: var(--text-1); vertical-align: middle; }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-sm); border: none; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all var(--t); text-decoration: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; box-shadow: 0 4px 12px var(--border-glow); }
+    .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.1); }
+    .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text-2); }
+    .btn-secondary:hover { border-color: var(--text-2); color: var(--text-1); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { filter: brightness(1.1); }
+    .btn-sm { padding: 6px 12px; font-size: 0.78rem; border-radius: 6px; }
+
+    /* Modals */
+    .modal-backdrop { position: fixed; inset: 0; z-index: 9000; background: rgba(3,7,18,0.85); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.22s; }
+    .modal-backdrop.open { opacity: 1; display: flex; }
+    .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; width: min(520px, 95vw); transform: translateY(20px); transition: transform 0.22s; box-shadow: var(--shadow); }
+    .modal-backdrop.open .modal { transform: translateY(0); }
+    .modal-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-1); display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .modal-close { margin-left: auto; background: none; border: none; color: var(--text-2); cursor: pointer; display: flex; align-items: center; }
+    .modal-close:hover { color: var(--danger); }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; width: 100%; margin-bottom: 14px; }
+    .form-row { display: flex; gap: 14px; margin-bottom: 14px; }
+    .form-row .form-group { margin-bottom: 0; }
+    .form-label { font-size: 0.75rem; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+    input[type="text"], input[type="number"], input[type="date"], select { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-1); font-size: 0.88rem; padding: 10px 14px; outline: none; transition: all var(--t); font-family: inherit; }
+    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--border-glow); }
+    select option { background: var(--bg-card); }
+
+    /* Autocomplete dropdown list */
+    .autocomplete-wrap { position: relative; width: 100%; }
+    .autocomplete-results { position: absolute; left: 0; right: 0; top: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: 0 0 var(--radius-sm) var(--radius-sm); z-index: 100; max-height: 180px; overflow-y: auto; display: none; box-shadow: var(--shadow); }
+    .autocomplete-item { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+    .autocomplete-item:hover { background: rgba(99,102,241,0.1); }
+    .autocomplete-item:last-child { border-bottom: none; }
+
+    /* Badge chips */
+    .badge-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+    .badge-chip.percent { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); color: var(--success); }
+    .badge-chip.amount { background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); color: var(--accent-2); }
+    .badge-chip.flat { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); color: var(--warning); }
+
+    /* Spinner */
+    .spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.05); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast Container */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 99999; }
+    .toast { padding: 12px 18px; border-radius: var(--radius); font-size: 0.88rem; font-weight: 600; color: white; min-width: 240px; display: flex; align-items: center; gap: 10px; animation: toast-in 0.3s ease; box-shadow: var(--shadow); }
+    .toast.success { background: #065f46; border: 1px solid rgba(16,185,129,0.3); }
+    .toast.error   { background: #7f1d1d; border: 1px solid rgba(239,68,68,0.3); }
+    .toast.info    { background: #1e1b4b; border: 1px solid rgba(99,102,241,0.3); }
+    @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+  </style>
+  <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div id="app">
+  <!-- Standalone Sidebar -->
+  <div id="smriti-sidebar-target" class="sidebar"></div>
+
+  <!-- Main Workspace -->
+  <div class="main-wrapper">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-breadcrumbs">
+        <span>SMRITI</span>
+        <span class="sep">/</span>
+        <span>Masters</span>
+        <span class="sep">/</span>
+        <span class="active">Scheme Creator</span>
+      </div>
+      <div class="topbar-right">
+        <button class="topbtn" onclick="history.back()" title="Go Back">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <button class="topbtn" onclick="history.forward()" title="Go Forward">
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter/Action bar -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input type="text" id="scheme-search" class="search-input" placeholder="Search active schemes..." oninput="handleSearch(this.value)">
+      </div>
+      <button class="btn btn-primary" onclick="openAddModal()">
+        <span class="material-symbols-outlined" style="font-size: 18px;">add</span> Create Scheme
+      </button>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-area">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Scheme Title</th>
+              <th>Applied On</th>
+              <th>Applied Target</th>
+              <th>Value Type</th>
+              <th>Discount Value</th>
+              <th>Validity</th>
+              <th style="width: 150px; text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="schemes-tbody">
+            <tr>
+              <td colspan="7" style="text-align: center;">
+                <div class="spinner" style="margin: 24px auto;"></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal: Create / Edit Scheme -->
+<div class="modal-backdrop" id="modal-scheme">
+  <div class="modal">
+    <div class="modal-title">
+      <span class="material-symbols-outlined" id="modal-icon">add_box</span> 
+      <span id="modal-title-text">Create Active Scheme</span>
+      <button class="modal-close" onclick="closeModal()"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      
+      <div class="form-group">
+        <label class="form-label">Scheme Title *</label>
+        <input type="text" id="sch-title" placeholder="e.g. Nike Winter 10% Off, Flat Diwali Rate">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="flex: 1;">
+          <label class="form-label">Apply On *</label>
+          <select id="sch-apply-on" onchange="handleApplyOnToggle(this.value)">
+            <option value="Item Code">Specific Item Code</option>
+            <option value="Item Group">Category (Item Group)</option>
+            <option value="Brand">Brand Master</option>
+          </select>
+        </div>
+        
+        <div class="form-group" style="flex: 1.2;">
+          <label class="form-label">Target Target Value *</label>
+          
+          <!-- Type-based target wrappers -->
+          <div id="target-item-wrapper" class="autocomplete-wrap">
+            <input type="text" id="sch-target-item" placeholder="Search SKU / Item Code..." oninput="searchItemCodes(this.value)" autocomplete="off">
+            <div class="autocomplete-results" id="item-autocomplete-box"></div>
+          </div>
+
+          <div id="target-group-wrapper" style="display: none;">
+            <select id="sch-target-group">
+              <option value="">-- Choose Category --</option>
+              {% for group in item_groups %}
+                <option value="{{ group }}">{{ group }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div id="target-brand-wrapper" style="display: none;">
+            <select id="sch-target-brand">
+              <option value="">-- Choose Brand --</option>
+              {% for brand in brands %}
+                <option value="{{ brand }}">{{ brand }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="flex: 1;">
+          <label class="form-label">Discount Type *</label>
+          <select id="sch-discount-type">
+            <option value="Percentage">Percentage (%)</option>
+            <option value="Amount">Flat Amount Discount (₹)</option>
+            <option value="Flat Rate">Fixed Price (₹)</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label class="form-label">Value *</label>
+          <input type="number" id="sch-value" placeholder="e.g. 10, 150" step="any">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="flex: 1;">
+          <label class="form-label">Valid From</label>
+          <input type="date" id="sch-from">
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label class="form-label">Valid Upto</label>
+          <input type="date" id="sch-upto">
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px;">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitSchemeForm()" id="btn-save">Save Scheme</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-wrap"></div>
+
+<script>
+  const CSRF_TOKEN = '{{ csrf_token }}';
+  window.loggedUser = '{{ user }}';
+  let schemesData = [];
+  let isEditing = false;
+  let editingId = null;
+
+  const API = {
+    call(method, args = {}) {
+      return fetch('/api/method/smriti_retail_os.api.scheme_api.' + method, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-frappe-csrf-token': CSRF_TOKEN
+        },
+        body: JSON.stringify(args)
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.exc) throw new Error(data._error_message || data.exc);
+        return data.message !== undefined ? data.message : data;
+      });
+    }
+  };
+
+  function toast(msg, type = 'success') {
+    const wrap = document.getElementById('toast-wrap');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    const icons = { success: 'check_circle', error: 'error', info: 'info' };
+    el.innerHTML = `<span class="material-symbols-outlined">${icons[type] || 'info'}</span><span>${msg}</span>`;
+    wrap.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+
+  function loadSchemesList() {
+    API.call('get_schemes')
+      .then(list => {
+        schemesData = list || [];
+        renderSchemesTable(schemesData);
+      })
+      .catch(e => {
+        toast('Failed to load schemes: ' + e.message, 'error');
+      });
+  }
+
+  function renderSchemesTable(list) {
+    const tbody = document.getElementById('schemes-tbody');
+    if (!list.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-2);">No active schemes found.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(s => {
+      let typeBadge = '';
+      let valDisplay = '';
+      if (s.rate_or_discount === 'Discount Percentage') {
+        typeBadge = '<span class="badge-chip percent">Percentage</span>';
+        valDisplay = s.discount_percentage + '%';
+      } else if (s.rate_or_discount === 'Discount Amount') {
+        typeBadge = '<span class="badge-chip amount">Amount</span>';
+        valDisplay = '₹' + s.discount_amount;
+      } else {
+        typeBadge = '<span class="badge-chip flat">Flat Rate</span>';
+        valDisplay = '₹' + s.rate;
+      }
+
+      const validity = (s.valid_from && s.valid_upto) 
+        ? `${s.valid_from} to ${s.valid_upto}` 
+        : (s.valid_from ? `From ${s.valid_from}` : (s.valid_upto ? `Upto ${s.valid_upto}` : 'Always Active'));
+
+      return `
+        <tr>
+          <td style="font-weight: 600; color: var(--text-1);">${s.pricing_rule_name}</td>
+          <td style="color: var(--text-2); font-size: 0.85rem;">${s.apply_on}</td>
+          <td style="font-weight: 600; font-family: monospace;">${s.applied_to}</td>
+          <td>${typeBadge}</td>
+          <td style="font-weight: 700; color: var(--accent-2);">${valDisplay}</td>
+          <td style="color: var(--text-2); font-size: 0.85rem;">${validity}</td>
+          <td style="text-align: center; display: flex; justify-content: center; gap: 8px;">
+            <button class="btn btn-secondary btn-sm" onclick="openEditModal('${s.name}', '${s.pricing_rule_name.replace(/'/g, "\\'")}', '${s.apply_on}', '${s.applied_to.replace(/'/g, "\\'")}', '${s.rate_or_discount}', ${s.discount_percentage || s.discount_amount || s.rate}, '${s.valid_from || ''}', '${s.valid_upto || ''}')">
+              <span class="material-symbols-outlined" style="font-size: 16px;">edit</span> Edit
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="deleteScheme('${s.name}')">
+              <span class="material-symbols-outlined" style="font-size: 16px;">delete</span> Delete
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function handleApplyOnToggle(applyOn) {
+    document.getElementById('target-item-wrapper').style.display = applyOn === 'Item Code' ? 'block' : 'none';
+    document.getElementById('target-group-wrapper').style.display = applyOn === 'Item Group' ? 'block' : 'none';
+    document.getElementById('target-brand-wrapper').style.display = applyOn === 'Brand' ? 'block' : 'none';
+  }
+
+  function searchItemCodes(q) {
+    const box = document.getElementById('item-autocomplete-box');
+    if (!q || q.length < 2) {
+      box.style.display = 'none';
+      return;
+    }
+
+    // Call SMRITI billing search API
+    fetch('/api/method/smriti_retail_os.billing_api.search_items', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-frappe-csrf-token': CSRF_TOKEN
+      },
+      body: JSON.stringify({ query: q })
+    })
+    .then(r => r.json())
+    .then(data => {
+      const items = data.message || [];
+      if (!items.length) {
+        box.innerHTML = '<div style="padding: 10px; color: var(--text-2);">No items found.</div>';
+      } else {
+        box.innerHTML = items.map(i => `
+          <div class="autocomplete-item" onclick="selectItem('${i.item_code}')">
+            <span><strong>${i.item_code}</strong> - ${i.item_name}</span>
+          </div>
+        `).join('');
+      }
+      box.style.display = 'block';
+    })
+    .catch(e => console.error(e));
+  }
+
+  function selectItem(code) {
+    document.getElementById('sch-target-item').value = code;
+    document.getElementById('item-autocomplete-box').style.display = 'none';
+  }
+
+  function handleSearch(val) {
+    const query = val.toLowerCase();
+    const filtered = schemesData.filter(s => 
+      s.pricing_rule_name.toLowerCase().includes(query) || 
+      s.apply_on.toLowerCase().includes(query) || 
+      s.applied_to.toLowerCase().includes(query)
+    );
+    renderSchemesTable(filtered);
+  }
+
+  function openAddModal() {
+    isEditing = false;
+    editingId = null;
+    document.getElementById('modal-icon').textContent = 'add_box';
+    document.getElementById('modal-title-text').textContent = 'Create Active Scheme';
+    document.getElementById('sch-title').value = '';
+    document.getElementById('sch-apply-on').value = 'Item Code';
+    document.getElementById('sch-apply-on').disabled = false;
+    document.getElementById('sch-target-item').value = '';
+    document.getElementById('sch-target-item').disabled = false;
+    document.getElementById('sch-target-group').value = '';
+    document.getElementById('sch-target-group').disabled = false;
+    document.getElementById('sch-target-brand').value = '';
+    document.getElementById('sch-target-brand').disabled = false;
+    document.getElementById('sch-discount-type').value = 'Percentage';
+    document.getElementById('sch-value').value = '';
+    document.getElementById('sch-from').value = '';
+    document.getElementById('sch-upto').value = '';
+
+    handleApplyOnToggle('Item Code');
+    document.getElementById('modal-scheme').classList.add('open');
+  }
+
+  function openEditModal(name, title, applyOn, appliedTo, rateOrDiscount, value, fromDate, uptoDate) {
+    isEditing = true;
+    editingId = name;
+    document.getElementById('modal-icon').textContent = 'edit_square';
+    document.getElementById('modal-title-text').textContent = 'Edit Scheme Details';
+    document.getElementById('sch-title').value = title;
+    document.getElementById('sch-apply-on').value = applyOn;
+    document.getElementById('sch-apply-on').disabled = true; // Lock targets on edit to protect schema references
+    
+    if (applyOn === 'Item Code') {
+      document.getElementById('sch-target-item').value = appliedTo;
+      document.getElementById('sch-target-item').disabled = true;
+    } else if (applyOn === 'Item Group') {
+      document.getElementById('sch-target-group').value = appliedTo;
+      document.getElementById('sch-target-group').disabled = true;
+    } else if (applyOn === 'Brand') {
+      document.getElementById('sch-target-brand').value = appliedTo;
+      document.getElementById('sch-target-brand').disabled = true;
+    }
+
+    let discountType = 'Percentage';
+    if (rateOrDiscount === 'Discount Amount') discountType = 'Amount';
+    else if (rateOrDiscount === 'Rate') discountType = 'Flat Rate';
+    
+    document.getElementById('sch-discount-type').value = discountType;
+    document.getElementById('sch-value').value = value;
+    document.getElementById('sch-from').value = fromDate;
+    document.getElementById('sch-upto').value = uptoDate;
+
+    handleApplyOnToggle(applyOn);
+    document.getElementById('modal-scheme').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modal-scheme').classList.remove('open');
+  }
+
+  function submitSchemeForm() {
+    const title = document.getElementById('sch-title').value.trim();
+    const applyOn = document.getElementById('sch-apply-on').value;
+    const discountType = document.getElementById('sch-discount-type').value;
+    const value = document.getElementById('sch-value').value;
+    const fromDate = document.getElementById('sch-from').value;
+    const uptoDate = document.getElementById('sch-upto').value;
+
+    let appliedTo = '';
+    if (applyOn === 'Item Code') {
+      appliedTo = document.getElementById('sch-target-item').value.trim();
+    } else if (applyOn === 'Item Group') {
+      appliedTo = document.getElementById('sch-target-group').value;
+    } else if (applyOn === 'Brand') {
+      appliedTo = document.getElementById('sch-target-brand').value;
+    }
+
+    if (!title) {
+      toast('Scheme Title is required.', 'error');
+      return;
+    }
+    if (!appliedTo) {
+      toast('Applied Target Value is required.', 'error');
+      return;
+    }
+    if (!value || parseFloat(value) <= 0) {
+      toast('Please enter a valid positive value.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('btn-save');
+    btn.disabled = true;
+
+    if (isEditing) {
+      API.call('update_scheme', { name: editingId, title, apply_on: applyOn, applied_to: appliedTo, discount_type: discountType, value, valid_from: fromDate, valid_upto: uptoDate })
+        .then(() => {
+          toast('Scheme successfully updated.', 'success');
+          closeModal();
+          loadSchemesList();
+        })
+        .catch(e => toast(e.message, 'error'))
+        .finally(() => btn.disabled = false);
+    } else {
+      API.call('create_scheme', { title, apply_on: applyOn, applied_to: appliedTo, discount_type: discountType, value, valid_from: fromDate, valid_upto: uptoDate })
+        .then(() => {
+          toast('Scheme successfully created.', 'success');
+          closeModal();
+          loadSchemesList();
+        })
+        .catch(e => toast(e.message, 'error'))
+        .finally(() => btn.disabled = false);
+    }
+  }
+
+  function deleteScheme(name) {
+    if (!confirm(`Are you sure you want to delete scheme "${name}"?`)) return;
+    
+    API.call('delete_scheme', { name })
+      .then(() => {
+        toast('Scheme deleted successfully.', 'success');
+        loadSchemesList();
+      })
+      .catch(e => {
+        toast(e.message, 'error');
+      });
+  }
+
+  // Click outside to close autocomplete list
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.autocomplete-wrap')) {
+      document.getElementById('item-autocomplete-box').style.display = 'none';
+    }
+  });
+
+  window.onload = function() {
+    loadSchemesList();
+  };
+</script>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=1.9.1"></script>
+<script>SMRITI.renderFlexibleSidebar("scheme_creator");</script>
+</body>
+</html>
+{% endblock %}

@@ -693,7 +693,7 @@ window.SMRITIReports = (function () {
                     ? `${inv.overdue_days}d overdue`
                     : "Current";
                 return `<tr>
-                    <td><a href="/app/sales-invoice/${inv.invoice}" style="color:var(--smriti-primary)">${inv.invoice}</a></td>
+                    <td><a href="/sales_invoices?invoice=${encodeURIComponent(inv.invoice)}" style="color:var(--smriti-primary)">${inv.invoice}</a></td>
                     <td>${frappe.utils.escape_html(inv.customer_name || inv.customer)}</td>
                     <td>${inv.posting_date}</td>
                     <td>${inv.due_date}</td>

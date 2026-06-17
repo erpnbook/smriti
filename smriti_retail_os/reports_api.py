@@ -1107,6 +1107,35 @@ REPORT_QUERIES = {
         """,
         "group_by": None,
         "order_by": "posting_date ASC"
+    },
+    "security_audit_log": {
+        "base_sql": """
+            SELECT 
+                creation,
+                user,
+                operation,
+                subject,
+                ip_address
+            FROM `tabActivity Log`
+            WHERE 1=1
+        """,
+        "group_by": None,
+        "order_by": "creation DESC"
+    },
+    "address_change_log": {
+        "base_sql": """
+            SELECT 
+                changed_at,
+                changed_by,
+                company,
+                field_name,
+                old_value,
+                new_value
+            FROM `tabSMRITI Address Audit Log`
+            WHERE 1=1
+        """,
+        "group_by": None,
+        "order_by": "changed_at DESC"
     }
 }
 
@@ -1544,7 +1573,16 @@ class SMRITIReportEngine:
             from_date = self.filters.get("from_date")
             to_date = self.filters.get("to_date")
             if from_date and to_date:
-                date_field = "pe.posting_date" if "pe." in base_sql else "posting_date" if "tabPayment Entry" in base_sql or "tabSales Invoice" in base_sql or "tabPurchase Invoice" in base_sql else "parent.posting_date" if "parent ON" in base_sql else "ce.posting_date" if "tabPOS Closing Entry" in base_sql else "posting_date" if "tabPOS Invoice" in base_sql else "i.posting_date"
+                date_field = (
+                    "creation" if "tabActivity Log" in base_sql
+                    else "changed_at" if "tabSMRITI Address Audit Log" in base_sql
+                    else "pe.posting_date" if "pe." in base_sql
+                    else "posting_date" if "tabPayment Entry" in base_sql or "tabSales Invoice" in base_sql or "tabPurchase Invoice" in base_sql
+                    else "parent.posting_date" if "parent ON" in base_sql
+                    else "ce.posting_date" if "tabPOS Closing Entry" in base_sql
+                    else "posting_date" if "tabPOS Invoice" in base_sql
+                    else "i.posting_date"
+                )
                 where_clauses.append(f"{date_field} BETWEEN %(from_date)s AND %(to_date)s")
                 params["from_date"] = from_date
                 params["to_date"] = to_date
@@ -1622,6 +1660,18 @@ class SMRITIReportEngine:
         if party:
             where_clauses.append("party = %(party)s")
             params["party"] = party
+
+        # User filter for Activity Log
+        user_filter = self.filters.get("user")
+        if user_filter and "tabActivity Log" in base_sql:
+            where_clauses.append("user = %(user)s")
+            params["user"] = user_filter
+
+        # Changed By filter for SMRITI Address Audit Log
+        changed_by = self.filters.get("changed_by")
+        if changed_by and "tabSMRITI Address Audit Log" in base_sql:
+            where_clauses.append("changed_by = %(changed_by)s")
+            params["changed_by"] = changed_by
 
         # Payment Mode filter
         payment_mode = self.filters.get("payment_mode")

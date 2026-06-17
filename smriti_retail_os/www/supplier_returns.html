@@ -1,0 +1,761 @@
+/**
+ * @file: smriti_retail_os/www/supplier_returns.html
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/supplier_returns.html
+  @description: SMRITI Supplier Returns & Debit Notes — Standalone UI (Zero system chrome)
+  @author: Antigravity AI
+  @version: 1.0.0
+  @license: MIT
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMRITI Supplier Returns</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg:         #0a0f1e;
+    --bg2:        #0f1629;
+    --card:       #131d35;
+    --card2:      #172040;
+    --border:     rgba(255,255,255,0.07);
+    --border2:    rgba(255,255,255,0.12);
+    --primary:    #6366f1;
+    --primary-lt: #818cf8;
+    --accent:     #f59e0b;
+    --success:    #10b981;
+    --warning:    #f59e0b;
+    --danger:     #ef4444;
+    --text:       #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-sub:   #475569;
+    --radius:     12px;
+    --radius-sm:  8px;
+    --radius-lg:  16px;
+    --t:          0.2s ease;
+}
+
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+
+.bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 0;
+}
+
+#app { position:relative; z-index:1; width:100vw; height:100vh; display:flex; overflow:hidden; }
+.main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+/* Topbar */
+.topbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
+.topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--text-muted); }
+.topbar-breadcrumbs span.sep { color:var(--text-sub); }
+.topbar-breadcrumbs span.active { color:var(--text); }
+.topbar-right { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
+.topbtn { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:var(--radius-sm); font-size:12px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); white-space:nowrap; }
+.topbtn span { font-size:16px; }
+.topbtn:hover { border-color:var(--primary); color:var(--primary-lt); }
+
+/* Filter Bar */
+.filter-bar { padding:14px 24px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; gap:16px; align-items:center; flex-shrink:0; }
+.form-input { padding:8px 12px; background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.88rem; outline:none; transition:all var(--t); font-family:inherit; }
+.form-input:focus { border-color:var(--primary); }
+.search-input { width:320px; }
+.filter-select { width:180px; }
+
+/* Table Wrapper */
+.table-wrap { flex:1; overflow:auto; padding:16px 24px; }
+.smriti-table { width:100%; border-collapse:collapse; text-align:left; }
+.smriti-table th { padding:10px 14px; background:var(--card2); color:var(--text-muted); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1; }
+.smriti-table td { padding:12px 14px; border-bottom:1px solid var(--border); font-size:0.88rem; vertical-align:middle; cursor:pointer; }
+.smriti-table tbody tr:hover td { background:rgba(99,102,241,0.04); }
+.smriti-table tbody tr:last-child td { border-bottom:none; }
+
+.invoice-badge { font-family:monospace; font-size:0.78rem; font-weight:700; color:var(--primary-lt); background:rgba(99,102,241,0.08); padding:3px 8px; border-radius:4px; border:1px solid var(--border); }
+.status-badge { display:inline-block; padding:2px 8px; border-radius:99px; font-weight:700; font-size:0.72rem; text-transform:uppercase; }
+.status-badge.completed { background:rgba(16,185,129,0.12); color:var(--success); }
+.status-badge.draft { background:rgba(255,255,255,0.04); color:var(--text-muted); }
+.status-badge.submitted { background:rgba(99,102,241,0.12); color:var(--primary-lt); }
+
+/* Slide-out Drawer */
+.drawer-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(3,7,18,0.7); backdrop-filter:blur(3px); display:flex; justify-content:flex-end; opacity:0; pointer-events:none; transition:opacity 0.25s ease; }
+.drawer-backdrop.open { opacity:1; pointer-events:all; }
+.drawer { width:100%; max-width:480px; height:100%; background:var(--bg2); border-left:1px solid var(--border2); transform:translateX(100%); transition:transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); display:flex; flex-direction:column; box-shadow: -10px 0 30px rgba(0,0,0,0.5); }
+.drawer-backdrop.open .drawer { transform:translateX(0); }
+
+.drawer-header { padding:20px; border-bottom:1px solid var(--border); display:flex; align-items:center; }
+.drawer-title { font-family:'Outfit',sans-serif; font-size:1.15rem; font-weight:800; }
+.drawer-close { margin-left:auto; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:22px; display:flex; align-items:center; }
+.drawer-close:hover { color:var(--text); }
+
+.drawer-body { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:20px; }
+
+.section-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
+.section-title { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--primary-lt); margin-bottom:12px; }
+
+.meta-row { display:flex; justify-content: space-between; font-size:0.88rem; margin-bottom:8px; }
+.meta-row:last-child { margin-bottom:0; }
+.meta-label { color:var(--text-muted); }
+.meta-value { font-weight:600; color:var(--text); }
+
+.invoice-items-table { width:100%; border-collapse:collapse; text-align:left; font-size:0.82rem; }
+.invoice-items-table th { padding:6px; color:var(--text-muted); border-bottom:1px solid var(--border); font-weight:700; }
+.invoice-items-table td { padding:8px 6px; border-bottom:1px solid var(--border); }
+.invoice-items-table tr:last-child td { border-bottom:none; }
+
+.drawer-footer { padding:20px; border-top:1px solid var(--border); display:flex; gap:12px; background:rgba(0,0,0,0.15); }
+.btn-print { flex:1; padding:10px; background:var(--primary); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.88rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; }
+.btn-print:hover { background:var(--primary-lt); }
+
+#toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
+.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+.toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
+.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
+.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+.toast span { font-size:20px; }
+@keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+</style>
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+</head>
+<body>
+
+<div class="bg-grid"></div>
+
+<div id="app">
+    <div id="smriti-sidebar-target" class="sidebar"></div>
+    <div class="main-wrapper">
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-breadcrumbs">
+                <span>SMRITI</span>
+                <span class="sep">/</span>
+                <span>Purchase</span>
+                <span class="sep">/</span>
+                <span class="active">Supplier Returns</span>
+            </div>
+            <div class="topbar-right">
+                <button class="topbtn" onclick="openReturnModal()" style="background:var(--primary); color:white; border-color:var(--primary);" title="Create Return">
+                    <span class="material-symbols-outlined">add</span> Create Return
+                </button>
+                <button class="topbtn" onclick="history.back()" title="Go Back">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+                <button class="topbtn" onclick="history.forward()" title="Go Forward">
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <input type="text" class="form-input search-input" id="search-box" placeholder="Search return no or supplier..." oninput="handleSearch(this.value)">
+            <select class="form-input filter-select" id="filter-status" onchange="applyFilters()">
+                <option value="">All Statuses</option>
+                <option value="Submitted">Submitted</option>
+                <option value="Draft">Draft</option>
+            </select>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+            <table class="smriti-table">
+                <thead>
+                    <tr>
+                        <th>Return Number</th>
+                        <th>Date & Time</th>
+                        <th>Supplier</th>
+                        <th style="text-align:right;">Grand Total</th>
+                        <th style="text-align:center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="returns-tbody">
+                    <tr><td colspan="5" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading Supplier Returns...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Details Drawer -->
+<div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()">
+    <div class="drawer" onclick="event.stopPropagation()">
+        <div class="drawer-header">
+            <div class="drawer-title" id="drw-id">Return Details</div>
+            <button class="drawer-close" onclick="closeDrawer()">&times;</button>
+        </div>
+        <div class="drawer-body">
+            <div class="section-card">
+                <div class="section-title">General Details</div>
+                <div class="meta-row"><span class="meta-label">Date & Time</span><span class="meta-value" id="drw-date"></span></div>
+                <div class="meta-row"><span class="meta-label">Supplier</span><span class="meta-value" id="drw-supplier"></span></div>
+                <div class="meta-row"><span class="meta-label">Status</span><span id="drw-status"></span></div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-title">Items Returned</div>
+                <table class="invoice-items-table">
+                    <thead>
+                        <tr>
+                            <th>Product Description</th>
+                            <th style="text-align:center;">Qty</th>
+                            <th style="text-align:right;">Rate</th>
+                            <th style="text-align:right;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="drw-items-tbody"></tbody>
+                </table>
+            </div>
+
+            <div class="section-card">
+                <div class="section-title">Breakdown</div>
+                <div class="meta-row" style="border-top:1px solid var(--border); padding-top:8px; margin-top:8px; font-size:1.05rem;"><span class="meta-label" style="color:var(--text); font-weight:700;">Grand Total</span><span class="meta-value" id="drw-grand" style="color:var(--success); font-weight:800;"></span></div>
+            </div>
+        </div>
+        <div class="drawer-footer" id="drawer-footer-actions">
+            <button class="btn-print" onclick="printReceipt()">
+                <span class="material-symbols-outlined">print</span> Print Debit Note
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Create Return Drawer -->
+<div class="drawer-backdrop" id="modal-backdrop" onclick="closeReturnModal()">
+    <div class="drawer" style="max-width: 680px;" onclick="event.stopPropagation()">
+        <div class="drawer-header">
+            <div class="drawer-title">Create Supplier Return</div>
+            <button class="drawer-close" onclick="closeReturnModal()">&times;</button>
+        </div>
+        <div class="drawer-body">
+            <!-- Step 1: Select Purchase Receipt (GRN) -->
+            <div class="section-card" id="grn-select-section">
+                <div class="section-title">Search & Select Original GRN</div>
+                <div style="position:relative; margin-bottom:12px;">
+                    <input type="text" class="form-input" id="grn-search-input" placeholder="Search original GRN no. or supplier..." style="width:100%;" oninput="handleGrnSearch(this.value)">
+                    <div id="grn-search-results" style="position:absolute; left:0; right:0; top:40px; background:var(--card2); border:1px solid var(--border2); border-radius:var(--radius-sm); max-height:200px; overflow-y:auto; z-index:100; display:none; box-shadow:0 8px 16px rgba(0,0,0,0.5);"></div>
+                </div>
+                <div id="selected-grn-display" style="font-weight:600; font-size:0.85rem; display:none; background:rgba(99,102,241,0.08); padding:8px 12px; border-radius:var(--radius-sm); border:1px solid var(--border);"></div>
+            </div>
+
+            <!-- Return Cart Section -->
+            <div class="section-card" id="cart-section" style="display:none;">
+                <div class="section-title">Return Items List</div>
+                <div style="overflow-x:auto;">
+                    <table class="invoice-items-table" style="width:100%; min-width:450px;">
+                        <thead>
+                            <tr>
+                                <th>Product Details</th>
+                                <th style="text-align:center; width:80px;">Received</th>
+                                <th style="text-align:center; width:80px;">Returned</th>
+                                <th style="text-align:center; width:80px;">Return Qty</th>
+                                <th style="text-align:right; width:90px;">Rate</th>
+                                <th style="text-align:right; width:90px;">Total</th>
+                                <th style="text-align:center; width:120px;">Warehouse</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-items-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Warehouse, Remarks & Summary -->
+            <div id="summary-section" style="display:none; grid-template-columns: 1fr 1fr; gap:16px;">
+                <div class="section-card">
+                    <div class="section-title">Default Return Warehouse & Remarks</div>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <label style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Default Return Warehouse</label>
+                            <select class="form-input" id="modal-default-warehouse" onchange="updateCartWarehouses(this.value)"></select>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <label style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Remarks / Reason</label>
+                            <textarea class="form-input" id="modal-remarks" style="height:70px; resize:none; font-size:0.82rem;" placeholder="Reason for return..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="section-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+                    <div class="section-title">Return Summary</div>
+                    <div style="display:flex; flex-direction:column; gap:8px; flex:1; justify-content:center;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.9rem;">
+                            <span class="meta-label">Total Returned Items</span>
+                            <span class="meta-value" id="summary-total-qty">0</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:1.05rem; border-top:1px solid var(--border); padding-top:8px; margin-top:8px;">
+                            <span class="meta-label" style="font-weight:700; color:var(--text);">Return Total</span>
+                            <span class="meta-value" id="summary-grand-total" style="color:var(--success); font-weight:800; font-size:1.15rem;">Rs. 0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="drawer-footer" id="modal-footer" style="display:none;">
+            <button class="topbtn" style="flex:1; justify-content:center; padding:10px;" onclick="closeReturnModal()">Cancel</button>
+            <button class="btn-print" style="flex:1.5; background:var(--success);" onclick="saveReturn()">
+                <span class="material-symbols-outlined">check_circle</span> Submit Return
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Manager PIN Override Modal -->
+<div class="drawer-backdrop" id="pin-modal-backdrop" onclick="closePinModal()" style="z-index:99999;">
+    <div class="drawer" style="max-width:360px; height:auto; margin:auto; border-radius:var(--radius); border:1px solid var(--border2);" onclick="event.stopPropagation()">
+        <div class="drawer-header">
+            <div class="drawer-title">Manager PIN Override</div>
+            <button class="drawer-close" onclick="closePinModal()">&times;</button>
+        </div>
+        <div class="drawer-body" style="padding:20px; text-align:center;">
+            <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;" id="pin-modal-message">Enter SMRITI Manager PIN to authorize this action.</div>
+            <input type="password" class="form-input" id="manager-pin-input" placeholder="••••" style="width:120px; text-align:center; font-size:20px; letter-spacing:8px; padding:10px;" maxlength="8" onkeydown="if(event.key==='Enter') submitPinOverride()">
+        </div>
+        <div class="drawer-footer" style="padding:12px 20px;">
+            <button class="topbtn" style="flex:1; justify-content:center;" onclick="closePinModal()">Cancel</button>
+            <button class="btn-print" style="flex:1; background:var(--primary);" onclick="submitPinOverride()">Authorize</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const CSRF_TOKEN = '{{ csrf_token }}';
+let loggedUser = '{{ cashier }}';
+let masterReturnsList = [];
+let activeReturnDoc = null;
+
+let selectedGrnName = null;
+let cartItems = [];
+let warehousesList = [];
+let defaultWarehouse = '';
+let pinModalAction = null;
+
+function api(method, params = {}) {
+    return fetch(`/api/method/${method}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-frappe-csrf-token': CSRF_TOKEN
+        },
+        body: JSON.stringify(params)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.exc) throw new Error(d._error_message || d.exc);
+        return d.message;
+    });
+}
+
+function toast(msg, type = 'success') {
+    const cont = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icon = type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info';
+    t.innerHTML = `<span class="material-symbols-outlined">${icon}</span> <span>${msg}</span>`;
+    cont.appendChild(t);
+    setTimeout(() => { t.remove(); }, 4000);
+}
+
+async function init() {
+    await loadReturns();
+    await loadWarehouses();
+}
+
+async function loadReturns() {
+    try {
+        const data = await api('frappe.client.get_list', {
+            doctype: 'Purchase Receipt',
+            filters: { is_return: 1 },
+            fields: ['name', 'posting_date', 'posting_time', 'supplier_name', 'grand_total', 'status', 'docstatus'],
+            order_by: 'posting_date desc, posting_time desc',
+            limit_page_length: 150
+        });
+        masterReturnsList = data || [];
+        renderTable(masterReturnsList);
+    } catch(e) {
+        toast('Failed to load supplier returns: ' + e.message, 'error');
+    }
+}
+
+async function loadWarehouses() {
+    try {
+        const data = await api('frappe.client.get_list', {
+            doctype: 'Warehouse',
+            filters: { is_group: 0 },
+            fields: ['name', 'warehouse_name'],
+            limit_page_length: 100
+        });
+        warehousesList = data || [];
+        if (warehousesList.length) {
+            defaultWarehouse = warehousesList[0].name;
+        }
+        const whSelect = document.getElementById('modal-default-warehouse');
+        whSelect.innerHTML = warehousesList.map(wh => `
+            <option value="${wh.name}">${wh.warehouse_name}</option>
+        `).join('');
+    } catch(e) {
+        console.error('Failed to load warehouses:', e);
+    }
+}
+
+function renderTable(list) {
+    const tbody = document.getElementById('returns-tbody');
+    if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-sub);padding:40px 0;">No supplier returns tracked.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = list.map(pr => {
+        const statusText = pr.docstatus === 1 ? 'Submitted' : 'Draft';
+        const statusCls = statusText.toLowerCase();
+        return `
+            <tr onclick="loadReturnDetails('${pr.name}')">
+                <td><span class="invoice-badge">${pr.name}</span></td>
+                <td>
+                    <div style="font-weight:600;">${pr.posting_date}</div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${pr.posting_time || ''}</div>
+                </td>
+                <td style="font-weight:600; color:var(--text);">${pr.supplier_name}</td>
+                <td style="text-align:right; font-weight:700; color:var(--success);">Rs. ${parseFloat(Math.abs(pr.grand_total)).toFixed(2)}</td>
+                <td style="text-align:center;">
+                    <span class="status-badge ${statusCls}">${statusText}</span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function handleSearch(q) {
+    applyFilters();
+}
+
+function applyFilters() {
+    const q = document.getElementById('search-box').value.toLowerCase();
+    const status = document.getElementById('filter-status').value;
+    let filtered = masterReturnsList;
+
+    if (q) {
+        filtered = filtered.filter(pr => 
+            pr.name.toLowerCase().includes(q) ||
+            pr.supplier_name.toLowerCase().includes(q)
+        );
+    }
+    if (status) {
+        filtered = filtered.filter(pr => {
+            const statusText = pr.docstatus === 1 ? 'Submitted' : 'Draft';
+            return statusText === status;
+        });
+    }
+    renderTable(filtered);
+}
+
+async function loadReturnDetails(returnId) {
+    try {
+        const doc = await api('frappe.client.get', {
+            doctype: 'Purchase Receipt',
+            name: returnId
+        });
+        activeReturnDoc = doc;
+        
+        document.getElementById('drw-id').textContent = doc.name;
+        document.getElementById('drw-date').textContent = `${doc.posting_date} | ${doc.posting_time || ''}`;
+        document.getElementById('drw-supplier').textContent = doc.supplier_name;
+        
+        const statusEl = document.getElementById('drw-status');
+        const statusText = doc.docstatus === 1 ? 'Submitted' : 'Draft';
+        statusEl.className = `status-badge ${statusText.toLowerCase()}`;
+        statusEl.textContent = statusText;
+
+        const tbody = document.getElementById('drw-items-tbody');
+        tbody.innerHTML = doc.items.map(it => `
+            <tr>
+                <td>
+                    <div style="font-weight:600;color:var(--text);">${it.item_name}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">${it.item_code}</div>
+                </td>
+                <td style="text-align:center;font-weight:600;">${Math.abs(it.qty)}</td>
+                <td style="text-align:right;">Rs. ${parseFloat(it.rate).toFixed(2)}</td>
+                <td style="text-align:right;font-weight:600;">Rs. ${parseFloat(Math.abs(it.amount)).toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        document.getElementById('drw-grand').textContent = `Rs. ${parseFloat(Math.abs(doc.grand_total)).toFixed(2)}`;
+        document.getElementById('drawer-backdrop').classList.add('open');
+    } catch(e) {
+        toast('Failed to load return details: ' + e.message, 'error');
+    }
+}
+
+function printReceipt() {
+    if (!activeReturnDoc) return;
+    const url = `/printview?doctype=Purchase%20Receipt&name=${encodeURIComponent(activeReturnDoc.name)}`;
+    window.open(url, '_blank');
+}
+
+function closeDrawer() {
+    document.getElementById('drawer-backdrop').classList.remove('open');
+    activeReturnDoc = null;
+}
+
+function openReturnModal() {
+    selectedGrnName = null;
+    cartItems = [];
+    document.getElementById('grn-search-input').value = '';
+    document.getElementById('selected-grn-display').style.display = 'none';
+    document.getElementById('cart-section').style.display = 'none';
+    document.getElementById('summary-section').style.display = 'none';
+    document.getElementById('modal-footer').style.display = 'none';
+    document.getElementById('modal-remarks').value = '';
+    
+    document.getElementById('modal-default-warehouse').value = defaultWarehouse;
+    document.getElementById('modal-backdrop').classList.add('open');
+}
+
+function closeReturnModal() {
+    document.getElementById('modal-backdrop').classList.remove('open');
+}
+
+async function handleGrnSearch(query) {
+    if (query.length < 2) {
+        document.getElementById('grn-search-results').style.display = 'none';
+        return;
+    }
+    try {
+        const list = await api('smriti_retail_os.api.supplier_returns_api.get_submitted_receipts', { query });
+        const resultsDiv = document.getElementById('grn-search-results');
+        if (!list.length) {
+            resultsDiv.innerHTML = '<div style="padding:10px; color:var(--text-muted);">No submitted GRNs found.</div>';
+        } else {
+            resultsDiv.innerHTML = list.map(pr => `
+                <div style="padding:10px; border-bottom:1px solid var(--border); cursor:pointer; font-size:0.85rem;" onclick="selectGrn('${pr.name}')">
+                    <span style="font-weight:700; color:var(--primary-lt);">${pr.name}</span> | 
+                    <span>${pr.supplier_name}</span> | 
+                    <span style="color:var(--success);">Rs. ${parseFloat(pr.grand_total).toFixed(2)}</span>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">${pr.posting_date}</div>
+                </div>
+            `).join('');
+        }
+        resultsDiv.style.display = 'block';
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+async function selectGrn(grnName) {
+    try {
+        const details = await api('smriti_retail_os.api.supplier_returns_api.get_receipt_details', { receipt_name: grnName });
+        document.getElementById('grn-search-results').style.display = 'none';
+        document.getElementById('grn-search-input').value = '';
+        
+        selectedGrnName = details.name;
+        
+        const grnDisp = document.getElementById('selected-grn-display');
+        grnDisp.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong>Selected GRN:</strong> <span class="invoice-badge">${details.name}</span>
+                    <span style="margin-left:8px; color:var(--text-muted);">${details.supplier_name}</span>
+                </div>
+                <button style="background:none; border:none; color:var(--danger); cursor:pointer;" onclick="clearSelectedGrn()">
+                    <span class="material-symbols-outlined" style="font-size:18px;">close</span>
+                </button>
+            </div>
+        `;
+        grnDisp.style.display = 'block';
+        
+        cartItems = details.items.map(it => ({
+            ...it,
+            return_qty: 0,
+            warehouse: it.warehouse || defaultWarehouse
+        }));
+        
+        renderCart();
+        
+        document.getElementById('cart-section').style.display = 'block';
+        document.getElementById('summary-section').style.display = 'grid';
+        document.getElementById('modal-footer').style.display = 'flex';
+        
+    } catch(e) {
+        toast('Failed to load GRN details: ' + e.message, 'error');
+    }
+}
+
+function clearSelectedGrn() {
+    selectedGrnName = null;
+    cartItems = [];
+    document.getElementById('selected-grn-display').style.display = 'none';
+    document.getElementById('cart-section').style.display = 'none';
+    document.getElementById('summary-section').style.display = 'none';
+    document.getElementById('modal-footer').style.display = 'none';
+}
+
+function renderCart() {
+    const tbody = document.getElementById('cart-items-tbody');
+    if (!cartItems.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-sub); padding:20px 0;">No items found.</td></tr>';
+        updateSummary();
+        return;
+    }
+    
+    tbody.innerHTML = cartItems.map((item, index) => {
+        const warehouseOptions = warehousesList.map(wh => `
+            <option value="${wh.name}" ${wh.name === item.warehouse ? 'selected' : ''}>${wh.warehouse_name}</option>
+        `).join('');
+        
+        return `
+            <tr>
+                <td>
+                    <div style="font-weight:600; color:var(--text);">${item.item_name}</div>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">${item.item_code}</div>
+                </td>
+                <td style="text-align:center; font-weight:600;">${item.qty}</td>
+                <td style="text-align:center; color:var(--text-muted);">${item.returned_qty}</td>
+                <td style="text-align:center;">
+                    <input type="number" class="form-input" style="width:70px; text-align:center; padding:4px;" value="${item.return_qty}" min="0" step="any" max="${item.max_return}" onchange="updateCartItemQty(${index}, this.value)">
+                </td>
+                <td style="text-align:right;">Rs. ${parseFloat(item.rate).toFixed(2)}</td>
+                <td style="text-align:right; font-weight:600;">
+                    Rs. ${(item.return_qty * item.rate).toFixed(2)}
+                </td>
+                <td>
+                    <select class="form-input" style="width:100%; padding:4px; font-size:0.8rem;" onchange="updateCartItemWarehouse(${index}, this.value)">
+                        ${warehouseOptions}
+                    </select>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    updateSummary();
+}
+
+function updateCartWarehouses(whVal) {
+    cartItems.forEach(it => {
+        it.warehouse = whVal;
+    });
+    renderCart();
+}
+
+function updateCartItemQty(index, val) {
+    const returnQty = parseFloat(val);
+    if (isNaN(returnQty) || returnQty < 0) return;
+    
+    const item = cartItems[index];
+    if (returnQty > item.max_return) {
+        toast(`Cannot return more than remaining quantity (${item.max_return})`, 'error');
+        renderCart();
+        return;
+    }
+    
+    item.return_qty = returnQty;
+    renderCart();
+}
+
+function updateCartItemWarehouse(index, val) {
+    cartItems[index].warehouse = val;
+}
+
+function updateSummary() {
+    let totalQty = 0;
+    let grandTotal = 0;
+    cartItems.forEach(it => {
+        totalQty += it.return_qty;
+        grandTotal += it.return_qty * it.rate;
+    });
+    
+    document.getElementById('summary-total-qty').textContent = totalQty.toFixed(2);
+    document.getElementById('summary-grand-total').textContent = `Rs. ${grandTotal.toFixed(2)}`;
+}
+
+async function saveReturn(managerPin = null) {
+    const returning = cartItems.filter(it => it.return_qty > 0);
+    if (!returning.length) {
+        toast('Please specify a return quantity greater than 0 for at least one item.', 'error');
+        return;
+    }
+    
+    const itemsPayload = returning.map(it => ({
+        receipt_item_name: it.receipt_item_name,
+        qty: it.return_qty,
+        warehouse: it.warehouse
+    }));
+    
+    const remarks = document.getElementById('modal-remarks').value;
+    
+    try {
+        const res = await api('smriti_retail_os.api.supplier_returns_api.submit_supplier_return', {
+            receipt_name: selectedGrnName,
+            return_items: JSON.stringify(itemsPayload),
+            remarks: remarks,
+            manager_pin: managerPin
+        });
+        
+        toast(res.message);
+        closeReturnModal();
+        loadReturns();
+    } catch(e) {
+        if (e.message.includes('Access Denied') || e.message.includes('restricted to Cashiers')) {
+            openPinModal('Manager authorization required to submit supplier returns.', async (pin) => {
+                await saveReturn(pin);
+            });
+        } else {
+            toast(e.message, 'error');
+        }
+    }
+}
+
+function openPinModal(msg, callback) {
+    document.getElementById('pin-modal-message').textContent = msg;
+    document.getElementById('manager-pin-input').value = '';
+    pinModalAction = callback;
+    document.getElementById('pin-modal-backdrop').classList.add('open');
+    document.getElementById('manager-pin-input').focus();
+}
+
+function closePinModal() {
+    document.getElementById('pin-modal-backdrop').classList.remove('open');
+    pinModalAction = null;
+}
+
+function submitPinOverride() {
+    const pin = document.getElementById('manager-pin-input').value;
+    if (!pin) {
+        toast('PIN is required', 'error');
+        return;
+    }
+    if (pinModalAction) {
+        pinModalAction(pin);
+    }
+}
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#grn-search-input') && !e.target.closest('#grn-search-results')) {
+        const div = document.getElementById('grn-search-results');
+        if (div) div.style.display = 'none';
+    }
+});
+
+window.onload = init;
+</script>
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+<script>
+    SMRITI.renderFlexibleSidebar("supplier_returns");
+</script>
+</body>
+</html>
+{% endblock %}

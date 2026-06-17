@@ -372,6 +372,15 @@
       color: var(--text-1);
       background: rgba(255,255,255,0.02);
     }
+    .data-table th.dragging {
+      opacity: 0.5;
+      background: rgba(99, 102, 241, 0.15) !important;
+      border: 1px dashed var(--accent);
+    }
+    .data-table th.drag-over {
+      border-left: 2px solid var(--accent) !important;
+      background: rgba(99, 102, 241, 0.08);
+    }
     .data-table th.sort-asc::after {
       content: '  ▲';
       font-size: 0.7rem;
@@ -520,6 +529,138 @@
       .mobile-switcher-container { display: flex; }
     }
 
+    /* ────────── Pivot Builder styles ────────── */
+    .pivot-builder-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex-shrink: 0;
+      margin-bottom: 4px;
+    }
+    .pivot-builder-hdr {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      padding-bottom: 8px;
+    }
+    .pivot-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-1);
+    }
+    .pivot-builder-body {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 20px;
+    }
+    .pivot-field-section {
+      background: rgba(0,0,0,0.15);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .pivot-section-lbl {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--text-3);
+      letter-spacing: 0.8px;
+    }
+    .pivot-field-list {
+      display: flex;
+      flex-flow: row wrap;
+      gap: 6px;
+      align-content: flex-start;
+      min-height: 120px;
+      padding: 6px;
+      border: 1px dashed rgba(255,255,255,0.03);
+      border-radius: var(--radius-sm);
+    }
+    .pivot-tag {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      cursor: grab;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all var(--t);
+    }
+    .pivot-tag:hover {
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.1);
+    }
+    .pivot-tag.dragging {
+      opacity: 0.4;
+    }
+    .pivot-dropzones-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .pivot-zone-card {
+      background: rgba(255,255,255,0.01);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .pivot-zone-hdr {
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border);
+      padding: 6px 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pivot-zone-drop {
+      padding: 10px;
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(0,0,0,0.1);
+      transition: all var(--t);
+    }
+    .pivot-zone-drop.drag-over {
+      background: rgba(99, 102, 241, 0.05);
+      border: 1px dashed var(--accent);
+    }
+    .pivot-zone-placeholder {
+      font-size: 0.75rem;
+      color: var(--text-3);
+      text-align: center;
+      margin: auto;
+      pointer-events: none;
+    }
+    .pivot-agg-select {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      font-size: 0.68rem;
+      padding: 2px 4px;
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+    }
+
     /* Print layout override */
     @media print {
       body { background: white !important; color: black !important; }
@@ -622,6 +763,11 @@
                 </div>
               </div>
 
+              <!-- Pivot View Toggle -->
+              <button class="btn-export" onclick="togglePivotBuilder()" id="btn-pivot-toggle">
+                <span class="material-symbols-outlined" style="font-size:16px;">pivot_table_chart</span> Pivot View
+              </button>
+
               <!-- Saved Views Selector -->
               <div style="display: flex; align-items: center; gap: 8px;">
                 <select id="saved-views-select" onchange="applySavedView(this.value)" style="width: auto; max-width: 200px;">
@@ -668,6 +814,62 @@
               <button class="btn-run" onclick="runReport()">
                 <span class="material-symbols-outlined" style="font-size:18px;">play_arrow</span> Run Report
               </button>
+            </div>
+          </div>
+
+          <!-- Pivot Builder Panel (hidden by default) -->
+          <div id="pivot-builder-panel" class="pivot-builder-container" style="display: none;">
+            <div class="pivot-builder-hdr">
+              <span class="material-symbols-outlined" style="color:var(--accent);">pivot_table_chart</span>
+              <span class="pivot-title">SMRITI Pivot Matrix Builder</span>
+              <button class="btn-export" onclick="resetPivot()" style="margin-left: auto; font-size: 0.75rem; padding: 4px 8px;">
+                <span class="material-symbols-outlined" style="font-size:14px;">restart_alt</span> Reset Pivot
+              </button>
+            </div>
+            <div class="pivot-builder-body">
+              <!-- Available Fields -->
+              <div class="pivot-field-section">
+                <div class="pivot-section-lbl">Available Fields</div>
+                <div class="pivot-field-list" id="pivot-available-fields" ondragover="allowDrop(event)" ondrop="dropField(event, 'available')">
+                  <!-- Injected dynamically -->
+                </div>
+              </div>
+              
+              <!-- Target Dropzones Grid -->
+              <div class="pivot-dropzones-grid">
+                <!-- Rows Zone -->
+                <div class="pivot-zone-card">
+                  <div class="pivot-zone-hdr">
+                    <span class="material-symbols-outlined" style="font-size:16px;">table_rows</span>
+                    <span>Rows</span>
+                  </div>
+                  <div class="pivot-zone-drop" id="pivot-rows-zone" ondragover="allowDrop(event)" ondrop="dropField(event, 'rows')">
+                    <div class="pivot-zone-placeholder">Drag fields here for row headers</div>
+                  </div>
+                </div>
+
+                <!-- Columns Zone -->
+                <div class="pivot-zone-card">
+                  <div class="pivot-zone-hdr">
+                    <span class="material-symbols-outlined" style="font-size:16px;">view_week</span>
+                    <span>Columns</span>
+                  </div>
+                  <div class="pivot-zone-drop" id="pivot-cols-zone" ondragover="allowDrop(event)" ondrop="dropField(event, 'cols')">
+                    <div class="pivot-zone-placeholder">Drag fields here for column headers</div>
+                  </div>
+                </div>
+
+                <!-- Values Zone -->
+                <div class="pivot-zone-card">
+                  <div class="pivot-zone-hdr">
+                    <span class="material-symbols-outlined" style="font-size:16px;">functions</span>
+                    <span>Values</span>
+                  </div>
+                  <div class="pivot-zone-drop" id="pivot-vals-zone" ondragover="allowDrop(event)" ondrop="dropField(event, 'vals')">
+                    <div class="pivot-zone-placeholder">Drag fields here for metrics</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -721,6 +923,11 @@
   let currentSortCol = null;
   let currentSortDesc = false;
   let hiddenColumns = [];
+  let currentReportColumns = []; // Store current active columns (with custom ordering)
+  let pivotRows = [];
+  let pivotCols = [];
+  let pivotVals = [];
+  let isPivotMode = false;
 
   // Filter lookups cache
   let filterOptions = {
@@ -843,13 +1050,14 @@
     // Group reports by category
     const categories = {};
     reportsList.forEach(r => {
-      const cat = r.report_category || 'Custom';
+      let cat = r.report_category || 'Custom';
+      if (cat === 'Inventory Analytics') cat = 'Inventory';
       if (!categories[cat]) categories[cat] = [];
       categories[cat].push(r);
     });
 
     // Render categories ordered
-    const catOrder = ['Sales', 'Inventory', 'Cash', 'Accounting', 'Purchase', 'Finance', 'Analytics', 'Custom'];
+    const catOrder = ['Sales', 'Inventory', 'Cash', 'Accounting', 'Purchase', 'Finance', 'Analytics', 'Audit', 'Custom'];
     const categoryMap = {
       'Sales': 'SMRITI Sales Analytics',
       'Inventory': 'SMRITI Inventory Analytics',
@@ -858,6 +1066,7 @@
       'Purchase': 'SMRITI Purchase Analytics',
       'Finance': 'SMRITI Finance Analytics',
       'Analytics': 'SMRITI General Analytics',
+      'Audit': 'SMRITI Audit Reports',
       'Custom': 'SMRITI Custom Analytics'
     };
     catOrder.forEach(cat => {
@@ -941,6 +1150,20 @@
     hiddenColumns = [];
     currentSortCol = null;
     currentSortDesc = false;
+    
+    isPivotMode = false;
+    const panel = document.getElementById('pivot-builder-panel');
+    if (panel) panel.style.display = 'none';
+    const btn = document.getElementById('btn-pivot-toggle');
+    if (btn) {
+      btn.classList.remove('active');
+      btn.style.borderColor = 'var(--border)';
+      btn.style.color = 'var(--text-2)';
+      btn.style.background = 'transparent';
+    }
+    pivotRows = [];
+    pivotCols = [];
+    pivotVals = [];
 
     // Toggle methodology checkbox visibility
     const methodologyContainer = document.getElementById('methodology-appendix-container');
@@ -974,6 +1197,14 @@
       showLoading(false);
       toast('Report template metadata not found.', 'error');
       return;
+    }
+
+    // Parse columns
+    try {
+      currentReportColumns = JSON.parse(activeReportTemplate.columns_json || '[]');
+    } catch(e) {
+      currentReportColumns = [];
+      console.error(e);
     }
 
     // Update displays
@@ -1209,17 +1440,32 @@
       if (input) input.value = filters[key];
     }
 
-    // Apply column visibilities
+    // Apply column visibilities and custom dragged order
     let visibleCols = [];
     try {
       visibleCols = JSON.parse(view.visible_columns_json || '[]');
     } catch(e) {}
 
+    let cols = [];
+    try { cols = JSON.parse(activeReportTemplate.columns_json || '[]'); } catch(e) {}
+
     if (visibleCols.length > 0) {
-      let cols = [];
-      try { cols = JSON.parse(activeReportTemplate.columns_json || '[]'); } catch(e) {}
+      // Reorder currentReportColumns based on saved visibleCols order
+      const orderedCols = [];
+      visibleCols.forEach(fname => {
+        const found = cols.find(c => c.fieldname === fname);
+        if (found) orderedCols.push(found);
+      });
+      // Append any hidden columns at the end
+      cols.forEach(c => {
+        if (!visibleCols.includes(c.fieldname)) {
+          orderedCols.push(c);
+        }
+      });
+      currentReportColumns = orderedCols;
       hiddenColumns = cols.map(c => c.fieldname).filter(name => !visibleCols.includes(name));
     } else {
+      currentReportColumns = cols;
       hiddenColumns = [];
     }
 
@@ -1236,10 +1482,8 @@
       filters[input.getAttribute('data-key')] = input.value;
     });
 
-    // Collect visible columns
-    let cols = [];
-    try { cols = JSON.parse(activeReportTemplate.columns_json || '[]'); } catch(e) {}
-    const visibleCols = cols.map(c => c.fieldname).filter(name => !hiddenColumns.includes(name));
+    // Collect visible columns in current dragged order
+    const visibleCols = currentReportColumns.map(c => c.fieldname).filter(name => !hiddenColumns.includes(name));
 
     showLoading(true);
     api('save_smriti_saved_view', {
@@ -1304,19 +1548,16 @@
 
   // Render Generic Table Grid
   function renderGrid() {
-    let cols = [];
-    try {
-      cols = JSON.parse(activeReportTemplate.columns_json || '[]');
-    } catch(e) {
-      console.error(e);
+    if (isPivotMode) {
+      renderPivotGrid();
+      return;
     }
-
-    // Filter visible columns
-    const visibleCols = cols.filter(c => !hiddenColumns.includes(c.fieldname));
+    // Filter visible columns from currentReportColumns state
+    const visibleCols = currentReportColumns.filter(c => !hiddenColumns.includes(c.fieldname));
 
     // Render columns toggle dropdown content
     const colMenu = document.getElementById('column-dropdown-menu');
-    colMenu.innerHTML = cols.map(c => {
+    colMenu.innerHTML = currentReportColumns.map(c => {
       const isChecked = !hiddenColumns.includes(c.fieldname) ? 'checked' : '';
       return `
         <label class="dropdown-item">
@@ -1345,15 +1586,72 @@
     header.innerHTML = '';
     const hr = document.createElement('tr');
     
-    visibleCols.forEach(col => {
+    visibleCols.forEach((col, index) => {
       const th = document.createElement('th');
       th.textContent = col.label || col.fieldname;
       if (col.width) th.style.width = col.width + 'px';
-      th.onclick = () => sortColumn(col.fieldname);
+      
+      // Sort click handler (skips sorting if it was dragged)
+      th.onclick = (e) => {
+        if (th.getAttribute('data-dragged') === 'true') {
+          th.removeAttribute('data-dragged');
+          return;
+        }
+        sortColumn(col.fieldname);
+      };
       
       if (currentSortCol === col.fieldname) {
         th.className = currentSortDesc ? 'sort-desc' : 'sort-asc';
       }
+
+      // Drag & Drop configuration
+      th.setAttribute('draggable', 'true');
+      th.style.cursor = 'grab';
+      
+      th.ondragstart = (e) => {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', index);
+        th.classList.add('dragging');
+      };
+      
+      th.ondragover = (e) => {
+        e.preventDefault();
+        th.classList.add('drag-over');
+      };
+      
+      th.ondragleave = () => {
+        th.classList.remove('drag-over');
+      };
+      
+      th.ondrop = (e) => {
+        e.preventDefault();
+        th.classList.remove('drag-over');
+        const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+        const toIndex = index;
+        
+        if (fromIndex !== toIndex) {
+          const visibleFnames = visibleCols.map(c => c.fieldname);
+          const fromFieldName = visibleFnames[fromIndex];
+          const toFieldName = visibleFnames[toIndex];
+          
+          const realFromIdx = currentReportColumns.findIndex(c => c.fieldname === fromFieldName);
+          const realToIdx = currentReportColumns.findIndex(c => c.fieldname === toFieldName);
+          
+          if (realFromIdx > -1 && realToIdx > -1) {
+            const [movedCol] = currentReportColumns.splice(realFromIdx, 1);
+            currentReportColumns.splice(realToIdx, 0, movedCol);
+            renderGrid();
+            toast(`Moved column: ${movedCol.label || movedCol.fieldname}`, 'info');
+          }
+        }
+      };
+      
+      th.ondragend = () => {
+        th.classList.remove('dragging');
+        th.setAttribute('data-dragged', 'true');
+        setTimeout(() => th.removeAttribute('data-dragged'), 100);
+      };
+      
       hr.appendChild(th);
     });
     header.appendChild(hr);
@@ -1376,7 +1674,7 @@
         td.innerHTML = formatCell(rawVal, col);
         
         // Text align for numeric columns
-        if (col.fieldtype === 'Currency' || col.fieldtype === 'Float' || col.fieldtype === 'Int' || col.fieldname.includes('qty') || col.fieldname.includes('amount') || col.fieldname.includes('value') || col.fieldname.includes('total')) {
+        if (col.fieldtype === 'Currency' || col.fieldtype === 'Float' || col.fieldtype === 'Int' || col.fieldname.includes('qty') || col.fieldname.includes('amount') || (col.fieldname.includes('value') && col.fieldname !== 'old_value' && col.fieldname !== 'new_value') || col.fieldname.includes('total')) {
           td.style.textAlign = 'right';
         }
         
@@ -1395,7 +1693,7 @@
     const key = col.fieldname;
     const type = col.fieldtype;
     
-    if (type === 'Currency' || key.includes('amount') || key.includes('total') || key.includes('value') || key.includes('price') || key.includes('taxable') || key.includes('expected') || key.includes('declared') || key.includes('difference')) {
+    if (type === 'Currency' || key.includes('amount') || key.includes('total') || (key.includes('value') && key !== 'old_value' && key !== 'new_value') || key.includes('price') || key.includes('taxable') || key.includes('expected') || key.includes('declared') || key.includes('difference')) {
       return formatRupee.format(val);
     }
     if (type === 'Float' || type === 'Int' || key.includes('qty') || key.includes('count') || key.includes('bills')) {
@@ -1455,7 +1753,7 @@
     const columnsToSum = visibleCols.filter(col => {
       const k = col.fieldname;
       const t = col.fieldtype;
-      return t === 'Currency' || t === 'Float' || t === 'Int' || k.includes('qty') || k.includes('amount') || k.includes('value') || k.includes('total') || k.includes('tax') || k.includes('difference');
+      return t === 'Currency' || t === 'Float' || t === 'Int' || k.includes('qty') || k.includes('amount') || (k.includes('value') && k !== 'old_value' && k !== 'new_value') || k.includes('total') || k.includes('tax') || k.includes('difference');
     });
 
     columnsToSum.forEach(col => {
@@ -1630,6 +1928,522 @@
       downloadCSVFile(generateBaseCSV());
     }
   };
+
+  // ────────── Pivot Matrix Builder Suite ──────────
+  window.togglePivotBuilder = function() {
+    const panel = document.getElementById('pivot-builder-panel');
+    const btn = document.getElementById('btn-pivot-toggle');
+    
+    isPivotMode = !isPivotMode;
+    if (isPivotMode) {
+      panel.style.display = 'flex';
+      btn.classList.add('active');
+      btn.style.borderColor = 'var(--accent)';
+      btn.style.color = 'var(--accent-2)';
+      btn.style.background = 'rgba(99, 102, 241, 0.08)';
+      renderPivotZones();
+    } else {
+      panel.style.display = 'none';
+      btn.classList.remove('active');
+      btn.style.borderColor = 'var(--border)';
+      btn.style.color = 'var(--text-2)';
+      btn.style.background = 'transparent';
+    }
+    renderGrid();
+  };
+
+  function renderAvailableFields() {
+    const container = document.getElementById('pivot-available-fields');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    const activeFields = [...pivotRows, ...pivotCols, ...pivotVals.map(v => v.fieldname)];
+    
+    currentReportColumns.forEach(col => {
+      if (activeFields.includes(col.fieldname)) return;
+      
+      const tag = document.createElement('div');
+      tag.className = 'pivot-tag';
+      tag.setAttribute('draggable', 'true');
+      tag.setAttribute('data-fieldname', col.fieldname);
+      tag.innerHTML = `<span class="material-symbols-outlined" style="font-size:12px;">drag_indicator</span> ${col.label || col.fieldname}`;
+      
+      tag.ondragstart = (e) => {
+        e.dataTransfer.setData('text/plain', col.fieldname);
+        tag.classList.add('dragging');
+      };
+      
+      tag.ondragend = () => {
+        tag.classList.remove('dragging');
+      };
+      
+      container.appendChild(tag);
+    });
+  }
+
+  window.allowDrop = function(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+  };
+
+  window.dropField = function(e, zoneName) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    
+    const fieldname = e.dataTransfer.getData('text/plain');
+    if (!fieldname) return;
+    
+    pivotRows = pivotRows.filter(f => f !== fieldname);
+    pivotCols = pivotCols.filter(f => f !== fieldname);
+    pivotVals = pivotVals.filter(v => v.fieldname !== fieldname);
+    
+    const col = currentReportColumns.find(c => c.fieldname === fieldname);
+    if (!col) return;
+    
+    if (zoneName === 'rows') {
+      pivotRows.push(fieldname);
+    } else if (zoneName === 'cols') {
+      pivotCols.push(fieldname);
+    } else if (zoneName === 'vals') {
+      const isNumeric = col.fieldtype === 'Currency' || col.fieldtype === 'Float' || col.fieldtype === 'Int' || col.fieldname.includes('qty') || col.fieldname.includes('amount') || col.fieldname.includes('value') || col.fieldname.includes('total');
+      const defaultAgg = isNumeric ? 'sum' : 'count';
+      pivotVals.push({
+        fieldname: fieldname,
+        label: col.label || col.fieldname,
+        fieldtype: col.fieldtype,
+        agg: defaultAgg
+      });
+    }
+    
+    renderPivotZones();
+    if (isPivotMode) {
+      renderGrid();
+    }
+  };
+
+  function renderPivotZones() {
+    renderAvailableFields();
+    
+    const renderZoneTags = (containerId, array, isVals = false) => {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+      
+      if (array.length === 0) {
+        container.innerHTML = `<div class="pivot-zone-placeholder">Drag fields here</div>`;
+        return;
+      }
+      
+      array.forEach((item, index) => {
+        const fieldname = isVals ? item.fieldname : item;
+        const col = currentReportColumns.find(c => c.fieldname === fieldname);
+        const label = col ? (col.label || col.fieldname) : fieldname;
+        
+        const tag = document.createElement('div');
+        tag.className = 'pivot-tag';
+        tag.setAttribute('draggable', 'true');
+        tag.setAttribute('data-fieldname', fieldname);
+        
+        let valHtml = '';
+        if (isVals) {
+          valHtml = `
+            <select class="pivot-agg-select" onchange="updatePivotValAgg('${fieldname}', this.value)">
+              <option value="sum" ${item.agg === 'sum' ? 'selected' : ''}>Sum</option>
+              <option value="count" ${item.agg === 'count' ? 'selected' : ''}>Count</option>
+              <option value="avg" ${item.agg === 'avg' ? 'selected' : ''}>Avg</option>
+            </select>
+          `;
+        }
+        
+        tag.innerHTML = `
+          <span class="material-symbols-outlined" style="font-size:12px;">drag_indicator</span>
+          <span>${label}</span>
+          ${valHtml}
+          <span class="material-symbols-outlined" style="font-size:14px; cursor:pointer; color:var(--text-3);" onclick="removePivotField('${fieldname}', '${containerId}')">close</span>
+        `;
+        
+        tag.ondragstart = (e) => {
+          e.dataTransfer.setData('text/plain', fieldname);
+          tag.classList.add('dragging');
+        };
+        
+        tag.ondragend = () => {
+          tag.classList.remove('dragging');
+        };
+        
+        container.appendChild(tag);
+      });
+    };
+    
+    renderZoneTags('pivot-rows-zone', pivotRows);
+    renderZoneTags('pivot-cols-zone', pivotCols);
+    renderZoneTags('pivot-vals-zone', pivotVals, true);
+  }
+
+  window.updatePivotValAgg = function(fieldname, agg) {
+    const item = pivotVals.find(v => v.fieldname === fieldname);
+    if (item) {
+      item.agg = agg;
+      if (isPivotMode) {
+        renderGrid();
+      }
+    }
+  };
+
+  window.removePivotField = function(fieldname, zoneId) {
+    pivotRows = pivotRows.filter(f => f !== fieldname);
+    pivotCols = pivotCols.filter(f => f !== fieldname);
+    pivotVals = pivotVals.filter(v => v.fieldname !== fieldname);
+    renderPivotZones();
+    if (isPivotMode) {
+      renderGrid();
+    }
+  };
+
+  window.resetPivot = function() {
+    pivotRows = [];
+    pivotCols = [];
+    pivotVals = [];
+    renderPivotZones();
+    if (isPivotMode) {
+      renderGrid();
+    }
+  };
+
+  function renderPivotGrid() {
+    const header = document.getElementById('grid-header');
+    const body = document.getElementById('grid-body');
+    const summaryBar = document.getElementById('grid-summary-bar');
+    
+    header.innerHTML = '';
+    body.innerHTML = '';
+    summaryBar.innerHTML = '';
+    
+    if (pivotRows.length === 0 && pivotCols.length === 0) {
+      body.innerHTML = `<tr><td style="text-align:center; color:var(--text-3); padding:48px;">Drag fields from "Available Fields" into "Rows", "Columns", or "Values" zones to construct your pivot matrix.</td></tr>`;
+      return;
+    }
+    
+    const activeVals = pivotVals.length > 0 ? pivotVals : [{ fieldname: '_count', label: 'Count', agg: 'count' }];
+    
+    // 1. Get unique sorted Row Combinations
+    const rowCombos = [];
+    const rowSeen = new Set();
+    activeReportData.forEach(row => {
+      const combo = pivotRows.map(rf => row[rf] !== undefined && row[rf] !== null ? String(row[rf]) : '—');
+      const key = combo.join('|||');
+      if (!rowSeen.has(key)) {
+        rowSeen.add(key);
+        rowCombos.push(combo);
+      }
+    });
+    
+    rowCombos.sort((a, b) => {
+      for (let i = 0; i < a.length; i++) {
+        const cmp = a[i].localeCompare(b[i], undefined, { numeric: true, sensitivity: 'base' });
+        if (cmp !== 0) return cmp;
+      }
+      return 0;
+    });
+    
+    // 2. Get unique sorted Column Combinations
+    const colCombos = [];
+    const colSeen = new Set();
+    activeReportData.forEach(row => {
+      const combo = pivotCols.map(cf => row[cf] !== undefined && row[cf] !== null ? String(row[cf]) : '—');
+      const key = combo.join('|||');
+      if (!colSeen.has(key)) {
+        colSeen.add(key);
+        colCombos.push(combo);
+      }
+    });
+    
+    colCombos.sort((a, b) => {
+      for (let i = 0; i < a.length; i++) {
+        const cmp = a[i].localeCompare(b[i], undefined, { numeric: true, sensitivity: 'base' });
+        if (cmp !== 0) return cmp;
+      }
+      return 0;
+    });
+    
+    const numColHeaderRows = Math.max(1, pivotCols.length);
+    const showValHeaderRow = activeVals.length > 1;
+    const totalHeaderRows = numColHeaderRows + (showValHeaderRow ? 1 : 0);
+    
+    const headerTrs = [];
+    for (let r = 0; r < totalHeaderRows; r++) {
+      const tr = document.createElement('tr');
+      headerTrs.push(tr);
+    }
+    
+    // Top-left corner cell(s) spanning row-wise and column-wise
+    pivotRows.forEach((rf, rIdx) => {
+      const th = document.createElement('th');
+      const colMeta = currentReportColumns.find(c => c.fieldname === rf);
+      th.textContent = colMeta ? (colMeta.label || colMeta.fieldname) : rf;
+      th.setAttribute('rowspan', totalHeaderRows);
+      th.style.verticalAlign = 'middle';
+      headerTrs[0].appendChild(th);
+    });
+    
+    if (pivotCols.length === 0) {
+      activeVals.forEach(val => {
+        const th = document.createElement('th');
+        th.textContent = val.label;
+        headerTrs[0].appendChild(th);
+      });
+    } else {
+      for (let cLevel = 0; cLevel < pivotCols.length; cLevel++) {
+        const tr = headerTrs[cLevel];
+        
+        let i = 0;
+        while (i < colCombos.length) {
+          let span = 1;
+          const currentVal = colCombos[i][cLevel];
+          
+          for (let j = i + 1; j < colCombos.length; j++) {
+            let match = true;
+            for (let k = 0; k <= cLevel; k++) {
+              if (colCombos[i][k] !== colCombos[j][k]) {
+                match = false;
+                break;
+              }
+            }
+            if (match) {
+              span++;
+            } else {
+              break;
+            }
+          }
+          
+          const th = document.createElement('th');
+          th.textContent = currentVal;
+          th.style.textAlign = 'center';
+          th.setAttribute('colspan', span * activeVals.length);
+          tr.appendChild(th);
+          
+          i += span;
+        }
+        
+        if (cLevel === 0) {
+          const th = document.createElement('th');
+          th.textContent = 'Grand Total';
+          th.style.textAlign = 'center';
+          th.setAttribute('colspan', activeVals.length);
+          th.setAttribute('rowspan', totalHeaderRows);
+          th.style.verticalAlign = 'middle';
+          tr.appendChild(th);
+        }
+      }
+      
+      if (showValHeaderRow) {
+        const tr = headerTrs[totalHeaderRows - 1];
+        colCombos.forEach(() => {
+          activeVals.forEach(val => {
+            const th = document.createElement('th');
+            th.textContent = val.label;
+            th.style.fontSize = '0.7rem';
+            tr.appendChild(th);
+          });
+        });
+      }
+    }
+    
+    headerTrs.forEach(tr => header.appendChild(tr));
+    
+    const cellData = {};
+    activeReportData.forEach(row => {
+      const rowKey = pivotRows.map(rf => row[rf] !== undefined && row[rf] !== null ? String(row[rf]) : '—').join('|||');
+      const colKey = pivotCols.map(cf => row[cf] !== undefined && row[cf] !== null ? String(row[cf]) : '—').join('|||');
+      const cellKey = rowKey + ':::' + colKey;
+      if (!cellData[cellKey]) {
+        cellData[cellKey] = [];
+      }
+      cellData[cellKey].push(row);
+    });
+    
+    const aggregate = (records, valField) => {
+      if (!records || records.length === 0) return null;
+      const key = valField.fieldname;
+      const agg = valField.agg;
+      
+      if (agg === 'count') {
+        return records.length;
+      }
+      
+      let sum = 0;
+      let count = 0;
+      records.forEach(r => {
+        const val = parseFloat(r[key]);
+        if (!isNaN(val)) {
+          sum += val;
+          count++;
+        }
+      });
+      
+      if (agg === 'avg') {
+        return count > 0 ? (sum / count) : 0;
+      }
+      return sum;
+    };
+    
+    const colGrandTotals = Array(colCombos.length * activeVals.length).fill(0);
+    const colGrandCounts = Array(colCombos.length * activeVals.length).fill(0);
+    const rowGrandTotals = Array(activeVals.length).fill(0);
+    const overallGrandTotals = Array(activeVals.length).fill(0);
+    const overallGrandCounts = Array(activeVals.length).fill(0);
+    
+    rowCombos.forEach(rowCombo => {
+      const tr = document.createElement('tr');
+      
+      rowCombo.forEach(val => {
+        const td = document.createElement('td');
+        td.textContent = val;
+        td.style.fontWeight = '500';
+        tr.appendChild(td);
+      });
+      
+      const rowKey = rowCombo.join('|||');
+      const rowValAccumulators = Array(activeVals.length).fill(0);
+      const rowValCounts = Array(activeVals.length).fill(0);
+      
+      if (pivotCols.length === 0) {
+        activeVals.forEach((val, valIdx) => {
+          const matchingRows = activeReportData.filter(r => {
+            return pivotRows.every(rf => String(r[rf] !== undefined && r[rf] !== null ? r[rf] : '—') === String(rowCombo[pivotRows.indexOf(rf)]));
+          });
+          
+          const result = aggregate(matchingRows, val);
+          const td = document.createElement('td');
+          td.innerHTML = result !== null ? formatCell(result, val) : '—';
+          td.style.textAlign = 'right';
+          tr.appendChild(td);
+          
+          if (result !== null) {
+            rowValAccumulators[valIdx] += result;
+            rowValCounts[valIdx]++;
+            overallGrandTotals[valIdx] += result;
+            overallGrandCounts[valIdx]++;
+          }
+        });
+      } else {
+        colCombos.forEach((colCombo, colIdx) => {
+          const colKey = colCombo.join('|||');
+          const cellKey = rowKey + ':::' + colKey;
+          const records = cellData[cellKey] || [];
+          
+          activeVals.forEach((val, valIdx) => {
+            const result = aggregate(records, val);
+            const td = document.createElement('td');
+            td.innerHTML = result !== null ? formatCell(result, val) : '—';
+            td.style.textAlign = 'right';
+            tr.appendChild(td);
+            
+            const flatColIdx = colIdx * activeVals.length + valIdx;
+            if (result !== null) {
+              colGrandTotals[flatColIdx] += result;
+              colGrandCounts[flatColIdx]++;
+              
+              rowValAccumulators[valIdx] += result;
+              rowValCounts[valIdx]++;
+            }
+          });
+        });
+        
+        activeVals.forEach((val, valIdx) => {
+          const td = document.createElement('td');
+          td.style.fontWeight = 'bold';
+          td.style.textAlign = 'right';
+          td.style.background = 'rgba(255,255,255,0.03)';
+          
+          let rowResult = rowValAccumulators[valIdx];
+          if (val.agg === 'avg' && rowValCounts[valIdx] > 0) {
+            rowResult = rowResult / rowValCounts[valIdx];
+          }
+          td.innerHTML = rowValCounts[valIdx] > 0 ? formatCell(rowResult, val) : '—';
+          tr.appendChild(td);
+          
+          if (rowValCounts[valIdx] > 0) {
+            overallGrandTotals[valIdx] += rowValAccumulators[valIdx];
+            overallGrandCounts[valIdx] += rowValCounts[valIdx];
+          }
+        });
+      }
+      
+      body.appendChild(tr);
+    });
+    
+    if (rowCombos.length > 0) {
+      const totalTr = document.createElement('tr');
+      totalTr.style.fontWeight = 'bold';
+      totalTr.style.background = 'rgba(0,0,0,0.2)';
+      
+      const labelTd = document.createElement('td');
+      labelTd.textContent = 'Grand Total';
+      labelTd.setAttribute('colspan', pivotRows.length);
+      totalTr.appendChild(labelTd);
+      
+      if (pivotCols.length === 0) {
+        activeVals.forEach((val, valIdx) => {
+          const td = document.createElement('td');
+          td.style.textAlign = 'right';
+          let totalVal = overallGrandTotals[valIdx];
+          if (val.agg === 'avg' && overallGrandCounts[valIdx] > 0) {
+            totalVal = totalVal / overallGrandCounts[valIdx];
+          }
+          td.innerHTML = overallGrandCounts[valIdx] > 0 ? formatCell(totalVal, val) : '—';
+          totalTr.appendChild(td);
+        });
+      } else {
+        colCombos.forEach((colCombo, colIdx) => {
+          activeVals.forEach((val, valIdx) => {
+            const flatColIdx = colIdx * activeVals.length + valIdx;
+            const td = document.createElement('td');
+            td.style.textAlign = 'right';
+            
+            let totalVal = colGrandTotals[flatColIdx];
+            if (val.agg === 'avg' && colGrandCounts[flatColIdx] > 0) {
+              totalVal = totalVal / colGrandCounts[flatColIdx];
+            }
+            td.innerHTML = colGrandCounts[flatColIdx] > 0 ? formatCell(totalVal, val) : '—';
+            totalTr.appendChild(td);
+          });
+        });
+        
+        activeVals.forEach((val, valIdx) => {
+          const td = document.createElement('td');
+          td.style.textAlign = 'right';
+          td.style.background = 'rgba(255,255,255,0.05)';
+          
+          let finalVal = overallGrandTotals[valIdx];
+          if (val.agg === 'avg' && overallGrandCounts[valIdx] > 0) {
+            finalVal = finalVal / overallGrandCounts[valIdx];
+          }
+          td.innerHTML = overallGrandCounts[valIdx] > 0 ? formatCell(finalVal, val) : '—';
+          totalTr.appendChild(td);
+        });
+      }
+      
+      body.appendChild(totalTr);
+    }
+    
+    const totalRows = activeReportData.length;
+    let metricsHtml = `<div class="summary-metric"><span class="summary-metric-lbl">Total Records:</span><span class="summary-metric-val">${totalRows}</span></div>`;
+    activeVals.forEach((val, valIdx) => {
+      let finalVal = overallGrandTotals[valIdx];
+      if (val.agg === 'avg' && overallGrandCounts[valIdx] > 0) {
+        finalVal = finalVal / overallGrandCounts[valIdx];
+      }
+      const formatted = formatCell(finalVal, val);
+      metricsHtml += `
+        <div class="summary-metric">
+          <span class="summary-metric-lbl">${val.agg.toUpperCase()} (${val.label}):</span>
+          <span class="summary-metric-val">${formatted}</span>
+        </div>
+      `;
+    });
+    summaryBar.innerHTML = `<div class="summary-metrics">${metricsHtml}</div>`;
+  }
 
   window.printReport = function() {
     if (!activeReportKey || activeReportData.length === 0) {

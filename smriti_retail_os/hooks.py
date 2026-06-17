@@ -144,12 +144,14 @@ doctype_js = {
 home_page = "index"
 
 # website user home page (by Role)
-# Desk users (System Manager, Store Manager) land on ERPNext /app on port 8080.
-# Cashiers land on SMRITI Billing terminal. Port 9000 root redirects to /billing via Nginx.
+# All users land on SMRITI pages — ERPNext Desk is never the home page.
+# Platform admin access is available via /smriti (Platform Center section).
 role_home_page = {
     "SMRITI Cashier": "billing",          # → Standalone billing terminal at /billing
     "SMRITI Store Manager": "smriti",     # → SMRITI Control Center
-    "System Manager": "app"               # → ERPNext Desk on port 8080
+    "System Manager": "smriti"            # → SMRITI Control Center (admin section visible)
+    # NOTE: AITDL Rule 7 / GEMINI.md Rule 8 — NEVER route to "app" (ERPNext Desk).
+    # If Platform/Admin tools needed, build SMRITI pages and link from /smriti.
 }
 
 # Generators
@@ -406,6 +408,11 @@ override_whitelisted_methods = {
 website_route_rules = [
     # ─── Coming Soon Route Alias ────────────────────────────────────
     {"from_route": "/coming-soon", "to_route": "smriti-coming-soon"},
+    {"from_route": "/security-workflows", "to_route": "security"},
+    {"from_route": "/brand-master", "to_route": "brand_master"},
+    {"from_route": "/category-master", "to_route": "category_master"},
+    {"from_route": "/scheme-creator", "to_route": "scheme_creator"},
+    {"from_route": "/supplier-returns", "to_route": "supplier_returns"},
 
 
     # ─── Core PWA & System Routes ───────────────────────────────────
@@ -493,6 +500,11 @@ website_route_rules = [
         # Standalone SMRITI Party Stock Accounts — served from www/psa.html + www/psa.py
         "from_route": "/psa",
         "to_route": "psa"
+    },
+    {
+        # Standalone Sales Orders Manager — served from www/sales_orders.html + www/sales_orders.py
+        "from_route": "/sales-orders",
+        "to_route": "sales_orders"
     },
     {
         # Standalone Billing Invoices — served from www/sales_invoices.html + www/sales_invoices.py

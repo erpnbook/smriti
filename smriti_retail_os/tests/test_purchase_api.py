@@ -11,7 +11,7 @@
 
 import frappe
 import unittest
-from frappe.utils import flt, cint, nowdate
+from frappe.utils import flt, cint, nowdate, add_days
 from smriti_retail_os.purchase_api import (
     get_open_purchase_orders,
     get_po_details,
@@ -321,10 +321,11 @@ class TestSmritiRetailPurchaseAPI(unittest.TestCase):
             "stock_uom": self.uom
         }]
 
+        target_schedule_date = add_days(nowdate(), 5)
         res = create_purchase_order(
             self.supplier, 
             items, 
-            schedule_date="2026-06-15", 
+            schedule_date=target_schedule_date, 
             remarks="Matrix PO Test Remarks",
             image_base64="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
             image_filename="test_image.png"
@@ -335,7 +336,7 @@ class TestSmritiRetailPurchaseAPI(unittest.TestCase):
         
         # Verify custom schedule date and remarks
         po_doc = frappe.get_doc("Purchase Order", res["name"])
-        self.assertEqual(str(po_doc.schedule_date), "2026-06-15")
+        self.assertEqual(str(po_doc.schedule_date), target_schedule_date)
         self.assertEqual(po_doc.terms, "Matrix PO Test Remarks")
 
         # Verify variant item was created correctly

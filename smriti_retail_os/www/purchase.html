@@ -1113,6 +1113,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('auth-user').addEventListener('keypress', e => { if (e.key === 'Enter') doAuth(); });
     checkAuth();
     addNewPORow();
+    
+    // Check URL parameters for tab
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam && ['grn', 'new-po', 'matrix-po'].includes(tabParam)) {
+        switchTab(tabParam);
+    }
 });
 
 function escapeHtml(str) {

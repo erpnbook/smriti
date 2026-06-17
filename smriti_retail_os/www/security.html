@@ -860,7 +860,12 @@ function switchTab(id) {
   });
   
   // Find current tab btn
-  event?.currentTarget?.classList.add('active');
+  const btn = document.querySelector(`.tab-btn[onclick*="'${id}'"]`) || document.querySelector(`.tab-btn[onclick*="${id}"]`);
+  if (btn) {
+    btn.classList.add('active');
+  } else if (event?.currentTarget) {
+    event.currentTarget.classList.add('active');
+  }
 
   document.querySelectorAll('.tab-panel').forEach(p => {
     p.classList.remove('active');
@@ -888,12 +893,20 @@ function closeModal(id) {
 
 // Global initialization
 window.onload = function() {
-  loadOverviewStats();
   loadCommonSelectors();
   
   // Dynamic badge count
   setInterval(syncInboxCountOnly, 15000);
   syncInboxCountOnly();
+
+  // Extract tab parameter and switch if provided
+  const urlParams = new URLSearchParams(window.location.search);
+  const tabParam = urlParams.get('tab');
+  if (tabParam && ['overview', 'users', 'roles', 'role-profiles', 'row-permissions', 'workflows', 'states', 'approvals'].includes(tabParam)) {
+    switchTab(tabParam);
+  } else {
+    loadOverviewStats();
+  }
 };
 
 function loadCommonSelectors() {

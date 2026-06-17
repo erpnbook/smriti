@@ -175,6 +175,39 @@ class TestSmritiReports(unittest.TestCase):
         self.assertEqual(result.get("success"), True)
         self.assertFalse(frappe.db.exists("SMRITI Saved View", view_doc_name))
 
+    def test_saved_view_column_reordering(self):
+        """Tests that custom column reordering is preserved in SMRITI Saved Views."""
+        report_key = "daily_sales_summary"
+        view_name = "Custom Reordered Daily Summary"
+        applied_filters = {"company": self.company_name}
+        
+        # Simulating a dragged column reordering sequence
+        custom_column_order = ["payment_mode", "posting_date", "total_invoices", "total_amount"]
+        
+        # 1. Save the custom view with the reordered column array
+        view_doc_name = save_smriti_saved_view(
+            view_name=view_name,
+            report_key=report_key,
+            applied_filters_json=json.dumps(applied_filters),
+            visible_columns_json=json.dumps(custom_column_order),
+            is_default=0
+        )
+        self.assertIsNotNone(view_doc_name)
+        
+        try:
+            # 2. Retrieve views and verify the custom column order sequence is preserved exactly
+            views = get_smriti_saved_views(report_key)
+            matching_views = [v for v in views if v.name == view_doc_name]
+            self.assertEqual(len(matching_views), 1)
+            
+            saved_order = json.loads(matching_views[0].visible_columns_json)
+            self.assertEqual(saved_order, custom_column_order)
+            self.assertEqual(saved_order[0], "payment_mode")
+            self.assertEqual(saved_order[-1], "total_amount")
+        finally:
+            # 3. Clean up the saved view doc
+            delete_smriti_saved_view(view_doc_name)
+
     def test_accounting_reports_seeding(self):
         """Tests that get_smriti_reports_list contains SMRITI Accounting Analytics reports."""
         reports = get_smriti_reports_list()
@@ -588,4 +621,55 @@ class TestSmritiReports(unittest.TestCase):
         # Cleanup
         frappe.db.delete("Sales Invoice", si_name)
         frappe.db.delete("Purchase Invoice", pi_name)
+        frappe.db.commit()
+
+    def test_audit_reports(self):
+        """Tests that SMRITI Security Audit Log and Address Change Log reports execute successfully."""
+        # 1. Insert mock Activity Log
+        log1 = frappe.new_doc("Activity Log")
+        log1.user = "Administrator"
+        log1.operation = "Login"
+        log1.subject = "Test report run audit"
+        log1.insert(ignore_permissions=True)
+        log1_name = log1.name
+        
+        # 2. Insert mock SMRITI Address Audit Log
+        log2 = frappe.new_doc("SMRITI Address Audit Log")
+        log2.company = self.company_name
+        log2.changed_by = "Administrator"
+        log2.changed_at = "2026-06-12 12:00:00"
+        log2.field_name = "address_line1"
+        log2.old_value = "123 Old St"
+        log2.new_value = "456 New Ave"
+        log2.insert(ignore_permissions=True)
+        log2_name = log2.name
+        
+        frappe.db.commit()
+        
+        # 3. Query Security Audit Log
+        filters = {
+            "from_date": "2026-06-01",
+            "to_date": "2026-06-16",
+            "user": "Administrator"
+        }
+        res_sec = get_smriti_report_data("security_audit_log", filters)
+        self.assertTrue(len(res_sec) > 0)
+        self.assertIn("creation", res_sec[0])
+        self.assertIn("user", res_sec[0])
+        
+        # 4. Query Address Change Log
+        filters2 = {
+            "company": self.company_name,
+            "from_date": "2026-06-01",
+            "to_date": "2026-06-16",
+            "changed_by": "Administrator"
+        }
+        res_addr = get_smriti_report_data("address_change_log", filters2)
+        self.assertTrue(len(res_addr) > 0)
+        self.assertIn("changed_at", res_addr[0])
+        self.assertEqual(res_addr[0]["field_name"], "address_line1")
+        
+        # Cleanup
+        frappe.db.delete("Activity Log", log1_name)
+        frappe.db.delete("SMRITI Address Audit Log", log2_name)
         frappe.db.commit()
