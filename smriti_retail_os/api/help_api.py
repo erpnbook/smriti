@@ -75,6 +75,12 @@ HELP_CENTER_REGISTRY = {
         "title": _("Backup Security & Key Recovery"),
         "category": "Administration Guides",
         "description": _("Guide to GPG AES-256 backup encryption, security banners, and dual-custodian recovery."),
+        "about": _("This guide explains the SMRITI enterprise backup security system, GPG AES-256 encryption, and dual-custodian key recovery protocol."),
+        "author": {
+            "name": "Jawahar R Mallah",
+            "title": _("Lead Architect & SMRITI Security Officer"),
+            "quote": _("Protecting customer and transaction history is as critical as securing the physical store inventory.")
+        },
         "content": _(
             "SMRITI Retail OS v1.8.3 features an enterprise-grade Backup Security system to ensure database backups are encrypted at rest and protected against unauthorized access.\n\n"
             "1. AES-256 Symmetric Encryption\n"
@@ -103,6 +109,12 @@ HELP_CENTER_REGISTRY = {
         "title": _("System Security & Audit Reports"),
         "category": "Administration Guides",
         "description": _("How to access and interpret SMRITI Security Audit Logs and Address Change Logs."),
+        "about": _("This guide outlines the SMRITI Audit Reports framework, including user activity tracking and address modification history logging."),
+        "author": {
+            "name": "Jawahar R Mallah",
+            "title": _("Lead Architect & SMRITI Security Officer"),
+            "quote": _("Complete transparency and auditability build the foundation of reliable retail scaling.")
+        },
         "content": _(
             "SMRITI Retail OS v1.9.2 includes a dedicated Audit Reports module under Administration to track security events and metadata changes without exposing raw backend tables.\n\n"
             "1. SMRITI Security Audit Log\n"
@@ -133,6 +145,12 @@ HELP_CENTER_REGISTRY = {
         "title": _("Pivot Matrix Builder & Custom Reports"),
         "category": "Analytics Guides",
         "description": _("Guide to using the drag-and-drop Pivot Matrix Builder and column reordering in SMRITI Reports."),
+        "about": _("This guide outlines the SMRITI Pivot Matrix Builder and drag-and-drop report layout personalization engine."),
+        "author": {
+            "name": "Jawahar R Mallah",
+            "title": _("Lead Architect & SMRITI Analytics Coordinator"),
+            "quote": _("Dynamic data visibility transforms raw transactions into actionable store decisions.")
+        },
         "content": _(
             "SMRITI Retail OS features a dynamic drag-and-drop reporting workspace designed to give users maximum control over data visualization.\n\n"
             "1. Column Reordering\n"
@@ -169,6 +187,12 @@ HELP_CENTER_REGISTRY = {
         "title": _("Dashboard Customization & Layouts"),
         "category": "Analytics Guides",
         "description": _("Learn how to personalize your SMRITI Home and PSV dashboards using drag-and-drop layouts."),
+        "about": _("This guide explains the SMRITI Dashboard Customization framework and widget order persistence model."),
+        "author": {
+            "name": "Jawahar R Mallah",
+            "title": _("Lead Architect & SMRITI UI-UX Designer"),
+            "quote": _("An interface tailored to a manager's immediate focus dramatically improves daily store productivity.")
+        },
         "content": _(
             "SMRITI Retail OS provides a customizable dashboard framework where users can reorder widgets to prioritize their primary business metrics.\n\n"
             "1. Toggling Edit Mode\n"
