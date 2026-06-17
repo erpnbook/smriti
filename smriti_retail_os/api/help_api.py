@@ -24,52 +24,326 @@ HELP_CENTER_REGISTRY = {
         "title": _("Inventory Aging Analysis"),
         "category": "Analytics Guides",
         "description": _("Understand how SMRITI tracks FIFO inventory aging and days of inventory (DOI)."),
-        "content": _("Coming Soon: Inventory Aging Analysis guide details how the stock aging snapshot tracks FIFO inventory aging buckets (0-30, 31-60, 61-90, 90+ days) and computes average age.")
+        "about": _("This guide explains SMRITI's FIFO-based inventory aging model, aging buckets, and automatic health alert triggers."),
+        "author": {
+            "name": "Jawahar R Mallah",
+            "title": _("Lead Architect & SMRITI Inventory Planner"),
+            "quote": _("Knowing the age of your inventory is the first step to unlocking tied-up working capital.")
+        },
+        "content": _(
+            "SMRITI Retail OS features a real-time FIFO stock aging snapshot engine to track inventory velocity and highlight capital risks.\n\n"
+            "1. FIFO-Based Quantity Allocation\n"
+            "Quantity is allocated to aging buckets by scanning historical positive ledger entries (e.g. Purchase Receipts, Stock Entries) in reverse chronological order (FIFO logic). Any remaining stock not matched to a positive ledger entry is automatically assigned to the oldest bucket (180+ days).\n\n"
+            "2. Aging Buckets\n"
+            "Stock is grouped into five aging intervals:\n"
+            "- 0-30 Days: Fresh inventory, high sales probability.\n"
+            "- 31-60 Days: Standard shelf inventory.\n"
+            "- 61-90 Days: Slow-moving inventory starting to lock capital.\n"
+            "- 91-180 Days: High-risk inventory requiring promotional intervention.\n"
+            "- 180+ Days (Critical): Dead stock requiring immediate liquidation.\n\n"
+            "3. Stock Health Classification\n"
+            "The system automatically flags stock lines with a health status:\n"
+            "- Critical: If there is any quantity in the 180+ Days bucket, or if more than 50% of the item's total inventory lies in the 91-180 and 180+ Days buckets.\n"
+            "- Warning: If more than 25% of the total inventory lies in 91-180 and 180+ Days buckets, or if there is any quantity in the 61-90 Days bucket.\n"
+            "- Healthy: All other inventory lines."
+        ),
+        "faqs": [
+            {
+                "question": _("How often are the stock aging snapshots updated?"),
+                "answer": _("Snapshots are generated incrementally using background tasks scheduled via PSV System Settings, preventing database locks during high-traffic store hours.")
+            },
+            {
+                "question": _("What happens to negative stock entries in aging calculations?"),
+                "answer": _("Negative stock entries represent sales and outflows, which consume stock according to FIFO. The aging engine only scans positive entries (receipts) to trace the origin date of the remaining balance.")
+            },
+            {
+                "question": _("Can I filter aging reports by store zones or categories?"),
+                "answer": _("Yes. The SMRITI Reports Center allows filtering by warehouse, zone, item group, and supplier to isolate aging bottlenecks.")
+            }
+        ]
     },
     "reorder_engine": {
         "title": _("Automated Reorder Engine"),
         "category": "Analytics Guides",
         "description": _("How the reorder engine triggers replenishment recommendations based on lead times and safety stock."),
-        "content": _("Coming Soon: Automated Reorder Engine guide details how the system calculates reorder points and order quantities.")
+        "about": _("This guide explains the SMRITI reorder engine calculations, lookback windows, and priority recommendation cascade."),
+        "author": {
+            "name": "Jawahar R Mallah",
+            "title": _("Lead Architect & SMRITI Supply Chain Planner"),
+            "quote": _("Precision replenishment prevents stockouts while avoiding over-stocking and locked capital.")
+        },
+        "content": _(
+            "The SMRITI Reorder Engine automates store replenishment by calculating optimal reorder points and purchase quantities based on live sales velocity and current inventory balances.\n\n"
+            "1. Three-Level Parameter Cascade\n"
+            "To define replenishment rules, the engine checks settings in a strict hierarchy:\n"
+            "- Level 1 (Highest): Variant-Specific Reorder Rules (e.g. rule for a specific size/color SKU).\n"
+            "- Level 2: Item Group Reorder Rules (e.g. rule for the Footwear category).\n"
+            "- Level 3 (Fallback): Global defaults configured in SMRITI PSV Settings.\n\n"
+            "2. Sales Velocity Calculation\n"
+            "The engine reviews sales history over a lookback window (default 4 weeks). It computes the weekly sales average (total sold divided by actual weeks of availability) and derives the average daily sales rate.\n\n"
+            "3. Formulas and Rules\n"
+            "- Days Cover: How many days the current stock will last based on daily sales (current balance / daily sales).\n"
+            "- Reorder Level (Point): The threshold below which replenishment triggers. Calculated as: (Lead Time Days * Daily Sales) + Safety Stock.\n"
+            "- Recommended Qty: Calculated as: Reorder Level - Current Balance. If a Maximum Stock cap is defined, the quantity is capped at: Max Stock - Current Balance.\n\n"
+            "4. Recommendation Priorities\n"
+            "- Critical: Current balance is zero, or Days Cover is less than 3 days.\n"
+            "- High: Days Cover is less than 7 days.\n"
+            "- Medium: Days Cover is less than 14 days.\n"
+            "- Low: Days Cover is 14 days or more."
+        ),
+        "faqs": [
+            {
+                "question": _("What if a SKU has no historical sales data?"),
+                "answer": _("If no sales are found within the lookback window, the daily sales rate defaults to 0. In this case, replenishment will trigger if the current stock is below the safety stock setting, recommending a quantity up to the safety stock level.")
+            },
+            {
+                "question": _("Does the engine automatically place Purchase Orders?"),
+                "answer": _("No. SMRITI constitution requires human approval for all business actions. Recommendations are populated in the Purchase Terminal where managers can review and submit them.")
+            },
+            {
+                "question": _("Where do I configure Lead Time and Safety Stock?"),
+                "answer": _("Go to the SMRITI Master Data page and open SMRITI PSV Reorder Rules to set up rules for specific variants, item groups, or companies.")
+            }
+        ]
     },
     "dead_stock_recovery": {
         "title": _("Dead Stock Recovery Workflows"),
         "category": "Analytics Guides",
         "description": _("Strategies and system tools to recover capital locked in dead inventory."),
-        "content": _("Coming Soon: Dead Stock Recovery Workflows details liquidation workflows and promotions for slow-moving stock.")
+        "about": _("This guide explains the SMRITI stock redistribution engine, and how it matches slow-moving excess stock with high-velocity shortage zones."),
+        "author": {
+            "name": "Jawahar R Mallah",
+            "title": _("Lead Architect & SMRITI Capital Optimizer"),
+            "quote": _("Dead stock is simply inventory in the wrong place. Redistribution brings it back to life.")
+        },
+        "content": _(
+            "SMRITI Retail OS includes an intelligent Redistribution Engine to recover capital locked in slow-moving or dead stock by transferring it to branches experiencing active demand.\n\n"
+            "1. Weeks of Cover (WoC) Classification\n"
+            "The engine analyzes sales velocity over the past 28 days for each SKU at each warehouse/location to determine Weeks of Cover (WoC = current balance / weekly sales average).\n\n"
+            "2. Identifying Sources and Sinks\n"
+            "- Sources (Excess Stock): Locations where WoC exceeds the configured 'Healthy WoC' threshold (default 8 weeks). The excess qty is: balance - (Healthy WoC * velocity).\n"
+            "- Sinks (Shortage Stock): Locations where WoC falls below the 'Critical WoC' threshold (default 2 weeks). The shortage qty is: (Healthy WoC * velocity) - balance.\n\n"
+            "3. Geographic Matching Scope\n"
+            "To minimize freight costs and logistical friction, the redistribution engine matches sources and sinks within a configured geographic scope in SMRITI PSV Settings:\n"
+            "- Same Territory: Source and sink must share the exact same territory.\n"
+            "- Same Region: Source and sink must share the same region.\n"
+            "- All: Matches globally across all company warehouses.\n\n"
+            "4. Suggested Transfers\n"
+            "The engine matches excess sources with shortage sinks for the same SKU. The suggested transfer quantity is the minimum of the source's excess and the sink's shortage (min(source_excess, sink_shortage)), sorted by quantity in descending order."
+        ),
+        "faqs": [
+            {
+                "question": _("How do I execute a suggested redistribution transfer?"),
+                "answer": _("Managers can view suggestions in the PSV Dashboard. Clicking 'Initiate Transfer' generates a pre-filled Stock Entry (Material Transfer) in Draft state for manager review.")
+            },
+            {
+                "question": _("Can I exclude certain stores from being sources of excess stock?"),
+                "answer": _("Yes. Warehouses marked as inactive or designated as showroom/flagship locations in SMRITI settings can be excluded from redistribution scans.")
+            },
+            {
+                "question": _("What if a SKU has zero sales velocity everywhere?"),
+                "answer": _("If velocity is 0 globally, the WoC becomes 999 days, classifying it as dead stock. The engine will not suggest transfers since there is no sink. Instead, the SKU will be highlighted for clearance promotions.")
+            }
+        ]
     },
     # Operations Guides
     "store_opening_closing": {
         "title": _("Store Opening & Closing Checklist"),
         "category": "Operations Guides",
         "description": _("Daily operational procedures for opening and closing store registers."),
-        "content": _("Coming Soon: Detailed guide on cash drawer reconciliation, store opening checks, end-of-day register closure, and store manager checklists.")
+        "about": _("This guide explains daily cashier shifts opening, cash drawer reconciliation, sales tracking, and manager PIN override protocols during shift closure."),
+        "author": {
+            "name": "Jawahar R Mallah",
+            "title": _("Lead Architect & SMRITI Store Operations Director"),
+            "quote": _("Tight cash drawer controls and manager audit trails ensure daily financial integrity at the POS.")
+        },
+        "content": _(
+            "SMRITI Retail OS enforces disciplined cashier shift management. Every day begins and ends with cash drawer reconciliation and shift logging.\n\n"
+            "1. Shift Opening Checklist\n"
+            "At start of shift, the cashier selects their POS Profile and logs the opening amount in the drawer for each payment mode (e.g. Cash, Card, UPI). Submitting the opening checklist creates a submitted POS Opening Entry, which activates the billing terminal.\n\n"
+            "2. Shift Summary and Sales Tracking\n"
+            "During the shift, the system tracks all sales transactions. When the cashier clicks 'Close Shift', SMRITI compiles a shift summary detailing:\n"
+            "- Total sales value and invoice count.\n"
+            "- Expected closing amounts per payment mode (calculated as: Opening Amount + Sales Amount).\n\n"
+            "3. Shift Closing Reconciliation\n"
+            "The cashier performs a physical count of cash and receipts and enters the actual closing amounts. The system calculates the variance (actual amount - expected amount).\n\n"
+            "4. Manager PIN Override\n"
+            "If the cash variance exceeds the configured validation threshold (e.g., Rs. 500), the cashier terminal locks. A Store Manager or System Manager must enter their dedicated PIN (`custom_smriti_pin`) to authorize the override. The override is saved as an audit comment on the shift record."
+        ),
+        "faqs": [
+            {
+                "question": _("Where is the cash variance threshold configured?"),
+                "answer": _("Managers can set the variance threshold via the POS Settings page in the system console, using the 'pos_closing_entry_validation_amount' parameter.")
+            },
+            {
+                "question": _("What happens if a manager enters an incorrect PIN multiple times?"),
+                "answer": _("To prevent brute-force attacks, the manager PIN verification system limits overrides to 5 failed attempts, after which it locks out the user for 10 minutes and logs an error.")
+            },
+            {
+                "question": _("Can a cashier open multiple shifts simultaneously?"),
+                "answer": _("No. The system strictly restricts cashiers to a single open shift per POS profile. Active shifts must be formally closed before a new shift can be opened.")
+            }
+        ]
     },
     "billing_cashier_workflows": {
         "title": _("Billing & Cashier Workflows"),
         "category": "Operations Guides",
         "description": _("Standard operating procedures for billing, POS operations, and customer checkouts."),
-        "content": _("Coming Soon: Learn how to scan items, apply discounts, select loyalty cards, handle payments, and issue bills.")
+        "about": _("This guide details the SMRITI billing terminal, item scanning, hold/recall functionality, manager overrides, and tax compliance workflows."),
+        "author": {
+            "name": "Jawahar R Mallah",
+            "title": _("Lead Architect & SMRITI POS Expert"),
+            "quote": _("A fast, secure checkout experience is the final and most critical point of contact with the customer.")
+        },
+        "content": _(
+            "The SMRITI Billing Terminal provides an optimized interface for cashiers to process transactions, manage customer profiles, and apply returns.\n\n"
+            "1. Scanned Barcode Handling\n"
+            "Scanning a barcode fetches the retail product's details instantly, including standard rate, MRP, GST rate, and standard unit of measure (UOM). If a barcode is not available, the system allows searching by item code or description.\n\n"
+            "2. Hold and Recall Bills\n"
+            "If a customer needs to pause checkout, the cashier can hold the bill. The cart is saved as a Draft POS Invoice (flagged as 'custom_is_held' and linked to the cashier's user ID). This frees up the terminal for the next customer. Held bills can be recalled and loaded back into the active cart at any time.\n\n"
+            "3. Invoice Submissions and Fallback\n"
+            "- If a shift is open: Submitting a bill creates a POS Invoice linked to the current shift.\n"
+            "- If no shift is open: The system falls back to creating a standard Sales Invoice with stock updates enabled (`update_stock = 1`), allowing back-office sales without drawer limits.\n"
+            "- Credit Sales: Selecting the 'On Credit' payment option submits the invoice without immediate payment, logging the total amount under Customer Outstanding.\n\n"
+            "4. Voiding and Manager Override\n"
+            "Security-sensitive actions—such as voiding a scanned item row, clearing the entire cart, or applying custom discounts—require manager verification via the manager PIN overlay."
+        ),
+        "faqs": [
+            {
+                "question": _("How are sales returns processed at the register?"),
+                "answer": _("Cashiers can select 'Sales Return', enter the original invoice number, and create a return invoice. This automatically processes stock receipts back into the warehouse and issues a credit note or cash refund.")
+            },
+            {
+                "question": _("Does SMRITI support multiple payment modes for a single invoice?"),
+                "answer": _("Yes. Split payments are fully supported. Cashiers can distribute the grand total across cash, card, and digital wallets within the checkout panel.")
+            },
+            {
+                "question": _("How are prices retrieved in the billing terminal?"),
+                "answer": _("The terminal checks the selling price list linked to the cashier's active POS Profile. MRP and standard retail rates are synchronized directly from the Item Price records.")
+            }
+        ]
     },
     # Purchasing Guides
     "vendor_management_po": {
         "title": _("Vendor Management & Purchase Orders"),
         "category": "Purchasing Guides",
         "description": _("How to manage vendors, purchase agreements, and issue Purchase Orders."),
-        "content": _("Coming Soon: Guide explaining supplier onboarding, price catalogs, auto PO generation, and purchase cycle verification.")
+        "about": _("This guide explains the SMRITI purchase terminal, self-healing item variant auto-creation, GRN submissions, batch tracking, and supplier returns."),
+        "author": {
+            "name": "Jawahar R Mallah",
+            "title": _("Lead Architect & SMRITI Procurement Specialist"),
+            "quote": _("Automating variant creation and batch tracking reduces administrative workload and supplier disputes.")
+        },
+        "content": _(
+            "SMRITI Retail OS streamlines procurement via the Purchase Terminal, facilitating purchase order creation, goods receipt notes (GRN), and purchase returns.\n\n"
+            "1. Role Restrictions\n"
+            "While cashiers can view open POs and GRNs, only users with 'SMRITI Store Manager' or 'System Manager' roles are permitted to submit purchase transactions.\n\n"
+            "2. Self-Healing Variant Auto-Creation\n"
+            "When creating a Purchase Order, if a footwear variant SKU is entered (following the 'Style-Color-Size' naming convention) that does not exist in the database, the system automatically creates the Item record. It configures standard attributes:\n"
+            "- Sets standard rate and default MRP (1.5x cost).\n"
+            "- Links selling price lists (Standard Selling and MRP).\n"
+            "- Attaches default HSN codes and 18% GST tax templates.\n"
+            "- Associates any uploaded variant product images.\n\n"
+            "3. Goods Receipt Note (GRN)\n"
+            "Creating a Purchase Receipt registers stock inflow. GRNs can be created against a specific Purchase Order (which updates the PO's received quantity) or as standalone receipts. If the item requires batches, SMRITI automatically creates or links a Batch record, supporting batch numbers and expiry dates.\n\n"
+            "4. Purchase Returns\n"
+            "If stock is damaged or incorrect, managers can submit a Purchase Return directly linked to the original GRN, reversing stock balances and updating ledger balances."
+        ),
+        "faqs": [
+            {
+                "question": _("How does the system calculate the pending quantity on a Purchase Order?"),
+                "answer": _("Pending quantity is computed as: PO Quantity - Received Quantity. Once the pending quantity for all item lines reaches zero, the PO status automatically updates to 'Completed'.")
+            },
+            {
+                "question": _("Where are uploaded variant images stored?"),
+                "answer": _("Images uploaded during PO creation are saved in the system's files module and linked directly to the newly created Item variant card.")
+            },
+            {
+                "question": _("Can I return a partial quantity from a GRN?"),
+                "answer": _("Yes. SMRITI allows editing the return document's items list to specify the exact quantity being returned to the vendor.")
+            }
+        ]
     },
     # Administration Guides
     "user_roles_permissions": {
         "title": _("User Roles & Operational Permissions"),
         "category": "Administration Guides",
         "description": _("Managing users, roles, and functional permissions in SMRITI OS."),
-        "content": _("Coming Soon: System administrator guide for setting up roles, branch restrictions, custom approval limits, and security controls.")
+        "about": _("This guide explains user roles, route restrictions, manager approval flows, and custom PIN security controls."),
+        "author": {
+            "name": "Jawahar R Mallah",
+            "title": _("Lead Architect & SMRITI Security Director"),
+            "quote": _("Granular role boundaries protect sensitive reports and ensure accountability at all operational levels.")
+        },
+        "content": _(
+            "SMRITI Retail OS employs a strict role-based access control (RBAC) framework to restrict access to sensitive configurations, financial reports, and high-impact transaction submissions.\n\n"
+            "1. Core Roles and Scope\n"
+            "- SMRITI Cashier: Granted access to POS billing, shift opening/closing, product catalogs, payments, and sales invoices. Restricted from administrative and purchasing functions.\n"
+            "- SMRITI Store Manager: Full access to store operations, including stock audits, supplier management, purchase orders, GRNs, sales uploads, schemes, and PSV analytics.\n"
+            "- System Manager: Global superuser permission to manage backups, GPG security, user accounts, system hooks, and database settings.\n\n"
+            "2. Route and Page Access Enforcements\n"
+            "Access is enforced at the router layer. For example:\n"
+            "- SMRITI Reports Center and PSV Dashboard are restricted to Store Managers and System Managers.\n"
+            "- Opening Balances and Security settings are restricted to Store Managers and System Managers.\n"
+            "If an unauthorized user attempts to access these routes, the system intercepts the request and displays an 'Access Denied' alert.\n\n"
+            "3. Manager PIN Controls (`custom_smriti_pin`)\n"
+            "Instead of sharing accounts, SMRITI implements manager PIN verification. Store Managers set a dedicated 4-digit PIN on their User profile. When a cashier performs a restricted action (e.g. voiding a row or closing a shift with a large variance), the manager enters their PIN. The action is authorized and logged with the manager's ID, preserving individual accountability."
+        ),
+        "faqs": [
+            {
+                "question": _("How do I assign a role to a new store employee?"),
+                "answer": _("System Managers can open the User master page in the system console, select the user account, and check the desired role (e.g., 'SMRITI Cashier' or 'SMRITI Store Manager') in the Roles table.")
+            },
+            {
+                "question": _("Can a manager change their security PIN?"),
+                "answer": _("Yes. Users with manager roles can update their security PIN directly via their User Profile settings in SMRITI, which securely hashes and updates the 'custom_smriti_pin' field.")
+            },
+            {
+                "question": _("How are unauthorized page access attempts handled?"),
+                "answer": _("SMRITI logs all access denied exceptions under SMRITI Security Logs, capturing the username, target page route, timestamp, and client IP address.")
+            }
+        ]
     },
     "branding_theme_setup": {
         "title": _("Branding & Store Theme Setup"),
         "category": "Administration Guides",
         "description": _("Customizing store themes, logos, receipt templates, and local branding settings."),
-        "content": _("Coming Soon: Guide on custom CSS injection, receipt print formatting, logo uploads, and multi-tenant branding settings.")
+        "about": _("This guide explains SMRITI whitelabel configuration, website context branding overrides, about dialog patching, and custom css overrides."),
+        "author": {
+            "name": "Jawahar R Mallah",
+            "title": _("Lead Architect & SMRITI Whitelabel Coordinator"),
+            "quote": _("A unified corporate brand builds professionalism and trust with clients and franchise partners.")
+        },
+        "content": _(
+            "SMRITI Retail OS is designed for full whitelabeling, ensuring that all user-facing interfaces, portals, and print formats are branded under SMRITI with zero system framework mentions.\n\n"
+            "1. Website Context Override (`website_context.py`)\n"
+            "The system overrides website context generation. When any portal or web page renders, Jinja templates are injected with:\n"
+            "- Custom brand name: 'SMRITI Retail OS'.\n"
+            "- Logo assets: Logo and favicon URL pointing to '/assets/smriti_retail_os/images/logo.svg'.\n"
+            "- Footers and links: External platform footer references are completely disabled.\n\n"
+            "2. Versioning and About Dialog Overrides (`branding_api.py`)\n"
+            "To prevent exposure in support dialogues, server-side methods intercept version queries. It maps default system modules to SMRITI product names:\n"
+            "- ERPNext is displayed as: 'SMRITI Retail OS'.\n"
+            "- Frappe Framework is displayed as: 'SMRITI Framework'.\n"
+            "- HRMS is displayed as: 'SMRITI HR'.\n"
+            "- Payments is displayed as: 'SMRITI Payments'.\n\n"
+            "3. Styling Overrides (`smriti_branding.css`)\n"
+            "A global corporate styling sheet is loaded on all views. This enforces the Navy Blue (#1A2B5C) and Royal Blue (#2563EB) color palette, standardizes typography, hides default platform logos, and styles custom desktop shortcuts."
+        ),
+        "faqs": [
+            {
+                "question": _("Where are print receipt formats configured?"),
+                "answer": _("Receipt print templates can be customized via the SMRITI Print Templates page, where managers can edit HTML/CSS templates, add logos, and define field placements.")
+            },
+            {
+                "question": _("Do branding overrides affect API payloads or developers?"),
+                "answer": _("No. Overrides are purely presentational at the UI and versioning layers. The underlying database schemas, DocTypes, and API routes remain stable and fully standard.")
+            },
+            {
+                "question": _("How can I change the primary company logo?"),
+                "answer": _("The logo is resolved from `/assets/smriti_retail_os/images/logo.svg`. To update it, replace the logo file in the assets directory and run asset synchronization.")
+            }
+        ]
     },
     "backup_security": {
         "title": _("Backup Security & Key Recovery"),
