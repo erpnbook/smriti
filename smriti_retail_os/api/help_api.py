@@ -118,6 +118,14 @@ HELP_CENTER_REGISTRY = {
             {
                 "question": _("How far back do the logs query by default?"),
                 "answer": _("You can filter logs by any date range using the 'From Date' and 'To Date' selectors. The page includes standard presets ('Today', 'This Week', 'This Month', 'Last Month') for quick querying, capped at a maximum retrieval limit of 10,000 records for performance protection.")
+            },
+            {
+                "question": _("What is tracked in the Address Change Log?"),
+                "answer": _("It tracks all creations, updates, or deletions of Company, Customer, Supplier, and Warehouse addresses, showing the modified field, the old value, and the new value.")
+            },
+            {
+                "question": _("Can I export these logs for external auditing?"),
+                "answer": _("Yes, you can click the 'Export' button on the SMRITI Reports toolbar to download the current filtered view in CSV or Excel format.")
             }
         ]
     },
@@ -146,6 +154,14 @@ HELP_CENTER_REGISTRY = {
             {
                 "question": _("Which fields can be used in the Values zone?"),
                 "answer": _("While any field can be dragged into the Values zone, numeric fields (such as Quantities, Values, and Amounts) default to the 'Sum' aggregation, while text or status fields default to 'Count'.")
+            },
+            {
+                "question": _("How do I clear the active pivot layout and return to the standard report grid?"),
+                "answer": _("Simply toggle the 'Pivot View' button off in the report toolbar, or click the 'Reset Pivot' button within the builder panel to clear all active dropzones.")
+            },
+            {
+                "question": _("Can I apply multiple fields to Rows or Columns?"),
+                "answer": _("Yes. You can drag multiple tags into the Rows or Columns zones. The builder will group them sequentially, creating a hierarchical multi-level pivot grid.")
             }
         ]
     },
@@ -170,6 +186,14 @@ HELP_CENTER_REGISTRY = {
             {
                 "question": _("Is my custom layout shared with other users?"),
                 "answer": _("No. Since dashboard layout configurations are stored in the browser's local storage (`localStorage`), the customization is user-specific and device-specific.")
+            },
+            {
+                "question": _("How do I reset the dashboard back to the default system layout?"),
+                "answer": _("While in edit mode (after clicking 'Customize Layout'), click the 'Reset Layout' button that appears in the topbar. This will clear the customization from local storage and restore the standard sequence.")
+            },
+            {
+                "question": _("Does layout customization work on mobile devices?"),
+                "answer": _("Yes. SMRITI dashboards support touch drag-and-drop events on mobile. However, due to limited screen width, all widget cards stack vertically on small viewports by default.")
             }
         ]
     }
