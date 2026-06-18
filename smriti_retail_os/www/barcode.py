@@ -49,4 +49,19 @@ def get_context(context):
     context.cashier    = frappe.session.user
     context.csrf_token = frappe.sessions.get_csrf_token()
 
+    # Pass license and site config for UI Configuration Engine
+    from smriti_retail_os.license.manager import get_license_summary
+    context.smriti_license = get_license_summary()
+    
+    from smriti_retail_os.company_api import get_company_settings, get_active_company
+    active_company = get_active_company()
+    comp_settings = get_company_settings(active_company) if active_company else {}
+    
+    context.smriti_site_config = {
+        "store_theme": comp_settings.get("store_theme") or "hybrid",
+        "store_experience": comp_settings.get("store_experience") or "standard",
+        "terminal_type": comp_settings.get("terminal_type") or "standard",
+        "brand_overrides": comp_settings.get("brand_overrides") or {}
+    }
+
     return context
