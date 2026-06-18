@@ -1,8 +1,3 @@
-:root {
-    --smriti-sidebar-width: var(--smriti-sidebar-width);
-    --smriti-sidebar-collapsed-width: var(--smriti-sidebar-collapsed-width);
-}
-
 /**
  * @file: smriti_retail_os/public/css/smriti_sidebar.css
  * @description: Styles for SMRITI responsive Left/Right sidebar..
@@ -22,7 +17,7 @@
     top: 0;
     left: 0;
     bottom: 0;
-    width: var(--smriti-sidebar-width);
+    width: var(--smriti-dimension-sidebar-width);
     background: var(--smriti-color-bg-primary) !important;
     border-right: 1px solid var(--smriti-color-border-default) !important;
     display: flex;
@@ -34,7 +29,7 @@
 }
 
 #smriti-sidebar.collapsed {
-    width: var(--smriti-sidebar-collapsed-width);
+    width: var(--smriti-dimension-sidebar-collapsed-width);
 }
 
 /* --- Brand Header --- */
