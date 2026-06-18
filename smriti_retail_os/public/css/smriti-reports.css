@@ -16,34 +16,34 @@
 /* Tokens from smriti_theme.css :root — no redefinition */
 
 .smriti-reports-container {
-    background-color: var(--smriti-bg);
-    color: var(--smriti-text);
+    background-color: var(--smriti-color-bg-page);
+    color: var(--smriti-color-text-primary);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 20px;
-    border-radius: var(--radius-lg);
+    padding: var(--smriti-spacing-xl);
+    border-radius: var(--smriti-radius-lg);
     min-height: 82vh;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--smriti-spacing-lg);
 }
 
 /* ── Filter Bar — FLAT white ── */
 .reports-filter-bar {
-    background: var(--smriti-card-bg);
-    border: 1px solid var(--smriti-card-border);
-    border-radius: var(--radius-md);
-    padding: 14px 20px;
+    background: var(--smriti-color-bg-primary);
+    border: 1px solid var(--smriti-color-border-default);
+    border-radius: var(--smriti-radius-md);
+    padding: var(--smriti-spacing-md) var(--smriti-spacing-xl);
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 12px;
-    box-shadow: var(--shadow-sm);
+    gap: var(--smriti-spacing-gap);
+    box-shadow: var(--smriti-shadow-sm);
 }
 
 .reports-filter-bar .filter-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--smriti-text-muted);
+    font-size: var(--smriti-font-size-xs);
+    font-weight: var(--smriti-font-weight-bold);
+    color: var(--smriti-color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.6px;
     white-space: nowrap;
@@ -52,55 +52,55 @@
 /* Filter inputs — INSET neumorphic */
 .reports-filter-bar input,
 .reports-filter-bar select {
-    background: var(--smriti-bg) !important;
+    background: var(--smriti-color-bg-page) !important;
     border: 1px solid transparent !important;
-    border-radius: var(--radius-md) !important;
-    color: var(--smriti-text) !important;
-    font-size: 13px !important;
-    padding: 8px 12px !important;
-    box-shadow: var(--neu-pressed-sm) !important;
-    transition: box-shadow var(--t-base) var(--ease), border-color var(--t-base) var(--ease) !important;
+    border-radius: var(--smriti-radius-md) !important;
+    color: var(--smriti-color-text-primary) !important;
+    font-size: var(--smriti-font-size-sm) !important;
+    padding: var(--smriti-spacing-sm) var(--smriti-spacing-md) !important;
+    box-shadow: var(--smriti-shadow-neu-pressed-sm) !important;
+    transition: box-shadow var(--smriti-t-base) var(--smriti-ease), border-color var(--smriti-t-base) var(--smriti-ease) !important;
     outline: none !important;
     min-width: 140px;
 }
 .reports-filter-bar input:focus,
 .reports-filter-bar select:focus {
-    border-color: var(--smriti-primary) !important;
-    box-shadow: var(--neu-pressed-sm), 0 0 0 3px var(--smriti-primary-glow) !important;
+    border-color: var(--smriti-color-brand-primary) !important;
+    box-shadow: var(--smriti-shadow-neu-pressed-sm), 0 0 0 3px var(--smriti-color-brand-light) !important;
 }
 
 /* ── Report buttons — NEUMORPHIC ── */
 .btn-report {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 9px 18px;
-    border-radius: var(--radius-md);
-    font-size: 13px;
-    font-weight: 600;
+    gap: var(--smriti-spacing-sm);
+    padding: var(--smriti-spacing-sm) var(--smriti-spacing-lg);
+    border-radius: var(--smriti-radius-md);
+    font-size: var(--smriti-font-size-sm);
+    font-weight: var(--smriti-font-weight-semibold);
     cursor: pointer;
     border: none;
     outline: none;
-    transition: all var(--t-base) var(--ease);
-    background: var(--smriti-bg);
-    color: var(--smriti-text);
-    box-shadow: var(--neu-float);
+    transition: all var(--smriti-t-base) var(--smriti-ease);
+    background: var(--smriti-color-bg-page);
+    color: var(--smriti-color-text-primary);
+    box-shadow: var(--smriti-shadow-neu-float);
 }
-.btn-report:hover  { box-shadow: var(--neu-float-lg); color: var(--smriti-primary); transform: translateY(-1px); }
-.btn-report:active { box-shadow: var(--neu-pressed); transform: translateY(0); }
+.btn-report:hover  { box-shadow: var(--smriti-shadow-neu-float-lg); color: var(--smriti-color-brand-primary); transform: translateY(-1px); }
+.btn-report:active { box-shadow: var(--smriti-shadow-neu-pressed); transform: translateY(0); }
 
 .btn-report-primary {
-    background: linear-gradient(145deg, var(--smriti-primary-light), var(--smriti-primary));
+    background: linear-gradient(145deg, var(--smriti-color-brand-light), var(--smriti-color-brand-primary));
     color: white;
-    box-shadow: 5px 5px 12px rgba(83,56,158,.35), -3px -3px 8px rgba(158,119,237,.20);
+    box-shadow: var(--smriti-shadow-sm);
 }
 .btn-report-primary:hover {
-    box-shadow: 7px 7px 16px rgba(83,56,158,.42), -4px -4px 10px rgba(158,119,237,.25);
+    box-shadow: var(--smriti-shadow-md);
     color: white;
     transform: translateY(-1px);
 }
 .btn-report-primary:active {
-    box-shadow: inset 4px 4px 8px rgba(83,56,158,.4), inset -2px -2px 5px rgba(139,92,246,.2);
+    box-shadow: var(--smriti-shadow-neu-pressed);
     transform: translateY(0);
 }
 
@@ -108,40 +108,40 @@
 .report-kpi-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
+    gap: var(--smriti-spacing-lg);
 }
 
 .report-kpi-card {
-    background: var(--smriti-bg);
-    border-radius: var(--radius-xl);
-    padding: 20px 22px;
-    box-shadow: var(--neu-float);
+    background: var(--smriti-color-bg-page);
+    border-radius: var(--smriti-radius-xl);
+    padding: var(--smriti-spacing-xl);
+    box-shadow: var(--smriti-shadow-neu-float);
     cursor: default;
-    transition: box-shadow var(--t-base) var(--ease), transform var(--t-base) var(--ease);
+    transition: box-shadow var(--smriti-t-base) var(--smriti-ease), transform var(--smriti-t-base) var(--smriti-ease);
     border: none;
 }
-.report-kpi-card:hover { box-shadow: var(--neu-float-lg); transform: translateY(-1px); }
+.report-kpi-card:hover { box-shadow: var(--smriti-shadow-neu-float-lg); transform: translateY(-1px); }
 
 .report-kpi-accent {
     height: 3px;
-    border-radius: var(--radius-full);
-    margin-bottom: 14px;
+    border-radius: var(--smriti-radius-full);
+    margin-bottom: var(--smriti-spacing-md);
 }
 
 .report-kpi-label {
-    font-size: 11px;
-    font-weight: 700;
+    font-size: var(--smriti-font-size-xs);
+    font-weight: var(--smriti-font-weight-bold);
     letter-spacing: 0.6px;
     text-transform: uppercase;
-    color: var(--smriti-text-muted);
-    margin-bottom: 8px;
+    color: var(--smriti-color-text-muted);
+    margin-bottom: var(--smriti-spacing-sm);
 }
 
 .report-kpi-value {
     font-family: 'Outfit', sans-serif;
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--smriti-text);
+    font-size: var(--smriti-font-size-2xl);
+    font-weight: var(--smriti-font-weight-extrabold);
+    color: var(--smriti-color-text-primary);
     letter-spacing: -0.8px;
     font-variant-numeric: tabular-nums;
 }
@@ -149,22 +149,22 @@
 .report-kpi-change {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: var(--radius-full);
-    margin-top: 8px;
+    gap: var(--smriti-spacing-xs);
+    font-size: var(--smriti-font-size-xs);
+    font-weight: var(--smriti-font-weight-semibold);
+    padding: var(--smriti-spacing-xs) var(--smriti-spacing-sm);
+    border-radius: var(--smriti-radius-full);
+    margin-top: var(--smriti-spacing-sm);
 }
-.report-kpi-change.up   { color: var(--smriti-success); background: var(--smriti-success-bg); }
-.report-kpi-change.down { color: var(--smriti-danger);  background: var(--smriti-danger-bg); }
+.report-kpi-change.up   { color: var(--smriti-color-status-success); background: var(--smriti-color-status-success-bg); }
+.report-kpi-change.down { color: var(--smriti-color-status-danger);  background: var(--smriti-color-status-danger-bg); }
 
 /* ── Chart container — FLAT white ── */
 .report-chart-card {
-    background: var(--smriti-card-bg);
-    border: 1px solid var(--smriti-card-border);
-    border-radius: var(--radius-lg);
-    padding: 22px 24px;
+    background: var(--smriti-color-bg-primary);
+    border: 1px solid var(--smriti-color-border-default);
+    border-radius: var(--smriti-radius-lg);
+    padding: var(--smriti-spacing-xl);
     box-shadow: none;
 }
 
@@ -172,23 +172,23 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--smriti-card-border);
+    margin-bottom: var(--smriti-spacing-lg);
+    padding-bottom: var(--smriti-spacing-md);
+    border-bottom: 1px solid var(--smriti-color-border-default);
 }
 
 .report-chart-title {
     font-family: 'Outfit', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--smriti-text);
+    font-size: var(--smriti-font-size-base);
+    font-weight: var(--smriti-font-weight-bold);
+    color: var(--smriti-color-text-primary);
 }
 
 /* ── Data table — FLAT crisp ── */
 .report-table-card {
-    background: var(--smriti-card-bg);
-    border: 1px solid var(--smriti-card-border);
-    border-radius: var(--radius-lg);
+    background: var(--smriti-color-bg-primary);
+    border: 1px solid var(--smriti-color-border-default);
+    border-radius: var(--smriti-radius-lg);
     overflow: hidden;
     box-shadow: none;
 }
@@ -199,73 +199,78 @@
 }
 
 .report-table th {
-    background: var(--smriti-card-bg-2);
+    background: var(--smriti-color-bg-secondary);
     text-align: left;
-    padding: 10px 16px;
-    font-size: 11px;
-    font-weight: 700;
+    padding: var(--smriti-spacing-padding-y) var(--smriti-spacing-lg);
+    font-size: var(--smriti-font-size-xs);
+    font-weight: var(--smriti-font-weight-bold);
     letter-spacing: 0.6px;
     text-transform: uppercase;
-    color: var(--smriti-text-muted);
-    border-bottom: 1px solid var(--smriti-card-border);
+    color: var(--smriti-color-text-muted);
+    border-bottom: 1px solid var(--smriti-color-border-default);
 }
 
 .report-table td {
-    padding: 11px 16px;
-    font-size: 13px;
-    color: var(--smriti-text);
-    border-bottom: 1px solid var(--smriti-card-border);
+    padding: var(--smriti-spacing-padding-y) var(--smriti-spacing-lg);
+    font-size: var(--smriti-font-size-sm);
+    color: var(--smriti-color-text-primary);
+    border-bottom: 1px solid var(--smriti-color-border-default);
     vertical-align: middle;
 }
 
-.report-table tbody tr { transition: background var(--t-fast); }
-.report-table tbody tr:hover td { background: var(--smriti-card-bg-2); }
+.report-table tbody tr { transition: background var(--smriti-t-fast); }
+.report-table tbody tr:hover td { background: var(--smriti-color-bg-secondary); }
 .report-table tbody tr:last-child td { border-bottom: none; }
 
 /* Status pills */
 .rpill {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 3px 9px;
-    border-radius: var(--radius-full);
-    font-size: 11px; font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--smriti-spacing-xs);
+    padding: var(--smriti-spacing-xs) var(--smriti-spacing-sm);
+    border-radius: var(--smriti-radius-full);
+    font-size: var(--smriti-font-size-xs);
+    font-weight: var(--smriti-font-weight-bold);
     border: 1px solid transparent;
 }
-.rpill.paid    { color: var(--smriti-success); background: var(--smriti-success-bg); border-color: var(--smriti-success-border); }
-.rpill.pending { color: var(--smriti-warning); background: var(--smriti-warning-bg); border-color: var(--smriti-warning-border); }
-.rpill.failed  { color: var(--smriti-danger);  background: var(--smriti-danger-bg);  border-color: var(--smriti-danger-border); }
+.rpill.paid    { color: var(--smriti-color-status-success); background: var(--smriti-color-status-success-bg); border-color: var(--smriti-color-status-success-border); }
+.rpill.pending { color: var(--smriti-color-status-warning); background: var(--smriti-color-status-warning-bg); border-color: var(--smriti-color-status-warning-border); }
+.rpill.failed  { color: var(--smriti-color-status-danger);  background: var(--smriti-color-status-danger-bg);  border-color: var(--smriti-color-status-danger-border); }
 
 /* Export button row */
 .report-export-row {
     display: flex;
-    gap: 10px;
+    gap: var(--smriti-spacing-sm);
     align-items: center;
     justify-content: flex-end;
-    padding: 14px 20px;
-    border-top: 1px solid var(--smriti-card-border);
-    background: var(--smriti-card-bg-2);
+    padding: var(--smriti-spacing-md) var(--smriti-spacing-xl);
+    border-top: 1px solid var(--smriti-color-border-default);
+    background: var(--smriti-color-bg-secondary);
 }
 
 /* Empty state */
 .report-empty {
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 60px 0;
-    color: var(--smriti-text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--smriti-spacing-2xl) 0;
+    color: var(--smriti-color-text-muted);
     text-align: center;
 }
-.report-empty-icon { font-size: 3em; opacity: 0.3; margin-bottom: 14px; }
-.report-empty-text { font-size: 14px; }
+.report-empty-icon { font-size: var(--smriti-font-size-2xl); opacity: 0.3; margin-bottom: var(--smriti-spacing-md); }
+.report-empty-text { font-size: var(--smriti-font-size-base); }
 
 /* Progress bars in reports */
 .report-progress-track {
     height: 6px;
-    background: var(--smriti-card-border);
-    border-radius: var(--radius-full);
+    background: var(--smriti-color-border-default);
+    border-radius: var(--smriti-radius-full);
     overflow: hidden;
 }
 .report-progress-fill {
     height: 100%;
-    border-radius: var(--radius-full);
-    background: linear-gradient(90deg, var(--smriti-primary), var(--smriti-primary-light));
-    transition: width 0.5s var(--ease);
+    border-radius: var(--smriti-radius-full);
+    background: linear-gradient(90deg, var(--smriti-color-brand-primary), var(--smriti-color-brand-light));
+    transition: width 0.5s var(--smriti-ease);
 }

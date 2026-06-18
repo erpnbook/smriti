@@ -1,3 +1,8 @@
+:root {
+    --smriti-sidebar-width: var(--smriti-sidebar-width);
+    --smriti-sidebar-collapsed-width: var(--smriti-sidebar-collapsed-width);
+}
+
 /**
  * @file: smriti_retail_os/public/css/smriti_sidebar.css
  * @description: Styles for SMRITI responsive Left/Right sidebar..
@@ -17,42 +22,42 @@
     top: 0;
     left: 0;
     bottom: 0;
-    width: 260px;
-    background: var(--card-bg, #ffffff) !important;
-    border-right: 1px solid var(--border-color, #eaecf0) !important;
+    width: var(--smriti-sidebar-width);
+    background: var(--smriti-color-bg-primary) !important;
+    border-right: 1px solid var(--smriti-color-border-default) !important;
     display: flex;
     flex-direction: column;
     transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    color: var(--text-color, #1d2939) !important;
+    color: var(--smriti-color-text-primary) !important;
     z-index: 1041;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 #smriti-sidebar.collapsed {
-    width: 68px;
+    width: var(--smriti-sidebar-collapsed-width);
 }
 
 /* --- Brand Header --- */
 .smriti-side-brand {
-    padding: 20px 16px;
+    padding: var(--smriti-spacing-xl) var(--smriti-spacing-lg);
     display: flex;
     align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid var(--border-color, #eaecf0) !important;
+    gap: var(--smriti-spacing-gap);
+    border-bottom: 1px solid var(--smriti-color-border-default) !important;
     overflow: hidden;
     white-space: nowrap;
 }
 
 .smriti-side-logo {
-    width: 32px;
-    height: 32px;
+    width: var(--smriti-spacing-2xl);
+    height: var(--smriti-spacing-2xl);
     flex-shrink: 0;
 }
 
 .smriti-side-title {
     font-weight: 700;
-    font-size: 1.15rem;
-    color: var(--primary-color, #6941c6) !important;
+    font-size: var(--smriti-font-size-lg);
+    color: var(--smriti-color-brand-primary) !important;
 }
 
 #smriti-sidebar.collapsed .smriti-side-title {
@@ -64,44 +69,47 @@
     margin-left: auto;
     background: none;
     border: none;
-    color: var(--text-muted, #475467);
+    color: var(--smriti-color-text-muted);
     cursor: pointer;
-    padding: 4px;
+    padding: var(--smriti-spacing-xs);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 6px;
+    border-radius: var(--smriti-radius-sm);
     transition: all 0.2s;
 }
 .smriti-side-toggle:hover {
-    background: var(--bg-light-gray, #f8f9fc);
-    color: var(--text-color, #1d2939);
+    background: var(--smriti-color-bg-secondary);
+    color: var(--smriti-color-text-primary);
 }
 
 #smriti-sidebar.collapsed .smriti-side-toggle {
-    margin: 0 auto;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 /* --- Navigation Menu --- */
 .smriti-side-menu {
     flex: 1;
-    padding: 16px 8px;
+    padding: var(--smriti-spacing-lg) var(--smriti-spacing-sm);
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: var(--smriti-spacing-xs);
     overflow-y: auto;
 }
 
 .smriti-side-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    color: var(--text-muted, #475467) !important;
+    gap: var(--smriti-spacing-gap);
+    padding: var(--smriti-spacing-sm) var(--smriti-spacing-md);
+    color: var(--smriti-color-text-muted) !important;
     text-decoration: none !important;
-    border-radius: 8px;
+    border-radius: var(--smriti-radius-md);
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: var(--smriti-font-size-base);
     min-height: 44px;
     transition: background 0.15s, color 0.15s;
     cursor: pointer;
@@ -110,19 +118,19 @@
 }
 
 .smriti-side-item:hover {
-    background: var(--bg-light-gray, #f8f9fc) !important;
-    color: var(--text-color, #1d2939) !important;
+    background: var(--smriti-color-bg-secondary) !important;
+    color: var(--smriti-color-text-primary) !important;
 }
 
 .smriti-side-item.active {
-    background: rgba(105, 65, 198, 0.08) !important;
-    color: var(--primary-color, #6941c6) !important;
+    background: var(--smriti-color-status-info-bg) !important;
+    color: var(--smriti-color-brand-primary) !important;
     font-weight: 600;
 }
 
 .smriti-side-item .icon,
 .smriti-side-item .side-item-emoji {
-    font-size: 20px;
+    font-size: var(--smriti-font-size-lg);
     flex-shrink: 0;
     width: 24px;
     text-align: center;
@@ -131,7 +139,7 @@
 
 #smriti-sidebar.collapsed .smriti-side-item {
     justify-content: center;
-    padding: 10px 0;
+    padding: var(--smriti-spacing-sm) 0;
 }
 
 #smriti-sidebar.collapsed .smriti-side-item span:not(.icon):not(.side-item-emoji) {
@@ -140,38 +148,38 @@
 
 /* --- Bottom Section --- */
 .smriti-side-footer {
-    border-top: 1px solid var(--border-color, #eaecf0) !important;
-    padding: 16px 12px;
-    background: var(--card-bg, #ffffff) !important;
+    border-top: 1px solid var(--smriti-color-border-default) !important;
+    padding: var(--smriti-spacing-lg) var(--smriti-spacing-md);
+    background: var(--smriti-color-bg-primary) !important;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--smriti-spacing-gap);
     overflow: hidden;
 }
 
 #smriti-sidebar.collapsed .smriti-side-footer {
     align-items: center;
-    padding: 16px 0;
+    padding: var(--smriti-spacing-lg) 0;
 }
 
 .smriti-side-cashier {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--smriti-spacing-sm);
     white-space: nowrap;
 }
 
 .smriti-side-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--primary-color, #6941c6);
+    width: var(--smriti-spacing-2xl);
+    height: var(--smriti-spacing-2xl);
+    border-radius: var(--smriti-radius-full);
+    background: var(--smriti-color-brand-primary);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: var(--smriti-font-size-base);
     flex-shrink: 0;
 }
 
@@ -182,13 +190,13 @@
 
 .smriti-side-name {
     font-weight: 600;
-    font-size: 0.9rem;
-    color: var(--text-color, #1d2939) !important;
+    font-size: var(--smriti-font-size-base);
+    color: var(--smriti-color-text-primary) !important;
 }
 
 .smriti-side-role {
-    font-size: 0.75rem;
-    color: var(--text-muted, #475467) !important;
+    font-size: var(--smriti-font-size-xs);
+    color: var(--smriti-color-text-muted) !important;
 }
 
 #smriti-sidebar.collapsed .smriti-side-info {
@@ -199,29 +207,29 @@
 .smriti-side-shift {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.82rem;
+    gap: var(--smriti-spacing-sm);
+    font-size: var(--smriti-font-size-sm);
     font-weight: 600;
-    color: var(--text-muted, #475467) !important;
+    color: var(--smriti-color-text-muted) !important;
     white-space: nowrap;
 }
 
 .smriti-side-shift-badge {
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 0.75rem;
+    padding: var(--smriti-spacing-xs) var(--smriti-spacing-sm);
+    border-radius: var(--smriti-radius-full);
+    font-size: var(--smriti-font-size-xs);
     font-weight: 700;
     text-transform: uppercase;
 }
 
 .smriti-side-shift-badge.open {
-    background: rgba(16, 185, 129, 0.1) !important;
-    color: #027a48 !important;
+    background: var(--smriti-color-status-success-bg) !important;
+    color: var(--smriti-color-status-success) !important;
 }
 
 .smriti-side-shift-badge.closed {
-    background: rgba(239, 68, 68, 0.1) !important;
-    color: #b42318 !important;
+    background: var(--smriti-color-status-danger-bg) !important;
+    color: var(--smriti-color-status-danger) !important;
 }
 
 #smriti-sidebar.collapsed .smriti-side-shift {
@@ -232,30 +240,30 @@
 .smriti-side-logout {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
-    color: #b42318 !important;
+    gap: var(--smriti-spacing-sm);
+    padding: var(--smriti-spacing-sm) var(--smriti-spacing-md);
+    color: var(--smriti-color-status-danger) !important;
     text-decoration: none !important;
-    border-radius: 6px;
+    border-radius: var(--smriti-radius-sm);
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: var(--smriti-font-size-base);
     transition: background 0.15s;
     background: none;
     border: none;
     width: 100%;
     text-align: left;
     cursor: pointer;
-    min-height: 38px;
+    min-height: calc(var(--smriti-spacing-2xl) + var(--smriti-spacing-sm));
 }
 
 .smriti-side-logout:hover {
-    background: rgba(240, 68, 56, 0.05) !important;
+    background: var(--smriti-color-status-danger-bg) !important;
 }
 
 #smriti-sidebar.collapsed .smriti-side-logout {
     justify-content: center;
-    padding: 8px 0;
-    color: #b42318 !important;
+    padding: var(--smriti-spacing-sm) 0;
+    color: var(--smriti-color-status-danger) !important;
 }
 
 #smriti-sidebar.collapsed .smriti-side-logout span:not(.icon) {
@@ -266,28 +274,28 @@
    Body Layout Shifting Rules (Custom Independent Sidebar)
    ============================================================ */
 body.smriti-sidebar-active {
-    padding-left: 260px !important;
+    padding-left: var(--smriti-sidebar-width) !important;
     transition: padding-left 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 body.smriti-sidebar-active.smriti-sidebar-collapsed {
-    padding-left: 68px !important;
+    padding-left: var(--smriti-sidebar-collapsed-width) !important;
 }
 
 /* Shift Top Navbar and Header elements */
 body.smriti-sidebar-active .navbar,
 body.smriti-sidebar-active header,
 body.smriti-sidebar-active .navbar-default {
-    left: 260px !important;
-    width: calc(100% - 260px) !important;
+    left: var(--smriti-sidebar-width) !important;
+    width: calc(100% - var(--smriti-sidebar-width)) !important;
     transition: left 0.25s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 body.smriti-sidebar-active.smriti-sidebar-collapsed .navbar,
 body.smriti-sidebar-active.smriti-sidebar-collapsed header,
 body.smriti-sidebar-active.smriti-sidebar-collapsed .navbar-default {
-    left: 68px !important;
-    width: calc(100% - 68px) !important;
+    left: var(--smriti-sidebar-collapsed-width) !important;
+    width: calc(100% - var(--smriti-sidebar-collapsed-width)) !important;
 }
 
 /* Hide standard Frappe sidebars completely when SMRITI sidebar is active */
@@ -311,7 +319,7 @@ body.smriti-sidebar-active .layout-side-section.sidebar-left {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: var(--smriti-color-bg-overlay);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     z-index: 1040;
@@ -329,10 +337,10 @@ body.smriti-mobile-sidebar-open .smriti-sidebar-backdrop {
 @media (max-width: 768px) {
     #smriti-sidebar {
         position: fixed;
-        left: -260px;
+        left: calc(-1 * var(--smriti-sidebar-width));
         top: 0;
         bottom: 0;
-        box-shadow: 10px 0 30px rgba(16, 24, 40, 0.1) !important;
+        box-shadow: var(--smriti-shadow-lg) !important;
         transition: left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
     
@@ -359,42 +367,42 @@ body.smriti-mobile-sidebar-open .smriti-sidebar-backdrop {
         display: flex !important;
         align-items: center;
         justify-content: center;
-        width: 38px;
-        height: 38px;
-        margin-right: 12px;
+        width: calc(var(--smriti-spacing-2xl) + var(--smriti-spacing-sm));
+        height: calc(var(--smriti-spacing-2xl) + var(--smriti-spacing-sm));
+        margin-right: var(--smriti-spacing-lg);
         background: transparent;
         border: none;
-        color: var(--text-color, #1d2939);
+        color: var(--smriti-color-text-primary);
         cursor: pointer;
-        border-radius: 50%;
+        border-radius: var(--smriti-radius-full);
         transition: background 0.2s;
         z-index: 1001; /* Above normal navbar items but below modals */
     }
     .smriti-mobile-hamburger:hover {
-        background: var(--bg-light-gray, #f8f9fc);
+        background: var(--smriti-color-bg-secondary);
     }
 }
 
 /* Sidebar Popout Button Styling */
 .smriti-side-item {
     position: relative;
-    padding-right: 36px !important; /* Make room for popout button */
+    padding-right: var(--smriti-spacing-2xl) !important; /* Make room for popout button */
 }
 
 .smriti-side-item-popout {
     position: absolute;
-    right: 8px;
+    right: var(--smriti-spacing-sm);
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: var(--text-muted, #475467);
+    color: var(--smriti-color-text-muted);
     cursor: pointer;
-    padding: 4px;
+    padding: var(--smriti-spacing-xs);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
+    border-radius: var(--smriti-radius-xs);
     opacity: 0; /* Hidden by default, show on hover */
     transition: opacity 0.2s, background 0.2s, color 0.2s;
     z-index: 2;
@@ -405,12 +413,12 @@ body.smriti-mobile-sidebar-open .smriti-sidebar-backdrop {
 }
 
 .smriti-side-item-popout:hover {
-    background: var(--border-color, #eaecf0) !important;
-    color: var(--primary-color, #6941c6) !important;
+    background: var(--smriti-color-border-default) !important;
+    color: var(--smriti-color-brand-primary) !important;
 }
 
 .smriti-side-item-popout span {
-    font-size: 16px !important;
+    font-size: var(--smriti-font-size-md) !important;
 }
 
 /* Hide popout button when sidebar is collapsed */
@@ -538,7 +546,7 @@ body.smriti-popout-active .smriti-backup-container {
     box-shadow: none !important;
     min-height: 100vh !important;
     height: auto !important;
-    padding: 16px !important;
+    padding: var(--smriti-spacing-lg) !important;
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
@@ -549,7 +557,7 @@ body.smriti-popout-active .smriti-backup-container {
 body.smriti-popout-active .shift-main {
     max-width: 100% !important;
     width: 100% !important;
-    padding: 16px !important;
+    padding: var(--smriti-spacing-lg) !important;
     margin: 0 !important;
     box-sizing: border-box !important;
 }
@@ -566,7 +574,7 @@ body.smriti-popout-active .tooltip {
 }
 
 body.smriti-popout-active .modal-dialog {
-    margin: 30px auto !important;
+    margin: var(--smriti-spacing-2xl) auto !important;
     width: auto !important;
     max-width: 90vw !important;
     max-height: 90vh !important;
@@ -590,31 +598,31 @@ body.smriti-popout-active .modal-body {
     top: 15px;
     right: 15px;
     display: flex;
-    gap: 8px;
+    gap: var(--smriti-spacing-sm);
     z-index: 999999;
-    background: rgba(255, 255, 255, 0.85);
+    background: var(--smriti-color-bg-primary);
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    padding: 6px;
-    border-radius: 30px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--smriti-color-border-default);
+    padding: var(--smriti-spacing-sm);
+    border-radius: var(--smriti-radius-full);
+    box-shadow: var(--smriti-shadow-md);
     transition: opacity 0.2s, transform 0.2s;
 }
 
 body.dark-mode .smriti-popout-controls-floating,
 body[data-theme="dark"] .smriti-popout-controls-floating {
-    background: rgba(17, 24, 39, 0.85);
-    border-color: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    background: var(--smriti-color-bg-secondary);
+    border-color: var(--smriti-color-border-default);
+    box-shadow: var(--smriti-shadow-xl);
 }
 
 .smriti-popout-controls-floating .smriti-popout-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    width: var(--smriti-spacing-2xl);
+    height: var(--smriti-spacing-2xl);
+    border-radius: var(--smriti-radius-full);
     border: none;
     background: none;
-    color: #475467;
+    color: var(--smriti-color-text-muted);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -624,23 +632,23 @@ body[data-theme="dark"] .smriti-popout-controls-floating {
 
 body.dark-mode .smriti-popout-controls-floating .smriti-popout-btn,
 body[data-theme="dark"] .smriti-popout-controls-floating .smriti-popout-btn {
-    color: #d1d5db;
+    color: var(--smriti-color-text-subtle);
 }
 
 .smriti-popout-controls-floating .smriti-popout-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-    color: #111827;
+    background: var(--smriti-color-bg-secondary);
+    color: var(--smriti-color-text-primary);
 }
 
 body.dark-mode .smriti-popout-controls-floating .smriti-popout-btn:hover,
 body[data-theme="dark"] .smriti-popout-controls-floating .smriti-popout-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #ffffff;
+    background: var(--smriti-color-bg-primary);
+    color: var(--smriti-color-bg-primary);
 }
 
 .smriti-popout-controls-floating .smriti-popout-close:hover {
-    background: #fee2e2 !important;
-    color: #b42318 !important;
+    background: var(--smriti-color-status-danger-bg) !important;
+    color: var(--smriti-color-status-danger) !important;
 }
 @media print {
     .smriti-popout-controls-floating {
@@ -652,11 +660,11 @@ body[data-theme="dark"] .smriti-popout-controls-floating .smriti-popout-btn:hove
 .smriti-side-theme-toggle-bar {
     display: flex;
     background: var(--smriti-bg);
-    border-radius: var(--radius-md);
+    border-radius: var(--smriti-radius-md);
     box-shadow: var(--neu-pressed-sm);
-    padding: 3px;
-    margin: 8px 0;
-    gap: 2px;
+    padding: var(--smriti-spacing-xs);
+    margin: var(--smriti-spacing-sm) 0;
+    gap: var(--smriti-spacing-xs);
 }
 
 body.theme-minimalist .smriti-side-theme-toggle-bar {
@@ -672,9 +680,9 @@ body.theme-minimalist .smriti-side-theme-toggle-bar {
     justify-content: center;
     background: transparent;
     border: none;
-    padding: 6px 4px;
-    border-radius: calc(var(--radius-md) - 2px);
-    font-size: 11px;
+    padding: var(--smriti-spacing-xs) var(--smriti-spacing-xs);
+    border-radius: calc(var(--smriti-radius-md) - 2px);
+    font-size: var(--smriti-font-size-xs);
     font-weight: 700;
     color: var(--smriti-text-muted);
     cursor: pointer;
@@ -702,11 +710,11 @@ body.theme-minimalist .smriti-side-theme-pill.active {
 /* Hide labels in collapsed sidebar */
 #smriti-sidebar.collapsed .smriti-side-theme-toggle-bar {
     flex-direction: column;
-    padding: 3px 2px;
+    padding: var(--smriti-spacing-xs) var(--smriti-spacing-xs);
 }
 
 #smriti-sidebar.collapsed .smriti-side-theme-pill span {
-    font-size: 14px; /* show only emoji in collapsed state */
+    font-size: var(--smriti-font-size-base); /* show only emoji in collapsed state */
 }
 
 
@@ -722,36 +730,36 @@ body.smriti-popout-active .page-head .sidebar-toggle-btn {
 .smriti-side-category {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    margin-bottom: 2px;
+    gap: var(--smriti-spacing-xs);
+    margin-bottom: var(--smriti-spacing-xs);
 }
 .smriti-side-category-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: 8px;
-    color: var(--text-muted, #475467) !important;
+    gap: var(--smriti-spacing-gap);
+    padding: var(--smriti-spacing-sm) var(--smriti-spacing-md);
+    border-radius: var(--smriti-radius-md);
+    color: var(--smriti-color-text-muted) !important;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: var(--smriti-font-size-base);
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
     user-select: none;
 }
 .smriti-side-category-header span.side-item-emoji {
-    font-size: 20px;
+    font-size: var(--smriti-font-size-lg);
     flex-shrink: 0;
     width: 24px;
     text-align: center;
     display: inline-block;
 }
 .smriti-side-category-header:hover {
-    background: var(--bg-light-gray, #f8f9fc) !important;
-    color: var(--text-color, #1d2939) !important;
+    background: var(--smriti-color-bg-secondary) !important;
+    color: var(--smriti-color-text-primary) !important;
 }
 .smriti-side-category-header .arrow {
     margin-left: auto;
-    font-size: 16px !important;
+    font-size: var(--smriti-font-size-md) !important;
     transition: transform 0.2s ease;
 }
 .smriti-side-category.open .smriti-side-category-header .arrow {
@@ -760,8 +768,8 @@ body.smriti-popout-active .page-head .sidebar-toggle-btn {
 .smriti-side-category-body {
     display: none;
     flex-direction: column;
-    gap: 2px;
-    padding-left: 28px;
+    gap: var(--smriti-spacing-xs);
+    padding-left: var(--smriti-spacing-2xl);
     overflow: hidden;
 }
 .smriti-side-category.open .smriti-side-category-body {
@@ -770,36 +778,36 @@ body.smriti-popout-active .page-head .sidebar-toggle-btn {
 .smriti-side-sub-item {
     display: flex;
     align-items: center;
-    padding: 8px 10px;
-    color: var(--text-muted, #475467) !important;
+    padding: var(--smriti-spacing-sm) var(--smriti-spacing-sm);
+    color: var(--smriti-color-text-muted) !important;
     text-decoration: none !important;
-    font-size: 0.85rem;
+    font-size: var(--smriti-font-size-sm);
     font-weight: 500;
-    border-radius: 6px;
+    border-radius: var(--smriti-radius-sm);
     transition: background 0.15s, color 0.15s;
     min-height: 36px;
 }
 .smriti-side-sub-item:hover, .smriti-side-sub-item.active {
-    color: var(--text-color, #1d2939) !important;
-    background: var(--bg-light-gray, #f8f9fc) !important;
+    color: var(--smriti-color-text-primary) !important;
+    background: var(--smriti-color-bg-secondary) !important;
 }
 .smriti-side-sub-item.active {
-    color: var(--primary-color, #6941c6) !important;
+    color: var(--smriti-color-brand-primary) !important;
     font-weight: 700;
 }
 .sidebar-sub-header,
 .smriti-side-sub-header {
-    font-size: 0.72rem;
+    font-size: var(--smriti-font-size-xs);
     font-weight: 800;
     text-transform: uppercase;
-    color: var(--text-muted, #94a3b8);
-    padding: 10px 10px 4px 6px;
+    color: var(--smriti-color-text-muted);
+    padding: var(--smriti-spacing-sm) var(--smriti-spacing-sm) var(--smriti-spacing-xs) var(--smriti-spacing-sm);
     letter-spacing: 0.8px;
     pointer-events: none;
     user-select: none;
     opacity: 0.75;
-    border-top: 1px dashed var(--border-color, rgba(0,0,0,0.05));
-    margin-top: 6px;
+    border-top: 1px dashed var(--smriti-color-border-default);
+    margin-top: var(--smriti-spacing-sm);
 }
 .sidebar-sub-header:first-child,
 .smriti-side-sub-header:first-child {
