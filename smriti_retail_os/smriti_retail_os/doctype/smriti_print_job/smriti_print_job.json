@@ -1,0 +1,154 @@
+{
+ "actions": [],
+ "autoname": "field:job_id",
+ "creation": "2026-06-18 15:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "job_id",
+  "item_code",
+  "barcode",
+  "template_name",
+  "printer_ip",
+  "printer_port",
+  "print_qty",
+  "payload_hash",
+  "payload_preview",
+  "status",
+  "error_message",
+  "created_by",
+  "created_on",
+  "completed_on"
+ ],
+ "fields": [
+  {
+   "fieldname": "job_id",
+   "fieldtype": "Data",
+   "label": "Job ID",
+   "unique": 1,
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item Code",
+   "options": "Item",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "barcode",
+   "fieldtype": "Data",
+   "label": "Barcode",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "template_name",
+   "fieldtype": "Data",
+   "label": "Template Name",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "printer_ip",
+   "fieldtype": "Data",
+   "label": "Printer IP",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "printer_port",
+   "fieldtype": "Int",
+   "label": "Printer Port",
+   "default": "9100"
+  },
+  {
+   "fieldname": "print_qty",
+   "fieldtype": "Int",
+   "label": "Print Qty",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "payload_hash",
+   "fieldtype": "Data",
+   "label": "Payload Hash",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payload_preview",
+   "fieldtype": "Data",
+   "label": "Payload Preview",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Queued\nSending\nSuccess\nFailed",
+   "in_list_view": 1,
+   "default": "Queued"
+  },
+  {
+   "fieldname": "error_message",
+   "fieldtype": "Text",
+   "label": "Error Message",
+   "read_only": 1
+  },
+  {
+   "fieldname": "created_by",
+   "fieldtype": "Data",
+   "label": "Created By",
+   "read_only": 1
+  },
+  {
+   "fieldname": "created_on",
+   "fieldtype": "Datetime",
+   "label": "Created On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "completed_on",
+   "fieldtype": "Datetime",
+   "label": "Completed On",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-18 15:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Print Job",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Administrator",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "custom": 0
+}

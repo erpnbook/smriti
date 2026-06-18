@@ -16,23 +16,6 @@ from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 def create_smriti_company_settings_doctype():
     """Creates the SMRITI Company Settings custom DocType for per-company retail configuration."""
     if frappe.db.exists("DocType", "SMRITI Company Settings"):
-        dt = frappe.get_doc("DocType", "SMRITI Company Settings")
-        existing_fields = [f.fieldname for f in dt.fields]
-        changed = False
-        new_fields = [
-            {"fieldname": "default_printer_ip", "fieldtype": "Data", "label": "Default Printer IP"},
-            {"fieldname": "default_printer_port", "fieldtype": "Int", "label": "Default Printer Port", "default": 9100},
-            {"fieldname": "default_printer_lang", "fieldtype": "Select", "options": "ZPL\nTSPL", "label": "Default Printer Language", "default": "ZPL"},
-            {"fieldname": "default_label_size", "fieldtype": "Select", "options": "50x25\n50x30\n75x50\n100x50\n106x55", "label": "Default Label Size", "default": "50x25"}
-        ]
-        for f in new_fields:
-            if f["fieldname"] not in existing_fields:
-                dt.append("fields", f)
-                changed = True
-        if changed:
-            dt.save(ignore_permissions=True)
-            frappe.db.commit()
-            print("[SMRITI] Appended printer fields to existing SMRITI Company Settings DocType")
         return
     try:
         doc = frappe.new_doc("DocType")
@@ -108,6 +91,8 @@ def create_smriti_company_settings_doctype():
 
 def create_reporting_doctypes():
     """Creates the SMRITI Report Role child table, SMRITI Report Template parent table, and SMRITI Saved View parent table."""
+    if frappe.db.exists("DocType", "SMRITI Report Template"):
+        return
     # 1. SMRITI Report Role (Child DocType)
     if not frappe.db.exists("DocType", "SMRITI Report Role"):
         try:
@@ -871,6 +856,8 @@ def create_audit_log_doctype():
 
 
 def create_master_doctypes():
+    if frappe.db.exists("DocType", "SMRITI Heel Type"):
+        return
     masters = [
         ("SMRITI Heel Type", "Heel Type"),
         ("SMRITI Outsole", "Outsole"),
@@ -1218,37 +1205,7 @@ def ensure_print_job_directory():
 def create_smriti_print_job_doctype():
     """Creates the SMRITI Print Job custom DocType for asynchronous print tracking."""
     if frappe.db.exists("DocType", "SMRITI Print Job"):
-        try:
-            dt = frappe.get_doc("DocType", "SMRITI Print Job")
-            existing_fields = [f.fieldname for f in dt.fields]
-            changed = False
-            fields = [
-                {"fieldname": "job_id", "fieldtype": "Data", "label": "Job ID", "read_only": 1, "unique": 1, "in_list_view": 1},
-                {"fieldname": "item_code", "fieldtype": "Link", "options": "Item", "label": "Item Code", "in_list_view": 1},
-                {"fieldname": "barcode", "fieldtype": "Data", "label": "Barcode", "in_list_view": 1},
-                {"fieldname": "template_name", "fieldtype": "Data", "label": "Template Name", "in_list_view": 1},
-                {"fieldname": "printer_ip", "fieldtype": "Data", "label": "Printer IP", "in_list_view": 1},
-                {"fieldname": "printer_port", "fieldtype": "Int", "label": "Printer Port", "default": 9100},
-                {"fieldname": "print_qty", "fieldtype": "Int", "label": "Print Qty", "in_list_view": 1},
-                {"fieldname": "payload_hash", "fieldtype": "Data", "label": "Payload Hash", "read_only": 1},
-                {"fieldname": "payload_preview", "fieldtype": "Data", "label": "Payload Preview", "read_only": 1},
-                {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Queued\nSending\nSuccess\nFailed", "default": "Queued", "in_list_view": 1},
-                {"fieldname": "error_message", "fieldtype": "Text", "label": "Error Message", "read_only": 1},
-                {"fieldname": "created_by", "fieldtype": "Data", "label": "Created By", "read_only": 1},
-                {"fieldname": "created_on", "fieldtype": "Datetime", "label": "Created On", "read_only": 1},
-                {"fieldname": "completed_on", "fieldtype": "Datetime", "label": "Completed On", "read_only": 1}
-            ]
-            for f in fields:
-                if f["fieldname"] not in existing_fields:
-                    dt.append("fields", f)
-                    changed = True
-            if changed:
-                dt.save(ignore_permissions=True)
-                frappe.db.commit()
-                print("[SMRITI] Updated existing SMRITI Print Job DocType fields")
-            return
-        except Exception as e:
-            frappe.log_error(f"Error checking/updating SMRITI Print Job DocType: {str(e)}")
+        return
 
     try:
         doc = frappe.new_doc("DocType")

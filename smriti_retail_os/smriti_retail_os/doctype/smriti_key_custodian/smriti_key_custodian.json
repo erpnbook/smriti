@@ -1,0 +1,116 @@
+{
+ "actions": [],
+ "autoname": "field:email",
+ "creation": "2026-06-18 15:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "custodian_name",
+  "email",
+  "verified",
+  "verification_date",
+  "last_recovery_sent",
+  "status",
+  "otp_hash",
+  "otp_expiry"
+ ],
+ "fields": [
+  {
+   "fieldname": "custodian_name",
+   "fieldtype": "Data",
+   "label": "Custodian Name",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "verified",
+   "fieldtype": "Check",
+   "label": "Verified",
+   "in_list_view": 1,
+   "read_only": 1,
+   "default": "0"
+  },
+  {
+   "fieldname": "verification_date",
+   "fieldtype": "Datetime",
+   "label": "Verification Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_recovery_sent",
+   "fieldtype": "Datetime",
+   "label": "Last Recovery Sent",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Pending\nVerified\nRevoked",
+   "in_list_view": 1,
+   "default": "Pending"
+  },
+  {
+   "fieldname": "otp_hash",
+   "fieldtype": "Data",
+   "label": "OTP Hash",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "otp_expiry",
+   "fieldtype": "Datetime",
+   "label": "OTP Expiry",
+   "read_only": 1,
+   "hidden": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-18 15:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Key Custodian",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "Administrator",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "custom": 0
+}

@@ -1,0 +1,285 @@
+{
+ "actions": [],
+ "autoname": "field:company",
+ "creation": "2026-06-18 15:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "sb_store",
+  "store_trade_name",
+  "store_logo_url",
+  "cb_store",
+  "brand_color",
+  "receipt_footer_text",
+  "invoice_series_prefix",
+  "sb_defaults",
+  "default_warehouse",
+  "default_pos_profile",
+  "cb_defaults",
+  "default_walk_in_customer",
+  "default_intrastate_tax_template",
+  "default_interstate_tax_template",
+  "sb_loyalty",
+  "loyalty_enabled",
+  "loyalty_points_per_rupee",
+  "sb_cloud_backup",
+  "cloud_backup_enabled",
+  "cloud_provider",
+  "s3_bucket",
+  "cb_cloud",
+  "s3_access_key",
+  "s3_secret_key",
+  "s3_region",
+  "sb_advanced",
+  "size_groups_json",
+  "destinationwise_taxes_json",
+  "backup_settings_json",
+  "default_printer_ip",
+  "default_printer_port",
+  "default_printer_lang",
+  "default_label_size"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "sb_store",
+   "fieldtype": "Section Break",
+   "label": "Store Identity"
+  },
+  {
+   "fieldname": "store_trade_name",
+   "fieldtype": "Data",
+   "label": "Store Trade Name",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "store_logo_url",
+   "fieldtype": "Data",
+   "label": "Store Logo URL"
+  },
+  {
+   "fieldname": "cb_store",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "brand_color",
+   "fieldtype": "Color",
+   "label": "Brand Color",
+   "default": "#1a73e8"
+  },
+  {
+   "fieldname": "receipt_footer_text",
+   "fieldtype": "Small Text",
+   "label": "Receipt Footer Text",
+   "default": "Thank you for shopping with us!"
+  },
+  {
+   "fieldname": "invoice_series_prefix",
+   "fieldtype": "Data",
+   "label": "Invoice Series Prefix",
+   "default": "SINV-"
+  },
+  {
+   "fieldname": "sb_defaults",
+   "fieldtype": "Section Break",
+   "label": "Operational Defaults"
+  },
+  {
+   "fieldname": "default_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "default_pos_profile",
+   "fieldtype": "Link",
+   "label": "Default POS Profile",
+   "options": "POS Profile"
+  },
+  {
+   "fieldname": "cb_defaults",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_walk_in_customer",
+   "fieldtype": "Link",
+   "label": "Default Walk-in Customer",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "default_intrastate_tax_template",
+   "fieldtype": "Link",
+   "label": "Default Intrastate Tax Template",
+   "options": "Sales Taxes and Charges Template"
+  },
+  {
+   "fieldname": "default_interstate_tax_template",
+   "fieldtype": "Link",
+   "label": "Default Interstate Tax Template",
+   "options": "Sales Taxes and Charges Template"
+  },
+  {
+   "fieldname": "sb_loyalty",
+   "fieldtype": "Section Break",
+   "label": "Loyalty Program"
+  },
+  {
+   "fieldname": "loyalty_enabled",
+   "fieldtype": "Check",
+   "label": "Enable Loyalty Program",
+   "default": "0"
+  },
+  {
+   "fieldname": "loyalty_points_per_rupee",
+   "fieldtype": "Float",
+   "label": "Points per Rupee",
+   "default": "1.0"
+  },
+  {
+   "fieldname": "sb_cloud_backup",
+   "fieldtype": "Section Break",
+   "label": "Cloud Backup (S3/Rclone)"
+  },
+  {
+   "fieldname": "cloud_backup_enabled",
+   "fieldtype": "Check",
+   "label": "Enable Cloud Backup",
+   "default": "0"
+  },
+  {
+   "fieldname": "cloud_provider",
+   "fieldtype": "Select",
+   "label": "Cloud Provider",
+   "options": "\nAWS S3\nGoogle Cloud Storage\nAzure Blob\nDigitalOcean Spaces"
+  },
+  {
+   "fieldname": "s3_bucket",
+   "fieldtype": "Data",
+   "label": "S3 Bucket Name"
+  },
+  {
+   "fieldname": "cb_cloud",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "s3_access_key",
+   "fieldtype": "Data",
+   "label": "S3 Access Key"
+  },
+  {
+   "fieldname": "s3_secret_key",
+   "fieldtype": "Password",
+   "label": "S3 Secret Key"
+  },
+  {
+   "fieldname": "s3_region",
+   "fieldtype": "Data",
+   "label": "S3 Region",
+   "default": "ap-south-1"
+  },
+  {
+   "fieldname": "sb_advanced",
+   "fieldtype": "Section Break",
+   "label": "Advanced Configuration",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "size_groups_json",
+   "fieldtype": "Long Text",
+   "label": "Size Groups JSON",
+   "hidden": 1
+  },
+  {
+   "fieldname": "destinationwise_taxes_json",
+   "fieldtype": "Long Text",
+   "label": "Destinationwise Taxes JSON",
+   "hidden": 1
+  },
+  {
+   "fieldname": "backup_settings_json",
+   "fieldtype": "Long Text",
+   "label": "Backup Settings JSON",
+   "hidden": 1
+  },
+  {
+   "fieldname": "default_printer_ip",
+   "fieldtype": "Data",
+   "label": "Default Printer IP"
+  },
+  {
+   "fieldname": "default_printer_port",
+   "fieldtype": "Int",
+   "label": "Default Printer Port",
+   "default": "9100"
+  },
+  {
+   "fieldname": "default_printer_lang",
+   "fieldtype": "Select",
+   "label": "Default Printer Language",
+   "options": "ZPL\nTSPL",
+   "default": "ZPL"
+  },
+  {
+   "fieldname": "default_label_size",
+   "fieldtype": "Select",
+   "label": "Default Label Size",
+   "options": "50x25\n50x30\n75x50\n100x50\n106x55",
+   "default": "50x25"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-18 15:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Company Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Store Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Cashier",
+   "read": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "custom": 0
+}
