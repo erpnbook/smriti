@@ -1,0 +1,184 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-06-18 15:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "rule_name",
+  "version",
+  "status",
+  "effective_from",
+  "effective_to",
+  "supersedes_rule",
+  "rule_type",
+  "dimension",
+  "dimension_doctype",
+  "dimension_value",
+  "rule_value",
+  "priority",
+  "allow_stack"
+ ],
+ "fields": [
+  {
+   "fieldname": "rule_name",
+   "fieldtype": "Data",
+   "label": "Rule Name",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "version",
+   "fieldtype": "Int",
+   "label": "Version",
+   "default": "1",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nActive\nSuspended\nArchived",
+   "default": "Draft",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "effective_from",
+   "fieldtype": "Date",
+   "label": "Effective From",
+   "index": 1
+  },
+  {
+   "fieldname": "effective_to",
+   "fieldtype": "Date",
+   "label": "Effective To",
+   "index": 1
+  },
+  {
+   "fieldname": "supersedes_rule",
+   "fieldtype": "Link",
+   "label": "Supersedes Rule",
+   "options": "SMRITI Loyalty Rule"
+  },
+  {
+   "fieldname": "rule_type",
+   "fieldtype": "Select",
+   "label": "Rule Type",
+   "options": "Multiplier\nBonus Points\nCap\nExclusion",
+   "default": "Multiplier",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "dimension",
+   "fieldtype": "Select",
+   "label": "Dimension",
+   "options": "Brand\nItem Group\nStyle\nSeason\nStore\nCustomer Group\nTier",
+   "default": "Brand",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "dimension_doctype",
+   "fieldtype": "Select",
+   "label": "Dimension DocType",
+   "options": "Brand\nItem Group\nCustomer Group\nWarehouse\nTerritory\nStyle\nSeason",
+   "reqd": 1
+  },
+  {
+   "fieldname": "dimension_value",
+   "fieldtype": "Dynamic Link",
+   "label": "Dimension Value",
+   "options": "dimension_doctype",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "rule_value",
+   "fieldtype": "Float",
+   "label": "Rule Value",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "priority",
+   "fieldtype": "Int",
+   "label": "Priority",
+   "default": "0"
+  },
+  {
+   "fieldname": "allow_stack",
+   "fieldtype": "Check",
+   "label": "Allow Stacking",
+   "default": "0"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-18 15:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Loyalty Rule",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Store Manager",
+   "read": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Administrator",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Marketing Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Auditor",
+   "read": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "custom": 0
+}

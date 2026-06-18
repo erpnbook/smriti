@@ -1,0 +1,53 @@
+[
+ {
+  "doctype": "Custom Field",
+  "name": "Customer-custom_membership_plan",
+  "dt": "Customer",
+  "fieldname": "custom_membership_plan",
+  "label": "Membership Plan",
+  "fieldtype": "Link",
+  "options": "SMRITI Membership Plan",
+  "insert_after": "custom_anniversary",
+  "module": "SMRITI Retail OS"
+ },
+ {
+  "doctype": "Custom Field",
+  "name": "Customer-custom_membership_start_date",
+  "dt": "Customer",
+  "fieldname": "custom_membership_start_date",
+  "label": "Membership Start Date",
+  "fieldtype": "Date",
+  "insert_after": "custom_membership_plan",
+  "module": "SMRITI Retail OS"
+ },
+ {
+  "doctype": "Custom Field",
+  "name": "Customer-custom_membership_expiry_date",
+  "dt": "Customer",
+  "fieldname": "custom_membership_expiry_date",
+  "label": "Membership Expiry Date",
+  "fieldtype": "Date",
+  "insert_after": "custom_membership_start_date",
+  "module": "SMRITI Retail OS"
+ },
+ {
+  "doctype": "Custom Field",
+  "name": "Customer-custom_customer_growth_score",
+  "dt": "Customer",
+  "fieldname": "custom_customer_growth_score",
+  "label": "Customer Growth Score",
+  "fieldtype": "Float",
+  "insert_after": "custom_membership_expiry_date",
+  "module": "SMRITI Retail OS"
+ },
+ {
+  "doctype": "Custom Field",
+  "name": "Customer-custom_growth_score_last_calculated",
+  "dt": "Customer",
+  "fieldname": "custom_growth_score_last_calculated",
+  "label": "Growth Score Last Calculated",
+  "fieldtype": "Datetime",
+  "insert_after": "custom_customer_growth_score",
+  "module": "SMRITI Retail OS"
+ }
+]

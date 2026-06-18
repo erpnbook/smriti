@@ -55,6 +55,21 @@ try:
 
     frappe.utils.pdf.get_pdf = patched_get_pdf
 
+    # 3. Patch get_locale_value in frappe.locale to prevent UnboundLocalError
+    import frappe.locale
+    def patched_get_locale_value(key, language=None):
+        value = None
+        lang = language or getattr(frappe.local, "lang", None)
+        if lang:
+            try:
+                value = frappe.client_cache.get_doc("Language", lang).get(key)
+            except Exception:
+                pass
+        return value or frappe.db.get_default(key)
+
+    frappe.locale.get_locale_value = patched_get_locale_value
+
 except Exception as e:
     import logging
-    logging.getLogger("frappe").warning(f"Failed to apply SMRITI PDF patch: {e}")
+    logging.getLogger("frappe").warning(f"Failed to apply SMRITI PDF or Locale patches: {e}")
+

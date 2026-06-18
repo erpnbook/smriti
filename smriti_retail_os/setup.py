@@ -1253,13 +1253,127 @@ def create_smriti_print_job_doctype():
         frappe.log_error(f"Error creating SMRITI Print Job DocType: {str(e)}")
 
 
+def create_smriti_loyalty_tier_doctype():
+    """Creates the SMRITI Loyalty Tier DocType."""
+    if frappe.db.exists("DocType", "SMRITI Loyalty Tier"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Loyalty Tier"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.autoname = "field:tier_name"
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 1
+        doc.issingle = 0
+
+        fields = [
+            {"fieldname": "tier_name", "fieldtype": "Data", "label": "Tier Name", "reqd": 1, "unique": 1, "in_list_view": 1},
+            {"fieldname": "min_points", "fieldtype": "Float", "label": "Minimum Points", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "tier_multiplier", "fieldtype": "Float", "label": "Tier Multiplier", "default": "1.0", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "validity_months", "fieldtype": "Int", "label": "Validity (Months)"},
+            {"fieldname": "active", "fieldtype": "Check", "label": "Active", "default": "1", "in_list_view": 1},
+            {"fieldname": "tier_benefits", "fieldtype": "Text", "label": "Tier Benefits"}
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+        doc.append("permissions", {"role": "SMRITI Administrator", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print("[SMRITI] Created SMRITI Loyalty Tier DocType")
+    except Exception as e:
+        frappe.log_error(f"Error creating SMRITI Loyalty Tier DocType: {str(e)}")
+
+
+def create_smriti_loyalty_rule_doctype():
+    """Creates the SMRITI Loyalty Rule DocType."""
+    if frappe.db.exists("DocType", "SMRITI Loyalty Rule"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Loyalty Rule"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.autoname = "hash"
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 1
+        doc.issingle = 0
+
+        fields = [
+            {"fieldname": "rule_name", "fieldtype": "Data", "label": "Rule Name", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "version", "fieldtype": "Int", "label": "Version", "default": "1", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nActive\nSuspended\nArchived", "default": "Draft", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "effective_from", "fieldtype": "Date", "label": "Effective From", "index": 1},
+            {"fieldname": "effective_to", "fieldtype": "Date", "label": "Effective To", "index": 1},
+            {"fieldname": "supersedes_rule", "fieldtype": "Link", "label": "Supersedes Rule", "options": "SMRITI Loyalty Rule"},
+            {"fieldname": "rule_type", "fieldtype": "Select", "label": "Rule Type", "options": "Multiplier\nBonus Points\nCap\nExclusion", "default": "Multiplier", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "dimension", "fieldtype": "Select", "label": "Dimension", "options": "Brand\nItem Group\nStyle\nSeason\nStore\nCustomer Group\nTier", "default": "Brand", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "dimension_doctype", "fieldtype": "Select", "label": "Dimension DocType", "options": "Brand\nItem Group\nCustomer Group\nWarehouse\nTerritory\nStyle\nSeason", "reqd": 1},
+            {"fieldname": "dimension_value", "fieldtype": "Dynamic Link", "label": "Dimension Value", "options": "dimension_doctype", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "rule_value", "fieldtype": "Float", "label": "Rule Value", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "priority", "fieldtype": "Int", "label": "Priority", "default": "0"},
+            {"fieldname": "allow_stack", "fieldtype": "Check", "label": "Allow Stacking", "default": "0"}
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+        doc.append("permissions", {"role": "SMRITI Administrator", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print("[SMRITI] Created SMRITI Loyalty Rule DocType")
+    except Exception as e:
+        frappe.log_error(f"Error creating SMRITI Loyalty Rule DocType: {str(e)}")
+
+
+def create_smriti_cge_settings_doctype():
+    """Creates the SMRITI CGE Settings single DocType."""
+    if frappe.db.exists("DocType", "SMRITI CGE Settings"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI CGE Settings"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 1
+        doc.issingle = 1
+
+        fields = [
+            {"fieldname": "enable_loyalty", "fieldtype": "Check", "label": "Enable Loyalty Studio", "default": "0"},
+            {"fieldname": "enable_cashback", "fieldtype": "Check", "label": "Enable Cashback Wallet", "default": "0"},
+            {"fieldname": "enable_coupon", "fieldtype": "Check", "label": "Enable Coupon Studio", "default": "0"},
+            {"fieldname": "enable_campaign_budget", "fieldtype": "Check", "label": "Enable Campaign Budget Enforcement", "default": "0"},
+            {"fieldname": "enable_offline_cache", "fieldtype": "Check", "label": "Enable Offline POS Caching", "default": "0"},
+            {"fieldname": "enable_rule_trace", "fieldtype": "Check", "label": "Enable Rule Evaluation Tracing", "default": "0"}
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+        doc.append("permissions", {"role": "SMRITI Administrator", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print("[SMRITI] Created SMRITI CGE Settings DocType")
+    except Exception as e:
+        frappe.log_error(f"Error creating SMRITI CGE Settings DocType: {str(e)}")
+
+
 def setup_smriti_retail_os():
     """
     Initializes custom fields, roles, and workspaces for standard DocTypes
     to extend ERPNext for SMRITI Retail OS.
     """
     # 00. Provision SMRITI roles first to prevent dependency issues in custom DocTypes
-    for role_name in ["SMRITI Cashier", "SMRITI Store Manager"]:
+    for role_name in ["SMRITI Cashier", "SMRITI Store Manager", "SMRITI Administrator", "SMRITI Marketing Manager", "SMRITI Auditor"]:
         if not frappe.db.exists("Role", role_name):
             try:
                 role = frappe.new_doc("Role")
@@ -1287,6 +1401,11 @@ def setup_smriti_retail_os():
     # 0c. Provision SMRITI Reporting DocTypes
     create_reporting_doctypes()
     seed_report_templates()
+
+    # 0f. Provision CGE DocTypes (v1.0 Foundation)
+    create_smriti_loyalty_tier_doctype()
+    create_smriti_loyalty_rule_doctype()
+    create_smriti_cge_settings_doctype()
 
     # 0d. Update Activity Log operation options
     setup_activity_log_options()
@@ -1561,6 +1680,89 @@ def setup_smriti_retail_os():
                 "label": "Anniversary",
                 "fieldtype": "Date",
                 "insert_after": "custom_birthday",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_membership_plan",
+                "label": "Membership Plan",
+                "fieldtype": "Link",
+                "options": "SMRITI Membership Plan",
+                "insert_after": "custom_anniversary",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_membership_start_date",
+                "label": "Membership Start Date",
+                "fieldtype": "Date",
+                "insert_after": "custom_membership_plan",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_membership_expiry_date",
+                "label": "Membership Expiry Date",
+                "fieldtype": "Date",
+                "insert_after": "custom_membership_start_date",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_customer_growth_score",
+                "label": "Customer Growth Score",
+                "fieldtype": "Float",
+                "insert_after": "custom_membership_expiry_date",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_growth_score_last_calculated",
+                "label": "Growth Score Last Calculated",
+                "fieldtype": "Datetime",
+                "insert_after": "custom_customer_growth_score",
+                "module": "SMRITI Retail OS"
+            }
+        ],
+        "Coupon Code": [
+            {
+                "fieldname": "custom_coupon_scope",
+                "label": "Coupon Scope",
+                "fieldtype": "Select",
+                "options": "Invoice\nItem\nBrand\nCustomer\nCustomer Group\nStore",
+                "default": "Invoice",
+                "insert_after": "coupon_type",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_campaign",
+                "label": "Campaign",
+                "fieldtype": "Link",
+                "options": "SMRITI Coupon Campaign",
+                "insert_after": "custom_coupon_scope",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_max_uses_per_customer",
+                "label": "Max Uses per Customer",
+                "fieldtype": "Int",
+                "insert_after": "custom_campaign",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_max_uses_per_mobile",
+                "label": "Max Uses per Mobile",
+                "fieldtype": "Int",
+                "insert_after": "custom_max_uses_per_customer",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_max_uses_per_day",
+                "label": "Max Uses per Day",
+                "fieldtype": "Int",
+                "insert_after": "custom_max_uses_per_mobile",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_max_discount_cap",
+                "label": "Max Discount Cap",
+                "fieldtype": "Currency",
+                "insert_after": "custom_max_uses_per_day",
                 "module": "SMRITI Retail OS"
             }
         ],
@@ -1949,6 +2151,24 @@ def setup_smriti_retail_os():
         },
         "SMRITI PSV Activity Log": {
              "SMRITI Store Manager": {"read": 1}
+        },
+        "SMRITI Loyalty Tier": {
+             "SMRITI Store Manager": {"read": 1},
+             "SMRITI Administrator": {"read": 1, "write": 1, "create": 1, "delete": 1},
+             "SMRITI Marketing Manager": {"read": 1, "write": 1, "create": 1},
+             "SMRITI Auditor": {"read": 1}
+        },
+        "SMRITI Loyalty Rule": {
+             "SMRITI Store Manager": {"read": 1},
+             "SMRITI Administrator": {"read": 1, "write": 1, "create": 1, "delete": 1},
+             "SMRITI Marketing Manager": {"read": 1, "write": 1, "create": 1},
+             "SMRITI Auditor": {"read": 1}
+        },
+        "SMRITI CGE Settings": {
+             "SMRITI Store Manager": {"read": 1},
+             "SMRITI Administrator": {"read": 1, "write": 1, "create": 1, "delete": 1},
+             "SMRITI Marketing Manager": {"read": 1},
+             "SMRITI Auditor": {"read": 1}
         }
     }
 

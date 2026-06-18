@@ -1,0 +1,65 @@
+[
+ {
+  "doctype": "Custom Field",
+  "name": "Coupon Code-custom_coupon_scope",
+  "dt": "Coupon Code",
+  "fieldname": "custom_coupon_scope",
+  "label": "Coupon Scope",
+  "fieldtype": "Select",
+  "options": "Invoice\nItem\nBrand\nCustomer\nCustomer Group\nStore",
+  "default": "Invoice",
+  "insert_after": "coupon_type",
+  "module": "SMRITI Retail OS"
+ },
+ {
+  "doctype": "Custom Field",
+  "name": "Coupon Code-custom_campaign",
+  "dt": "Coupon Code",
+  "fieldname": "custom_campaign",
+  "label": "Campaign",
+  "fieldtype": "Link",
+  "options": "SMRITI Coupon Campaign",
+  "insert_after": "custom_coupon_scope",
+  "module": "SMRITI Retail OS"
+ },
+ {
+  "doctype": "Custom Field",
+  "name": "Coupon Code-custom_max_uses_per_customer",
+  "dt": "Coupon Code",
+  "fieldname": "custom_max_uses_per_customer",
+  "label": "Max Uses per Customer",
+  "fieldtype": "Int",
+  "insert_after": "custom_campaign",
+  "module": "SMRITI Retail OS"
+ },
+ {
+  "doctype": "Custom Field",
+  "name": "Coupon Code-custom_max_uses_per_mobile",
+  "dt": "Coupon Code",
+  "fieldname": "custom_max_uses_per_mobile",
+  "label": "Max Uses per Mobile",
+  "fieldtype": "Int",
+  "insert_after": "custom_max_uses_per_customer",
+  "module": "SMRITI Retail OS"
+ },
+ {
+  "doctype": "Custom Field",
+  "name": "Coupon Code-custom_max_uses_per_day",
+  "dt": "Coupon Code",
+  "fieldname": "custom_max_uses_per_day",
+  "label": "Max Uses per Day",
+  "fieldtype": "Int",
+  "insert_after": "custom_max_uses_per_mobile",
+  "module": "SMRITI Retail OS"
+ },
+ {
+  "doctype": "Custom Field",
+  "name": "Coupon Code-custom_max_discount_cap",
+  "dt": "Coupon Code",
+  "fieldname": "custom_max_discount_cap",
+  "label": "Max Discount Cap",
+  "fieldtype": "Currency",
+  "insert_after": "custom_max_uses_per_day",
+  "module": "SMRITI Retail OS"
+ }
+]

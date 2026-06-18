@@ -51,7 +51,7 @@ def open_shift(cashier, pos_profile, opening_entries):
     opening.company = company
     opening.period_start_date = now_datetime()
     opening.posting_date = nowdate()
-    opening.status = "Open"
+    opening.status = "Draft"
 
     for entry in entries:
         if flt(entry.get("opening_amount")) >= 0:

@@ -1,0 +1,117 @@
+{
+ "actions": [],
+ "creation": "2026-06-18 15:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "enable_loyalty",
+  "enable_cashback",
+  "enable_coupon",
+  "enable_campaign_budget",
+  "enable_offline_cache",
+  "enable_rule_trace"
+ ],
+ "fields": [
+  {
+   "fieldname": "enable_loyalty",
+   "fieldtype": "Check",
+   "label": "Enable Loyalty Studio",
+   "default": "0"
+  },
+  {
+   "fieldname": "enable_cashback",
+   "fieldtype": "Check",
+   "label": "Enable Cashback Wallet",
+   "default": "0"
+  },
+  {
+   "fieldname": "enable_coupon",
+   "fieldtype": "Check",
+   "label": "Enable Coupon Studio",
+   "default": "0"
+  },
+  {
+   "fieldname": "enable_campaign_budget",
+   "fieldtype": "Check",
+   "label": "Enable Campaign Budget Enforcement",
+   "default": "0"
+  },
+  {
+   "fieldname": "enable_offline_cache",
+   "fieldtype": "Check",
+   "label": "Enable Offline POS Caching",
+   "default": "0"
+  },
+  {
+   "fieldname": "enable_rule_trace",
+   "fieldtype": "Check",
+   "label": "Enable Rule Evaluation Tracing",
+   "default": "0"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-18 15:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI CGE Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Store Manager",
+   "read": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Administrator",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Marketing Manager",
+   "read": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Auditor",
+   "read": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "issingle": 1,
+ "custom": 0
+}
