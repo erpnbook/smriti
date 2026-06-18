@@ -138,9 +138,10 @@
             _applyStyleTag = document.createElement("style");
             _applyStyleTag.id = _STYLE_TAG_ID;
             _applyStyleTag.setAttribute("data-smriti-engine", "v1");
-            /* Insert as first child of head for lowest specificity cascade position */
+            /* Append as LAST child of head so engine :root wins cascade over
+               any earlier page-level :root block (same specificity, later wins). */
             var head = document.head || document.getElementsByTagName("head")[0];
-            head.insertBefore(_applyStyleTag, head.firstChild);
+            head.appendChild(_applyStyleTag);
         }
 
         _applyStyleTag.textContent = cssText;
