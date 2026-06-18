@@ -20,9 +20,5 @@ def get_context(context):
         frappe.throw("Access restricted to System Manager.", frappe.PermissionError)
 
     context.no_cache = 1
-    context.csrf_token = frappe.generate_hash()
-    frappe.cache().set_value(
-        f"csrf_token:{frappe.session.sid}:golive",
-        context.csrf_token,
-        expires_in_sec=3600
-    )
+    context.csrf_token = frappe.sessions.get_csrf_token()
+
