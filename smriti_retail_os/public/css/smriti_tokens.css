@@ -1,0 +1,142 @@
+/**
+ * @file: smriti_retail_os/public/css/smriti_tokens.css
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+/**
+ * @file smriti_tokens.css
+ * @description SMRITI UI Configuration Engine — System Default Token Values
+ *              Single source of truth for all CSS Custom Property defaults.
+ *              Defined in: docs/architecture/ui/SMRITI_UI_CONFIGURATION_ENGINE_V1.md §6
+ *
+ * GOVERNANCE:
+ *   - All tokens MUST use the approved namespace: --smriti-{category}-{name}
+ *   - No hex colors, rgb(), rgba(), hsl() permitted in component files.
+ *   - Components consume var(--smriti-*) only — never hardcoded values.
+ *   - This file defines System Default (Level 7 — lowest resolver priority).
+ *   - SMRITI.applyUIConfig() writes higher-priority overrides into :root at runtime.
+ *   - Do NOT modify this file to add theme/profile overrides.
+ *     Theme/profile overrides are defined in smriti_ui_resolver.js.
+ *
+ * LOAD ORDER:
+ *   smriti_tokens.css          ← loaded first (CSS, :root defaults)
+ *   smriti_theme_manager.js    ← applyUIConfig() writes overrides into :root at runtime
+ *
+ * BACKWARD COMPATIBILITY:
+ *   Existing --smriti-* short tokens (--smriti-bg, --smriti-primary, etc.)
+ *   in smriti_theme.css remain untouched in Phase 1.
+ *   This file introduces the new namespaced tokens alongside them.
+ *   Migration from old to new tokens is Phase 2.
+ *
+ * @version 1.0.0
+ * @status Phase 1A — Foundation Layer
+ * @author AITDL / SMRITI Engineering
+ * @license MIT — Copyright (c) 2026 AITDL NETWORK & ERPNbook.com
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SYSTEM DEFAULT TOKEN VALUES — Light Mode (Neumorphic Hybrid)
+   These are Level 7 defaults. Runtime resolver overwrites as needed.
+   ═══════════════════════════════════════════════════════════════════════ */
+:root {
+
+  /* ── Color: Backgrounds ─────────────────────────────────────────── */
+  --smriti-color-bg-page:              #e8ecf2;   /* Neumorphic clay base */
+  --smriti-color-bg-primary:           #ffffff;   /* Flat white data surface */
+  --smriti-color-bg-secondary:         #f6f8fb;   /* Elevated secondary surface */
+
+  /* ── Color: Text ────────────────────────────────────────────────── */
+  --smriti-color-text-primary:         #0f172a;   /* High emphasis */
+  --smriti-color-text-muted:           #475467;   /* Medium emphasis */
+  --smriti-color-text-subtle:          #94a3b8;   /* Low emphasis */
+
+  /* ── Color: Brand ───────────────────────────────────────────────── */
+  --smriti-color-brand-primary:        #6941c6;   /* Primary purple */
+  --smriti-color-brand-light:          #9e77ed;   /* Lighter accent */
+  --smriti-color-brand-dark:           #53389e;   /* Darker accent */
+
+  /* ── Color: Borders ─────────────────────────────────────────────── */
+  --smriti-color-border-default:       #e2e8f0;   /* Standard border */
+  --smriti-color-border-strong:        #d0d5dd;   /* Emphasized border */
+
+  /* ── Color: Status ──────────────────────────────────────────────── */
+  --smriti-color-status-success:       #027a48;
+  --smriti-color-status-success-bg:    #ecfdf3;
+  --smriti-color-status-success-border:#abefc6;
+  --smriti-color-status-danger:        #b42318;
+  --smriti-color-status-danger-bg:     #fef3f2;
+  --smriti-color-status-danger-border: #fecdca;
+  --smriti-color-status-warning:       #b54708;
+  --smriti-color-status-warning-bg:    #fffaeb;
+  --smriti-color-status-warning-border:#fedf89;
+  --smriti-color-status-info:          #0ea5e9;
+  --smriti-color-status-info-bg:       #f0f9ff;
+  --smriti-color-status-info-border:   #b2ddff;
+
+  /* ── Spacing ────────────────────────────────────────────────────── */
+  --smriti-spacing-xs:                 4px;
+  --smriti-spacing-sm:                 8px;
+  --smriti-spacing-md:                 12px;
+  --smriti-spacing-lg:                 16px;
+  --smriti-spacing-xl:                 24px;
+  --smriti-spacing-2xl:                32px;
+  --smriti-spacing-padding-y:          10px;
+  --smriti-spacing-padding-x:          14px;
+  --smriti-spacing-gap:                12px;
+
+  /* ── Border Radius ──────────────────────────────────────────────── */
+  --smriti-radius-xs:                  4px;
+  --smriti-radius-sm:                  6px;
+  --smriti-radius-md:                  10px;
+  --smriti-radius-lg:                  14px;
+  --smriti-radius-xl:                  18px;
+  --smriti-radius-2xl:                 24px;
+  --smriti-radius-full:                9999px;
+
+  /* ── Shadows ────────────────────────────────────────────────────── */
+  --smriti-shadow-xs:                  0 1px 2px rgba(15,23,42,.05);
+  --smriti-shadow-sm:                  0 1px 3px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+  --smriti-shadow-md:                  0 4px 12px rgba(15,23,42,.08), 0 2px 4px rgba(15,23,42,.04);
+  --smriti-shadow-lg:                  0 12px 28px rgba(15,23,42,.10), 0 4px 8px rgba(15,23,42,.04);
+  --smriti-shadow-xl:                  0 24px 48px rgba(15,23,42,.12), 0 8px 16px rgba(15,23,42,.05);
+  --smriti-shadow-neu-float:           6px 6px 14px #c5c9d4, -6px -6px 14px #ffffff;
+  --smriti-shadow-neu-pressed:         inset 6px 6px 12px #c5c9d4, inset -6px -6px 12px #ffffff;
+  --smriti-shadow-neu-float-lg:        10px 10px 24px #c0c4d0, -10px -10px 24px #ffffff;
+  --smriti-shadow-neu-pressed-sm:      inset 3px 3px 7px #c8ccd6, inset -3px -3px 7px #ffffff;
+
+  /* ── Font Size ──────────────────────────────────────────────────── */
+  --smriti-font-size-xs:               0.72rem;
+  --smriti-font-size-sm:               0.82rem;
+  --smriti-font-size-base:             0.95rem;
+  --smriti-font-size-md:               1rem;
+  --smriti-font-size-lg:               1.15rem;
+  --smriti-font-size-xl:               1.35rem;
+  --smriti-font-size-2xl:              1.6rem;
+
+  /* ── Font Weight ────────────────────────────────────────────────── */
+  --smriti-font-weight-regular:        400;
+  --smriti-font-weight-medium:         500;
+  --smriti-font-weight-semibold:       600;
+  --smriti-font-weight-bold:           700;
+  --smriti-font-weight-extrabold:      800;
+
+  /* ── Z-Index ────────────────────────────────────────────────────── */
+  --smriti-z-index-base:               0;
+  --smriti-z-index-dropdown:           100;
+  --smriti-z-index-sticky:             200;
+  --smriti-z-index-overlay:            500;
+  --smriti-z-index-modal:              1000;
+  --smriti-z-index-sidebar:            1041;
+  --smriti-z-index-toast:              1100;
+  --smriti-z-index-tooltip:            1200;
+
+  /* ── Transition Easing (non-color, not blocked by Stylelint) ────── */
+  --smriti-ease:                       cubic-bezier(0.16, 1, 0.3, 1);
+  --smriti-t-fast:                     0.12s;
+  --smriti-t-base:                     0.20s;
+  --smriti-t-slow:                     0.35s;
+}
