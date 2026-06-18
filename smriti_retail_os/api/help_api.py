@@ -563,6 +563,58 @@ HELP_CENTER_REGISTRY = {
                 "answer": _("Yes. SMRITI dashboards support touch drag-and-drop events on mobile. However, due to limited screen width, all widget cards stack vertically on small viewports by default.")
             }
         ]
+    },
+    "go_live_readiness": {
+        "title": _("Go-Live Readiness Checklist"),
+        "category": "Administration Guides",
+        "description": _("Verify and resolve system prerequisites, product catalogue requirements, and tax configurations before launch."),
+        "about": _("This guide explains SMRITI's real-time system readiness checklist, required parameters, and how to resolve catalogue and tax configuration blockers."),
+        "author": {
+            "name": "Jawahar R Mallah",
+            "title": _("Lead Architect & SMRITI Release Manager"),
+            "quote": _("A disciplined go-live validation checks all operational vectors so store billing works flawlessly on day one.")
+        },
+        "content": _(
+            "SMRITI Retail OS implements a rigorous Go-Live Readiness Checklist under Administration to verify all store prerequisites and operational configurations before launching production operations.\n\n"
+            "1. Real-Time Validation Modules\n"
+            "The check engine scans 14 distinct system checks grouped into five core areas:\n"
+            "- Licensing: Validates SMRITI License Activation and verifies the License Signing Secret in site_config.json.\n"
+            "- Store Setup: Verifies Default Company configuration, Store Warehouses, and active POS Profiles.\n"
+            "- Users & Security: Ensures SMRITI Cashier and Store Manager roles are assigned, Manager PINs are set, and validates Backup Encryption.\n"
+            "- Catalogue & Pricing: Checks Selling Price Lists, Customer Masters, active Product Catalogue, and GST / Tax Templates.\n"
+            "- Infrastructure: Confirms Outgoing Email SMTP accounts are configured for billing notifications.\n\n"
+            "2. Critical Catalog Blockers\n"
+            "To prevent checkout failures, the system blocks go-live if the Product Catalogue contains zero sellable items. To satisfy this check, you must load at least 5 sellable products in the Item Master, ensuring:\n"
+            "- Disabled is set to 'No'.\n"
+            "- Is Sales Item and Maintain Stock are set appropriately.\n"
+            "- Selling Prices are assigned via a valid Selling Price List.\n"
+            "- Item Groups are configured.\n\n"
+            "3. India GST Compliance Setup\n"
+            "For automated GST calculations at POS, the system checks for tax templates. If none are found, a warning is raised. Ensure you:\n"
+            "- Create standard GST templates (5%, 12%, 18%, 28%) via Sales Taxes and Charges Templates.\n"
+            "- Map item-wise GST rates using the India Compliance HSN codes.\n"
+            "- Assign the default tax templates in the active POS Profile.\n\n"
+            "4. Backup Encryption & Security\n"
+            "To secure store history, SMRITI checks for backup encryption. While categorized as a recommended INFO warning (non-blocking), configuring GPG AES-256 backup encryption under Security Settings is recommended before final production cutover."
+        ),
+        "faqs": [
+            {
+                "question": _("What constitutes a critical go-live blocker?"),
+                "answer": _("A status of 'FAIL' in any check (such as 0 sellable items or missing POS profiles) will block go-live, marking the overall status as 'NOT READY'. Warnings ('WARN') display a status of 'CAUTION', while 'INFO' items do not block pilot rollout.")
+            },
+            {
+                "question": _("How is the Go-Live Readiness Score computed?"),
+                "answer": _("The score represents the percentage of passed checks relative to the total number of validation checks. A score of 90%+ with zero critical failures is required for production cutover approval.")
+            },
+            {
+                "question": _("Why does the system require at least 5 items to pass the catalogue check?"),
+                "answer": _("A standard retail rollout requires a verified product catalogue. Finding less than 5 items flags a caution warning ('WARN') suggesting you import the full catalogue, while 0 items triggers a critical 'FAIL' blocker.")
+            },
+            {
+                "question": _("How do I re-run the readiness checks after fixing an issue?"),
+                "answer": _("Open the Go-Live Readiness page under Administration and click the 'Re-run Checks' button in the topbar. The backend will re-evaluate all system parameters in real-time.")
+            }
+        ]
     }
 }
 
