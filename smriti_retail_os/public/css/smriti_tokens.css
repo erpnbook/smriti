@@ -139,4 +139,15 @@
   --smriti-t-fast:                     0.12s;
   --smriti-t-base:                     0.20s;
   --smriti-t-slow:                     0.35s;
+
+  /* ── POS Terminal Tokens (Phase 1B — pos-dark profile) ─────────── */
+  /* These tokens serve the Billing module pos-dark theme.            */
+  /* Runtime resolver (pos-dark profile) overrides color tokens.      */
+  /* These define POS-specific UI elements with no light-mode equiv.  */
+  --smriti-color-brand-accent:         #e94560;   /* POS accent — warm red-pink */
+  --smriti-color-bg-elevated:          #172040;   /* 4th surface layer (pos-dark only) */
+  --smriti-color-bg-overlay:           rgba(0,0,0,0.70); /* Modal backdrop overlay */
+  --smriti-shadow-pos-card:            0 8px 24px rgba(233,69,96,0.25);   /* Accent-glow card */
+  --smriti-shadow-pos-floating:        0 0 30px rgba(233,69,96,0.30);     /* Floating accent glow */
+  --smriti-shadow-pos-checkout:        0 6px 20px rgba(16,185,129,0.20);  /* Checkout button glow */
 }
