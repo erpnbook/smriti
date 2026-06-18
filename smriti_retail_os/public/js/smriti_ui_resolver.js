@@ -64,6 +64,9 @@
         "--smriti-spacing-padding-y":          "10px",
         "--smriti-spacing-padding-x":          "14px",
         "--smriti-spacing-gap":                "12px",
+        /* Layout Dimensions */
+        "--smriti-dimension-sidebar-width":           "260px",
+        "--smriti-dimension-sidebar-collapsed-width": "68px",
         /* Radius */
         "--smriti-radius-xs":                  "4px",
         "--smriti-radius-sm":                  "6px",
