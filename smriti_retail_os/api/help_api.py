@@ -26,7 +26,7 @@ HELP_CENTER_REGISTRY = {
         "description": _("Understand how SMRITI tracks FIFO inventory aging and days of inventory (DOI)."),
         "about": _("This guide explains SMRITI's FIFO-based inventory aging model, aging buckets, and automatic health alert triggers."),
         "author": {
-            "name": "Jawahar R Mallah",
+            "name": "SMRITI Documentation Team",
             "title": _("Lead Architect & SMRITI Inventory Planner"),
             "quote": _("Knowing the age of your inventory is the first step to unlocking tied-up working capital.")
         },
@@ -68,7 +68,7 @@ HELP_CENTER_REGISTRY = {
         "description": _("How the reorder engine triggers replenishment recommendations based on lead times and safety stock."),
         "about": _("This guide explains the SMRITI reorder engine calculations, lookback windows, and priority recommendation cascade."),
         "author": {
-            "name": "Jawahar R Mallah",
+            "name": "SMRITI Documentation Team",
             "title": _("Lead Architect & SMRITI Supply Chain Planner"),
             "quote": _("Precision replenishment prevents stockouts while avoiding over-stocking and locked capital.")
         },
@@ -112,7 +112,7 @@ HELP_CENTER_REGISTRY = {
         "description": _("Strategies and system tools to recover capital locked in dead inventory."),
         "about": _("This guide explains the SMRITI stock redistribution engine, and how it matches slow-moving excess stock with high-velocity shortage zones."),
         "author": {
-            "name": "Jawahar R Mallah",
+            "name": "SMRITI Documentation Team",
             "title": _("Lead Architect & SMRITI Capital Optimizer"),
             "quote": _("Dead stock is simply inventory in the wrong place. Redistribution brings it back to life.")
         },
@@ -153,7 +153,7 @@ HELP_CENTER_REGISTRY = {
         "description": _("Daily operational procedures for opening and closing store registers."),
         "about": _("This guide explains daily cashier shifts opening, cash drawer reconciliation, sales tracking, and manager PIN override protocols during shift closure."),
         "author": {
-            "name": "Jawahar R Mallah",
+            "name": "SMRITI Documentation Team",
             "title": _("Lead Architect & SMRITI Store Operations Director"),
             "quote": _("Tight cash drawer controls and manager audit trails ensure daily financial integrity at the POS.")
         },
@@ -191,7 +191,7 @@ HELP_CENTER_REGISTRY = {
         "description": _("Standard operating procedures for billing, POS operations, and customer checkouts."),
         "about": _("This guide details the SMRITI billing terminal, item scanning, hold/recall functionality, manager overrides, and tax compliance workflows."),
         "author": {
-            "name": "Jawahar R Mallah",
+            "name": "SMRITI Documentation Team",
             "title": _("Lead Architect & SMRITI POS Expert"),
             "quote": _("A fast, secure checkout experience is the final and most critical point of contact with the customer.")
         },
@@ -230,7 +230,7 @@ HELP_CENTER_REGISTRY = {
         "description": _("How to manage vendors, purchase agreements, and issue Purchase Orders."),
         "about": _("This guide explains the SMRITI purchase terminal, self-healing item variant auto-creation, GRN submissions, batch tracking, and supplier returns."),
         "author": {
-            "name": "Jawahar R Mallah",
+            "name": "SMRITI Documentation Team",
             "title": _("Lead Architect & SMRITI Procurement Specialist"),
             "quote": _("Automating variant creation and batch tracking reduces administrative workload and supplier disputes.")
         },
@@ -271,7 +271,7 @@ HELP_CENTER_REGISTRY = {
         "description": _("Managing users, roles, and functional permissions in SMRITI OS."),
         "about": _("This guide explains user roles, route restrictions, manager approval flows, and custom PIN security controls."),
         "author": {
-            "name": "Jawahar R Mallah",
+            "name": "SMRITI Documentation Team",
             "title": _("Lead Architect & SMRITI Security Director"),
             "quote": _("Granular role boundaries protect sensitive reports and ensure accountability at all operational levels.")
         },
@@ -323,7 +323,7 @@ HELP_CENTER_REGISTRY = {
         "description": _("Customizing store themes, logos, receipt templates, and local branding settings."),
         "about": _("This guide explains SMRITI whitelabel configuration, website context branding overrides, about dialog patching, and custom css overrides."),
         "author": {
-            "name": "Jawahar R Mallah",
+            "name": "SMRITI Documentation Team",
             "title": _("Lead Architect & SMRITI Whitelabel Coordinator"),
             "quote": _("A unified corporate brand builds professionalism and trust with clients and franchise partners.")
         },
@@ -364,7 +364,7 @@ HELP_CENTER_REGISTRY = {
         "description": _("Guide to GPG AES-256 backup encryption, security banners, and dual-custodian recovery."),
         "about": _("This guide explains the SMRITI enterprise backup security system, GPG AES-256 encryption, and dual-custodian key recovery protocol."),
         "author": {
-            "name": "Jawahar R Mallah",
+            "name": "SMRITI Documentation Team",
             "title": _("Lead Architect & SMRITI Security Officer"),
             "quote": _("Protecting customer and transaction history is as critical as securing the physical store inventory.")
         },
@@ -398,7 +398,7 @@ HELP_CENTER_REGISTRY = {
         "description": _("How to access and interpret SMRITI Security Audit Logs and Address Change Logs."),
         "about": _("This guide outlines the SMRITI Audit Reports framework, including user activity tracking and address modification history logging."),
         "author": {
-            "name": "Jawahar R Mallah",
+            "name": "SMRITI Documentation Team",
             "title": _("Lead Architect & SMRITI Security Officer"),
             "quote": _("Complete transparency and auditability build the foundation of reliable retail scaling.")
         },
@@ -434,7 +434,7 @@ HELP_CENTER_REGISTRY = {
         "description": _("How SMRITI license keys work, offline validation, and the activation workflow."),
         "about": _("This guide explains the SMRITI License Key format (SMRT keys), offline HMAC-SHA256 validation, tier extraction, and the Registration tab activation flow."),
         "author": {
-            "name": "Jawahar R Mallah",
+            "name": "SMRITI Documentation Team",
             "title": _("Lead Architect & SMRITI Licensing Authority"),
             "quote": _("Self-describing signed keys eliminate server dependencies while maintaining cryptographic integrity.")
         },
@@ -490,7 +490,7 @@ HELP_CENTER_REGISTRY = {
         "description": _("Guide to using the drag-and-drop Pivot Matrix Builder and column reordering in SMRITI Reports."),
         "about": _("This guide outlines the SMRITI Pivot Matrix Builder and drag-and-drop report layout personalization engine."),
         "author": {
-            "name": "Jawahar R Mallah",
+            "name": "SMRITI Documentation Team",
             "title": _("Lead Architect & SMRITI Analytics Coordinator"),
             "quote": _("Dynamic data visibility transforms raw transactions into actionable store decisions.")
         },
@@ -532,7 +532,7 @@ HELP_CENTER_REGISTRY = {
         "description": _("Learn how to personalize your SMRITI Home and PSV dashboards using drag-and-drop layouts."),
         "about": _("This guide explains the SMRITI Dashboard Customization framework and widget order persistence model."),
         "author": {
-            "name": "Jawahar R Mallah",
+            "name": "SMRITI Documentation Team",
             "title": _("Lead Architect & SMRITI UI-UX Designer"),
             "quote": _("An interface tailored to a manager's immediate focus dramatically improves daily store productivity.")
         },
@@ -570,7 +570,7 @@ HELP_CENTER_REGISTRY = {
         "description": _("Verify and resolve system prerequisites, product catalogue requirements, and tax configurations before launch."),
         "about": _("This guide explains SMRITI's real-time system readiness checklist, required parameters, and how to resolve catalogue and tax configuration blockers."),
         "author": {
-            "name": "Jawahar R Mallah",
+            "name": "SMRITI Documentation Team",
             "title": _("Lead Architect & SMRITI Release Manager"),
             "quote": _("A disciplined go-live validation checks all operational vectors so store billing works flawlessly on day one.")
         },
