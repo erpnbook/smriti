@@ -34,7 +34,7 @@ def get_brands(search_txt=None):
     brands = frappe.get_all(
         "Brand",
         filters=filters,
-        fields=["name", "brand_name", "description", "image"],
+        fields=["name", "brand", "description", "image"],
         order_by="name asc"
     )
     return brands
@@ -56,7 +56,7 @@ def create_brand(brand_name, description=None):
         
     doc = frappe.get_doc({
         "doctype": "Brand",
-        "brand_name": brand_name,
+        "brand": brand_name,
         "description": description
     })
     doc.insert(ignore_permissions=True)
