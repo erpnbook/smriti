@@ -30,12 +30,12 @@ def get_schemes(search_txt=None):
     """
     filters = {"selling": 1, "disable": 0}
     if search_txt:
-        filters["pricing_rule_name"] = ["like", f"%{search_txt}%"]
+        filters["title"] = ["like", f"%{search_txt}%"]
         
     rules = frappe.get_all(
         "Pricing Rule",
         filters=filters,
-        fields=["name", "pricing_rule_name", "apply_on", "rate_or_discount", "discount_percentage", "discount_amount", "rate", "valid_from", "valid_upto", "company"],
+        fields=["name", "title", "apply_on", "rate_or_discount", "discount_percentage", "discount_amount", "rate", "valid_from", "valid_upto", "company"],
         order_by="creation desc"
     )
     
@@ -88,7 +88,7 @@ def create_scheme(title, apply_on, applied_to, discount_type, value, valid_from=
     
     doc = frappe.get_doc({
         "doctype": "Pricing Rule",
-        "pricing_rule_name": title.strip(),
+        "title": title.strip(),
         "apply_on": apply_on,
         "selling": 1,
         "buying": 0,
@@ -120,7 +120,7 @@ def update_scheme(name, title, apply_on, applied_to, discount_type, value, valid
     rate_or_discount = "Discount Percentage" if discount_type == "Percentage" else ("Discount Amount" if discount_type == "Amount" else "Rate")
     
     doc = frappe.get_doc("Pricing Rule", name)
-    doc.pricing_rule_name = title.strip()
+    doc.title = title.strip()
     doc.apply_on = apply_on
     doc.valid_from = valid_from
     doc.valid_upto = valid_upto

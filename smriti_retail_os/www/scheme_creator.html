@@ -383,14 +383,14 @@
 
       return `
         <tr>
-          <td style="font-weight: 600; color: var(--text-1);">${s.pricing_rule_name}</td>
+          <td style="font-weight: 600; color: var(--text-1);">${s.title}</td>
           <td style="color: var(--text-2); font-size: 0.85rem;">${s.apply_on}</td>
           <td style="font-weight: 600; font-family: monospace;">${s.applied_to}</td>
           <td>${typeBadge}</td>
           <td style="font-weight: 700; color: var(--accent-2);">${valDisplay}</td>
           <td style="color: var(--text-2); font-size: 0.85rem;">${validity}</td>
           <td style="text-align: center; display: flex; justify-content: center; gap: 8px;">
-            <button class="btn btn-secondary btn-sm" onclick="openEditModal('${s.name}', '${s.pricing_rule_name.replace(/'/g, "\\'")}', '${s.apply_on}', '${s.applied_to.replace(/'/g, "\\'")}', '${s.rate_or_discount}', ${s.discount_percentage || s.discount_amount || s.rate}, '${s.valid_from || ''}', '${s.valid_upto || ''}')">
+            <button class="btn btn-secondary btn-sm" onclick="openEditModal('${s.name}', '${s.title.replace(/'/g, "\\'")}', '${s.apply_on}', '${s.applied_to.replace(/'/g, "\\'")}', '${s.rate_or_discount}', ${s.discount_percentage || s.discount_amount || s.rate}, '${s.valid_from || ''}', '${s.valid_upto || ''}')">
               <span class="material-symbols-outlined" style="font-size: 16px;">edit</span> Edit
             </button>
             <button class="btn btn-danger btn-sm" onclick="deleteScheme('${s.name}')">
@@ -447,7 +447,7 @@
   function handleSearch(val) {
     const query = val.toLowerCase();
     const filtered = schemesData.filter(s => 
-      s.pricing_rule_name.toLowerCase().includes(query) || 
+      s.title.toLowerCase().includes(query) || 
       s.apply_on.toLowerCase().includes(query) || 
       s.applied_to.toLowerCase().includes(query)
     );
