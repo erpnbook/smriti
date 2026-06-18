@@ -13,29 +13,31 @@
 <title>SMRITI Purchase Manager</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_tokens.css">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-    --bg:         #0a0f1e;
-    --bg2:        #0f1629;
-    --card:       #131d35;
-    --card2:      #172040;
-    --border:     rgba(255,255,255,0.07);
-    --border2:    rgba(255,255,255,0.12);
-    --primary:    #6366f1;
-    --primary-lt: #818cf8;
-    --accent:     #f59e0b;
-    --success:    #10b981;
-    --warning:    #f59e0b;
-    --danger:     #ef4444;
-    --text:       #e2e8f0;
-    --text-muted: #94a3b8;
-    --text-sub:   #475569;
-    --radius:     12px;
-    --radius-sm:  8px;
-    --radius-lg:  16px;
-    --t:          0.2s ease;
+    /* ── SMRITI Token Bridge (Phase 2C-W1) ───────────────────────────── */
+    --bg:         var(--smriti-color-bg-page);
+    --bg2:        var(--smriti-color-bg-primary);
+    --card:       var(--smriti-color-bg-secondary);
+    --card2:      var(--smriti-color-bg-elevated);
+    --border:     var(--smriti-color-border-default);
+    --border2:    var(--smriti-color-border-strong);
+    --primary:    var(--smriti-color-brand-primary);
+    --primary-lt: var(--smriti-color-brand-light);
+    --accent:     var(--smriti-color-brand-accent);
+    --success:    var(--smriti-color-status-success);
+    --warning:    var(--smriti-color-status-warning);
+    --danger:     var(--smriti-color-status-danger);
+    --text:       var(--smriti-color-text-primary);
+    --text-muted: var(--smriti-color-text-muted);
+    --text-sub:   var(--smriti-color-text-subtle);
+    --radius:     var(--smriti-radius-lg);
+    --radius-sm:  var(--smriti-radius-md);
+    --radius-lg:  var(--smriti-radius-xl);
+    --t:          var(--smriti-t-base) ease;
 }
 
 html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
@@ -1908,6 +1910,27 @@ document.addEventListener('keydown', e => {
 </script>
 
 <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.2"></script>
-<script>SMRITI.renderFlexibleSidebar("purchase_ops");</script></body>
+<script>SMRITI.renderFlexibleSidebar("purchase_ops");</script>
+
+<script>
+    window.frappe = window.frappe || {};
+    window.frappe.boot = window.frappe.boot || {};
+    window.frappe.boot.smriti_license = {{ smriti_license | tojson }};
+    window.frappe.boot.smriti_site_config = {{ smriti_site_config | tojson }};
+</script>
+
+<!-- SMRITI UI Configuration Engine — loaded last to merge safely into SMRITI global -->
+<script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js?v=2.0.4"></script>
+<script src="/assets/smriti_retail_os/js/smriti_theme_manager.js?v=2.0.4"></script>
+<script>
+    /* Activate UI Configuration Engine for Purchase Manager.
+       Called after all sidebar scripts run so SMRITI global is stable. */
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.SMRITI && typeof SMRITI.initUIEngine === 'function') {
+            SMRITI.initUIEngine();
+        }
+    });
+</script>
+</body>
 </html>
 {% endblock %}
