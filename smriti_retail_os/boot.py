@@ -102,6 +102,21 @@ def extend_bootinfo(bootinfo):
         if not desk_ok:
             bootinfo.default_route = smriti_route
 
+        # Injects licensing summary for License validation gate (Level 7 check)
+        from smriti_retail_os.license.manager import get_license_summary
+        bootinfo.smriti_license = get_license_summary()
+
+        # Injects site config for Store defaults (Level 6 resolution)
+        from smriti_retail_os.company_api import get_company_settings, get_active_company
+        comp = get_active_company()
+        comp_settings = get_company_settings(comp) if comp else {}
+        bootinfo.smriti_site_config = frappe._dict({
+            "store_theme": comp_settings.get("store_theme") or "hybrid",
+            "store_experience": comp_settings.get("store_experience") or "standard",
+            "terminal_type": comp_settings.get("terminal_type") or "standard",
+            "brand_overrides": comp_settings.get("brand_overrides") or {}
+        })
+
     except Exception as e:
         frappe.log_error(str(e), "SMRITI extend_bootinfo Error")
 

@@ -317,7 +317,7 @@
     function _isFullResolutionAllowed() {
         try {
             var lic = (window.frappe && window.frappe.boot && window.frappe.boot.smriti_license) || {};
-            var status = lic.license_status || "Unregistered";
+            var status = lic.license_status || lic.status || "Unregistered";
             /* Full resolution allowed for Active and Grace Period only */
             return (status === "Active" || status === "Grace Period");
         } catch (e) {

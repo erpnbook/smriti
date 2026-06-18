@@ -1637,6 +1637,7 @@ function newBill() {
     document.getElementById('pay-upi').disabled  = false;
     document.getElementById('pay-card').disabled = false;
     document.getElementById('success-overlay').style.display = 'none';
+    updateTotals();
     document.getElementById('barcode-input').focus();
 }
 
@@ -1995,9 +1996,17 @@ checkAuth();
     }
 </script>
 
+<!-- Injects licensing and site config details from server context for UI Engine resolution -->
+<script>
+    window.frappe = window.frappe || {};
+    window.frappe.boot = window.frappe.boot || {};
+    window.frappe.boot.smriti_license = {{ smriti_license | tojson }};
+    window.frappe.boot.smriti_site_config = {{ smriti_site_config | tojson }};
+</script>
+
 <!-- SMRITI UI Configuration Engine — loaded last to merge safely into SMRITI global -->
-<script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js"></script>
-<script src="/assets/smriti_retail_os/js/smriti_theme_manager.js"></script>
+<script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js?v=2.0.4"></script>
+<script src="/assets/smriti_retail_os/js/smriti_theme_manager.js?v=2.0.4"></script>
 <script>
     /* Activate pos-dark profile for Billing Terminal.
        Called after all sidebar scripts run so SMRITI global is stable. */
