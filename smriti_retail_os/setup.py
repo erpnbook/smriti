@@ -1367,6 +1367,158 @@ def create_smriti_cge_settings_doctype():
         frappe.log_error(f"Error creating SMRITI CGE Settings DocType: {str(e)}")
 
 
+def create_smriti_wallet_ledger_doctype():
+    """Creates the SMRITI Wallet Ledger custom DocType."""
+    if frappe.db.exists("DocType", "SMRITI Wallet Ledger"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Wallet Ledger"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.autoname = "field:ledger_sequence"
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 1
+        doc.issingle = 0
+
+        fields = [
+            {"fieldname": "ledger_sequence", "fieldtype": "Data", "label": "Ledger Sequence", "unique": 1},
+            {"fieldname": "customer", "fieldtype": "Link", "options": "Customer", "label": "Customer", "reqd": 1, "index": 1},
+            {"fieldname": "wallet_type", "fieldtype": "Select", "label": "Wallet Type", "options": "Promo Cashback\nRefund Wallet\nGift Card Wallet\nLoyalty Conversion Wallet", "default": "Promo Cashback", "reqd": 1},
+            {"fieldname": "transaction_type", "fieldtype": "Select", "label": "Transaction Type", "options": "Debit\nCredit", "reqd": 1},
+            {"fieldname": "amount", "fieldtype": "Currency", "label": "Amount", "reqd": 1},
+            {"fieldname": "reference_invoice", "fieldtype": "Link", "options": "Sales Invoice", "label": "Reference Invoice", "index": 1},
+            {"fieldname": "expiry_date", "fieldtype": "Date", "label": "Expiry Date"},
+            {"fieldname": "journal_entry", "fieldtype": "Link", "options": "Journal Entry", "label": "Journal Entry"},
+            {"fieldname": "is_reversal", "fieldtype": "Check", "label": "Is Reversal", "default": "0"},
+            {"fieldname": "is_expired", "fieldtype": "Check", "label": "Is Expired", "default": "0"}
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+        doc.append("permissions", {"role": "SMRITI Administrator", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print("[SMRITI] Created SMRITI Wallet Ledger DocType")
+    except Exception as e:
+        frappe.log_error(f"Error creating SMRITI Wallet Ledger DocType: {str(e)}")
+
+
+def create_smriti_coupon_campaign_doctype():
+    """Creates the SMRITI Coupon Campaign custom DocType."""
+    if frappe.db.exists("DocType", "SMRITI Coupon Campaign"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Coupon Campaign"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.autoname = "field:campaign_name"
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 1
+        doc.issingle = 0
+
+        fields = [
+            {"fieldname": "campaign_name", "fieldtype": "Data", "label": "Campaign Name", "unique": 1, "reqd": 1},
+            {"fieldname": "campaign_type", "fieldtype": "Select", "label": "Campaign Type", "options": "Festival\nWin-back\nLaunch\nLoyalty", "default": "Festival", "reqd": 1},
+            {"fieldname": "start_date", "fieldtype": "Date", "label": "Start Date", "reqd": 1},
+            {"fieldname": "end_date", "fieldtype": "Date", "label": "End Date", "reqd": 1},
+            {"fieldname": "budget_limit", "fieldtype": "Currency", "label": "Budget Limit", "reqd": 1},
+            {"fieldname": "budget_reserved", "fieldtype": "Currency", "label": "Budget Reserved", "default": "0"},
+            {"fieldname": "budget_consumed", "fieldtype": "Currency", "label": "Budget Consumed", "default": "0"},
+            {"fieldname": "stop_on_limit", "fieldtype": "Check", "label": "Stop on Limit Exceeded", "default": "1"},
+            {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Draft\nActive\nCompleted\nCancelled", "default": "Draft", "reqd": 1}
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+        doc.append("permissions", {"role": "SMRITI Administrator", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print("[SMRITI] Created SMRITI Coupon Campaign DocType")
+    except Exception as e:
+        frappe.log_error(f"Error creating SMRITI Coupon Campaign DocType: {str(e)}")
+
+
+def create_smriti_liability_snapshot_doctype():
+    """Creates the SMRITI Liability Snapshot custom DocType."""
+    if frappe.db.exists("DocType", "SMRITI Liability Snapshot"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Liability Snapshot"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.autoname = "hash"
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 1
+        doc.issingle = 0
+
+        fields = [
+            {"fieldname": "snapshot_date", "fieldtype": "Date", "label": "Snapshot Date", "reqd": 1},
+            {"fieldname": "loyalty_liability", "fieldtype": "Currency", "label": "Loyalty Liability", "reqd": 1},
+            {"fieldname": "cashback_liability", "fieldtype": "Currency", "label": "Cashback Liability", "reqd": 1},
+            {"fieldname": "coupon_liability", "fieldtype": "Currency", "label": "Coupon Liability", "reqd": 1},
+            {"fieldname": "giftcard_liability", "fieldtype": "Currency", "label": "Gift Card Liability", "reqd": 1}
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+        doc.append("permissions", {"role": "SMRITI Administrator", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print("[SMRITI] Created SMRITI Liability Snapshot DocType")
+    except Exception as e:
+        frappe.log_error(f"Error creating SMRITI Liability Snapshot DocType: {str(e)}")
+
+
+def create_smriti_rule_evaluation_log_doctype():
+    """Creates the SMRITI Rule Evaluation Log custom DocType."""
+    if frappe.db.exists("DocType", "SMRITI Rule Evaluation Log"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Rule Evaluation Log"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.autoname = "hash"
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 1
+        doc.issingle = 0
+
+        fields = [
+            {"fieldname": "invoice", "fieldtype": "Link", "options": "Sales Invoice", "label": "Invoice", "reqd": 1, "index": 1},
+            {"fieldname": "rule_name", "fieldtype": "Data", "label": "Rule Name"},
+            {"fieldname": "rule_type", "fieldtype": "Select", "label": "Rule Type", "options": "Promotion\nLoyalty Rule\nCoupon", "default": "Loyalty Rule", "reqd": 1, "index": 1},
+            {"fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Applied\nIgnored", "default": "Applied", "reqd": 1},
+            {"fieldname": "reason", "fieldtype": "Text", "label": "Reason"},
+            {"fieldname": "multiplier", "fieldtype": "Float", "label": "Multiplier"},
+            {"fieldname": "discount_amount", "fieldtype": "Float", "label": "Discount Amount"},
+            {"fieldname": "timestamp", "fieldtype": "Datetime", "label": "Timestamp", "reqd": 1, "index": 1}
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+        doc.append("permissions", {"role": "SMRITI Administrator", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print("[SMRITI] Created SMRITI Rule Evaluation Log DocType")
+    except Exception as e:
+        frappe.log_error(f"Error creating SMRITI Rule Evaluation Log DocType: {str(e)}")
+
+
 def setup_smriti_retail_os():
     """
     Initializes custom fields, roles, and workspaces for standard DocTypes
@@ -1406,6 +1558,10 @@ def setup_smriti_retail_os():
     create_smriti_loyalty_tier_doctype()
     create_smriti_loyalty_rule_doctype()
     create_smriti_cge_settings_doctype()
+    create_smriti_wallet_ledger_doctype()
+    create_smriti_coupon_campaign_doctype()
+    create_smriti_liability_snapshot_doctype()
+    create_smriti_rule_evaluation_log_doctype()
 
     # 0d. Update Activity Log operation options
     setup_activity_log_options()
@@ -2168,6 +2324,32 @@ def setup_smriti_retail_os():
              "SMRITI Store Manager": {"read": 1},
              "SMRITI Administrator": {"read": 1, "write": 1, "create": 1, "delete": 1},
              "SMRITI Marketing Manager": {"read": 1},
+             "SMRITI Auditor": {"read": 1}
+        },
+        "SMRITI Wallet Ledger": {
+             "SMRITI Store Manager": {"read": 1},
+             "SMRITI Administrator": {"read": 1, "write": 1, "create": 1, "delete": 1},
+             "SMRITI Marketing Manager": {"read": 1},
+             "SMRITI Cashier": {"read": 1, "create": 1},
+             "SMRITI Auditor": {"read": 1}
+        },
+        "SMRITI Coupon Campaign": {
+             "SMRITI Store Manager": {"read": 1},
+             "SMRITI Administrator": {"read": 1, "write": 1, "create": 1, "delete": 1},
+             "SMRITI Marketing Manager": {"read": 1, "write": 1, "create": 1},
+             "SMRITI Auditor": {"read": 1}
+        },
+        "SMRITI Liability Snapshot": {
+             "SMRITI Store Manager": {"read": 1},
+             "SMRITI Administrator": {"read": 1, "write": 1, "create": 1, "delete": 1},
+             "SMRITI Marketing Manager": {"read": 1},
+             "SMRITI Auditor": {"read": 1}
+        },
+        "SMRITI Rule Evaluation Log": {
+             "SMRITI Store Manager": {"read": 1},
+             "SMRITI Administrator": {"read": 1, "write": 1, "create": 1, "delete": 1},
+             "SMRITI Marketing Manager": {"read": 1},
+             "SMRITI Cashier": {"read": 1, "create": 1},
              "SMRITI Auditor": {"read": 1}
         }
     }
