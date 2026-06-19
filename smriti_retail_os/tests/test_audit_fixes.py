@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/tests/test_audit_fixes.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Audit fix verification tests — validates remediation patches.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

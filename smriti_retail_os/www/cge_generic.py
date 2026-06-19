@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/www/cge_generic.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI CGE Generic page controller — CGE UI context and auth.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

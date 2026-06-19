@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/patches/add_liability_snapshot_unique_constraint.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI Add Liability Snapshot Unique Constraint — retail operating system module.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

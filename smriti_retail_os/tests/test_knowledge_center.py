@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/tests/test_knowledge_center.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Unit tests for SMRITI Knowledge Center — search and content APIs.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/smriti_retail_os/doctype/psv_ledger_entry/psv_ledger_entry.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI DocType controller — Frappe document lifecycle handlers.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

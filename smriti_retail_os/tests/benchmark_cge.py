@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/tests/benchmark_cge.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Performance benchmark tests for CGE rule evaluation engine.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

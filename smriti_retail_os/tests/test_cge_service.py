@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/tests/test_cge_service.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Unit tests for CGE service layer — channel gross earnings processing.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

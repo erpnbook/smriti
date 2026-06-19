@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/tests/test_psv_analysis.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Unit tests for PSV analytics — coverage, aging, and health score.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

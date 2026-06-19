@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/cge/api/__init__.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI Api package initialisation.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

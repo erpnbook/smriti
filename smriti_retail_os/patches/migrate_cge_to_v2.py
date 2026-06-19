@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/patches/migrate_cge_to_v2.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI Migrate Cge To V2 — retail operating system module.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

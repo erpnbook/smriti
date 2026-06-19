@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/patches/add_smriti_feature_flag.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI Add Smriti Feature Flag — retail operating system module.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

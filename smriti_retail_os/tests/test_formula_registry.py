@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/tests/test_formula_registry.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Unit tests for SMRITI Formula Registry — formula CRUD and lookup.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

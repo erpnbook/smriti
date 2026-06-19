@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/api/seed_pos_data.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI Seed Pos Data — retail operating system module.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

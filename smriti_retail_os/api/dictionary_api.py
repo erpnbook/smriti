@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/api/dictionary_api.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI Dictionary Api — retail operating system module.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

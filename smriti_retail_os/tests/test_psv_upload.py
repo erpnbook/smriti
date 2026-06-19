@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/tests/test_psv_upload.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Unit tests for PSV party sales upload processing.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

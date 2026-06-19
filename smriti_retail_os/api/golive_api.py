@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/api/golive_api.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI Go-Live API — setup completion and onboarding checks.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

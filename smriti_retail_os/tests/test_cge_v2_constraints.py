@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/tests/test_cge_v2_constraints.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: CGE v2 constraint tests — data integrity and rule validation.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

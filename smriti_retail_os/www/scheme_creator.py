@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/www/scheme_creator.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI Scheme Creator page controller — pricing scheme UI context.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/www/index.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI root index controller — entry-point redirect and session check.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

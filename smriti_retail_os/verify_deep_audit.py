@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/verify_deep_audit.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI deep audit verification — end-to-end compliance checks.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

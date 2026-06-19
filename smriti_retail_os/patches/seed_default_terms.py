@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/patches/seed_default_terms.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI Business Dictionary seed patch — populates KGF business terms.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

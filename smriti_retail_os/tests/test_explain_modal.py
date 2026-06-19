@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/tests/test_explain_modal.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Unit tests for SMRITI Explain Engine — ⓘ modal content verification.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/patches/seed_default_formulas.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: SMRITI Formula Registry seed patch — populates core formula definitions.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0
