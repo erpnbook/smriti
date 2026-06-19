@@ -341,7 +341,9 @@ HELP_CENTER_REGISTRY = {
             "- HRMS is displayed as: 'SMRITI HR'.\n"
             "- Payments is displayed as: 'SMRITI Payments'.\n\n"
             "3. Styling Overrides (`smriti_branding.css`)\n"
-            "A global corporate styling sheet is loaded on all views. This enforces the Navy Blue (#1A2B5C) and Royal Blue (#2563EB) color palette, standardizes typography, hides default platform logos, and styles custom desktop shortcuts."
+            "A global corporate styling sheet is loaded on all views. This enforces the Navy Blue (#1A2B5C) and Royal Blue (#2563EB) color palette, standardizes typography, hides default platform logos, and styles custom desktop shortcuts.\n\n"
+            "4. Footer Branding Cleanup\n"
+            "To comply with SMRITI UI-first policies, user-facing standalone routes (such as the Formula Registry and Business Dictionary) have been stripped of footer branding mentioning external platform names, ensuring a clean, fully whitelabeled interface."
         ),
         "faqs": [
             {
