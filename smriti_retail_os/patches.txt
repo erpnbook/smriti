@@ -19,4 +19,8 @@ smriti_retail_os.patches.add_liability_snapshot_unique_constraint
 
 # v2.0.0 — PDT-02/PDT-M01: Unique index on SMRITI SKU Twin
 smriti_retail_os.patches.add_twin_unique_index
+
+# v2.0.0 — KGF-02/DOC-02: Seed Default SMRITI Formulas
+smriti_retail_os.patches.seed_default_formulas
+
 

@@ -1,0 +1,739 @@
+/**
+ * @file: smriti_retail_os/www/smriti-formula-registry.html
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMRITI Formula Registry</title>
+    <link rel="icon" href="/assets/smriti_retail_os/images/smriti_logo.svg">
+    <style>
+        :root {
+            --navy-blue: #1A2B5C;
+            --bright-blue: #2563EB;
+            --accent-blue: #3B82F6;
+            --background: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --text-dark: #0F172A;
+            --text-gray: #475569;
+            --border-color: #E2E8F0;
+            --shadow: 0 4px 20px rgba(26,43,92,0.06);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Navigation */
+        header {
+            background-color: var(--navy-blue);
+            color: white;
+            padding: 16px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand-logo {
+            height: 36px;
+        }
+
+        .brand-title {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .brand-subtitle {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.1);
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            text-decoration: none;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .btn-back:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(-2px);
+        }
+
+        /* Main Container Layout */
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        /* Title and Intro */
+        .hero-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .hero-section h1 {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--navy-blue);
+            letter-spacing: -0.5px;
+        }
+
+        .hero-section p {
+            font-size: 16px;
+            color: var(--text-gray);
+            max-width: 800px;
+            line-height: 1.6;
+        }
+
+        /* Search and Filtering Controls */
+        .controls-bar {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-wrapper {
+            position: relative;
+            flex-grow: 1;
+            max-width: 500px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 16px 14px 44px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: white;
+            font-size: 15px;
+            color: var(--text-dark);
+            box-shadow: var(--shadow);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            border-color: var(--bright-blue);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-gray);
+            font-size: 18px;
+            pointer-events: none;
+        }
+
+        .filter-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tag {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-gray);
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+
+        .filter-tag:hover {
+            border-color: var(--bright-blue);
+            color: var(--bright-blue);
+        }
+
+        .filter-tag.active {
+            background: var(--bright-blue);
+            border-color: var(--bright-blue);
+            color: white;
+        }
+
+        /* Grid of Formula Cards */
+        .formula-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 24px;
+        }
+
+        .formula-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .formula-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--bright-blue);
+            opacity: 0.8;
+        }
+
+        .formula-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(26,43,92,0.1);
+            border-color: var(--accent-blue);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .formula-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .formula-id {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--bright-blue);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .formula-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--navy-blue);
+        }
+
+        .category-badge {
+            background: #EFF6FF;
+            color: var(--bright-blue);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .formula-expr-box {
+            background: #F8FAFC;
+            border: 1px solid #F1F5F9;
+            padding: 14px;
+            border-radius: 8px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            font-weight: 700;
+            color: #0F172A;
+            overflow-x: auto;
+        }
+
+        .formula-brief {
+            font-size: 14px;
+            color: var(--text-gray);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-footer {
+            margin-top: auto;
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-gray);
+        }
+
+        .owner-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .status-approved {
+            background: #ECFDF5;
+            color: #059669;
+        }
+
+        /* Detail Drawer View */
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .drawer-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            right: -600px;
+            width: 100%;
+            max-width: 600px;
+            height: 100%;
+            background: white;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.15);
+            z-index: 201;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer.open {
+            right: 0;
+        }
+
+        .drawer-header {
+            background: var(--navy-blue);
+            color: white;
+            padding: 24px 32px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .drawer-header-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .drawer-close {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .drawer-close:hover {
+            background: rgba(255,255,255,0.2);
+            transform: rotate(90deg);
+        }
+
+        .drawer-content {
+            padding: 32px;
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        .drawer-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .drawer-section-title {
+            font-size: 14px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.75px;
+            color: var(--bright-blue);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+
+        .drawer-meaning {
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: #F8FAFC;
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid var(--navy-blue);
+        }
+
+        .drawer-example {
+            font-family: system-ui, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-gray);
+            background: #EFF6FF;
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-blue);
+        }
+
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .meta-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-gray);
+            text-transform: uppercase;
+        }
+
+        .meta-val {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Footer styling */
+        footer {
+            background: white;
+            border-top: 1px solid var(--border-color);
+            padding: 20px 40px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-gray);
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand-container">
+            <img class="brand-logo" src="/assets/smriti_retail_os/images/smriti_logo.svg" alt="SMRITI Logo" onerror="this.style.display='none'">
+            <span class="brand-title">SMRITI Retail OS</span>
+            <span class="brand-subtitle">Knowledge Governance Center</span>
+        </div>
+        <div class="header-actions">
+            <a href="/smriti" class="btn-back">← Dashboard</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="hero-section">
+            <h1>SMRITI Formula Registry</h1>
+            <p>Welcome to the central governance repository for all mathematical calculations, forecasting metrics, and analytical scores used across the SMRITI platform. Built under the SMRITI Knowledge Governance Framework (KGF), ensuring complete explainability and traceability for all metrics.</p>
+        </div>
+
+        <div class="controls-bar">
+            <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-input" class="search-input" placeholder="Search formulas by ID, name, or keywords...">
+            </div>
+            <div class="filter-tags" id="category-filters">
+                <div class="filter-tag active" data-category="ALL">All Categories</div>
+                {% for category in categories %}
+                    <div class="filter-tag" data-category="{{ category }}">{{ category }}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="formula-grid" id="formula-container">
+            {% for f in formulas %}
+                <div class="formula-card" 
+                     data-id="{{ f.formula_id }}" 
+                     data-category="{{ f.formula_category }}"
+                     data-name="{{ f.formula_name | lower }}"
+                     data-meaning="{{ f.business_meaning | lower }}"
+                     onclick="openDrawer({{ f | as_json | force_escape }})">
+                    <div class="card-header">
+                        <div class="formula-meta">
+                            <span class="formula-id">{{ f.formula_id }}</span>
+                            <h3 class="formula-title">{{ f.formula_name }}</h3>
+                        </div>
+                        <span class="category-badge">{{ f.formula_category }}</span>
+                    </div>
+
+                    <div class="formula-expr-box">
+                        {{ f.formula_expression }}
+                    </div>
+
+                    <div class="formula-brief">
+                        {{ f.business_meaning }}
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="owner-info">
+                            <span>👤</span> {{ f.business_owner }}
+                        </div>
+                        <span class="status-badge status-approved">Approved v{{ f.formula_version }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Drawer Overlay -->
+    <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+
+    <!-- Right-side Detail Drawer -->
+    <div class="drawer" id="detail-drawer">
+        <div class="drawer-header">
+            <div class="drawer-header-info">
+                <span class="formula-id" id="drawer-id">FC-001</span>
+                <h2 id="drawer-title" style="font-size: 24px; font-weight: 800;">Forecast Confidence</h2>
+            </div>
+            <button class="drawer-close" onclick="closeDrawer()">✕</button>
+        </div>
+        <div class="drawer-content">
+            <div class="drawer-section">
+                <span class="drawer-section-title">Business Meaning (Plain Language & Hinglish)</span>
+                <div class="drawer-meaning" id="drawer-meaning">
+                    Plain definition goes here.
+                </div>
+            </div>
+
+            <div class="drawer-section">
+                <span class="drawer-section-title">Documentation Formula</span>
+                <div class="formula-expr-box" id="drawer-expression">
+                    expression = goes_here
+                </div>
+            </div>
+
+            <div class="drawer-section">
+                <span class="drawer-section-title">Worked Example</span>
+                <div class="drawer-example" id="drawer-example">
+                    worked example goes here.
+                </div>
+            </div>
+
+            <div class="drawer-section">
+                <span class="drawer-section-title">Governance & Traceability</span>
+                <div class="metadata-grid">
+                    <div class="meta-item">
+                        <span class="meta-label">Code Reference</span>
+                        <span class="meta-val" id="drawer-ref" style="font-family: monospace; font-size:12px; word-break: break-all;">services/forecasting_service.py</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Category</span>
+                        <span class="meta-val" id="drawer-category">Forecasting</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Business Owner</span>
+                        <span class="meta-val" id="drawer-b-owner">Jawahar R. Mallah</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Technical Owner</span>
+                        <span class="meta-val" id="drawer-t-owner">AITDL Core Team</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Effective Date</span>
+                        <span class="meta-val" id="drawer-effective">2026-06-19</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Dependent Features</span>
+                        <span class="meta-val" id="drawer-dependencies">PDT Dashboard</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="drawer-section">
+                <span class="drawer-section-title">Interpretation & Recommended Action</span>
+                <div class="drawer-meaning" id="drawer-action" style="border-left-color: var(--accent-blue); background: #FAF5FF; border-left-width: 4px;">
+                    recommended action goes here.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>SMRITI Retail OS is a premium operational layer built on ERPNext by AITDL — Founder & Chief Architect: Jawahar R. Mallah.</p>
+        <p style="margin-top: 6px; font-size: 11px; color: var(--text-gray);">&copy; 2026 AITDL NETWORK. All rights reserved.</p>
+    </footer>
+
+    <script>
+        let activeCategory = 'ALL';
+
+        // 1. Search and Filtering logic
+        const searchInput = document.getElementById('search-input');
+        const filterTags = document.querySelectorAll('#category-filters .filter-tag');
+        const cards = document.querySelectorAll('.formula-card');
+
+        function applyFilters() {
+            const query = searchInput.value.toLowerCase().trim();
+
+            cards.forEach(card => {
+                const cardCategory = card.getAttribute('data-category');
+                const cardId = card.getAttribute('data-id').toLowerCase();
+                const cardName = card.getAttribute('data-name');
+                const cardMeaning = card.getAttribute('data-meaning');
+
+                const matchesSearch = !query || 
+                    cardId.includes(query) || 
+                    cardName.includes(query) || 
+                    cardMeaning.includes(query);
+
+                const matchesCategory = activeCategory === 'ALL' || cardCategory === activeCategory;
+
+                if (matchesSearch && matchesCategory) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        searchInput.addEventListener('input', applyFilters);
+
+        filterTags.forEach(tag => {
+            tag.addEventListener('click', () => {
+                filterTags.forEach(t => t.classList.remove('active'));
+                tag.classList.add('active');
+                activeCategory = tag.getAttribute('data-category');
+                applyFilters();
+            });
+        });
+
+        // 2. Drawer actions
+        const overlay = document.getElementById('drawer-overlay');
+        const drawer = document.getElementById('detail-drawer');
+
+        function openDrawer(formula) {
+            document.getElementById('drawer-id').textContent = formula.formula_id;
+            document.getElementById('drawer-title').textContent = formula.formula_name;
+            document.getElementById('drawer-meaning').textContent = formula.business_meaning;
+            document.getElementById('drawer-expression').textContent = formula.formula_expression;
+            document.getElementById('drawer-example').textContent = formula.worked_example;
+            document.getElementById('drawer-ref').textContent = formula.implementation_reference || 'N/A';
+            document.getElementById('drawer-category').textContent = formula.formula_category;
+            document.getElementById('drawer-b-owner').textContent = formula.business_owner || 'Jawahar R. Mallah';
+            document.getElementById('drawer-t-owner').textContent = formula.technical_owner || 'AITDL Core Team';
+            document.getElementById('drawer-effective').textContent = formula.effective_date || '2026-06-19';
+
+            // Dependencies
+            let deps = formula.dependent_features || [];
+            if (typeof deps === 'string') {
+                try {
+                    deps = JSON.parse(deps);
+                } catch (e) {
+                    deps = [deps];
+                }
+            }
+            document.getElementById('drawer-dependencies').textContent = Array.isArray(deps) ? deps.join(', ') : deps;
+
+            // Recommended Action & Interpretation
+            let guide = formula.interpretation_guide || '';
+            let action = formula.recommended_action || '';
+            document.getElementById('drawer-action').innerHTML = `
+                <p style="font-weight:700; color:var(--navy-blue); margin-bottom:8px;">Interpretation:</p>
+                <p style="margin-bottom:12px; font-size:14px; color:var(--text-gray);">${guide}</p>
+                <p style="font-weight:700; color:var(--bright-blue); margin-bottom:8px;">Recommended Next Action:</p>
+                <p style="font-size:14px; color:var(--text-gray);">${action}</p>
+            `;
+
+            overlay.classList.add('open');
+            drawer.classList.add('open');
+        }
+
+        function closeDrawer() {
+            overlay.classList.remove('open');
+            drawer.classList.remove('open');
+        }
+    </script>
+</body>
+</html>

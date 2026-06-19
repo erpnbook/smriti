@@ -1,0 +1,205 @@
+{
+  "actions": [],
+  "creation": "2026-06-19 20:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "formula_id",
+    "formula_name",
+    "formula_version",
+    "formula_category",
+    "status",
+    "is_active",
+    "replaces_formula_id",
+    "effective_date",
+    "deprecation_date",
+    "implementation_reference",
+    "dependent_features",
+    "formula_expression",
+    "formula_language",
+    "variables_and_inputs",
+    "data_sources",
+    "business_owner",
+    "technical_owner",
+    "business_meaning",
+    "worked_example",
+    "interpretation_guide",
+    "recommended_action",
+    "explainability_json",
+    "migration_notes"
+  ],
+  "fields": [
+    {
+      "fieldname": "formula_id",
+      "fieldtype": "Data",
+      "label": "Formula ID",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "formula_name",
+      "fieldtype": "Data",
+      "label": "Formula Name",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "formula_version",
+      "fieldtype": "Data",
+      "label": "Formula Version",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "formula_category",
+      "fieldtype": "Select",
+      "label": "Formula Category",
+      "options": "\nInventory\nForecasting\nOutlet Health\nTransfer Optimization\nAudit\nSales Analytics\nPDT\nPSV\nCGE\nSPM",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "\nDraft\nUnder Review\nApproved\nDeprecated",
+      "reqd": 1,
+      "default": "Draft",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Is Active",
+      "default": 1
+    },
+    {
+      "fieldname": "replaces_formula_id",
+      "fieldtype": "Link",
+      "label": "Replaces Formula",
+      "options": "SMRITI Formula Definition"
+    },
+    {
+      "fieldname": "effective_date",
+      "fieldtype": "Date",
+      "label": "Effective Date",
+      "reqd": 1
+    },
+    {
+      "fieldname": "deprecation_date",
+      "fieldtype": "Date",
+      "label": "Deprecation Date"
+    },
+    {
+      "fieldname": "implementation_reference",
+      "fieldtype": "Data",
+      "label": "Implementation Reference"
+    },
+    {
+      "fieldname": "dependent_features",
+      "fieldtype": "Long Text",
+      "label": "Dependent Features"
+    },
+    {
+      "fieldname": "formula_expression",
+      "fieldtype": "Long Text",
+      "label": "Formula Expression",
+      "reqd": 1
+    },
+    {
+      "fieldname": "formula_language",
+      "fieldtype": "Data",
+      "label": "Formula Language",
+      "default": "documentation"
+    },
+    {
+      "fieldname": "variables_and_inputs",
+      "fieldtype": "Long Text",
+      "label": "Variables and Inputs"
+    },
+    {
+      "fieldname": "data_sources",
+      "fieldtype": "Long Text",
+      "label": "Data Sources"
+    },
+    {
+      "fieldname": "business_owner",
+      "fieldtype": "Data",
+      "label": "Business Owner",
+      "default": "Jawahar R. Mallah"
+    },
+    {
+      "fieldname": "technical_owner",
+      "fieldtype": "Data",
+      "label": "Technical Owner",
+      "default": "AITDL Core Team"
+    },
+    {
+      "fieldname": "business_meaning",
+      "fieldtype": "Long Text",
+      "label": "Business Meaning"
+    },
+    {
+      "fieldname": "worked_example",
+      "fieldtype": "Long Text",
+      "label": "Worked Example"
+    },
+    {
+      "fieldname": "interpretation_guide",
+      "fieldtype": "Long Text",
+      "label": "Interpretation Guide"
+    },
+    {
+      "fieldname": "recommended_action",
+      "fieldtype": "Long Text",
+      "label": "Recommended Action"
+    },
+    {
+      "fieldname": "explainability_json",
+      "fieldtype": "Long Text",
+      "label": "Explainability JSON"
+    },
+    {
+      "fieldname": "migration_notes",
+      "fieldtype": "Long Text",
+      "label": "Migration Notes"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-06-19 20:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "SMRITI Formula Definition",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 0,
+      "read": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 0
+    },
+    {
+      "create": 0,
+      "read": 1,
+      "role": "SMRITI Store Manager",
+      "share": 1,
+      "write": 0
+    },
+    {
+      "create": 1,
+      "read": 1,
+      "role": "Administrator",
+      "share": 1,
+      "write": 1,
+      "delete": 1
+    }
+  ],
+  "quick_entry": 0,
+  "sort_field": "formula_id",
+  "sort_order": "ASC",
+  "states": [],
+  "track_changes": 1
+}
