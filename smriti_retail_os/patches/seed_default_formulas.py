@@ -397,6 +397,44 @@ def execute():
                     "Avoid pricing markdowns on single size items if curve is complete"
                 ]
             })
+        },
+        {
+            "formula_id": "KGF-001",
+            "formula_name": "KGF Coverage %",
+            "formula_version": "1.0.0",
+            "formula_category": "Audit",
+            "status": "Approved",
+            "is_active": 1,
+            "effective_date": "2026-06-19",
+            "implementation_reference": "services/formula_service.py::calculate_kgf_coverage",
+            "dependent_features": json.dumps(["Documentation Center", "Audit & Variance Management"]),
+            "formula_expression": "kgf_coverage_percent = (registered_kpis / total_kpis) * 100",
+            "formula_language": "documentation",
+            "variables_and_inputs": json.dumps({
+                "registered_kpis": "Number of unique active KPIs in the Formula Registry",
+                "total_kpis": "Total count of calculated KPI fields exposed in SMRITI dashboards"
+            }),
+            "data_sources": "tabSMRITI Formula Definition",
+            "business_owner": "Jawahar R. Mallah",
+            "technical_owner": "AITDL Core Team",
+            "business_meaning": "KGF Coverage % measures the compliance of our metrics to the explainability constitution. Hum ye check karte hain ki humare kitne percentage of active dashboard metrics Formula Registry mein registered aur documented hain.",
+            "worked_example": "If there are 11 dashboard metrics exposed, and 10 of them are registered in the Formula Registry:\nkgf_coverage_percent = (10 / 11) * 100 = 90.91%.",
+            "interpretation_guide": "Bands:\n- Compliant: 100% (Target)\n- High Cover: 90-99%\n- Action Required: < 90%",
+            "recommended_action": "If coverage drops below 100%, block production deployments of new metrics and register the missing KPIs immediately.",
+            "explainability_json": json.dumps({
+                "meaning": "Measures percentage of system metrics that are documented in the registry.",
+                "formula": "kgf_coverage_percent = (registered_kpis / total_kpis) * 100",
+                "example": "(10 registered / 11 total metrics) * 100 = 90.91% coverage.",
+                "bands": [
+                    {"min": 0, "max": 90, "label": "Action Required"},
+                    {"min": 90, "max": 99.9, "label": "High Cover"},
+                    {"min": 100, "max": 100, "label": "Compliant"}
+                ],
+                "actions": [
+                    "Register missing dashboard metrics in the central registry",
+                    "Reject PRs containing undocumented KPIs"
+                ]
+            })
         }
     ]
 
