@@ -82,7 +82,18 @@ class LicensePayload(TypedDict):
 
 
 def _get_secret() -> bytes:
-    """Returns the HMAC signing secret for license key validation."""
+    """
+    Returns the HMAC signing secret for license key validation.
+
+    Priority order:
+      1. frappe.conf.smriti_license_secret  (site_config.json — production)
+      2. SMRITI_LICENSE_SECRET env var       (CI / container override)
+      3. developer_mode=1 only — fallback to _FALLBACK_SECRET with WARNING logged
+         every call so no production instance can silently use the dev key.
+
+    Raises:
+        frappe.ValidationError: In non-developer-mode when no secret is configured.
+    """
     # 1. site_config.json
     secret = getattr(frappe.conf, "smriti_license_secret", None)
     if secret:
@@ -93,14 +104,27 @@ def _get_secret() -> bytes:
     if secret:
         return secret.encode("utf-8")
 
-    # 3. Fallback (development / demo)
-    frappe.log_error(
-        title="SMRITI License: Using Development Secret",
-        message=(
-            "smriti_license_secret not found in site_config.json or environment. "
-            "Using fallback development secret. Set smriti_license_secret in "
-            "site_config.json for production use."
+    # 3. Fail-closed in production — throw if developer_mode is not set
+    if not getattr(frappe.conf, "developer_mode", 0):
+        frappe.throw(
+            _(
+                "SMRITI License: smriti_license_secret is not configured. "
+                "Set smriti_license_secret in site_config.json or the "
+                "SMRITI_LICENSE_SECRET environment variable before activating "
+                "a license key. Contact support@erpnbook.com for assistance."
+            ),
+            title=_("License Configuration Error"),
         )
+
+    # 4. developer_mode only — fallback with WARNING logged on every call
+    frappe.log_error(
+        title="SMRITI License: Using Development Secret [WARNING]",
+        message=(
+            "developer_mode=1 and no smriti_license_secret is configured. "
+            "Using fallback development secret. This WARNING is logged on "
+            "EVERY validation call. Set smriti_license_secret in "
+            "site_config.json before going to production."
+        ),
     )
     return _FALLBACK_SECRET.encode("utf-8")
 
