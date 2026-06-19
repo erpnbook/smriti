@@ -34,8 +34,9 @@ class TestGetSecret(unittest.TestCase):
         """When smriti_license_secret is in frappe.conf, it must be returned."""
         from smriti_retail_os.license.key_validator import _get_secret
 
-        with patch.object(frappe.conf, "smriti_license_secret", "test-secret-from-conf"), \
+        with patch.object(frappe, "conf", MagicMock(spec=[])) as mock_conf, \
              patch.dict(os.environ, {}, clear=False):
+            mock_conf.smriti_license_secret = "test-secret-from-conf"
             result = _get_secret()
             self.assertEqual(result, b"test-secret-from-conf")
 
