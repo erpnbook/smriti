@@ -1,0 +1,34 @@
+# -*- coding: utf-8 -*-
+#
+# @file: smriti_retail_os/smriti_retail_os/doctype/smriti_sku_twin/smriti_sku_twin.py
+# @description: Handles user login, registration, and JWT token generation.
+# @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+# @date: 2026-05-28
+# @version: 1.0.0
+# @license: MIT
+# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+#
+# -*- coding: utf-8 -*-
+# Copyright (c) 2026, SMRITI Retail OS and contributors
+# For license information, please see license.txt
+
+import frappe
+from frappe.model.document import Document
+
+class SMRITISKUTwin(Document):
+    def validate(self):
+        # Uniqueness validation
+        duplicate = frappe.db.exists(
+            "SMRITI SKU Twin",
+            {
+                "company": self.company,
+                "party_stock_account": self.party_stock_account,
+                "item_code": self.item_code,
+                "name": ["!=", self.name]
+            }
+        )
+        if duplicate:
+            frappe.throw(
+                frappe._("A Product Twin already exists for company {0}, PSA {1}, and item {2} ({3}).")
+                .format(self.company, self.party_stock_account, self.item_code, duplicate)
+            )

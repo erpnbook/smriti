@@ -320,8 +320,14 @@ doc_events = {
     "Delivery Note": {
         "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
         # PSV-F1-FIX: top-level psv_integration module (not the inner smriti_retail_os/smriti_retail_os/ stub)
-        "on_submit": "smriti_retail_os.psv_integration.handle_delivery_note_submit",
-        "on_cancel": "smriti_retail_os.psv_integration.handle_delivery_note_cancel"
+        "on_submit": [
+            "smriti_retail_os.psv_integration.handle_delivery_note_submit",
+            "smriti_retail_os.services.pdt_service.on_delivery_note_submit"
+        ],
+        "on_cancel": [
+            "smriti_retail_os.psv_integration.handle_delivery_note_cancel",
+            "smriti_retail_os.services.pdt_service.on_delivery_note_cancel"
+        ]
     },
     "Stock Entry": {
         # PSV-F1-FIX: top-level psv_integration module (not the inner smriti_retail_os/smriti_retail_os/ stub)
@@ -340,6 +346,12 @@ doc_events = {
     },
     "Address": {
         "on_update": "smriti_retail_os.hooks_logic.after_address_save"
+    },
+    "SMRITI Party Sales Upload": {
+        "on_submit": "smriti_retail_os.services.pdt_service.on_sales_upload_submit"
+    },
+    "SMRITI Party Physical Snapshot": {
+        "on_submit": "smriti_retail_os.services.pdt_service.on_physical_snapshot_submit"
     }
 }
 
