@@ -615,8 +615,65 @@ HELP_CENTER_REGISTRY = {
                 "answer": _("Open the Go-Live Readiness page under Administration and click the 'Re-run Checks' button in the topbar. The backend will re-evaluate all system parameters in real-time.")
             }
         ]
+    },
+    "cge_explorer": {
+        "title": _("Customer Growth Engine (CGE) Explorer & Console"),
+        "category": "Administration Guides",
+        "description": _("Detailed guide to managing promotional campaigns, loyalty rules, benefit instruments, and wallets using the dynamic config-driven explorer."),
+        "about": _("This guide explains the dynamic schema-driven CGE Explorer console, role-based access controls, child table structures, audit logs, and delete protection."),
+        "author": {
+            "name": "SMRITI Documentation Team",
+            "title": _("Lead Architect & SMRITI Loyalty Optimizer"),
+            "quote": _("Dynamic configuration-driven loyalty models decouple operational rules from code, allowing rapid retail scaling.")
+        },
+        "content": _(
+            "The SMRITI Customer Growth Engine (CGE) Explorer provides a unified console to manage 12 distinct configuration and transactional modules without exposing raw backend database views or standard ERPNext desk layouts. This design keeps the retail experience fully whitelabeled and aligned with the SMRITI UI/UX constitution.\n\n"
+            "1. Decoupled Architecture & Route Mapping\n"
+            "Each of the 12 CGE modules maps to the canonical standalone template `/cge_generic.html` via route aliases configured in `hooks.py`. The frontend routes are: \n"
+            "- /cge-benefit-instruments: Manage loyalty points, cashback, vouchers, and store credits.\n"
+            "- /cge-membership-tiers: Configure customer tiers based on spending thresholds.\n"
+            "- /cge-loyalty-programs: Track overall program configurations.\n"
+            "- /cge-campaigns: Track marketing campaigns, budget allocations, and caps.\n"
+            "- /cge-promotion-rules: Edit promotional rules and logic.\n"
+            "- /cge-coupon-rules: Manage discount codes and coupon rules.\n"
+            "- /cge-loyalty-rules: Configure points earn/redeem multipliers.\n"
+            "- /cge-benefit-wallets: Operational view of customer wallet balances.\n"
+            "- /cge-customer-benefit-profiles: View customer loyalty registrations.\n"
+            "- /cge-benefit-resolution-policies: Map order-of-precedence rules.\n"
+            "- /cge-liability-snapshots: System-generated snapshots of outstanding financial liabilities.\n"
+            "- /cge-benefit-audit-logs: Detailed records of manual adjustments and state changes.\n\n"
+            "2. Whitelisted API Security Layer\n"
+            "All CRUD actions are routed through whitelisted Python controllers in `cge_api.py` (`get_cge_generic_fields`, `get_cge_generic_list`, `get_cge_generic_doc`, `save_cge_generic_doc`, and `delete_cge_generic_doc`). To protect against SQL injection and unauthorized schema exploitation, the backend strictly validates requests against an allowlist of permitted CGE DocTypes. Any attempt to query or edit a DocType outside this list triggers a validation error and aborts immediately.\n\n"
+            "3. Config-Driven Dynamic Form Renderer\n"
+            "SMRITI reads active field metadata dynamically to construct form views. It automatically handles inputs for fields like Link dropdowns, Select values, Numbers, Strings, and Dates. When a field type is identified as a Table, the console automatically renders an interactive editable grid. This allows administrators to manage complex sub-records like sequence priorities and multiplier details in a simple, streamlined interface.\n\n"
+            "4. Role Enforcement & Delete Protection\n"
+            "To prevent tampering with promotional budgets and loyalty balances, access is restricted to SMRITI Store Manager, System Manager, and Administrator roles. Every record creation, modification, or deletion triggers a secure log in SMRITI's global audit trail. Deleting active configurations is safeguarded by backend referential check logic to prevent orphan records or data inconsistencies."
+        ),
+        "faqs": [
+            {
+                "question": _("Who has permission to access the CGE Explorer and make changes?"),
+                "answer": _("Only users assigned the 'SMRITI Store Manager', 'System Manager', or 'Administrator' roles can access these explorers. Cashiers and standard staff are blocked from loading these routes.")
+            },
+            {
+                "question": _("How are child tables (like Benefit Resolution Sequence Details) managed in the form?"),
+                "answer": _("The console dynamically reads child table schemas and renders them as editable grids. Users can add, edit, or delete rows in the grid. When saving, the entire parent-child hierarchy is validated and sent as a single transaction-isolated payload to prevent partial updates.")
+            },
+            {
+                "question": _("What happens if a user tries to delete a CGE configuration doc?"),
+                "answer": _("When a delete request is submitted, the backend validates if the record is linked to other active transactions (e.g., active campaigns or wallets). If referential integrity checks pass, the record is removed, and a SMRITI Audit event is logged containing the operator's ID, timestamp, and details. If it is linked to active transactions, deletion is blocked to prevent data corruption.")
+            },
+            {
+                "question": _("Is my transaction data safe from unauthorized API queries?"),
+                "answer": _("Yes. The generic API endpoints strictly check the target DocType against the ALLOWED_CGE_DOCTYPES whitelist. If an attacker tries to pass a non-CGE DocType (like 'User' or 'Sales Invoice') to the generic CRUD endpoint, it throws an Access Denied exception and terminates the request.")
+            },
+            {
+                "question": _("Does updating a campaign budget affect active checkouts instantly?"),
+                "answer": _("Yes. The CGE Checkout validation engine reads campaign configuration and budget balances in real-time. Once a budget cap is reached, or if a campaign is disabled in the explorer, the checkout engine will automatically stop applying that discount at the POS registers.")
+            }
+        ]
     }
 }
+
 
 @frappe.whitelist()
 def get_help_article(article_key=None):
