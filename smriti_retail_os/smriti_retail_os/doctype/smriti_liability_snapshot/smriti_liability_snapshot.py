@@ -12,4 +12,19 @@ import frappe
 from frappe.model.document import Document
 
 class SMRITILiabilitySnapshot(Document):
-    pass
+    def validate(self):
+        filters = {"snapshot_date": self.snapshot_date}
+        if self.company:
+            filters["company"] = self.company
+        else:
+            filters["company"] = ["is", "not set"]
+            
+        duplicate = frappe.db.get_value("SMRITI Liability Snapshot", filters, "name")
+        if duplicate and duplicate != self.name:
+            frappe.throw(
+                frappe._("A SMRITI Liability Snapshot already exists for company {0} on {1}.").format(
+                    self.company or "Global", self.snapshot_date
+                ),
+                frappe.DuplicateEntryError
+            )
+

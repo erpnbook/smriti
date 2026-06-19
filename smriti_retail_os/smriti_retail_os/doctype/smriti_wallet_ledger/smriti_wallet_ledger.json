@@ -8,14 +8,17 @@
  "field_order": [
   "ledger_sequence",
   "customer",
+  "company",
   "wallet_type",
   "transaction_type",
   "amount",
+  "balance_remaining",
   "reference_invoice",
   "expiry_date",
   "journal_entry",
   "is_reversal",
-  "is_expired"
+  "is_expired",
+  "remarks"
  ],
  "fields": [
   {
@@ -33,6 +36,13 @@
    "reqd": 1,
    "in_list_view": 1,
    "index": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "in_list_view": 1
   },
   {
    "fieldname": "wallet_type",
@@ -57,6 +67,12 @@
    "label": "Amount",
    "reqd": 1,
    "in_list_view": 1
+  },
+  {
+   "fieldname": "balance_remaining",
+   "fieldtype": "Currency",
+   "label": "Balance Remaining",
+   "default": "0"
   },
   {
    "fieldname": "reference_invoice",
@@ -88,6 +104,11 @@
    "fieldtype": "Check",
    "label": "Is Expired",
    "default": "0"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
   }
  ],
  "index_web_pages_for_search": 1,

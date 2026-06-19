@@ -492,24 +492,14 @@ def initialize_item_wise_tax_details(doc, method=None):
 
 def validate_and_reconcile_retail_invoice(doc, method):
     """
-    Triggers before_validate on POS Invoice and Sales Invoice.
-    Validates loyalty redemption credits against database ledgers to prevent margin leaks.
-
-    NOTE: The auto-heal stock block has been removed (2026-06-07).
-    It was architecturally unsound:
-    - The docstatus guard (docstatus != 1) made it a no-op in before_validate context
-    - It used selling rate as valuation rate, corrupting inventory valuation
-    - It called frappe.db.commit() inside a document event hook, violating Frappe transaction boundaries
-    - It bypassed all permissions with ignore_permissions=True
-    Use ERPNext standard negative stock control or a manager-approved Stock Entry instead.
+    Triggers before_validate/before_save/before_submit on POS Invoice and Sales Invoice.
+    Validates loyalty redemption credits, wallet deductions, and coupon limits on the server.
     """
     initialize_item_wise_tax_details(doc)
-    if doc.docstatus != 0:
-        # Only run on Draft documents (before_validate context)
-        # docstatus=0: Draft being saved/validated
+    if doc.docstatus == 2:
         return
-
-    # Validate Loyalty Redemption Credits
+        
+    # 1. Validate Loyalty Redemption Credits
     if doc.redeem_loyalty_points and doc.loyalty_points > 0:
         try:
             from erpnext.accounts.doctype.loyalty_program.loyalty_program import get_loyalty_details
@@ -524,8 +514,6 @@ def validate_and_reconcile_retail_invoice(doc, method):
                     )
         except ImportError:
             # C-05 FIX: Only catch ImportError (india_compliance/erpnext module not installed).
-            # Previously `except Exception` was catching frappe.throw() (ValidationError),
-            # silently bypassing the loyalty check and allowing over-redemption.
             # Fallback raw database check when the module is not available:
             loyalty_program = frappe.db.get_value("Customer", doc.customer, "loyalty_program")
             if loyalty_program:
@@ -539,6 +527,44 @@ def validate_and_reconcile_retail_invoice(doc, method):
                         _("Customer loyalty points balance ({0}) is less than points requested for redemption ({1}).").format(
                             available_points, doc.loyalty_points
                         )
+                    )
+
+    # 2. Validate CGE Wallet Deduction (AUD-03 & AUD-04)
+    settings = frappe.get_doc("SMRITI CGE Settings")
+    wallet_ded_amt = flt(doc.get("custom_wallet_deduction"))
+    if wallet_ded_amt > 0.0:
+        if not settings.enable_cashback:
+            frappe.throw(_("Cashback Wallet is disabled in CGE settings."), frappe.ValidationError)
+            
+        from smriti_retail_os.cge.service.cge_service import get_active_wallet_balance
+        active_bal = get_active_wallet_balance(doc.customer)
+        if wallet_ded_amt > active_bal:
+            frappe.throw(
+                _("Requested wallet deduction {0} exceeds active cashback balance {1}.").format(
+                    wallet_ded_amt, active_bal
+                ),
+                frappe.ValidationError
+            )
+
+    # 3. Validate Coupon Code (AUD-02 & AUD-04)
+    coupon_code = doc.get("coupon_code") or doc.get("custom_coupon_code")
+    if coupon_code:
+        if not settings.enable_coupon:
+            frappe.throw(_("Coupon Studio is disabled in CGE settings."), frappe.ValidationError)
+            
+        from smriti_retail_os.cge.service.cge_service import validate_coupon_code
+        coupon = validate_coupon_code(coupon_code, doc.customer, doc.name)
+        
+        # Check campaign budget limits
+        coupon_disc_amt = flt(doc.get("custom_coupon_discount") or doc.get("discount_amount"))
+        if coupon.custom_campaign and settings.enable_campaign_budget:
+            campaign = frappe.get_doc("SMRITI Coupon Campaign", coupon.custom_campaign)
+            if campaign.stop_on_limit:
+                total_exposure = flt(campaign.budget_consumed) + flt(campaign.budget_reserved) + coupon_disc_amt
+                if total_exposure > flt(campaign.budget_limit):
+                    frappe.throw(
+                        _("Campaign budget limit exceeded for campaign {0}.").format(campaign.campaign_name),
+                        frappe.ValidationError
                     )
 
 
@@ -584,3 +610,34 @@ def after_address_save(doc, method=None):
                 log_doc.insert(ignore_permissions=True)
             except Exception as audit_ex:
                 frappe.log_error(f"Error logging address audit trail: {str(audit_ex)}")
+
+
+def release_reserved_budget_on_trash(doc, method=None):
+    """
+    Hook handler on POS/Sales Invoice trash/delete.
+    Releases campaign budget reservation from Redis and DB (AUD-17).
+    """
+    from frappe.utils import flt
+    settings = frappe.get_doc("SMRITI CGE Settings")
+    if not settings.enable_coupon:
+        return
+        
+    coupon_code = doc.get("coupon_code") or doc.get("custom_coupon_code")
+    if not coupon_code:
+        return
+        
+    session_id = doc.get("custom_billing_session_id") or f"pos_{doc.name}"
+    cache_key = f"{session_id}_{coupon_code}"
+    
+    # Check Redis reservation first
+    reservation = frappe.cache().hget("cge_budget_reservations", cache_key)
+    if reservation:
+        campaign_name = reservation.get("campaign")
+        amount = flt(reservation.get("amount"))
+        
+        if frappe.db.exists("SMRITI Coupon Campaign", campaign_name):
+            campaign = frappe.get_doc("SMRITI Coupon Campaign", campaign_name)
+            campaign.budget_reserved = max(0.0, flt(campaign.budget_reserved) - amount)
+            campaign.save(ignore_permissions=True)
+            
+        frappe.cache().hdel("cge_budget_reservations", cache_key)

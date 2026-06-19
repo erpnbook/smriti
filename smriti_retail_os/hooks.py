@@ -253,6 +253,21 @@ doc_events = {
         "before_validate": [
             "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
             "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
+        ],
+        "before_save": [
+            "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
+        ],
+        "before_submit": [
+            "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
+        ],
+        "on_submit": [
+            "smriti_retail_os.cge.service.cge_service.process_invoice_submit"
+        ],
+        "on_cancel": [
+            "smriti_retail_os.cge.service.cge_service.process_invoice_cancel"
+        ],
+        "on_trash": [
+            "smriti_retail_os.hooks_logic.release_reserved_budget_on_trash"
         ]
     },
     "Sales Invoice": {
@@ -260,14 +275,25 @@ doc_events = {
             "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
             "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
         ],
+        "before_save": [
+            "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
+        ],
+        "before_submit": [
+            "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
+        ],
         "before_cancel": [
             "smriti_retail_os.psv_service.validate_sales_invoice_cancel"
         ],
         "on_submit": [
-            "smriti_retail_os.psv_service.process_sales_invoice_submit"
+            "smriti_retail_os.psv_service.process_sales_invoice_submit",
+            "smriti_retail_os.cge.service.cge_service.process_invoice_submit"
         ],
         "on_cancel": [
-            "smriti_retail_os.psv_service.process_sales_invoice_cancel"
+            "smriti_retail_os.psv_service.process_sales_invoice_cancel",
+            "smriti_retail_os.cge.service.cge_service.process_invoice_cancel"
+        ],
+        "on_trash": [
+            "smriti_retail_os.hooks_logic.release_reserved_budget_on_trash"
         ]
     },
     "Purchase Receipt": {
@@ -316,8 +342,19 @@ scheduler_events = {
     "daily": [
         "smriti_retail_os.backup_api.run_scheduled_backup",
         "smriti_retail_os.psv_service.run_psv_daily_health_check",
-        "smriti_retail_os.barcode_api.cleanup_old_print_jobs"
-    ]
+        "smriti_retail_os.barcode_api.cleanup_old_print_jobs",
+        "smriti_retail_os.license.tasks.evaluate_license_status",
+        "smriti_retail_os.cge.service.cge_service.reconcile_wallet_liability",
+        "smriti_retail_os.cge.service.cge_service.expire_wallet_credits",
+        "smriti_retail_os.cge.service.cge_service.generate_all_liability_snapshots",
+        "smriti_retail_os.cge.service.cge_service.execute_snapshot_cleanup",
+        "smriti_retail_os.cge.service.cge_service.cleanup_expired_budget_reservations"
+    ],
+    "cron": {
+        "*/30 * * * *": [
+            "smriti_retail_os.cge.service.cge_service.release_expired_reservations"
+        ]
+    }
 }
 
 # Testing
@@ -632,11 +669,4 @@ website_route_rules = [
 ]
 
 
-# ── Scheduler Events ──────────────────────────────────────────────────────────
 
-scheduler_events = {
-    "daily": [
-        # SMRITI License: daily state evaluation (architecture §6a Trigger A)
-        "smriti_retail_os.license.tasks.evaluate_license_status",
-    ]
-}

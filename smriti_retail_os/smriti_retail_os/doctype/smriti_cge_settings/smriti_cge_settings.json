@@ -10,7 +10,10 @@
   "enable_coupon",
   "enable_campaign_budget",
   "enable_offline_cache",
-  "enable_rule_trace"
+  "enable_rule_trace",
+  "wallet_validity_days",
+  "amber_liability_threshold",
+  "red_liability_threshold"
  ],
  "fields": [
   {
@@ -48,6 +51,24 @@
    "fieldtype": "Check",
    "label": "Enable Rule Evaluation Tracing",
    "default": "0"
+  },
+  {
+   "fieldname": "wallet_validity_days",
+   "fieldtype": "Int",
+   "label": "Wallet Validity (Days)",
+   "default": "90"
+  },
+  {
+   "fieldname": "amber_liability_threshold",
+   "fieldtype": "Currency",
+   "label": "Amber Liability Threshold",
+   "default": "100000"
+  },
+  {
+   "fieldname": "red_liability_threshold",
+   "fieldtype": "Currency",
+   "label": "Red Liability Threshold",
+   "default": "250000"
   }
  ],
  "index_web_pages_for_search": 1,

@@ -12,4 +12,8 @@ smriti_retail_os.patches.mark_setup_complete
 smriti_retail_os.patches.add_smriti_feature_flag
 
 # v1.3.0 — PERF-002/PERF-003: Composite index on PSV Ledger Entry for balance query performance
-smriti_retail_os.patches.add_psv_ledger_composite_index
+smriti_retail_os.patches.add_psv_ledger_composite_index
+
+# v1.3.1 — AUD-16: SMRITI Liability Snapshot Unique Constraint on (company, snapshot_date)
+smriti_retail_os.patches.add_liability_snapshot_unique_constraint
+
