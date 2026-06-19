@@ -209,21 +209,15 @@ const GROUP_ICON  = {
 };
 
 async function api(method, params = {}) {
-    let csrf = CSRF;
-    if (!csrf || csrf === '{{ csrf_token }}') {
-        // fallback: try cookie
-        const m = document.cookie.match(/csrf_token=([^;]+)/);
-        if (m) csrf = decodeURIComponent(m[1]);
-    }
     const r = await fetch(`/api/method/${method}`, {
-        method: 'POST', credentials: 'include',
-        headers: { 'Content-Type': 'application/json', 'x-frappe-csrf-token': csrf },
-        body: JSON.stringify(params)
+        method: 'GET', credentials: 'include',
+        headers: { 'Accept': 'application/json' }
     });
     const d = await r.json();
     if (d.exc || d.exc_type) throw new Error(d._error_message || d.exc_type || 'Server error');
     return d.message;
 }
+
 
 function renderBanner(data) {
     const icons = { READY: 'rocket_launch', CAUTION: 'warning_amber', NOT_READY: 'dangerous' };
