@@ -280,11 +280,42 @@
             <option value="Percentage">Percentage (%)</option>
             <option value="Amount">Flat Amount Discount (₹)</option>
             <option value="Flat Rate">Fixed Price (₹)</option>
+            <option value="Buy X Get Y Free">Buy X Get Y Free</option>
           </select>
         </div>
         <div class="form-group" style="flex: 1;">
           <label class="form-label">Value *</label>
           <input type="number" id="sch-value" placeholder="e.g. 10, 150" step="any">
+        </div>
+      </div>
+
+      <!-- Buy X Get Y Free Options -->
+      <div id="buy-x-get-y-options" style="display: none; border: 1px dashed var(--border); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 14px; background: rgba(255,255,255,0.01); width: 100%;">
+        <div class="form-row">
+          <div class="form-group" style="flex: 1;">
+            <label class="form-label">Buy Quantity (X) *</label>
+            <input type="number" id="sch-buy-qty" placeholder="e.g. 2">
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label class="form-label">Free Quantity (Y) *</label>
+            <input type="number" id="sch-free-qty" placeholder="e.g. 1">
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom: 0;">
+          <div class="form-group" style="flex: 1;">
+            <label class="form-label">Get Same Item?</label>
+            <select id="sch-same-item" onchange="handleSameItemToggle(this.value)">
+              <option value="1">Yes, same item</option>
+              <option value="0">No, different item</option>
+            </select>
+          </div>
+          <div class="form-group" id="free-item-group" style="flex: 1.2; display: none;">
+            <label class="form-label">Free Item (Y) *</label>
+            <div class="autocomplete-wrap">
+              <input type="text" id="sch-free-item" placeholder="Search Free Item..." oninput="searchFreeItems(this.value)" autocomplete="off">
+              <div class="autocomplete-results" id="free-item-autocomplete-box"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -366,7 +397,10 @@
     tbody.innerHTML = list.map(s => {
       let typeBadge = '';
       let valDisplay = '';
-      if (s.rate_or_discount === 'Discount Percentage') {
+      if (s.price_or_product_discount === 'Product') {
+        typeBadge = '<span class="badge-chip flat" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); color: var(--success);">BOGO</span>';
+        valDisplay = `Buy ${s.min_qty} Get ${s.free_qty} ${s.same_item ? 'Same' : s.free_item} Free`;
+      } else if (s.rate_or_discount === 'Discount Percentage') {
         typeBadge = '<span class="badge-chip percent">Percentage</span>';
         valDisplay = s.discount_percentage + '%';
       } else if (s.rate_or_discount === 'Discount Amount') {
@@ -390,7 +424,7 @@
           <td style="font-weight: 700; color: var(--accent-2);">${valDisplay}</td>
           <td style="color: var(--text-2); font-size: 0.85rem;">${validity}</td>
           <td style="text-align: center; display: flex; justify-content: center; gap: 8px;">
-            <button class="btn btn-secondary btn-sm" onclick="openEditModal('${s.name}', '${s.title.replace(/'/g, "\\'")}', '${s.apply_on}', '${s.applied_to.replace(/'/g, "\\'")}', '${s.rate_or_discount}', ${s.discount_percentage || s.discount_amount || s.rate}, '${s.valid_from || ''}', '${s.valid_upto || ''}')">
+            <button class="btn btn-secondary btn-sm" onclick="openEditModal('${s.name}', '${s.title.replace(/'/g, "\\'")}', '${s.apply_on}', '${s.applied_to.replace(/'/g, "\\'")}', '${s.price_or_product_discount || ''}', '${s.rate_or_discount || ''}', ${s.discount_percentage || s.discount_amount || s.rate || 0}, ${s.min_qty || 0}, ${s.free_qty || 0}, ${s.same_item || 0}, '${s.free_item || ''}', '${s.valid_from || ''}', '${s.valid_upto || ''}')">
               <span class="material-symbols-outlined" style="font-size: 16px;">edit</span> Edit
             </button>
             <button class="btn btn-danger btn-sm" onclick="deleteScheme('${s.name}')">
@@ -470,14 +504,22 @@
     document.getElementById('sch-target-brand').disabled = false;
     document.getElementById('sch-discount-type').value = 'Percentage';
     document.getElementById('sch-value').value = '';
+    document.getElementById('sch-buy-qty').value = '';
+    document.getElementById('sch-free-qty').value = '';
+    document.getElementById('sch-same-item').value = '1';
+    document.getElementById('sch-free-item').value = '';
+    document.getElementById('free-item-group').style.display = 'none';
     document.getElementById('sch-from').value = '';
     document.getElementById('sch-upto').value = '';
+
+    document.getElementById('buy-x-get-y-options').style.display = 'none';
+    document.getElementById('sch-value').closest('.form-group').style.display = 'block';
 
     handleApplyOnToggle('Item Code');
     document.getElementById('modal-scheme').classList.add('open');
   }
 
-  function openEditModal(name, title, applyOn, appliedTo, rateOrDiscount, value, fromDate, uptoDate) {
+  function openEditModal(name, title, applyOn, appliedTo, priceOrProduct, rateOrDiscount, value, minQty, freeQty, sameItem, freeItem, fromDate, uptoDate) {
     isEditing = true;
     editingId = name;
     document.getElementById('modal-icon').textContent = 'edit_square';
@@ -497,12 +539,29 @@
       document.getElementById('sch-target-brand').disabled = true;
     }
 
-    let discountType = 'Percentage';
-    if (rateOrDiscount === 'Discount Amount') discountType = 'Amount';
-    else if (rateOrDiscount === 'Rate') discountType = 'Flat Rate';
-    
-    document.getElementById('sch-discount-type').value = discountType;
-    document.getElementById('sch-value').value = value;
+    const valueGroup = document.getElementById('sch-value').closest('.form-group');
+    const bogoGroup = document.getElementById('buy-x-get-y-options');
+
+    if (priceOrProduct === 'Product') {
+      document.getElementById('sch-discount-type').value = 'Buy X Get Y Free';
+      valueGroup.style.display = 'none';
+      bogoGroup.style.display = 'block';
+      document.getElementById('sch-buy-qty').value = minQty;
+      document.getElementById('sch-free-qty').value = freeQty;
+      document.getElementById('sch-same-item').value = sameItem ? '1' : '0';
+      document.getElementById('sch-free-item').value = freeItem;
+      document.getElementById('free-item-group').style.display = sameItem ? 'none' : 'block';
+    } else {
+      let discountType = 'Percentage';
+      if (rateOrDiscount === 'Discount Amount') discountType = 'Amount';
+      else if (rateOrDiscount === 'Rate') discountType = 'Flat Rate';
+      
+      document.getElementById('sch-discount-type').value = discountType;
+      valueGroup.style.display = 'block';
+      bogoGroup.style.display = 'none';
+      document.getElementById('sch-value').value = value;
+    }
+
     document.getElementById('sch-from').value = fromDate;
     document.getElementById('sch-upto').value = uptoDate;
 
@@ -539,16 +598,54 @@
       toast('Applied Target Value is required.', 'error');
       return;
     }
-    if (!value || parseFloat(value) <= 0) {
-      toast('Please enter a valid positive value.', 'error');
-      return;
+
+    let args = { 
+      title, 
+      apply_on: applyOn, 
+      applied_to: appliedTo, 
+      discount_type: discountType, 
+      value: value || 0, 
+      valid_from: fromDate, 
+      valid_upto: uptoDate 
+    };
+
+    if (discountType === 'Buy X Get Y Free') {
+      const minQty = document.getElementById('sch-buy-qty').value;
+      const freeQty = document.getElementById('sch-free-qty').value;
+      const sameItem = document.getElementById('sch-same-item').value;
+      const freeItem = document.getElementById('sch-free-item').value.trim();
+
+      if (!minQty || parseFloat(minQty) <= 0) {
+        toast('Please enter a valid Buy Quantity.', 'error');
+        return;
+      }
+      if (!freeQty || parseFloat(freeQty) <= 0) {
+        toast('Please enter a valid Free Quantity.', 'error');
+        return;
+      }
+      if (sameItem === '0' && !freeItem) {
+        toast('Please specify the Free Item.', 'error');
+        return;
+      }
+
+      args.min_qty = minQty;
+      args.free_qty = freeQty;
+      args.same_item = sameItem;
+      args.free_item = sameItem === '1' ? '' : freeItem;
+      args.value = minQty; // Fallback value
+    } else {
+      if (!value || parseFloat(value) <= 0) {
+        toast('Please enter a valid positive value.', 'error');
+        return;
+      }
     }
 
     const btn = document.getElementById('btn-save');
     btn.disabled = true;
 
     if (isEditing) {
-      API.call('update_scheme', { name: editingId, title, apply_on: applyOn, applied_to: appliedTo, discount_type: discountType, value, valid_from: fromDate, valid_upto: uptoDate })
+      args.name = editingId;
+      API.call('update_scheme', args)
         .then(() => {
           toast('Scheme successfully updated.', 'success');
           closeModal();
@@ -557,7 +654,7 @@
         .catch(e => toast(e.message, 'error'))
         .finally(() => btn.disabled = false);
     } else {
-      API.call('create_scheme', { title, apply_on: applyOn, applied_to: appliedTo, discount_type: discountType, value, valid_from: fromDate, valid_upto: uptoDate })
+      API.call('create_scheme', args)
         .then(() => {
           toast('Scheme successfully created.', 'success');
           closeModal();
@@ -580,9 +677,64 @@
         toast(e.message, 'error');
       });
   }
+
+  function handleSameItemToggle(val) {
+    document.getElementById('free-item-group').style.display = val === '0' ? 'block' : 'none';
+  }
+
+  function searchFreeItems(q) {
+    const box = document.getElementById('free-item-autocomplete-box');
+    if (!q || q.length < 2) {
+      box.style.display = 'none';
+      return;
+    }
+    fetch('/api/method/smriti_retail_os.billing_api.search_items', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-frappe-csrf-token': CSRF_TOKEN
+      },
+      body: JSON.stringify({ query: q })
+    })
+    .then(r => r.json())
+    .then(data => {
+      const items = data.message || [];
+      if (!items.length) {
+        box.innerHTML = '<div style="padding: 10px; color: var(--text-2);">No items found.</div>';
+      } else {
+        box.innerHTML = items.map(i => `
+          <div class="autocomplete-item" onclick="selectFreeItem('${i.item_code}')">
+            <span><strong>${i.item_code}</strong> - ${i.item_name}</span>
+          </div>
+        `).join('');
+      }
+      box.style.display = 'block';
+    })
+    .catch(e => console.error(e));
+  }
+
+  function selectFreeItem(code) {
+    document.getElementById('sch-free-item').value = code;
+    document.getElementById('free-item-autocomplete-box').style.display = 'none';
+  }
+
   document.addEventListener('click', function(e) {
     if (!e.target.closest('.autocomplete-wrap')) {
       document.getElementById('item-autocomplete-box').style.display = 'none';
+      document.getElementById('free-item-autocomplete-box').style.display = 'none';
+    }
+  });
+
+  document.getElementById('sch-discount-type').addEventListener('change', function(e) {
+    const val = e.target.value;
+    const valueGroup = document.getElementById('sch-value').closest('.form-group');
+    const bogoGroup = document.getElementById('buy-x-get-y-options');
+    if (val === 'Buy X Get Y Free') {
+      valueGroup.style.display = 'none';
+      bogoGroup.style.display = 'block';
+    } else {
+      valueGroup.style.display = 'block';
+      bogoGroup.style.display = 'none';
     }
   });
 

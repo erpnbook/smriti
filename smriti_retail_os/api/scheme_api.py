@@ -35,7 +35,7 @@ def get_schemes(search_txt=None):
     rules = frappe.get_all(
         "Pricing Rule",
         filters=filters,
-        fields=["name", "title", "apply_on", "rate_or_discount", "discount_percentage", "discount_amount", "rate", "valid_from", "valid_upto", "company"],
+        fields=["name", "title", "apply_on", "price_or_product_discount", "rate_or_discount", "discount_percentage", "discount_amount", "rate", "min_qty", "free_qty", "same_item", "free_item", "valid_from", "valid_upto", "company"],
         order_by="creation desc"
     )
     
@@ -66,7 +66,8 @@ def get_schemes(search_txt=None):
     return rules
 
 @frappe.whitelist()
-def create_scheme(title, apply_on, applied_to, discount_type, value, valid_from=None, valid_upto=None, company=None):
+def create_scheme(title, apply_on, applied_to, discount_type, value, valid_from=None, valid_upto=None, company=None,
+                  min_qty=None, free_qty=None, same_item=None, free_item=None):
     """
     Creates a SMRITI Pricing Rule representing a retail scheme.
     """
@@ -84,30 +85,55 @@ def create_scheme(title, apply_on, applied_to, discount_type, value, valid_from=
         company = companies[0] if companies else ""
         
     val = flt(value)
-    rate_or_discount = "Discount Percentage" if discount_type == "Percentage" else ("Discount Amount" if discount_type == "Amount" else "Rate")
     
-    doc = frappe.get_doc({
-        "doctype": "Pricing Rule",
-        "title": title.strip(),
-        "apply_on": apply_on,
-        "selling": 1,
-        "buying": 0,
-        "company": company,
-        "valid_from": valid_from,
-        "valid_upto": valid_upto,
-        "price_or_product_discount": "Price",
-        "rate_or_discount": rate_or_discount,
-        "discount_percentage": val if discount_type == "Percentage" else 0.0,
-        "discount_amount": val if discount_type == "Amount" else 0.0,
-        "rate": val if discount_type == "Flat Rate" else 0.0
-    })
+    if discount_type == "Buy X Get Y Free":
+        price_or_product_discount = "Product"
+        min_q = flt(min_qty or value or 1)
+        free_q = flt(free_qty or 1)
+        same_it = 1 if same_item in (1, "1", True) else 0
+        free_it = free_item if not same_it else None
+        
+        doc = frappe.get_doc({
+            "doctype": "Pricing Rule",
+            "title": title.strip(),
+            "apply_on": apply_on,
+            "selling": 1,
+            "buying": 0,
+            "company": company,
+            "valid_from": valid_from,
+            "valid_upto": valid_upto,
+            "price_or_product_discount": "Product",
+            "min_qty": min_q,
+            "same_item": same_it,
+            "free_item": free_it,
+            "free_qty": free_q,
+            "free_item_uom": frappe.db.get_value("Item", free_it or applied_to, "stock_uom") or "Nos"
+        })
+    else:
+        rate_or_discount = "Discount Percentage" if discount_type == "Percentage" else ("Discount Amount" if discount_type == "Amount" else "Rate")
+        doc = frappe.get_doc({
+            "doctype": "Pricing Rule",
+            "title": title.strip(),
+            "apply_on": apply_on,
+            "selling": 1,
+            "buying": 0,
+            "company": company,
+            "valid_from": valid_from,
+            "valid_upto": valid_upto,
+            "price_or_product_discount": "Price",
+            "rate_or_discount": rate_or_discount,
+            "discount_percentage": val if discount_type == "Percentage" else 0.0,
+            "discount_amount": val if discount_type == "Amount" else 0.0,
+            "rate": val if discount_type == "Flat Rate" else 0.0
+        })
     
     _set_pricing_rule_links(doc, apply_on, applied_to.strip())
     doc.insert(ignore_permissions=True)
     return doc.name
 
 @frappe.whitelist()
-def update_scheme(name, title, apply_on, applied_to, discount_type, value, valid_from=None, valid_upto=None):
+def update_scheme(name, title, apply_on, applied_to, discount_type, value, valid_from=None, valid_upto=None,
+                  min_qty=None, free_qty=None, same_item=None, free_item=None):
     """
     Updates an existing SMRITI Pricing Rule details.
     """
@@ -117,18 +143,40 @@ def update_scheme(name, title, apply_on, applied_to, discount_type, value, valid
         frappe.throw(_("Scheme '{0}' does not exist.").format(name))
         
     val = flt(value)
-    rate_or_discount = "Discount Percentage" if discount_type == "Percentage" else ("Discount Amount" if discount_type == "Amount" else "Rate")
-    
     doc = frappe.get_doc("Pricing Rule", name)
     doc.title = title.strip()
     doc.apply_on = apply_on
     doc.valid_from = valid_from
     doc.valid_upto = valid_upto
-    doc.rate_or_discount = rate_or_discount
-    doc.discount_percentage = val if discount_type == "Percentage" else 0.0
-    doc.discount_amount = val if discount_type == "Amount" else 0.0
-    doc.rate = val if discount_type == "Flat Rate" else 0.0
     
+    if discount_type == "Buy X Get Y Free":
+        doc.price_or_product_discount = "Product"
+        doc.min_qty = flt(min_qty or value or 1)
+        doc.same_item = 1 if same_item in (1, "1", True) else 0
+        doc.free_qty = flt(free_qty or 1)
+        if doc.same_item:
+            doc.free_item = None
+        else:
+            doc.free_item = free_item
+            doc.free_item_uom = frappe.db.get_value("Item", free_item, "stock_uom") or "Nos"
+            
+        doc.rate_or_discount = None
+        doc.discount_percentage = 0.0
+        doc.discount_amount = 0.0
+        doc.rate = 0.0
+    else:
+        doc.price_or_product_discount = "Price"
+        rate_or_discount = "Discount Percentage" if discount_type == "Percentage" else ("Discount Amount" if discount_type == "Amount" else "Rate")
+        doc.rate_or_discount = rate_or_discount
+        doc.discount_percentage = val if discount_type == "Percentage" else 0.0
+        doc.discount_amount = val if discount_type == "Amount" else 0.0
+        doc.rate = val if discount_type == "Flat Rate" else 0.0
+        doc.min_qty = 0.0
+        doc.same_item = 0
+        doc.free_item = None
+        doc.free_qty = 0.0
+        doc.free_item_uom = None
+        
     _set_pricing_rule_links(doc, apply_on, applied_to.strip())
     doc.save(ignore_permissions=True)
     return doc.name
