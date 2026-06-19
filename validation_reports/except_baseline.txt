@@ -1,0 +1,332 @@
+﻿
+Filename                           LineNumber Line                                             
+--------                           ---------- ----                                             
+backup_api.py                              67     except Exception:                            
+backup_api.py                              85     except Exception:                            
+backup_api.py                             117     except Exception:                            
+backup_api.py                             179         except Exception:                        
+backup_api.py                             401         except Exception:                        
+backup_api.py                             525             except Exception as ex:              
+backup_api.py                             536     except Exception as e:                       
+backup_api.py                             729         except Exception as e:                   
+backup_api.py                             746                 except Exception:                
+backup_api.py                             749                     except Exception:            
+backup_api.py                             758                 except Exception:                
+backup_api.py                             761                     except Exception:            
+backup_api.py                             786     except Exception as ex:                      
+backup_api.py                             845     except Exception as e:                       
+backup_runner.py                           68                 except Exception as mail_ex:     
+backup_runner.py                           82     except Exception as ex:                      
+backup_runner.py                           86         except Exception:                        
+balance_engine.py                          46     except Exception:                            
+balance_engine.py                          80     except Exception:                            
+balance_engine.py                          88     except Exception:                            
+balance_engine.py                         136         except Exception:                        
+balance_engine.py                         144         except Exception:                        
+balance_engine.py                         390     except Exception:                            
+barcode_api.py                            323                         except Exception:        
+barcode_api.py                            365                                 except Exception:
+barcode_api.py                            374             except Exception as e:               
+barcode_api.py                            544     except Exception as e:                       
+barcode_api.py                            730     except Exception as e:                       
+barcode_api.py                            772     except Exception as e:                       
+barcode_api.py                            791     except Exception as e:                       
+barcode_api.py                            817     except Exception as e:                       
+barcode_api.py                            852                 except Exception:                
+barcode_api.py                            870                     except Exception:            
+barcode_api.py                            875                     except Exception:            
+barcode_api.py                            946     except Exception as e:                       
+barcode_api.py                            992                     except Exception:            
+barcode_api.py                            995     except Exception as e:                       
+barcode_api.py                           1015     except Exception:                            
+barcode_api.py                           1040         except Exception:                        
+barcode_api.py                           1080     except Exception:                            
+barcode_api.py                           1160     except Exception as e:                       
+barcode_api.py                           1260     except Exception as e:                       
+barcode_api.py                           1291     except Exception:                            
+barcode_api.py                           1324     except Exception as e:                       
+barcode_api.py                           1378     except Exception as e:                       
+barcode_api.py                           1416             except Exception as le:              
+barcode_api.py                           1453         except Exception as e:                   
+barcode_api.py                           1462     except Exception as e:                       
+barcode_api.py                           1494         except Exception as le:                  
+barcode_api.py                           1616     except Exception as e:                       
+barcode_api.py                           1687     except Exception:                            
+barcode_api.py                           1695     except Exception:                            
+barcode_api.py                           1833                 except Exception:                
+barcode_api.py                           1854                 except Exception:                
+barcode_api.py                           1867     except Exception as e:                       
+billing_api.py                            482     except Exception:                            
+billing_api.py                            492         except Exception as del_ex:              
+billing_api.py                            553             except Exception as e:               
+billing_api.py                            724         except Exception:                        
+billing_api.py                            803     except Exception:                            
+billing_api.py                            835     except Exception:                            
+boot.py                                   147                     except Exception:            
+boot.py                                   160     except Exception as e:                       
+boot.py                                   175     except Exception as e:                       
+boot.py                                   198             except Exception:                    
+boot.py                                   250                 except Exception:                
+boot.py                                   262     except Exception as e:                       
+boot.py                                   282     except Exception:                            
+boot.py                                   309     except Exception:                            
+boot.py                                   340                     except Exception:            
+boot.py                                   361     except Exception as e:                       
+boot.py                                   378     except Exception as e:                       
+boot.py                                   385     except Exception as e:                       
+boot.py                                   391     except Exception:                            
+branding_api.py                            49     except Exception:                            
+company_api.py                             58     except Exception:                            
+company_api.py                            331     except Exception:                            
+company_api.py                            336     except Exception:                            
+company_api.py                            375         except Exception as e:                   
+company_api.py                            525     except Exception:                            
+company_api.py                            534     except Exception:                            
+company_api.py                            543     except Exception:                            
+create_indexes.py                          18     except Exception as e:                       
+create_indexes.py                          25     except Exception as e:                       
+create_indexes.py                          32     except Exception as e:                       
+gpg_service.py                             32     except Exception:                            
+gpg_service.py                             58     except Exception as e:                       
+gpg_service.py                             62             except Exception:                    
+gpg_service.py                             91     except Exception as e:                       
+gpg_service.py                             95             except Exception:                    
+gpg_service.py                            105         except Exception:                        
+gpg_service.py                            122         except Exception:                        
+hooks.py                                   20 except Exception:                                
+hooks_logic.py                             51     except Exception:                            
+hooks_logic.py                            132     except Exception:                            
+hooks_logic.py                            158             except Exception:                    
+hooks_logic.py                            293         except Exception:                        
+hooks_logic.py                            345         except Exception:                        
+hooks_logic.py                            406         except Exception:                        
+hooks_logic.py                            458         except Exception:                        
+hooks_logic.py                            611             except Exception as audit_ex:        
+import_itemaster.py                       313         except Exception as e:                   
+inventory_api.py                          193     except Exception:                            
+inventory_api.py                          248     except Exception:                            
+inventory_api.py                          331     except Exception:                            
+inventory_api.py                          386     except Exception:                            
+inventory_api.py                          487         except Exception:                        
+item_master_api.py                        237                 except Exception:                
+item_master_api.py                        483         except Exception:                        
+item_master_api.py                        545     except Exception:                            
+item_master_api.py                        562     except Exception as e:                       
+item_master_api.py                        581     except Exception as e:                       
+item_master_api.py                        604     except Exception:                            
+item_master_api.py                        666                 except Exception:                
+item_master_api.py                        670     except Exception as e:                       
+item_master_api.py                       1252         except Exception:                        
+item_master_api.py                       1440         except Exception as e:                   
+item_master_api.py                       1501         except Exception:                        
+item_master_api.py                       1507     except Exception:                            
+item_master_api.py                       1546         except Exception:                        
+key_recovery_service.py                   179         except Exception:                        
+ledger_engine.py                           68     except Exception:                            
+ledger_engine.py                           82     except Exception:                            
+loyalty_api.py                             71     except Exception as e:                       
+master_api.py                              36     except Exception: pass                       
+master_api.py                              38     except Exception: pass                       
+master_api.py                              40     except Exception: pass                       
+master_api.py                             519         except Exception:                        
+master_api.py                             543         except Exception:                        
+master_api.py                             648         except Exception:                        
+platform_api.py                            61     except Exception:                            
+platform_api.py                            73     except Exception as e:                       
+platform_api.py                            82     except Exception as e:                       
+platform_api.py                            93     except Exception as e:                       
+platform_api.py                           104     except Exception as e:                       
+platform_api.py                           117     except Exception as e:                       
+platform_api.py                           183     except Exception as e:                       
+platform_api.py                           219     except Exception as e:                       
+platform_api.py                           227     except Exception as e:                       
+platform_api.py                           265         except Exception:                        
+platform_api.py                           342     except Exception as e:                       
+platform_api.py                           358     except Exception as e:                       
+platform_api.py                           429     except Exception as e:                       
+platform_api.py                           490     except Exception as e:                       
+psv_analysis_service.py                   208     except Exception:                            
+psv_api.py                                407 	except Exception:                               
+psv_api.py                                414 	except Exception:                               
+psv_api.py                                422 	except Exception:                               
+psv_api.py                                433 	except Exception:                               
+psv_integration.py                        102     except Exception:                            
+psv_integration.py                        147     except Exception:                            
+psv_integration.py                        199     except Exception:                            
+psv_integration.py                        229     except Exception:                            
+psv_integration.py                        254     except Exception:                            
+psv_service.py                             65         except Exception:                        
+psv_service.py                            135     except Exception as e:                       
+psv_service.py                            155     except Exception as e:                       
+psv_service.py                           1282                     except Exception as e:       
+psv_service.py                           1344                     except Exception as e:       
+psv_service.py                           1350     except Exception as e:                       
+psv_upload_service.py                      56     except Exception as e:                       
+psv_upload_service.py                     261     except Exception as e:                       
+purchase_api.py                           168         except Exception as e:                   
+purchase_api.py                           260     except Exception:                            
+purchase_api.py                           348     except Exception:                            
+purchase_api.py                           380     except Exception:                            
+reports_api.py                            113     except Exception:                            
+reports_api.py                            135     except Exception:                            
+reports_api.py                            154     except Exception:                            
+reports_api.py                            173     except Exception:                            
+reports_api.py                            192     except Exception:                            
+reports_api.py                            353     except Exception:                            
+reports_api.py                            369     except Exception:                            
+reports_api.py                            386     except Exception:                            
+reports_api.py                            580         except Exception as e:                   
+reports_api.py                            656     except Exception as e:                       
+reports_api.py                            742         except Exception as e:                   
+reports_api.py                            765             except Exception as e:               
+reports_api.py                            899         except Exception as e:                   
+reports_api.py                           1216         except Exception as e:                   
+sales_order_api.py                        127     except Exception:                            
+security_api.py                           678         except Exception:                        
+security_api.py                           721         except Exception as e:                   
+setup.py                                   88     except Exception as e:                       
+setup.py                                  114         except Exception as e:                   
+setup.py                                  167         except Exception as e:                   
+setup.py                                  182         except Exception as e:                   
+setup.py                                  223         except Exception as e:                   
+setup.py                                  853     except Exception as e:                       
+setup.py                                  903             except Exception as e:               
+setup.py                                  923                     except Exception as e:       
+setup.py                                 1062                 except Exception as e:           
+setup.py                                 1070                 except Exception as e:           
+setup.py                                 1095                         except Exception as e:   
+setup.py                                 1097             except Exception as e:               
+setup.py                                 1143     except Exception as e:                       
+setup.py                                 1188     except Exception as e:                       
+setup.py                                 1201     except Exception:                            
+setup.py                                 1252     except Exception as e:                       
+setup.py                                 1288     except Exception as e:                       
+setup.py                                 1331     except Exception as e:                       
+setup.py                                 1366     except Exception as e:                       
+setup.py                                 1408     except Exception as e:                       
+setup.py                                 1447     except Exception as e:                       
+setup.py                                 1482     except Exception as e:                       
+setup.py                                 1520     except Exception as e:                       
+setup.py                                 1555             except Exception as e:               
+setup.py                                 1576     except Exception as e:                       
+setup.py                                 1595             except Exception as e:               
+setup.py                                 2581             except Exception as e:               
+setup.py                                 2627     except Exception:                            
+setup.py                                 2764         except Exception as e:                   
+setup.py                                 2801             except Exception as e:               
+setup.py                                 2844         except Exception as e:                   
+setup.py                                 2856             except Exception as e:               
+setup.py                                 2902         except Exception as e:                   
+setup.py                                 2945     except Exception as e:                       
+setup_demo_company.py                      93             except Exception as e:               
+setup_demo_company.py                     126         except Exception as e:                   
+setup_demo_company.py                     295         except Exception as e:                   
+setup_demo_company.py                     304         except Exception as e:                   
+setup_wizard_api.py                       239             except Exception:                    
+setup_wizard_api.py                       244             except Exception:                    
+setup_wizard_api.py                       269             except Exception:                    
+setup_wizard_api.py                       274             except Exception:                    
+setup_wizard_api.py                       691         except Exception:                        
+setup_wizard_api.py                       696         except Exception:                        
+setup_wizard_api.py                       751     except Exception as e:                       
+shift_api.py                               68     except Exception:                            
+shift_api.py                              284     except Exception:                            
+shift_api.py                              385         except Exception:                        
+sizewise_invoice_api.py                   597                 except Exception:                
+sizewise_invoice_api.py                   646     except Exception:                            
+sizewise_invoice_api.py                   722     except Exception:                            
+sizewise_invoice_api.py                   742     except Exception:                            
+sync_assets.py                            174         except Exception as e:                   
+sync_assets.py                            213     except Exception:                            
+sync_assets.py                            230         except Exception as e:                   
+test_redirect.py                           23     except Exception as e:                       
+test_redirect.py                           34     except Exception as e:                       
+transaction_kernel.py                      80     except Exception:                            
+transaction_kernel.py                     276         except Exception:                        
+transaction_kernel.py                     417     except Exception:                            
+transaction_kernel.py                     569         except Exception:                        
+transaction_kernel.py                     709     except Exception:                            
+transaction_kernel.py                     793         except Exception as e:                   
+transaction_kernel.py                     956         except Exception:                        
+transaction_kernel.py                     976     except Exception:                            
+transaction_kernel.py                    1027     except Exception:                            
+verify_deep_audit.py                       50     except Exception as e:                       
+verify_deep_audit.py                       64     except Exception as e:                       
+website_context.py                         44             except Exception:                    
+website_context.py                         58         except Exception:                        
+__init__.py                                38         except Exception as e:                   
+__init__.py                                50                 except Exception as inner_e:     
+__init__.py                                66             except Exception:                    
+__init__.py                                72 except Exception as e:                           
+__init__.py                                82 except Exception as e:                           
+check_pos_status.py                        18     except Exception as e:                       
+golive_api.py                              53     except Exception:                            
+golive_api.py                             161     except Exception:                            
+golive_api.py                             175     except Exception:                            
+golive_api.py                             272         except Exception:                        
+help_api.py                               946     except Exception:                            
+license_api.py                             69     except Exception:                            
+license_api.py                            141     except Exception:                            
+payment_api.py                            188     except Exception:                            
+pdt_api.py                                 53     except Exception:                            
+pdt_api.py                                 98         except Exception:                        
+pdt_api.py                                133         except Exception:                        
+pdt_api.py                                155         except Exception:                        
+scheme_api.py                              62         except Exception:                        
+supplier_returns_api.py                   158     except Exception:                            
+cge_service.py                             32         except Exception:                        
+cge_service.py                             35             except Exception:                    
+cge_service.py                            383             except Exception:                    
+cge_service.py                            479         except Exception as e:                   
+cge_service.py                            534         except Exception as e:                   
+cge_service.py                            996         except Exception as ex:                  
+cge_service.py                           1022     except Exception as ex:                      
+cge_service.py                           1314     except Exception as e:                       
+key_validator.py                          174     except Exception:                            
+manager.py                                 40     except Exception:                            
+tasks.py                                   87     except Exception as e:                       
+mark_setup_complete.py                     23     except Exception as e:                       
+mark_setup_complete.py                     34     except Exception as e:                       
+migrate_cge_to_v2.py                       99                 except Exception as e:           
+smriti_post_migrate_healthcheck.py         35     except Exception as e:                       
+smriti_post_migrate_healthcheck.py         50     except Exception as e:                       
+smriti_post_migrate_healthcheck.py         68     except Exception as e:                       
+smriti_post_migrate_healthcheck.py         80     except Exception as e:                       
+smriti_post_migrate_healthcheck.py         88     except Exception as e:                       
+smriti_post_migrate_healthcheck.py         99     except Exception as e:                       
+smriti_post_migrate_healthcheck.py        113     except Exception as e:                       
+smriti_post_migrate_healthcheck.py        120     except Exception as e:                       
+smriti_post_migrate_healthcheck.py        130     except Exception as e:                       
+smriti_post_migrate_healthcheck.py        137     except Exception as e:                       
+forecasting_service.py                     37     except Exception:                            
+knowledge_service.py                      387         except Exception:                        
+pdt_service.py                             53     except Exception:                            
+pdt_service.py                            244         except Exception:                        
+pdt_service.py                            247     except Exception as e:                       
+pdt_service.py                            255         except Exception:                        
+smriti_print_template.py                   73             except Exception as le:              
+seed_psv_uat.py                          1162     except Exception as e:                       
+seed_psv_uat.py                          1170     except Exception as e:                       
+seed_psv_uat.py                          1253         except Exception as e:                   
+seed_psv_uat.py                          1279     except Exception as e:                       
+seed_psv_uat.py                          1650     except Exception as e:                       
+seed_psv_uat.py                          1662     except Exception as e:                       
+seed_psv_uat.py                          1675     except Exception as e:                       
+seed_psv_uat.py                          1687     except Exception as e:                       
+seed_psv_uat.py                          1700     except Exception as e:                       
+test_audit_remediation.py                 475         except Exception:                        
+test_backup_security_hotfix.py             53                         except Exception:        
+test_barcode_api.py                       404             except Exception:                    
+test_barcode_api.py                       483             except Exception:                    
+test_barcode_api.py                       534             except Exception as e:               
+test_cge_rules.py                         625             except Exception as e:               
+test_item_master_api.py                    59         except Exception as e:                   
+test_item_master_api.py                    73         except Exception as e:                   
+test_item_master_api.py                   970         except Exception:                        
+test_psv.py                               461         except Exception as e:                   
+test_purchase_api.py                      313             except Exception:                    
+invoice_utils.py                          350         except Exception as e:                   
+opening_balance.py                         46         except Exception:                        
+
+
+
