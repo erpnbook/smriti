@@ -45,7 +45,8 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
     // Site Config feature flags check
     const siteConfig = {
         "ai_hub_enabled": false,
-        "intelligence_enabled": false
+        "intelligence_enabled": false,
+        "cge_enabled": false
     };
 
     // Role restrictions for sections
@@ -60,6 +61,7 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
     
     function hasRoleAccess(sectionId) {
         const SECTION_ROLE_RESTRICTIONS = {
+            "cge": ["System Manager", "SMRITI Store Manager", "SMRITI Auditor"],
             "psv": ["System Manager", "SMRITI Store Manager"],
             "finance": ["System Manager", "SMRITI Store Manager"],
             "administration": ["System Manager", "SMRITI Store Manager"]
@@ -72,6 +74,7 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
     // SECTION EMOJIS
     const SECTION_EMOJIS = {
         "masters": "📦",
+        "cge": "📈",
         "psv": "🌐",
         "sales": "🛒",
         "purchase": "📥",
@@ -169,6 +172,15 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
 
         visibleItems.forEach(item => {
             if (isAdminAccount && (item.id === 'security' || item.id === 'security_workflows')) return;
+
+            if (item.type === "header") {
+                subItemsHtml += `
+                    <div class="sidebar-sub-header" style="opacity: 0.7; margin-top: 8px; padding-left: 8px; font-weight: 800; font-size: 11px; color: var(--smriti-color-text-muted);">
+                        ${item.label}
+                    </div>
+                `;
+                return;
+            }
 
             const isItemActiveFlag = isItemActive(item, activePageId);
             if (isItemActiveFlag) isSubActive = true;

@@ -1,0 +1,105 @@
+{
+ "actions": [],
+ "autoname": "field:customer",
+ "creation": "2026-06-19 10:30:00.000000",
+ "description": "Projection / Cached View Only. Not a financial source of truth.",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "customer",
+  "active_loyalty_tier",
+  "accumulated_points",
+  "is_eligible_for_benefits"
+ ],
+ "fields": [
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "active_loyalty_tier",
+   "fieldtype": "Link",
+   "label": "Active Loyalty Tier",
+   "options": "SMRITI Membership Tier",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "accumulated_points",
+   "fieldtype": "Float",
+   "label": "Accumulated Points",
+   "default": "0.0",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "is_eligible_for_benefits",
+   "fieldtype": "Check",
+   "label": "Is Eligible For Benefits",
+   "default": "1",
+   "in_list_view": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-19 10:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Customer Benefit Profile",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Store Manager",
+   "read": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Administrator",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Cashier",
+   "read": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Auditor",
+   "read": 1,
+   "report": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "custom": 0
+}

@@ -1521,6 +1521,62 @@ def create_smriti_rule_evaluation_log_doctype():
         frappe.log_error(f"Error creating SMRITI Rule Evaluation Log DocType: {str(e)}")
 
 
+def ensure_cge_v2_doctypes():
+    """
+    Bootstrap Safety Layer: Verifies that CGE v2 DocTypes are correctly created in the DB.
+    If missing, imports them from their JSON file.
+    """
+    doctypes = [
+        "SMRITI Benefit Instrument Type",
+        "SMRITI Benefit Instrument",
+        "SMRITI Benefit Wallet",
+        "SMRITI Benefit Ledger",
+        "SMRITI Benefit Liability Snapshot",
+        "SMRITI Campaign",
+        "SMRITI Promotion Rule",
+        "SMRITI Coupon Rule",
+        "SMRITI Loyalty Program",
+        "SMRITI Loyalty Rule",
+        "SMRITI Membership Tier",
+        "SMRITI Benefit Resolution Sequence Detail",
+        "SMRITI Benefit Resolution Policy",
+        "SMRITI Customer Benefit Profile",
+        "SMRITI Benefit Audit Log"
+    ]
+    for dt in doctypes:
+        if not frappe.db.exists("DocType", dt):
+            # Parse directory name from doctype name
+            folder_name = dt.lower().replace(" ", "_")
+            path = frappe.get_app_path("smriti_retail_os", "smriti_retail_os", "doctype", folder_name, f"{folder_name}.json")
+            try:
+                from frappe.modules.import_file import import_file_by_path
+                import_file_by_path(path, force=True, ignore_version=True)
+                print(f"[SMRITI] Bootstrapped missing DocType: {dt}")
+            except Exception as e:
+                frappe.log_error(f"Error bootstrapping CGE v2 DocType {dt}: {str(e)}")
+
+    # Phase 4C Database Index Verification (non-blocking warning, no frappe.throw)
+    try:
+        from smriti_retail_os.patches.migrate_cge_to_v2 import REQUIRED_INDEXES
+        for doctype, indexes in REQUIRED_INDEXES.items():
+            if frappe.db.table_exists(doctype):
+                table_name = f"tab{doctype}"
+                for idx_name, cols in indexes.items():
+                    idx_rows = frappe.db.sql(f"SHOW INDEX FROM `{table_name}` WHERE Key_name = %s", (idx_name,), as_dict=True)
+                    if not idx_rows:
+                        msg = f"[SMRITI CGE Warning] Missing database index: {idx_name} on `{table_name}` for columns {cols}. Activation blocked."
+                        print(msg)
+                        frappe.log_error(msg, "SMRITI CGE Index Verification")
+                    else:
+                        db_cols = [r.get("Column_name") or r.get("column_name") for r in idx_rows]
+                        if set(db_cols) != set(cols):
+                            msg = f"[SMRITI CGE Warning] Index {idx_name} exists but covers columns {db_cols} instead of {cols}. Activation blocked."
+                            print(msg)
+                            frappe.log_error(msg, "SMRITI CGE Index Verification")
+    except Exception as e:
+        print(f"[SMRITI] Warning verifying database indexes: {str(e)}")
+
+
 def setup_smriti_retail_os():
     """
     Initializes custom fields, roles, and workspaces for standard DocTypes
@@ -1564,6 +1620,9 @@ def setup_smriti_retail_os():
     create_smriti_coupon_campaign_doctype()
     create_smriti_liability_snapshot_doctype()
     create_smriti_rule_evaluation_log_doctype()
+
+    # 0g. Verify and Bootstrap CGE v2 DocTypes (v2.0 Architecture Freeze)
+    ensure_cge_v2_doctypes()
 
     # 0d. Update Activity Log operation options
     setup_activity_log_options()

@@ -1,0 +1,59 @@
+{
+ "actions": [],
+ "creation": "2026-06-19 10:30:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "benefit_type",
+  "execution_order",
+  "allow_stacking",
+  "exclusive_rule"
+ ],
+ "fields": [
+  {
+   "fieldname": "benefit_type",
+   "fieldtype": "Select",
+   "label": "Benefit Type",
+   "options": "Promotion\nCoupon\nLoyalty\nVoucher\nCashback\nStore Credit",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "execution_order",
+   "fieldtype": "Int",
+   "label": "Execution Order",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "allow_stacking",
+   "fieldtype": "Check",
+   "label": "Allow Stacking",
+   "default": "1",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "exclusive_rule",
+   "fieldtype": "Check",
+   "label": "Exclusive Rule",
+   "default": "0",
+   "in_list_view": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-19 10:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Benefit Resolution Sequence Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "istable": 1,
+ "custom": 0
+}

@@ -1,0 +1,101 @@
+{
+ "actions": [],
+ "autoname": "field:tier_name",
+ "creation": "2026-06-19 10:30:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "tier_name",
+  "min_points",
+  "min_lifetime_spend",
+  "tier_multiplier",
+  "active"
+ ],
+ "fields": [
+  {
+   "fieldname": "tier_name",
+   "fieldtype": "Data",
+   "label": "Tier Name",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "min_points",
+   "fieldtype": "Float",
+   "label": "Minimum Points",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "min_lifetime_spend",
+   "fieldtype": "Currency",
+   "label": "Minimum Lifetime Spend",
+   "default": "0.0",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "tier_multiplier",
+   "fieldtype": "Float",
+   "label": "Tier Multiplier",
+   "default": "1.0",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "active",
+   "fieldtype": "Check",
+   "label": "Active",
+   "default": "1",
+   "in_list_view": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-19 10:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Membership Tier",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Store Manager",
+   "read": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Administrator",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "custom": 0
+}

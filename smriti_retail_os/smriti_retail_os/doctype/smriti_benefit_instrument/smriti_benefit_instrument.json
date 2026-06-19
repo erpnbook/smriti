@@ -1,0 +1,114 @@
+{
+ "actions": [],
+ "autoname": "field:instrument_name",
+ "creation": "2026-06-19 10:30:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "instrument_name",
+  "instrument_type",
+  "validity_days",
+  "allow_negative_balance",
+  "reversal_strategy",
+  "liability_account",
+  "expense_account"
+ ],
+ "fields": [
+  {
+   "fieldname": "instrument_name",
+   "fieldtype": "Data",
+   "label": "Instrument Name",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "instrument_type",
+   "fieldtype": "Link",
+   "label": "Instrument Type",
+   "options": "SMRITI Benefit Instrument Type",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "validity_days",
+   "fieldtype": "Int",
+   "label": "Validity (Days)",
+   "default": "90"
+  },
+  {
+   "fieldname": "allow_negative_balance",
+   "fieldtype": "Check",
+   "label": "Allow Negative Balance",
+   "default": "0"
+  },
+  {
+   "fieldname": "reversal_strategy",
+   "fieldtype": "Select",
+   "label": "Reversal Strategy",
+   "options": "Full Reversal\nPro-Rata Reversal\nZero Reversal",
+   "default": "Full Reversal",
+   "reqd": 1
+  },
+  {
+   "fieldname": "liability_account",
+   "fieldtype": "Link",
+   "label": "Liability Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "expense_account",
+   "fieldtype": "Link",
+   "label": "Expense Account",
+   "options": "Account"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-19 10:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Benefit Instrument",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Store Manager",
+   "read": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Administrator",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "custom": 0
+}

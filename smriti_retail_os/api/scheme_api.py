@@ -207,24 +207,37 @@ def _set_pricing_rule_links(doc, apply_on, applied_to):
         if any(f.fieldname == ct for f in meta.fields):
             doc.set(ct, [])
             
-    # 2. Populate based on apply_on
+    # 2. Split values by comma for multiple targets
+    targets = [t.strip() for t in applied_to.split(",") if t.strip()]
+    if not targets:
+        return
+
     if apply_on == "Item Code":
         if any(f.fieldname == "items" for f in meta.fields):
-            doc.append("items", {"item_code": applied_to})
+            for t in targets:
+                doc.append("items", {"item_code": t})
+            if len(targets) > 1 and hasattr(doc, "mixed_conditions"):
+                doc.mixed_conditions = 1
         elif hasattr(doc, "item_code"):
-            doc.item_code = applied_to
+            doc.item_code = targets[0]
             
     elif apply_on == "Item Group":
         if any(f.fieldname == "item_groups" for f in meta.fields):
-            doc.append("item_groups", {"item_group": applied_to})
+            for t in targets:
+                doc.append("item_groups", {"item_group": t})
+            if len(targets) > 1 and hasattr(doc, "mixed_conditions"):
+                doc.mixed_conditions = 1
         elif hasattr(doc, "item_group"):
-            doc.item_group = applied_to
+            doc.item_group = targets[0]
             
     elif apply_on == "Brand":
         if any(f.fieldname == "brands" for f in meta.fields):
-            doc.append("brands", {"brand": applied_to})
+            for t in targets:
+                doc.append("brands", {"brand": t})
+            if len(targets) > 1 and hasattr(doc, "mixed_conditions"):
+                doc.mixed_conditions = 1
         elif hasattr(doc, "brand"):
-            doc.brand = applied_to
+            doc.brand = targets[0]
 
 def check_manager_permission():
     """
