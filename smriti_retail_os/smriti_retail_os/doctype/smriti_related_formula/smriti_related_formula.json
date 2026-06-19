@@ -1,0 +1,34 @@
+{
+  "actions": [],
+  "creation": "2026-06-19 21:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "istable": 1,
+  "field_order": [
+    "formula_id"
+  ],
+  "fields": [
+    {
+      "fieldname": "formula_id",
+      "fieldtype": "Link",
+      "label": "Formula ID",
+      "options": "SMRITI Formula Definition",
+      "reqd": 1,
+      "in_list_view": 1
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "links": [],
+  "modified": "2026-06-19 21:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "SMRITI Related Formula",
+  "owner": "Administrator",
+  "permissions": [],
+  "quick_entry": 0,
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 0
+}

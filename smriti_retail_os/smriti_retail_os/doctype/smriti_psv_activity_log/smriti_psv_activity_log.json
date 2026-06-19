@@ -37,7 +37,7 @@
       "fieldname": "action_type",
       "fieldtype": "Select",
       "label": "Action Type",
-      "options": "\nUpload Sales\nApprove Snapshot\nSubmit Dispatch\nCancel Dispatch\nOpening Balance Import\nReconciliation Alert\nFormula Explained",
+      "options": "\nUpload Sales\nApprove Snapshot\nSubmit Dispatch\nCancel Dispatch\nOpening Balance Import\nReconciliation Alert\nFormula Explained\nDictionary Accessed",
       "reqd": 1,
       "in_list_view": 1,
       "read_only": 1

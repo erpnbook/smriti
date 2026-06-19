@@ -57,6 +57,23 @@ class TestCGERuleEvaluator(unittest.TestCase):
             item_doc.gst_hsn_code = "999900"
             item_doc.insert(ignore_permissions=True)
 
+        # Get active company and warehouse dynamically
+        cls.company_name = frappe.get_all("Company", limit=1)[0].name
+        cls.warehouse = frappe.db.get_value("Warehouse", {"company": cls.company_name, "is_group": 0})
+        if not cls.warehouse:
+            parent = frappe.db.get_value("Warehouse", {"company": cls.company_name, "is_group": 1})
+            w = frappe.get_doc({
+                "doctype": "Warehouse",
+                "warehouse_name": "Stores - TDP",
+                "parent_warehouse": parent,
+                "company": cls.company_name,
+                "is_group": 0
+            })
+            w.insert(ignore_permissions=True)
+            cls.warehouse = w.name
+
+        frappe.db.commit()
+
     @classmethod
     def tearDownClass(cls):
         # Clean up
@@ -181,7 +198,7 @@ class TestCGERuleEvaluator(unittest.TestCase):
             "item_code": self.item_code,
             "qty": 1,
             "rate": 1000.0,
-            "warehouse": "Stores - TDP"
+            "warehouse": self.warehouse
         })
         
         # Evaluate

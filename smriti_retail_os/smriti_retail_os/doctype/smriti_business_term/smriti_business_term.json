@@ -1,0 +1,189 @@
+{
+  "actions": [],
+  "creation": "2026-06-19 21:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "term_id",
+    "term_name",
+    "term_category",
+    "term_version",
+    "replaces_term_id",
+    "status",
+    "is_active",
+    "term_aliases",
+    "effective_date",
+    "deprecation_date",
+    "business_owner",
+    "technical_owner",
+    "definition",
+    "hinglish_definition",
+    "related_formulas",
+    "related_terms",
+    "faq",
+    "common_mistakes",
+    "manual_reference",
+    "training_reference"
+  ],
+  "fields": [
+    {
+      "fieldname": "term_id",
+      "fieldtype": "Data",
+      "label": "Term ID",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "term_name",
+      "fieldtype": "Data",
+      "label": "Term Name",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "term_category",
+      "fieldtype": "Select",
+      "label": "Term Category",
+      "options": "\nInventory\nDistribution\nForecasting\nAudit\nSales\nCustomer\nOutlet\nSystem\nGovernance\nTraining",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "term_version",
+      "fieldtype": "Data",
+      "label": "Term Version",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "replaces_term_id",
+      "fieldtype": "Link",
+      "label": "Replaces Term",
+      "options": "SMRITI Business Term"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "\nDraft\nUnder Review\nApproved\nDeprecated",
+      "reqd": 1,
+      "default": "Draft",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Is Active",
+      "default": 1
+    },
+    {
+      "fieldname": "term_aliases",
+      "fieldtype": "Long Text",
+      "label": "Term Aliases"
+    },
+    {
+      "fieldname": "effective_date",
+      "fieldtype": "Date",
+      "label": "Effective Date",
+      "reqd": 1
+    },
+    {
+      "fieldname": "deprecation_date",
+      "fieldtype": "Date",
+      "label": "Deprecation Date"
+    },
+    {
+      "fieldname": "business_owner",
+      "fieldtype": "Data",
+      "label": "Business Owner",
+      "default": "Jawahar R. Mallah"
+    },
+    {
+      "fieldname": "technical_owner",
+      "fieldtype": "Data",
+      "label": "Technical Owner",
+      "default": "AITDL Core Team"
+    },
+    {
+      "fieldname": "definition",
+      "fieldtype": "Long Text",
+      "label": "Definition",
+      "reqd": 1
+    },
+    {
+      "fieldname": "hinglish_definition",
+      "fieldtype": "Long Text",
+      "label": "Hinglish Definition",
+      "reqd": 1
+    },
+    {
+      "fieldname": "related_formulas",
+      "fieldtype": "Table",
+      "label": "Related Formulas",
+      "options": "SMRITI Related Formula"
+    },
+    {
+      "fieldname": "related_terms",
+      "fieldtype": "Table",
+      "label": "Related Terms",
+      "options": "SMRITI Related Term"
+    },
+    {
+      "fieldname": "faq",
+      "fieldtype": "Long Text",
+      "label": "FAQ (JSON)"
+    },
+    {
+      "fieldname": "common_mistakes",
+      "fieldtype": "Long Text",
+      "label": "Common Mistakes (JSON)"
+    },
+    {
+      "fieldname": "manual_reference",
+      "fieldtype": "Data",
+      "label": "Manual Reference"
+    },
+    {
+      "fieldname": "training_reference",
+      "fieldtype": "Data",
+      "label": "Training Reference"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-06-19 21:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "SMRITI Business Term",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 0,
+      "read": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 0
+    },
+    {
+      "create": 0,
+      "read": 1,
+      "role": "SMRITI Store Manager",
+      "share": 1,
+      "write": 0
+    },
+    {
+      "create": 1,
+      "read": 1,
+      "role": "Administrator",
+      "share": 1,
+      "write": 1,
+      "delete": 1
+    }
+  ],
+  "quick_entry": 0,
+  "sort_field": "term_id",
+  "sort_order": "ASC",
+  "states": [],
+  "track_changes": 1
+}

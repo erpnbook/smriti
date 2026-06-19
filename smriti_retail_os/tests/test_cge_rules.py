@@ -99,6 +99,21 @@ class TestCGERulesAndDR(unittest.TestCase):
             if updated:
                 fy_doc.save(ignore_permissions=True)
                 
+        # Get active company and warehouse dynamically
+        cls.company_name = frappe.get_all("Company", limit=1)[0].name
+        cls.warehouse = frappe.db.get_value("Warehouse", {"company": cls.company_name, "is_group": 0})
+        if not cls.warehouse:
+            parent = frappe.db.get_value("Warehouse", {"company": cls.company_name, "is_group": 1})
+            w = frappe.get_doc({
+                "doctype": "Warehouse",
+                "warehouse_name": "Stores - TDP",
+                "parent_warehouse": parent,
+                "company": cls.company_name,
+                "is_group": 0
+            })
+            w.insert(ignore_permissions=True)
+            cls.warehouse = w.name
+
         # Commit all fixtures so link validation passes across tests
         frappe.db.commit()
 
@@ -241,7 +256,7 @@ class TestCGERulesAndDR(unittest.TestCase):
             "item_code": self.item_code,
             "qty": 1,
             "rate": 100.0,
-            "warehouse": "Stores - TDP"
+            "warehouse": self.warehouse
         })
         si.insert(ignore_permissions=True)
         si.submit()
@@ -282,7 +297,7 @@ class TestCGERulesAndDR(unittest.TestCase):
             "item_code": self.item_code,
             "qty": 1,
             "rate": 1000.0,
-            "warehouse": "Stores - TDP"
+            "warehouse": self.warehouse
         })
         
         evaluator = CGERuleEvaluator(invoice)
@@ -425,7 +440,7 @@ class TestCGERulesAndDR(unittest.TestCase):
             "item_code": self.item_code,
             "qty": 1,
             "rate": 1000.0,
-            "warehouse": "Stores - TDP"
+            "warehouse": self.warehouse
         })
         si.insert(ignore_permissions=True)
         si.submit()
@@ -508,7 +523,7 @@ class TestCGERulesAndDR(unittest.TestCase):
             "item_code": self.item_code,
             "qty": 1,
             "rate": 1000.0,
-            "warehouse": "Stores - TDP"
+            "warehouse": self.warehouse
         })
         si.insert(ignore_permissions=True)
         si.submit()
@@ -561,7 +576,7 @@ class TestCGERulesAndDR(unittest.TestCase):
             "item_code": self.item_code,
             "qty": 1,
             "rate": 100.0,
-            "warehouse": "Stores - TDP"
+            "warehouse": self.warehouse
         })
         
         # Set excessive wallet deduction
@@ -666,7 +681,7 @@ class TestCGERulesAndDR(unittest.TestCase):
             "item_code": self.item_code,
             "qty": 1,
             "rate": 100.0,
-            "warehouse": "Stores - TDP"
+            "warehouse": self.warehouse
         })
         si.insert(ignore_permissions=True)
         
@@ -722,7 +737,7 @@ class TestCGERulesAndDR(unittest.TestCase):
                 "item_code": it_code,
                 "qty": 1,
                 "rate": 100.0,
-                "warehouse": "Stores - TDP"
+                "warehouse": self.warehouse
             })
             
         frappe.db.commit()

@@ -56,6 +56,8 @@ const SMRITI_ROUTE_MAP = {
   "cge_benefit_resolution_policies":  "/cge-benefit-resolution-policies",
   "cge_liability_snapshots":          "/cge-liability-snapshots",
   "cge_benefit_audit_logs":           "/cge-benefit-audit-logs",
+  "formula_registry":                 "/smriti-formula-registry",
+  "business_dictionary":              "/smriti-dictionary",
 };
 
 function resolveSmritiRoute(key) {
@@ -479,6 +481,16 @@ const SMRITI_NAV = {
       label: "Help Desk",
       status: "active",
       items: [
+        { id: "formula_registry",
+          label: "Formula Registry",
+          route: "/smriti-formula-registry",
+          standalone_route: "/smriti-formula-registry",
+          status: "active" },
+        { id: "business_dictionary",
+          label: "Business Dictionary",
+          route: "/smriti-dictionary",
+          standalone_route: "/smriti-dictionary",
+          status: "active" },
         { id: "user_manual",
           label: "User Manual",
           route: "/smriti-help",

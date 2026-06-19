@@ -220,8 +220,12 @@
 
     window.smritiExplainGoTo = function (type, val) {
         closeExplainModal();
-        let prefix = type === "manual" ? "Manual Reference" : (type === "training" ? "Training Lesson" : "Business Dictionary");
-        window.location.href = `/smriti-coming-soon?feature=${encodeURIComponent(prefix + ": " + val)}&back=/app/smriti-formula-registry`;
+        if (type === "dictionary") {
+            window.location.href = `/smriti-dictionary?term=${encodeURIComponent(val)}`;
+        } else {
+            let prefix = type === "manual" ? "Manual Reference" : "Training Lesson";
+            window.location.href = `/smriti-coming-soon?feature=${encodeURIComponent(prefix + ": " + val)}&back=/app/smriti-formula-registry`;
+        }
     };
 
     window.copyFormulaToClipboard = function () {

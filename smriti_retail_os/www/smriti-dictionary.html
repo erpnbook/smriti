@@ -1,0 +1,838 @@
+/**
+ * @file: smriti_retail_os/www/smriti-dictionary.html
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMRITI Business Dictionary</title>
+    <link rel="icon" href="/assets/smriti_retail_os/images/smriti_logo.svg">
+    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_explain.css">
+    <script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
+    <script src="/assets/smriti_retail_os/js/smriti_explain.js"></script>
+    <style>
+        :root {
+            --navy-blue: #1A2B5C;
+            --bright-blue: #2563EB;
+            --accent-blue: #3B82F6;
+            --background: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --text-dark: #0F172A;
+            --text-gray: #475569;
+            --border-color: #E2E8F0;
+            --shadow: 0 4px 20px rgba(26,43,92,0.06);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--navy-blue);
+            color: white;
+            padding: 16px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand-logo {
+            height: 36px;
+        }
+
+        .brand-title {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .brand-subtitle {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.1);
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            text-decoration: none;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .btn-back:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(-2px);
+        }
+
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .hero-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .hero-section h1 {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--navy-blue);
+            letter-spacing: -0.5px;
+        }
+
+        .hero-section p {
+            font-size: 16px;
+            color: var(--text-gray);
+            max-width: 800px;
+            line-height: 1.6;
+        }
+
+        .controls-bar {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-wrapper {
+            position: relative;
+            flex-grow: 1;
+            max-width: 500px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 16px 14px 44px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: white;
+            font-size: 15px;
+            color: var(--text-dark);
+            box-shadow: var(--shadow);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            border-color: var(--bright-blue);
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-gray);
+            font-size: 18px;
+            pointer-events: none;
+        }
+
+        .filter-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tag {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-gray);
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+
+        .filter-tag:hover {
+            border-color: var(--bright-blue);
+            color: var(--bright-blue);
+        }
+
+        .filter-tag.active {
+            background: var(--bright-blue);
+            border-color: var(--bright-blue);
+            color: white;
+        }
+
+        .term-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 24px;
+        }
+
+        .term-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .term-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--bright-blue);
+            opacity: 0.8;
+        }
+
+        .term-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(26,43,92,0.1);
+            border-color: var(--accent-blue);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .term-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .term-id-label {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--bright-blue);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .term-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--navy-blue);
+        }
+
+        .category-badge {
+            background: #EFF6FF;
+            color: var(--bright-blue);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .term-brief {
+            font-size: 14px;
+            color: var(--text-gray);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex-grow: 1;
+        }
+
+        .card-footer {
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-gray);
+        }
+
+        .owner-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+
+        .status-approved {
+            background: #ECFDF5;
+            color: #059669;
+        }
+
+        /* Drawer Overlay */
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .drawer-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            right: -600px;
+            width: 100%;
+            max-width: 600px;
+            height: 100%;
+            background: white;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.15);
+            z-index: 201;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer.open {
+            right: 0;
+        }
+
+        .drawer-header {
+            background: var(--navy-blue);
+            color: white;
+            padding: 24px 32px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .drawer-header-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .drawer-close {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .drawer-close:hover {
+            background: rgba(255,255,255,0.2);
+            transform: rotate(90deg);
+        }
+
+        .drawer-content {
+            padding: 32px;
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        .drawer-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .drawer-section-title {
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.75px;
+            color: var(--bright-blue);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+
+        .drawer-box {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: #F8FAFC;
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid var(--navy-blue);
+        }
+
+        .drawer-box-hinglish {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #1E3A8A;
+            background: #EFF6FF;
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-blue);
+        }
+
+        .drawer-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .drawer-tag {
+            background: #F1F5F9;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid #E2E8F0;
+        }
+
+        .drawer-tag:hover {
+            background: var(--bright-blue);
+            color: white;
+            border-color: var(--bright-blue);
+        }
+
+        .faq-item {
+            margin-bottom: 12px;
+        }
+
+        .faq-q {
+            font-weight: 700;
+            color: var(--navy-blue);
+            margin-bottom: 4px;
+        }
+
+        .faq-a {
+            font-size: 13px;
+            color: var(--text-gray);
+        }
+
+        .metadata-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            background: #F8FAFC;
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .meta-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-gray);
+            text-transform: uppercase;
+        }
+
+        .meta-val {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        footer {
+            background: white;
+            border-top: 1px solid var(--border-color);
+            padding: 20px 40px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-gray);
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand-container">
+            <img class="brand-logo" src="/assets/smriti_retail_os/images/smriti_logo.svg" alt="SMRITI Logo" onerror="this.style.display='none'">
+            <span class="brand-title">SMRITI Retail OS</span>
+            <span class="brand-subtitle">Business Dictionary</span>
+        </div>
+        <div class="header-actions">
+            <a href="/smriti" class="btn-back">← Dashboard</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="hero-section">
+            <h1>SMRITI Business Dictionary</h1>
+            <p>Your central lookup source for understanding retail operations terminology, distribution systems, forecasting methodologies, and KGF governance policies.</p>
+        </div>
+
+        <div class="controls-bar">
+            <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-input" class="search-input" placeholder="Search terms by ID, name, meaning, or aliases...">
+            </div>
+            <div class="filter-tags" id="category-filters">
+                <div class="filter-tag active" data-category="ALL">All Categories</div>
+                {% for category in categories %}
+                    <div class="filter-tag" data-category="{{ category }}">{{ category }}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="term-grid" id="term-container">
+            {% for t in terms %}
+                <div class="term-card" 
+                     data-id="{{ t.term_id }}" 
+                     data-category="{{ t.term_category }}"
+                     data-name="{{ t.term_name | lower }}"
+                     data-aliases="{{ t.term_aliases | default('[]') | lower }}"
+                     data-definition="{{ t.definition | lower }}"
+                     onclick="openTermDetail('{{ t.term_id }}')">
+                    <div class="card-header">
+                        <div class="term-meta">
+                            <span class="term-id-label">{{ t.term_id }}</span>
+                            <h3 class="term-title">{{ t.term_name }}</h3>
+                        </div>
+                        <span class="category-badge">{{ t.term_category }}</span>
+                    </div>
+
+                    <div class="term-brief">
+                        {{ t.definition }}
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="owner-info">
+                            <span>👤</span> Jawahar R. Mallah
+                        </div>
+                        <span class="status-badge status-approved">Approved v{{ t.term_version }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Drawer Overlay -->
+    <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+
+    <!-- Right-side Detail Drawer -->
+    <div class="drawer" id="detail-drawer">
+        <div class="drawer-header">
+            <div class="drawer-header-info">
+                <span class="term-id-label" id="drawer-id">TERM-01</span>
+                <h2 id="drawer-title" style="font-size: 24px; font-weight: 800;">Term Title</h2>
+            </div>
+            <button class="drawer-close" onclick="closeDrawer()">✕</button>
+        </div>
+        <div class="drawer-content">
+            <div class="drawer-section">
+                <span class="drawer-section-title">English Definition</span>
+                <div class="drawer-box" id="drawer-definition">
+                    Definition goes here.
+                </div>
+            </div>
+
+            <div class="drawer-section">
+                <span class="drawer-section-title">Hinglish Explanation</span>
+                <div class="drawer-box-hinglish" id="drawer-hinglish">
+                    Hinglish goes here.
+                </div>
+            </div>
+
+            <div class="drawer-section" id="section-formulas" style="display: none;">
+                <span class="drawer-section-title">Related Formulas</span>
+                <div class="drawer-tags" id="drawer-formulas">
+                    <!-- Dynamic formula badges -->
+                </div>
+            </div>
+
+            <div class="drawer-section" id="section-terms" style="display: none;">
+                <span class="drawer-section-title">Related Terms</span>
+                <div class="drawer-tags" id="drawer-terms">
+                    <!-- Dynamic related term badges -->
+                </div>
+            </div>
+
+            <div class="drawer-section" id="section-faq" style="display: none;">
+                <span class="drawer-section-title">Frequently Asked Questions (FAQ)</span>
+                <div id="drawer-faq">
+                    <!-- Dynamic FAQs -->
+                </div>
+            </div>
+
+            <div class="drawer-section" id="section-mistakes" style="display: none;">
+                <span class="drawer-section-title">Common Mistakes to Avoid</span>
+                <div id="drawer-mistakes">
+                    <!-- Dynamic mistakes -->
+                </div>
+            </div>
+
+            <div class="drawer-section">
+                <span class="drawer-section-title">Learn More & Traceability</span>
+                <div class="metadata-grid">
+                    <div class="meta-item">
+                        <span class="meta-label">Manual Reference</span>
+                        <span class="meta-val" id="drawer-manual">N/A</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Training Reference</span>
+                        <span class="meta-val" id="drawer-training">N/A</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Business Owner</span>
+                        <span class="meta-val" id="drawer-b-owner">Jawahar R. Mallah</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Technical Owner</span>
+                        <span class="meta-val" id="drawer-t-owner">AITDL Core Team</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Version</span>
+                        <span class="meta-val" id="drawer-version">1.0.0</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Effective Date</span>
+                        <span class="meta-val" id="drawer-effective">2026-06-19</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>SMRITI Retail OS is a premium operational layer built on ERPNext by AITDL — Founder & Chief Architect: Jawahar R. Mallah.</p>
+        <p style="margin-top: 6px; font-size: 11px; color: var(--text-gray);">&copy; 2026 AITDL NETWORK. All rights reserved.</p>
+    </footer>
+
+    <script>
+        let activeCategory = 'ALL';
+
+        // 1. Search and Filtering logic
+        const searchInput = document.getElementById('search-input');
+        const filterTags = document.querySelectorAll('#category-filters .filter-tag');
+        const cards = document.querySelectorAll('.term-card');
+
+        function applyFilters() {
+            const query = searchInput.value.toLowerCase().trim();
+
+            cards.forEach(card => {
+                const cardCategory = card.getAttribute('data-category');
+                const cardId = card.getAttribute('data-id').toLowerCase();
+                const cardName = card.getAttribute('data-name');
+                const cardAliases = card.getAttribute('data-aliases');
+                const cardDefinition = card.getAttribute('data-definition');
+
+                const matchesSearch = !query || 
+                    cardId.includes(query) || 
+                    cardName.includes(query) || 
+                    cardDefinition.includes(query) ||
+                    cardAliases.includes(query);
+
+                const matchesCategory = activeCategory === 'ALL' || cardCategory === activeCategory;
+
+                if (matchesSearch && matchesCategory) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        searchInput.addEventListener('input', applyFilters);
+
+        filterTags.forEach(tag => {
+            tag.addEventListener('click', () => {
+                filterTags.forEach(t => t.classList.remove('active'));
+                tag.classList.add('active');
+                activeCategory = tag.getAttribute('data-category');
+                applyFilters();
+            });
+        });
+
+        // 2. Fetch Term Detail via Whitelisted API
+        function openTermDetail(termId) {
+            frappe.call({
+                method: "smriti_retail_os.api.dictionary_api.get_term_detail",
+                args: { term_id: termId },
+                callback: function (r) {
+                    if (r.message) {
+                        renderTermDrawer(r.message);
+                    }
+                }
+            });
+        }
+
+        function renderTermDrawer(term) {
+            const overlay = document.getElementById('drawer-overlay');
+            const drawer = document.getElementById('detail-drawer');
+
+            document.getElementById('drawer-id').textContent = term.term_id;
+            document.getElementById('drawer-title').textContent = term.term_name;
+            document.getElementById('drawer-definition').textContent = term.definition;
+            document.getElementById('drawer-hinglish').textContent = term.hinglish_definition;
+
+            document.getElementById('drawer-manual').textContent = term.manual_reference || 'N/A';
+            document.getElementById('drawer-training').textContent = term.training_reference || 'N/A';
+            document.getElementById('drawer-b-owner').textContent = term.business_owner || 'Jawahar R. Mallah';
+            document.getElementById('drawer-t-owner').textContent = term.technical_owner || 'AITDL Core Team';
+            document.getElementById('drawer-version').textContent = 'v' + term.term_version;
+            document.getElementById('drawer-effective').textContent = term.effective_date || '2026-06-19';
+
+            // Related Formulas integration with Explain Modal!
+            const formulaSec = document.getElementById('section-formulas');
+            const formulaContainer = document.getElementById('drawer-formulas');
+            if (term.related_formulas && term.related_formulas.length > 0) {
+                formulaContainer.innerHTML = term.related_formulas.map(fid => `
+                    <span class="drawer-tag" style="background:#FAF5FF; color:#8B5CF6; border-color:#E9D5FF;" onclick="closeDrawer(); window.smritiExplain('${fid}')">
+                        ⓘ Explain ${fid}
+                    </span>
+                `).join('');
+                formulaSec.style.display = 'block';
+            } else {
+                formulaSec.style.display = 'none';
+            }
+
+            // Related Terms integration (reloads drawer on click!)
+            const termsSec = document.getElementById('section-terms');
+            const termsContainer = document.getElementById('drawer-terms');
+            if (term.related_terms && term.related_terms.length > 0) {
+                termsContainer.innerHTML = term.related_terms.map(tid => `
+                    <span class="drawer-tag" onclick="openTermDetail('${tid}')">
+                        ${tid}
+                    </span>
+                `).join('');
+                termsSec.style.display = 'block';
+            } else {
+                termsSec.style.display = 'none';
+            }
+
+            // FAQs
+            const faqSec = document.getElementById('section-faq');
+            const faqContainer = document.getElementById('drawer-faq');
+            if (term.faq && term.faq.length > 0) {
+                faqContainer.innerHTML = term.faq.map(item => `
+                    <div class="faq-item">
+                        <p class="faq-q">Q: ${item.q}</p>
+                        <p class="faq-a">${item.a}</p>
+                    </div>
+                `).join('');
+                faqSec.style.display = 'block';
+            } else {
+                faqSec.style.display = 'none';
+            }
+
+            // Mistakes
+            const mistakesSec = document.getElementById('section-mistakes');
+            const mistakesContainer = document.getElementById('drawer-mistakes');
+            if (term.common_mistakes && term.common_mistakes.length > 0) {
+                mistakesContainer.innerHTML = term.common_mistakes.map(item => `
+                    <div class="faq-item" style="border-left: 2px solid #EF4444; padding-left: 8px;">
+                        <p class="faq-q" style="color:#EF4444;">⚠️ Mistake: ${item.mistake}</p>
+                        <p class="faq-a">${item.a}</p>
+                    </div>
+                `).join('');
+                mistakesSec.style.display = 'block';
+            } else {
+                mistakesSec.style.display = 'none';
+            }
+
+            overlay.classList.add('open');
+            drawer.classList.add('open');
+        }
+
+        function closeDrawer() {
+            document.getElementById('drawer-overlay').classList.remove('open');
+            document.getElementById('detail-drawer').classList.remove('open');
+        }
+
+        // Auto-open term drawer from URL query parameters
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const termId = urlParams.get('term');
+            if (termId) {
+                openTermDetail(termId);
+            }
+        });
+    </script>
+</body>
+</html>
