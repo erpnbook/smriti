@@ -58,7 +58,7 @@ const SMRITI_ROUTE_MAP = {
   "cge_benefit_audit_logs":           "/cge-benefit-audit-logs",
   "formula_registry":                 "/smriti-formula-registry",
   "business_dictionary":              "/smriti-dictionary",
-  "pdt_dashboard":                    "/coming-soon",
+  "pdt_dashboard":                    "/smriti-pdt",
   "simulation_sandbox":               "/coming-soon",
   "knowledge_center":                 "/coming-soon",
 };
@@ -525,11 +525,9 @@ const SMRITI_NAV = {
       items: [
         { id: "pdt_dashboard",
           label: "PDT Dashboard",
-          route: "/coming-soon",
-          standalone_route: "/coming-soon",
-          status: "coming_soon",
-          progress: 75,
-          eta: "Q3 2026" },
+          route: "/smriti-pdt",
+          standalone_route: "/smriti-pdt",
+          status: "active" },
         { id: "simulation_sandbox",
           label: "Simulation Sandbox",
           route: "/coming-soon",

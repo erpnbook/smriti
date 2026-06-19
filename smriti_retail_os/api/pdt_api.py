@@ -139,3 +139,64 @@ def run_simulation(simulation_config):
     results = run_sandbox_simulation(config)
     
     return results
+
+
+@frappe.whitelist()
+def get_pdt_dashboard_list(filters=None):
+    """
+    Returns list of all SMRITI SKU Twin records matching filters.
+    Includes summary metrics for the header cards.
+    """
+    frappe.only_for(["System Manager", "SMRITI Store Manager", "SMRITI Cashier"])
+    
+    if isinstance(filters, str):
+        try:
+            filters = json.loads(filters)
+        except Exception:
+            filters = {}
+    elif not filters:
+        filters = {}
+        
+    db_filters = {}
+    if filters.get("party_stock_account"):
+        db_filters["party_stock_account"] = filters.get("party_stock_account")
+    if filters.get("twin_state"):
+        db_filters["twin_state"] = filters.get("twin_state")
+    if filters.get("item_code"):
+        db_filters["item_code"] = ["like", f"%{filters.get('item_code')}%"]
+        
+    # Read twins
+    twins = frappe.get_all(
+        "SMRITI SKU Twin",
+        filters=db_filters,
+        fields=[
+            "name", "company", "party_stock_account", "item_code", "current_stock",
+            "weekly_velocity", "weeks_of_cover", "twin_state", "reorder_suggestion",
+            "recommended_transfer_source", "recommended_transfer_qty", "transfer_benefit_score",
+            "predicted_stockout_date", "twin_quality_score", "twin_quality_status",
+            "variant_curve_status", "last_recalculated", "freshness_status"
+        ],
+        order_by="weeks_of_cover asc"
+    )
+    
+    # Calculate stats across ALL twins (unfiltered for accurate dashboard counters)
+    all_twins = frappe.get_all("SMRITI SKU Twin", fields=["twin_state"])
+    stats = {
+        "total": len(all_twins),
+        "healthy": sum(1 for t in all_twins if t.twin_state == "Healthy"),
+        "warning": sum(1 for t in all_twins if t.twin_state in ("Warning", "Monitor", "Replenish Soon")),
+        "critical": sum(1 for t in all_twins if t.twin_state == "Critical"),
+        "stockout": sum(1 for t in all_twins if t.twin_state == "Stockout"),
+        "dead_stock": sum(1 for t in all_twins if t.twin_state == "Dead Stock"),
+        "overstock": sum(1 for t in all_twins if t.twin_state == "Overstock")
+    }
+    
+    # Fetch active PSAs for filtering dropdowns
+    psas = frappe.get_all("SMRITI Party Stock Account", filters={"active": 1}, fields=["name", "customer", "location_name"])
+    
+    return {
+        "twins": twins,
+        "stats": stats,
+        "psas": psas
+    }
+

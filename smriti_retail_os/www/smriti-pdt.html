@@ -1,0 +1,680 @@
+/**
+ * @file: smriti_retail_os/www/smriti-pdt.html
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/smriti-pdt.html
+  @description: SMRITI Product Digital Twin (PDT) Dashboard — Standalone UI
+  @author: Jawahar R. Mallah <jawahar.mallah@gmail.com>
+  @version: 2.0.0
+  @license: MIT
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMRITI Product Digital Twin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-base:     #0a0f1e;
+      --bg-surface:  #0f1629;
+      --bg-card:     #131d35;
+      --bg-input:    #172040;
+      --border:      rgba(255,255,255,0.07);
+      --border-glow: rgba(37,99,235,0.2);
+      --accent:      #2563eb;
+      --accent-glow: rgba(37,99,235,0.5);
+      --accent-2:    #3b82f6;
+      --success:     #10b981;
+      --warning:     #f59e0b;
+      --danger:      #ef4444;
+      --text-1:      #e2e8f0;
+      --text-2:      #94a3b8;
+      --text-3:      #475569;
+      --radius:      12px;
+      --radius-sm:   8px;
+      --radius-lg:   16px;
+      --shadow:      0 8px 32px rgba(0,0,0,0.5);
+      --t:           0.2s ease;
+    }
+
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg-base); color: var(--text-1); font-family: 'Inter', sans-serif; font-size: 14px; }
+
+    .bg-grid {
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(37,99,235,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37,99,235,0.015) 1px, transparent 1px);
+      background-size: 50px 50px;
+      z-index: 0;
+    }
+    .bg-glow {
+      position: fixed; width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(37,99,235,0.04) 0%, transparent 70%);
+      top: -100px; left: -100px; z-index: 0; filter: blur(40px);
+    }
+
+    #app { position: relative; z-index: 1; width: 100vw; height: 100vh; display: flex; overflow: hidden; }
+
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    .topbar { height: 56px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0; }
+    .topbar-breadcrumbs { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-2); }
+    .topbar-breadcrumbs span.sep { color: var(--text-3); }
+    .topbar-breadcrumbs span.active { color: var(--text-1); }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .topbtn { background: none; border: none; color: var(--text-2); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all var(--t); }
+    .topbtn:hover { background: rgba(255,255,255,0.05); color: var(--text-1); }
+
+    /* Content Pane */
+    .content-pane {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Dashboard Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+    }
+    .metric-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: all var(--t);
+      cursor: pointer;
+    }
+    .metric-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-glow);
+      box-shadow: 0 8px 24px rgba(37,99,235,0.15);
+    }
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0; width: 4px;
+      background: var(--accent);
+    }
+    .metric-card.risk-green::before { background: var(--success); }
+    .metric-card.risk-amber::before { background: var(--warning); }
+    .metric-card.risk-red::before { background: var(--danger); }
+    .metric-card.risk-purple::before { background: #8b5cf6; }
+    .metric-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .metric-title { font-size: 0.8rem; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+    .metric-icon { color: var(--text-3); }
+    .metric-value { font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; color: var(--text-1); margin-bottom: 6px; }
+    .metric-desc { font-size: 0.78rem; color: var(--text-2); }
+
+    /* Filters Box */
+    .filter-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 200px; }
+    .filter-label { font-size: 0.75rem; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    input[type="text"], select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-1); font-size: 0.88rem; padding: 10px 14px; outline: none; transition: all var(--t);
+    }
+    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--border-glow); }
+
+    /* Tables */
+    .table-container { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-surface); }
+    .smriti-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
+    .smriti-table th { background: rgba(0,0,0,0.15); padding: 12px 16px; font-weight: 700; color: var(--text-2); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
+    .smriti-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text-1); vertical-align: middle; }
+    .smriti-table tr:last-child td { border-bottom: none; }
+    .smriti-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Twin State Badges */
+    .state-badge { font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; display: inline-block; text-align: center; }
+    .state-badge.healthy { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
+    .state-badge.warning { background: rgba(245,158,11,0.1); color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
+    .state-badge.critical { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+    .state-badge.stockout { background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); }
+    .state-badge.dead { background: rgba(75,85,99,0.2); color: #d1d5db; border: 1px solid rgba(75,85,99,0.4); }
+    .state-badge.overstock { background: rgba(139,92,246,0.1); color: #a78bfa; border: 1px solid rgba(139,92,246,0.2); }
+
+    /* WOC Bar */
+    .woc-bar-container { display: flex; align-items: center; gap: 8px; }
+    .woc-bar-bg { width: 60px; height: 6px; background: var(--bg-input); border-radius: 3px; overflow: hidden; }
+    .woc-bar-fill { height: 100%; border-radius: 3px; }
+    .woc-bar-fill.green { background: var(--success); }
+    .woc-bar-fill.orange { background: var(--warning); }
+    .woc-bar-fill.red { background: var(--danger); }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-sm); border: none; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all var(--t); text-decoration: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; box-shadow: 0 4px 12px var(--border-glow); }
+    .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.1); }
+    .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text-2); }
+    .btn-secondary:hover { border-color: var(--text-2); color: var(--text-1); }
+    .btn-xs { padding: 4px 8px; font-size: 0.72rem; border-radius: 4px; }
+
+    /* Toast Container */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 99999; }
+    .toast { padding: 12px 18px; border-radius: var(--radius); font-size: 0.88rem; font-weight: 600; color: white; min-width: 240px; display: flex; align-items: center; gap: 10px; animation: toast-in 0.3s ease; box-shadow: var(--shadow); }
+    .toast.success { background: #065f46; border: 1px solid rgba(16,185,129,0.3); }
+    .toast.error   { background: #7f1d1d; border: 1px solid rgba(239,68,68,0.3); }
+    .toast.info    { background: #1e1b4b; border: 1px solid rgba(99,102,241,0.3); }
+    @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+    /* Explain Tooltip Button */
+    .explain-btn { display: inline-flex; align-items: center; justify-content: center; background: none; border: none; color: var(--text-2); cursor: pointer; border-radius: 50%; padding: 2px; }
+    .explain-btn:hover { color: var(--accent-2); }
+
+    /* Modal Backdrop */
+    .modal-backdrop { position: fixed; inset: 0; z-index: 9000; background: rgba(3,7,18,0.85); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.22s; }
+    .modal-backdrop.open { opacity: 1; display: flex; }
+    .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; width: min(540px, 95vw); transform: translateY(20px); transition: transform 0.22s; box-shadow: var(--shadow); }
+    .modal-backdrop.open .modal { transform: translateY(0); }
+    .modal-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-1); display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .modal-close { margin-left: auto; background: none; border: none; color: var(--text-2); cursor: pointer; display: flex; align-items: center; }
+    .modal-close:hover { color: var(--danger); }
+
+    .explain-block { display: flex; flex-direction: column; gap: 12px; font-size: 0.9rem; line-height: 1.5; color: var(--text-2); }
+    .explain-formula { background: var(--bg-input); border-radius: var(--radius-sm); padding: 12px; font-family: monospace; color: var(--accent-2); font-size: 0.95rem; border: 1px solid var(--border); }
+    .explain-alert { background: rgba(37,99,235,0.05); border-left: 3px solid var(--accent); padding: 10px 14px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 0.85rem; color: var(--text-1); }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-2); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .empty-icon { font-size: 2.5rem; color: var(--text-3); }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+  </style>
+  <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div id="app">
+  <!-- Standalone Sidebar -->
+  <div id="smriti-sidebar-target" class="sidebar"></div>
+
+  <!-- Main Workspace -->
+  <div class="main-wrapper">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-breadcrumbs">
+        <span>SMRITI</span>
+        <span class="sep">/</span>
+        <span class="active">Product Digital Twin Dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <button class="topbtn" onclick="history.back()" title="Go Back">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <button class="topbtn" onclick="history.forward()" title="Go Forward">
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Scrollable content area -->
+    <div class="content-pane">
+      
+      <!-- Metrics Grid -->
+      <div class="metrics-grid">
+        <div class="metric-card" onclick="filterByState('')">
+          <div class="metric-header">
+            <span class="metric-title">Total SKU Twins</span>
+            <span class="material-symbols-outlined metric-icon">inventory_2</span>
+          </div>
+          <div class="metric-value" id="stat-total">0</div>
+          <div class="metric-desc">SKUs active in digital twins</div>
+        </div>
+
+        <div class="metric-card risk-green" onclick="filterByState('Healthy')">
+          <div class="metric-header">
+            <span class="metric-title">Healthy</span>
+            <span class="material-symbols-outlined metric-icon" style="color:var(--success);">check_circle</span>
+          </div>
+          <div class="metric-value" id="stat-healthy">0</div>
+          <div class="metric-desc">SKUs with sufficient stock cover</div>
+        </div>
+
+        <div class="metric-card risk-amber" onclick="filterByState('Warning')">
+          <div class="metric-header">
+            <span class="metric-title">Warning / Monitor</span>
+            <span class="material-symbols-outlined metric-icon" style="color:var(--warning);">error</span>
+          </div>
+          <div class="metric-value" id="stat-warning">0</div>
+          <div class="metric-desc">Medium cover risk SKU counts</div>
+        </div>
+
+        <div class="metric-card risk-red" onclick="filterByState('Critical')">
+          <div class="metric-header">
+            <span class="metric-title">Critical</span>
+            <span class="material-symbols-outlined metric-icon" style="color:var(--danger);">warning</span>
+          </div>
+          <div class="metric-value" id="stat-critical">0</div>
+          <div class="metric-desc">SKUs with cover under 2 weeks</div>
+        </div>
+
+        <div class="metric-card risk-red" onclick="filterByState('Stockout')">
+          <div class="metric-header">
+            <span class="metric-title">Stocked Out</span>
+            <span class="material-symbols-outlined metric-icon" style="color:#fca5a5;">cancel</span>
+          </div>
+          <div class="metric-value" id="stat-stockout">0</div>
+          <div class="metric-desc">SKUs out of stock in outlets</div>
+        </div>
+
+        <div class="metric-card risk-purple" onclick="filterByState('Overstock')">
+          <div class="metric-header">
+            <span class="metric-title">Overstock</span>
+            <span class="material-symbols-outlined metric-icon" style="color:#a78bfa;">inventory</span>
+          </div>
+          <div class="metric-value" id="stat-overstock">0</div>
+          <div class="metric-desc">SKUs with cover > 12 weeks</div>
+        </div>
+      </div>
+
+      <!-- Filters Panel -->
+      <div class="filter-panel">
+        <div class="filter-group">
+          <span class="filter-label">Search SKU / Item</span>
+          <input type="text" id="search-item" placeholder="Type SKU code..." oninput="triggerFilter()">
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Outlet / PSA</span>
+          <select id="filter-psa" onchange="triggerFilter()">
+            <option value="">All Outlets</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Twin State</span>
+          <select id="filter-state" onchange="triggerFilter()">
+            <option value="">All States</option>
+            <option value="Healthy">Healthy</option>
+            <option value="Monitor">Monitor</option>
+            <option value="Replenish Soon">Replenish Soon</option>
+            <option value="Critical">Critical</option>
+            <option value="Stockout">Stockout</option>
+            <option value="Dead Stock">Dead Stock</option>
+            <option value="Overstock">Overstock</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Twins Table Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title"><span class="material-symbols-outlined">query_stats</span> Product Twin Entities</span>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <div class="table-container" style="border:none; border-radius:0;">
+            <table class="smriti-table">
+              <thead>
+                <tr>
+                  <th>SKU Details</th>
+                  <th>Store / Outlet</th>
+                  <th>Current Stock</th>
+                  <th>Weekly Velocity</th>
+                  <th>Weeks of Cover</th>
+                  <th>Stockout Forecast</th>
+                  <th>Twin Quality</th>
+                  <th>Recommended Action</th>
+                  <th style="text-align: center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="twins-tbody">
+                <tr><td colspan="9" style="text-align:center;">Loading digital twin entities...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Explain WOC & Predictor (Rule ID: DOC-01 Compliance) -->
+<div class="modal-backdrop" id="modal-explain" onclick="closeModal('modal-explain')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">
+      <span class="material-symbols-outlined">info</span> ⓘ Explain Metric
+      <button class="modal-close" onclick="closeModal('modal-explain')"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div class="explain-block" id="explain-content">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-wrap"></div>
+
+<script>
+  const CSRF_TOKEN = '{{ csrf_token }}';
+  window.loggedUser = '{{ user }}';
+
+  const API = {
+    call(method, args = {}) {
+      return fetch('/api/method/' + method, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-frappe-csrf-token': CSRF_TOKEN
+        },
+        body: JSON.stringify(args)
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.exc) throw new Error(data._error_message || data.exc);
+        return data.message !== undefined ? data.message : data;
+      });
+    }
+  };
+
+  function toast(msg, type = 'success') {
+    const wrap = document.getElementById('toast-wrap');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    const icons = { success: 'check_circle', error: 'error', info: 'info' };
+    el.innerHTML = `<span class="material-symbols-outlined">${icons[type] || 'info'}</span><span>${msg}</span>`;
+    wrap.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+
+  function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('open');
+  }
+
+  function openModal(modalId) {
+    document.getElementById(modalId).classList.add('open');
+  }
+
+  // --- Filtering & Loading ---
+  let activeFilters = {
+    item_code: '',
+    party_stock_account: '',
+    twin_state: ''
+  };
+
+  function loadDashboardData() {
+    API.call('smriti_retail_os.api.pdt_api.get_pdt_dashboard_list', {
+      filters: activeFilters
+    })
+    .then(data => {
+      // 1. Update stats
+      const stats = data.stats || {};
+      document.getElementById('stat-total').innerText = stats.total || 0;
+      document.getElementById('stat-healthy').innerText = stats.healthy || 0;
+      document.getElementById('stat-warning').innerText = stats.warning || 0;
+      document.getElementById('stat-critical').innerText = stats.critical || 0;
+      document.getElementById('stat-stockout').innerText = stats.stockout || 0;
+      document.getElementById('stat-overstock').innerText = stats.overstock || 0;
+
+      // 2. Populate PSA Dropdown if not already populated
+      const psaSelect = document.getElementById('filter-psa');
+      if (psaSelect.options.length === 1 && data.psas) {
+        data.psas.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.name;
+          opt.innerText = `${p.location_name} (${p.customer})`;
+          psaSelect.appendChild(opt);
+        });
+      }
+
+      // 3. Render twins
+      renderTwinsTable(data.twins);
+    })
+    .catch(e => {
+      toast('Failed to load dashboard data: ' + e.message, 'error');
+    });
+  }
+
+  function renderTwinsTable(twins) {
+    const tbody = document.getElementById('twins-tbody');
+    if (!twins || !twins.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              <span class="material-symbols-outlined empty-icon">skateboarding</span>
+              <span>No Product Twin records match the selected filters.</span>
+            </div>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = twins.map(t => {
+      // State Badge class mapping
+      let stateClass = 'healthy';
+      if (t.twin_state === 'Critical') stateClass = 'critical';
+      else if (t.twin_state === 'Stockout') stateClass = 'stockout';
+      else if (t.twin_state === 'Dead Stock') stateClass = 'dead';
+      else if (t.twin_state === 'Overstock') stateClass = 'overstock';
+      else if (['Warning', 'Monitor', 'Replenish Soon'].includes(t.twin_state)) stateClass = 'warning';
+
+      // WOC indicator color
+      let wocColor = 'green';
+      if (t.weeks_of_cover < 2.0) wocColor = 'red';
+      else if (t.weeks_of_cover < 4.0) wocColor = 'orange';
+
+      // WOC bar width (capped at 12 weeks for visual representation)
+      const wocBarWidth = Math.min(100, (t.weeks_of_cover / 12.0) * 100);
+
+      // Rebuild button spinner state
+      const rebuildBtnId = `btn-rebuild-${t.name.replace(/[^a-zA-Z0-9]/g, '-')}`;
+
+      // Recommended action badge / text
+      let recText = t.recommendation_reason || 'No action needed';
+      if (t.reorder_suggestion > 0) {
+        if (t.recommended_transfer_source) {
+          recText = `🚚 Transfer ${t.recommended_transfer_qty} pcs from ${t.recommended_transfer_source.split('-').pop()} (Benefit: ${t.transfer_benefit_score})`;
+        } else {
+          recText = `📥 Replenish ${t.reorder_suggestion} pcs (Purchase Request)`;
+        }
+      }
+
+      return `
+        <tr>
+          <td style="font-weight:700; color:var(--text-1);">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="material-symbols-outlined" style="color:var(--accent-2); font-size:18px;">precision_manufacturing</span>
+              ${t.item_code}
+            </div>
+          </td>
+          <td>${t.party_stock_account.split('-').pop()}</td>
+          <td style="font-weight:600;">${parseFloat(t.current_stock || 0).toLocaleString()} pcs</td>
+          <td>${parseFloat(t.weekly_velocity || 0).toFixed(1)} / week</td>
+          <td>
+            <div class="woc-bar-container">
+              <div class="woc-bar-bg" title="WOC: ${t.weeks_of_cover} weeks">
+                <div class="woc-bar-fill ${wocColor}" style="width: ${wocBarWidth}%"></div>
+              </div>
+              <span style="font-weight:600;">${t.weeks_of_cover}w</span>
+              <button class="explain-btn" onclick="explainWoc('${t.name}')" title="Explain formula calculation">
+                <span class="material-symbols-outlined" style="font-size:16px;">info</span>
+              </button>
+            </div>
+          </td>
+          <td>
+            <span style="font-weight:600; color:${t.twin_state === 'Stockout' ? 'var(--danger)' : 'var(--text-1)'}">
+              ${t.twin_state === 'Stockout' ? 'Stockout' : (t.predicted_stockout_date || 'N/A')}
+            </span>
+          </td>
+          <td>
+            <span class="state-badge ${stateClass}">${t.twin_state}</span>
+          </td>
+          <td style="font-size:0.82rem; color:var(--text-2); font-weight:500;">
+            ${recText}
+          </td>
+          <td style="text-align: center;">
+            <button class="btn btn-secondary btn-xs" id="${rebuildBtnId}" onclick="recalculateTwin('${t.party_stock_account}', '${t.item_code}', '${rebuildBtnId}')" title="Recalculate digital twin">
+              <span class="material-symbols-outlined" style="font-size:14px;">sync</span> Recalc
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function triggerFilter() {
+    activeFilters.item_code = document.getElementById('search-item').value;
+    activeFilters.party_stock_account = document.getElementById('filter-psa').value;
+    activeFilters.twin_state = document.getElementById('filter-state').value;
+    loadDashboardData();
+  }
+
+  function filterByState(state) {
+    document.getElementById('filter-state').value = state;
+    triggerFilter();
+  }
+
+  function recalculateTwin(psa, itemCode, btnId) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    const origHtml = btn.innerHTML;
+    btn.innerHTML = `<span class="material-symbols-outlined" style="font-size:14px; animation:spin 1s linear infinite;">sync</span> Recalc...`;
+    btn.disabled = true;
+
+    API.call('smriti_retail_os.api.pdt_api.trigger_rebuild', {
+      party_stock_account: psa,
+      item_code: itemCode
+    })
+    .then(res => {
+      toast('Recalculation complete.', 'success');
+      loadDashboardData();
+    })
+    .catch(e => {
+      toast('Recalculation failed: ' + e.message, 'error');
+      btn.innerHTML = origHtml;
+      btn.disabled = false;
+    });
+  }
+
+  // --- Rule ID: DOC-01 Formula & Worked Example Transparency Overlay ---
+  function explainWoc(twinName) {
+    API.call('frappe.client.get', {
+      doctype: 'SMRITI SKU Twin',
+      name: twinName
+    })
+    .then(t => {
+      const explainContent = document.getElementById('explain-content');
+      
+      const stock = parseFloat(t.current_stock || 0);
+      const velocity = parseFloat(t.weekly_velocity || 0);
+      const dailyVelocity = velocity / 7.0;
+      
+      // Calculate weeks of cover worked example
+      const wocMath = velocity > 0 ? (stock / velocity).toFixed(2) : '99.0 (No sales/velocity)';
+      
+      // Calculate days to stockout worked example
+      const daysToStockout = dailyVelocity > 0 ? Math.ceil(stock / dailyVelocity) : 'N/A';
+      
+      explainContent.innerHTML = `
+        <div style="font-family:'Outfit', sans-serif; font-size:1.1rem; font-weight:700; color:var(--text-1); margin-bottom:8px;">
+          Product Twin: ${t.item_code} at ${t.party_stock_account.split('-').pop()}
+        </div>
+        
+        <div class="explain-alert">
+          <strong>Twin State: ${t.twin_state}</strong><br>
+          Current Stock is <strong>${stock} pcs</strong>. Weekly Sales Velocity is <strong>${velocity.toFixed(1)} pcs/week</strong>.
+        </div>
+
+        <div style="margin-top: 10px;">
+          <strong>1. Weeks of Cover (WOC) Formula</strong>
+          <div class="explain-formula">
+            Weeks of Cover = Current Stock / Weekly Sales Velocity
+          </div>
+          <div style="font-size:0.85rem; margin-top:4px;">
+            <strong>Worked Example:</strong> ${stock} pcs / ${velocity.toFixed(1)} pcs/week = <strong>${wocMath} weeks of cover</strong>.
+          </div>
+        </div>
+
+        <div style="margin-top: 10px;">
+          <strong>2. Stockout Date Prediction Formula</strong>
+          <div class="explain-formula">
+            Days to Stockout = Current Stock / (Weekly Sales Velocity / 7)<br>
+            Expected Stockout Date = Today + Days to Stockout
+          </div>
+          <div style="font-size:0.85rem; margin-top:4px;">
+            <strong>Worked Example:</strong> ${stock} pcs / (${velocity.toFixed(1)} / 7) pcs/day = <strong>${daysToStockout} days</strong>.<br>
+            Expected Stockout Date is calculated as: <strong>${t.predicted_stockout_date || 'N/A'}</strong>.
+          </div>
+        </div>
+
+        <div style="margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; font-size:0.85rem;">
+          <strong>Recommended Action:</strong> ${t.recommendation_reason || 'Monitor stock cover trends daily.'}
+        </div>
+        
+        <div style="font-size:0.75rem; color:var(--text-3); text-align:right; margin-top:6px;">
+          Formula version: ${t.forecast_version || 'PDT-2.0.1'} | Audited by AITDL Central Registry
+        </div>
+      `;
+      openModal('modal-explain');
+    })
+    .catch(e => {
+      toast('Failed to load metric details: ' + e.message, 'error');
+    });
+  }
+</script>
+
+<script>
+  // Add CSS spin animation
+  const style = document.createElement('style');
+  style.innerHTML = `
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `;
+  document.head.appendChild(style);
+</script>
+
+<!-- Standalone Sidebar Script Imports -->
+<script src="/assets/smriti_retail_os/js/smriti_nav_config.js?v=2.0.4"></script>
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.4"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // 1. Initialize standalone sidebar with the active view ID
+    if (window.SMRITI && SMRITI.renderFlexibleSidebar) {
+      SMRITI.renderFlexibleSidebar("pdt_dashboard");
+    }
+    
+    // 2. Fetch and render PDT list
+    loadDashboardData();
+  });
+</script>
+
+</body>
+</html>
+{% endblock %}

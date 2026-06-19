@@ -239,3 +239,28 @@ class TestPDT(TestPSV):
             "item_code": self.item
         })
         self.assertTrue(twin_exists)
+
+    def test_pdt_dashboard_list(self):
+        # 1. Create a twin record
+        twin = frappe.get_doc({
+            "doctype": "SMRITI SKU Twin",
+            "company": self.company,
+            "party_stock_account": self.account_name,
+            "item_code": self.item,
+            "current_stock": 30.0,
+            "weekly_velocity": 5.0,
+            "weeks_of_cover": 6.0,
+            "twin_state": "Healthy"
+        })
+        twin.insert(ignore_permissions=True)
+        frappe.db.commit()
+
+        # 2. Call the API method
+        from smriti_retail_os.api.pdt_api import get_pdt_dashboard_list
+        res = get_pdt_dashboard_list({"twin_state": "Healthy"})
+        
+        self.assertGreater(len(res["twins"]), 0)
+        self.assertEqual(res["twins"][0]["item_code"], self.item)
+        self.assertEqual(res["stats"]["healthy"], 1)
+        self.assertGreater(len(res["psas"]), 0)
+
