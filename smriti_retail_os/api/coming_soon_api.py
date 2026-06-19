@@ -24,6 +24,21 @@ COMING_SOON_REGISTRY = {
         "progress": 10,
         "eta":      "Q4 2026",
     },
+    "pdt_dashboard": {
+        "title":    "Product Digital Twin Dashboard",
+        "progress": 75,
+        "eta":      "Q3 2026",
+    },
+    "simulation_sandbox": {
+        "title":    "Simulation Sandbox",
+        "progress": 60,
+        "eta":      "Q3 2026",
+    },
+    "knowledge_center": {
+        "title":    "Knowledge Center Portal",
+        "progress": 10,
+        "eta":      "Q3 2026",
+    },
     # ── Features below are LIVE — removed from registry ──────────────────
     # analytics          → /analytics (live since v1.2.13)
     # supplier_payments  → /payments (live since v1.2.12)

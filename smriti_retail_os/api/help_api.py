@@ -731,6 +731,137 @@ HELP_CENTER_REGISTRY = {
                 "answer": _("Every glossary detail lookup logs a `DICTIONARY_ACCESSED` activity event in the SMRITI PSV Activity Log for compliance audits.")
             }
         ]
+    },
+    "pdt_dashboard": {
+        "title": _("Product Digital Twin (PDT) Dashboard"),
+        "category": "Analytics Guides",
+        "description": _("Predictive stock status tracking, sales velocity, and weeks of cover calculations per SKU."),
+        "about": _("This guide explains the SMRITI Product Digital Twin (PDT), state machine definitions, and replenishment matching."),
+        "author": {
+            "name": "Jawahar R. Mallah",
+            "title": _("Founder & Chief Architect, AITDL"),
+            "quote": _("Moving store operations from reactive stock tracking to predictive inventory planning.")
+        },
+        "content": _(
+            "The SMRITI Product Digital Twin (PDT) tracks the lifecycle and health of every SKU in the network, utilizing a predictive state machine.\n\n"
+            "1. Predictive PDT States\n"
+            "Each SKU Twin is classified dynamically based on inventory levels and sales velocity:\n"
+            "- Stockout: Current stock is 0 or less.\n"
+            "- Dead Stock: High risk of absolute stagnation based on inactivity period.\n"
+            "- Overstock: Weeks of Cover (WoC) exceeds 12 weeks.\n"
+            "- Critical: Weeks of Cover is less than 2 weeks.\n"
+            "- Replenish Soon: Weeks of Cover is between 2 and 4 weeks.\n"
+            "- Monitor: Weeks of Cover is between 4 and 6 weeks.\n"
+            "- Healthy: Optimal stock cover of 6 to 12 weeks.\n\n"
+            "2. Read Model & Redis Cache Layer\n"
+            "To support high-frequency queries, PDT stats are cached in Redis at key `smriti:pdt:{company}:{party_stock_account}:{item_code}` with a 1-hour TTL, ensuring fast dashboard load times.\n\n"
+            "3. State Transition Logs\n"
+            "Every twin recalculation triggers state machine evaluations and logs transitions for audit trace validation."
+        ),
+        "faqs": [
+            {
+                "question": _("How often does the PDT recalculate?"),
+                "answer": _("Recalculation is triggered automatically by downstream transactions (e.g. Sales Uploads, Physical Counts) or via the daily scheduled sweep. System managers can trigger a manual rebuild via the UI.")
+            },
+            {
+                "question": _("What mathematical inputs drive the Weeks of Cover calculation?"),
+                "answer": _("It divides current SKU stock by the weekly sales velocity. The velocity is computed using a 4-week lookback window to normalize seasonal or weekly demand variance.")
+            }
+        ]
+    },
+    "simulation_sandbox": {
+        "title": _("Simulation Sandbox & Scenario Planning"),
+        "category": "Analytics Guides",
+        "description": _("Risk-free in-memory scenario modeling for discounts, velocity spikes, and lead time changes."),
+        "about": _("Understand how to run simulation scenarios without altering active database ledger records."),
+        "author": {
+            "name": "Jawahar R. Mallah",
+            "title": _("Founder & Chief Architect, AITDL"),
+            "quote": _("Model business decisions before executing them on live ledger databases.")
+        },
+        "content": _(
+            "The SMRITI Simulation Sandbox enables executives to model 'what-if' scenarios in-memory, analyzing how operational changes impact supply chain metrics.\n\n"
+            "1. Sandbox Inputs\n"
+            "Users can tweak three primary parameters:\n"
+            "- Velocity Multiplier: Simulate demand spikes (e.g., 1.5x increase for holiday seasons).\n"
+            "- Lead Time Days Override: Model supply chain disruptions or shipping delays.\n"
+            "- Promotions & Pricing: Adjust pricing structures to see immediate impact on predicted stockout dates.\n\n"
+            "2. Pure In-Memory Calculations\n"
+            "The simulation runs entirely in memory without writing to active ledger tables (e.g., Stock Ledger Entries), protecting financial and inventory data from corruption.\n\n"
+            "3. Actionable Recommendations\n"
+            "The sandbox outputs simulated Weeks of Cover, expected stock-out dates, and recommended transfer/replenishment quantities."
+        ),
+        "faqs": [
+            {
+                "question": _("Can cashier users access the Simulation Sandbox?"),
+                "answer": _("No. The sandbox is restricted to SMRITI Store Manager and System Manager roles due to its strategic and planning nature.")
+            },
+            {
+                "question": _("How do I execute a simulation?"),
+                "answer": _("Navigate to SMRITI Home → Operations → Simulation Sandbox, set your multipliers and targets, and click 'Execute Simulation'.")
+            }
+        ]
+    },
+    "cge_engine": {
+        "title": _("Customer Grace Engine (CGE) Setup & Workflows"),
+        "category": "Governance Guides",
+        "description": _("Campaign management, promotion rules, coupon rules, loyalty rules, and liability snapshot auditing."),
+        "about": _("Detailed operational guide for managing benefit instruments, membership tiers, wallets, and liability reconciliation."),
+        "author": {
+            "name": "Jawahar R. Mallah",
+            "title": _("Founder & Chief Architect, AITDL"),
+            "quote": _("Transparent promotions, predictable loyalty programs, and fully auditable liabilities.")
+        },
+        "content": _(
+            "The Customer Grace Engine (CGE) is SMRITI's loyalty and promotions subsystem. It decouples complex marketing campaigns from ERPNext core ledgers.\n\n"
+            "1. Key Components\n"
+            "- Benefit Instruments: Coupons, loyalty points, cashback, and direct discounts.\n"
+            "- Membership Tiers: Dynamic customer leveling (Silver, Gold, Platinum) with reward accelerators.\n"
+            "- Benefit Wallets: Custodial store value trackers for customer loyalty points and pre-funded balances.\n\n"
+            "2. Budget Reservation\n"
+            "CGE locks loyalty point/coupon liabilities before invoice submission. The points/coupons are formalised when the invoice is submitted, or released back to the budget if the draft invoice is trashed.\n\n"
+            "3. Liability Snapshots & Auditing\n"
+            "To comply with financial disclosure requirements, CGE runs a daily job reconciling wallet balances and generating liability snapshots."
+        ),
+        "faqs": [
+            {
+                "question": _("How are CGE rules evaluated during checkout?"),
+                "answer": _("The checkout payload bridge transmits the draft cart to the CGE rules engine, which evaluates eligible coupons and returns discounts to the register in real-time.")
+            },
+            {
+                "question": _("Where are CGE liability reports accessed?"),
+                "answer": _("Go to the CGE section in the SMRITI sidebar and click 'Liability Snapshots' or run CGE reports in the Reports Center.")
+            }
+        ]
+    },
+    "knowledge_center": {
+        "title": _("Knowledge Center Portal"),
+        "category": "Governance Guides",
+        "description": _("Unified interface mapping user manuals, the business dictionary, formula registry, training center, and release notes."),
+        "about": _("Understand the unified portal design for Sprint 4 and knowledge access governance."),
+        "author": {
+            "name": "Jawahar R. Mallah",
+            "title": _("Founder & Chief Architect, AITDL"),
+            "quote": _("Knowledge is power only when it is organized, transparent, and discoverable.")
+        },
+        "content": _(
+            "The SMRITI Knowledge Center (/knowledge-center) is the unified discovery portal planned for Sprint 4.\n\n"
+            "1. Core Purpose\n"
+            "Instead of navigating separate pages for formulas, terms, and troubleshooting, the Knowledge Center will serve as a single hub to consume all documentation and reference tools.\n\n"
+            "2. Consolidated Hub Components\n"
+            "The portal will group and display:\n"
+            "- Business Dictionary (DOC-04): Term search and definitions.\n"
+            "- Formula Registry (DOC-02): Math expressions and worked examples.\n"
+            "- Training Center: Interactive exercises and SOPs.\n"
+            "- User Manuals: Multipage manuals and training guides.\n"
+            "- Release Notes: Version change histories and feature logs."
+        ),
+        "faqs": [
+            {
+                "question": _("When will the unified Knowledge Center be fully built?"),
+                "answer": _("The unified Knowledge Center portal is scheduled for deployment during Sprint 4 (Q3 2026). The menu item is currently reserved in the navigation sidebar.")
+            }
+        ]
     }
 }
 

@@ -152,7 +152,9 @@ def extend_bootinfo(bootinfo):
             "store_experience": comp_settings.get("store_experience") or "standard",
             "terminal_type": comp_settings.get("terminal_type") or "standard",
             "brand_overrides": comp_settings.get("brand_overrides") or {},
-            "cge_enabled": cge_enabled
+            "cge_enabled": True,
+            "ai_hub_enabled": True,
+            "intelligence_enabled": True
         })
 
     except Exception as e:
@@ -351,7 +353,9 @@ def get_smriti_session_info():
             "logo_url":          "/assets/smriti_retail_os/images/smriti_logo.svg",
             "frontend_enabled":  _is_smriti_frontend_enabled(),
             "smriti_site_config": {
-                "cge_enabled": cge_enabled
+                "cge_enabled": True,
+                "ai_hub_enabled": True,
+                "intelligence_enabled": True
             }
         }
     except Exception as e:

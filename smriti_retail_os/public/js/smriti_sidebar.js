@@ -223,9 +223,9 @@ SMRITI._buildSidebarDOM = function(active_page, shift) {
 
     // Site Config feature flags check
     const siteConfig = Object.assign({
-        "ai_hub_enabled": false,
-        "intelligence_enabled": false,
-        "cge_enabled": false
+        "ai_hub_enabled": true,
+        "intelligence_enabled": true,
+        "cge_enabled": true
     }, (frappe.boot && frappe.boot.smriti_site_config) || {});
 
     // Role restrictions for sections

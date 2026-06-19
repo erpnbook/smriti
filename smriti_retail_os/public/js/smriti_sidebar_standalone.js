@@ -44,9 +44,9 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
 
     // Site Config feature flags check
     const siteConfig = {
-        "ai_hub_enabled": false,
-        "intelligence_enabled": false,
-        "cge_enabled": false
+        "ai_hub_enabled": true,
+        "intelligence_enabled": true,
+        "cge_enabled": true
     };
 
     try {

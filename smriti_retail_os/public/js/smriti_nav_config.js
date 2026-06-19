@@ -58,6 +58,9 @@ const SMRITI_ROUTE_MAP = {
   "cge_benefit_audit_logs":           "/cge-benefit-audit-logs",
   "formula_registry":                 "/smriti-formula-registry",
   "business_dictionary":              "/smriti-dictionary",
+  "pdt_dashboard":                    "/coming-soon",
+  "simulation_sandbox":               "/coming-soon",
+  "knowledge_center":                 "/coming-soon",
 };
 
 function resolveSmritiRoute(key) {
@@ -481,6 +484,13 @@ const SMRITI_NAV = {
       label: "Help Desk",
       status: "active",
       items: [
+        { id: "knowledge_center",
+          label: "Knowledge Center",
+          route: "/coming-soon",
+          standalone_route: "/coming-soon",
+          status: "coming_soon",
+          progress: 10,
+          eta: "Q3 2026" },
         { id: "formula_registry",
           label: "Formula Registry",
           route: "/smriti-formula-registry",
@@ -511,8 +521,22 @@ const SMRITI_NAV = {
     {
       id: "ai_hub",
       label: "AI Hub",
-      status: "hidden",
+      status: "active",
       items: [
+        { id: "pdt_dashboard",
+          label: "PDT Dashboard",
+          route: "/coming-soon",
+          standalone_route: "/coming-soon",
+          status: "coming_soon",
+          progress: 75,
+          eta: "Q3 2026" },
+        { id: "simulation_sandbox",
+          label: "Simulation Sandbox",
+          route: "/coming-soon",
+          standalone_route: "/coming-soon",
+          status: "coming_soon",
+          progress: 60,
+          eta: "Q3 2026" },
         { id: "demand_forecasts",
           label: "Demand Forecasts",
           status: "hidden" },
