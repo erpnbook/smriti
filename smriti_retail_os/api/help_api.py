@@ -671,6 +671,66 @@ HELP_CENTER_REGISTRY = {
                 "answer": _("Yes. The CGE Checkout validation engine reads campaign configuration and budget balances in real-time. Once a budget cap is reached, or if a campaign is disabled in the explorer, the checkout engine will automatically stop applying that discount at the POS registers.")
             }
         ]
+    },
+    "formula_registry": {
+        "title": _("Formula Registry (DOC-02)"),
+        "category": "Governance Guides",
+        "description": _("Central repository for managing mathematical and forecasting formulas used in SMRITI OS."),
+        "about": _("This guide explains the SMRITI Formula Registry, how to register new mathematical formulas, and the audit and caching layers."),
+        "author": {
+            "name": "Jawahar R. Mallah",
+            "title": _("Founder & Chief Architect, AITDL"),
+            "quote": _("Standardized formulas prevent black-box decision making and build absolute operational trust.")
+        },
+        "content": _(
+            "The SMRITI Formula Registry is the core mathematical ledger of SMRITI Retail OS. It maps all key calculated metrics (like Weeks of Cover, Sales Velocity, and Dead Stock Score) to cryptographically traceable definitions.\n\n"
+            "1. Config-Driven Formula Schema\n"
+            "Each formula definition is managed under the `SMRITI Formula Definition` DocType. Records contain the formula ID, mathematical expression, variables map, business meaning, worked example, and interpretation bands.\n\n"
+            "2. Redis Caching Layer\n"
+            "To support high-concurrency and sub-second load times, formulas are cached in Redis under the key `smriti:explain:{formula_id}:{version}` with a TTL of 3600 seconds (1 hour). Subsequent loads bypass database queries.\n\n"
+            "3. Access Auditing\n"
+            "Every request to fetch a formula (hit or miss) is recorded in the `SMRITI PSV Activity Log` with `event_type = 'FORMULA_EXPLAINED'` to trace operational usage."
+        ),
+        "faqs": [
+            {
+                "question": _("Can store managers modify active formulas?"),
+                "answer": _("No. SMRITI Constitution restricts formula changes to Administrator and AITDL Chief Architect accounts to prevent tampering with core metrics.")
+            },
+            {
+                "question": _("What happens if a formula is missing in the registry?"),
+                "answer": _("The dashboard rendering engine enforces strict validation checks. Any computed KPI must exist in the registry, or the system blocks execution to prevent untraceable math.")
+            }
+        ]
+    },
+    "business_dictionary": {
+        "title": _("Business Dictionary (DOC-04)"),
+        "category": "Governance Guides",
+        "description": _("Searchable business glossary mapping key retail terms, relationships, and Hinglish definitions."),
+        "about": _("This guide describes the SMRITI Business Dictionary, the glossary schema, seeding, and relationships mapping."),
+        "author": {
+            "name": "Jawahar R. Mallah",
+            "title": _("Founder & Chief Architect, AITDL"),
+            "quote": _("When teams speak the same language, from cashiers to executives, operational errors drop to zero.")
+        },
+        "content": _(
+            "The SMRITI Business Dictionary is the central glossary mapping all critical retail operational terms (such as PSA, PSV, PDT, WOC, and Size Curves).\n\n"
+            "1. Localized Hinglish Explanations\n"
+            "To assist ground-level operators who may find pure English technical definitions confusing, the glossary includes localized Hinglish descriptions blending English retail vocabulary with Hindi sentence syntax.\n\n"
+            "2. Relational Lineage Maps\n"
+            "Glossary terms are mapped to related terms and related formulas via custom child doctypes `SMRITI Related Term` and `SMRITI Related Formula`, building a comprehensive lineage network.\n\n"
+            "3. Search & Category Filters\n"
+            "The standalone dictionary UI (/smriti-dictionary) features category-based filters and real-time fuzzy search to quickly locate terms, common mistakes, and FAQs."
+        ),
+        "faqs": [
+            {
+                "question": _("How are terms seeded into the dictionary?"),
+                "answer": _("SMRITI seeds 20 default retail terms using a 2-phase migration patch `seed_default_terms.py` to prevent validation errors from forward-referenced relationship links.")
+            },
+            {
+                "question": _("How are glossary accesses logged?"),
+                "answer": _("Every glossary detail lookup logs a `DICTIONARY_ACCESSED` activity event in the SMRITI PSV Activity Log for compliance audits.")
+            }
+        ]
     }
 }
 
