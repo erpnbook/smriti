@@ -31,7 +31,12 @@ const STATIC_ASSETS = [
     '/assets/smriti_retail_os/css/smriti_branding.css',
     '/assets/smriti_retail_os/css/smriti-reports.css',
     '/assets/smriti_retail_os/css/smriti_sales_invoice.css',
-    '/assets/smriti_retail_os/js/smriti_sidebar.js',
+    '/assets/smriti_retail_os/css/smriti_tokens.css',
+    '/assets/smriti_retail_os/css/smriti_sidebar_standalone.css',
+    '/assets/smriti_retail_os/js/smriti_sidebar_standalone.js',
+    '/assets/smriti_retail_os/js/smriti_session_lock.js',
+    '/assets/smriti_retail_os/js/smriti_ui_resolver.js',
+    '/assets/smriti_retail_os/js/smriti_theme_manager.js',
     '/assets/smriti_retail_os/js/main.js',
     '/assets/smriti_retail_os/js/smriti_payload_bridge.js',
     '/assets/smriti_retail_os/js/smriti_pwa.js',
@@ -50,8 +55,16 @@ const CACHE_STRATEGIES = {
     staleWhileRevalidate: [
         '/billing', '/sizewise_invoice', '/purchase', '/sizewise_item',
         '/smriti', '/inventory', '/eway_bill', '/customers', '/suppliers',
-        '/item_master', '/security', '/platform_center', '/shift', '/barcode',
-        '/products', '/sales_invoices', '/configure'
+        '/item-master', '/security', '/platform_center', '/shift', '/barcode-center',
+        '/products', '/sales-invoices', '/config-portal', '/sales-returns', '/delivery-challan',
+        '/purchase-receipt', '/purchase-invoice', '/payments', '/supplier-returns', '/stock-audit',
+        '/sales-upload', '/brand-master', '/category-master', '/scheme-creator', '/psv-dashboard',
+        '/psv-opening-balance', '/release-notes', '/support', '/psv-reconciliation',
+        '/psv-exception-analysis', '/cge-benefit-instruments', '/cge-membership-tiers',
+        '/cge-loyalty-programs', '/cge-campaigns', '/cge-promotion-rules', '/cge-coupon-rules',
+        '/cge-loyalty-rules', '/cge-benefit-wallets', '/cge-customer-benefit-profiles',
+        '/cge-benefit-resolution-policies', '/cge-liability-snapshots', '/cge-benefit-audit-logs',
+        '/smriti-cge', '/coming-soon', '/smriti-help'
     ],
 };
 

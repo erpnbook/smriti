@@ -21,6 +21,10 @@ import unittest
 
 class TestCGEV2Constraints(unittest.TestCase):
     def setUp(self):
+        # Create missing indexes for CGE v2 testing
+        from smriti_retail_os.create_indexes import run as create_db_indexes
+        create_db_indexes()
+
         # We check if CGE v2 tables exist before running database tests
         self.wallet_table = "SMRITI Benefit Wallet"
         self.ledger_table = "SMRITI Benefit Ledger"

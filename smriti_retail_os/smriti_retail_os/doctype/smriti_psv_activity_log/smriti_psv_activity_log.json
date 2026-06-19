@@ -8,6 +8,7 @@
     "timestamp",
     "user",
     "action_type",
+    "event_type",
     "party_stock_account",
     "reference_doctype",
     "reference_name",
@@ -36,9 +37,15 @@
       "fieldname": "action_type",
       "fieldtype": "Select",
       "label": "Action Type",
-      "options": "\nUpload Sales\nApprove Snapshot\nSubmit Dispatch\nCancel Dispatch\nOpening Balance Import\nReconciliation Alert",
+      "options": "\nUpload Sales\nApprove Snapshot\nSubmit Dispatch\nCancel Dispatch\nOpening Balance Import\nReconciliation Alert\nFormula Explained",
       "reqd": 1,
       "in_list_view": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "event_type",
+      "fieldtype": "Data",
+      "label": "Event Type",
       "read_only": 1
     },
     {

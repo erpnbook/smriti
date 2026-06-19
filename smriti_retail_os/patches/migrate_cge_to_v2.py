@@ -21,7 +21,7 @@ from frappe import _
 from frappe.utils import flt, now_datetime
 
 # DRY_RUN = True blocks database mutation and only performs dry-run validation, reporting counts and schemas.
-DRY_RUN = True
+DRY_RUN = False
 
 REQUIRED_INDEXES = {
     "SMRITI Benefit Wallet": {

@@ -70,7 +70,7 @@ frappe.ui.form.on('Item', {
         // HSN-first: when HSN code changes, auto-derive GST % from HSN master
         if (frm.doc.gst_hsn_code) {
             frappe.call({
-                method: 'smriti_retail_os.smriti_retail_os.item_master_api.get_hsn_gst_rate',
+                method: 'smriti_retail_os.item_master_api.get_hsn_gst_rate',
                 args: { hsn_code: frm.doc.gst_hsn_code },
                 callback: function(r) {
                     if (r.message !== undefined) {

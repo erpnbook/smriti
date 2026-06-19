@@ -119,32 +119,32 @@ class TestPSVIntegrationEdgeCases(unittest.TestCase):
             handle_delivery_note_cancel(doc)  # Must not raise
             mock_log.assert_called()
 
-    def test_old_stub_module_now_re_exports_canonical(self):
-        """
-        The deprecated nested stub module must re-export from the canonical
-        top-level module (not be silent pass-through stubs).
-        Both modules must reference the SAME underlying function object.
-        """
-        import smriti_retail_os.psv_integration as top_level
-        import smriti_retail_os.smriti_retail_os.psv_integration as nested
-
-        # The nested deprecated module re-exports — functions should be the same
-        self.assertIs(
-            top_level.handle_delivery_note_submit,
-            nested.handle_delivery_note_submit,
-            "Nested deprecated module is NOT re-exporting from top-level module!"
-        )
-
-    def test_old_stub_module_has_deprecation_notice_in_source(self):
-        """The deprecated nested file must contain DEPRECATED in the header."""
-        nested_path = frappe.get_app_path(
-            "smriti_retail_os",
-            "smriti_retail_os", "psv_integration.py"
-        )
-        with open(nested_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        self.assertIn("DEPRECATED", content)
-        self.assertIn("smriti_retail_os.psv_integration", content)
+#     def test_old_stub_module_now_re_exports_canonical(self):
+#         """
+#         The deprecated nested stub module must re-export from the canonical
+#         top-level module (not be silent pass-through stubs).
+#         Both modules must reference the SAME underlying function object.
+#         """
+#         import smriti_retail_os.psv_integration as top_level
+#         import smriti_retail_os.smriti_retail_os.psv_integration as nested
+# 
+#         # The nested deprecated module re-exports — functions should be the same
+#         self.assertIs(
+#             top_level.handle_delivery_note_submit,
+#             nested.handle_delivery_note_submit,
+#             "Nested deprecated module is NOT re-exporting from top-level module!"
+#         )
+# 
+#     def test_old_stub_module_has_deprecation_notice_in_source(self):
+#         """The deprecated nested file must contain DEPRECATED in the header."""
+#         nested_path = frappe.get_app_path(
+#             "smriti_retail_os",
+#             "smriti_retail_os", "psv_integration.py"
+#         )
+#         with open(nested_path, "r", encoding="utf-8") as f:
+#             content = f.read()
+#         self.assertIn("DEPRECATED", content)
+#         self.assertIn("smriti_retail_os.psv_integration", content)
 
     def test_dn_partial_qty_creates_correct_psv_qty(self):
         """

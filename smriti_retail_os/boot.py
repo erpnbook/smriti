@@ -27,6 +27,22 @@ import fnmatch
 import werkzeug.routing.exceptions
 from frappe import _
 from smriti_retail_os.security_constants import PROTECTED_CONFIG_PATTERNS
+from werkzeug.exceptions import HTTPException
+from werkzeug.wrappers import Response
+
+class ServiceWorkerResponse(HTTPException):
+    def __init__(self, content):
+        self.content = content
+        super(ServiceWorkerResponse, self).__init__()
+
+    def get_response(self, environ=None):
+        response = Response(
+            self.content,
+            content_type='application/javascript; charset=utf-8',
+        )
+        response.headers['Service-Worker-Allowed'] = '/'
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        return response
 
 # ── Role → SMRITI Route mapping ───────────────────────────────────
 SMRITI_ROLE_ROUTES = {
@@ -171,6 +187,16 @@ def check_desk_access():
 
         path = frappe.request.path or ""
 
+        # Serve sw.js directly at root scope with correct MIME type to bypass Frappe website HTML rendering
+        if path == "/sw.js":
+            sw_path = frappe.get_app_path('smriti_retail_os', 'public', 'js', 'sw.js')
+            try:
+                with open(sw_path, 'rb') as f:
+                    sw_content = f.read()
+            except Exception:
+                sw_content = b""
+            raise ServiceWorkerResponse(sw_content)
+
         # ─── v1.8.2a: Block /backups/ direct-download for unsafe sessions / protected files
         if path.startswith("/backups/"):
             user = getattr(frappe.session, "user", "Guest")
@@ -227,7 +253,7 @@ def check_desk_access():
             if not _is_desk_allowed(user, user_roles):
                 raise werkzeug.routing.exceptions.RequestRedirect("/smriti")
 
-    except werkzeug.routing.exceptions.RequestRedirect:
+    except (werkzeug.routing.exceptions.RequestRedirect, HTTPException):
         raise
     except (frappe.PermissionError, frappe.AuthenticationError):
         raise  # Intentional security responses — must not be swallowed

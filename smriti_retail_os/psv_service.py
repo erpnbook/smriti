@@ -134,7 +134,17 @@ def process_sales_invoice_submit(doc, method=None):
             create_psv_transaction(doc.custom_party_stock_account, tx_type, items_data, doc.company, doc.doctype, doc.name, "Generated from Sales Invoice", get_posting_datetime(doc))
     except Exception as e:
         frappe.log_error(title=f"PSV Error: {doc.name}", message=frappe.get_traceback())
-        frappe.get_doc({"doctype": "SMRITI PSV Exception Record", "party_stock_account": doc.custom_party_stock_account, "exception_type": "Hook Failure", "reference_doctype": doc.doctype, "reference_name": doc.name, "description": str(e), "status": "Pending Reconciliation"}).insert(ignore_permissions=True)
+        frappe.get_doc({
+            "doctype": "SMRITI PSV Exception Record",
+            "timestamp": now_datetime(),
+            "last_seen": now_datetime(),
+            "party_stock_account": doc.custom_party_stock_account,
+            "alert_type": "Hook Failure",
+            "reference_doctype": doc.doctype,
+            "reference_name": doc.name,
+            "reconciliation_notes": str(e),
+            "status": "Pending Reconciliation"
+        }).insert(ignore_permissions=True)
         frappe.db.commit()
 
 def process_sales_invoice_cancel(doc, method=None):
@@ -144,7 +154,17 @@ def process_sales_invoice_cancel(doc, method=None):
         if tx_name: frappe.get_doc("SMRITI PSV Transaction", tx_name).cancel()
     except Exception as e:
         frappe.log_error(title=f"PSV Cancel Error: {doc.name}", message=frappe.get_traceback())
-        frappe.get_doc({"doctype": "SMRITI PSV Exception Record", "party_stock_account": doc.custom_party_stock_account, "exception_type": "Hook Failure", "reference_doctype": doc.doctype, "reference_name": doc.name, "description": str(e), "status": "Pending Reconciliation"}).insert(ignore_permissions=True)
+        frappe.get_doc({
+            "doctype": "SMRITI PSV Exception Record",
+            "timestamp": now_datetime(),
+            "last_seen": now_datetime(),
+            "party_stock_account": doc.custom_party_stock_account,
+            "alert_type": "Hook Failure",
+            "reference_doctype": doc.doctype,
+            "reference_name": doc.name,
+            "reconciliation_notes": str(e),
+            "status": "Pending Reconciliation"
+        }).insert(ignore_permissions=True)
         frappe.db.commit()
 # ─── WEEKLY SALES UPLOAD ──────────────────────────────────────────────────────
 

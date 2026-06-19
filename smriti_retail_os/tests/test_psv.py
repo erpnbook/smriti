@@ -77,6 +77,15 @@ class TestPSV(FrappeTestCase):
             addr.insert(ignore_permissions=True)
             frappe.db.commit()
 
+        # Resolve or create Warehouse for Test PSV Company
+        self.warehouse = frappe.db.get_value("Warehouse", {"company": self.company, "is_group": 0}, "name")
+        if not self.warehouse:
+            w = frappe.new_doc("Warehouse")
+            w.warehouse_name = "Test Stores"
+            w.company = self.company
+            w.insert(ignore_permissions=True)
+            self.warehouse = w.name
+
         # Create valid GST HSN Code record for India Compliance
         self.hsn_code = frappe.db.exists("GST HSN Code", "998311") or frappe.db.get_value("GST HSN Code", {}, "name")
         if not self.hsn_code:

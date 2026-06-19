@@ -335,7 +335,7 @@ class SmritiItemMasterController {
                     const hsn_val = $(this).val();
                     if (hsn_val) {
                         frappe.call({
-                            method: 'smriti_retail_os.smriti_retail_os.item_master_api.get_hsn_gst_rate',
+                            method: 'smriti_retail_os.item_master_api.get_hsn_gst_rate',
                             args: { hsn_code: hsn_val },
                             callback: function (r) {
                                 if (r.message !== undefined && rows[rowIdx]) {
@@ -499,7 +499,7 @@ class SmritiItemMasterController {
             const hsn = row.data['HSN CODE'];
             if (hsn) {
                 frappe.call({
-                    method: 'smriti_retail_os.smriti_retail_os.item_master_api.get_hsn_gst_rate',
+                    method: 'smriti_retail_os.item_master_api.get_hsn_gst_rate',
                     args: { hsn_code: hsn },
                     callback: function (r) {
                         if (r.message !== undefined && self._get_rows(suffix)[rowIdx]) {

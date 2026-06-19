@@ -337,7 +337,7 @@ async function loadDashboardSummary() {
 async function loadPsaList() {
     try {
         // SEC-001 FIX: Route through SMRITI service controller, not raw frappe.client.get_list
-        const data = await api('smriti_retail_os.smriti_retail_os.psv_api.list_psas');
+        const data = await api('smriti_retail_os.psv_api.list_psas');
         masterPsaList = data || [];
         renderTable(masterPsaList);
     } catch(e) {
@@ -487,7 +487,7 @@ async function openEditPsaModal(name) {
     try {
         toast('Fetching account details...', 'info');
         // SEC-001 FIX: Route through SMRITI service controller, not raw frappe.client.get
-        const a = await api('smriti_retail_os.smriti_retail_os.psv_api.get_psa', { name: name });
+        const a = await api('smriti_retail_os.psv_api.get_psa', { name: name });
 
         document.getElementById('modal-action-title').textContent = `Edit Account: ${a.name}`;
         document.getElementById('psa-id').value = a.name;
@@ -541,7 +541,7 @@ async function savePsaDetail() {
     try {
         if (!psaId) {
             // SEC-001 FIX: Use SMRITI service controller instead of raw frappe.client.insert
-            await api('smriti_retail_os.smriti_retail_os.psv_api.create_psa', {
+            await api('smriti_retail_os.psv_api.create_psa', {
                 company, customer,
                 location_name: location,
                 zone, region,
@@ -552,7 +552,7 @@ async function savePsaDetail() {
             toast('Account created successfully!', 'success');
         } else {
             // SEC-001 FIX: Use SMRITI service controller instead of raw frappe.client.set_value
-            await api('smriti_retail_os.smriti_retail_os.psv_api.update_psa', {
+            await api('smriti_retail_os.psv_api.update_psa', {
                 name: psaId,
                 zone, region,
                 area_manager: manager || null,

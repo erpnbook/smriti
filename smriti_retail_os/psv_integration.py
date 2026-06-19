@@ -238,13 +238,16 @@ def handle_sales_return_cancel(doc, method=None):
 def _create_dn_exception_record(doc, psa, exception_type, description):
     """Creates a SMRITI PSV Exception Record for operational health monitoring."""
     try:
+        from frappe.utils import now_datetime
         frappe.get_doc({
             "doctype": "SMRITI PSV Exception Record",
             "party_stock_account": psa,
-            "exception_type": exception_type,
+            "alert_type": exception_type,
+            "timestamp": now_datetime(),
+            "last_seen": now_datetime(),
             "reference_doctype": doc.doctype,
             "reference_name": doc.name,
-            "description": description,
+            "reconciliation_notes": description,
             "status": "Pending Reconciliation"
         }).insert(ignore_permissions=True)
         frappe.db.commit()

@@ -24,7 +24,7 @@ import frappe
 from frappe import _
 from frappe.utils.file_manager import get_file_path
 
-from smriti_retail_os.smriti_retail_os.psv_ledger_service import create_transaction
+from smriti_retail_os.psv_ledger_service import create_transaction
 
 
 def process_upload(upload_doc_name: str):

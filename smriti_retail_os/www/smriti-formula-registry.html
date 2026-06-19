@@ -14,6 +14,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMRITI Formula Registry</title>
     <link rel="icon" href="/assets/smriti_retail_os/images/smriti_logo.svg">
+    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_explain.css">
+    <script src="/assets/smriti_retail_os/js/smriti_explain.js"></script>
     <style>
         :root {
             --navy-blue: #1A2B5C;
@@ -546,7 +548,10 @@
                             <span class="formula-id">{{ f.formula_id }}</span>
                             <h3 class="formula-title">{{ f.formula_name }}</h3>
                         </div>
-                        <span class="category-badge">{{ f.formula_category }}</span>
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                            <span class="category-badge">{{ f.formula_category }}</span>
+                            <button class="filter-tag" style="padding: 4px 8px; font-size: 11px; margin: 0; box-shadow: none; border-radius: 6px; border: 1px solid var(--bright-blue); color: var(--bright-blue); font-weight: 700; background: transparent; cursor: pointer; transition: var(--transition);" onclick="event.stopPropagation(); testExplainFormula('{{ f.formula_id }}')">ⓘ Explain</button>
+                        </div>
                     </div>
 
                     <div class="formula-expr-box">
@@ -638,6 +643,12 @@
                     recommended action goes here.
                 </div>
             </div>
+
+            <div class="drawer-section" style="margin-top: 12px;">
+                <button class="filter-tag" style="background: var(--bright-blue); color: white; border-color: var(--bright-blue); padding: 12px; width: 100%; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; text-align: center; justify-content: center;" onclick="closeDrawer(); testExplainFormula(document.getElementById('drawer-id').textContent)">
+                    🔍 Open Explain Modal
+                </button>
+            </div>
         </div>
     </div>
 
@@ -728,6 +739,23 @@
 
             overlay.classList.add('open');
             drawer.classList.add('open');
+        }
+
+        function testExplainFormula(formulaId) {
+            const sampleInputs = {
+                "INV-001": { total_sales_qty: 15, lookback_days: 30, result: 3.5 },
+                "INV-002": { current_stock: 84, weekly_velocity: 20, result: 4.2 },
+                "INV-003": { active_days_since_last_sale: 90, max_inactive_days_allowed: 180, result: 50 },
+                "FRC-001": { coefficient_of_variation: 0.15, result: 85 },
+                "OHS-001": { sync_delay_hours: 4, variance_percentage: 5, result: 73 },
+                "TRF-001": { sales_retaining_value: 5000, freight_cost: 300, origin_stockout_risk_penalty: 200, result: 4500 },
+                "SAL-001": { total_sales_qty: 40, opening_stock: 80, received_stock: 20, result: 40 },
+                "AUD-001": { physical_qty: 98, ledger_qty: 100, result: 98 },
+                "INV-004": { annual_sales_cost: 120000, average_inventory_value: 30000, result: 4 },
+                "VAR-001": { active_available_sizes: 6, total_sizes_in_curve: 8, result: 75 },
+                "KGF-001": { registered_kpis: 11, total_kpis: 11, result: 100 }
+            };
+            window.smritiExplain(formulaId, sampleInputs[formulaId] || null);
         }
 
         function closeDrawer() {

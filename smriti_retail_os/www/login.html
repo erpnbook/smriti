@@ -19,7 +19,7 @@
 <script>
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/assets/smriti_retail_os/js/sw.js')
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
             .then(reg => console.log('[SMRITI] SW registered: ', reg.scope))
             .catch(err => console.log('[SMRITI] SW registration failed: ', err));
     });

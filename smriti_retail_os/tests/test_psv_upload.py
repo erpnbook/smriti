@@ -13,7 +13,7 @@
 
 import frappe
 from frappe.tests.utils import FrappeTestCase
-from smriti_retail_os.smriti_retail_os.psv_upload_service import process_upload
+from smriti_retail_os.psv_upload_service import process_upload
 
 class TestPSVUpload(FrappeTestCase):
     def test_atomic_rollback_on_bad_barcode(self):

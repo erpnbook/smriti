@@ -644,6 +644,8 @@ tbody tr:last-child td { border-bottom: none; }
             </div>
         <div class="topbar-divider"></div>
         <div class="topbar-invoice">Invoice: <b id="tb-invoice">NEW BILL</b></div>
+        <div class="topbar-divider"></div>
+        <div class="topbar-invoice" id="network-status" style="font-weight:600;font-size:0.82rem;">🟢 Online</div>
         <div class="topbar-shortcuts">
             <b>F2</b> Search &nbsp;|&nbsp; <b>F3</b> Customer &nbsp;|&nbsp; <b>F4</b> Hold &nbsp;|&nbsp; <b>F5</b> Recall &nbsp;|&nbsp; <b>F6</b> Pay &nbsp;|&nbsp; <b>F9</b> Submit
         </div>
@@ -1610,7 +1612,40 @@ async function checkout() {
         overlay.style.display = 'flex';
 
     } catch (e) {
-        toast(`Submission failed: ${e.message}`, 'error');
+        if (!navigator.onLine || e.message.includes('Failed to fetch') || e.message.includes('NetworkError') || e.message.includes('network')) {
+            if (typeof window.SmritiOfflineStore !== 'undefined') {
+                try {
+                    const payload = {
+                        cashier: S.user,
+                        customer: S.customer,
+                        items: S.items,
+                        payments: payments,
+                        loyalty_points: document.getElementById('loyalty-input').value || 0,
+                        invoice_name: S.invoiceName || null,
+                        on_credit: onCredit,
+                        tax_override: S.tax_override || 'Default',
+                        billing_address: S.billing_address || null,
+                        shipping_address: S.shipping_address || null,
+                    };
+                    const queueId = await window.SmritiOfflineStore.savePendingInvoice(payload, CSRF_TOKEN);
+                    
+                    if (typeof SMRITI_PWA !== 'undefined' && typeof SMRITI_PWA.triggerBackgroundSync === 'function') {
+                        await SMRITI_PWA.triggerBackgroundSync();
+                    }
+                    
+                    document.getElementById('success-invoice-name').textContent = `OFFLINE QUEUED: Local Bill #${queueId}`;
+                    S.lastPrintUrl = null;
+                    document.getElementById('success-overlay').style.display = 'flex';
+                    toast('Offline: Invoice saved to offline queue', 'success');
+                } catch (dbErr) {
+                    toast(`Offline queue failed: ${dbErr.message}`, 'error');
+                }
+            } else {
+                toast(`Submission failed: ${e.message}`, 'error');
+            }
+        } else {
+            toast(`Submission failed: ${e.message}`, 'error');
+        }
     }
 
     btn.disabled = false;

@@ -71,7 +71,7 @@ def make_ledger_entry(company, posting_datetime, party_stock_account, item_code,
     return ple
 
 
-def log_activity(action_type, party_stock_account=None, reference_doctype=None, reference_name=None, details=None):
+def log_activity(action_type, party_stock_account=None, reference_doctype=None, reference_name=None, details=None, event_type=None):
     """
     Creates an entry in the SMRITI PSV Activity Log.
     """
@@ -87,6 +87,7 @@ def log_activity(action_type, party_stock_account=None, reference_doctype=None, 
         "timestamp": frappe.utils.now_datetime(),
         "user": frappe.session.user or "Administrator",
         "action_type": action_type,
+        "event_type": event_type,
         "party_stock_account": party_stock_account,
         "reference_doctype": reference_doctype,
         "reference_name": reference_name,

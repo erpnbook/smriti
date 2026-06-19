@@ -22,6 +22,12 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        import frappe.utils.background_jobs
+        cls._original_validate_queue = frappe.utils.background_jobs.validate_queue
+        frappe.utils.background_jobs.validate_queue = lambda qtype, *args, **kwargs: None
+        if hasattr(frappe.utils.background_jobs, "default_queue_list"):
+            if "barcode" not in frappe.utils.background_jobs.default_queue_list:
+                frappe.utils.background_jobs.default_queue_list.append("barcode")
         # Clean up any test templates and their versions
         test_templates = ["TEST_ZPL_TEMPLATE", "TEST_TSPL_TEMPLATE", "TEST_MAPPINGS_TEMPLATE", "TEST_TOO_LARGE", "TEST_INVALID_MAPPINGS", "TEST_RESTORE_SNAP_TEMPLATE", "TEST_LOCK_TEMPLATE", "TEST_LEGACY_TEMPLATE"]
         frappe.db.delete("SMRITI Print Template Version", {"template": ["in", test_templates]})
@@ -31,7 +37,25 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         seed_master_doctypes()
         setup_activity_log_options()
 
+    @classmethod
+    def tearDownClass(cls):
+        import frappe.utils.background_jobs
+        if hasattr(cls, "_original_validate_queue"):
+            frappe.utils.background_jobs.validate_queue = cls._original_validate_queue
+        super().tearDownClass()
+
+    def setUp(self):
+        import frappe.utils.background_jobs
+        self._original_validate_queue = frappe.utils.background_jobs.validate_queue
+        frappe.utils.background_jobs.validate_queue = lambda qtype, *args, **kwargs: None
+        if hasattr(frappe.utils.background_jobs, "default_queue_list"):
+            if "barcode" not in frappe.utils.background_jobs.default_queue_list:
+                frappe.utils.background_jobs.default_queue_list.append("barcode")
+
     def tearDown(self):
+        import frappe.utils.background_jobs
+        if hasattr(self, "_original_validate_queue"):
+            frappe.utils.background_jobs.validate_queue = self._original_validate_queue
         # Clean up test templates and their versions
         test_templates = ["TEST_ZPL_TEMPLATE", "TEST_TSPL_TEMPLATE", "TEST_MAPPINGS_TEMPLATE", "TEST_TOO_LARGE", "TEST_INVALID_MAPPINGS", "TEST_RESTORE_SNAP_TEMPLATE", "TEST_LOCK_TEMPLATE", "TEST_LEGACY_TEMPLATE"]
         frappe.db.delete("SMRITI Print Template Version", {"template": ["in", test_templates]})

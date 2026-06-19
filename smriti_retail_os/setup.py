@@ -2048,6 +2048,26 @@ def setup_smriti_retail_os():
                 "module": "SMRITI Retail OS"
             }
         ],
+        "Delivery Note": [
+            {
+                "fieldname": "custom_party_stock_account",
+                "label": "Party Stock Account (PSV)",
+                "fieldtype": "Link",
+                "options": "SMRITI Party Stock Account",
+                "insert_after": "customer",
+                "module": "SMRITI Retail OS"
+            }
+        ],
+        "Stock Entry": [
+            {
+                "fieldname": "custom_party_stock_account",
+                "label": "Party Stock Account (PSV)",
+                "fieldtype": "Link",
+                "options": "SMRITI Party Stock Account",
+                "insert_after": "naming_series",
+                "module": "SMRITI Retail OS"
+            }
+        ],
         "Sales Invoice": [
             {
                 "fieldname": "custom_sizewise_json",
