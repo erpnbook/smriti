@@ -1504,3 +1504,73 @@ def get_offline_cache():
         
     return result_dict
 
+
+def get_cge_generic_fields_meta(doctype):
+    """
+    Returns field metadata for CGE DocType to render form fields dynamically in the UI.
+    """
+    import json
+    meta = frappe.get_meta(doctype)
+    fields = []
+    for f in meta.fields:
+        if not f.hidden and f.fieldtype not in ['Section Break', 'Column Break']:
+            fields.append({
+                "fieldname": f.fieldname,
+                "label": f.label,
+                "fieldtype": f.fieldtype,
+                "reqd": f.reqd,
+                "options": f.options,
+                "default": f.default
+            })
+    return fields
+
+
+def save_cge_generic_doc_service(doctype, doc_data):
+    """
+    Saves (inserts or updates) a SMRITI CGE document.
+    """
+    import json
+    if isinstance(doc_data, str):
+        doc_data = json.loads(doc_data)
+
+    name = doc_data.get("name")
+    if name and frappe.db.exists(doctype, name):
+        doc = frappe.get_doc(doctype, name)
+    else:
+        doc = frappe.new_doc(doctype)
+
+    # Set fields
+    meta = frappe.get_meta(doctype)
+    for f in meta.fields:
+        if f.fieldname == "name":
+            continue
+        if f.fieldtype == "Table":
+            # Handle child table (sequence_details, etc.)
+            child_rows = doc_data.get(f.fieldname) or []
+            doc.set(f.fieldname, [])
+            for row in child_rows:
+                # Remove temporary properties
+                row.pop("name", None)
+                row.pop("parent", None)
+                row.pop("parentfield", None)
+                row.pop("parenttype", None)
+                doc.append(f.fieldname, row)
+        elif f.fieldname in doc_data:
+            doc.set(f.fieldname, doc_data[f.fieldname])
+
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    return doc.name
+
+
+def delete_cge_generic_doc_service(doctype, name):
+    """
+    Deletes a SMRITI CGE document.
+    """
+    if not frappe.db.exists(doctype, name):
+        frappe.throw(_("Document {0} of type {1} not found.").format(name, doctype))
+
+    frappe.delete_doc(doctype, name, ignore_permissions=True)
+    frappe.db.commit()
+    return True
+

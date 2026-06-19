@@ -188,14 +188,24 @@ def check_desk_access():
 
             return  # Authenticated user, non-protected file — pass through
 
+        # ─── SMRITI Policy: Redirect legacy /desk/smriti-* and /app/smriti-* to dedicated standalone routes
+        if path.startswith("/desk/smriti-"):
+            new_path = path.replace("/desk/", "/", 1)
+            raise werkzeug.routing.exceptions.RequestRedirect(new_path)
+        if path.startswith("/app/smriti-"):
+            new_path = path.replace("/app/", "/", 1)
+            raise werkzeug.routing.exceptions.RequestRedirect(new_path)
+
+        # ─── SMRITI Policy: Redirect any remaining /desk or /desk/ paths to SMRITI
+        if path == "/desk" or path.startswith("/desk/"):
+            raise werkzeug.routing.exceptions.RequestRedirect("/smriti")
+
         # ─── SMRITI Policy: Block Frappe-owned paths unconditionally ─────────────
         # Any path in SMRITI_BLOCKED_DESK_PATHS → redirect to /smriti.
         # Applies to ALL users including Administrator. No exceptions.
         # Policy: if setup-wizard appears, create a SMRITI page — never expose it.
         for blocked in SMRITI_BLOCKED_DESK_PATHS:
             if path.startswith(blocked):
-                if path.startswith("/desk/smriti-cge") or path.startswith("/app/smriti-cge"):
-                    continue
                 raise werkzeug.routing.exceptions.RequestRedirect("/smriti")
 
         # ─── Desk-access guard for remaining /desk and /app routes ────────────────

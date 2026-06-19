@@ -10,6 +10,15 @@
 #
 
 app_name = "smriti_retail_os"
+
+# Dynamic queue registration for SMRITI async printer queue
+try:
+    import frappe.utils.background_jobs
+    if hasattr(frappe.utils.background_jobs, "default_queue_list"):
+        if "barcode" not in frappe.utils.background_jobs.default_queue_list:
+            frappe.utils.background_jobs.default_queue_list.append("barcode")
+except Exception:
+    pass
 app_title = "SMRITI Retail OS"
 app_publisher = "PrathamOne / AITDL"
 app_description = "SMRITI Retail OS — Intelligent Indian Retail Platform"
@@ -447,6 +456,19 @@ override_whitelisted_methods = {
 website_route_rules = [
     # ─── Coming Soon Route Alias ────────────────────────────────────
     {"from_route": "/coming-soon", "to_route": "smriti-coming-soon"},
+    {"from_route": "/smriti-cge", "to_route": "smriti-cge"},
+    {"from_route": "/cge-benefit-instruments", "to_route": "cge_generic"},
+    {"from_route": "/cge-membership-tiers", "to_route": "cge_generic"},
+    {"from_route": "/cge-loyalty-programs", "to_route": "cge_generic"},
+    {"from_route": "/cge-campaigns", "to_route": "cge_generic"},
+    {"from_route": "/cge-promotion-rules", "to_route": "cge_generic"},
+    {"from_route": "/cge-coupon-rules", "to_route": "cge_generic"},
+    {"from_route": "/cge-loyalty-rules", "to_route": "cge_generic"},
+    {"from_route": "/cge-benefit-wallets", "to_route": "cge_generic"},
+    {"from_route": "/cge-customer-benefit-profiles", "to_route": "cge_generic"},
+    {"from_route": "/cge-benefit-resolution-policies", "to_route": "cge_generic"},
+    {"from_route": "/cge-liability-snapshots", "to_route": "cge_generic"},
+    {"from_route": "/cge-benefit-audit-logs", "to_route": "cge_generic"},
     {"from_route": "/security-workflows", "to_route": "security"},
     {"from_route": "/brand-master", "to_route": "brand_master"},
     {"from_route": "/category-master", "to_route": "category_master"},

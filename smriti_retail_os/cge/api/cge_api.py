@@ -305,3 +305,132 @@ def save_loyalty_tier(tier_data):
             
     doc.save(ignore_permissions=True)
     return doc.name
+
+
+ALLOWED_CGE_DOCTYPES = [
+    'SMRITI Benefit Instrument',
+    'SMRITI Membership Tier',
+    'SMRITI Loyalty Program',
+    'SMRITI Campaign',
+    'SMRITI Promotion Rule',
+    'SMRITI Coupon Rule',
+    'SMRITI Loyalty Rule',
+    'SMRITI Benefit Wallet',
+    'SMRITI Customer Benefit Profile',
+    'SMRITI Benefit Resolution Policy',
+    'SMRITI Benefit Liability Snapshot',
+    'SMRITI Benefit Audit Log',
+    'SMRITI Benefit Resolution Sequence Detail'
+]
+
+def check_cge_doctype(doctype):
+    if doctype not in ALLOWED_CGE_DOCTYPES:
+        frappe.throw(_("Access Denied: Invalid CGE DocType {0}.").format(doctype), frappe.PermissionError)
+
+@frappe.whitelist()
+def get_cge_generic_fields(doctype):
+    """
+    Returns field metadata for a CGE DocType.
+    Restricted to manager/admin.
+    """
+    from smriti_retail_os.security_api import check_store_manager_or_admin
+    check_store_manager_or_admin()
+    check_cge_doctype(doctype)
+    
+    from smriti_retail_os.cge.service.cge_service import get_cge_generic_fields_meta
+    return get_cge_generic_fields_meta(doctype)
+
+@frappe.whitelist()
+def get_cge_generic_list(doctype, filters=None, limit=100):
+    """
+    Queries records of a CGE DocType.
+    Restricted to manager/admin.
+    """
+    from smriti_retail_os.security_api import check_store_manager_or_admin
+    check_store_manager_or_admin()
+    check_cge_doctype(doctype)
+    
+    if isinstance(filters, str):
+        filters = json.loads(filters)
+        
+    meta = frappe.get_meta(doctype)
+    fields = ["name"]
+    for f in meta.fields:
+        if not f.hidden and f.fieldtype not in ['Section Break', 'Column Break', 'Table', 'Code']:
+            fields.append(f.fieldname)
+            
+    if "creation" not in fields:
+        fields.append("creation")
+        
+    return frappe.get_all(doctype,
+        filters=filters,
+        fields=fields,
+        order_by="modified desc" if "modified" in [f.fieldname for f in meta.fields] else "creation desc",
+        limit=cint(limit) or 100
+    )
+
+@frappe.whitelist()
+def get_cge_generic_doc(doctype, name):
+    """
+    Gets full document details including child tables.
+    Restricted to manager/admin.
+    """
+    from smriti_retail_os.security_api import check_store_manager_or_admin
+    check_store_manager_or_admin()
+    check_cge_doctype(doctype)
+    
+    doc = frappe.get_doc(doctype, name)
+    doc_dict = doc.as_dict()
+    
+    meta = frappe.get_meta(doctype)
+    for f in meta.fields:
+        if f.fieldtype == "Table" and f.fieldname in doc_dict:
+            doc_dict[f.fieldname] = [row.as_dict() for row in doc.get(f.fieldname)]
+            
+    return doc_dict
+
+@frappe.whitelist()
+def save_cge_generic_doc(doctype, doc_data):
+    """
+    Creates or updates a CGE document.
+    Restricted to manager/admin.
+    """
+    from smriti_retail_os.security_api import check_store_manager_or_admin
+    check_store_manager_or_admin()
+    check_cge_doctype(doctype)
+    
+    from smriti_retail_os.cge.service.cge_service import save_cge_generic_doc_service
+    
+    is_new = not frappe.db.exists(doctype, json.loads(doc_data).get("name") if isinstance(doc_data, str) else doc_data.get("name"))
+    action = "Create" if is_new else "Update"
+    
+    doc_name = save_cge_generic_doc_service(doctype, doc_data)
+    
+    from smriti_retail_os.backup_api import log_audit_event
+    log_audit_event(
+        f"CGE Generic {action}",
+        f"CGE Document of type {doctype} with name {doc_name} was saved by {frappe.session.user}."
+    )
+    
+    return doc_name
+
+@frappe.whitelist()
+def delete_cge_generic_doc(doctype, name):
+    """
+    Deletes a CGE document.
+    Restricted to manager/admin.
+    """
+    from smriti_retail_os.security_api import check_store_manager_or_admin
+    check_store_manager_or_admin()
+    check_cge_doctype(doctype)
+    
+    from smriti_retail_os.cge.service.cge_service import delete_cge_generic_doc_service
+    res = delete_cge_generic_doc_service(doctype, name)
+    
+    from smriti_retail_os.backup_api import log_audit_event
+    log_audit_event(
+        "CGE Generic Delete",
+        f"CGE Document of type {doctype} with name {name} was deleted by {frappe.session.user}."
+    )
+    
+    return res

@@ -2,7 +2,7 @@
   "name": "SMRITI Retail OS",
   "short_name": "SMRITI",
   "description": "Complete Retail Management System by AITDL Network",
-  "start_url": "/desk",
+  "start_url": "/smriti",
   "display": "standalone",
   "orientation": "any",
   "theme_color": "#0f766e",

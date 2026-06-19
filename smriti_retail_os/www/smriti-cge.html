@@ -1,0 +1,1503 @@
+/**
+ * @file: smriti_retail_os/www/smriti-cge.html
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/smriti-cge.html
+  @description: SMRITI Customer Growth Engine (CGE) Studio — Standalone UI
+  @author: Antigravity AI
+  @version: 2.0.0
+  @license: MIT
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMRITI CGE Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-base:     #0a0f1e;
+      --bg-surface:  #0f1629;
+      --bg-card:     #131d35;
+      --bg-input:    #172040;
+      --border:      rgba(255,255,255,0.07);
+      --border-glow: rgba(99,102,241,0.2);
+      --accent:      #6366f1;
+      --accent-glow: rgba(99,102,241,0.5);
+      --accent-2:    #818cf8;
+      --success:     #10b981;
+      --warning:     #f59e0b;
+      --danger:      #ef4444;
+      --text-1:      #e2e8f0;
+      --text-2:      #94a3b8;
+      --text-3:      #475569;
+      --radius:      12px;
+      --radius-sm:   8px;
+      --radius-lg:   16px;
+      --shadow:      0 8px 32px rgba(0,0,0,0.5);
+      --t:           0.2s ease;
+    }
+
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg-base); color: var(--text-1); font-family: 'Inter', sans-serif; font-size: 14px; }
+
+    .bg-grid {
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+      background-size: 50px 50px;
+      z-index: 0;
+    }
+    .bg-glow {
+      position: fixed; width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,0.04) 0%, transparent 70%);
+      top: -100px; left: -100px; z-index: 0; filter: blur(40px);
+    }
+
+    #app { position: relative; z-index: 1; width: 100vw; height: 100vh; display: flex; overflow: hidden; }
+
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    .topbar { height: 56px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0; }
+    .topbar-breadcrumbs { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-2); }
+    .topbar-breadcrumbs span.sep { color: var(--text-3); }
+    .topbar-breadcrumbs span.active { color: var(--text-1); }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .topbtn { background: none; border: none; color: var(--text-2); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all var(--t); }
+    .topbtn:hover { background: rgba(255,255,255,0.05); color: var(--text-1); }
+
+    /* Tabs Bar */
+    .tabs-bar {
+      display: flex;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      gap: 16px;
+      flex-shrink: 0;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-2);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 16px 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      transition: color var(--t);
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--text-1); }
+    .tab-btn.active { color: var(--accent-2); }
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 3px 3px 0 0;
+      box-shadow: 0 -2px 10px var(--accent);
+    }
+
+    /* Content Pane */
+    .content-pane {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: none;
+    }
+    .content-pane.active {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Dashboard Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+    .metric-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: all var(--t);
+    }
+    .metric-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-glow);
+      box-shadow: 0 8px 24px rgba(99,102,241,0.15);
+    }
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0; width: 4px;
+      background: var(--accent);
+    }
+    .metric-card.risk-amber::before { background: var(--warning); }
+    .metric-card.risk-red::before { background: var(--danger); }
+    .metric-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .metric-title { font-size: 0.8rem; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+    .metric-icon { color: var(--text-3); }
+    .metric-value { font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; color: var(--text-1); margin-bottom: 6px; }
+    .metric-desc { font-size: 0.78rem; color: var(--text-2); }
+    .risk-badge { font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; }
+    .risk-badge.green { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
+    .risk-badge.amber { background: rgba(245,158,11,0.1); color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
+    .risk-badge.red { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+
+    /* Core Layouts (Two Columns) */
+    .two-col-grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .two-col-grid { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0,0,0,0.1);
+    }
+    .panel-title { font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .panel-title span { color: var(--accent-2); }
+    .panel-body { padding: 20px; }
+
+    /* List Elements */
+    .list-wrapper { display: flex; flex-direction: column; gap: 10px; max-height: 520px; overflow-y: auto; padding-right: 4px; }
+    .cge-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      cursor: pointer;
+      transition: all var(--t);
+      position: relative;
+    }
+    .cge-card:hover { border-color: var(--accent-glow); transform: translateX(2px); }
+    .cge-card.active { border-color: var(--accent); background: rgba(99,102,241,0.05); }
+    .cge-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .cge-card-title { font-weight: 700; color: var(--text-1); font-size: 0.9rem; }
+    .cge-card-badge { font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-2); }
+    .cge-card-details { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--text-2); }
+
+    /* Progress Indicators */
+    .progress-container { margin-top: 10px; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-2); margin-bottom: 4px; }
+    .progress-bar-bg { height: 6px; background: var(--bg-input); border-radius: 3px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 3px; transition: width 0.4s ease; }
+    .progress-bar-fill.warning { background: var(--warning); }
+    .progress-bar-fill.danger { background: var(--danger); }
+
+    /* Tables */
+    .table-container { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-surface); }
+    .smriti-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
+    .smriti-table th { background: rgba(0,0,0,0.15); padding: 12px 16px; font-weight: 700; color: var(--text-2); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
+    .smriti-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text-1); vertical-align: middle; }
+    .smriti-table tr:last-child td { border-bottom: none; }
+    .smriti-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Forms */
+    .form-group { display: flex; flex-direction: column; gap: 6px; width: 100%; margin-bottom: 16px; }
+    .form-label { font-size: 0.75rem; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+    input[type="text"], input[type="number"], input[type="date"], select, textarea {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-1); font-size: 0.88rem; padding: 10px 14px; outline: none; transition: all var(--t); font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--border-glow); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-sm); border: none; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all var(--t); text-decoration: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; box-shadow: 0 4px 12px var(--border-glow); }
+    .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.1); }
+    .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text-2); }
+    .btn-secondary:hover { border-color: var(--text-2); color: var(--text-1); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { filter: brightness(1.1); }
+    .btn-sm { padding: 6px 12px; font-size: 0.78rem; border-radius: 6px; }
+    .btn-xs { padding: 4px 8px; font-size: 0.72rem; border-radius: 4px; }
+
+    /* Badges */
+    .transaction-badge { font-size: 0.75rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+    .transaction-badge.credit { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
+    .transaction-badge.debit { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+
+    /* Modals */
+    .modal-backdrop { position: fixed; inset: 0; z-index: 9000; background: rgba(3,7,18,0.85); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.22s; }
+    .modal-backdrop.open { opacity: 1; display: flex; }
+    .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; width: min(480px, 95vw); transform: translateY(20px); transition: transform 0.22s; box-shadow: var(--shadow); }
+    .modal-backdrop.open .modal { transform: translateY(0); }
+    .modal-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-1); display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .modal-close { margin-left: auto; background: none; border: none; color: var(--text-2); cursor: pointer; display: flex; align-items: center; }
+    .modal-close:hover { color: var(--danger); }
+
+    /* Toast Container */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 99999; }
+    .toast { padding: 12px 18px; border-radius: var(--radius); font-size: 0.88rem; font-weight: 600; color: white; min-width: 240px; display: flex; align-items: center; gap: 10px; animation: toast-in 0.3s ease; box-shadow: var(--shadow); }
+    .toast.success { background: #065f46; border: 1px solid rgba(16,185,129,0.3); }
+    .toast.error   { background: #7f1d1d; border: 1px solid rgba(239,68,68,0.3); }
+    .toast.info    { background: #1e1b4b; border: 1px solid rgba(99,102,241,0.3); }
+    @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-2); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .empty-icon { font-size: 2.5rem; color: var(--text-3); }
+
+    .wallet-filter-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .wallet-search { display: flex; gap: 10px; align-items: center; flex: 1; max-width: 400px; }
+
+    .btn-smriti-action {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white; border: none; font-size: 0.85rem; font-weight: 700; padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer; transition: all var(--t);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-smriti-action:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+  </style>
+  <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div id="app">
+  <!-- Standalone Sidebar -->
+  <div id="smriti-sidebar-target" class="sidebar"></div>
+
+  <!-- Main Workspace -->
+  <div class="main-wrapper">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-breadcrumbs">
+        <span>SMRITI</span>
+        <span class="sep">/</span>
+        <span class="active">CGE Studio</span>
+      </div>
+      <div class="topbar-right">
+        <button class="topbtn" onclick="history.back()" title="Go Back">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <button class="topbtn" onclick="history.forward()" title="Go Forward">
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="switchTab('dashboard')">
+        <span class="material-symbols-outlined">analytics</span> Dashboard
+      </button>
+      <button class="tab-btn" onclick="switchTab('promotions')">
+        <span class="material-symbols-outlined">sell</span> Promotions
+      </button>
+      <button class="tab-btn" onclick="switchTab('loyalty')">
+        <span class="material-symbols-outlined">card_membership</span> Loyalty Studio
+      </button>
+      <button class="tab-btn" onclick="switchTab('coupons')">
+        <span class="material-symbols-outlined">local_activity</span> Coupons
+      </button>
+      <button class="tab-btn" onclick="switchTab('wallet')">
+        <span class="material-symbols-outlined">account_balance_wallet</span> Cashback Wallet
+      </button>
+    </div>
+
+    <!-- Tab Panels -->
+
+    <!-- Pane 1: Dashboard -->
+    <div class="content-pane active" id="pane-dashboard">
+      <div class="metrics-grid" id="metrics-grid">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title"><span class="material-symbols-outlined">history</span> Outstanding Liability Risk Log</span>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <div class="table-container" style="border:none; border-radius:0;">
+            <table class="smriti-table">
+              <thead>
+                <tr>
+                  <th>Snapshot Date</th>
+                  <th>Loyalty Exposure</th>
+                  <th>Cashback Balance Exposure</th>
+                  <th>Coupon Budget Reserved</th>
+                  <th>Total Exposure</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="snapshots-tbody">
+                <tr><td colspan="6" style="text-align:center;">Loading snapshots...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pane 2: Promotions -->
+    <div class="content-pane" id="pane-promotions">
+      <div class="two-col-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title"><span class="material-symbols-outlined">list_alt</span> Active Pricing Rules</span>
+          </div>
+          <div class="panel-body">
+            <div class="list-wrapper" id="promotions-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title"><span class="material-symbols-outlined">info</span> Promotion Info</span>
+          </div>
+          <div class="panel-body" id="promotion-editor-container">
+            <div class="empty-state">
+              <span class="material-symbols-outlined empty-icon">touch_app</span>
+              <span>Select a pricing rule from the left panel.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pane 3: Loyalty Studio -->
+    <div class="content-pane" id="pane-loyalty">
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-primary btn-sm" onclick="openNewLoyaltyTier()"><span class="material-symbols-outlined" style="font-size:16px;">add</span> New Loyalty Tier</button>
+        <button class="btn btn-primary btn-sm" onclick="openNewLoyaltyRule()"><span class="material-symbols-outlined" style="font-size:16px;">add</span> New Loyalty Rule</button>
+      </div>
+
+      <div class="two-col-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title"><span class="material-symbols-outlined">military_tech</span> Loyalty Tiers & Rules</span>
+          </div>
+          <div class="panel-body">
+            <div class="list-wrapper" id="loyalty-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title"><span class="material-symbols-outlined">border_color</span> Configuration Panel</span>
+          </div>
+          <div class="panel-body" id="loyalty-editor-container">
+            <div class="empty-state">
+              <span class="material-symbols-outlined empty-icon">touch_app</span>
+              <span>Select a tier or loyalty rule to edit, or click New.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pane 4: Coupons -->
+    <div class="content-pane" id="pane-coupons">
+      <div style="display: flex; justify-content: flex-end;">
+        <button class="btn btn-primary btn-sm" onclick="openNewCampaign()"><span class="material-symbols-outlined" style="font-size:16px;">add</span> New Coupon Campaign</button>
+      </div>
+
+      <div class="two-col-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title"><span class="material-symbols-outlined">campaign</span> Coupon Campaigns</span>
+          </div>
+          <div class="panel-body">
+            <div class="list-wrapper" id="coupons-list">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title"><span class="material-symbols-outlined">account_balance</span> Campaign Budget Config</span>
+          </div>
+          <div class="panel-body" id="coupons-editor-container">
+            <div class="empty-state">
+              <span class="material-symbols-outlined empty-icon">touch_app</span>
+              <span>Select a campaign to configure budgets and utilization settings.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pane 5: Cashback Wallet -->
+    <div class="content-pane" id="pane-wallet">
+      <div class="wallet-filter-row">
+        <div class="wallet-search">
+          <span class="form-label" style="margin: 0; min-width: 100px;">Filter Customer</span>
+          <input type="text" id="wallet-customer-filter" placeholder="Search customer ID or name..." oninput="handleWalletFilter(this.value)">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openWalletAdjustmentModal()"><span class="material-symbols-outlined" style="font-size:16px;">payments</span> Manual Adjustment</button>
+      </div>
+
+      <div class="table-container">
+        <table class="smriti-table">
+          <thead>
+            <tr>
+              <th>Sequence ID</th>
+              <th>Customer</th>
+              <th>Wallet Type</th>
+              <th>Transaction</th>
+              <th>Amount</th>
+              <th>Reference Invoice</th>
+              <th>Journal Entry</th>
+              <th>Audit Reason</th>
+              <th>Created At</th>
+              <th style="text-align: center;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="wallet-ledger-entries">
+            <tr><td colspan="10" style="text-align: center;">Loading Wallet Ledger...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal: Manual Adjustment -->
+<div class="modal-backdrop" id="modal-adjustment" onclick="closeModal('modal-adjustment')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">
+      <span class="material-symbols-outlined">payments</span> Manual Wallet Adjustment
+      <button class="modal-close" onclick="closeModal('modal-adjustment')"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div class="form-group">
+        <label class="form-label">Customer ID *</label>
+        <select id="adj-customer">
+          <!-- Populated dynamically -->
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Wallet Type *</label>
+        <select id="adj-wallet-type">
+          <option value="Promo Cashback">Promo Cashback</option>
+          <option value="Customer Refund">Customer Refund</option>
+          <option value="Manual Adjustment" selected>Manual Adjustment</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Transaction Type *</label>
+        <select id="adj-transaction-type">
+          <option value="Credit" selected>Credit</option>
+          <option value="Debit">Debit</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Adjustment Category *</label>
+        <select id="adj-reason-type">
+          <option value="Manual Credit">Manual Credit</option>
+          <option value="Manual Debit">Manual Debit</option>
+          <option value="Customer Complaint">Customer Complaint</option>
+          <option value="Campaign Correction">Campaign Correction</option>
+          <option value="System Recovery">System Recovery</option>
+          <option value="Admin Adjustment">Admin Adjustment</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Adjustment Amount (₹) *</label>
+        <input type="number" id="adj-amount" min="0.01" step="0.01" placeholder="e.g. 500">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Audit Remarks / Reason *</label>
+        <textarea id="adj-remarks" rows="3" placeholder="Explain the rationale for manual override..."></textarea>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-adjustment')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitWalletAdjustment()" id="btn-post-adj">Post Adjustment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Reversal -->
+<div class="modal-backdrop" id="modal-reversal" onclick="closeModal('modal-reversal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">
+      <span class="material-symbols-outlined">undo</span> Reverse Wallet Transaction
+      <button class="modal-close" onclick="closeModal('modal-reversal')"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <input type="hidden" id="rev-ledger-seq">
+      <div class="form-group">
+        <label class="form-label">Reason for Reversal *</label>
+        <textarea id="rev-reason" rows="3" placeholder="Enter reason for reversing this transaction..."></textarea>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-reversal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitReversal()" id="btn-confirm-rev">Confirm Reversal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-wrap"></div>
+
+<script>
+  const CSRF_TOKEN = '{{ csrf_token }}';
+  window.loggedUser = '{{ user }}';
+
+  const API = {
+    call(method, args = {}) {
+      return fetch('/api/method/' + method, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-frappe-csrf-token': CSRF_TOKEN
+        },
+        body: JSON.stringify(args)
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.exc) throw new Error(data._error_message || data.exc);
+        return data.message !== undefined ? data.message : data;
+      });
+    }
+  };
+
+  function toast(msg, type = 'success') {
+    const wrap = document.getElementById('toast-wrap');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    const icons = { success: 'check_circle', error: 'error', info: 'info' };
+    el.innerHTML = `<span class="material-symbols-outlined">${icons[type] || 'info'}</span><span>${msg}</span>`;
+    wrap.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+
+  // --- Tab Management ---
+  let activeTab = 'dashboard';
+  function switchTab(tabId) {
+    activeTab = tabId;
+    
+    // Toggle active state on buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.innerText.toLowerCase().includes(tabId)) {
+        btn.classList.add('active');
+      }
+    });
+
+    // Toggle panes
+    document.querySelectorAll('.content-pane').forEach(pane => {
+      pane.classList.remove('active');
+    });
+    const activePane = document.getElementById('pane-' + tabId);
+    if (activePane) activePane.classList.add('active');
+
+    loadTabData();
+  }
+
+  function loadTabData() {
+    if (activeTab === 'dashboard') loadDashboard();
+    else if (activeTab === 'promotions') loadPromotions();
+    else if (activeTab === 'loyalty') loadLoyalty();
+    else if (activeTab === 'coupons') loadCoupons();
+    else if (activeTab === 'wallet') loadWalletLedger();
+  }
+
+  // --- Helper to format currency ---
+  function formatINR(val) {
+    return parseFloat(val || 0).toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  // --- Dashboard Data Loading ---
+  function loadDashboard() {
+    API.call('smriti_retail_os.cge.api.cge_api.get_cge_liability_metrics')
+      .then(metrics => {
+        const grid = document.getElementById('metrics-grid');
+        let riskClass = 'green';
+        let riskStatus = 'STABLE';
+        let cardClass = '';
+
+        const amberLimit = parseFloat(metrics.amber_threshold) || 100000.0;
+        const redLimit = parseFloat(metrics.red_threshold) || 250000.0;
+        const total = parseFloat(metrics.total_liability) || 0;
+
+        if (total > redLimit) {
+          riskStatus = 'RED RISK';
+          riskClass = 'red';
+          cardClass = 'risk-red';
+        } else if (total > amberLimit) {
+          riskStatus = 'AMBER WARNING';
+          riskClass = 'amber';
+          cardClass = 'risk-amber';
+        }
+
+        grid.innerHTML = `
+          <div class="metric-card ${cardClass}">
+            <div class="metric-header">
+              <span class="metric-title">Outstanding Loyalty Points</span>
+              <span class="material-symbols-outlined metric-icon">stars</span>
+            </div>
+            <div class="metric-value">${parseFloat(metrics.loyalty_liability).toLocaleString()}</div>
+            <div class="metric-desc">Unexpired points liability score</div>
+          </div>
+
+          <div class="metric-card ${cardClass}">
+            <div class="metric-header">
+              <span class="metric-title">Cashback Wallet Liability</span>
+              <span class="material-symbols-outlined metric-icon">account_balance_wallet</span>
+            </div>
+            <div class="metric-value">₹${formatINR(metrics.cashback_liability)}</div>
+            <div class="metric-desc">Combined wallet balance exposure</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <span class="metric-title">Campaign Exposure</span>
+              <span class="material-symbols-outlined metric-icon">toll</span>
+            </div>
+            <div class="metric-value">₹${formatINR(metrics.coupon_exposure)}</div>
+            <div class="metric-desc">Reserved coupon budget limits</div>
+          </div>
+
+          <div class="metric-card ${cardClass}">
+            <div class="metric-header">
+              <span class="metric-title">CGE Risk Status</span>
+              <span class="risk-badge ${riskClass}">${riskStatus}</span>
+            </div>
+            <div class="metric-value">₹${formatINR(metrics.total_liability)}</div>
+            <div class="metric-desc">Target limit: ₹${parseFloat(redLimit).toLocaleString('en-IN')}</div>
+          </div>
+        `;
+        loadSnapshots();
+      })
+      .catch(e => {
+        toast('Failed to load dashboard metrics: ' + e.message, 'error');
+      });
+  }
+
+  function loadSnapshots() {
+    API.call('frappe.client.get_list', {
+      doctype: 'SMRITI Liability Snapshot',
+      fields: ['snapshot_date', 'loyalty_liability', 'cashback_liability', 'coupon_liability'],
+      order_by: 'snapshot_date desc',
+      limit: 10
+    })
+    .then(snapshots => {
+      const tbody = document.getElementById('snapshots-tbody');
+      if (!snapshots.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--text-2);">No historical snapshots logged yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = snapshots.map(s => {
+        const total = parseFloat(s.loyalty_liability || 0) + parseFloat(s.cashback_liability || 0) + parseFloat(s.coupon_liability || 0);
+        let riskBadge = '<span class="risk-badge green">STABLE</span>';
+        if (total > 250000) riskBadge = '<span class="risk-badge red">RED RISK</span>';
+        else if (total > 100000) riskBadge = '<span class="risk-badge amber">AMBER WARNING</span>';
+
+        return `
+          <tr>
+            <td style="font-weight:600; color:var(--text-1);">${s.snapshot_date}</td>
+            <td>${parseFloat(s.loyalty_liability || 0).toLocaleString()} Points</td>
+            <td>₹${formatINR(s.cashback_liability)}</td>
+            <td>₹${formatINR(s.coupon_liability)}</td>
+            <td style="font-weight:700;">₹${formatINR(total)}</td>
+            <td>${riskBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    })
+    .catch(e => {
+      document.getElementById('snapshots-tbody').innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--danger);">Error loading logs.</td></tr>`;
+    });
+  }
+
+  // --- Promotions Tab ---
+  let promotionsData = [];
+  function loadPromotions() {
+    API.call('frappe.client.get_list', {
+      doctype: 'Pricing Rule',
+      filters: { disable: 0 },
+      fields: ['name', 'title', 'selling', 'price_or_product_discount', 'apply_on', 'rate_or_discount', 'discount_percentage', 'discount_amount'],
+      order_by: 'creation desc',
+      limit: 100
+    })
+    .then(rules => {
+      promotionsData = rules || [];
+      renderPromotionsList();
+    })
+    .catch(e => {
+      toast('Failed to load pricing rules: ' + e.message, 'error');
+    });
+  }
+
+  function renderPromotionsList() {
+    const wrapper = document.getElementById('promotions-list');
+    if (!promotionsData.length) {
+      wrapper.innerHTML = '<div class="empty-state"><span>No active promotions.</span></div>';
+      return;
+    }
+    wrapper.innerHTML = promotionsData.map(p => {
+      const benefit = p.rate_or_discount === 'Discount Percentage'
+        ? `${p.discount_percentage}% off`
+        : (p.rate_or_discount === 'Discount Amount' ? `₹${p.discount_amount} off` : 'Rate Override');
+      return `
+        <div class="cge-card" onclick="selectPromotion('${p.name}')" id="promo-card-${p.name}">
+          <div class="cge-card-header">
+            <span class="cge-card-title">${p.title || p.name}</span>
+            <span class="cge-card-badge">${p.apply_on}</span>
+          </div>
+          <div class="cge-card-details">
+            <span>Benefit: <strong>${benefit}</strong></span>
+            <span>ID: ${p.name}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function selectPromotion(name) {
+    document.querySelectorAll('#promotions-list .cge-card').forEach(c => c.classList.remove('active'));
+    document.getElementById('promo-card-' + name).classList.add('active');
+
+    const promo = promotionsData.find(p => p.name === name);
+    if (!promo) return;
+
+    document.getElementById('promotion-editor-container').innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <h3 style="font-family:'Outfit',sans-serif; font-size:1.15rem; font-weight:800; color:var(--text-1); border-bottom:1px solid var(--border); padding-bottom:8px;">${promo.title || promo.name}</h3>
+        <table class="smriti-table">
+          <tbody>
+            <tr><td style="font-weight:600; width:180px;">System Rule ID:</td><td>${promo.name}</td></tr>
+            <tr><td style="font-weight:600;">Pricing Rule Type:</td><td>${promo.price_or_product_discount}</td></tr>
+            <tr><td style="font-weight:600;">Applies On Dimension:</td><td>${promo.apply_on}</td></tr>
+            <tr><td style="font-weight:600;">Discount Formula:</td><td>${promo.rate_or_discount}</td></tr>
+            <tr><td style="font-weight:600;">Active State:</td><td><span class="risk-badge green">ACTIVE / COMMITTED</span></td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:0.8rem; color:var(--text-2); line-height:1.5;">
+          Promotion rules leverage standard ERPNext pricing engines. To modify pricing ratios or apply new tier exclusions, edit the pricing rule definition.
+        </p>
+        <div style="margin-top: 10px;">
+          <a href="/app/pricing-rule/${promo.name}" class="btn-smriti-action" target="_blank">
+            <span class="material-symbols-outlined" style="font-size:16px;">open_in_new</span> Edit Pricing Rule
+          </a>
+        </div>
+      </div>
+    `;
+  }
+
+  // --- Loyalty Studio Tab ---
+  let loyaltyTiers = [];
+  let loyaltyRules = [];
+  function loadLoyalty() {
+    API.call('frappe.client.get_list', {
+      doctype: 'SMRITI Loyalty Tier',
+      fields: ['name', 'tier_name', 'min_points', 'tier_multiplier', 'active'],
+      order_by: 'min_points asc',
+      limit: 100
+    })
+    .then(tiers => {
+      loyaltyTiers = tiers || [];
+      return API.call('frappe.client.get_list', {
+        doctype: 'SMRITI Loyalty Rule',
+        fields: ['name', 'rule_name', 'rule_type', 'dimension', 'dimension_value', 'rule_value', 'priority', 'status'],
+        order_by: 'priority desc',
+        limit: 100
+      });
+    })
+    .then(rules => {
+      loyaltyRules = rules || [];
+      renderLoyaltyList();
+    })
+    .catch(e => {
+      toast('Failed to load loyalty structure: ' + e.message, 'error');
+    });
+  }
+
+  function renderLoyaltyList() {
+    const wrap = document.getElementById('loyalty-list');
+    let html = `<div style="font-weight:800; font-size:0.75rem; color:var(--text-3); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px;">Loyalty Tiers</div>`;
+
+    if (!loyaltyTiers.length) {
+      html += '<div style="padding:10px; color:var(--text-3); font-size:0.8rem;">No tiers defined.</div>';
+    } else {
+      loyaltyTiers.forEach(t => {
+        html += `
+          <div class="cge-card" onclick="selectLoyaltyTier('${t.name}')" id="loy-card-tier-${t.name}" style="border-left: 3px solid var(--accent);">
+            <div class="cge-card-header">
+              <span class="cge-card-title">${t.tier_name}</span>
+              <span class="cge-card-badge">${t.active ? 'Active' : 'Inactive'}</span>
+            </div>
+            <div class="cge-card-details">
+              <span>Points Req: <strong>${t.min_points}</strong></span>
+              <span>Earning Multiplier: <strong>${t.tier_multiplier}x</strong></span>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    html += `<div style="font-weight:800; font-size:0.75rem; color:var(--text-3); text-transform:uppercase; letter-spacing:0.8px; margin: 20px 0 8px 0;">Loyalty Rules</div>`;
+    if (!loyaltyRules.length) {
+      html += '<div style="padding:10px; color:var(--text-3); font-size:0.8rem;">No custom rules configured.</div>';
+    } else {
+      loyaltyRules.forEach(r => {
+        html += `
+          <div class="cge-card" onclick="selectLoyaltyRule('${r.name}')" id="loy-card-rule-${r.name}" style="border-left: 3px solid var(--success);">
+            <div class="cge-card-header">
+              <span class="cge-card-title">${r.rule_name}</span>
+              <span class="cge-card-badge">${r.status}</span>
+            </div>
+            <div class="cge-card-details">
+              <span>Type: <strong>${r.rule_type}</strong> | Priority: <strong>${r.priority}</strong></span>
+              <span>Dimension: ${r.dimension} (${r.dimension_value})</span>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    wrap.innerHTML = html;
+  }
+
+  function selectLoyaltyTier(name) {
+    document.querySelectorAll('#loyalty-list .cge-card').forEach(c => c.classList.remove('active'));
+    const card = document.getElementById('loy-card-tier-' + name);
+    if (card) card.classList.add('active');
+
+    const tier = loyaltyTiers.find(t => t.name === name);
+    if (!tier) return;
+
+    renderTierForm(tier);
+  }
+
+  function openNewLoyaltyTier() {
+    renderTierForm({ name: '', tier_name: '', min_points: 0, tier_multiplier: 1.0, active: 1 });
+  }
+
+  function renderTierForm(data) {
+    const isNew = !data.name;
+    document.getElementById('loyalty-editor-container').innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <h3 style="font-family:'Outfit',sans-serif; font-size:1.15rem; font-weight:800; color:var(--text-1); border-bottom:1px solid var(--border); padding-bottom:8px;">
+          ${isNew ? 'Create Loyalty Tier' : 'Edit Tier: ' + data.tier_name}
+        </h3>
+        <div class="form-group">
+          <label class="form-label">Tier Name *</label>
+          <input type="text" id="tier-name" value="${data.tier_name}" placeholder="e.g. Silver, Gold">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Min Points Threshold *</label>
+            <input type="number" id="tier-min-points" value="${data.min_points}" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Collection Multiplier *</label>
+            <input type="number" id="tier-multiplier" value="${data.tier_multiplier}" step="0.1" min="0.1">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status *</label>
+          <select id="tier-active">
+            <option value="1" ${data.active == 1 ? 'selected' : ''}>Active</option>
+            <option value="0" ${data.active == 0 ? 'selected' : ''}>Inactive</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; margin-top: 10px;">
+          <button class="btn btn-primary" onclick="saveLoyaltyTier('${data.name}')" id="btn-save-tier" style="flex:1;">Save Tier</button>
+          ${!isNew ? `<button class="btn btn-danger" onclick="deleteLoyaltyTier('${data.name}')">Delete</button>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  function saveLoyaltyTier(name) {
+    const tier_name = document.getElementById('tier-name').value.trim();
+    const min_points = parseInt(document.getElementById('tier-min-points').value) || 0;
+    const tier_multiplier = parseFloat(document.getElementById('tier-multiplier').value) || 1.0;
+    const active = parseInt(document.getElementById('tier-active').value);
+
+    if (!tier_name) {
+      toast('Tier Name is required.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('btn-save-tier');
+    btn.disabled = true;
+
+    API.call('smriti_retail_os.cge.api.cge_api.save_loyalty_tier', {
+      tier_data: {
+        name: name || null,
+        tier_name, min_points, tier_multiplier, active
+      }
+    })
+    .then(() => {
+      toast('Tier saved successfully.', 'success');
+      loadLoyalty();
+      document.getElementById('loyalty-editor-container').innerHTML = `
+        <div class="empty-state">
+          <span class="material-symbols-outlined empty-icon">check_circle</span>
+          <span>Tier configuration stored. Select another to configure.</span>
+        </div>
+      `;
+    })
+    .catch(e => {
+      toast('Failed to save tier: ' + e.message, 'error');
+    })
+    .finally(() => { btn.disabled = false; });
+  }
+
+  function deleteLoyaltyTier(name) {
+    if (!confirm('Are you sure you want to delete this Loyalty Tier?')) return;
+    API.call('frappe.client.delete', { doctype: 'SMRITI Loyalty Tier', name: name })
+      .then(() => {
+        toast('Tier deleted successfully.', 'success');
+        loadLoyalty();
+        document.getElementById('loyalty-editor-container').innerHTML = `
+          <div class="empty-state"><span class="material-symbols-outlined empty-icon">delete</span><span>Tier deleted.</span></div>
+        `;
+      })
+      .catch(e => { toast('Failed to delete tier: ' + e.message, 'error'); });
+  }
+
+  function selectLoyaltyRule(name) {
+    document.querySelectorAll('#loyalty-list .cge-card').forEach(c => c.classList.remove('active'));
+    const card = document.getElementById('loy-card-rule-' + name);
+    if (card) card.classList.add('active');
+
+    const rule = loyaltyRules.find(r => r.name === name);
+    if (!rule) return;
+
+    renderRuleForm(rule);
+  }
+
+  function openNewLoyaltyRule() {
+    renderRuleForm({ name: '', rule_name: '', rule_type: 'Multiplier', dimension: 'Brand', dimension_value: '', rule_value: 1.0, priority: 10, status: 'Active', allow_stack: 1 });
+  }
+
+  function renderRuleForm(data) {
+    const isNew = !data.name;
+    document.getElementById('loyalty-editor-container').innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <h3 style="font-family:'Outfit',sans-serif; font-size:1.15rem; font-weight:800; color:var(--text-1); border-bottom:1px solid var(--border); padding-bottom:8px;">
+          ${isNew ? 'Create Loyalty Rule' : 'Edit Rule: ' + data.rule_name}
+        </h3>
+        <div class="form-group">
+          <label class="form-label">Rule Name *</label>
+          <input type="text" id="rule-name" value="${data.rule_name}" placeholder="e.g. Double points on Style X">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Rule Type *</label>
+            <select id="rule-type">
+              <option value="Multiplier" ${data.rule_type === 'Multiplier' ? 'selected' : ''}>Multiplier</option>
+              <option value="Bonus Points" ${data.rule_type === 'Bonus Points' ? 'selected' : ''}>Bonus Points</option>
+              <option value="Cap" ${data.rule_type === 'Cap' ? 'selected' : ''}>Points Cap</option>
+              <option value="Exclusion" ${data.rule_type === 'Exclusion' ? 'selected' : ''}>Exclusion (No Points)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Rule Value *</label>
+            <input type="number" id="rule-val" value="${data.rule_value}" step="0.01">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Target Dimension *</label>
+            <select id="rule-dimension">
+              <option value="Brand" ${data.dimension === 'Brand' ? 'selected' : ''}>Brand</option>
+              <option value="Item Group" ${data.dimension === 'Item Group' ? 'selected' : ''}>Item Group</option>
+              <option value="Style" ${data.dimension === 'Style' ? 'selected' : ''}>Style Code</option>
+              <option value="Season" ${data.dimension === 'Season' ? 'selected' : ''}>Season</option>
+              <option value="Store" ${data.dimension === 'Store' ? 'selected' : ''}>Store (Warehouse)</option>
+              <option value="Customer Group" ${data.dimension === 'Customer Group' ? 'selected' : ''}>Customer Group</option>
+              <option value="Tier" ${data.dimension === 'Tier' ? 'selected' : ''}>Loyalty Tier</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Dimension Value *</label>
+            <input type="text" id="rule-dim-val" value="${data.dimension_value || ''}" placeholder="e.g. Nike, Silver">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Priority (higher resolves first) *</label>
+            <input type="number" id="rule-priority" value="${data.priority || 10}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Allow Rule Stacking *</label>
+            <select id="rule-stack">
+              <option value="1" ${data.allow_stack == 1 ? 'selected' : ''}>Yes</option>
+              <option value="0" ${data.allow_stack == 0 ? 'selected' : ''}>No (Priority Overrides)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status *</label>
+          <select id="rule-status">
+            <option value="Active" ${data.status === 'Active' ? 'selected' : ''}>Active</option>
+            <option value="Inactive" ${data.status === 'Inactive' ? 'selected' : ''}>Inactive</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; margin-top: 10px;">
+          <button class="btn btn-primary" onclick="saveLoyaltyRule('${data.name}')" id="btn-save-rule" style="flex:1;">Save Rule</button>
+          ${!isNew ? `<button class="btn btn-danger" onclick="deleteLoyaltyRule('${data.name}')">Delete</button>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  function saveLoyaltyRule(name) {
+    const rule_name = document.getElementById('rule-name').value.trim();
+    const rule_type = document.getElementById('rule-type').value;
+    const rule_value = parseFloat(document.getElementById('rule-val').value) || 0;
+    const dimension = document.getElementById('rule-dimension').value;
+    const dimension_value = document.getElementById('rule-dim-val').value.trim();
+    const priority = parseInt(document.getElementById('rule-priority').value) || 10;
+    const allow_stack = parseInt(document.getElementById('rule-stack').value);
+    const status = document.getElementById('rule-status').value;
+
+    if (!rule_name || !dimension_value) {
+      toast('Rule Name and Dimension Value are required.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('btn-save-rule');
+    btn.disabled = true;
+
+    API.call('smriti_retail_os.cge.api.cge_api.save_loyalty_rule', {
+      rule_data: {
+        name: name || null,
+        rule_name, rule_type, rule_value, dimension, dimension_value, priority, allow_stack, status
+      }
+    })
+    .then(() => {
+      toast('Rule saved successfully.', 'success');
+      loadLoyalty();
+      document.getElementById('loyalty-editor-container').innerHTML = `
+        <div class="empty-state"><span class="material-symbols-outlined empty-icon">check_circle</span><span>Rule configuration stored.</span></div>
+      `;
+    })
+    .catch(e => {
+      toast('Failed to save rule: ' + e.message, 'error');
+    })
+    .finally(() => { btn.disabled = false; });
+  }
+
+  function deleteLoyaltyRule(name) {
+    if (!confirm('Are you sure you want to delete this Loyalty Rule?')) return;
+    API.call('frappe.client.delete', { doctype: 'SMRITI Loyalty Rule', name: name })
+      .then(() => {
+        toast('Rule deleted successfully.', 'success');
+        loadLoyalty();
+        document.getElementById('loyalty-editor-container').innerHTML = `
+          <div class="empty-state"><span class="material-symbols-outlined empty-icon">delete</span><span>Rule deleted.</span></div>
+        `;
+      })
+      .catch(e => { toast('Failed to delete rule: ' + e.message, 'error'); });
+  }
+
+  // --- Coupons / Campaigns Tab ---
+  let campaignsData = [];
+  function loadCoupons() {
+    API.call('smriti_retail_os.cge.api.cge_api.get_campaigns_with_utilization')
+      .then(list => {
+        campaignsData = list || [];
+        renderCouponsList();
+      })
+      .catch(e => {
+        toast('Failed to load campaigns: ' + e.message, 'error');
+      });
+  }
+
+  function renderCouponsList() {
+    const wrap = document.getElementById('coupons-list');
+    if (!campaignsData.length) {
+      wrap.innerHTML = '<div class="empty-state"><span>No campaigns configured.</span></div>';
+      return;
+    }
+    wrap.innerHTML = campaignsData.map(c => {
+      const util = parseFloat(c.utilization || 0);
+      let barCls = '';
+      if (util >= 90) barCls = 'danger';
+      else if (util >= 70) barCls = 'warning';
+
+      return `
+        <div class="cge-card" onclick="selectCampaign('${c.name}')" id="camp-card-${c.name}">
+          <div class="cge-card-header">
+            <span class="cge-card-title">${c.campaign_name}</span>
+            <span class="cge-card-badge">${c.status}</span>
+          </div>
+          <div class="cge-card-details">
+            <span>Type: <strong>${c.campaign_type}</strong></span>
+            <span>Duration: ${c.start_date || 'Open'} to ${c.end_date || 'Open'}</span>
+            <span>Limit: ₹${parseFloat(c.budget_limit || 0).toLocaleString('en-IN')} | Consumed: ₹${parseFloat(c.budget_consumed || 0).toLocaleString('en-IN')}</span>
+          </div>
+          <div class="progress-container">
+            <div class="progress-label">
+              <span>Budget Utilization</span>
+              <span>${util.toFixed(1)}%</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill ${barCls}" style="width: ${Math.min(100, util)}%;"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function selectCampaign(name) {
+    document.querySelectorAll('#coupons-list .cge-card').forEach(c => c.classList.remove('active'));
+    const card = document.getElementById('camp-card-' + name);
+    if (card) card.classList.add('active');
+
+    const camp = campaignsData.find(c => c.name === name);
+    if (!camp) return;
+
+    renderCampaignForm(camp);
+  }
+
+  function openNewCampaign() {
+    renderCampaignForm({ name: '', campaign_name: '', campaign_type: 'Discount Coupon', start_date: '', end_date: '', budget_limit: 10000, stop_on_limit: 1, status: 'Active' });
+  }
+
+  function renderCampaignForm(data) {
+    const isNew = !data.name;
+    document.getElementById('coupons-editor-container').innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <h3 style="font-family:'Outfit',sans-serif; font-size:1.15rem; font-weight:800; color:var(--text-1); border-bottom:1px solid var(--border); padding-bottom:8px;">
+          ${isNew ? 'Create Coupon Campaign' : 'Edit Campaign: ' + data.campaign_name}
+        </h3>
+        <div class="form-group">
+          <label class="form-label">Campaign Name *</label>
+          <input type="text" id="camp-name" value="${data.campaign_name}" placeholder="e.g. Summer Festival Cashback">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Campaign Type *</label>
+            <select id="camp-type">
+              <option value="Discount Coupon" ${data.campaign_type === 'Discount Coupon' ? 'selected' : ''}>Discount Coupon</option>
+              <option value="Cashback Promo" ${data.campaign_type === 'Cashback Promo' ? 'selected' : ''}>Cashback Promo</option>
+              <option value="Seasonal Drive" ${data.campaign_type === 'Seasonal Drive' ? 'selected' : ''}>Seasonal Drive</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Budget Limit (₹) *</label>
+            <input type="number" id="camp-limit" value="${data.budget_limit}" min="1">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Start Date</label>
+            <input type="date" id="camp-start" value="${data.start_date || ''}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Date</label>
+            <input type="date" id="camp-end" value="${data.end_date || ''}">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Hard Stop on Limit *</label>
+            <select id="camp-stop">
+              <option value="1" ${data.stop_on_limit == 1 ? 'selected' : ''}>Yes (Hard Stop)</option>
+              <option value="0" ${data.stop_on_limit == 0 ? 'selected' : ''}>No (Allow Overdraft)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status *</label>
+            <select id="camp-status">
+              <option value="Active" ${data.status === 'Active' ? 'selected' : ''}>Active</option>
+              <option value="Inactive" ${data.status === 'Inactive' ? 'selected' : ''}>Inactive</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top: 10px;">
+          <button class="btn btn-primary" onclick="saveCampaign('${data.name}')" id="btn-save-camp" style="flex:1;">Save Campaign</button>
+          ${!isNew ? `<button class="btn btn-danger" onclick="deleteCampaign('${data.name}')">Delete</button>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  function saveCampaign(name) {
+    const campaign_name = document.getElementById('camp-name').value.trim();
+    const campaign_type = document.getElementById('camp-type').value;
+    const budget_limit = parseFloat(document.getElementById('camp-limit').value) || 0;
+    const start_date = document.getElementById('camp-start').value;
+    const end_date = document.getElementById('camp-end').value;
+    const stop_on_limit = parseInt(document.getElementById('camp-stop').value);
+    const status = document.getElementById('camp-status').value;
+
+    if (!campaign_name) {
+      toast('Campaign Name is required.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('btn-save-camp');
+    btn.disabled = true;
+
+    API.call('smriti_retail_os.cge.api.cge_api.save_coupon_campaign', {
+      campaign_data: {
+        name: name || null,
+        campaign_name, campaign_type, budget_limit, start_date, end_date, stop_on_limit, status
+      }
+    })
+    .then(() => {
+      toast('Campaign saved successfully.', 'success');
+      loadCoupons();
+      document.getElementById('coupons-editor-container').innerHTML = `
+        <div class="empty-state"><span class="material-symbols-outlined empty-icon">check_circle</span><span>Campaign configuration stored.</span></div>
+      `;
+    })
+    .catch(e => {
+      toast('Failed to save campaign: ' + e.message, 'error');
+    })
+    .finally(() => { btn.disabled = false; });
+  }
+
+  function deleteCampaign(name) {
+    if (!confirm('Are you sure you want to delete this Coupon Campaign?')) return;
+    API.call('frappe.client.delete', { doctype: 'SMRITI Coupon Campaign', name: name })
+      .then(() => {
+        toast('Campaign deleted successfully.', 'success');
+        loadCoupons();
+        document.getElementById('coupons-editor-container').innerHTML = `
+          <div class="empty-state"><span class="material-symbols-outlined empty-icon">delete</span><span>Campaign deleted.</span></div>
+        `;
+      })
+      .catch(e => { toast('Failed to delete campaign: ' + e.message, 'error'); });
+  }
+
+  // --- Cashback Wallet Tab ---
+  let walletLedgerData = [];
+  let filterTimeout = null;
+
+  function handleWalletFilter(val) {
+    if (filterTimeout) clearTimeout(filterTimeout);
+    filterTimeout = setTimeout(() => {
+      loadWalletLedger(val.trim());
+    }, 400);
+  }
+
+  function loadWalletLedger(customer = '') {
+    API.call('smriti_retail_os.cge.api.cge_api.get_wallet_ledger', {
+      customer: customer || null,
+      limit: 50
+    })
+    .then(entries => {
+      walletLedgerData = entries || [];
+      renderWalletLedger();
+    })
+    .catch(e => {
+      toast('Failed to fetch wallet ledger: ' + e.message, 'error');
+    });
+  }
+
+  function renderWalletLedger() {
+    const tbody = document.getElementById('wallet-ledger-entries');
+    if (!walletLedgerData.length) {
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-2);">No wallet ledger entries found.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = walletLedgerData.map(l => {
+      const trCls = l.transaction_type === 'Credit' ? 'credit' : 'debit';
+      const sign = l.transaction_type === 'Credit' ? '+' : '-';
+      
+      let actionBtn = '';
+      if (!l.is_reversal && l.transaction_type === 'Debit') {
+        const reversed = walletLedgerData.some(rx => rx.is_reversal && rx.reference_invoice === l.reference_invoice && rx.transaction_type === 'Credit');
+        if (!reversed) {
+          actionBtn = `<button class="btn btn-danger btn-xs" onclick="openReversalModal('${l.name}')">Reverse</button>`;
+        } else {
+          actionBtn = '<span style="font-size:0.75rem; color:var(--text-3);">Reversed</span>';
+        }
+      } else if (l.is_reversal) {
+        actionBtn = '<span style="font-size:0.75rem; color:var(--text-3);">Reversal</span>';
+      }
+
+      const journalLink = l.journal_entry ? `<a href="/app/journal-entry/${l.journal_entry}" target="_blank" style="color:var(--accent-2); font-weight:600; text-decoration:none;">${l.journal_entry}</a>` : '-';
+      const formattedDate = new Date(l.creation).toLocaleString();
+
+      return `
+        <tr>
+          <td style="font-family:monospace; font-weight:600;">${l.ledger_sequence}</td>
+          <td style="font-weight:600;">${l.customer}</td>
+          <td>${l.wallet_type}</td>
+          <td><span class="transaction-badge ${trCls}">${l.transaction_type}</span></td>
+          <td style="font-weight:700;">${sign} ₹${parseFloat(l.amount).toFixed(2)}</td>
+          <td>${l.reference_invoice || '-'}</td>
+          <td>${journalLink}</td>
+          <td>
+            <strong>${l.adjustment_reason_type || '-'}</strong>
+            ${l.remarks ? `<br><span style="font-size:0.78rem; color:var(--text-2);">${l.remarks}</span>` : ''}
+          </td>
+          <td style="font-size:0.78rem; color:var(--text-2);">${formattedDate}</td>
+          <td style="text-align: center;">${actionBtn}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // --- Modal Helpers ---
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  // --- Wallet Adjustment posting ---
+  function openWalletAdjustmentModal() {
+    // Load customer links into adjustment dropdown on open
+    API.call('frappe.client.get_list', {
+      doctype: 'Customer',
+      fields: ['name', 'customer_name'],
+      order_by: 'customer_name asc',
+      limit: 200
+    })
+    .then(customers => {
+      const select = document.getElementById('adj-customer');
+      select.innerHTML = customers.map(c => `<option value="${c.name}">${c.customer_name} (${c.name})</option>`).join('');
+      openModal('modal-adjustment');
+    })
+    .catch(e => {
+      toast('Failed to load customers list: ' + e.message, 'error');
+    });
+  }
+
+  function submitWalletAdjustment() {
+    const customer = document.getElementById('adj-customer').value;
+    const wallet_type = document.getElementById('adj-wallet-type').value;
+    const transaction_type = document.getElementById('adj-transaction-type').value;
+    const adjustment_reason_type = document.getElementById('adj-reason-type').value;
+    const amount = parseFloat(document.getElementById('adj-amount').value) || 0;
+    const remarks = document.getElementById('adj-remarks').value.trim();
+
+    if (amount <= 0) {
+      toast('Amount must be greater than zero.', 'error');
+      return;
+    }
+    if (!remarks) {
+      toast('Audit remarks are required.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('btn-post-adj');
+    btn.disabled = true;
+
+    API.call('smriti_retail_os.cge.api.cge_api.post_wallet_adjustment', {
+      customer, wallet_type, transaction_type, amount, remarks, adjustment_reason_type
+    })
+    .then(() => {
+      toast('Wallet adjustment posted successfully.', 'success');
+      closeModal('modal-adjustment');
+      // Reset inputs
+      document.getElementById('adj-amount').value = '';
+      document.getElementById('adj-remarks').value = '';
+      loadWalletLedger();
+    })
+    .catch(e => {
+      toast('Failed to post adjustment: ' + e.message, 'error');
+    })
+    .finally(() => { btn.disabled = false; });
+  }
+
+  // --- Reversal posting ---
+  function openReversalModal(ledgerSeq) {
+    document.getElementById('rev-ledger-seq').value = ledgerSeq;
+    document.getElementById('rev-reason').value = '';
+    openModal('modal-reversal');
+  }
+
+  function submitReversal() {
+    const seq = document.getElementById('rev-ledger-seq').value;
+    const reason = document.getElementById('rev-reason').value.trim();
+
+    if (!reason) {
+      toast('Reversal reason is required.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('btn-confirm-rev');
+    btn.disabled = true;
+
+    API.call('smriti_retail_os.cge.api.cge_api.reverse_wallet_transaction', {
+      ledger_seq: seq,
+      reason: reason
+    })
+    .then(() => {
+      toast('Transaction reversed successfully.', 'success');
+      closeModal('modal-reversal');
+      loadWalletLedger();
+    })
+    .catch(e => {
+      toast('Reversal failed: ' + e.message, 'error');
+    })
+    .finally(() => { btn.disabled = false; });
+  }
+
+  // --- Initialization ---
+  window.onload = function() {
+    loadDashboard();
+  };
+</script>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.4"></script>
+<script>SMRITI.renderFlexibleSidebar("cge_dashboard");</script>
+</body>
+</html>
+{% endblock %}

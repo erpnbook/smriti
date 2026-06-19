@@ -25,7 +25,6 @@ class TestCGEV2Constraints(unittest.TestCase):
         self.wallet_table = "SMRITI Benefit Wallet"
         self.ledger_table = "SMRITI Benefit Ledger"
         
-    @unittest.expectedFailure
     def test_01_wallet_composite_unique_index_exists(self):
         """Verify uq_wallet_cust_comp_inst unique index exists on SMRITI Benefit Wallet table."""
         if not frappe.db.table_exists(self.wallet_table):
@@ -42,7 +41,8 @@ class TestCGEV2Constraints(unittest.TestCase):
         # Verify columns covered and uniqueness
         db_cols = []
         for r in idx_rows:
-            self.assertEqual(int(r.get("Non_unique") or r.get("non_unique")), 0, "Index is not unique!")
+            non_unique = r.get("Non_unique") if r.get("Non_unique") is not None else r.get("non_unique")
+            self.assertEqual(int(non_unique), 0, "Index is not unique!")
             db_cols.append(r.get("Column_name") or r.get("column_name"))
             
         self.assertEqual(
@@ -51,7 +51,6 @@ class TestCGEV2Constraints(unittest.TestCase):
             f"Index covers {db_cols} instead of ('customer', 'company', 'benefit_instrument')!"
         )
 
-    @unittest.expectedFailure
     def test_02_ledger_query_index_exists(self):
         """Verify idx_ledger_cust_inst_date index exists on SMRITI Benefit Ledger table."""
         if not frappe.db.table_exists(self.ledger_table):
@@ -72,7 +71,6 @@ class TestCGEV2Constraints(unittest.TestCase):
             f"Index covers {db_cols} instead of ('customer', 'benefit_instrument', 'posting_date')!"
         )
 
-    @unittest.expectedFailure
     def test_03_ledger_ref_index_exists(self):
         """Verify idx_ledger_ref index exists on SMRITI Benefit Ledger table."""
         if not frappe.db.table_exists(self.ledger_table):

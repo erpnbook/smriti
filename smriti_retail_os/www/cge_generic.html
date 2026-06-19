@@ -1,0 +1,682 @@
+/**
+ * @file: smriti_retail_os/www/cge_generic.html
+ * @description: Handles user login, registration, and JWT token generation.
+ * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ * @date: 2026-05-28
+ * @version: 1.0.0
+ * @license: MIT
+ * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ */
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/cge_generic.html
+  @description: Dynamic SMRITI CGE Explorer & CRUD Console
+  @author: Antigravity AI
+  @version: 1.0.0
+  @license: MIT
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMRITI - {{ target_title }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-base:     #0a0f1e;
+      --bg-surface:  #0f1629;
+      --bg-card:     #131d35;
+      --bg-input:    #172040;
+      --border:      rgba(255,255,255,0.07);
+      --border-glow: rgba(99,102,241,0.2);
+      --accent:      #6366f1;
+      --accent-glow: rgba(99,102,241,0.5);
+      --accent-2:    #818cf8;
+      --success:     #10b981;
+      --warning:     #f59e0b;
+      --danger:      #ef4444;
+      --text-1:      #e2e8f0;
+      --text-2:      #94a3b8;
+      --text-3:      #475569;
+      --radius:      12px;
+      --radius-sm:   8px;
+      --radius-lg:   16px;
+      --shadow:      0 8px 32px rgba(0,0,0,0.5);
+      --t:           0.2s ease;
+    }
+
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg-base); color: var(--text-1); font-family: 'Inter', sans-serif; font-size: 14px; }
+
+    .bg-grid {
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+      background-size: 50px 50px;
+      z-index: 0;
+    }
+    .bg-glow {
+      position: fixed; width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,0.04) 0%, transparent 70%);
+      top: -100px; left: -100px; z-index: 0; filter: blur(40px);
+    }
+
+    #app { position: relative; z-index: 1; width: 100vw; height: 100vh; display: flex; overflow: hidden; }
+
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    .topbar { height: 56px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0; }
+    .topbar-breadcrumbs { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-2); }
+    .topbar-breadcrumbs span.sep { color: var(--text-3); }
+    .topbar-breadcrumbs span.active { color: var(--text-1); }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .topbtn { background: none; border: none; color: var(--text-2); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all var(--t); }
+    .topbtn:hover { background: rgba(255,255,255,0.05); color: var(--text-1); }
+
+    .filter-bar { padding: 16px 24px; background: var(--bg-surface); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; gap: 16px; }
+    .search-wrap { position: relative; flex: 1; max-width: 400px; }
+    .search-input { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-1); font-size: 0.88rem; padding: 10px 14px 10px 38px; outline: none; transition: all var(--t); }
+    .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--border-glow); }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
+
+    .content-area { flex: 1; overflow-y: auto; padding: 24px; }
+    .table-container { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-surface); }
+    .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
+    .data-table th { background: rgba(0,0,0,0.15); padding: 14px 16px; font-weight: 700; color: var(--text-2); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
+    .data-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); color: var(--text-1); vertical-align: middle; }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-sm); border: none; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all var(--t); text-decoration: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; box-shadow: 0 4px 12px var(--border-glow); }
+    .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.1); }
+    .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text-2); }
+    .btn-secondary:hover { border-color: var(--text-2); color: var(--text-1); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { filter: brightness(1.1); }
+    .btn-sm { padding: 6px 12px; font-size: 0.78rem; border-radius: 6px; }
+    .btn-xs { padding: 4px 8px; font-size: 0.72rem; border-radius: 4px; }
+
+    /* Modals */
+    .modal-backdrop { position: fixed; inset: 0; z-index: 9000; background: rgba(3,7,18,0.85); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.22s; }
+    .modal-backdrop.open { opacity: 1; display: flex; }
+    .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; width: min(600px, 95vw); transform: translateY(20px); transition: transform 0.22s; box-shadow: var(--shadow); max-height: 90vh; overflow-y: auto; }
+    .modal-backdrop.open .modal { transform: translateY(0); }
+    .modal-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-1); display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .modal-close { margin-left: auto; background: none; border: none; color: var(--text-2); cursor: pointer; display: flex; align-items: center; }
+    .modal-close:hover { color: var(--danger); }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; width: 100%; margin-bottom: 16px; }
+    .form-label { font-size: 0.75rem; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+    input[type="text"], input[type="number"], input[type="date"], input[type="datetime-local"], select, textarea {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-1); font-size: 0.88rem; padding: 10px 14px; outline: none; transition: all var(--t); font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--border-glow); }
+    input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+
+    /* Child Table Manager */
+    .child-table-wrapper { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-surface); margin-top: 8px; }
+    .child-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+    .child-table th { background: rgba(0,0,0,0.1); padding: 8px 12px; font-weight: 700; color: var(--text-2); border-bottom: 1px solid var(--border); }
+    .child-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .child-table tr:last-child td { border-bottom: none; }
+
+    /* Toast Container */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 99999; }
+    .toast { padding: 12px 18px; border-radius: var(--radius); font-size: 0.88rem; font-weight: 600; color: white; min-width: 240px; display: flex; align-items: center; gap: 10px; animation: toast-in 0.3s ease; box-shadow: var(--shadow); }
+    .toast.success { background: #065f46; border: 1px solid rgba(16,185,129,0.3); }
+    .toast.error   { background: #7f1d1d; border: 1px solid rgba(239,68,68,0.3); }
+    .toast.info    { background: #1e1b4b; border: 1px solid rgba(99,102,241,0.3); }
+    @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+    /* Spinner */
+    .spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 40px; }
+    .spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.05); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-2); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .empty-icon { font-size: 3rem; color: var(--text-3); }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+  </style>
+  <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div id="app">
+  <!-- Standalone Sidebar -->
+  <div id="smriti-sidebar-target" class="sidebar"></div>
+
+  <!-- Main Workspace -->
+  <div class="main-wrapper">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-breadcrumbs">
+        <span>SMRITI</span>
+        <span class="sep">/</span>
+        <span>CGE</span>
+        <span class="sep">/</span>
+        <span class="active">{{ target_title }}</span>
+      </div>
+      <div class="topbar-right">
+        <button class="topbtn" onclick="history.back()" title="Go Back">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <button class="topbtn" onclick="history.forward()" title="Go Forward">
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input type="text" class="search-input" id="search-box" placeholder="Search records by ID..." oninput="handleSearch(this.value)">
+      </div>
+      <button class="btn btn-primary" onclick="openNewModal()">
+        <span class="material-symbols-outlined">add</span> New {{ target_title }}
+      </button>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="content-area">
+      <div id="list-container">
+        <div class="spinner-wrap"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Dialog -->
+<div class="modal-backdrop" id="generic-modal" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">
+      <span class="material-symbols-outlined" id="modal-icon-title">edit_note</span>
+      <span id="modal-heading">Edit Document</span>
+      <button class="modal-close" onclick="closeModal()"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <form id="generic-form" onsubmit="handleFormSubmit(event)">
+      <input type="hidden" id="form-doc-name">
+      <div id="form-fields-container">
+        <!-- Rendered dynamically -->
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btn-save-doc">Save Record</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-wrap"></div>
+
+<script>
+  const CSRF_TOKEN = '{{ csrf_token }}';
+  const targetDoctype = '{{ target_doctype }}';
+  const targetTitle = '{{ target_title }}';
+
+  const API = {
+    call(method, args = {}) {
+      return fetch('/api/method/' + method, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-frappe-csrf-token': CSRF_TOKEN
+        },
+        body: JSON.stringify(args)
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.exc) throw new Error(data._error_message || data.exc);
+        return data.message !== undefined ? data.message : data;
+      });
+    }
+  };
+
+  function toast(msg, type = 'success') {
+    const wrap = document.getElementById('toast-wrap');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    const icons = { success: 'check_circle', error: 'error', info: 'info' };
+    el.innerHTML = `<span class="material-symbols-outlined">${icons[type] || 'info'}</span><span>${msg}</span>`;
+    wrap.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+
+  let schemaFields = [];
+  let recordsData = [];
+  let filteredRecords = [];
+  let childTableMeta = {}; // Caches metadata of child tables
+
+  // --- Initialize ---
+  window.onload = function() {
+    // 1. Fetch schema fields
+    API.call('smriti_retail_os.cge.api.cge_api.get_cge_generic_fields', { doctype: targetDoctype })
+      .then(fields => {
+        schemaFields = fields || [];
+        // Pre-fetch metadata for any child tables
+        const promises = schemaFields
+          .filter(f => f.fieldtype === 'Table')
+          .map(f => {
+            return API.call('smriti_retail_os.cge.api.cge_api.get_cge_generic_fields', { doctype: f.options })
+              .then(childFields => {
+                childTableMeta[f.options] = childFields;
+              });
+          });
+        return Promise.all(promises);
+      })
+      .then(() => {
+        // 2. Fetch list data
+        return loadListData();
+      })
+      .catch(e => {
+        toast('Failed to load schema: ' + e.message, 'error');
+      });
+  };
+
+  function loadListData() {
+    return API.call('smriti_retail_os.cge.api.cge_api.get_cge_generic_list', { doctype: targetDoctype })
+      .then(list => {
+        recordsData = list || [];
+        filteredRecords = [...recordsData];
+        renderTable();
+      })
+      .catch(e => {
+        document.getElementById('list-container').innerHTML = 
+          `<div class="empty-state"><span class="material-symbols-outlined empty-icon" style="color:var(--danger);">error</span><span>Error loading records: ${e.message}</span></div>`;
+      });
+  }
+
+  // --- Render Listing Table ---
+  function renderTable() {
+    const container = document.getElementById('list-container');
+    if (!filteredRecords.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <span class="material-symbols-outlined empty-icon">folder_open</span>
+          <span>No records found in this explorer. Click "New" to create one.</span>
+        </div>
+      `;
+      return;
+    }
+
+    // Determine headers based on non-break schema fields
+    const visibleFields = schemaFields.filter(f => f.fieldtype !== 'Table');
+    
+    let html = `
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Record ID</th>
+              ${visibleFields.map(f => `<th>${f.label}</th>`).join('')}
+              <th>Created At</th>
+              <th style="text-align: center; width: 140px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    filteredRecords.forEach(r => {
+      const formattedDate = r.creation ? new Date(r.creation).toLocaleString() : '-';
+      html += `
+        <tr>
+          <td style="font-weight:600; font-family:monospace; color:var(--text-1);">${r.name}</td>
+          ${visibleFields.map(f => {
+            let val = r[f.fieldname];
+            if (val === null || val === undefined) val = '-';
+            else if (f.fieldtype === 'Check') {
+              val = val ? '<span class="material-symbols-outlined" style="color:var(--success);">check_circle</span>' : '<span class="material-symbols-outlined" style="color:var(--text-3);">cancel</span>';
+            } else if (f.fieldtype === 'Currency') {
+              val = '₹' + parseFloat(val).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            }
+            return `<td>${val}</td>`;
+          }).join('')}
+          <td style="font-size:0.8rem; color:var(--text-2);">${formattedDate}</td>
+          <td style="text-align: center;">
+            <button class="btn btn-secondary btn-xs" onclick="openEditModal('${r.name}')" style="margin-right:4px;">Edit</button>
+            <button class="btn btn-danger btn-xs" onclick="handleDeleteRecord('${r.name}')">Delete</button>
+          </td>
+        </tr>
+      `;
+    });
+
+    html += `
+          </tbody>
+        </table>
+      </div>
+    `;
+    container.innerHTML = html;
+  }
+
+  // --- Search Filtering ---
+  let searchTimeout = null;
+  function handleSearch(query) {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      const q = query.toLowerCase().trim();
+      if (!q) {
+        filteredRecords = [...recordsData];
+      } else {
+        filteredRecords = recordsData.filter(r => {
+          return r.name.toLowerCase().includes(q) || 
+            Object.keys(r).some(k => String(r[k]).toLowerCase().includes(q));
+        });
+      }
+      renderTable();
+    }, 300);
+  }
+
+  // --- Modal Forms Creation ---
+  let activeChildRows = {}; // Keeps track of child rows in form, key is fieldname
+
+  function openNewModal() {
+    document.getElementById('modal-heading').innerText = 'New ' + targetTitle;
+    document.getElementById('modal-icon-title').innerText = 'add_circle';
+    document.getElementById('form-doc-name').value = '';
+    
+    // Clear child tables rows
+    activeChildRows = {};
+    schemaFields.filter(f => f.fieldtype === 'Table').forEach(f => {
+      activeChildRows[f.fieldname] = [];
+    });
+
+    renderFormFields({});
+    openModal();
+  }
+
+  function openEditModal(name) {
+    document.getElementById('modal-heading').innerText = 'Edit ' + targetTitle;
+    document.getElementById('modal-icon-title').innerText = 'edit_note';
+    document.getElementById('form-doc-name').value = name;
+
+    API.call('smriti_retail_os.cge.api.cge_api.get_cge_generic_doc', { doctype: targetDoctype, name: name })
+      .then(doc => {
+        // Set up child tables
+        activeChildRows = {};
+        schemaFields.filter(f => f.fieldtype === 'Table').forEach(f => {
+          activeChildRows[f.fieldname] = doc[f.fieldname] || [];
+        });
+
+        renderFormFields(doc);
+        openModal();
+      })
+      .catch(e => {
+        toast('Failed to load document: ' + e.message, 'error');
+      });
+  }
+
+  function renderFormFields(doc) {
+    const container = document.getElementById('form-fields-container');
+    container.innerHTML = '';
+
+    schemaFields.forEach(f => {
+      const val = doc[f.fieldname] !== undefined ? doc[f.fieldname] : (f.default !== null ? f.default : '');
+      const div = document.createElement('div');
+      
+      if (f.fieldtype === 'Table') {
+        // Render Child Table manager
+        div.className = 'form-group';
+        div.style.gridColumn = '1 / -1'; // Full width
+        div.innerHTML = `
+          <label class="form-label">${f.label}</label>
+          <div class="child-table-wrapper">
+            <table class="child-table" id="child-table-${f.fieldname}">
+              <thead>
+                <tr>
+                  ${childTableMeta[f.options].map(cf => `<th>${cf.label}</th>`).join('')}
+                  <th style="width: 50px; text-align: center;"></th>
+                </tr>
+              </thead>
+              <tbody id="child-tbody-${f.fieldname}">
+                <!-- Rendered child rows -->
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top: 8px;">
+            <button type="button" class="btn btn-secondary btn-xs" onclick="addChildRow('${f.fieldname}', '${f.options}')">
+              <span class="material-symbols-outlined" style="font-size:12px;">add</span> Add Row
+            </button>
+          </div>
+        `;
+        container.appendChild(div);
+        renderChildRows(f.fieldname, f.options);
+      } else {
+        // Standard Field
+        div.className = 'form-group';
+        let inputHtml = '';
+        
+        if (f.fieldtype === 'Select') {
+          const options = (f.options || '').split('\n').map(o => o.trim()).filter(Boolean);
+          inputHtml = `
+            <select id="field-${f.fieldname}" ${f.reqd ? 'required' : ''}>
+              <option value="">Select...</option>
+              ${options.map(o => `<option value="${o}" ${o === val ? 'selected' : ''}>${o}</option>`).join('')}
+            </select>
+          `;
+        } else if (f.fieldtype === 'Check') {
+          inputHtml = `
+            <div style="display:flex; align-items:center; gap:8px; padding-top:4px;">
+              <input type="checkbox" id="field-${f.fieldname}" ${val ? 'checked' : ''}>
+              <span style="font-size:0.88rem; color:var(--text-2);">${f.label}</span>
+            </div>
+          `;
+        } else if (f.fieldtype === 'Small Text' || f.fieldtype === 'Text' || f.fieldtype === 'Long Text' || f.fieldtype === 'Code') {
+          inputHtml = `<textarea id="field-${f.fieldname}" rows="3" ${f.reqd ? 'required' : ''}>${val}</textarea>`;
+        } else if (f.fieldtype === 'Link') {
+          // Links will have dynamic select box which queries on focus / renders current value
+          inputHtml = `
+            <select id="field-${f.fieldname}" ${f.reqd ? 'required' : ''}>
+              <option value="${val}">${val || 'Select...'}</option>
+            </select>
+          `;
+          // Trigger asynchronous load
+          setTimeout(() => {
+            const selectEl = document.getElementById(`field-${f.fieldname}`);
+            fetchLinkOptions(f.options, selectEl, val);
+          }, 10);
+        } else if (f.fieldtype === 'Int' || f.fieldtype === 'Float' || f.fieldtype === 'Currency' || f.fieldtype === 'Percent') {
+          inputHtml = `<input type="number" id="field-${f.fieldname}" value="${val}" step="any" ${f.reqd ? 'required' : ''}>`;
+        } else if (f.fieldtype === 'Date') {
+          inputHtml = `<input type="date" id="field-${f.fieldname}" value="${val}" ${f.reqd ? 'required' : ''}>`;
+        } else if (f.fieldtype === 'Datetime') {
+          // Format value for datetime-local
+          let dtVal = '';
+          if (val) {
+            dtVal = new Date(val).toISOString().slice(0, 16);
+          }
+          inputHtml = `<input type="datetime-local" id="field-${f.fieldname}" value="${dtVal}" ${f.reqd ? 'required' : ''}>`;
+        } else {
+          // Fallback to text input
+          inputHtml = `<input type="text" id="field-${f.fieldname}" value="${val}" ${f.reqd ? 'required' : ''}>`;
+        }
+
+        div.innerHTML = `
+          ${f.fieldtype !== 'Check' ? `<label class="form-label">${f.label} ${f.reqd ? '*' : ''}</label>` : ''}
+          ${inputHtml}
+        `;
+        container.appendChild(div);
+      }
+    });
+  }
+
+  // --- Dynamic Option Loading for Link Fields ---
+  function fetchLinkOptions(linkDocType, selectElement, currentValue) {
+    API.call('frappe.client.get_list', { doctype: linkDocType, limit: 150 })
+      .then(list => {
+        let options = `<option value="">Select...</option>`;
+        list.forEach(item => {
+          options += `<option value="${item.name}" ${item.name === currentValue ? 'selected' : ''}>${item.name}</option>`;
+        });
+        selectElement.innerHTML = options;
+      })
+      .catch(err => {
+        console.error('Failed to load link options for ' + linkDocType, err);
+      });
+  }
+
+  // --- Child Table Grid Rendering & Events ---
+  function renderChildRows(fieldname, optionDoctype) {
+    const tbody = document.getElementById(`child-tbody-${fieldname}`);
+    const rows = activeChildRows[fieldname] || [];
+    const fields = childTableMeta[optionDoctype];
+
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="${fields.length + 1}" style="text-align:center; color:var(--text-3); font-style:italic;">No rows. Click Add Row.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = '';
+    rows.forEach((row, index) => {
+      const tr = document.createElement('tr');
+      
+      let tds = '';
+      fields.forEach(cf => {
+        const cVal = row[cf.fieldname] !== undefined ? row[cf.fieldname] : '';
+        let inputField = '';
+        
+        if (cf.fieldtype === 'Select') {
+          const options = (cf.options || '').split('\n').map(o => o.trim()).filter(Boolean);
+          inputField = `
+            <select style="padding:6px; font-size:0.8rem;" onchange="updateChildValue('${fieldname}', ${index}, '${cf.fieldname}', this.value)">
+              <option value="">Select...</option>
+              ${options.map(o => `<option value="${o}" ${o === cVal ? 'selected' : ''}>${o}</option>`).join('')}
+            </select>
+          `;
+        } else if (cf.fieldtype === 'Check') {
+          inputField = `
+            <input type="checkbox" ${cVal ? 'checked' : ''} onchange="updateChildValue('${fieldname}', ${index}, '${cf.fieldname}', this.checked ? 1 : 0)">
+          `;
+        } else if (cf.fieldtype === 'Int' || cf.fieldtype === 'Float' || cf.fieldtype === 'Currency' || cf.fieldtype === 'Percent') {
+          inputField = `
+            <input type="number" value="${cVal}" style="padding:6px; font-size:0.8rem;" oninput="updateChildValue('${fieldname}', ${index}, '${cf.fieldname}', this.value)">
+          `;
+        } else {
+          inputField = `
+            <input type="text" value="${cVal}" style="padding:6px; font-size:0.8rem;" oninput="updateChildValue('${fieldname}', ${index}, '${cf.fieldname}', this.value)">
+          `;
+        }
+        
+        tds += `<td>${inputField}</td>`;
+      });
+
+      tds += `
+        <td style="text-align: center;">
+          <button type="button" class="btn btn-danger btn-xs" onclick="deleteChildRow('${fieldname}', ${index}, '${optionDoctype}')" title="Delete Row">
+            <span class="material-symbols-outlined" style="font-size:12px;">delete</span>
+          </button>
+        </td>
+      `;
+      tr.innerHTML = tds;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function addChildRow(fieldname, optionDoctype) {
+    const rowObj = {};
+    childTableMeta[optionDoctype].forEach(cf => {
+      rowObj[cf.fieldname] = cf.fieldtype === 'Check' ? 0 : '';
+    });
+    activeChildRows[fieldname].push(rowObj);
+    renderChildRows(fieldname, optionDoctype);
+  }
+
+  function updateChildValue(fieldname, index, key, value) {
+    activeChildRows[fieldname][index][key] = value;
+  }
+
+  function deleteChildRow(fieldname, index, optionDoctype) {
+    activeChildRows[fieldname].splice(index, 1);
+    renderChildRows(fieldname, optionDoctype);
+  }
+
+  // --- Form submission CRUD ---
+  function handleFormSubmit(event) {
+    event.preventDefault();
+    const btn = document.getElementById('btn-save-doc');
+    btn.disabled = true;
+
+    const docName = document.getElementById('form-doc-name').value;
+    const docData = { name: docName || undefined };
+
+    schemaFields.forEach(f => {
+      if (f.fieldtype === 'Table') {
+        docData[f.fieldname] = activeChildRows[f.fieldname];
+      } else {
+        const el = document.getElementById(`field-${f.fieldname}`);
+        if (el) {
+          if (f.fieldtype === 'Check') {
+            docData[f.fieldname] = el.checked ? 1 : 0;
+          } else if (f.fieldtype === 'Int' || f.fieldtype === 'Float' || f.fieldtype === 'Currency' || f.fieldtype === 'Percent') {
+            docData[f.fieldname] = el.value ? parseFloat(el.value) : 0.0;
+          } else {
+            docData[f.fieldname] = el.value.trim();
+          }
+        }
+      }
+    });
+
+    API.call('smriti_retail_os.cge.api.cge_api.save_cge_generic_doc', {
+      doctype: targetDoctype,
+      doc_data: docData
+    })
+    .then(savedName => {
+      toast('Document saved successfully: ' + savedName, 'success');
+      closeModal();
+      loadListData();
+    })
+    .catch(e => {
+      toast('Failed to save document: ' + e.message, 'error');
+    })
+    .finally(() => {
+      btn.disabled = false;
+    });
+  }
+
+  // --- Deleting records ---
+  function handleDeleteRecord(name) {
+    if (!confirm(`Are you sure you want to permanently delete this record: ${name}?`)) return;
+    
+    API.call('smriti_retail_os.cge.api.cge_api.delete_cge_generic_doc', {
+      doctype: targetDoctype,
+      name: name
+    })
+    .then(() => {
+      toast('Record deleted successfully.', 'success');
+      loadListData();
+    })
+    .catch(e => {
+      toast('Failed to delete record: ' + e.message, 'error');
+    });
+  }
+
+  // --- Modal Helpers ---
+  function openModal() {
+    document.getElementById('generic-modal').classList.add('open');
+  }
+  function closeModal() {
+    document.getElementById('generic-modal').classList.remove('open');
+  }
+</script>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.4"></script>
+<script>SMRITI.renderFlexibleSidebar("cge_dashboard");</script>
+</body>
+</html>
+{% endblock %}

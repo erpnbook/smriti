@@ -73,3 +73,13 @@ except Exception as e:
     import logging
     logging.getLogger("frappe").warning(f"Failed to apply SMRITI PDF or Locale patches: {e}")
 
+# Dynamic queue registration for SMRITI async printer queue
+try:
+    import frappe.utils.background_jobs
+    if hasattr(frappe.utils.background_jobs, "default_queue_list"):
+        if "barcode" not in frappe.utils.background_jobs.default_queue_list:
+            frappe.utils.background_jobs.default_queue_list.append("barcode")
+except Exception as e:
+    import logging
+    logging.getLogger("frappe").warning(f"Failed to register barcode queue: {e}")
+
