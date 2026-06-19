@@ -61,6 +61,11 @@ const SMRITI_ROUTE_MAP = {
   "pdt_dashboard":                    "/smriti-pdt",
   "simulation_sandbox":               "/coming-soon",
   "knowledge_center":                 "/smriti-help",
+  "sizewise_item":                    "/sizewise_item",
+  "psv_opening_balance":              "/psv-opening-balance",
+  "eway_bill":                        "/eway_bill",
+  "analytics_dashboard":              "/analytics",
+  "platform_center":                  "/platform_center",
 };
 
 function resolveSmritiRoute(key) {
@@ -121,6 +126,11 @@ const SMRITI_NAV = {
           label: "Suppliers",
           route: resolveSmritiRoute("suppliers"),
           standalone_route: "/suppliers",
+          status: "active" },
+        { id: "sizewise_item",
+          label: "Sizewise Item CRUD",
+          route: resolveSmritiRoute("sizewise_item"),
+          standalone_route: "/sizewise_item",
           status: "active" }
       ]
     },
@@ -244,6 +254,11 @@ const SMRITI_NAV = {
           label: "Exception Analysis",
           route: "/psv-exception-analysis",
           standalone_route: "/psv-exception-analysis",
+          status: "active" },
+        { id: "psv_opening_balance",
+          label: "PSV Opening Balance",
+          route: resolveSmritiRoute("psv_opening_balance"),
+          standalone_route: "/psv-opening-balance",
           status: "active" }
       ]
     },
@@ -281,6 +296,11 @@ const SMRITI_NAV = {
           label: "Credit Notes",
           route: "/sales-invoices",
           standalone_route: "/sales-invoices",
+          status: "active" },
+        { id: "eway_bill",
+          label: "E-Way Bill Management",
+          route: resolveSmritiRoute("eway_bill"),
+          standalone_route: "/eway_bill",
           status: "active" }
       ]
     },
@@ -419,6 +439,11 @@ const SMRITI_NAV = {
           label: "Audit Reports",
           route: "/reports?report=security_audit_log",
           standalone_route: "/reports?report=security_audit_log",
+          status: "active" },
+        { id: "analytics_dashboard",
+          label: "Analytics Dashboard",
+          route: resolveSmritiRoute("analytics_dashboard"),
+          standalone_route: "/analytics",
           status: "active" }
       ]
     },
@@ -476,6 +501,11 @@ const SMRITI_NAV = {
           label: "Backup & Restore",
           route: "/backup",
           standalone_route: "/backup",
+          status: "active" },
+        { id: "platform_center",
+          label: "Platform Center",
+          route: resolveSmritiRoute("platform_center"),
+          standalone_route: "/platform_center",
           status: "active" }
       ]
     },
