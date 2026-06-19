@@ -60,7 +60,7 @@ const SMRITI_ROUTE_MAP = {
   "business_dictionary":              "/smriti-dictionary",
   "pdt_dashboard":                    "/smriti-pdt",
   "simulation_sandbox":               "/coming-soon",
-  "knowledge_center":                 "/coming-soon",
+  "knowledge_center":                 "/smriti-help",
 };
 
 function resolveSmritiRoute(key) {
@@ -486,11 +486,9 @@ const SMRITI_NAV = {
       items: [
         { id: "knowledge_center",
           label: "Knowledge Center",
-          route: "/coming-soon",
-          standalone_route: "/coming-soon",
-          status: "coming_soon",
-          progress: 10,
-          eta: "Q3 2026" },
+          route: "/smriti-help",
+          standalone_route: "/smriti-help",
+          status: "active" },
         { id: "formula_registry",
           label: "Formula Registry",
           route: "/smriti-formula-registry",

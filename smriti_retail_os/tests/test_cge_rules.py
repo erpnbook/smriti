@@ -42,6 +42,23 @@ class TestCGERulesAndDR(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        # Seed standard Party Types if missing in test database
+        for name, acc_type in [("Customer", "Receivable"), ("Supplier", "Payable")]:
+            if not frappe.db.exists("Party Type", name):
+                pt = frappe.new_doc("Party Type")
+                pt.party_type = name
+                pt.account_type = acc_type
+                pt.insert(ignore_permissions=True)
+                frappe.db.commit()
+
+        # Seed test user to avoid LinkValidationError
+        if not frappe.db.exists("User", "test@example.com"):
+            user = frappe.new_doc("User")
+            user.email = "test@example.com"
+            user.first_name = "Test User"
+            user.insert(ignore_permissions=True)
+            frappe.db.commit()
+
         # Create remaining_points custom field if not present (AUD-09)
         if not frappe.db.exists("Custom Field", "Loyalty Point Entry-remaining_points"):
             from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
@@ -143,6 +160,53 @@ class TestCGERulesAndDR(unittest.TestCase):
         frappe.db.delete("SMRITI Rule Evaluation Log")
         frappe.db.delete("Sales Invoice", {"customer": self.customer_name})
         frappe.db.delete("POS Invoice", {"customer": self.customer_name})
+        frappe.db.commit()
+
+        # Ensure Brand and Customer exist before each test (safeguard against rollback/wipe)
+        self.brand = "Puma CGE"
+        if not frappe.db.exists("Brand", self.brand):
+            brand_doc = frappe.new_doc("Brand")
+            brand_doc.brand = self.brand
+            brand_doc.insert(ignore_permissions=True)
+
+        self.customer_name = "_Test CGE Customer Rules"
+        self.customer_mobile = "9999988888"
+        if not frappe.db.exists("Customer", self.customer_name):
+            cust = frappe.new_doc("Customer")
+            cust.customer_name = self.customer_name
+            cust.customer_group = "Individual"
+            cust.mobile_no = self.customer_mobile
+            cust.insert(ignore_permissions=True)
+
+        self.item_code = "_Test CGE Item Rules"
+        if not frappe.db.exists("Item", self.item_code):
+            item_doc = frappe.new_doc("Item")
+            item_doc.item_code = self.item_code
+            item_doc.item_name = self.item_code
+            item_doc.item_group = "All Item Groups"
+            item_doc.brand = self.brand
+            item_doc.gst_hsn_code = "999900"
+            item_doc.insert(ignore_permissions=True)
+
+        # Seed standard Party Types if missing or incomplete in test database
+        for name, acc_type in [("Customer", "Receivable"), ("Supplier", "Payable")]:
+            if not frappe.db.exists("Party Type", name):
+                pt = frappe.new_doc("Party Type")
+                pt.party_type = name
+                pt.account_type = acc_type
+                pt.insert(ignore_permissions=True)
+            else:
+                current_acc_type = frappe.db.get_value("Party Type", name, "account_type")
+                if current_acc_type != acc_type:
+                    frappe.db.set_value("Party Type", name, "account_type", acc_type)
+
+        # Seed test user to avoid LinkValidationError
+        if not frappe.db.exists("User", "test@example.com"):
+            user = frappe.new_doc("User")
+            user.email = "test@example.com"
+            user.first_name = "Test User"
+            user.insert(ignore_permissions=True)
+
         frappe.db.commit()
         
         # Enable CGE features in settings — reload fresh to avoid TimestampMismatchError
@@ -431,6 +495,8 @@ class TestCGERulesAndDR(unittest.TestCase):
 
     def test_idempotency_validation(self):
         """Verify duplicate transaction submissions for the same reference invoice are blocked."""
+        print("DEBUG CUSTOMER PARTY TYPE:", frappe.db.get_value("Party Type", "Customer", "account_type"))
+        print("DEBUG ALL PARTY TYPES:", frappe.db.get_all("Party Type", fields=["name", "account_type"]))
         # Create and submit a Sales Invoice to use as reference
         si = frappe.new_doc("Sales Invoice")
         si.customer = self.customer_name
@@ -1112,38 +1178,41 @@ class TestCGERulesAndDR(unittest.TestCase):
     def test_abandoned_reservation_cleanup(self):
         """C-17.2: Abandoned reservation. Create reservation, force expiry (simulate older than 24 hours), run cleanup. Expected: budget released."""
         campaign_name = "Stale Budget Campaign"
-        if not frappe.db.exists("SMRITI Coupon Campaign", campaign_name):
-            campaign = frappe.new_doc("SMRITI Coupon Campaign")
-            campaign.campaign_name = campaign_name
-            campaign.campaign_type = "Festival"
-            campaign.budget_limit = 10000.0
-            campaign.status = "Active"
-            campaign.start_date = add_to_date(nowdate(), days=-5)
-            campaign.end_date = add_to_date(nowdate(), days=5)
-            campaign.insert(ignore_permissions=True)
-            
-        pr_name = "PR-STALE-TEST"
-        existing_pr = frappe.db.get_value("Pricing Rule", {"title": pr_name}, "name")
-        if not existing_pr:
-            pr = frappe.new_doc("Pricing Rule")
-            pr.title = pr_name
-            pr.apply_on = "Item Code"
-            pr.selling = 1
-            pr.rate_or_discount = "Discount Percentage"
-            pr.discount_percentage = 10.0
-            pr.company = frappe.db.get_value("Company", {}, "name")
-            pr.append("items", {"item_code": self.item_code})
-            pr.insert(ignore_permissions=True)
-            existing_pr = pr.name
-            
         coupon_code = "CC-STALE-TEST"
-        if not frappe.db.exists("Coupon Code", coupon_code):
-            coupon = frappe.new_doc("Coupon Code")
-            coupon.coupon_code = coupon_code
-            coupon.coupon_name = coupon_code
-            coupon.custom_campaign = campaign_name
-            coupon.pricing_rule = existing_pr
-            coupon.insert(ignore_permissions=True)
+        pr_name = "PR-STALE-TEST"
+        
+        # Unconditionally clear existing test structures to guarantee fresh state
+        frappe.db.delete("Coupon Code", {"coupon_code": coupon_code})
+        frappe.db.delete("SMRITI Coupon Campaign", {"campaign_name": campaign_name})
+        frappe.db.delete("Pricing Rule", {"title": pr_name})
+        frappe.db.commit()
+
+        campaign = frappe.new_doc("SMRITI Coupon Campaign")
+        campaign.campaign_name = campaign_name
+        campaign.campaign_type = "Festival"
+        campaign.budget_limit = 10000.0
+        campaign.status = "Active"
+        campaign.start_date = add_to_date(nowdate(), days=-5)
+        campaign.end_date = add_to_date(nowdate(), days=5)
+        campaign.insert(ignore_permissions=True)
+            
+        pr = frappe.new_doc("Pricing Rule")
+        pr.title = pr_name
+        pr.apply_on = "Item Code"
+        pr.selling = 1
+        pr.rate_or_discount = "Discount Percentage"
+        pr.discount_percentage = 10.0
+        pr.company = frappe.db.get_value("Company", {}, "name")
+        pr.append("items", {"item_code": self.item_code})
+        pr.insert(ignore_permissions=True)
+        existing_pr = pr.name
+            
+        coupon = frappe.new_doc("Coupon Code")
+        coupon.coupon_code = coupon_code
+        coupon.coupon_name = coupon_code
+        coupon.custom_campaign = campaign_name
+        coupon.pricing_rule = existing_pr
+        coupon.insert(ignore_permissions=True)
             
         # Enable coupon campaign budget enforcement in settings
         settings = frappe.get_doc("SMRITI CGE Settings")

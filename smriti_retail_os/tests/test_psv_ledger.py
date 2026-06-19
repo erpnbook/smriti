@@ -18,6 +18,16 @@ from smriti_retail_os.balance_engine import get_party_balance
 from smriti_retail_os.psv_ledger_service import create_transaction, reverse_transaction
 
 class TestPSVLedger(TestPSV):
+    def setUp(self):
+        super().setUp()
+        for name in ["Material Receipt", "Material Issue", "Material Transfer"]:
+            if not frappe.db.exists("Stock Entry Type", name):
+                doc = frappe.new_doc("Stock Entry Type")
+                doc.name = name
+                doc.purpose = name
+                doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+
     def make_stock_receipt(self, item_code, qty):
         se = frappe.new_doc("Stock Entry")
         se.purpose = "Material Receipt"

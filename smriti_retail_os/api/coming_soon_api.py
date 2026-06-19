@@ -29,12 +29,8 @@ COMING_SOON_REGISTRY = {
         "progress": 60,
         "eta":      "Q3 2026",
     },
-    "knowledge_center": {
-        "title":    "Knowledge Center Portal",
-        "progress": 10,
-        "eta":      "Q3 2026",
-    },
     # ── Features below are LIVE — removed from registry ──────────────────
+    # knowledge_center   → /smriti-help (live since Sprint 4)
     # pdt_dashboard      → /smriti-pdt (live since Sprint 4)
     # analytics          → /analytics (live since v1.2.13)
     # supplier_payments  → /payments (live since v1.2.12)

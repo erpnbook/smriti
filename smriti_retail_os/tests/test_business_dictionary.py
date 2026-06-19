@@ -24,6 +24,14 @@ class TestBusinessDictionary(unittest.TestCase):
         frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": "TST-BD-001"})
         frappe.db.commit()
 
+        # Seed test user to avoid LinkValidationError in activity log creation
+        if not frappe.db.exists("User", "test@example.com"):
+            user = frappe.new_doc("User")
+            user.email = "test@example.com"
+            user.first_name = "Test User"
+            user.insert(ignore_permissions=True)
+            frappe.db.commit()
+
         # Ensure KGF-001 formula exists for link testing
         formula_doc_name = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": "KGF-001"})
         if not formula_doc_name:
@@ -38,6 +46,7 @@ class TestBusinessDictionary(unittest.TestCase):
                 "effective_date": "2026-06-19",
                 "formula_meaning": "Test meaning",
                 "display_formula": "A / B",
+                "formula_expression": "A / B",
                 "formula_language": "documentation"
             })
             mock_formula.insert(ignore_permissions=True)

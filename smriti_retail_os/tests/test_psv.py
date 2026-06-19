@@ -36,8 +36,10 @@ class TestPSV(FrappeTestCase):
         if not self.uom:
             uom_doc = frappe.new_doc("UOM")
             uom_doc.uom_name = "Nos"
-            uom_doc.insert(ignore_permissions=True)
-            self.uom = uom_doc.name
+            # ignore_if_duplicate: prevents DuplicateEntryError when a prior test class
+            # (e.g. TestPSVPhase1_1) committed 'Nos' before this setUp runs.
+            uom_doc.insert(ignore_permissions=True, ignore_if_duplicate=True)
+            self.uom = frappe.db.exists("UOM", "Nos") or uom_doc.name
 
         self.item_group = frappe.db.exists("Item Group", "All Item Groups") or frappe.db.get_value("Item Group", {}, "name")
         if not self.item_group:
