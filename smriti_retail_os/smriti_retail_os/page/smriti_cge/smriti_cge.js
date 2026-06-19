@@ -354,7 +354,7 @@ class SmritiCGEPage {
             method: "frappe.client.get_list",
             args: {
                 doctype: "SMRITI Liability Snapshot",
-                fields: ["snapshot_date", "loyalty_liability", "cashback_liability", "coupon_liability", "total_liability"],
+                fields: ["snapshot_date", "loyalty_liability", "cashback_liability", "coupon_liability"],
                 order_by: "snapshot_date desc",
                 limit: 5
             },

@@ -24,7 +24,7 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
         await new Promise((resolve, reject) => {
             const script = document.createElement('script');
             // Cache-bust: version 2.0.0 forces fresh load after route changes
-            script.src = '/assets/smriti_retail_os/js/smriti_nav_config.js?v=2.0.3';
+            script.src = '/assets/smriti_retail_os/js/smriti_nav_config.js?v=2.0.4';
             script.onload = resolve;
             script.onerror = reject;
             document.head.appendChild(script);
@@ -48,6 +48,20 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
         "intelligence_enabled": false,
         "cge_enabled": false
     };
+
+    try {
+        if (window.frappe && frappe.boot && frappe.boot.smriti_site_config) {
+            Object.assign(siteConfig, frappe.boot.smriti_site_config);
+        } else {
+            const res = await fetch("/api/method/smriti_retail_os.boot.get_smriti_session_info");
+            const data = await res.json();
+            if (data.message && data.message.smriti_site_config) {
+                Object.assign(siteConfig, data.message.smriti_site_config);
+            }
+        }
+    } catch(e) {
+        console.error("[SMRITI] Failed to load site config:", e);
+    }
 
     // Role restrictions for sections
     let user_roles = ["SMRITI Store Manager"];

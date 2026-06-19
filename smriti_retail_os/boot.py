@@ -110,11 +110,33 @@ def extend_bootinfo(bootinfo):
         from smriti_retail_os.company_api import get_company_settings, get_active_company
         comp = get_active_company()
         comp_settings = get_company_settings(comp) if comp else {}
+
+        # Read and parse smriti_site_config from frappe.conf
+        cge_enabled = False
+        raw_config = frappe.conf.get("smriti_site_config")
+        if raw_config:
+            if isinstance(raw_config, dict):
+                cge_enabled = raw_config.get("cge_enabled")
+            elif isinstance(raw_config, str):
+                import re
+                match = re.search(r"cge_enabled\s*:\s*(true|1|false|0)", raw_config, re.IGNORECASE)
+                if match:
+                    cge_enabled = match.group(1).lower() in ("true", "1")
+                else:
+                    import json
+                    try:
+                        parsed = json.loads(raw_config)
+                        if isinstance(parsed, dict):
+                            cge_enabled = parsed.get("cge_enabled")
+                    except Exception:
+                        pass
+
         bootinfo.smriti_site_config = frappe._dict({
             "store_theme": comp_settings.get("store_theme") or "hybrid",
             "store_experience": comp_settings.get("store_experience") or "standard",
             "terminal_type": comp_settings.get("terminal_type") or "standard",
-            "brand_overrides": comp_settings.get("brand_overrides") or {}
+            "brand_overrides": comp_settings.get("brand_overrides") or {},
+            "cge_enabled": cge_enabled
         })
 
     except Exception as e:
@@ -172,6 +194,8 @@ def check_desk_access():
         # Policy: if setup-wizard appears, create a SMRITI page — never expose it.
         for blocked in SMRITI_BLOCKED_DESK_PATHS:
             if path.startswith(blocked):
+                if path.startswith("/desk/smriti-cge") or path.startswith("/app/smriti-cge"):
+                    continue
                 raise werkzeug.routing.exceptions.RequestRedirect("/smriti")
 
         # ─── Desk-access guard for remaining /desk and /app routes ────────────────
@@ -257,6 +281,27 @@ def get_smriti_session_info():
     try:
         user       = frappe.session.user
         user_roles = frappe.get_roles(user)
+
+        # Read and parse smriti_site_config from frappe.conf
+        cge_enabled = False
+        raw_config = frappe.conf.get("smriti_site_config")
+        if raw_config:
+            if isinstance(raw_config, dict):
+                cge_enabled = raw_config.get("cge_enabled")
+            elif isinstance(raw_config, str):
+                import re
+                match = re.search(r"cge_enabled\s*:\s*(true|1|false|0)", raw_config, re.IGNORECASE)
+                if match:
+                    cge_enabled = match.group(1).lower() in ("true", "1")
+                else:
+                    import json
+                    try:
+                        parsed = json.loads(raw_config)
+                        if isinstance(parsed, dict):
+                            cge_enabled = parsed.get("cge_enabled")
+                    except Exception:
+                        pass
+
         return {
             "user":              user,
             "full_name":         frappe.db.get_value(
@@ -269,6 +314,9 @@ def get_smriti_session_info():
             "app_name":          "SMRITI Retail OS",
             "logo_url":          "/assets/smriti_retail_os/images/smriti_logo.svg",
             "frontend_enabled":  _is_smriti_frontend_enabled(),
+            "smriti_site_config": {
+                "cge_enabled": cge_enabled
+            }
         }
     except Exception as e:
         frappe.log_error(str(e), "SMRITI Session Info Error")
