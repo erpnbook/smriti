@@ -142,11 +142,11 @@ def _check_manager_pins():
 
 def _check_backup_security():
     try:
-        settings = frappe.get_single("SMRITI Security Settings")
-        enabled  = cint(getattr(settings, "enable_backup_encryption", 0))
+        from smriti_retail_os.backup_api import get_settings
+        settings = get_settings()
+        enabled  = cint(settings.get("enable_backup_encryption", 0))
         if enabled:
-            custodians = getattr(settings, "key_custodians", []) or []
-            verified   = [c for c in custodians if getattr(c, "verified", 0)]
+            verified = frappe.get_all("SMRITI Key Custodian", filters={"status": "Verified", "verified": 1})
             if len(verified) >= 2:
                 return {"id": "backup", "label": "Backup Encryption",
                         "status": "PASS", "message": "AES-256 encryption enabled. Dual-custodian recovery verified.",

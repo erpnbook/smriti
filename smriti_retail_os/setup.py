@@ -1385,9 +1385,11 @@ def create_smriti_wallet_ledger_doctype():
         fields = [
             {"fieldname": "ledger_sequence", "fieldtype": "Data", "label": "Ledger Sequence", "unique": 1},
             {"fieldname": "customer", "fieldtype": "Link", "options": "Customer", "label": "Customer", "reqd": 1, "index": 1},
+            {"fieldname": "company", "fieldtype": "Link", "options": "Company", "label": "Company"},
             {"fieldname": "wallet_type", "fieldtype": "Select", "label": "Wallet Type", "options": "Promo Cashback\nRefund Wallet\nGift Card Wallet\nLoyalty Conversion Wallet", "default": "Promo Cashback", "reqd": 1},
             {"fieldname": "transaction_type", "fieldtype": "Select", "label": "Transaction Type", "options": "Debit\nCredit", "reqd": 1},
             {"fieldname": "amount", "fieldtype": "Currency", "label": "Amount", "reqd": 1},
+            {"fieldname": "balance_remaining", "fieldtype": "Currency", "label": "Balance Remaining", "default": "0"},
             {"fieldname": "reference_invoice", "fieldtype": "Link", "options": "Sales Invoice", "label": "Reference Invoice", "index": 1},
             {"fieldname": "expiry_date", "fieldtype": "Date", "label": "Expiry Date"},
             {"fieldname": "journal_entry", "fieldtype": "Link", "options": "Journal Entry", "label": "Journal Entry"},
@@ -1648,6 +1650,16 @@ def setup_smriti_retail_os():
                 "module": "SMRITI Retail OS"
             }
         ],
+        "Loyalty Point Entry": [
+            {
+                "fieldname": "remaining_points",
+                "label": "Remaining Points",
+                "fieldtype": "Float",
+                "insert_after": "loyalty_points",
+                "default": "0",
+                "module": "SMRITI Retail OS"
+            }
+        ],
         "POS Invoice": [
             {
                 "fieldname": "custom_is_held",
@@ -1682,6 +1694,30 @@ def setup_smriti_retail_os():
                 "insert_after": "custom_hold_time",
                 "read_only": 1,
                 "unique": 1,
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_wallet_deduction",
+                "label": "Wallet Deduction",
+                "fieldtype": "Currency",
+                "insert_after": "custom_billing_session_id",
+                "default": "0",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_loyalty_points_earned",
+                "label": "Loyalty Points Earned",
+                "fieldtype": "Float",
+                "insert_after": "custom_wallet_deduction",
+                "default": "0",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_coupon_discount",
+                "label": "Coupon Discount",
+                "fieldtype": "Currency",
+                "insert_after": "custom_loyalty_points_earned",
+                "default": "0",
                 "module": "SMRITI Retail OS"
             }
         ],
@@ -1978,6 +2014,30 @@ def setup_smriti_retail_os():
                 "fieldtype": "Link",
                 "options": "SMRITI Party Stock Account",
                 "insert_after": "custom_billing_session_id",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_wallet_deduction",
+                "label": "Wallet Deduction",
+                "fieldtype": "Currency",
+                "insert_after": "custom_party_stock_account",
+                "default": "0",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_loyalty_points_earned",
+                "label": "Loyalty Points Earned",
+                "fieldtype": "Float",
+                "insert_after": "custom_wallet_deduction",
+                "default": "0",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_coupon_discount",
+                "label": "Coupon Discount",
+                "fieldtype": "Currency",
+                "insert_after": "custom_loyalty_points_earned",
+                "default": "0",
                 "module": "SMRITI Retail OS"
             }
         ],
