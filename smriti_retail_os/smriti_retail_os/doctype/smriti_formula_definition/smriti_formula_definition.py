@@ -53,3 +53,21 @@ class SMRITIFormulaDefinition(Document):
                 json.loads(self.dependent_features)
             except ValueError:
                 frappe.throw(frappe._("Dependent Features must be a valid JSON array or object."))
+
+    def on_update(self):
+        frappe.cache().delete_value(f"smriti:explain:{self.formula_id}:{self.formula_version}")
+        frappe.cache().delete_value(f"smriti:explain:{self.formula_id}:latest")
+        frappe.enqueue(
+            "smriti_retail_os.services.knowledge_service.rebuild_knowledge_index",
+            queue="short",
+            now=frappe.flags.in_test
+        )
+
+    def on_trash(self):
+        frappe.cache().delete_value(f"smriti:explain:{self.formula_id}:{self.formula_version}")
+        frappe.cache().delete_value(f"smriti:explain:{self.formula_id}:latest")
+        frappe.enqueue(
+            "smriti_retail_os.services.knowledge_service.rebuild_knowledge_index",
+            queue="short",
+            now=frappe.flags.in_test
+        )

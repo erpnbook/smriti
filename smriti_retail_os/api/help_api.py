@@ -787,3 +787,123 @@ def get_help_toc():
             ordered_categories[cat] = categories[cat]
             
     return ordered_categories
+
+
+@frappe.whitelist()
+def search_knowledge(query=None):
+    """
+    Exposes SMRITI Knowledge Center search endpoint to query the Redis index.
+    """
+    if not query:
+        query = frappe.form_dict.get("query")
+    if not query:
+        return []
+    
+    from smriti_retail_os.services.knowledge_service import search_knowledge_index
+    return search_knowledge_index(query)
+
+
+@frappe.whitelist()
+def rebuild_index_cache():
+    """
+    Manually rebuilds the persistent SMRITI search cache index in Redis.
+    Restricted to SMRITI Store Manager or System Manager role.
+    """
+    from smriti_retail_os.inventory_api import check_store_manager_role
+    try:
+        check_store_manager_role()
+    except Exception:
+        frappe.throw(_("Not permitted to rebuild search index"), frappe.PermissionError)
+        
+    from smriti_retail_os.services.knowledge_service import rebuild_knowledge_index
+    count = rebuild_knowledge_index()
+    return {"status": "Success", "indexed_items": count}
+
+
+@frappe.whitelist()
+def get_governance_data():
+    """
+    Returns aggregated metrics and view statistics for the KGF Governance tab.
+    """
+    from smriti_retail_os.services.knowledge_service import get_governance_stats
+    return get_governance_stats()
+
+
+@frappe.whitelist()
+def get_manual_html(volume_name=None):
+    """
+    Reads the target manual markdown file and returns compiled HTML.
+    Restricted to secure, valid alphanumeric basenames inside docs/.
+    """
+    import re
+    import os
+    from frappe.utils import markdown
+    
+    if not volume_name:
+        volume_name = frappe.form_dict.get("volume_name")
+        
+    if not volume_name:
+        frappe.throw(_("Document name is required"), frappe.ValidationError)
+        
+    if not re.match(r"^[a-zA-Z0-9_/.-]+$", volume_name):
+        frappe.throw(_("Invalid document name"), frappe.ValidationError)
+        
+    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "..", "..", "docs"))
+    
+    # Check paths
+    file_path = os.path.join(docs_root, "user_manual", f"{volume_name}.md")
+    if not os.path.exists(file_path):
+        file_path = os.path.join(docs_root, "kb", f"{volume_name}.md")
+        if not os.path.exists(file_path):
+            # Check subdirectories
+            found = False
+            for root, dirs, files in os.walk(os.path.join(docs_root, "kb")):
+                if f"{volume_name}.md" in files:
+                    file_path = os.path.join(root, f"{volume_name}.md")
+                    found = True
+                    break
+            if not found:
+                frappe.throw(_("Document '{0}' not found").format(volume_name), frappe.DoesNotExistError)
+                
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+        
+    # Strip YAML frontmatter
+    if content.startswith("---"):
+        parts = content.split("---", 2)
+        if len(parts) >= 3:
+            content = parts[2]
+            
+    return markdown(content)
+
+
+@frappe.whitelist()
+def get_knowledge_assets():
+    """
+    Returns lists of all active SMRITI Formula Definitions and Business Terms.
+    """
+    import json
+    
+    formulas = frappe.get_all(
+        "SMRITI Formula Definition",
+        filters={"is_active": 1, "status": "Approved"},
+        fields=["formula_id", "formula_name", "formula_category", "formula_expression", "business_meaning", "worked_example", "interpretation_guide", "recommended_action", "business_owner"]
+    )
+    
+    terms = frappe.get_all(
+        "SMRITI Business Term",
+        filters={"is_active": 1, "status": "Approved"},
+        fields=["name", "term_id", "term_name", "term_category", "definition", "hinglish_definition", "faq", "common_mistakes", "manual_reference", "training_reference", "business_owner"]
+    )
+    
+    # Enrich terms with relationships
+    for t in terms:
+        t.faq = json.loads(t.faq) if t.faq else []
+        t.common_mistakes = json.loads(t.common_mistakes) if t.common_mistakes else []
+        t.related_formulas = [rf.formula_id for rf in frappe.get_all("SMRITI Related Formula", filters={"parent": t.name}, fields=["formula_id"])]
+        t.related_terms = [rt.related_term_id for rt in frappe.get_all("SMRITI Related Term", filters={"parent": t.name}, fields=["related_term_id"])]
+        
+    return {
+        "formulas": formulas,
+        "terms": terms
+    }

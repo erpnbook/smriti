@@ -23,5 +23,9 @@ smriti_retail_os.patches.add_twin_unique_index
 # v2.0.0 — KGF-03/DOC-04: Seed Default SMRITI Business Dictionary Terms
 smriti_retail_os.patches.seed_default_terms
 
+# v2.2.0 — KC-04: Seed SMRITI Knowledge Coverage % KPI
+smriti_retail_os.patches.seed_knowledge_kpi
+
+
 
 
