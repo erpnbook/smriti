@@ -33,11 +33,20 @@ def quick_create_item(item_name, barcode, rate, mrp, gst_percentage):
     item.standard_rate = flt(rate)
     # Custom fields — use safe setter in case not installed
     try: item.custom_is_retail_item = 1
-    except Exception: pass
+    except Exception:
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().warning(f"SMRITI Warning: Financial/Data-integrity-adjacent exception in master_api.py:36: {sys.exc_info()[1]}")
     try: item.custom_gst_percentage = str(gst_percentage)
-    except Exception: pass
+    except Exception:
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().warning(f"SMRITI Warning: Financial/Data-integrity-adjacent exception in master_api.py:38: {sys.exc_info()[1]}")
     try: item.custom_mrp = flt(mrp)
-    except Exception: pass
+    except Exception:
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().warning(f"SMRITI Warning: Financial/Data-integrity-adjacent exception in master_api.py:40: {sys.exc_info()[1]}")
     
     # Auto-resolve Item Tax Template from percentage
     template_name = frappe.db.get_value(
@@ -517,7 +526,9 @@ def get_size_groups():
         try:
             return frappe.parse_json(raw)
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in master_api.py:519: {sys.exc_info()[1]}")
     return _DEFAULT_SIZE_GROUPS
 
 
@@ -541,7 +552,9 @@ def get_destinationwise_taxes():
         try:
             return frappe.parse_json(raw)
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in master_api.py:543: {sys.exc_info()[1]}")
     return _DEFAULT_STATE_TAX_MAP
 
 
@@ -646,7 +659,9 @@ def create_brand(brand_name, brand_description=None):
         try:
             doc.description = brand_description
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in master_api.py:648: {sys.exc_info()[1]}")
     doc.insert(ignore_permissions=True)
     frappe.db.commit()
     return {"name": doc.name, "brand": doc.brand}

@@ -311,7 +311,9 @@ class TestSmritiRetailPurchaseAPI(unittest.TestCase):
             try:
                 frappe.delete_doc("Item", variant_code, force=True)
             except Exception:
-                pass
+                import sys
+                _frappe = sys.modules.get('frappe')
+                if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in tests/test_purchase_api.py:313: {sys.exc_info()[1]}")
 
         items = [{
             "item_code": variant_code,

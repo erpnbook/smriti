@@ -402,7 +402,9 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             try:
                 _process_print_job(print_job_id=job_id)
             except Exception:
-                pass
+                import sys
+                _frappe = sys.modules.get('frappe')
+                if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in tests/test_barcode_api.py:404: {sys.exc_info()[1]}")
                 
         status = frappe.db.get_value("SMRITI Print Job", {"job_id": job_id}, "status")
         self.assertEqual(status, "Failed")
@@ -481,7 +483,9 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             try:
                 _process_print_job(print_job_id=job_id)
             except Exception:
-                pass
+                import sys
+                _frappe = sys.modules.get('frappe')
+                if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in tests/test_barcode_api.py:483: {sys.exc_info()[1]}")
                 
         # Retry the job
         with patch('smriti_retail_os.barcode_api._send_to_printer_sync') as mock_send_new:

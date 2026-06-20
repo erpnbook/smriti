@@ -63,7 +63,9 @@ def _psv_upload_lock(party_stock_account):
         try:
             cache.delete(lock_key)
         except Exception:
-            pass  # Best-effort release; lock expires automatically after _PSV_LOCK_EXPIRY_SECONDS
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in psv_service.py:65: {sys.exc_info()[1]}")
 
 
 # --- UNIVERSAL TRANSACTION ENGINE ---

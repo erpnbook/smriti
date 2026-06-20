@@ -42,7 +42,9 @@ def get_context(context):
             except frappe.Redirect:
                 raise
             except Exception:
-                pass
+                import sys
+                _frappe = sys.modules.get('frappe')
+                if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in website_context.py:44: {sys.exc_info()[1]}")
 
     # Ensure CSRF token is generated and persisted in session database during GET request
     if frappe.session.user != "Guest" and getattr(frappe.local, "session", None) and getattr(frappe.local, "session_obj", None):
@@ -56,7 +58,9 @@ def get_context(context):
             frappe.local.session_obj.update(force=True)
             frappe.db.commit()
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in website_context.py:58: {sys.exc_info()[1]}")
         finally:
             frappe.flags.read_only = original_read_only
 

@@ -235,7 +235,9 @@ def validate_import_rows(rows_json):
                     if not frappe.db.exists(doctype_name, val):
                         warnings.append(f"{label} '{val}' not found — will be auto-created")
                 except Exception:
-                    pass
+                    import sys
+                    _frappe = sys.modules.get('frappe')
+                    if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in item_master_api.py:237: {sys.exc_info()[1]}")
 
         status = "error" if errors else ("warning" if warnings else "valid")
         results.append({
@@ -543,7 +545,9 @@ def _safe_set(doc, fieldname, value):
     try:
         doc.set(fieldname, value)
     except Exception:
-        pass
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in item_master_api.py:545: {sys.exc_info()[1]}")
 
 
 def _ensure_uom(uom_name):
@@ -664,7 +668,9 @@ def _ensure_master_value(doctype_name, value):
                     doc.set(field, val_clean)
                     break
                 except Exception:
-                    pass
+                    import sys
+                    _frappe = sys.modules.get('frappe')
+                    if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in item_master_api.py:666: {sys.exc_info()[1]}")
             doc.insert(ignore_permissions=True)
             frappe.db.commit()
     except Exception as e:
@@ -1250,7 +1256,9 @@ def validate_pivot_values(styles_json):
                         "suggestions": existing_sub_cats[:8]
                     })
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in item_master_api.py:1252: {sys.exc_info()[1]}")
 
     return {
         "new_categories":    new_categories,
@@ -1499,13 +1507,17 @@ def reset_all_transactions():
             frappe.db.sql(f"TRUNCATE `{table_name}`")
             deleted.append(doctype)
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in item_master_api.py:1501: {sys.exc_info()[1]}")
             
     # Reset Naming Series
     try:
         frappe.db.sql("TRUNCATE `tabSeries`")
     except Exception:
-        pass
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in item_master_api.py:1507: {sys.exc_info()[1]}")
         
     frappe.db.commit()
     
@@ -1544,7 +1556,9 @@ def reset_all_items():
             frappe.db.sql(f"TRUNCATE `{table_name}`")
             deleted.append(doctype)
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in item_master_api.py:1546: {sys.exc_info()[1]}")
             
     frappe.db.commit()
     

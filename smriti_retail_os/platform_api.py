@@ -263,7 +263,9 @@ def get_diagnostics(log_type="error", limit=50):
                         "status": j.get_status()
                     })
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in platform_api.py:265: {sys.exc_info()[1]}")
         return jobs
     return []
 

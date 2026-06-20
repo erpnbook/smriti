@@ -145,7 +145,9 @@ def extend_bootinfo(bootinfo):
                         if isinstance(parsed, dict):
                             cge_enabled = parsed.get("cge_enabled")
                     except Exception:
-                        pass
+                        import sys
+                        _frappe = sys.modules.get('frappe')
+                        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in boot.py:147: {sys.exc_info()[1]}")
 
         bootinfo.smriti_site_config = frappe._dict({
             "store_theme": comp_settings.get("store_theme") or "hybrid",
@@ -248,7 +250,9 @@ def check_desk_access():
                     validate_auth()
                     user = getattr(frappe.session, "user", "Guest")
                 except Exception:
-                    pass
+                    import sys
+                    _frappe = sys.modules.get('frappe')
+                    if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in boot.py:250: {sys.exc_info()[1]}")
 
             user_roles = frappe.get_roles(user) if user else []
 
@@ -338,7 +342,9 @@ def get_smriti_session_info():
                         if isinstance(parsed, dict):
                             cge_enabled = parsed.get("cge_enabled")
                     except Exception:
-                        pass
+                        import sys
+                        _frappe = sys.modules.get('frappe')
+                        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in boot.py:340: {sys.exc_info()[1]}")
 
         return {
             "user":              user,

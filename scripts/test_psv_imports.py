@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: scripts/test_psv_imports.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Standalone test utility for PSV split service file import verification.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

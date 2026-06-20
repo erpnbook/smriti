@@ -567,7 +567,9 @@ def _build_and_persist_doc(doctype, enriched, meta, company, action):
         try:
             doc.run_method("set_taxes")
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().warning(f"SMRITI Warning: Financial/Data-integrity-adjacent exception in transaction_kernel.py:569: {sys.exc_info()[1]}")
 
     # ── Save / Submit ────────────────────────────────────────────────────────
     save_flags = dict(ignore_permissions=True)

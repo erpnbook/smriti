@@ -84,7 +84,9 @@ def run_backup():
         try:
             frappe.log_error("SMRITI Backup Runner Error", str(ex))
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in backup_runner.py:86: {sys.exc_info()[1]}")
 
 def _send_email(file_path, settings, recipient):
     host = settings.get("smtp_host") or os.environ.get("SMTP_HOST")

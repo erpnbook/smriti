@@ -385,7 +385,9 @@ def calculate_knowledge_coverage():
             if isinstance(faq_list, list) and len(faq_list) > 0:
                 has_faq = True
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in services/knowledge_service.py:387: {sys.exc_info()[1]}")
             
         has_manual = bool(t.manual_reference and len(t.manual_reference.strip()) > 0)
         has_training = bool(t.training_reference and len(t.training_reference.strip()) > 0)

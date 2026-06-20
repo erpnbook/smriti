@@ -51,7 +51,9 @@ class TestBackupSecurityHotfix(unittest.TestCase):
                         try:
                             os.unlink(p)
                         except Exception:
-                            pass
+                            import sys
+                            _frappe = sys.modules.get('frappe')
+                            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in tests/test_backup_security_hotfix.py:53: {sys.exc_info()[1]}")
 
     def setUp(self):
         """Inject a test-only encryption key into frappe.conf (NEVER used in prod)."""

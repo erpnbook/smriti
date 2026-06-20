@@ -49,7 +49,9 @@ def _get_company_state_fallback(company=None):
             )
             return None
     except Exception:
-        pass
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in hooks_logic.py:51: {sys.exc_info()[1]}")
     return None
 
 
@@ -156,7 +158,9 @@ def sync_item_taxes_and_prices(doc, method):
             try:
                 doc.custom_gst_percentage = str(hsn_derived_rate)
             except Exception:
-                pass
+                import sys
+                _frappe = sys.modules.get('frappe')
+                if _frappe: _frappe.logger().warning(f"SMRITI Warning: Financial/Data-integrity-adjacent exception in hooks_logic.py:158: {sys.exc_info()[1]}")
 
     # Resolve the effective GST percentage (HSN-derived takes priority)
     pct = hsn_derived_rate if hsn_derived_rate is not None else cint(doc.custom_gst_percentage or 0)

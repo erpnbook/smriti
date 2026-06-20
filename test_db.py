@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: test_db.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Direct database connection verification utility for SMRITI Retail OS.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0

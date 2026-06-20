@@ -60,7 +60,9 @@ def encrypt_file(src_path, passphrase, dest_path):
             try:
                 os.remove(dest_path)
             except Exception:
-                pass
+                import sys
+                _frappe = sys.modules.get('frappe')
+                if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in gpg_service.py:62: {sys.exc_info()[1]}")
         raise RuntimeError(f"GPG encryption exception: {str(e)}")
         
     # Delete original source file only on success
@@ -93,7 +95,9 @@ def decrypt_file(enc_path, passphrase, dest_path):
             try:
                 os.remove(dest_path)
             except Exception:
-                pass
+                import sys
+                _frappe = sys.modules.get('frappe')
+                if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in gpg_service.py:95: {sys.exc_info()[1]}")
         raise RuntimeError(f"GPG decryption exception: {str(e)}")
 
 def get_key_from_conf(version):

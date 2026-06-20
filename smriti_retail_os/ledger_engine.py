@@ -66,7 +66,9 @@ def make_ledger_entry(company, posting_datetime, party_stock_account, item_code,
         from smriti_retail_os.balance_engine import invalidate_balance_cache
         invalidate_balance_cache(party_stock_account, item_code)
     except Exception:
-        pass  # Cache invalidation failure must never break a ledger write
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().warning(f"SMRITI Warning: Financial/Data-integrity-adjacent exception in ledger_engine.py:68: {sys.exc_info()[1]}")
 
     return ple
 
@@ -80,7 +82,9 @@ def log_activity(action_type, party_stock_account=None, reference_doctype=None, 
         if frappe.local and frappe.local.request_ip:
             ip_addr = frappe.local.request_ip
     except Exception:
-        pass
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in ledger_engine.py:82: {sys.exc_info()[1]}")
 
     log = frappe.get_doc({
         "doctype": "SMRITI PSV Activity Log",

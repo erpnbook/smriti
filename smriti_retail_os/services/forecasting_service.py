@@ -35,7 +35,9 @@ def calculate_weekly_velocity_stats(company, party_stock_account, item_code):
             settings = frappe.get_cached_doc("SMRITI PSV Settings")
             avg_weeks = settings.reorder_avg_weeks or 4
     except Exception:
-        pass
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in services/forecasting_service.py:37: {sys.exc_info()[1]}")
     
     lookback_days = avg_weeks * 7
     start_date = add_days(today(), -lookback_days)

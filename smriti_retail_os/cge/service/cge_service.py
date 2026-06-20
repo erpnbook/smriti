@@ -33,7 +33,9 @@ def safe_parse_redis_val(val):
             try:
                 val = frappe.safe_eval(val)
             except Exception:
-                pass
+                import sys
+                _frappe = sys.modules.get('frappe')
+                if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in cge/service/cge_service.py:35: {sys.exc_info()[1]}")
     return val
 
 def get_active_wallet_balance(customer):

@@ -78,7 +78,9 @@ def get_party_balance(party_stock_account: str, item_code: str,
         if cached is not None:
             return float(cached)
     except Exception:
-        pass  # Cache miss — fall through to DB
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in balance_engine.py:80: {sys.exc_info()[1]}")
 
     balance = _query_single_balance(party_stock_account, item_code)
 
@@ -86,7 +88,9 @@ def get_party_balance(party_stock_account: str, item_code: str,
     try:
         frappe.cache().set_value(cache_key, balance, expires_in_sec=_BALANCE_CACHE_TTL)
     except Exception:
-        pass  # Cache write failure is non-fatal
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in balance_engine.py:88: {sys.exc_info()[1]}")
 
     return balance
 
@@ -134,7 +138,9 @@ def get_bulk_party_balances(party_stock_account: str, item_codes=None) -> dict:
             if cached is not None:
                 return cached
         except Exception:
-            pass  # Cache miss — fall through to DB
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in balance_engine.py:136: {sys.exc_info()[1]}")
 
     result_dict = _query_bulk_balance(party_stock_account, item_codes)
 
@@ -142,7 +148,9 @@ def get_bulk_party_balances(party_stock_account: str, item_codes=None) -> dict:
         try:
             frappe.cache().set_value(cache_key, result_dict, expires_in_sec=_BALANCE_CACHE_TTL)
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in balance_engine.py:144: {sys.exc_info()[1]}")
 
     return result_dict
 
@@ -388,5 +396,7 @@ def _get_psv_settings() -> dict:
         if frappe.db.exists("DocType", "SMRITI PSV Settings"):
             return frappe.get_cached_doc("SMRITI PSV Settings").as_dict()
     except Exception:
-        pass
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in balance_engine.py:390: {sys.exc_info()[1]}")
     return {}

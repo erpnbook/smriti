@@ -51,7 +51,9 @@ def enqueue_rebuild_twin_cache(company, party_stock_account, item_code, source_e
         # Set lock with 5 minutes expiry
         frappe.cache().set_value(lock_key, 1, expires_in_sec=300)
     except Exception:
-        pass  # Lock check failure should not block execution
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in services/pdt_service.py:53: {sys.exc_info()[1]}")
         
     frappe.enqueue(
         "smriti_retail_os.services.pdt_service.rebuild_twin_cache",
@@ -242,7 +244,9 @@ def rebuild_twin_cache(company, party_stock_account=None, item_code=None, source
         try:
             frappe.cache().set_value(redis_key, doc.as_dict(), expires_in_sec=3600)
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in services/pdt_service.py:244: {sys.exc_info()[1]}")
             
     except Exception as e:
         frappe.log_error(f"PDT Rebuild Failure for {party_stock_account} / {item_code}: {str(e)}", "SMRITI PDT Error")
@@ -253,7 +257,9 @@ def rebuild_twin_cache(company, party_stock_account=None, item_code=None, source
         try:
             frappe.cache().delete_key(lock_key)
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in services/pdt_service.py:255: {sys.exc_info()[1]}")
 
 
 # ─── Hook Handlers ───────────────────────────────────────────────────────────

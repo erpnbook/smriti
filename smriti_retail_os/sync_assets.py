@@ -211,7 +211,9 @@ def _build_assets_json(sites_assets_dir, bench_assets_dir, apps):
     try:
         shutil.copy2(sites_manifest_path, bench_manifest_path)
     except Exception:
-        pass
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in sync_assets.py:213: {sys.exc_info()[1]}")
 
     # Handle RTL variant
     bench_rtl_path = os.path.join(bench_assets_dir, "assets-rtl.json")

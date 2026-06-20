@@ -595,7 +595,9 @@ def _add_gst_taxes(si, tax_type, company):
                         total_taxable += taxable
                         total_tax += taxable * (tax_pct / 100.0)
                 except Exception:
-                    pass
+                    import sys
+                    _frappe = sys.modules.get('frappe')
+                    if _frappe: _frappe.logger().warning(f"SMRITI Warning: Financial/Data-integrity-adjacent exception in sizewise_invoice_api.py:597: {sys.exc_info()[1]}")
         
         blended_rate = (total_tax / total_taxable * 100.0) if total_taxable > 0 else 0.0
         blended_rate = round(blended_rate, 4)
@@ -644,7 +646,9 @@ def get_sizewise_invoice(invoice_name):
                 **meta
             }
     except Exception:
-        pass
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in sizewise_invoice_api.py:646: {sys.exc_info()[1]}")
 
     frappe.throw(_(
         f"Invoice {invoice_name} was not created via Sizewise Invoice module "

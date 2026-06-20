@@ -18,7 +18,9 @@ try:
         if "barcode" not in frappe.utils.background_jobs.default_queue_list:
             frappe.utils.background_jobs.default_queue_list.append("barcode")
 except Exception:
-    pass
+    import sys
+    _frappe = sys.modules.get('frappe')
+    if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in hooks.py:20: {sys.exc_info()[1]}")
 app_title = "SMRITI Retail OS"
 app_publisher = "PrathamOne / AITDL"
 app_description = "SMRITI Retail OS — Intelligent Indian Retail Platform"

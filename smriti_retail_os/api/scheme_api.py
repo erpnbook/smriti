@@ -60,7 +60,9 @@ def get_schemes(search_txt=None):
                 elif getattr(doc, "brand", None):
                     applied_to = doc.brand
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in api/scheme_api.py:62: {sys.exc_info()[1]}")
         r["applied_to"] = applied_to or "-"
         
     return rules

@@ -405,14 +405,18 @@ def get_psv_health():
 		if frappe.get_meta("Delivery Note").has_field("custom_party_stock_account"):
 			checks["delivery_note_psa_field_exists"] = True
 	except Exception:
-		pass
+		import sys
+		_frappe = sys.modules.get('frappe')
+		if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in psv_api.py:407: {sys.exc_info()[1]}")
 
 	# 4. Stock Entry PSA field exists
 	try:
 		if frappe.get_meta("Stock Entry").has_field("custom_party_stock_account"):
 			checks["stock_entry_psa_field_exists"] = True
 	except Exception:
-		pass
+		import sys
+		_frappe = sys.modules.get('frappe')
+		if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in psv_api.py:414: {sys.exc_info()[1]}")
 
 	# 5. Unique hash index exists
 	try:
@@ -420,7 +424,9 @@ def get_psv_health():
 		if any(idx.get("Key_name") == "unique_hash" for idx in indices):
 			checks["unique_hash_index_exists"] = True
 	except Exception:
-		pass
+		import sys
+		_frappe = sys.modules.get('frappe')
+		if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in psv_api.py:422: {sys.exc_info()[1]}")
 
 	# 6. Exception Record schema valid
 	try:
@@ -431,7 +437,9 @@ def get_psv_health():
 				meta.has_field("timestamp")):
 				checks["exception_record_schema_valid"] = True
 	except Exception:
-		pass
+		import sys
+		_frappe = sys.modules.get('frappe')
+		if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in psv_api.py:433: {sys.exc_info()[1]}")
 
 	# Overall status
 	all_passed = all(checks.values())

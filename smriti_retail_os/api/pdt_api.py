@@ -51,7 +51,9 @@ def get_twin_status(party_stock_account, item_code):
                 
             return cached_data
     except Exception:
-        pass
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in api/pdt_api.py:53: {sys.exc_info()[1]}")
 
     # 2. Query MariaDB SMRITI SKU Twin table
     twin_data = frappe.db.get_value(
@@ -96,7 +98,9 @@ def get_twin_status(party_stock_account, item_code):
         try:
             frappe.cache().set_value(redis_key, twin_dict, expires_in_sec=3600)
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in api/pdt_api.py:98: {sys.exc_info()[1]}")
             
         return twin_dict
 

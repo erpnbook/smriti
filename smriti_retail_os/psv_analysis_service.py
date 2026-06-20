@@ -206,5 +206,7 @@ def _get_psv_settings() -> dict:
         if frappe.db.exists("DocType", "SMRITI PSV Settings"):
             return frappe.get_cached_doc("SMRITI PSV Settings").as_dict()
     except Exception:
-        pass
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in psv_analysis_service.py:208: {sys.exc_info()[1]}")
     return {}

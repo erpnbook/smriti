@@ -56,7 +56,9 @@ def get_business_type():
             bt = frappe.db.get_value("SMRITI Company Settings", company, "custom_business_type")
             return bt or "Footwear"
     except Exception:
-        pass
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in company_api.py:58: {sys.exc_info()[1]}")
     return "Footwear"
 
 @frappe.whitelist()

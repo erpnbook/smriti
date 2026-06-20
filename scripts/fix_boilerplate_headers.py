@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # @file: scripts/fix_boilerplate_headers.py
-# @description: Handles user login, registration, and JWT token generation.
+# @description: Utility script to clean up boilerplate headers and replace descriptions.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.0.0
@@ -145,19 +145,20 @@ PATH_DESCRIPTIONS = [
     # Patches
     ("patches/seed_default_formulas.py", "SMRITI Formula Registry seed patch — populates core formula definitions"),
     ("patches/seed_default_terms.py",    "SMRITI Business Dictionary seed patch — populates KGF business terms"),
-
     # Tests (seed/utility)
     ("tests/seed_psv_uat.py",           "SMRITI PSV UAT seed — seeds channel partner test data and runs validation"),
 
     # Verification scripts
     ("verify_deep_audit.py",            "SMRITI deep audit verification — end-to-end compliance checks"),
     ("test_redirect.py",                "SMRITI redirect test — boot.py route guard verification"),
+    ("test_db.py",                      "Direct database connection verification utility for SMRITI Retail OS"),
 
     # Scripts
+    ("scripts/test_license_standalone.py", "Standalone test runner for SMRITI License Key Validator fail-closed behaviour"),
+    ("scripts/test_psv_imports.py",      "Standalone test utility for PSV split service file import verification"),
+    ("scripts/fix_boilerplate_headers.py", "Utility script to clean up boilerplate headers and replace descriptions"),
     ("scripts/",                         "SMRITI maintenance script — development and operations utility"),
 ]
-
-
 def derive_description(rel_path: str) -> str:
     """
     Derive an accurate description for a Python file based on its relative path.
@@ -237,21 +238,17 @@ def main():
     parser.add_argument("--verbose", action="store_true", help="Show each file and its new description")
     args = parser.parse_args()
 
-    smriti_root = os.path.join(APP_ROOT, "smriti_retail_os")
-    if not os.path.isdir(smriti_root):
-        print(f"ERROR: Cannot find smriti_retail_os at {smriti_root}")
-        sys.exit(1)
-
     changed = 0
     errors = 0
     scanned = 0
 
-    print(f"{'DRY RUN — ' if args.dry_run else ''}Scanning {smriti_root} ...")
+    print(f"{'DRY RUN — ' if args.dry_run else ''}Scanning {APP_ROOT} ...")
     print("=" * 70)
 
-    for dirpath, _, filenames in os.walk(smriti_root):
-        if "__pycache__" in dirpath:
-            continue
+    ignore_dirs = {"__pycache__", "validation_reports", "client_tools", ".git", "node_modules", "overrides", "rollback"}
+
+    for dirpath, dirnames, filenames in os.walk(APP_ROOT):
+        dirnames[:] = [d for d in dirnames if d not in ignore_dirs]
         for fname in filenames:
             if not fname.endswith(".py"):
                 continue

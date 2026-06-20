@@ -177,7 +177,9 @@ def get_settings():
             merged["smtp_password"] = _get_smtp_password()
             return merged
         except Exception:
-            pass
+            import sys
+            _frappe = sys.modules.get('frappe')
+            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in backup_api.py:179: {sys.exc_info()[1]}")
     result = DEFAULT_SETTINGS.copy()
     result["smtp_password"] = _get_smtp_password()
     return result
@@ -747,7 +749,9 @@ def restore_backup(file_name):
                     try:
                         os.remove(decrypted_tmp_path)
                     except Exception:
-                        pass
+                        import sys
+                        _frappe = sys.modules.get('frappe')
+                        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in backup_api.py:749: {sys.exc_info()[1]}")
             else:
                 try:
                     # Fallback zero-overwrite
@@ -759,7 +763,9 @@ def restore_backup(file_name):
                     try:
                         os.remove(decrypted_tmp_path)
                     except Exception:
-                        pass
+                        import sys
+                        _frappe = sys.modules.get('frappe')
+                        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in backup_api.py:761: {sys.exc_info()[1]}")
         decrypted_tmp_path = None
 
 

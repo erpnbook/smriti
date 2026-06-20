@@ -64,7 +64,9 @@ try:
             try:
                 value = frappe.client_cache.get_doc("Language", lang).get(key)
             except Exception:
-                pass
+                import sys
+                _frappe = sys.modules.get('frappe')
+                if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in __init__.py:66: {sys.exc_info()[1]}")
         return value or frappe.db.get_default(key)
 
     frappe.locale.get_locale_value = patched_get_locale_value

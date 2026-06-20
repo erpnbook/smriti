@@ -321,7 +321,9 @@ def generate_prn(items, template_name=None):
                         try:
                             item_doc = frappe.get_doc("Item", item_code)
                         except Exception:
-                            pass
+                            import sys
+                            _frappe = sys.modules.get('frappe')
+                            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in barcode_api.py:323: {sys.exc_info()[1]}")
                             
                         # Rebuild token dict dynamically using mappings
                         token_dict = {}
@@ -363,7 +365,9 @@ def generate_prn(items, template_name=None):
                                 try:
                                     val = f"{int(flt(val))}"
                                 except Exception:
-                                    pass
+                                    import sys
+                                    _frappe = sys.modules.get('frappe')
+                                    if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in barcode_api.py:365: {sys.exc_info()[1]}")
                                     
                             token_dict[lbl_f] = str(val) if val is not None else ""
 
@@ -850,7 +854,9 @@ def get_print_analytics():
                 try:
                     data = json.loads(remarks)
                 except Exception:
-                    pass
+                    import sys
+                    _frappe = sys.modules.get('frappe')
+                    if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in barcode_api.py:852: {sys.exc_info()[1]}")
             
             if not data:
                 # Fallback parser for older/legacy logs
@@ -868,12 +874,16 @@ def get_print_analytics():
                     try:
                         labels = cint(subj.split("Printed ")[1].split(" label")[0])
                     except Exception:
-                        pass
+                        import sys
+                        _frappe = sys.modules.get('frappe')
+                        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in barcode_api.py:870: {sys.exc_info()[1]}")
                 if "using template " in subj:
                     try:
                         template = subj.split("using template ")[1].split(" on ")[0]
                     except Exception:
-                        pass
+                        import sys
+                        _frappe = sys.modules.get('frappe')
+                        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in barcode_api.py:875: {sys.exc_info()[1]}")
                 
                 data = {
                     "labels": labels,
@@ -990,7 +1000,9 @@ def get_template_usage_stats():
                         lbl_cnt = int(subj.split("Printed ")[1].split(" label")[0])
                         stats[temp_part]["labels"] += lbl_cnt
                     except Exception:
-                        pass
+                        import sys
+                        _frappe = sys.modules.get('frappe')
+                        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in barcode_api.py:992: {sys.exc_info()[1]}")
         return stats
     except Exception as e:
         frappe.log_error(f"Error compiling template usage stats: {str(e)}")
@@ -1289,7 +1301,9 @@ def enqueue_print_job(template_name, printer_ip, printer_port, payload, print_qt
             request_ip = frappe.local.ip
             request_user_agent = frappe.local.request.headers.get("User-Agent")
     except Exception:
-        pass
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in barcode_api.py:1291: {sys.exc_info()[1]}")
 
     # Create SMRITI Print Job record
     doc = frappe.new_doc("SMRITI Print Job")
@@ -1831,7 +1845,9 @@ def cleanup_old_print_jobs():
                 try:
                     os.remove(prn_path)
                 except Exception:
-                    pass
+                    import sys
+                    _frappe = sys.modules.get('frappe')
+                    if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in barcode_api.py:1833: {sys.exc_info()[1]}")
             frappe.delete_doc("SMRITI Print Job", job.name, ignore_permissions=True)
             success_deleted += 1
             
@@ -1852,7 +1868,9 @@ def cleanup_old_print_jobs():
                 try:
                     os.remove(prn_path)
                 except Exception:
-                    pass
+                    import sys
+                    _frappe = sys.modules.get('frappe')
+                    if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in barcode_api.py:1854: {sys.exc_info()[1]}")
             frappe.delete_doc("SMRITI Print Job", job.name, ignore_permissions=True)
             failed_deleted += 1
             
