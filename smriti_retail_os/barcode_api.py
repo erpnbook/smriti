@@ -1154,7 +1154,19 @@ def save_print_template(template_name, label_size, printer_language, raw_templat
         doc.custom_is_default = 1
     else:
         doc.custom_is_default = int(custom_is_default)
-    
+
+    if custom_visual_layout_json:
+        val_res = validate_layout_diagnostics(custom_visual_layout_json, label_size)
+        score = val_res.get("printability_score", 100.0)
+        grade = val_res.get("grade", "A+")
+        enforce = get_enforce_printability_threshold()
+        if enforce and grade == "F":
+            errors = [d["message"] for d in val_res.get("diagnostics", []) if d.get("severity") == "error"]
+            err_msg = "; ".join(errors) if errors else "Low printability score"
+            frappe.throw(
+                _("Template save blocked. Printability Score: {0} (Grade F). Errors: {1}").format(score, err_msg)
+            )
+
     try:
         doc.save(ignore_permissions=True)
         frappe.db.commit()
@@ -1678,18 +1690,129 @@ def cleanup_old_print_jobs():
     )
 
 
+def get_barcode_hrt_reserved_height():
+    """Helper to fetch barcode_hrt_reserved_height_mm from settings or fallback to 2.5."""
+    try:
+        if frappe.db.exists("DocType", "SMRITI Barcode Settings"):
+            res = frappe.db.sql(
+                "SELECT value FROM `tabSingles` WHERE doctype = 'SMRITI Barcode Settings' AND field = 'barcode_hrt_reserved_height_mm'"
+            )
+            if res and res[0][0] is not None:
+                return float(res[0][0])
+    except Exception:
+        pass
+    return 2.5
+
+
+def get_enforce_printability_threshold():
+    """Helper to fetch enforce_printability_threshold from settings or fallback to 1."""
+    try:
+        if frappe.db.exists("DocType", "SMRITI Barcode Settings"):
+            res = frappe.db.sql(
+                "SELECT value FROM `tabSingles` WHERE doctype = 'SMRITI Barcode Settings' AND field = 'enforce_printability_threshold'"
+            )
+            if res and res[0][0] is not None:
+                return int(res[0][0])
+    except Exception:
+        pass
+    return 1
+
+
+def get_printability_formula_config():
+    """
+    Fetches the printability score configuration dynamically from SMRITI Formula Definition
+    cached for performance (TTL = 3600), with fallback to default weights/grade_bands.
+    """
+    cache_key = "smriti:barcode_printability_formula_config"
+    try:
+        cached = frappe.cache().get_value(cache_key)
+        if cached:
+            return cached
+    except Exception:
+        pass
+
+    config = {
+        "weights": {
+            "margin": 25,
+            "quiet_zone": 25,
+            "overflow": 20,
+            "density": 15,
+            "collision": 15
+        },
+        "grade_bands": {
+            "A+": [95, 100],
+            "A": [90, 94],
+            "B": [80, 89],
+            "C": [70, 79],
+            "F": [0, 69]
+        },
+        "version": "1.0"
+    }
+
+    try:
+        if frappe.db.exists("SMRITI Formula Definition", {"formula_id": "SMRITI-PRN-SCORE-01"}):
+            formula_json = frappe.db.get_value(
+                "SMRITI Formula Definition",
+                {"formula_id": "SMRITI-PRN-SCORE-01"},
+                "explainability_json"
+            )
+            if formula_json:
+                db_cfg = frappe.parse_json(formula_json)
+                if db_cfg.get("weights"):
+                    config["weights"].update(db_cfg["weights"])
+                if db_cfg.get("grade_bands"):
+                    config["grade_bands"] = db_cfg["grade_bands"]
+                if db_cfg.get("version"):
+                    config["version"] = db_cfg["version"]
+            else:
+                frappe.log_error(
+                    title="SMRITI Formula Registry Warning",
+                    message="SMRITI Barcode Studio Formula Registry 'SMRITI-PRN-SCORE-01' has empty explainability_json. Using fallback default config."
+                )
+        else:
+            frappe.log_error(
+                title="SMRITI Formula Registry Warning",
+                message="SMRITI Barcode Studio Formula Registry 'SMRITI-PRN-SCORE-01' missing. Using fallback default config."
+            )
+    except Exception as e:
+        frappe.log_error(
+            title="SMRITI Formula Registry Warning",
+            message=f"SMRITI Barcode Studio Formula Registry fetch failed: {str(e)}"
+        )
+
+    try:
+        frappe.cache().set_value(cache_key, config, expires_in_sec=3600)
+    except Exception:
+        pass
+    return config
+
+
 @frappe.whitelist()
 def validate_layout_diagnostics(layout_json, label_size, item_data=None):
     """
     Validates print template layout and returns a dictionary of diagnostics.
     Diagnostics are categorized as 'warning' or 'error'.
+    Includes printability score calculation, grade bands, breakdown, and recommendations.
     """
     if not layout_json:
-        return {"diagnostics": [], "errors_count": 0, "warnings_count": 0}
+        return {
+            "diagnostics": [],
+            "errors_count": 0,
+            "warnings_count": 0,
+            "printability_score": 100.0,
+            "grade": "A+",
+            "breakdown": {
+                "margin": 25,
+                "quiet_zone": 25,
+                "overflow": 20,
+                "density": 15,
+                "collision": 15
+            },
+            "recommendations": []
+        }
 
     import json
-    
-    # 1. Handle wrapped/unwrapped compatibility
+
     try:
         parsed = json.loads(layout_json)
         if isinstance(parsed, dict) and "elements" in parsed:
@@ -1701,7 +1824,6 @@ def validate_layout_diagnostics(layout_json, label_size, item_data=None):
     except Exception:
         elements = []
 
-    # Parse label dimensions (e.g. "50x25")
     try:
         parts = label_size.split('x')
         lw = float(parts[0])
@@ -1710,15 +1832,19 @@ def validate_layout_diagnostics(layout_json, label_size, item_data=None):
         lw = 50.0
         lh = 25.0
 
+    reserved_height_mm = get_barcode_hrt_reserved_height()
+    formula_cfg = get_printability_formula_config()
+    weights = formula_cfg["weights"]
+    grade_bands = formula_cfg["grade_bands"]
+
     diagnostics = []
-    
-    # Token resolver helper for text overflow check
+    recommendations = []
+
     def resolve_tokens_py(content, item):
         if not content:
             return ""
         if not item:
             item = {}
-        # standard item values
         tokens = {
             "barcode": item.get("barcode") or "8901234567890",
             "item_code": item.get("item_code") or "ITEM-12345",
@@ -1735,31 +1861,62 @@ def validate_layout_diagnostics(layout_json, label_size, item_data=None):
             res = res.replace(f"{{{k}}}", v)
         return res
 
-    # Constant safe margin in mm
     SAFE_MARGIN_MM = 1.5
+    margin_errors_count = 0
+    margin_warnings_count = 0
 
-    # Check bounds
+    QUIET_ZONE_BUFFER = 2.5
+    quiet_zone_errors_count = 0
+    quiet_zone_warnings_count = 0
+
+    text_overflows_count = 0
+    density_warnings_count = 0
+    collision_errors_count = 0
+
+    processed_elements = []
+    barcodes = []
+
     for elem in elements:
-        x = float(elem.get("x", 0))
-        y = float(elem.get("y", 0))
-        w = float(elem.get("w", 0))
-        h = float(elem.get("h", 0))
+        try:
+            x = float(elem.get("x", 0))
+            y = float(elem.get("y", 0))
+            w = float(elem.get("w", 0))
+            h = float(elem.get("h", 0))
+        except Exception:
+            continue
         el_type = elem.get("type", "")
         el_id = elem.get("id", "")
         content = elem.get("content", "")
 
-        # 1. Absolute boundary check
+        processed_elem = {
+            "id": el_id,
+            "type": el_type,
+            "x": x,
+            "y": y,
+            "w": w,
+            "h": h,
+            "content": content,
+            "format": elem.get("format") or elem.get("barcode_type") or "code128"
+        }
+        processed_elements.append(processed_elem)
+
+        if el_type == "barcode":
+            barcodes.append(processed_elem)
+
+    # 1. Printable bounds & safe margin check
+    for elem in processed_elements:
+        x, y, w, h = elem["x"], elem["y"], elem["w"], elem["h"]
+        el_type, el_id = elem["type"], elem["id"]
+
         if x < 0 or y < 0 or (x + w) > lw or (y + h) > lh:
             diagnostics.append({
                 "element_id": el_id,
                 "severity": "error",
                 "message": f"Element {el_id or el_type} exceeds printable area ({lw}x{lh}mm)"
             })
-            continue # Skip margin checks if it's already outside bounds
+            margin_errors_count += 1
+            continue
 
-        # 2. Safe margin boundary check (1.5mm inset)
-        # Barcode and QR code crossing 1.5mm margin is an ERROR
-        # Text/image crossing is a WARNING
         if x < SAFE_MARGIN_MM or y < SAFE_MARGIN_MM or (x + w) > (lw - SAFE_MARGIN_MM) or (y + h) > (lh - SAFE_MARGIN_MM):
             if el_type in ["barcode", "qrcode"]:
                 diagnostics.append({
@@ -1767,42 +1924,152 @@ def validate_layout_diagnostics(layout_json, label_size, item_data=None):
                     "severity": "error",
                     "message": f"{el_type.upper()} {el_id} overlaps print-safe margin"
                 })
+                margin_errors_count += 1
             else:
                 diagnostics.append({
                     "element_id": el_id,
                     "severity": "warning",
                     "message": f"Element {el_id or el_type} overlaps print-safe margin"
                 })
+                margin_warnings_count += 1
 
-        # 3. Text Overflow check
-        if el_type == "text":
-            resolved = resolve_tokens_py(content, item_data)
-            # Estimate width: let's assume each char is approx 1.8mm wide for standard rendering
+    # 2. Quiet Zone Buffer & Barcode Density check
+    for bc in barcodes:
+        bc_format = bc["format"].lower()
+        bc_w = bc["w"]
+        is_ean_upc = "ean" in bc_format or "upc" in bc_format
+        min_rec = 25.0 if is_ean_upc else 15.0
+        if bc_w < min_rec:
+            diagnostics.append({
+                "element_id": bc["id"],
+                "severity": "warning",
+                "message": f"Barcode {bc['id']} width ({bc_w}mm) is less than recommended minimum ({min_rec}mm) for {bc['format']}"
+            })
+            density_warnings_count += 1
+
+        ax, ay, aw, ah = bc["x"], bc["y"], bc["w"], bc["h"]
+        q_x = ax - QUIET_ZONE_BUFFER
+        q_w = aw + 2 * QUIET_ZONE_BUFFER
+
+        for other in processed_elements:
+            if other["id"] == bc["id"]:
+                continue
+            ox, oy, ow, oh = other["x"], other["y"], other["w"], other["h"]
+
+            # AABB intersection on inflated quiet zone bounding box
+            if (q_x < ox + ow) and (q_x + q_w > ox) and (ay < oy + oh) and (ay + ah > oy):
+                is_decor = other["type"] in ["box", "bar"]
+                is_main_overlap = (ax < ox + ow) and (ax + aw > ox) and (ay < oy + oh) and (ay + ah > oy)
+                if not is_main_overlap:
+                    if is_decor:
+                        diagnostics.append({
+                            "element_id": f"{bc['id']}<->{other['id']}",
+                            "severity": "warning",
+                            "message": f"Decorative element {other['id']} invades quiet zone buffer of barcode {bc['id']}"
+                        })
+                        quiet_zone_warnings_count += 1
+                    else:
+                        diagnostics.append({
+                            "element_id": f"{bc['id']}<->{other['id']}",
+                            "severity": "error",
+                            "message": f"Non-decorative element {other['id']} encroaches on quiet zone buffer of barcode {bc['id']}"
+                        })
+                        quiet_zone_errors_count += 1
+
+    # 3. Text Overflow check
+    for elem in processed_elements:
+        if elem["type"] == "text":
+            resolved = resolve_tokens_py(elem["content"], item_data)
             char_width_mm = 1.8
             est_width = len(resolved) * char_width_mm
-            if est_width > w:
+            if est_width > elem["w"]:
                 diagnostics.append({
-                    "element_id": el_id,
+                    "element_id": elem["id"],
                     "severity": "warning",
-                    "message": f"Text element {el_id} content may overflow designed width"
+                    "message": f"Text element {elem['id']} content may overflow designed width"
                 })
+                text_overflows_count += 1
 
-    # 4. Element Collision Detection (exclude box/bar)
-    non_decorative = [e for e in elements if e.get("type") not in ["box", "bar"]]
+    # 4. Collision check (Main + Virtual HRT)
+    non_decorative = [e for e in processed_elements if e["type"] not in ["box", "bar"]]
     for i in range(len(non_decorative)):
         for j in range(i + 1, len(non_decorative)):
             a = non_decorative[i]
             b = non_decorative[j]
-            ax, ay, aw, ah = float(a.get("x", 0)), float(a.get("y", 0)), float(a.get("w", 0)), float(a.get("h", 0))
-            bx, by, bw, bh = float(b.get("x", 0)), float(b.get("y", 0)), float(b.get("w", 0)), float(b.get("h", 0))
-            
-            # AABB intersection
+            ax, ay, aw, ah = a["x"], a["y"], a["w"], a["h"]
+            bx, by, bw, bh = b["x"], b["y"], b["w"], b["h"]
+
             if (ax < bx + bw) and (ax + aw > bx) and (ay < by + bh) and (ay + ah > by):
                 diagnostics.append({
-                    "element_id": f"{a.get('id')}<->{b.get('id')}",
+                    "element_id": f"{a['id']}<->{b['id']}",
                     "severity": "error",
-                    "message": f"Element collision detected between {a.get('id') or a.get('type')} and {b.get('id') or b.get('type')}"
+                    "message": f"Element collision detected between {a['id'] or a['type']} and {b['id'] or b['type']}"
                 })
+                collision_errors_count += 1
+
+    for bc in barcodes:
+        bx, by, bw, bh = bc["x"], bc["y"], bc["w"], bc["h"]
+        vx, vy, vw, vh = bx, by + bh, bw, reserved_height_mm
+
+        if vy + vh > lh:
+            diagnostics.append({
+                "element_id": bc["id"],
+                "severity": "warning",
+                "message": f"Virtual HRT area for barcode {bc['id']} exceeds label printable height ({lh}mm)"
+            })
+
+        for other in non_decorative:
+            if other["id"] == bc["id"]:
+                continue
+            ox, oy, ow, oh = other["x"], other["y"], other["w"], other["h"]
+
+            if (vx < ox + ow) and (vx + vw > ox) and (vy < oy + oh) and (vy + vh > oy):
+                diagnostics.append({
+                    "element_id": f"{bc['id']}_hrt<->{other['id']}",
+                    "severity": "error",
+                    "message": f"Element {other['id']} overlaps virtual HRT reserved space of barcode {bc['id']}"
+                })
+                collision_errors_count += 1
+
+    # Calculate Printability Score
+    margin_score = max(0, weights["margin"] - (margin_errors_count * 10) - (margin_warnings_count * 5))
+
+    quiet_zone_score = weights["quiet_zone"]
+    if quiet_zone_errors_count > 0:
+        quiet_zone_score = 0
+    else:
+        quiet_zone_score = max(0, quiet_zone_score - (quiet_zone_warnings_count * 5))
+
+    overflow_score = max(0, weights["overflow"] - (text_overflows_count * 5))
+    density_score = max(0, weights["density"] - (density_warnings_count * 5))
+
+    collision_score = weights["collision"]
+    if collision_errors_count > 0:
+        collision_score = 0
+
+    total_score = float(margin_score + quiet_zone_score + overflow_score + density_score + collision_score)
+
+    grade = "F"
+    try:
+        # Sort grade bands by min value descending to find the correct band cleanly
+        sorted_bands = sorted(grade_bands.items(), key=lambda x: x[1][0], reverse=True)
+        for g_name, range_val in sorted_bands:
+            if total_score >= range_val[0]:
+                grade = g_name
+                break
+    except Exception:
+        pass
+
+    if margin_errors_count > 0 or margin_warnings_count > 0:
+        recommendations.append("Adjust layout elements to stay within print safe margins (1.5mm inset).")
+    if quiet_zone_errors_count > 0 or quiet_zone_warnings_count > 0:
+        recommendations.append("Ensure left and right barcode quiet zones (2.5mm buffer) are free of overlaps.")
+    if text_overflows_count > 0:
+        recommendations.append("Reduce text font size or increase text field width to prevent content overflow.")
+    if density_warnings_count > 0:
+        recommendations.append("Increase barcode width to meet minimum density scanning standards.")
+    if collision_errors_count > 0:
+        recommendations.append("Reposition overlapping design elements and keep the barcode HRT space clear.")
 
     errors_count = sum(1 for d in diagnostics if d["severity"] == "error")
     warnings_count = sum(1 for d in diagnostics if d["severity"] == "warning")
@@ -1810,7 +2077,17 @@ def validate_layout_diagnostics(layout_json, label_size, item_data=None):
     return {
         "diagnostics": diagnostics,
         "errors_count": errors_count,
-        "warnings_count": warnings_count
+        "warnings_count": warnings_count,
+        "printability_score": total_score,
+        "grade": grade,
+        "breakdown": {
+            "margin": margin_score,
+            "quiet_zone": quiet_zone_score,
+            "overflow": overflow_score,
+            "density": density_score,
+            "collision": collision_score
+        },
+        "recommendations": recommendations
     }
 
 
@@ -1883,7 +2160,176 @@ def cleanup_old_print_jobs():
             f"Cleaned up {success_deleted} success jobs (>30d) and {failed_deleted} failed jobs (>90d)."
         )
     except Exception as e:
-        frappe.log_error("SMRITI Print Job Cleanup Error", str(e))
+        frappe.log_error(title="SMRITI Print Job Cleanup Error", message=str(e))
+
+
+def enforce_barcode_scan_event_immutability(doc, method=None):
+    """
+    Enforces that SMRITI Barcode Scan Event records are read-only after creation.
+    Only allows new record insertion.
+    """
+    if not doc.is_new():
+        frappe.throw(frappe.ValidationError("SMRITI Barcode Scan Event records are immutable and cannot be updated."))
+
+
+@frappe.whitelist()
+def log_barcode_scan_event(event_uuid, template_id, barcode_family, printer_profile, scan_method, scan_attempts, scan_success, first_pass_success, store_id=None, pos_invoice=None, pos_invoice_item=None):
+    """
+    Logs a barcode scan telemetry event. Restricted to users with System Manager, SMRITI POS User, or POS User roles.
+    """
+    # 1. Access/Role Verification
+    roles = frappe.get_roles(frappe.session.user)
+    authorized_roles = {"System Manager", "SMRITI POS User", "POS User", "SMRITI Store Manager", "SMRITI Cashier"}
+    if not authorized_roles.intersection(set(roles)):
+        frappe.throw(frappe._("Not authorized to log telemetry events."), frappe.PermissionError)
+
+    # 2. Idempotency Check
+    existing = frappe.db.get_value("SMRITI Barcode Scan Event", {"event_uuid": event_uuid}, "name")
+    if existing:
+        return frappe.get_doc("SMRITI Barcode Scan Event", existing)
+
+    # 3. Determine Governance Event ID
+    scan_attempts = int(scan_attempts)
+    scan_success = int(scan_success)
+    first_pass_success = int(first_pass_success)
+
+    if scan_success == 1 and first_pass_success == 1:
+        gov_id = "SCAN-EVT-001"
+    elif scan_success == 1 and first_pass_success == 0:
+        gov_id = "SCAN-EVT-002"
+    else:
+        gov_id = "SCAN-EVT-003"
+
+    # Default store_id if not provided: retrieve first available non-group warehouse as fallback
+    if not store_id:
+        store_id = frappe.db.get_value("Warehouse", {"is_group": 0, "disabled": 0}, "name")
+
+    if not store_id:
+        frappe.throw(frappe.ValidationError("A valid Store (Warehouse) is required to log telemetry."))
+
+    # 4. Insert raw SMRITI Barcode Scan Event doc
+    doc = frappe.get_doc({
+        "doctype": "SMRITI Barcode Scan Event",
+        "event_uuid": event_uuid,
+        "timestamp": frappe.utils.now_datetime(),
+        "store_id": store_id,
+        "template_id": template_id,
+        "barcode_family": barcode_family,
+        "printer_profile": printer_profile,
+        "scan_method": scan_method,
+        "scan_attempts": scan_attempts,
+        "scan_success": scan_success,
+        "first_pass_success": first_pass_success,
+        "governance_event_id": gov_id,
+        "pos_invoice": pos_invoice,
+        "pos_invoice_item": pos_invoice_item
+    })
+    doc.insert(ignore_permissions=True)
+    frappe.db.commit()
+    return doc
+
+
+def delete_expired_scan_events():
+    """
+    Scheduler task to prune raw telemetry events older than 90 days.
+    """
+    from frappe.utils import add_days, now_datetime
+    cutoff = add_days(now_datetime(), -90)
+    
+    expired_events = frappe.db.sql("""
+        SELECT name FROM `tabSMRITI Barcode Scan Event`
+        WHERE timestamp < %(cutoff)s
+    """, {"cutoff": cutoff}, as_dict=True)
+
+    count = 0
+    for ev in expired_events:
+        frappe.delete_doc("SMRITI Barcode Scan Event", ev["name"], ignore_permissions=True)
+        count += 1
+
+    if count > 0:
+        frappe.db.commit()
+        from smriti_retail_os.backup_api import log_audit_event
+        log_audit_event(
+            "SMRITI Telemetry Cleanup",
+            f"Pruned {count} raw scan events older than 90 days."
+        )
+        print(f"[SMRITI Telemetry] Pruned {count} raw scan events older than 90 days.")
+
+
+@frappe.whitelist()
+def aggregate_scan_telemetry(period="Daily", target_date=None):
+    """
+    Aggregates raw scan events and calculates Scan Reliability Scores.
+    Default period is Daily, aggregating the previous calendar day.
+    """
+    from frappe.utils import add_days, getdate, flt
+    
+    if not target_date:
+        target_date = add_days(getdate(), -1)
+    else:
+        target_date = getdate(target_date)
+
+    data = frappe.db.sql("""
+        SELECT
+            store_id,
+            template_id,
+            barcode_family,
+            printer_profile,
+            COUNT(name) as total_scans,
+            SUM(CASE WHEN scan_success = 1 THEN 1 ELSE 0 END) as total_successes,
+            SUM(CASE WHEN governance_event_id = 'SCAN-EVT-001' THEN 1 ELSE 0 END) as first_pass_successes,
+            SUM(CASE WHEN governance_event_id = 'SCAN-EVT-002' THEN 1 ELSE 0 END) as retry_successes,
+            SUM(CASE WHEN governance_event_id = 'SCAN-EVT-003' THEN 1 ELSE 0 END) as failures
+        FROM
+            `tabSMRITI Barcode Scan Event`
+        WHERE
+            DATE(timestamp) = %(target_date)s
+        GROUP BY
+            store_id, template_id, barcode_family, printer_profile
+    """, {"target_date": target_date}, as_dict=True)
+
+    for row in data:
+        total = int(row["total_scans"])
+        first_pass = int(row["first_pass_successes"])
+        retries = int(row["retry_successes"])
+        failures = int(row["failures"])
+
+        if total > 0:
+            reliability_score = flt(((first_pass + 0.5 * retries) / total) * 100, 2)
+            first_pass_rate = flt(first_pass / total, 4)
+        else:
+            reliability_score = 0.0
+            first_pass_rate = 0.0
+
+        filters = {
+            "snapshot_date": target_date,
+            "period": period,
+            "store_id": row["store_id"],
+            "template_id": row["template_id"],
+            "barcode_family": row["barcode_family"],
+            "printer_profile": row["printer_profile"]
+        }
+
+        existing_name = frappe.db.get_value("SMRITI Barcode Telemetry Snapshot", filters, "name")
+        if existing_name:
+            snapshot = frappe.get_doc("SMRITI Barcode Telemetry Snapshot", existing_name)
+        else:
+            snapshot = frappe.new_doc("SMRITI Barcode Telemetry Snapshot")
+            snapshot.update(filters)
+
+        snapshot.total_scans = total
+        snapshot.total_successes = int(row["total_successes"])
+        snapshot.first_pass_successes = first_pass
+        snapshot.retry_successes = retries
+        snapshot.failures = failures
+        snapshot.scan_reliability_score = reliability_score
+        snapshot.first_pass_success_rate = first_pass_rate
+        
+        snapshot.save(ignore_permissions=True)
+
+    frappe.db.commit()
+    print(f"[SMRITI Telemetry] Completed aggregation for {target_date} ({len(data)} records).")
+
 
 
 

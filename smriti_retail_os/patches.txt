@@ -27,4 +27,9 @@ smriti_retail_os.patches.seed_default_terms
 smriti_retail_os.patches.seed_knowledge_kpi
 # v1.4.0 — Phase 2: Composite index on active PSV Ledger Entry table for balance query performance
 smriti_retail_os.patches.add_psv_ledger_active_table_composite_index
+# v2.5.0 — Seed SMRITI Printability Score Formula Definition
+smriti_retail_os.patches.seed_printability_formula
+# v2.6.0 — Seed SMRITI Barcode Telemetry Metadata & Formula
+smriti_retail_os.patches.seed_telemetry_meta
+
 

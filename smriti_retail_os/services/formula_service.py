@@ -107,9 +107,9 @@ def validate_formula_registered(formula_id):
 
 def calculate_kgf_coverage():
     """
-    Calculates KGF Coverage % based on total expected dashboard metrics (11).
+    Calculates KGF Coverage % based on total expected dashboard metrics (12).
     """
-    total_kpis = 11
+    total_kpis = 13
     registered_kpis = frappe.db.count(
         "SMRITI Formula Definition",
         {

@@ -1366,6 +1366,167 @@ def create_smriti_cge_settings_doctype():
     except Exception as e:
         frappe.log_error(f"Error creating SMRITI CGE Settings DocType: {str(e)}")
 
+def create_smriti_barcode_settings_doctype():
+    """Creates the SMRITI Barcode Settings single DocType."""
+    if frappe.db.exists("DocType", "SMRITI Barcode Settings"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Barcode Settings"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 1
+        doc.issingle = 1
+
+        fields = [
+            {"fieldname": "barcode_hrt_reserved_height_mm", "fieldtype": "Float", "label": "Barcode HRT Reserved Height (mm)", "default": 2.5},
+            {"fieldname": "enforce_printability_threshold", "fieldtype": "Check", "label": "Enforce Printability Threshold", "default": 1}
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+        doc.append("permissions", {"role": "SMRITI Store Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        # Seed default value
+        settings = frappe.get_doc("SMRITI Barcode Settings")
+        settings.barcode_hrt_reserved_height_mm = 2.5
+        settings.enforce_printability_threshold = 1
+        settings.save(ignore_permissions=True)
+        frappe.db.commit()
+        
+        print("[SMRITI] Created SMRITI Barcode Settings DocType")
+    except Exception as e:
+        frappe.log_error(title="Error creating SMRITI Barcode Settings DocType", message=str(e))
+
+
+def create_smriti_telemetry_event_definition_doctype():
+    """Creates the SMRITI Telemetry Event Definition DocType."""
+    if frappe.db.exists("DocType", "SMRITI Telemetry Event Definition"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Telemetry Event Definition"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.autoname = "Prompt"
+        doc.editable_grid = 1
+        doc.quick_entry = 1
+        doc.track_changes = 1
+        doc.issingle = 0
+
+        fields = [
+            {"fieldname": "event_name", "fieldtype": "Data", "label": "Event Name", "reqd": 1},
+            {"fieldname": "description", "fieldtype": "Small Text", "label": "Description"}
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+        doc.append("permissions", {"role": "SMRITI Store Manager", "read": 1, "write": 0, "create": 0, "delete": 0})
+        doc.append("permissions", {"role": "SMRITI Cashier", "read": 1, "write": 0, "create": 0, "delete": 0})
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print("[SMRITI] Created SMRITI Telemetry Event Definition DocType")
+    except Exception as e:
+        frappe.log_error(title="Error creating SMRITI Telemetry Event Definition DocType", message=str(e))
+
+
+def create_smriti_barcode_scan_event_doctype():
+    """Creates the SMRITI Barcode Scan Event custom DocType."""
+    if frappe.db.exists("DocType", "SMRITI Barcode Scan Event"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Barcode Scan Event"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.autoname = "naming_series:"
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 1
+        doc.issingle = 0
+
+        fields = [
+            {"fieldname": "naming_series", "fieldtype": "Select", "label": "Naming Series", "options": "SCN-EVT-.YYYY.-.MM.-.#####", "default": "SCN-EVT-.YYYY.-.MM.-.#####", "hidden": 1},
+            {"fieldname": "event_uuid", "fieldtype": "Data", "label": "Event UUID", "reqd": 1, "unique": 1},
+            {"fieldname": "timestamp", "fieldtype": "Datetime", "label": "Timestamp", "reqd": 1},
+            {"fieldname": "store_id", "fieldtype": "Link", "options": "Warehouse", "label": "Store (Warehouse)", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "template_id", "fieldtype": "Link", "options": "SMRITI Print Template", "label": "Print Template", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "barcode_family", "fieldtype": "Select", "options": "EAN-13\nEAN-8\nUPC-A\nUPC-E\nCode128\nCode39\nQR Code", "label": "Barcode Family", "reqd": 1},
+            {"fieldname": "printer_profile", "fieldtype": "Data", "label": "Printer Profile"},
+            {"fieldname": "scan_method", "fieldtype": "Select", "options": "Handheld Laser\nFixed Omnidirectional\nMobile Camera\nManual Input", "label": "Scan Method", "reqd": 1},
+            {"fieldname": "scan_attempts", "fieldtype": "Int", "label": "Scan Attempts", "default": 1},
+            {"fieldname": "scan_success", "fieldtype": "Check", "label": "Scan Success", "default": 0},
+            {"fieldname": "first_pass_success", "fieldtype": "Check", "label": "First Pass Success", "default": 0},
+            {"fieldname": "governance_event_id", "fieldtype": "Link", "options": "SMRITI Telemetry Event Definition", "label": "Governance Event ID"},
+            {"fieldname": "pos_invoice", "fieldtype": "Link", "options": "Sales Invoice", "label": "POS Invoice"},
+            {"fieldname": "pos_invoice_item", "fieldtype": "Data", "label": "POS Invoice Item"}
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+        doc.append("permissions", {"role": "SMRITI Store Manager", "read": 1, "write": 0, "create": 1, "delete": 0})
+        doc.append("permissions", {"role": "SMRITI Cashier", "read": 1, "write": 0, "create": 1, "delete": 0})
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print("[SMRITI] Created SMRITI Barcode Scan Event DocType")
+    except Exception as e:
+        frappe.log_error(title="Error creating SMRITI Barcode Scan Event DocType", message=str(e))
+
+
+def create_smriti_barcode_telemetry_snapshot_doctype():
+    """Creates the SMRITI Barcode Telemetry Snapshot custom DocType."""
+    if frappe.db.exists("DocType", "SMRITI Barcode Telemetry Snapshot"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Barcode Telemetry Snapshot"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.autoname = "naming_series:"
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 1
+        doc.issingle = 0
+
+        fields = [
+            {"fieldname": "naming_series", "fieldtype": "Select", "label": "Naming Series", "options": "SCN-SNAP-.YYYY.-.MM.-.#####", "default": "SCN-SNAP-.YYYY.-.MM.-.#####", "hidden": 1},
+            {"fieldname": "snapshot_date", "fieldtype": "Date", "label": "Snapshot Date", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "period", "fieldtype": "Select", "options": "Daily\nWeekly\nMonthly", "label": "Period", "default": "Daily", "reqd": 1},
+            {"fieldname": "store_id", "fieldtype": "Link", "options": "Warehouse", "label": "Store (Warehouse)", "in_list_view": 1},
+            {"fieldname": "template_id", "fieldtype": "Link", "options": "SMRITI Print Template", "label": "Print Template", "in_list_view": 1},
+            {"fieldname": "barcode_family", "fieldtype": "Select", "options": "EAN-13\nEAN-8\nUPC-A\nUPC-E\nCode128\nCode39\nQR Code", "label": "Barcode Family"},
+            {"fieldname": "printer_profile", "fieldtype": "Data", "label": "Printer Profile"},
+            {"fieldname": "total_scans", "fieldtype": "Int", "label": "Total Scans", "default": 0},
+            {"fieldname": "total_successes", "fieldtype": "Int", "label": "Total Successes", "default": 0},
+            {"fieldname": "first_pass_successes", "fieldtype": "Int", "label": "First Pass Successes", "default": 0},
+            {"fieldname": "retry_successes", "fieldtype": "Int", "label": "Retry Successes", "default": 0},
+            {"fieldname": "failures", "fieldtype": "Int", "label": "Failures", "default": 0},
+            {"fieldname": "scan_reliability_score", "fieldtype": "Float", "label": "Scan Reliability Score", "default": 0.0},
+            {"fieldname": "first_pass_success_rate", "fieldtype": "Float", "label": "First Pass Success Rate", "default": 0.0}
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+        doc.append("permissions", {"role": "SMRITI Store Manager", "read": 1, "write": 0, "create": 0, "delete": 0})
+        doc.append("permissions", {"role": "SMRITI Cashier", "read": 1, "write": 0, "create": 0, "delete": 0})
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print("[SMRITI] Created SMRITI Barcode Telemetry Snapshot DocType")
+    except Exception as e:
+        frappe.log_error(title="Error creating SMRITI Barcode Telemetry Snapshot DocType", message=str(e))
+
 
 def create_smriti_wallet_ledger_doctype():
     """Creates the SMRITI Wallet Ledger custom DocType."""
@@ -1606,6 +1767,10 @@ def setup_smriti_retail_os():
 
     # 0e. Provision SMRITI Print Job DocType (V2.1)
     create_smriti_print_job_doctype()
+    create_smriti_barcode_settings_doctype()
+    create_smriti_telemetry_event_definition_doctype()
+    create_smriti_barcode_scan_event_doctype()
+    create_smriti_barcode_telemetry_snapshot_doctype()
     ensure_print_job_directory()
 
     # 0c. Provision SMRITI Reporting DocTypes
@@ -2683,6 +2848,18 @@ def hide_non_retail_modules():
         seed_terms()
     except Exception as e:
         frappe.log_error(f"Error seeding default terms: {str(e)}", "SMRITI Setup Error")
+
+    try:
+        from smriti_retail_os.patches.seed_printability_formula import execute as seed_printability
+        seed_printability()
+    except Exception as e:
+        frappe.log_error(f"Error seeding printability formula: {str(e)}", "SMRITI Setup Error")
+
+    try:
+        from smriti_retail_os.patches.seed_telemetry_meta import execute as seed_telemetry
+        seed_telemetry()
+    except Exception as e:
+        frappe.log_error(f"Error seeding telemetry formula: {str(e)}", "SMRITI Setup Error")
 
     frappe.db.commit()
 

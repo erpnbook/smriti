@@ -33,9 +33,12 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         frappe.db.delete("SMRITI Print Template Version", {"template": ["in", test_templates]})
         frappe.db.delete("SMRITI Print Template", {"name": ["in", test_templates]})
         frappe.db.commit()
-        from smriti_retail_os.setup import seed_master_doctypes, setup_activity_log_options
+        from smriti_retail_os.setup import seed_master_doctypes, setup_activity_log_options, create_smriti_barcode_settings_doctype
         seed_master_doctypes()
         setup_activity_log_options()
+        create_smriti_barcode_settings_doctype()
+        from smriti_retail_os.patches.seed_printability_formula import execute as seed_printability
+        seed_printability()
 
     @classmethod
     def tearDownClass(cls):
@@ -919,6 +922,205 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         
         self.assertEqual(res1["diagnostics"], res2["diagnostics"])
         self.assertEqual(res1["errors_count"], res2["errors_count"])
+
+    def test_24_printability_formula_seeded(self):
+        """test_24: Verify SMRITI-PRN-SCORE-01 formula exists in Formula Registry"""
+        self.assertTrue(frappe.db.exists("SMRITI Formula Definition", {"formula_id": "SMRITI-PRN-SCORE-01"}))
+        doc = frappe.get_doc("SMRITI Formula Definition", {"formula_id": "SMRITI-PRN-SCORE-01"})
+        self.assertEqual(doc.status, "Approved")
+        self.assertEqual(doc.is_active, 1)
+        self.assertIn("explainability_json", doc.as_dict())
+
+    def test_25_settings_fallback_and_default_values(self):
+        """test_25: Verify fallback values when settings DocType is missing or values are empty"""
+        from smriti_retail_os.barcode_api import (
+            get_barcode_hrt_reserved_height,
+            get_enforce_printability_threshold,
+        )
+        orig_exists = frappe.db.exists
+        def mock_exists(dt, *args, **kwargs):
+            if dt == "SMRITI Barcode Settings" or "SMRITI Barcode Settings" in args:
+                return False
+            return orig_exists(dt, *args, **kwargs)
+        
+        with unittest.mock.patch("frappe.db.exists", side_effect=mock_exists):
+            self.assertEqual(get_barcode_hrt_reserved_height(), 2.5)
+            self.assertEqual(get_enforce_printability_threshold(), 1)
+
+    def test_26_save_validation_boundary_conditions(self):
+        """test_26: Test save validation block on boundary scores (69 vs 70) and config enforce toggle"""
+        from smriti_retail_os.barcode_api import save_print_template, validate_layout_diagnostics
+        
+        elements_70 = [
+            {"id": "txt1", "type": "text", "x": 1.0, "y": 2.0, "w": 10.0, "h": 2.0, "content": ""},
+            {"id": "txt2", "type": "text", "x": 1.0, "y": 5.0, "w": 10.0, "h": 2.0, "content": ""},
+            {"id": "txt3", "type": "text", "x": 1.0, "y": 8.0, "w": 10.0, "h": 2.0, "content": ""},
+            {"id": "txt4", "type": "text", "x": 15.0, "y": 2.0, "w": 5.0, "h": 2.0, "content": "Very Long Text Name"},
+            {"id": "txt5", "type": "text", "x": 15.0, "y": 5.0, "w": 5.0, "h": 2.0, "content": "Very Long Text Name"},
+            {"id": "txt6", "type": "text", "x": 15.0, "y": 8.0, "w": 5.0, "h": 2.0, "content": "Very Long Text Name"},
+        ]
+        layout_70 = json.dumps(elements_70)
+        res_70 = validate_layout_diagnostics(layout_70, "50x25")
+        self.assertEqual(res_70["printability_score"], 70.0)
+        self.assertEqual(res_70["grade"], "C")
+        
+        try:
+            save_print_template(
+                template_name="TEST_LOCK_TEMPLATE",
+                label_size="50x25",
+                printer_language="ZPL",
+                raw_template="^XA^XZ",
+                custom_visual_layout_json=layout_70
+            )
+        except frappe.ValidationError:
+            self.fail("save_print_template should not throw on Score = 70")
+            
+        elements_65 = elements_70 + [
+            {"id": "txt7", "type": "text", "x": 1.0, "y": 11.0, "w": 10.0, "h": 2.0, "content": ""}
+        ]
+        layout_65 = json.dumps(elements_65)
+        res_65 = validate_layout_diagnostics(layout_65, "50x25")
+        self.assertTrue(res_65["printability_score"] < 70)
+        self.assertEqual(res_65["grade"], "F")
+        
+        frappe.db.set_single_value("SMRITI Barcode Settings", "enforce_printability_threshold", 1)
+        frappe.db.commit()
+        self.assertRaises(
+            frappe.ValidationError,
+            save_print_template,
+            template_name="TEST_LOCK_TEMPLATE",
+            label_size="50x25",
+            printer_language="ZPL",
+            raw_template="^XA^XZ",
+            custom_visual_layout_json=layout_65
+        )
+        
+        frappe.db.set_single_value("SMRITI Barcode Settings", "enforce_printability_threshold", 0)
+        frappe.db.commit()
+        try:
+            save_print_template(
+                template_name="TEST_LOCK_TEMPLATE",
+                label_size="50x25",
+                printer_language="ZPL",
+                raw_template="^XA^XZ",
+                custom_visual_layout_json=layout_65
+            )
+        except frappe.ValidationError:
+            self.fail("save_print_template should allow save on Grade F when enforce is disabled")
+            
+        frappe.db.set_single_value("SMRITI Barcode Settings", "enforce_printability_threshold", 1)
+        frappe.db.commit()
+
+    def test_27_quiet_zone_intrusion_modes(self):
+        """test_27: Test quiet zone intrusions (non-decorative triggers error, decorative triggers warning)"""
+        from smriti_retail_os.barcode_api import validate_layout_diagnostics
+        
+        layout_err = json.dumps([
+            {"id": "bc1", "type": "barcode", "x": 10.0, "y": 5.0, "w": 20.0, "h": 10.0, "format": "code128"},
+            {"id": "txt1", "type": "text", "x": 6.0, "y": 6.0, "w": 3.0, "h": 3.0, "content": "Text"}
+        ])
+        res_err = validate_layout_diagnostics(layout_err, "50x25")
+        self.assertEqual(res_err["errors_count"], 1)
+        self.assertEqual(res_err["breakdown"]["quiet_zone"], 0)
+        
+        layout_warn = json.dumps([
+            {"id": "bc1", "type": "barcode", "x": 10.0, "y": 5.0, "w": 20.0, "h": 10.0, "format": "code128"},
+            {"id": "box1", "type": "box", "x": 6.0, "y": 6.0, "w": 3.0, "h": 3.0}
+        ])
+        res_warn = validate_layout_diagnostics(layout_warn, "50x25")
+        self.assertEqual(res_warn["errors_count"], 0)
+        self.assertEqual(res_warn["warnings_count"], 1)
+        self.assertEqual(res_warn["breakdown"]["quiet_zone"], 20)
+
+    def test_28_virtual_hrt_collision(self):
+        """test_28: Verify virtual HRT space overlap collision triggers error"""
+        from smriti_retail_os.barcode_api import validate_layout_diagnostics
+        
+        layout_overlap = json.dumps([
+            {"id": "bc1", "type": "barcode", "x": 10.0, "y": 5.0, "w": 20.0, "h": 10.0, "format": "code128"},
+            {"id": "txt1", "type": "text", "x": 15.0, "y": 16.0, "w": 5.0, "h": 2.0, "content": "Text"}
+        ])
+        res_overlap = validate_layout_diagnostics(layout_overlap, "50x25")
+        self.assertEqual(res_overlap["errors_count"], 1)
+        self.assertEqual(res_overlap["breakdown"]["collision"], 0)
+
+    def test_29_barcode_density_rules(self):
+        """test_29: Test minimum recommended barcode widths per barcode family"""
+        from smriti_retail_os.barcode_api import validate_layout_diagnostics
+        
+        layout_ean = json.dumps([
+            {"id": "bc1", "type": "barcode", "x": 10.0, "y": 5.0, "w": 20.0, "h": 10.0, "format": "ean13"}
+        ])
+        res_ean = validate_layout_diagnostics(layout_ean, "50x25")
+        self.assertEqual(res_ean["warnings_count"], 1)
+        self.assertEqual(res_ean["breakdown"]["density"], 10)
+        
+        layout_code = json.dumps([
+            {"id": "bc1", "type": "barcode", "x": 10.0, "y": 5.0, "w": 20.0, "h": 10.0, "format": "code128"}
+        ])
+        res_code = validate_layout_diagnostics(layout_code, "50x25")
+        self.assertEqual(res_code["warnings_count"], 0)
+        self.assertEqual(res_code["breakdown"]["density"], 15)
+
+    def test_30_formula_corruption_fallback(self):
+        """test_30: Verify fallback safety when Formula Registry is corrupted/missing"""
+        from smriti_retail_os.barcode_api import validate_layout_diagnostics, get_printability_formula_config
+        
+        try:
+            frappe.cache().delete_value("smriti:barcode_printability_formula_config")
+        except Exception:
+            pass
+        
+        orig_exists = frappe.db.exists
+        def mock_exists(dt, *args, **kwargs):
+            if dt == "SMRITI Formula Definition":
+                return False
+            return orig_exists(dt, *args, **kwargs)
+            
+        with unittest.mock.patch("frappe.db.exists", side_effect=mock_exists):
+            cfg = get_printability_formula_config()
+            self.assertEqual(cfg["weights"]["margin"], 25)
+            self.assertEqual(cfg["weights"]["quiet_zone"], 25)
+            
+            layout = json.dumps([
+                {"id": "txt1", "type": "text", "x": 5.0, "y": 5.0, "w": 10.0, "h": 5.0, "content": "Hello"}
+            ])
+            res = validate_layout_diagnostics(layout, "50x25")
+            self.assertEqual(res["printability_score"], 100.0)
+            self.assertEqual(res["grade"], "A+")
+
+    def test_31_formula_missing_warning_log(self):
+        """test_31: Verify that a warning log is generated when SMRITI-PRN-SCORE-01 formula is missing"""
+        from smriti_retail_os.barcode_api import get_printability_formula_config
+        
+        # Delete any existing warning error logs for clean check
+        frappe.db.delete("Error Log", {"method": "SMRITI Formula Registry Warning"})
+        frappe.db.commit()
+        
+        try:
+            frappe.cache().delete_value("smriti:barcode_printability_formula_config")
+        except Exception:
+            pass
+            
+        orig_exists = frappe.db.exists
+        def mock_exists(dt, *args, **kwargs):
+            if dt == "SMRITI Formula Definition":
+                args_str = str(args) + str(kwargs)
+                if "SMRITI-PRN-SCORE-01" in args_str:
+                    return False
+            return orig_exists(dt, *args, **kwargs)
+            
+        with unittest.mock.patch("frappe.db.exists", side_effect=mock_exists):
+            cfg = get_printability_formula_config()
+            self.assertEqual(cfg["weights"]["margin"], 25)
+            
+            # Verify that Error Log is created
+            log_exists = frappe.db.exists("Error Log", {"method": "SMRITI Formula Registry Warning"})
+            self.assertTrue(log_exists)
+            
+            # Verify log content
+            log_doc = frappe.get_doc("Error Log", log_exists)
+            self.assertIn("SMRITI-PRN-SCORE-01", log_doc.error)
 
 
 

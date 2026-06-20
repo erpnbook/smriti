@@ -354,6 +354,9 @@ doc_events = {
     },
     "SMRITI Party Physical Snapshot": {
         "on_submit": "smriti_retail_os.services.pdt_service.on_physical_snapshot_submit"
+    },
+    "SMRITI Barcode Scan Event": {
+        "before_save": "smriti_retail_os.barcode_api.enforce_barcode_scan_event_immutability"
     }
 }
 
@@ -366,6 +369,7 @@ scheduler_events = {
         "smriti_retail_os.backup_api.run_scheduled_backup",
         "smriti_retail_os.psv_service.run_psv_daily_health_check",
         "smriti_retail_os.barcode_api.cleanup_old_print_jobs",
+        "smriti_retail_os.barcode_api.delete_expired_scan_events",
         "smriti_retail_os.license.tasks.evaluate_license_status",
         "smriti_retail_os.cge.service.cge_service.reconcile_wallet_liability",
         "smriti_retail_os.cge.service.cge_service.expire_wallet_credits",
@@ -376,6 +380,9 @@ scheduler_events = {
     "cron": {
         "*/30 * * * *": [
             "smriti_retail_os.cge.service.cge_service.release_expired_reservations"
+        ],
+        "0 3 * * *": [
+            "smriti_retail_os.barcode_api.aggregate_scan_telemetry"
         ]
     }
 }
