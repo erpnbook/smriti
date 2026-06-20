@@ -1,24 +1,24 @@
 # Migration Validation Report
 > **Status**: ✅ PASSED
-> Generated: 2026-06-11 10:11:37.450192
+> Generated: 2026-06-20 12:02:48.268539
 
 ## Dry Run
 | Metric | Value |
 |--------|-------|
-| Customers Scanned | 1 |
-| Partners Created | 1 |
-| Partners Skipped | 0 |
-| Brands Created | 1 |
+| Customers Scanned | 3 |
+| Partners Created | 2 |
+| Partners Skipped | 1 |
+| Brands Created | 0 |
 | Errors | 0 |
-| Execution Time | 0.015s |
+| Execution Time | 0.023s |
 
 ## Actual Run
 | Metric | Value |
 |--------|-------|
-| Customers Scanned | 1 |
-| Partners Created | 1 |
+| Customers Scanned | 3 |
+| Partners Created | 2 |
 | Errors | 0 |
-| Execution Time | 0.042s |
+| Execution Time | 0.211s |
 
 ## Balance Reconciliation
 | Metric | Value |
