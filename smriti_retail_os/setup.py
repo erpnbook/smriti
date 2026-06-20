@@ -2671,6 +2671,19 @@ def hide_non_retail_modules():
     if hidden_ws_count:
         print(f"[SMRITI] Hid {hidden_ws_count} non-retail Workspaces.")
 
+    # Seed default formulas & business dictionary terms automatically on setup/migrate (idempotent)
+    try:
+        from smriti_retail_os.patches.seed_default_formulas import execute as seed_formulas
+        seed_formulas()
+    except Exception as e:
+        frappe.log_error(f"Error seeding default formulas: {str(e)}", "SMRITI Setup Error")
+
+    try:
+        from smriti_retail_os.patches.seed_default_terms import execute as seed_terms
+        seed_terms()
+    except Exception as e:
+        frappe.log_error(f"Error seeding default terms: {str(e)}", "SMRITI Setup Error")
+
     frappe.db.commit()
 
 

@@ -24,7 +24,18 @@
     "faq",
     "common_mistakes",
     "manual_reference",
-    "training_reference"
+    "training_reference",
+    "dictionary_key",
+    "projection_path",
+    "entity_type",
+    "data_type",
+    "measure_or_dimension",
+    "is_groupable",
+    "is_filterable",
+    "is_reportable",
+    "default_aggregation",
+    "approval_status",
+    "dictionary_version"
   ],
   "fields": [
     {
@@ -148,6 +159,71 @@
       "fieldname": "training_reference",
       "fieldtype": "Data",
       "label": "Training Reference"
+    },
+    {
+      "fieldname": "dictionary_key",
+      "fieldtype": "Data",
+      "label": "Dictionary Key"
+    },
+    {
+      "fieldname": "projection_path",
+      "fieldtype": "Data",
+      "label": "Projection Path"
+    },
+    {
+      "fieldname": "entity_type",
+      "fieldtype": "Data",
+      "label": "Entity Type"
+    },
+    {
+      "fieldname": "data_type",
+      "fieldtype": "Select",
+      "label": "Data Type",
+      "options": "\nString\nFloat\nCurrency\nDate\nDatetime\nInt\nPercent\nLink"
+    },
+    {
+      "fieldname": "measure_or_dimension",
+      "fieldtype": "Select",
+      "label": "Measure or Dimension",
+      "options": "\nDimension\nMeasure"
+    },
+    {
+      "fieldname": "is_groupable",
+      "fieldtype": "Check",
+      "label": "Is Groupable",
+      "default": 0
+    },
+    {
+      "fieldname": "is_filterable",
+      "fieldtype": "Check",
+      "label": "Is Filterable",
+      "default": 0
+    },
+    {
+      "fieldname": "is_reportable",
+      "fieldtype": "Check",
+      "label": "Is Reportable",
+      "default": 0
+    },
+    {
+      "fieldname": "default_aggregation",
+      "fieldtype": "Select",
+      "label": "Default Aggregation",
+      "options": "\nNone\nSum\nAvg\nCount\nMin\nMax",
+      "default": "None"
+    },
+    {
+      "fieldname": "approval_status",
+      "fieldtype": "Select",
+      "label": "Approval Status",
+      "options": "\nDraft\nApproved\nDeprecated\nBlocked",
+      "default": "Draft"
+    },
+    {
+      "fieldname": "dictionary_version",
+      "fieldtype": "Data",
+      "label": "Dictionary Version",
+      "default": "1.0"
     }
   ],
   "index_web_pages_for_search": 1,

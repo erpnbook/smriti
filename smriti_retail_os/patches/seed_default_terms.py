@@ -383,17 +383,337 @@ def execute():
         }
     ]
 
+    # Standard reporting terms used in dynamic dynamic query engines
+    reporting_terms = [
+        {
+            "term_id": "item_code",
+            "term_name": "Item Code",
+            "term_category": "Sales",
+            "definition": "Unique alphanumeric code of the item variant.",
+            "hinglish_definition": "Item variant ka unique code identifier.",
+            "term_aliases": ["item_code", "sku"],
+            "manual_reference": "Volume 3 > Products",
+            "training_reference": "TRN-INV-ITEM",
+            "related_formulas": [],
+            "related_terms": [],
+            "faq": [],
+            "common_mistakes": [],
+            "dictionary_key": "item_code",
+            "projection_path": "POS Invoice Item.item_code",
+            "entity_type": "POS Invoice Item",
+            "data_type": "Link",
+            "measure_or_dimension": "Dimension",
+            "is_groupable": 1,
+            "is_filterable": 1,
+            "is_reportable": 1,
+            "default_aggregation": "None",
+            "approval_status": "Approved",
+            "dictionary_version": "1.0"
+        },
+        {
+            "term_id": "item_name",
+            "term_name": "Item Name",
+            "term_category": "Sales",
+            "definition": "Descriptive name of the product item.",
+            "hinglish_definition": "Product item ka general name.",
+            "term_aliases": ["item_name", "product_name"],
+            "manual_reference": "Volume 3 > Products",
+            "training_reference": "TRN-INV-ITEM",
+            "related_formulas": [],
+            "related_terms": [],
+            "faq": [],
+            "common_mistakes": [],
+            "dictionary_key": "item_name",
+            "projection_path": "POS Invoice Item.item_name",
+            "entity_type": "POS Invoice Item",
+            "data_type": "String",
+            "measure_or_dimension": "Dimension",
+            "is_groupable": 1,
+            "is_filterable": 1,
+            "is_reportable": 1,
+            "default_aggregation": "None",
+            "approval_status": "Approved",
+            "dictionary_version": "1.0"
+        },
+        {
+            "term_id": "item_group",
+            "term_name": "Item Group",
+            "term_category": "Sales",
+            "definition": "Classification category group of the product item.",
+            "hinglish_definition": "Product items ka grouping category group.",
+            "term_aliases": ["item_group", "category"],
+            "manual_reference": "Volume 3 > Products",
+            "training_reference": "TRN-INV-ITEM",
+            "related_formulas": [],
+            "related_terms": [],
+            "faq": [],
+            "common_mistakes": [],
+            "dictionary_key": "item_group",
+            "projection_path": "POS Invoice Item.item_group",
+            "entity_type": "POS Invoice Item",
+            "data_type": "Link",
+            "measure_or_dimension": "Dimension",
+            "is_groupable": 1,
+            "is_filterable": 1,
+            "is_reportable": 1,
+            "default_aggregation": "None",
+            "approval_status": "Approved",
+            "dictionary_version": "1.0"
+        },
+        {
+            "term_id": "brand",
+            "term_name": "Brand",
+            "term_category": "Sales",
+            "definition": "Brand name associated with the product.",
+            "hinglish_definition": "Product ka brand name description.",
+            "term_aliases": ["brand"],
+            "manual_reference": "Volume 3 > Products",
+            "training_reference": "TRN-INV-ITEM",
+            "related_formulas": [],
+            "related_terms": [],
+            "faq": [],
+            "common_mistakes": [],
+            "dictionary_key": "brand",
+            "projection_path": "POS Invoice Item.brand",
+            "entity_type": "POS Invoice Item",
+            "data_type": "Link",
+            "measure_or_dimension": "Dimension",
+            "is_groupable": 1,
+            "is_filterable": 1,
+            "is_reportable": 1,
+            "default_aggregation": "None",
+            "approval_status": "Approved",
+            "dictionary_version": "1.0"
+        },
+        {
+            "term_id": "qty_sold",
+            "term_name": "Quantity Sold",
+            "term_category": "Sales",
+            "definition": "Total quantity of items sold in transactions.",
+            "hinglish_definition": "Transactions mein bechi gayi items ki total quantity count.",
+            "term_aliases": ["qty_sold", "quantity", "qty"],
+            "manual_reference": "Volume 3 > Sales Analytics",
+            "training_reference": "TRN-SAL-ANALYTICS",
+            "related_formulas": [],
+            "related_terms": [],
+            "faq": [],
+            "common_mistakes": [],
+            "dictionary_key": "qty_sold",
+            "projection_path": "POS Invoice Item.qty",
+            "entity_type": "POS Invoice Item",
+            "data_type": "Float",
+            "measure_or_dimension": "Measure",
+            "is_groupable": 0,
+            "is_filterable": 0,
+            "is_reportable": 1,
+            "default_aggregation": "Sum",
+            "approval_status": "Approved",
+            "dictionary_version": "1.0"
+        },
+        {
+            "term_id": "taxable_amount",
+            "term_name": "Taxable Amount",
+            "term_category": "Sales",
+            "definition": "Net taxable transaction total before GST tax additions.",
+            "hinglish_definition": "Bina GST tax lagaye total taxable net transaction total price.",
+            "term_aliases": ["taxable_amount", "net_amount"],
+            "manual_reference": "Volume 3 > Sales Analytics",
+            "training_reference": "TRN-SAL-ANALYTICS",
+            "related_formulas": [],
+            "related_terms": [],
+            "faq": [],
+            "common_mistakes": [],
+            "dictionary_key": "taxable_amount",
+            "projection_path": "POS Invoice Item.net_amount",
+            "entity_type": "POS Invoice Item",
+            "data_type": "Currency",
+            "measure_or_dimension": "Measure",
+            "is_groupable": 0,
+            "is_filterable": 0,
+            "is_reportable": 1,
+            "default_aggregation": "Sum",
+            "approval_status": "Approved",
+            "dictionary_version": "1.0"
+        },
+        {
+            "term_id": "gross_amount",
+            "term_name": "Gross Amount",
+            "term_category": "Sales",
+            "definition": "Gross transaction amount including all tax components.",
+            "hinglish_definition": "Taxes and adjustments ke baad banne wala gross total amount.",
+            "term_aliases": ["gross_amount", "amount"],
+            "manual_reference": "Volume 3 > Sales Analytics",
+            "training_reference": "TRN-SAL-ANALYTICS",
+            "related_formulas": [],
+            "related_terms": [],
+            "faq": [],
+            "common_mistakes": [],
+            "dictionary_key": "gross_amount",
+            "projection_path": "POS Invoice Item.amount",
+            "entity_type": "POS Invoice Item",
+            "data_type": "Currency",
+            "measure_or_dimension": "Measure",
+            "is_groupable": 0,
+            "is_filterable": 0,
+            "is_reportable": 1,
+            "default_aggregation": "Sum",
+            "approval_status": "Approved",
+            "dictionary_version": "1.0"
+        },
+        {
+            "term_id": "posting_date",
+            "term_name": "Posting Date",
+            "term_category": "Sales",
+            "definition": "The formal posting date of transactions.",
+            "hinglish_definition": "Transaction record hone ki formal posting date log.",
+            "term_aliases": ["posting_date", "date"],
+            "manual_reference": "Volume 3 > Store Operations",
+            "training_reference": "TRN-SAL-ANALYTICS",
+            "related_formulas": [],
+            "related_terms": [],
+            "faq": [],
+            "common_mistakes": [],
+            "dictionary_key": "posting_date",
+            "projection_path": "POS Invoice.posting_date",
+            "entity_type": "POS Invoice",
+            "data_type": "Date",
+            "measure_or_dimension": "Dimension",
+            "is_groupable": 1,
+            "is_filterable": 1,
+            "is_reportable": 1,
+            "default_aggregation": "None",
+            "approval_status": "Approved",
+            "dictionary_version": "1.0"
+        },
+        {
+            "term_id": "bills_count",
+            "term_name": "Bills Count",
+            "term_category": "Sales",
+            "definition": "Number of invoices generated in store.",
+            "hinglish_definition": "Store mein print kiye gaye total invoices ki numerical count value.",
+            "term_aliases": ["bills_count", "invoice_count"],
+            "manual_reference": "Volume 3 > Store Operations",
+            "training_reference": "TRN-SAL-ANALYTICS",
+            "related_formulas": [],
+            "related_terms": [],
+            "faq": [],
+            "common_mistakes": [],
+            "dictionary_key": "bills_count",
+            "projection_path": "POS Invoice.name",
+            "entity_type": "POS Invoice",
+            "data_type": "Int",
+            "measure_or_dimension": "Measure",
+            "is_groupable": 0,
+            "is_filterable": 0,
+            "is_reportable": 1,
+            "default_aggregation": "Count",
+            "approval_status": "Approved",
+            "dictionary_version": "1.0"
+        },
+        {
+            "term_id": "discount_amount",
+            "term_name": "Discount Amount",
+            "term_category": "Sales",
+            "definition": "Total discount value given on the invoices.",
+            "hinglish_definition": "Invoices par diya gaya overall total discount value.",
+            "term_aliases": ["discount_amount", "discount"],
+            "manual_reference": "Volume 3 > Store Operations",
+            "training_reference": "TRN-SAL-ANALYTICS",
+            "related_formulas": [],
+            "related_terms": [],
+            "faq": [],
+            "common_mistakes": [],
+            "dictionary_key": "discount_amount",
+            "projection_path": "POS Invoice.discount_amount",
+            "entity_type": "POS Invoice",
+            "data_type": "Currency",
+            "measure_or_dimension": "Measure",
+            "is_groupable": 0,
+            "is_filterable": 0,
+            "is_reportable": 1,
+            "default_aggregation": "Sum",
+            "approval_status": "Approved",
+            "dictionary_version": "1.0"
+        },
+        {
+            "term_id": "tax_amount",
+            "term_name": "Tax Amount",
+            "term_category": "Sales",
+            "definition": "Total taxes and charges aggregated on the invoice.",
+            "hinglish_definition": "Invoice par calculate kiya gaya total tax and charges value.",
+            "term_aliases": ["tax_amount", "total_taxes_and_charges"],
+            "manual_reference": "Volume 3 > Store Operations",
+            "training_reference": "TRN-SAL-ANALYTICS",
+            "related_formulas": [],
+            "related_terms": [],
+            "faq": [],
+            "common_mistakes": [],
+            "dictionary_key": "tax_amount",
+            "projection_path": "POS Invoice.total_taxes_and_charges",
+            "entity_type": "POS Invoice",
+            "data_type": "Currency",
+            "measure_or_dimension": "Measure",
+            "is_groupable": 0,
+            "is_filterable": 0,
+            "is_reportable": 1,
+            "default_aggregation": "Sum",
+            "approval_status": "Approved",
+            "dictionary_version": "1.0"
+        },
+        {
+            "term_id": "grand_total",
+            "term_name": "Grand Total",
+            "term_category": "Sales",
+            "definition": "Grand total amount payable on the invoice.",
+            "hinglish_definition": "Invoice par paid total grand payable amount value.",
+            "term_aliases": ["grand_total"],
+            "manual_reference": "Volume 3 > Store Operations",
+            "training_reference": "TRN-SAL-ANALYTICS",
+            "related_formulas": [],
+            "related_terms": [],
+            "faq": [],
+            "common_mistakes": [],
+            "dictionary_key": "grand_total",
+            "projection_path": "POS Invoice.grand_total",
+            "entity_type": "POS Invoice",
+            "data_type": "Currency",
+            "measure_or_dimension": "Measure",
+            "is_groupable": 0,
+            "is_filterable": 0,
+            "is_reportable": 1,
+            "default_aggregation": "Sum",
+            "approval_status": "Approved",
+            "dictionary_version": "1.0"
+        }
+    ]
+
+    default_terms.extend(reporting_terms)
+
+    # Initialize metadata defaults for all terms
+    for t in default_terms:
+        t.setdefault("dictionary_key", t["term_id"].lower().replace(" ", "_"))
+        t.setdefault("projection_path", "")
+        t.setdefault("entity_type", "")
+        t.setdefault("data_type", "String")
+        t.setdefault("measure_or_dimension", "Dimension")
+        t.setdefault("is_groupable", 0)
+        t.setdefault("is_filterable", 0)
+        t.setdefault("is_reportable", 0)
+        t.setdefault("default_aggregation", "None")
+        t.setdefault("approval_status", "Approved")
+        t.setdefault("dictionary_version", "1.0")
+
     print(f"Phase 1: Seeding {len(default_terms)} SMRITI Business Dictionary terms...")
     for t in default_terms:
-        exists = frappe.db.exists("SMRITI Business Term", {"term_id": t["term_id"], "term_version": "1.0.0"})
-        if not exists:
+        exists_name = frappe.db.exists("SMRITI Business Term", {"term_id": t["term_id"], "term_version": t["dictionary_version"]})
+        if not exists_name:
             # Create parent term without child tables first to avoid LinkValidationErrors
             doc = frappe.get_doc({
                 "doctype": "SMRITI Business Term",
                 "term_id": t["term_id"],
                 "term_name": t["term_name"],
                 "term_category": t["term_category"],
-                "term_version": "1.0.0",
+                "term_version": t["dictionary_version"],
                 "status": "Approved",
                 "is_active": 1,
                 "effective_date": "2026-06-19",
@@ -403,18 +723,51 @@ def execute():
                 "manual_reference": t["manual_reference"],
                 "training_reference": t["training_reference"],
                 "faq": json.dumps(t["faq"]),
-                "common_mistakes": json.dumps(t["common_mistakes"])
+                "common_mistakes": json.dumps(t["common_mistakes"]),
+                "dictionary_key": t["dictionary_key"],
+                "projection_path": t["projection_path"],
+                "entity_type": t["entity_type"],
+                "data_type": t["data_type"],
+                "measure_or_dimension": t["measure_or_dimension"],
+                "is_groupable": t["is_groupable"],
+                "is_filterable": t["is_filterable"],
+                "is_reportable": t["is_reportable"],
+                "default_aggregation": t["default_aggregation"],
+                "approval_status": t["approval_status"],
+                "dictionary_version": t["dictionary_version"]
             })
             doc.insert(ignore_permissions=True)
             print(f" - [Phase 1 Seeded] Term: {t['term_id']}")
         else:
-            print(f" - [Phase 1 Exists] Term: {t['term_id']}")
+            doc = frappe.get_doc("SMRITI Business Term", exists_name)
+            doc.term_name = t["term_name"]
+            doc.term_category = t["term_category"]
+            doc.definition = t["definition"]
+            doc.hinglish_definition = t["hinglish_definition"]
+            doc.term_aliases = json.dumps(t["term_aliases"])
+            doc.manual_reference = t["manual_reference"]
+            doc.training_reference = t["training_reference"]
+            doc.faq = json.dumps(t["faq"])
+            doc.common_mistakes = json.dumps(t["common_mistakes"])
+            doc.dictionary_key = t["dictionary_key"]
+            doc.projection_path = t["projection_path"]
+            doc.entity_type = t["entity_type"]
+            doc.data_type = t["data_type"]
+            doc.measure_or_dimension = t["measure_or_dimension"]
+            doc.is_groupable = t["is_groupable"]
+            doc.is_filterable = t["is_filterable"]
+            doc.is_reportable = t["is_reportable"]
+            doc.default_aggregation = t["default_aggregation"]
+            doc.approval_status = t["approval_status"]
+            doc.dictionary_version = t["dictionary_version"]
+            doc.save(ignore_permissions=True)
+            print(f" - [Phase 1 Updated] Term: {t['term_id']}")
 
     frappe.db.commit()
 
     print("Phase 2: Updating SMRITI Business Dictionary terms relations...")
     for t in default_terms:
-        doc_name = frappe.db.get_value("SMRITI Business Term", {"term_id": t["term_id"], "term_version": "1.0.0"})
+        doc_name = frappe.db.get_value("SMRITI Business Term", {"term_id": t["term_id"], "term_version": t["dictionary_version"]})
         if doc_name:
             doc = frappe.get_doc("SMRITI Business Term", doc_name)
             
@@ -436,7 +789,9 @@ def execute():
 
             # Append related terms
             for rtid in t["related_terms"]:
-                related_doc_name = frappe.db.get_value("SMRITI Business Term", {"term_id": rtid, "term_version": "1.0.0"})
+                related_doc_name = frappe.db.get_value("SMRITI Business Term", {"term_id": rtid, "term_version": "1.0"})
+                if not related_doc_name:
+                    related_doc_name = frappe.db.get_value("SMRITI Business Term", {"term_id": rtid})
                 if related_doc_name:
                     doc.append("related_terms", {
                         "doctype": "SMRITI Related Term",

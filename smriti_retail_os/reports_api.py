@@ -1174,8 +1174,136 @@ class SMRITIReportEngine:
         ).hexdigest()
         return f"smriti:{self.report_key}:{filter_hash}"
 
+    def validate_report_dictionary_bounds(self):
+        """
+        P0 Governance Validation Rule:
+        No dynamic report may execute unless all required columns are active,
+        reportable, and approved in the SMRITI Business Dictionary.
+        Measures must have a default_aggregation defined.
+        """
+        bypassed_reports = [
+            "payment_register", "receipt_register", "cash_book", "day_book",
+            "customer_outstanding", "supplier_outstanding", "security_audit_log", "address_change_log"
+        ]
+        if self.report_key in bypassed_reports:
+            return
+
+        columns = []
+        if self.template.columns_json:
+            try:
+                columns = json.loads(self.template.columns_json)
+            except Exception:
+                columns = []
+        
+        for col in columns:
+            fieldname = col.get("fieldname")
+            if not fieldname:
+                continue
+            
+            # Fetch term from database or cache
+            term_name = frappe.db.get_value("SMRITI Business Term", {"term_id": fieldname}, "name")
+            if not term_name:
+                term_name = frappe.db.get_value("SMRITI Business Term", {"dictionary_key": fieldname}, "name")
+                
+            if not term_name:
+                frappe.throw(
+                    frappe._("Governance Violation: Report column '{0}' is not defined in the SMRITI Business Dictionary.")
+                    .format(fieldname),
+                    frappe.ValidationError
+                )
+            
+            term = frappe.get_doc("SMRITI Business Term", term_name)
+            
+            # Check approval status and reportable flag
+            if term.approval_status != "Approved":
+                frappe.throw(
+                    frappe._("Governance Violation: Business term '{0}' is not approved (Current status: {1}).")
+                    .format(fieldname, term.approval_status),
+                    frappe.ValidationError
+                )
+                
+            if term.status == "Deprecated":
+                frappe.throw(
+                    frappe._("Governance Violation: Business term '{0}' is deprecated.")
+                    .format(fieldname),
+                    frappe.ValidationError
+                )
+                
+            if not term.is_reportable:
+                frappe.throw(
+                    frappe._("Governance Violation: Business term '{0}' is marked as non-reportable.")
+                    .format(fieldname),
+                    frappe.ValidationError
+                )
+                
+            # Check Measure aggregation constraints
+            if term.measure_or_dimension == "Measure":
+                if not term.default_aggregation or term.default_aggregation == "None":
+                    frappe.throw(
+                        frappe._("Governance Violation: Measure term '{0}' must define a default aggregation type (None is not allowed).")
+                        .format(fieldname),
+                        frappe.ValidationError
+                    )
+
+    def validate_report_formula_bounds(self):
+        """
+        P0 Governance Validation Rule:
+        Any linked formula in the glossary terms must exist, be active,
+        and approved in the Formula Registry.
+        """
+        bypassed_reports = [
+            "payment_register", "receipt_register", "cash_book", "day_book",
+            "customer_outstanding", "supplier_outstanding", "security_audit_log", "address_change_log"
+        ]
+        if self.report_key in bypassed_reports:
+            return
+
+        columns = []
+        if self.template.columns_json:
+            try:
+                columns = json.loads(self.template.columns_json)
+            except Exception:
+                columns = []
+
+        for col in columns:
+            fieldname = col.get("fieldname")
+            if not fieldname:
+                continue
+            
+            term_name = frappe.db.get_value("SMRITI Business Term", {"term_id": fieldname}) or frappe.db.get_value("SMRITI Business Term", {"dictionary_key": fieldname})
+            if not term_name:
+                continue
+                
+            term = frappe.get_doc("SMRITI Business Term", term_name)
+            for f_row in term.get("related_formulas", []):
+                formula_name = f_row.formula_id
+                if not formula_name or not frappe.db.exists("SMRITI Formula Definition", formula_name):
+                    frappe.throw(
+                        frappe._("Governance Violation: Linked formula definition '{0}' on term '{1}' does not exist in the Formula Registry.")
+                        .format(formula_name, fieldname),
+                        frappe.ValidationError
+                    )
+                
+                formula = frappe.get_doc("SMRITI Formula Definition", formula_name)
+                if formula.status != "Approved":
+                    frappe.throw(
+                        frappe._("Governance Violation: Linked formula '{0}' is not approved (Current status: {1}).")
+                        .format(formula_name, formula.status),
+                        frappe.ValidationError
+                    )
+                if not formula.is_active:
+                    frappe.throw(
+                        frappe._("Governance Violation: Linked formula '{0}' is inactive.")
+                        .format(formula_name),
+                        frappe.ValidationError
+                    )
+
     def run(self):
         self.check_permissions()
+
+        # Enforce SMRITI P0 Governance validations
+        self.validate_report_dictionary_bounds()
+        self.validate_report_formula_bounds()
 
         # Check Cache
         cache_minutes = cint(self.template.cache_minutes)
@@ -1215,6 +1343,54 @@ class SMRITIReportEngine:
             frappe.db.commit()
         except Exception as e:
             frappe.log_error(f"Error logging report execution: {str(e)}")
+
+        # Log to SMRITI PSV Activity Log for Explainability & Audit
+        try:
+            ip_addr = "127.0.0.1"
+            if hasattr(frappe.local, "request_ip") and frappe.local.request_ip:
+                ip_addr = frappe.local.request_ip
+            
+            columns = []
+            if self.template.columns_json:
+                try:
+                    columns = json.loads(self.template.columns_json)
+                except Exception:
+                    columns = []
+            
+            selected_terms = [c.get("fieldname") for c in columns if c.get("fieldname")]
+            aggregations = {}
+            group_by_fields = []
+            
+            for col in columns:
+                fieldname = col.get("fieldname")
+                term_name = frappe.db.get_value("SMRITI Business Term", {"term_id": fieldname}) or frappe.db.get_value("SMRITI Business Term", {"dictionary_key": fieldname})
+                if term_name:
+                    term = frappe.get_doc("SMRITI Business Term", term_name)
+                    if term.measure_or_dimension == "Measure":
+                        aggregations[fieldname] = term.default_aggregation
+                    else:
+                        group_by_fields.append(fieldname)
+            
+            explain_log = frappe.get_doc({
+                "doctype": "SMRITI PSV Activity Log",
+                "timestamp": frappe.utils.now_datetime(),
+                "user": frappe.session.user or "Administrator",
+                "action_type": "Formula Explained",
+                "event_type": "REPORT_QUERY_EXECUTED",
+                "reference_doctype": "SMRITI Report Template",
+                "reference_name": self.report_key,
+                "ip_address": ip_addr,
+                "details": json.dumps({
+                    "dictionary_version": self.template.schema_version or "1.0",
+                    "selected_terms": selected_terms,
+                    "aggregation": aggregations,
+                    "group_by": group_by_fields
+                })
+            })
+            explain_log.insert(ignore_permissions=True)
+            frappe.db.commit()
+        except Exception as e:
+            frappe.log_error(f"Error logging report execution explain audit: {str(e)}")
 
         # Write to Cache
         if cache_minutes > 0:
@@ -1542,6 +1718,72 @@ class SMRITIReportEngine:
         base_sql = config["base_sql"]
         group_by = config.get("group_by")
         order_by = config.get("order_by")
+
+        # Safe SQL Resolver & Dynamic Auto-Aggregation
+        columns = []
+        bypassed_reports = [
+            "payment_register", "receipt_register", "cash_book", "day_book",
+            "customer_outstanding", "supplier_outstanding", "security_audit_log", "address_change_log"
+        ]
+        if self.template.columns_json and self.report_key not in bypassed_reports:
+            try:
+                columns = json.loads(self.template.columns_json)
+            except Exception:
+                columns = []
+
+        dynamic_projections = []
+        dimensions = []
+        measures = []
+        
+        alias_map = {
+            "POS Invoice Item": "items",
+            "POS Invoice": "parent",
+            "Item": "item",
+            "Bin": "b",
+            "SMRITI Party Stock Account": "psa"
+        }
+
+        for col in columns:
+            fieldname = col.get("fieldname")
+            if not fieldname:
+                continue
+            
+            term_name = frappe.db.get_value("SMRITI Business Term", {"term_id": fieldname}) or frappe.db.get_value("SMRITI Business Term", {"dictionary_key": fieldname})
+            if term_name:
+                term = frappe.get_doc("SMRITI Business Term", term_name)
+                proj = term.projection_path or ""
+                resolved_proj = proj
+                if "." in proj:
+                    parts = proj.split(".", 1)
+                    tbl, col_name = parts[0], parts[1]
+                    if tbl in alias_map:
+                        resolved_proj = f"{alias_map[tbl]}.{col_name}"
+                    else:
+                        resolved_proj = f"`tab{tbl}`.{col_name}"
+                else:
+                    resolved_proj = proj or fieldname
+                
+                if term.measure_or_dimension == "Measure":
+                    agg = term.default_aggregation or "Sum"
+                    if agg == "None":
+                        agg = "Sum"
+                    dynamic_projections.append(f"{agg}({resolved_proj}) as {fieldname}")
+                    measures.append(fieldname)
+                else:
+                    dynamic_projections.append(f"{resolved_proj} as {fieldname}")
+                    dimensions.append(resolved_proj)
+            else:
+                dynamic_projections.append(fieldname)
+
+        if dynamic_projections and "FROM" in base_sql.upper():
+            select_part = "SELECT " + ", ".join(dynamic_projections)
+            from_index = base_sql.upper().find("FROM")
+            base_sql = select_part + " " + base_sql[from_index:]
+            
+            if dimensions:
+                group_by = ", ".join(dimensions)
+            else:
+                group_by = None
 
         where_clauses = []
         params = {}
