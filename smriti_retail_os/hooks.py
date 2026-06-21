@@ -273,11 +273,13 @@ doc_events = {
         ],
         "on_submit": [
             "smriti_retail_os.cge.service.cge_service.process_invoice_submit",
-            "smriti_retail_os.sfm.service.attribution_service.process_invoice_submit"
+            "smriti_retail_os.sfm.service.attribution_service.process_invoice_submit",
+            "smriti_retail_os.clienteling.service.clienteling_service.on_pos_invoice_submit"
         ],
         "on_cancel": [
             "smriti_retail_os.cge.service.cge_service.process_invoice_cancel",
-            "smriti_retail_os.sfm.service.attribution_service.process_invoice_cancel"
+            "smriti_retail_os.sfm.service.attribution_service.process_invoice_cancel",
+            "smriti_retail_os.clienteling.service.clienteling_service.on_pos_invoice_cancel"
         ],
         "on_trash": [
             "smriti_retail_os.hooks_logic.release_reserved_budget_on_trash"
@@ -300,12 +302,14 @@ doc_events = {
         "on_submit": [
             "smriti_retail_os.psv_service.process_sales_invoice_submit",
             "smriti_retail_os.cge.service.cge_service.process_invoice_submit",
-            "smriti_retail_os.sfm.service.attribution_service.process_invoice_submit"
+            "smriti_retail_os.sfm.service.attribution_service.process_invoice_submit",
+            "smriti_retail_os.clienteling.service.clienteling_service.on_invoice_submit"
         ],
         "on_cancel": [
             "smriti_retail_os.psv_service.process_sales_invoice_cancel",
             "smriti_retail_os.cge.service.cge_service.process_invoice_cancel",
-            "smriti_retail_os.sfm.service.attribution_service.process_invoice_cancel"
+            "smriti_retail_os.sfm.service.attribution_service.process_invoice_cancel",
+            "smriti_retail_os.clienteling.service.clienteling_service.on_invoice_cancel"
         ],
         "on_trash": [
             "smriti_retail_os.hooks_logic.release_reserved_budget_on_trash"

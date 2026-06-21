@@ -66,6 +66,7 @@ const SMRITI_ROUTE_MAP = {
   "eway_bill":                        "/eway_bill",
   "analytics_dashboard":              "/analytics",
   "platform_center":                  "/platform_center",
+  "clienteling":                      "/smriti-clienteling",
 };
 
 function resolveSmritiRoute(key) {
@@ -271,6 +272,11 @@ const SMRITI_NAV = {
           label: "POS Billing",
           route: "/billing",
           standalone_route: "/billing",
+          status: "active" },
+        { id: "clienteling",
+          label: "Clienteling Studio",
+          route: "/smriti-clienteling",
+          standalone_route: "/smriti-clienteling",
           status: "active" },
         { id: "sales_orders",
           label: "Sales Orders",

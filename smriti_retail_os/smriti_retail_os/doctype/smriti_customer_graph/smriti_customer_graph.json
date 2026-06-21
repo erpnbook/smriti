@@ -1,0 +1,209 @@
+{
+ "actions": [],
+ "creation": "2026-06-22 02:30:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "customer",
+  "purchases_count",
+  "returns_count",
+  "net_revenue",
+  "wallet_balance",
+  "campaign_responses_count",
+  "attributed_revenue",
+  "owned_customer_revenue",
+  "preferred_brand",
+  "preferred_category",
+  "preferred_size",
+  "preferred_color",
+  "last_visit_date",
+  "visit_frequency_days",
+  "favorite_executive",
+  "is_dirty",
+  "dirty_source",
+  "dirty_document",
+  "graph_version",
+  "calculation_status",
+  "last_calculated_on"
+ ],
+ "fields": [
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer",
+   "reqd": 1,
+   "unique": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "purchases_count",
+   "fieldtype": "Int",
+   "label": "Total Purchases",
+   "default": "0"
+  },
+  {
+   "fieldname": "returns_count",
+   "fieldtype": "Int",
+   "label": "Total Returns",
+   "default": "0"
+  },
+  {
+   "fieldname": "net_revenue",
+   "fieldtype": "Currency",
+   "label": "Net Revenue",
+   "default": "0.0"
+  },
+  {
+   "fieldname": "wallet_balance",
+   "fieldtype": "Currency",
+   "label": "Wallet Balance",
+   "default": "0.0"
+  },
+  {
+   "fieldname": "campaign_responses_count",
+   "fieldtype": "Int",
+   "label": "Campaign Responses",
+   "default": "0"
+  },
+  {
+   "fieldname": "attributed_revenue",
+   "fieldtype": "Currency",
+   "label": "Attributed Revenue",
+   "default": "0.0"
+  },
+  {
+   "fieldname": "owned_customer_revenue",
+   "fieldtype": "Currency",
+   "label": "Owned Customer Revenue",
+   "default": "0.0"
+  },
+  {
+   "fieldname": "preferred_brand",
+   "fieldtype": "Link",
+   "label": "Preferred Brand",
+   "options": "Brand"
+  },
+  {
+   "fieldname": "preferred_category",
+   "fieldtype": "Link",
+   "label": "Preferred Category",
+   "options": "Item Group"
+  },
+  {
+   "fieldname": "preferred_size",
+   "fieldtype": "Data",
+   "label": "Preferred Size"
+  },
+  {
+   "fieldname": "preferred_color",
+   "fieldtype": "Data",
+   "label": "Preferred Color"
+  },
+  {
+   "fieldname": "last_visit_date",
+   "fieldtype": "Date",
+   "label": "Last Visit Date"
+  },
+  {
+   "fieldname": "visit_frequency_days",
+   "fieldtype": "Float",
+   "label": "Visit Frequency (Days)",
+   "default": "0.0"
+  },
+  {
+   "fieldname": "favorite_executive",
+   "fieldtype": "Link",
+   "label": "Favorite Executive",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "is_dirty",
+   "fieldtype": "Check",
+   "label": "Is Dirty",
+   "default": "0"
+  },
+  {
+   "fieldname": "dirty_source",
+   "fieldtype": "Data",
+   "label": "Dirty Source"
+  },
+  {
+   "fieldname": "dirty_document",
+   "fieldtype": "Data",
+   "label": "Dirty Document"
+  },
+  {
+   "fieldname": "graph_version",
+   "fieldtype": "Data",
+   "label": "Graph Version",
+   "default": "v1",
+   "reqd": 1
+  },
+  {
+   "fieldname": "calculation_status",
+   "fieldtype": "Select",
+   "label": "Calculation Status",
+   "options": "Pending\nProcessing\nCompleted\nFailed",
+   "default": "Pending",
+   "reqd": 1
+  },
+  {
+   "fieldname": "last_calculated_on",
+   "fieldtype": "Datetime",
+   "label": "Last Calculated On"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-06-22 02:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Customer Graph",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Store Manager",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "last_calculated_on",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "custom": 0
+}

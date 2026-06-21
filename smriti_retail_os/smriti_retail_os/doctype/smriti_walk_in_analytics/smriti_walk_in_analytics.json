@@ -1,0 +1,120 @@
+{
+ "actions": [],
+ "creation": "2026-06-22 02:30:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "date",
+  "store",
+  "total_walk_ins",
+  "total_conversions",
+  "conversion_rate",
+  "total_revenue",
+  "avg_engagement_minutes"
+ ],
+ "fields": [
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "label": "Store",
+   "options": "Warehouse",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "total_walk_ins",
+   "fieldtype": "Int",
+   "label": "Total Walk-Ins",
+   "default": "0",
+   "reqd": 1
+  },
+  {
+   "fieldname": "total_conversions",
+   "fieldtype": "Int",
+   "label": "Conversions",
+   "default": "0",
+   "reqd": 1
+  },
+  {
+   "fieldname": "conversion_rate",
+   "fieldtype": "Percent",
+   "label": "Conversion Rate",
+   "default": "0.0",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "total_revenue",
+   "fieldtype": "Currency",
+   "label": "Total Revenue",
+   "default": "0.0",
+   "reqd": 1
+  },
+  {
+   "fieldname": "avg_engagement_minutes",
+   "fieldtype": "Float",
+   "label": "Avg Engagement (Minutes)",
+   "default": "0.0",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-06-22 02:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Walk In Analytics",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Store Manager",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "date",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "custom": 0
+}
