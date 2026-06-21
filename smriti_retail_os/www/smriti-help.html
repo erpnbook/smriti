@@ -477,6 +477,82 @@
             overflow: hidden;
         }
 
+        /* ----------------------------------------------------------------
+           Dictionary Term Link + Hover Tooltip
+           Applied to <a href="dictionary:TERM_ID"> anchors inside manual.
+           ---------------------------------------------------------------- */
+        a.dict-term-link {
+            color: var(--primary-navy);
+            text-decoration: none;
+            border-bottom: 1.5px dashed var(--primary-blue);
+            font-weight: 600;
+            position: relative;
+            cursor: pointer;
+            transition: color 0.15s, border-color 0.15s;
+        }
+
+        a.dict-term-link:hover {
+            color: var(--primary-blue);
+            border-bottom-style: solid;
+        }
+
+        /* Floating tooltip card */
+        #dict-hover-tooltip {
+            position: fixed;
+            z-index: 9999;
+            max-width: 300px;
+            background: #FFFFFF;
+            border: 1px solid var(--border-glass);
+            border-radius: 10px;
+            padding: 12px 14px;
+            box-shadow: 0 8px 32px rgba(26, 43, 92, 0.14), 0 2px 8px rgba(0,0,0,0.06);
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.18s ease, transform 0.18s ease;
+        }
+
+        #dict-hover-tooltip.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .dtt-id {
+            font-family: monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 2px;
+            letter-spacing: 0.04em;
+        }
+
+        .dtt-name {
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--primary-navy);
+            margin-bottom: 6px;
+        }
+
+        .dtt-def {
+            font-size: 12px;
+            color: var(--text-main);
+            line-height: 1.55;
+            margin-bottom: 6px;
+        }
+
+        .dtt-footer {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .dtt-footer span.material-symbols-outlined {
+            font-size: 13px;
+            color: var(--primary-blue);
+        }
+
         /* Sliding Detail Drawer */
         .drawer-overlay {
             position: fixed;
@@ -968,6 +1044,17 @@
         </div>
     </div>
 
+    <!-- Dictionary Term Hover Tooltip -->
+    <div id="dict-hover-tooltip" role="tooltip" aria-live="polite">
+        <div class="dtt-id" id="dtt-id"></div>
+        <div class="dtt-name" id="dtt-name"></div>
+        <div class="dtt-def" id="dtt-def"></div>
+        <div class="dtt-footer">
+            <span class="material-symbols-outlined">touch_app</span>
+            Click to open full definition
+        </div>
+    </div>
+
     <script>
         const CSRF_TOKEN = '{{ csrf_token }}';
         
@@ -1008,7 +1095,7 @@
                 loadManualVolume('volume_1_daily_operations');
             }
 
-            // Intercept formula links inside manual viewport
+            // Intercept formula: and dictionary: links inside manual viewport
             const manualContainer = document.getElementById('manual-content-container');
             if (manualContainer) {
                 manualContainer.addEventListener('click', function(e) {
@@ -1019,14 +1106,37 @@
                             e.preventDefault();
                             const formulaId = href.substring(8); // Extract after 'formula:'
                             window.dispatchEvent(new CustomEvent('smriti:formula-open', { detail: { formulaId } }));
+                        } else if (href.startsWith('dictionary:')) {
+                            e.preventDefault();
+                            const termId = href.substring(11); // Extract after 'dictionary:'
+                            hideDictTooltip();
+                            window.dispatchEvent(new CustomEvent('smriti:term-open', { detail: { termId } }));
                         }
                     }
+                });
+
+                // Hover tooltip for dictionary: links
+                manualContainer.addEventListener('mouseover', function(e) {
+                    const anchor = e.target.closest('a[href^="dictionary:"]');
+                    if (anchor) showDictTooltip(anchor);
+                });
+                manualContainer.addEventListener('mouseout', function(e) {
+                    const anchor = e.target.closest('a[href^="dictionary:"]');
+                    if (anchor) hideDictTooltip();
+                });
+                manualContainer.addEventListener('mousemove', function(e) {
+                    positionDictTooltip(e);
                 });
             }
 
             // Decoupled listener for opening formulas
             window.addEventListener('smriti:formula-open', function(e) {
                 openFormulaInDrawer(e.detail.formulaId);
+            });
+
+            // Decoupled listener for opening dictionary terms
+            window.addEventListener('smriti:term-open', function(e) {
+                openTermInDrawer(e.detail.termId);
             });
 
             // Debounced Search Keyup Event
@@ -1323,44 +1433,76 @@
         }
 
         // Wikipedia-style Knowledge Graph Drawer Controls
-        function openTermInDrawer(termId) {
-            const term = allTerms.find(t => t.term_id === termId);
-            if (!term) return;
+        async function openTermInDrawer(termId) {
+            // 1. Try cache first
+            let term = allTerms.find(t => t.term_id === termId);
+
+            if (!term) {
+                // 2. Cache miss — dynamic fetch from dictionary API
+                const detail = await api('smriti_retail_os.api.dictionary_api.get_term_detail', { term_id: termId });
+                if (!detail) {
+                    frappe.show_alert({ message: `Term "${termId}" not found or not yet approved.`, indicator: 'orange' });
+                    return;
+                }
+                // Normalize API payload to match allTerms shape
+                term = {
+                    term_id: detail.term_id,
+                    term_name: detail.term_name,
+                    term_category: detail.term_category,
+                    term_version: detail.term_version,
+                    definition: detail.definition,
+                    hinglish_definition: detail.hinglish_definition,
+                    manual_reference: detail.manual_reference,
+                    training_reference: detail.training_reference,
+                    faq: Array.isArray(detail.faq) ? detail.faq : [],
+                    common_mistakes: Array.isArray(detail.common_mistakes) ? detail.common_mistakes : [],
+                    related_formulas: Array.isArray(detail.related_formulas) ? detail.related_formulas : [],
+                    related_terms: Array.isArray(detail.related_terms) ? detail.related_terms : []
+                };
+            }
 
             window.history.pushState(null, '', `?term=${termId}`);
 
             document.getElementById('drawer-title').textContent = term.term_name;
-            
+
             // Build related term badges
             let relTermsHtml = '';
-            term.related_terms.forEach(tId => {
+            (term.related_terms || []).forEach(tId => {
                 relTermsHtml += `<span class="relation-badge" onclick="openTermInDrawer('${tId}')"><span class="material-symbols-outlined" style="font-size:12px;">menu_book</span> ${tId}</span>`;
             });
 
             // Build related formula badges
             let relFormulasHtml = '';
-            term.related_formulas.forEach(fId => {
+            (term.related_formulas || []).forEach(fId => {
                 relFormulasHtml += `<span class="relation-badge relation-badge-formula" onclick="window.dispatchEvent(new CustomEvent('smriti:formula-open', { detail: { formulaId: '${fId}' } }))"><span class="material-symbols-outlined" style="font-size:12px;">calculate</span> ${fId}</span>`;
             });
 
-            // Build FAQ list
+            // Build FAQ list — normalize { q, a } OR { question, answer }
             let faqHtml = '';
-            term.faq.forEach(f => {
+            (term.faq || []).forEach(f => {
+                if (!f) return;
+                const question = f.question || f.q || '';
+                const answer   = f.answer   || f.a || '';
+                if (!question) return;
                 faqHtml += `
                     <div style="margin-bottom:10px; background:#F8FAFC; padding:10px; border-radius:6px; border:1px solid var(--border-glass);">
-                        <strong style="font-size:13px; color:var(--primary-navy);">${f.question}</strong>
-                        <p style="font-size:13px; color:var(--text-main); margin-top:4px;">${f.answer}</p>
+                        <strong style="font-size:13px; color:var(--primary-navy);">${question}</strong>
+                        <p style="font-size:13px; color:var(--text-main); margin-top:4px;">${answer}</p>
                     </div>
                 `;
             });
 
-            // Build Common Mistakes list
+            // Build Common Mistakes — normalize { mistake, a } OR plain string
             let mistakesHtml = '';
-            term.common_mistakes.forEach(m => {
+            (term.common_mistakes || []).forEach(m => {
+                if (!m) return;
+                const mistakeText = (typeof m === 'object') ? (m.mistake || m.error || '') : String(m);
+                const correctionText = (typeof m === 'object') ? (m.a || m.answer || m.correction || '') : '';
+                if (!mistakeText) return;
                 mistakesHtml += `
                     <div style="margin-bottom:8px; color:var(--accent-red); font-size:13px; display:flex; align-items:start; gap:4px;">
                         <span class="material-symbols-outlined" style="font-size:16px; margin-top:2px;">error_outline</span>
-                        <span>${m}</span>
+                        <span><strong>${mistakeText}</strong>${correctionText ? ` — ${correctionText}` : ''}</span>
                     </div>
                 `;
             });
@@ -1378,7 +1520,7 @@
 
                 <div class="detail-section">
                     <div class="detail-section-title">Hinglish Explanation (Native)</div>
-                    <div class="detail-text-hinglish">${term.hinglish_definition}</div>
+                    <div class="detail-text-hinglish">${term.hinglish_definition || ''}</div>
                 </div>
 
                 ${mistakesHtml ? `
@@ -1416,6 +1558,52 @@
 
             document.getElementById('drawer-body').innerHTML = bodyHtml;
             document.getElementById('detail-drawer').classList.add('active');
+        }
+
+        // -----------------------------------------------------------------
+        // Dictionary Hover Tooltip Helpers
+        // -----------------------------------------------------------------
+        function showDictTooltip(anchorEl) {
+            const href = anchorEl.getAttribute('href') || '';
+            if (!href.startsWith('dictionary:')) return;
+            const termId = href.substring(11);
+
+            // Lookup in local cache only — no network call for hover
+            const term = allTerms.find(t => t.term_id === termId);
+            if (!term) return;
+
+            const tooltip = document.getElementById('dict-hover-tooltip');
+            document.getElementById('dtt-id').textContent   = term.term_id;
+            document.getElementById('dtt-name').textContent = term.term_name;
+            // Truncate definition at 120 chars for brevity
+            const def = term.definition || '';
+            document.getElementById('dtt-def').textContent  = def.length > 120 ? def.substring(0, 117) + '…' : def;
+
+            tooltip.classList.add('visible');
+        }
+
+        function hideDictTooltip() {
+            document.getElementById('dict-hover-tooltip').classList.remove('visible');
+        }
+
+        function positionDictTooltip(mouseEvent) {
+            const tooltip = document.getElementById('dict-hover-tooltip');
+            if (!tooltip.classList.contains('visible')) return;
+            const margin = 14;
+            let x = mouseEvent.clientX + margin;
+            let y = mouseEvent.clientY + margin;
+            // Prevent right overflow
+            const tw = tooltip.offsetWidth || 300;
+            if (x + tw > window.innerWidth - 8) {
+                x = mouseEvent.clientX - tw - margin;
+            }
+            // Prevent bottom overflow
+            const th = tooltip.offsetHeight || 120;
+            if (y + th > window.innerHeight - 8) {
+                y = mouseEvent.clientY - th - margin;
+            }
+            tooltip.style.left = x + 'px';
+            tooltip.style.top  = y + 'px';
         }
 
         async function openFormulaInDrawer(formulaId) {

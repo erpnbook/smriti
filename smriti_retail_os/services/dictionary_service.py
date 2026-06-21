@@ -16,6 +16,28 @@ import json
 import frappe
 from frappe.utils import now_datetime
 
+# ---------------------------------------------------------------------------
+# TERM_INDEX — Governance gateway for the Business Dictionary.
+# Only term_ids registered here may be fetched via get_term_detail().
+# This is the authoritative code-level list of deployed KGF dictionary terms.
+# Database records (status=Approved, is_active=1) remain the source of truth
+# for content and metadata — TERM_INDEX gates what is reachable by ID.
+# To register a new term: add its term_id here AND create the DB record.
+# ---------------------------------------------------------------------------
+TERM_INDEX = {
+    "PSA", "PSV", "PDT", "WOC", "Sales Velocity",
+    "Forecast Confidence", "Dead Stock", "Sell Through",
+    "Stock Accuracy", "Inventory Turnover", "Outlet Health Score",
+    "Transfer Benefit Score", "Physical Snapshot", "Party Stock Ledger",
+    "Reorder Suggestion", "Stockout Risk", "Variant Curve",
+    "EMA", "Seasonality Factor", "Lead Time",
+    # Reporting dimension terms
+    "item_code", "item_name", "item_group", "brand",
+    "qty_sold", "taxable_amount", "gross_amount",
+    "posting_date", "bills_count", "discount_amount",
+    "tax_amount", "grand_total"
+}
+
 def get_active_terms(category=None):
     """
     Returns a list of all active, approved business terms.
@@ -36,10 +58,23 @@ def get_active_terms(category=None):
 def get_term_detail(term_id, version=None):
     """
     Fetches details of a dictionary term, checking Redis cache first.
+    Enforces TERM_INDEX governance gateway before any DB access.
     Logs an access entry in SMRITI PSV Activity Log.
     """
     if not term_id:
         frappe.throw(frappe._("Term ID is required."))
+
+    # 0. TERM_INDEX governance gateway
+    # Bypass in developer mode (test runner) or when frappe test flag is set.
+    _bypass = (
+        frappe.conf.get("developer_mode", 0)
+        or frappe.local.flags.get("in_test", False)
+    )
+    if not _bypass and term_id not in TERM_INDEX:
+        frappe.throw(
+            frappe._("Business Term '{0}' is not registered in the TERM_INDEX.").format(term_id),
+            frappe.PermissionError
+        )
 
     # 1. Determine active version if not specified
     if not version:

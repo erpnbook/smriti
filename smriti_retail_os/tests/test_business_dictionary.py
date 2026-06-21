@@ -18,6 +18,16 @@ import frappe
 from smriti_retail_os.services.dictionary_service import get_active_terms, get_term_detail
 
 class TestBusinessDictionary(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Seed default SMRITI Business terms once for all tests to speed up execution
+        from smriti_retail_os.patches.seed_default_terms import execute as seed_terms
+        # Clean all Business Terms first to ensure clean default state
+        frappe.db.delete("SMRITI Business Term")
+        frappe.db.commit()
+        seed_terms()
+        frappe.db.commit()
+
     def setUp(self):
         # Clean up test terms to avoid collision
         frappe.db.delete("SMRITI Business Term", {"term_id": "TST-BD-001"})
@@ -81,6 +91,13 @@ class TestBusinessDictionary(unittest.TestCase):
         frappe.cache().delete_value(cache_key)
 
     def tearDown(self):
+        # Roll back any open transaction from the test (e.g. seeding) before
+        # performing cleanup deletes. This releases intention locks held by
+        # seed_default_terms() which otherwise cause 1205 lock wait timeout.
+        try:
+            frappe.db.rollback()
+        except Exception:
+            pass
         frappe.db.delete("SMRITI Business Term", {"term_id": "TST-BD-001"})
         frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": "TST-BD-001"})
         frappe.db.commit()
@@ -158,10 +175,6 @@ class TestBusinessDictionary(unittest.TestCase):
         self.assertIn("Version: 1.0.0", logs[0]["details"])
 
     def test_seeded_terms(self):
-        # Run seeding manually to ensure they exist
-        from smriti_retail_os.patches.seed_default_terms import execute as seed_terms
-        seed_terms()
-
         # Check a few core seeded terms
         core_terms = ["PSA", "PSV", "PDT", "WOC", "Dead Stock", "Variant Curve"]
         for tid in core_terms:
@@ -174,3 +187,64 @@ class TestBusinessDictionary(unittest.TestCase):
         pdt_detail = get_term_detail("PDT")
         self.assertIn("FRC-001", pdt_detail["related_formulas"])
         self.assertIn("WOC", pdt_detail["related_terms"])
+
+    def test_term_index_integrity(self):
+        """
+        All term_ids registered in TERM_INDEX must exist in the database
+        as Approved + Active business terms (or as reporting dimension terms
+        which may be stored with is_active=1 but without the KGF full profile).
+        At minimum, each TERM_INDEX member must have a database record.
+        """
+        from smriti_retail_os.services.dictionary_service import TERM_INDEX
+
+        missing = []
+        for tid in TERM_INDEX:
+            exists = frappe.db.exists("SMRITI Business Term", {"term_id": tid})
+            if not exists:
+                missing.append(tid)
+
+        self.assertEqual(
+            missing, [],
+            f"TERM_INDEX members missing from DB: {missing}"
+        )
+
+    def test_term_index_gateway(self):
+        """
+        get_term_detail() must raise PermissionError (via frappe.throw) for
+        term_ids not registered in TERM_INDEX, when not in test context.
+        """
+        # Ensure we are NOT in frappe test flag bypass (simulate production)
+        original_flag = frappe.local.flags.get("in_test", False)
+        frappe.local.flags["in_test"] = False
+
+        try:
+            with self.assertRaises(Exception) as ctx:
+                get_term_detail("UNKNOWN-GATEWAY-TERM-XYZ")
+            # frappe.throw raises frappe.exceptions.ValidationError or PermissionError
+            # Accept any frappe exception that contains the gateway message
+            self.assertIn("TERM_INDEX", str(ctx.exception))
+        finally:
+            frappe.local.flags["in_test"] = original_flag
+
+    def test_dynamic_term_fetch_payload(self):
+        """
+        get_term_detail() must return a payload with normalized list fields.
+        Uses 'PSV' — a real TERM_INDEX member seeded in DB — so no gateway
+        bypass or flag manipulation is needed.
+        faq, common_mistakes, related_formulas, related_terms must be lists.
+        """
+
+        payload = get_term_detail("PSV")
+
+        self.assertIsInstance(payload["faq"], list,
+            "faq field must be a list")
+        self.assertIsInstance(payload["common_mistakes"], list,
+            "common_mistakes field must be a list")
+        self.assertIsInstance(payload["related_formulas"], list,
+            "related_formulas field must be a list")
+        self.assertIsInstance(payload["related_terms"], list,
+            "related_terms field must be a list")
+
+        # PSV must have a definition
+        self.assertTrue(payload.get("definition"), "PSV definition must not be empty")
+        self.assertEqual(payload["term_id"], "PSV")
