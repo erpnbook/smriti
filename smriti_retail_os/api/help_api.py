@@ -903,6 +903,47 @@ HELP_CENTER_REGISTRY = {
                 "answer": _("When importing a Purchase Receipt or PO, the expansion modal allows you to choose 'Select All', 'Only Missing Labels', or 'Only New SKUs' to optimize print volume.")
             }
         ]
+    },
+    "barcode_telemetry": {
+        "title": _("Barcode Scan Telemetry Framework"),
+        "category": "Operations Guides",
+        "description": _("Real-time scan event tracking, daily aggregations, and the Scan Reliability Score (SRS)."),
+        "about": _("Detailed guide for SMRITI Barcode Scan Telemetry (ACP-BARCODE-002A) covering event types, retention rules, and formula transparency."),
+        "author": {
+            "name": "Jawahar R. Mallah",
+            "title": _("Founder & Chief Architect, AITDL"),
+            "quote": _("Explainable telemetry turns checkout noise into actionable print-quality intelligence.")
+        },
+        "content": _(
+            "SMRITI Retail OS features the Barcode Scan Telemetry Collection Framework (ACP-BARCODE-002A) to monitor and optimize physical scanning reliability.\n\n"
+            "1. Seeded Governance Event Definitions\n"
+            "Scanning events are automatically classified into three standard event codes to avoid magic numbers:\n"
+            "- SCAN-EVT-001 (Success): Scanned and decoded successfully on the very first try.\n"
+            "- SCAN-EVT-002 (Retry): Scanned successfully but required multiple attempts (retry scanning).\n"
+            "- SCAN-EVT-003 (Failure): Failed to decode or bypassed by manually typing the barcode digits.\n\n"
+            "2. Raw Event Logging and Immutability\n"
+            "Cashier scan attempts are logged to SMRITI Barcode Scan Event records. Each record includes scan attempts, barcode family, scanner type, and a unique UUID to filter network retries. Once inserted, events are strictly read-only and immutable; saving or editing existing events throws a validation error.\n\n"
+            "3. Scan Reliability Score (SRS)\n"
+            "The system evaluates physical scan usability using the KGF-registered formula (SMRITI-SCAN-REL-01):\n"
+            "SRS = ((FirstPassSuccesses + 0.5 * RetrySuccesses) / TotalScans) * 100\n"
+            "Scores below 85% trigger store alerts recommending layout revision or printhead cleaning.\n\n"
+            "4. Retention Policy\n"
+            "Raw logs are kept for 90 days and pruned daily by delete_expired_scan_events. Aggregated Telemetry Snapshots are saved permanently for performance trends and training."
+        ),
+        "faqs": [
+            {
+                "question": _("What roles are allowed to submit barcode scan telemetry?"),
+                "answer": _("Only logged-in, authenticated sessions matching POS Cashier, POS User, Store Manager, or System Manager roles can log scan events.")
+            },
+            {
+                "question": _("Are raw barcode scan events backed up?"),
+                "answer": _("Yes. Raw telemetry is included in regular backups for audit and forensics. However, live tables are kept light by pruning logs older than 90 days.")
+            },
+            {
+                "question": _("When are scan snapshots computed?"),
+                "answer": _("Aggregations run daily at 03:00 AM local time via background scheduler to prevent database locks during store hours.")
+            }
+        ]
     }
 }
 
