@@ -2173,10 +2173,65 @@ def enforce_barcode_scan_event_immutability(doc, method=None):
 
 
 @frappe.whitelist()
+def get_barcode_feature_flags():
+    """
+    Returns SMRITI Barcode telemetry and learning feature flags.
+    If the settings DocType is missing, returns all False (fail-safe principle).
+    Uses caching (TTL = 3600) for performance.
+    """
+    cache_key = "smriti:barcode_feature_flags"
+    try:
+        cached = frappe.cache().get_value(cache_key)
+        if cached is not None:
+            return cached
+    except Exception:
+        pass
+
+    flags = {
+        "capture": False,
+        "aggregation": False,
+        "learning": False
+    }
+
+    try:
+        if frappe.db.exists("DocType", "SMRITI Barcode Settings") and frappe.db.exists("SMRITI Barcode Settings", "SMRITI Barcode Settings"):
+            capture = frappe.db.get_single_value("SMRITI Barcode Settings", "barcode_telemetry_capture_enabled")
+            aggregation = frappe.db.get_single_value("SMRITI Barcode Settings", "barcode_telemetry_aggregation_enabled")
+            learning = frappe.db.get_single_value("SMRITI Barcode Settings", "barcode_learning_enabled")
+            
+            flags["capture"] = bool(cint(capture)) if capture is not None else False
+            flags["aggregation"] = bool(cint(aggregation)) if aggregation is not None else False
+            flags["learning"] = bool(cint(learning)) if learning is not None else False
+    except Exception:
+        pass
+
+    try:
+        frappe.cache().set_value(cache_key, flags, expires_in_sec=3600)
+    except Exception:
+        pass
+
+    return flags
+
+
+def clear_barcode_feature_flags_cache(doc=None, method=None):
+    """Clears cached SMRITI Barcode feature flags."""
+    try:
+        frappe.cache().delete_value("smriti:barcode_feature_flags")
+    except Exception:
+        pass
+
+
+@frappe.whitelist()
 def log_barcode_scan_event(event_uuid, template_id, barcode_family, printer_profile, scan_method, scan_attempts, scan_success, first_pass_success, store_id=None, pos_invoice=None, pos_invoice_item=None):
     """
     Logs a barcode scan telemetry event. Restricted to users with System Manager, SMRITI POS User, or POS User roles.
+    Checks barcode_telemetry_capture_enabled feature flag before logging.
     """
+    # Check feature flags first
+    flags = get_barcode_feature_flags()
+    if not flags.get("capture"):
+        return {"status": "disabled", "message": "Barcode telemetry capture is disabled"}
+
     # 1. Access/Role Verification
     roles = frappe.get_roles(frappe.session.user)
     authorized_roles = {"System Manager", "SMRITI POS User", "POS User", "SMRITI Store Manager", "SMRITI Cashier"}
@@ -2229,6 +2284,7 @@ def log_barcode_scan_event(event_uuid, template_id, barcode_family, printer_prof
     return doc
 
 
+
 def delete_expired_scan_events():
     """
     Scheduler task to prune raw telemetry events older than 90 days.
@@ -2261,8 +2317,15 @@ def aggregate_scan_telemetry(period="Daily", target_date=None):
     """
     Aggregates raw scan events and calculates Scan Reliability Scores.
     Default period is Daily, aggregating the previous calendar day.
+    Checks barcode_telemetry_aggregation_enabled feature flag.
     """
+    flags = get_barcode_feature_flags()
+    if not flags.get("aggregation"):
+        print("[SMRITI Telemetry] Aggregation is disabled in SMRITI Barcode Settings.")
+        return
+
     from frappe.utils import add_days, getdate, flt
+
     
     if not target_date:
         target_date = add_days(getdate(), -1)

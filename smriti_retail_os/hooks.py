@@ -357,6 +357,9 @@ doc_events = {
     },
     "SMRITI Barcode Scan Event": {
         "before_save": "smriti_retail_os.barcode_api.enforce_barcode_scan_event_immutability"
+    },
+    "SMRITI Barcode Settings": {
+        "on_update": "smriti_retail_os.barcode_api.clear_barcode_feature_flags_cache"
     }
 }
 

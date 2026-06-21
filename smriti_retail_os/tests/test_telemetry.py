@@ -15,7 +15,9 @@ from frappe.utils import add_days, getdate, now_datetime
 from smriti_retail_os.barcode_api import (
     log_barcode_scan_event,
     delete_expired_scan_events,
-    aggregate_scan_telemetry
+    aggregate_scan_telemetry,
+    get_barcode_feature_flags,
+    clear_barcode_feature_flags_cache
 )
 
 class TestTelemetry(unittest.TestCase):
@@ -25,6 +27,14 @@ class TestTelemetry(unittest.TestCase):
         from smriti_retail_os.patches.seed_telemetry_meta import execute as seed_telemetry
         seed_telemetry()
         
+        # Ensure SMRITI Barcode Settings exists and enable flags for baseline tests
+        from smriti_retail_os.setup import create_smriti_barcode_settings_doctype
+        create_smriti_barcode_settings_doctype()
+        frappe.db.set_single_value("SMRITI Barcode Settings", "barcode_telemetry_capture_enabled", 1)
+        frappe.db.set_single_value("SMRITI Barcode Settings", "barcode_telemetry_aggregation_enabled", 1)
+        frappe.db.set_single_value("SMRITI Barcode Settings", "barcode_learning_enabled", 1)
+        clear_barcode_feature_flags_cache()
+
         # Ensure default warehouse exists
         w_name = frappe.db.get_value("Warehouse", {"warehouse_name": "Test Warehouse - SCN"}, "name")
         if not w_name:
@@ -38,6 +48,7 @@ class TestTelemetry(unittest.TestCase):
             frappe.db.commit()
             w_name = w.name
         self.warehouse = w_name
+
             
         # Create a mock Print Template if not exists
         if not frappe.db.exists("SMRITI Print Template", "Test Telemetry Template"):
@@ -297,3 +308,72 @@ class TestTelemetry(unittest.TestCase):
         # Assert old one deleted, new one exists
         self.assertFalse(frappe.db.exists("SMRITI Barcode Scan Event", old_doc.name))
         self.assertTrue(frappe.db.exists("SMRITI Barcode Scan Event", new_doc.name))
+
+    def test_log_scan_event_disabled(self):
+        """Verifies that scan event logging is bypassed when capture is disabled."""
+        frappe.db.set_single_value("SMRITI Barcode Settings", "barcode_telemetry_capture_enabled", 0)
+        clear_barcode_feature_flags_cache()
+
+        res = log_barcode_scan_event(
+            event_uuid="uuid-disabled-1",
+            template_id="Test Telemetry Template",
+            barcode_family="Code128",
+            printer_profile="Zebra 203 DPI",
+            scan_method="Handheld Laser",
+            scan_attempts=1,
+            scan_success=1,
+            first_pass_success=1,
+            store_id=self.warehouse
+        )
+        self.assertIsInstance(res, dict)
+        self.assertEqual(res.get("status"), "disabled")
+        self.assertFalse(frappe.db.exists("SMRITI Barcode Scan Event", {"event_uuid": "uuid-disabled-1"}))
+
+    def test_aggregation_disabled(self):
+        """Verifies that daily telemetry aggregation is skipped when disabled."""
+        frappe.db.set_single_value("SMRITI Barcode Settings", "barcode_telemetry_aggregation_enabled", 0)
+        clear_barcode_feature_flags_cache()
+
+        yesterday = add_days(getdate(), -1)
+        # Ensure a raw event exists (manually inserted bypassing log API or with it enabled)
+        frappe.db.set_single_value("SMRITI Barcode Settings", "barcode_telemetry_capture_enabled", 1)
+        clear_barcode_feature_flags_cache()
+        log_barcode_scan_event(
+            event_uuid="uuid-agg-dis-1",
+            template_id="Test Telemetry Template",
+            barcode_family="Code128",
+            printer_profile="Zebra 203 DPI",
+            scan_method="Handheld Laser",
+            scan_attempts=1,
+            scan_success=1,
+            first_pass_success=1,
+            store_id=self.warehouse
+        )
+        # Bypassing raw event save constraints for timestamp modification
+        frappe.db.set_value("SMRITI Barcode Scan Event", {"event_uuid": "uuid-agg-dis-1"}, "timestamp", yesterday)
+        frappe.db.commit()
+
+        # Turn aggregation back to disabled
+        frappe.db.set_single_value("SMRITI Barcode Settings", "barcode_telemetry_aggregation_enabled", 0)
+        clear_barcode_feature_flags_cache()
+
+        aggregate_scan_telemetry(period="Daily", target_date=yesterday)
+
+        # Verify no snapshot was created
+        snapshots = frappe.get_all(
+            "SMRITI Barcode Telemetry Snapshot",
+            filters={"snapshot_date": yesterday}
+        )
+        self.assertEqual(len(snapshots), 0)
+
+    def test_missing_settings_failsafe(self):
+        """Verifies fail-safe principle: when settings doc is deleted, all flags default to False."""
+        frappe.db.delete("Singles", {"doctype": "SMRITI Barcode Settings"})
+        frappe.db.commit()
+        clear_barcode_feature_flags_cache()
+
+        flags = get_barcode_feature_flags()
+        self.assertFalse(flags.get("capture"))
+        self.assertFalse(flags.get("aggregation"))
+        self.assertFalse(flags.get("learning"))
+
