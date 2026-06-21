@@ -312,3 +312,73 @@ class TestKnowledgeCenter(unittest.TestCase):
         # Reset user back to Administrator
         frappe.set_user('Administrator')
 
+    def test_formula_visibility_permissions(self):
+        from smriti_retail_os.services.formula_service import get_formula_detail
+
+        # Create approved test formula
+        f_approved = frappe.get_doc({
+            "doctype": "SMRITI Formula Definition",
+            "formula_id": "TST-F-001",
+            "formula_name": "Test Approved Formula",
+            "formula_version": "1.0.0",
+            "formula_category": "Inventory",
+            "status": "Approved",
+            "is_active": 1,
+            "effective_date": "2026-06-19",
+            "formula_expression": "a + b",
+        })
+        f_approved.insert(ignore_permissions=True)
+
+        # Create draft test formula
+        f_draft = frappe.get_doc({
+            "doctype": "SMRITI Formula Definition",
+            "formula_id": "TST-F-002",
+            "formula_name": "Test Draft Formula",
+            "formula_version": "1.0.0",
+            "formula_category": "Inventory",
+            "status": "Draft",
+            "is_active": 0,
+            "effective_date": "2026-06-19",
+            "formula_expression": "x + y",
+        })
+        f_draft.insert(ignore_permissions=True)
+        frappe.db.commit()
+
+        # 1. System Manager role can view both
+        frappe.set_user('Administrator')
+        doc1 = get_formula_detail("TST-F-001")
+        doc2 = get_formula_detail("TST-F-002")
+        self.assertEqual(doc1.formula_id, "TST-F-001")
+        self.assertEqual(doc2.formula_id, "TST-F-002")
+
+        # 2. Store Manager / Cashier cannot view draft formula
+        frappe.set_user('cashier@smriti.com')
+        # Can view approved
+        doc_app = get_formula_detail("TST-F-001")
+        self.assertEqual(doc_app.formula_id, "TST-F-001")
+
+        # Cannot view draft
+        with self.assertRaises(frappe.PermissionError):
+            get_formula_detail("TST-F-002")
+
+        # Cannot view unregistered non-existent formula
+        with self.assertRaises(frappe.PermissionError):
+            get_formula_detail("NON-EXISTENT")
+
+        # Reset user
+        frappe.set_user('Administrator')
+
+    def test_formula_link_interception(self):
+        from smriti_retail_os.api.help_api import get_manual_html
+        
+        frappe.set_user('Administrator')
+        html_content = get_manual_html("volume_2_manager_guide")
+        
+        # Verify that the manual HTML compiles with the explicit formula: URI scheme
+        self.assertIn('href="formula:INV-002"', html_content)
+        self.assertIn('href="formula:INV-003"', html_content)
+        self.assertIn('href="formula:INV-001"', html_content)
+        self.assertIn('href="formula:INV-004"', html_content)
+        self.assertIn('href="formula:TRF-001"', html_content)
+
+

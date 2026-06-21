@@ -1187,7 +1187,7 @@ def get_manual_html(volume_name=None):
     Enforces role-based visibility restrictions via the DOCUMENT_REGISTRY.
     """
     import os
-    from frappe.utils import markdown
+    from frappe.utils import md_to_html
     
     if not volume_name:
         volume_name = frappe.form_dict.get("volume_name")
@@ -1237,7 +1237,7 @@ def get_manual_html(volume_name=None):
         if len(parts) >= 3:
             content = parts[2]
             
-    return markdown(content)
+    return md_to_html(content)
 
 
 @frappe.whitelist()

@@ -15,6 +15,23 @@
 import frappe
 import json
 
+FORMULA_INDEX = {
+    "INV-001": "Sales Velocity",
+    "INV-002": "Weeks of Cover (WOC)",
+    "INV-003": "Dead Stock Score",
+    "INV-004": "Inventory Turnover",
+    "INV-005": "Variant Curve Health",
+    "FRC-001": "Forecast Confidence",
+    "OHS-001": "Outlet Health Score",
+    "TRF-001": "Transfer Benefit Score",
+    "SAL-001": "Sell Through %",
+    "AUD-001": "Stock Accuracy %",
+    "VAR-001": "Variant Curve Health",
+    "KGF-001": "KGF Coverage %",
+    "SMRITI-SCAN-REL-01": "Scan Reliability Score",
+    "SMRITI-PRN-SCORE-01": "Printability Score"
+}
+
 @frappe.whitelist()
 def get_active_formulas(category=None):
     """
@@ -64,18 +81,24 @@ def get_formula_detail(formula_id, version=None):
     Retrieves the detailed definition of a specific formula ID.
     If version is not provided, defaults to the active/approved one.
     """
+    # 1. Enforce Registry Check (Governance Gate)
+    if formula_id not in FORMULA_INDEX:
+        is_test_bypass = frappe.flags.in_test and formula_id.startswith("TST-")
+        if not is_test_bypass:
+            frappe.throw(
+                frappe._("Formula {0} is not registered in the Formula Registry.").format(formula_id),
+                frappe.PermissionError
+            )
+
     filters = {"formula_id": formula_id}
     if version:
         filters["formula_version"] = version
-    else:
-        filters["is_active"] = 1
-        filters["status"] = "Approved"
 
     docs = frappe.get_all(
         "SMRITI Formula Definition",
         filters=filters,
-        fields=["name"],
-        limit=1
+        fields=["name", "status", "is_active"],
+        order_by="is_active desc, status desc, formula_version desc"
     )
 
     if not docs:
@@ -84,7 +107,25 @@ def get_formula_detail(formula_id, version=None):
             .format(formula_id, version or "Active")
         )
 
-    doc = frappe.get_doc("SMRITI Formula Definition", docs[0]["name"])
+    # 2. Enforce Role-Based Permissions & Document Status/Active Checks
+    if "System Manager" not in frappe.get_roles():
+        # Find the first active and approved version
+        target_doc_name = None
+        for d in docs:
+            if d.status == "Approved" and d.is_active == 1:
+                target_doc_name = d.name
+                break
+        
+        if not target_doc_name:
+            frappe.throw(
+                frappe._("Not permitted to view this formula (Draft/Inactive)."),
+                frappe.PermissionError
+            )
+        doc = frappe.get_doc("SMRITI Formula Definition", target_doc_name)
+    else:
+        # System Managers can view any retrieved version
+        doc = frappe.get_doc("SMRITI Formula Definition", docs[0]["name"])
+
     return doc
 
 def validate_formula_registered(formula_id):

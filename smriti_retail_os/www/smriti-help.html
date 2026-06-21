@@ -1000,13 +1000,34 @@
             } else if (term) {
                 openTermInDrawer(term);
             } else if (formula) {
-                openFormulaInDrawer(formula);
+                window.dispatchEvent(new CustomEvent('smriti:formula-open', { detail: { formulaId: formula } }));
             } else if (manual) {
                 loadManualVolume(manual);
             } else {
                 // Default load vol 1
                 loadManualVolume('volume_1_daily_operations');
             }
+
+            // Intercept formula links inside manual viewport
+            const manualContainer = document.getElementById('manual-content-container');
+            if (manualContainer) {
+                manualContainer.addEventListener('click', function(e) {
+                    const anchor = e.target.closest('a');
+                    if (anchor) {
+                        const href = anchor.getAttribute('href') || '';
+                        if (href.startsWith('formula:')) {
+                            e.preventDefault();
+                            const formulaId = href.substring(8); // Extract after 'formula:'
+                            window.dispatchEvent(new CustomEvent('smriti:formula-open', { detail: { formulaId } }));
+                        }
+                    }
+                });
+            }
+
+            // Decoupled listener for opening formulas
+            window.addEventListener('smriti:formula-open', function(e) {
+                openFormulaInDrawer(e.detail.formulaId);
+            });
 
             // Debounced Search Keyup Event
             document.getElementById('search-input').addEventListener('keyup', function(e) {
@@ -1204,7 +1225,7 @@
                 openTermInDrawer(termId);
             } else if (type === 'Formula Definition') {
                 const formulaId = id.split(':')[1];
-                openFormulaInDrawer(formulaId);
+                window.dispatchEvent(new CustomEvent('smriti:formula-open', { detail: { formulaId } }));
             } else {
                 // Manual or KB
                 const url = new URL(reference, window.location.origin);
@@ -1244,7 +1265,7 @@
                             <p style="font-size:14px;color:var(--text-main);margin-top:4px;">${f.business_meaning}</p>
                         </div>
                         <div style="margin-top:12px; text-align:right;">
-                            <button class="relation-badge relation-badge-formula" onclick="openFormulaInDrawer('${f.formula_id}')">
+                            <button class="relation-badge relation-badge-formula" onclick="window.dispatchEvent(new CustomEvent('smriti:formula-open', { detail: { formulaId: '${f.formula_id}' } }))">
                                 <span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span> Expand Details
                             </button>
                         </div>
@@ -1319,7 +1340,7 @@
             // Build related formula badges
             let relFormulasHtml = '';
             term.related_formulas.forEach(fId => {
-                relFormulasHtml += `<span class="relation-badge relation-badge-formula" onclick="openFormulaInDrawer('${fId}')"><span class="material-symbols-outlined" style="font-size:12px;">calculate</span> ${fId}</span>`;
+                relFormulasHtml += `<span class="relation-badge relation-badge-formula" onclick="window.dispatchEvent(new CustomEvent('smriti:formula-open', { detail: { formulaId: '${fId}' } }))"><span class="material-symbols-outlined" style="font-size:12px;">calculate</span> ${fId}</span>`;
             });
 
             // Build FAQ list
@@ -1397,9 +1418,28 @@
             document.getElementById('detail-drawer').classList.add('active');
         }
 
-        function openFormulaInDrawer(formulaId) {
-            const formula = allFormulas.find(f => f.formula_id === formulaId);
-            if (!formula) return;
+        async function openFormulaInDrawer(formulaId) {
+            let formula = allFormulas.find(f => f.formula_id === formulaId);
+            if (!formula) {
+                // Fetch dynamically from registry API
+                const detail = await api('smriti_retail_os.api.formula_api.get_formula_detail', { formula_id: formulaId });
+                if (detail) {
+                    formula = {
+                        formula_id: detail.formula_id,
+                        formula_name: detail.formula_name,
+                        formula_category: detail.formula_category,
+                        formula_expression: detail.formula_expression,
+                        business_meaning: detail.business_meaning,
+                        worked_example: detail.worked_example,
+                        interpretation_guide: detail.interpretation_guide,
+                        recommended_action: detail.recommended_action,
+                        business_owner: detail.business_owner
+                    };
+                } else {
+                    alert("Formula definition not found or is in Draft status.");
+                    return;
+                }
+            }
 
             window.history.pushState(null, '', `?formula=${formulaId}`);
 
