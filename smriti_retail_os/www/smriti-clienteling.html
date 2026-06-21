@@ -550,13 +550,13 @@
         <!-- Metrics Snapshot -->
         <div class="panel">
           <div class="panel-header">
-            <span class="panel-title"><span class="material-symbols-outlined">insights</span> Core Metrics Snapshot</span>
+            <span class="panel-title"><span class="material-symbols-outlined">insights</span> SMRITI Customer Intelligence Graph</span>
             <button class="btn btn-secondary btn-xs" onclick="openExplainModal()">
               <span class="material-symbols-outlined" style="font-size:12px;">info</span> Explain Metrics
             </button>
           </div>
           <div class="panel-body">
-            <div class="grid-3">
+            <div class="grid-3" style="margin-bottom:20px;">
               <div class="kpi-card" style="background:var(--bg-input); padding:12px 16px; min-height:80px;">
                 <div class="kpi-header" style="font-size:0.7rem;">Lifetime Value</div>
                 <div class="kpi-value" style="font-size:1.35rem; margin-top:4px;" id="detail-ltv">₹0.00</div>
@@ -568,6 +568,23 @@
               <div class="kpi-card" style="background:var(--bg-input); padding:12px 16px; min-height:80px;">
                 <div class="kpi-header" style="font-size:0.7rem;">Engagement Index</div>
                 <div class="kpi-value" style="font-size:1.35rem; margin-top:4px;" id="detail-engagement">0%</div>
+              </div>
+            </div>
+            <div class="grid-3">
+              <div class="kpi-card" style="background:var(--bg-input); padding:12px 16px; min-height:100px;">
+                <div class="kpi-header" style="font-size:0.7rem;">Churn Risk</div>
+                <div class="kpi-value" style="font-size:1.35rem; margin-top:4px;" id="detail-churn-score">0%</div>
+                <div class="kpi-footer" id="detail-churn-level" style="margin-top:4px;">-</div>
+              </div>
+              <div class="kpi-card" style="background:var(--bg-input); padding:12px 16px; min-height:100px;">
+                <div class="kpi-header" style="font-size:0.7rem;">VIP Candidate Score</div>
+                <div class="kpi-value" style="font-size:1.35rem; margin-top:4px;" id="detail-vip-score">0%</div>
+                <div class="kpi-footer" id="detail-vip-level" style="margin-top:4px;">-</div>
+              </div>
+              <div class="kpi-card" style="background:var(--bg-input); padding:12px 16px; min-height:100px;">
+                <div class="kpi-header" style="font-size:0.7rem;">Campaign Affinity Score</div>
+                <div class="kpi-value" style="font-size:1.35rem; margin-top:4px;" id="detail-affinity-score">0%</div>
+                <div class="kpi-footer" id="detail-affinity-level" style="margin-top:4px;">-</div>
               </div>
             </div>
           </div>
@@ -586,7 +603,7 @@
       </div>
       <button class="modal-close" onclick="closeModal('modal-explain')"><span class="material-symbols-outlined">close</span></button>
     </div>
-    <div style="display:flex; flex-direction:column; gap:16px; font-size:0.9rem; line-height:1.45;">
+    <div style="display:flex; flex-direction:column; gap:16px; font-size:0.9rem; line-height:1.45; max-height:480px; overflow-y:auto; padding-right:6px;">
       <div>
         <h4 style="font-family:'Outfit'; color:var(--accent-2); margin-bottom:4px;">Average Basket Value (ABV)</h4>
         <p style="color:var(--text-2); margin-bottom:4px;">Formula: <code style="color:white;">LTV ÷ Purchases</code></p>
@@ -603,6 +620,27 @@
         <h4 style="font-family:'Outfit'; color:var(--accent-2); margin-bottom:4px;">Engagement Score</h4>
         <p style="color:var(--text-2); margin-bottom:4px;">Weighted: <code style="color:white;">Purchases Frequency (50%) + Spend Volume (40%) - Return Deductions (20%)</code></p>
         <p id="explain-engagement-calc" style="background:var(--bg-input); padding:8px; border-radius:var(--radius-sm); font-family:monospace;"></p>
+      </div>
+      <hr style="border:none; border-top:1px solid var(--border);">
+      <div>
+        <h4 style="font-family:'Outfit'; color:var(--accent-2); margin-bottom:4px;">Churn Risk Score</h4>
+        <p style="color:var(--text-2); margin-bottom:4px;">Formula ID: <code id="explain-churn-id" style="color:white;">-</code>, Version: <code id="explain-churn-ver" style="color:white;">-</code></p>
+        <p style="color:var(--text-2); margin-bottom:4px;">Expression: <code id="explain-churn-expr" style="color:white; word-break:break-all;">-</code></p>
+        <p id="explain-churn-calc" style="background:var(--bg-input); padding:8px; border-radius:var(--radius-sm); font-family:monospace;"></p>
+      </div>
+      <hr style="border:none; border-top:1px solid var(--border);">
+      <div>
+        <h4 style="font-family:'Outfit'; color:var(--accent-2); margin-bottom:4px;">VIP Candidate Score</h4>
+        <p style="color:var(--text-2); margin-bottom:4px;">Formula ID: <code id="explain-vip-id" style="color:white;">-</code>, Version: <code id="explain-vip-ver" style="color:white;">-</code></p>
+        <p style="color:var(--text-2); margin-bottom:4px;">Expression: <code id="explain-vip-expr" style="color:white; word-break:break-all;">-</code></p>
+        <p id="explain-vip-calc" style="background:var(--bg-input); padding:8px; border-radius:var(--radius-sm); font-family:monospace;"></p>
+      </div>
+      <hr style="border:none; border-top:1px solid var(--border);">
+      <div>
+        <h4 style="font-family:'Outfit'; color:var(--accent-2); margin-bottom:4px;">Campaign Affinity Score</h4>
+        <p style="color:var(--text-2); margin-bottom:4px;">Formula ID: <code id="explain-affinity-id" style="color:white;">-</code>, Version: <code id="explain-affinity-ver" style="color:white;">-</code></p>
+        <p style="color:var(--text-2); margin-bottom:4px;">Expression: <code id="explain-affinity-expr" style="color:white; word-break:break-all;">-</code></p>
+        <p id="explain-affinity-calc" style="background:var(--bg-input); padding:8px; border-radius:var(--radius-sm); font-family:monospace;"></p>
       </div>
     </div>
   </div>
@@ -835,11 +873,51 @@
 
       document.getElementById('detail-pred-item').textContent = profile.likely_purchase_prediction || 'None';
       document.getElementById('detail-pred-conf').textContent = profile.prediction_confidence ? `${parseInt(profile.prediction_confidence)}%` : '0%';
-      document.getElementById('detail-pred-visit').textContent = profile.next_visit_prediction || '-';
+      const visitConf = profile.next_visit_confidence ? ` (${parseInt(profile.next_visit_confidence)}% confidence)` : '';
+      document.getElementById('detail-pred-visit').textContent = (profile.next_visit_prediction || '-') + visitConf;
 
       document.getElementById('detail-ltv').textContent = `₹${formatINR(profile.lifetime_value)}`;
       document.getElementById('detail-abv').textContent = `₹${formatINR(profile.average_basket_value)}`;
       document.getElementById('detail-engagement').textContent = `${parseInt(profile.engagement_score)}%`;
+
+      // Customer Intelligence Graph projections
+      document.getElementById('detail-churn-score').textContent = `${parseInt(profile.churn_risk_score || 0)}%`;
+      
+      let churnBadge = 'Healthy';
+      if (profile.churn_risk_level === 'Warning') {
+        churnBadge = '<span class="status-badge browsing">Warning</span>';
+      } else if (profile.churn_risk_level === 'Critical') {
+        churnBadge = '<span class="status-badge exited">Critical</span>';
+      } else {
+        churnBadge = '<span class="status-badge assisted">Healthy</span>';
+      }
+      document.getElementById('detail-churn-level').innerHTML = churnBadge;
+
+      document.getElementById('detail-vip-score').textContent = `${parseInt(profile.vip_candidate_score || 0)}%`;
+      
+      let vipBadge = profile.vip_candidate_level || 'Low';
+      if (profile.is_vip) {
+        vipBadge = `<span class="status-badge converted">VIP (High)</span>`;
+      } else if (profile.vip_candidate_level === 'High') {
+        vipBadge = `<span class="status-badge assisted">High Candidate</span>`;
+      } else if (profile.vip_candidate_level === 'Medium') {
+        vipBadge = `<span class="status-badge browsing">Medium</span>`;
+      } else {
+        vipBadge = `<span class="status-badge registered">Low</span>`;
+      }
+      document.getElementById('detail-vip-level').innerHTML = vipBadge;
+
+      document.getElementById('detail-affinity-score').textContent = `${parseInt(profile.campaign_affinity_score || 0)}%`;
+      
+      let affinityBadge = 'Low Response';
+      if (profile.campaign_affinity_score >= 70.0) {
+        affinityBadge = '<span class="status-badge converted">High Response</span>';
+      } else if (profile.campaign_affinity_score >= 30.0) {
+        affinityBadge = '<span class="status-badge assisted">Moderate</span>';
+      } else {
+        affinityBadge = '<span class="status-badge registered">Low Response</span>';
+      }
+      document.getElementById('detail-affinity-level').innerHTML = affinityBadge;
 
       openModal('modal-details');
     })
@@ -875,6 +953,59 @@
       Spend Volume Points: ${volWeight.toFixed(0)} / 40 <br>
       Return Ratio Deductions: -${returnDeduct.toFixed(0)} / 20 <br>
       Total Score: <strong>${parseInt(p.engagement_score)}%</strong>
+    `;
+
+    // Churn Risk Score Explain
+    document.getElementById('explain-churn-id').textContent = p.churn_formula_id || 'TST-CHURN';
+    document.getElementById('explain-churn-ver').textContent = p.churn_formula_version || '1.0.0';
+    document.getElementById('explain-churn-expr').textContent = p.churn_expr || '(days_since_last_visit - visit_frequency_days) / visit_frequency_days * 100';
+    
+    const lastVisitDate = p.last_visit_date;
+    let daysSinceLast = 0;
+    if (lastVisitDate) {
+      daysSinceLast = Math.floor((new Date() - new Date(lastVisitDate)) / (1000 * 60 * 60 * 24));
+    }
+    const freqDays = p.visit_frequency_days || 0;
+    document.getElementById('explain-churn-calc').innerHTML = `
+      Days Since Last Visit: ${daysSinceLast} days <br>
+      Visit Cycle (Frequency): ${freqDays.toFixed(1)} days <br>
+      Calculation: (${daysSinceLast} - ${freqDays.toFixed(1)}) ÷ ${freqDays > 0 ? freqDays.toFixed(1) : 1} × 100 <br>
+      = <strong>${parseInt(p.churn_risk_score || 0)}% Churn Risk (${p.churn_risk_level || 'Healthy'})</strong>
+    `;
+
+    // VIP Candidate Score Explain
+    document.getElementById('explain-vip-id').textContent = p.vip_formula_id || 'TST-VIP';
+    document.getElementById('explain-vip-ver').textContent = p.vip_formula_version || '1.0.0';
+    document.getElementById('explain-vip-expr').textContent = p.vip_expr || '(net_revenue / 50000 * 50) + (abv / 5000 * 30) + min(20, purchases_count * 2.0)';
+    
+    const netRevenue = p.lifetime_value || 0;
+    const purchasesCount = p.purchases_count || 0;
+    const abv = p.average_basket_value || 0;
+    
+    const ltvWeight = (netRevenue / 50000 * 50);
+    const abvWeight = (abv / 5000 * 30);
+    const purchWeight = Math.min(20, purchasesCount * 2.0);
+    
+    document.getElementById('explain-vip-calc').innerHTML = `
+      LTV Factor: ${netRevenue.toFixed(2)} ÷ 50000 × 50 = ${ltvWeight.toFixed(1)} <br>
+      ABV Factor: ${abv.toFixed(2)} ÷ 5000 × 30 = ${abvWeight.toFixed(1)} <br>
+      Purchases Factor: min(20, ${purchasesCount} × 2.0) = ${purchWeight.toFixed(1)} <br>
+      Total Candidate Score: <strong>${parseInt(p.vip_candidate_score || 0)}% (${p.vip_candidate_level || 'Low'})</strong> <br>
+      VIP Status: <strong>${p.is_vip ? 'Active VIP ✅' : 'Standard Customer'}</strong> (threshold: 80.0%)
+    `;
+
+    // Campaign Affinity Score Explain
+    document.getElementById('explain-affinity-id').textContent = p.affinity_formula_id || 'TST-AFFINITY';
+    document.getElementById('explain-affinity-ver').textContent = p.affinity_formula_version || '1.0.0';
+    document.getElementById('explain-affinity-expr').textContent = p.affinity_expr || 'campaign_responses * 20.0';
+    
+    // We can infer campaign responses:
+    const affinityScore = p.campaign_affinity_score || 0;
+    const inferredResponses = Math.round(affinityScore / 20.0);
+    document.getElementById('explain-affinity-calc').innerHTML = `
+      Campaign Responses / Touchpoints: ${inferredResponses} <br>
+      Calculation: ${inferredResponses} × 20.0 <br>
+      = <strong>${parseInt(affinityScore)}% Affinity Score</strong>
     `;
 
     openModal('modal-explain');

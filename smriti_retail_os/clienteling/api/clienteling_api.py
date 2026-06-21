@@ -35,7 +35,31 @@ def get_customer_profile(customer):
     if profile.is_dirty:
         clienteling_service.mark_dirty(customer, source="API Get Profile", source_document="Manual")
         
-    return profile.as_dict()
+    profile_dict = profile.as_dict()
+    
+    # Attach SMRITI Customer Intelligence Graph details for explainability transparency
+    intel_doc = frappe.db.get_value(
+        "SMRITI Customer Intelligence Graph",
+        customer,
+        [
+            "churn_formula_id", "churn_formula_version",
+            "vip_formula_id", "vip_formula_version",
+            "affinity_formula_id", "affinity_formula_version",
+            "intelligence_graph_version"
+        ],
+        as_dict=True
+    )
+    if intel_doc:
+        profile_dict.update(intel_doc)
+        
+    # Also fetch the actual expressions of these formulas from Formula Registry
+    for key, f_id in [("churn_expr", "TST-CHURN"), ("vip_expr", "TST-VIP"), ("affinity_expr", "TST-AFFINITY")]:
+        expr = None
+        if f_id:
+            expr = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": f_id}, "formula_expression")
+        profile_dict[key] = expr
+        
+    return profile_dict
 
 @frappe.whitelist()
 def log_customer_interaction(customer, interaction_type, employee, interaction_outcome, store, channel, details=None):

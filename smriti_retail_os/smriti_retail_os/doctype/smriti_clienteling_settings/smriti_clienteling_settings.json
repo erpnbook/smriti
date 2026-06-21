@@ -1,0 +1,79 @@
+{
+ "actions": [],
+ "creation": "2026-06-22 03:50:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "enable_clienteling",
+  "vip_threshold",
+  "dormancy_days",
+  "enable_predictions"
+ ],
+ "fields": [
+  {
+   "fieldname": "enable_clienteling",
+   "fieldtype": "Check",
+   "label": "Enable Clienteling Studio",
+   "default": "1"
+  },
+  {
+   "fieldname": "vip_threshold",
+   "fieldtype": "Percent",
+   "label": "VIP Candidate Threshold Score",
+   "default": "80.0"
+  },
+  {
+   "fieldname": "dormancy_days",
+   "fieldtype": "Int",
+   "label": "Standard Dormancy Days",
+   "default": "90"
+  },
+  {
+   "fieldname": "enable_predictions",
+   "fieldtype": "Check",
+   "label": "Enable AI predictions",
+   "default": "1"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-06-22 03:50:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Clienteling Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Store Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "custom": 0,
+ "issingle": 1
+}

@@ -211,3 +211,166 @@ class TestClienteling(FrappeTestCase):
         # Clean up seeded formulas
         frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-ABV", "TST-LTV"]]})
         frappe.db.commit()
+
+    def test_formula_version_tracking(self):
+        """Asserts that when a formula version changes in SMRITI Formula Definition, the recalculated intelligence graph records the new version snapshot."""
+        # 1. Setup/Verify formula TST-VIP exists
+        formula_id = "TST-VIP"
+        doc_name = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": formula_id}, "name")
+        if not doc_name:
+            f_doc = frappe.get_doc({
+                "doctype": "SMRITI Formula Definition",
+                "formula_id": formula_id,
+                "formula_name": "VIP Candidate Score",
+                "formula_version": "1.0.0",
+                "formula_category": "Sales Analytics",
+                "status": "Approved",
+                "is_active": 1,
+                "effective_date": "2026-06-22",
+                "formula_expression": "(net_revenue / 50000 * 50) + (abv / 5000 * 30) + min(20, purchases_count * 2.0)"
+            }).insert(ignore_permissions=True)
+        else:
+            f_doc = frappe.get_doc("SMRITI Formula Definition", doc_name)
+            f_doc.formula_version = "1.0.0"
+            f_doc.is_active = 1
+            f_doc.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        # 2. Run calculation
+        clienteling_service.regenerate_customer_data(self.customer)
+        intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
+        self.assertEqual(intel.vip_formula_version, "1.0.0")
+
+        # 3. Change version
+        f_doc = frappe.get_doc("SMRITI Formula Definition", f_doc.name)
+        f_doc.formula_version = "2.0.0"
+        f_doc.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        # 4. Recalculate and assert version snapshot updated
+        clienteling_service.regenerate_customer_data(self.customer)
+        intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
+        self.assertEqual(intel.vip_formula_version, "2.0.0")
+
+    def test_prediction_confidence_bounds(self):
+        """Asserts that confidence scores are validated between 0 and 100."""
+        # 1. Mock get_pdt_predictions to return confidence > 100 and < 0
+        from unittest import mock
+        
+        # Test upper bound clamp
+        with mock.patch("smriti_retail_os.clienteling.service.clienteling_service.get_pdt_predictions") as mock_pred:
+            mock_pred.return_value = {
+                "likely_purchase": None,
+                "confidence": 150.0,
+                "predicted_next_visit": None,
+                "next_visit_confidence": 200.0
+            }
+            clienteling_service.regenerate_customer_data(self.customer)
+            intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
+            self.assertEqual(intel.next_purchase_confidence, 100.0)
+            self.assertEqual(intel.next_visit_confidence, 100.0)
+
+        # Test lower bound clamp
+        with mock.patch("smriti_retail_os.clienteling.service.clienteling_service.get_pdt_predictions") as mock_pred:
+            mock_pred.return_value = {
+                "likely_purchase": None,
+                "confidence": -50.0,
+                "predicted_next_visit": None,
+                "next_visit_confidence": -10.0
+            }
+            clienteling_service.regenerate_customer_data(self.customer)
+            intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
+            self.assertEqual(intel.next_purchase_confidence, 0.0)
+            self.assertEqual(intel.next_visit_confidence, 0.0)
+
+    def test_vip_threshold_settings(self):
+        """Asserts that changing vip_threshold from 80 to 70 correctly updates is_vip from 0 to 1 on matching profiles."""
+        # 1. Setup clienteling settings
+        settings = frappe.get_single("SMRITI Clienteling Settings")
+        settings.vip_threshold = 80.0
+        settings.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        # Build initial graph/profile
+        clienteling_service.regenerate_customer_data(self.customer)
+
+        # 2. Setup mock customer graph to score exactly 76%
+        # VIP expression: (net_revenue / 50000 * 50) + (abv / 5000 * 30) + min(20, purchases_count * 2.0)
+        # net_revenue = 35000 (gives 35)
+        # purchases_count = 10 (gives 20)
+        # abv = 3500 (gives 3500/5000 * 30 = 21)
+        # Total = 35 + 20 + 21 = 76
+        graph = frappe.get_doc("SMRITI Customer Graph", self.customer)
+        graph.net_revenue = 35000.0
+        graph.purchases_count = 10
+        graph.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        # 3. Calculate and verify VIP Candidate Score is 76% and is_vip is 0
+        from unittest import mock
+        with mock.patch("smriti_retail_os.clienteling.service.clienteling_service.update_customer_graph") as mock_graph:
+            mock_graph.return_value = graph
+            clienteling_service.regenerate_customer_data(self.customer)
+            
+        intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
+        profile = frappe.get_doc("SMRITI Customer Profile", self.customer)
+        self.assertEqual(intel.vip_candidate_score, 76.0)
+        self.assertEqual(intel.is_vip, 0)
+        self.assertEqual(profile.is_vip, 0)
+
+        # 4. Change vip_threshold to 70
+        settings = frappe.get_single("SMRITI Clienteling Settings")
+        settings.vip_threshold = 70.0
+        settings.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        # 5. Recalculate and assert is_vip updates to 1
+        with mock.patch("smriti_retail_os.clienteling.service.clienteling_service.update_customer_graph") as mock_graph:
+            mock_graph.return_value = graph
+            clienteling_service.regenerate_customer_data(self.customer)
+            
+        intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
+        profile = frappe.get_doc("SMRITI Customer Profile", self.customer)
+        self.assertEqual(intel.is_vip, 1)
+        self.assertEqual(profile.is_vip, 1)
+
+    def test_dormancy_detection(self):
+        """Asserts dormancy flag is updated based on dormancy_days setting."""
+        # 1. Setup clienteling settings
+        settings = frappe.get_single("SMRITI Clienteling Settings")
+        settings.dormancy_days = 90
+        settings.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        # Build initial graph/profile
+        clienteling_service.regenerate_customer_data(self.customer)
+
+        # 2. Setup customer graph with last_visit_date 80 days ago
+        from frappe.utils import add_days, today
+        graph = frappe.get_doc("SMRITI Customer Graph", self.customer)
+        graph.last_visit_date = add_days(today(), -80)
+        graph.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        # 3. Recalculate and verify is_dormant is 0
+        from unittest import mock
+        with mock.patch("smriti_retail_os.clienteling.service.clienteling_service.update_customer_graph") as mock_graph:
+            mock_graph.return_value = graph
+            clienteling_service.regenerate_customer_data(self.customer)
+            
+        intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
+        self.assertEqual(intel.is_dormant, 0)
+
+        # 4. Setup customer graph with last_visit_date 100 days ago
+        graph = frappe.get_doc("SMRITI Customer Graph", self.customer)
+        graph.last_visit_date = add_days(today(), -100)
+        graph.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        # 5. Recalculate and verify is_dormant is 1
+        with mock.patch("smriti_retail_os.clienteling.service.clienteling_service.update_customer_graph") as mock_graph:
+            mock_graph.return_value = graph
+            clienteling_service.regenerate_customer_data(self.customer)
+            
+        intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
+        self.assertEqual(intel.is_dormant, 1)

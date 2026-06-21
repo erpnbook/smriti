@@ -15,13 +15,13 @@ from frappe import _
 
 def mark_dirty(customer, source=None, source_document=None):
     """
-    Sets dirty status on SMRITI Customer Graph and SMRITI Customer Profile.
+    Sets dirty status on SMRITI Customer Graph, SMRITI Customer Intelligence Graph, and SMRITI Customer Profile.
     Queues background worker task to recalculate asynchronously.
     """
     if not customer:
         return
         
-    for doctype in ["SMRITI Customer Graph", "SMRITI Customer Profile"]:
+    for doctype in ["SMRITI Customer Graph", "SMRITI Customer Intelligence Graph", "SMRITI Customer Profile"]:
         if frappe.db.exists(doctype, customer):
             frappe.db.set_value(doctype, customer, {
                 "is_dirty": 1,
@@ -42,30 +42,38 @@ def mark_dirty(customer, source=None, source_document=None):
 
 def regenerate_customer_data(customer, source=None, source_document=None):
     """
-    Background queue execution to rebuild Graph and Profile databases.
+    Background queue execution to rebuild Graph, Intelligence Graph, and Profile databases.
     """
     # Create entries if they do not exist
-    for doctype in ["SMRITI Customer Graph", "SMRITI Customer Profile"]:
+    for doctype in ["SMRITI Customer Graph", "SMRITI Customer Intelligence Graph", "SMRITI Customer Profile"]:
         if not frappe.db.exists(doctype, customer):
             doc = frappe.new_doc(doctype)
             doc.customer = customer
-            doc.graph_version = "v1"
+            if doctype == "SMRITI Customer Graph":
+                doc.graph_version = "v1"
+            elif doctype == "SMRITI Customer Intelligence Graph":
+                doc.intelligence_graph_version = "v1"
+            elif doctype == "SMRITI Customer Profile":
+                doc.graph_version = "v1"
             doc.calculation_status = "Pending"
             doc.flags.ignore_permissions = True
             doc.insert()
             
     # Mark as processing
-    for doctype in ["SMRITI Customer Graph", "SMRITI Customer Profile"]:
+    for doctype in ["SMRITI Customer Graph", "SMRITI Customer Intelligence Graph", "SMRITI Customer Profile"]:
         frappe.db.set_value(doctype, customer, "calculation_status", "Processing")
         
     try:
         # 1. Update Customer Graph
         graph_doc = update_customer_graph(customer, source, source_document)
         
-        # 2. Update Customer Profile
-        update_customer_profile(customer, graph_doc, source, source_document)
+        # 2. Update Customer Intelligence Graph
+        intel_doc = update_customer_intelligence_graph(customer, graph_doc, source, source_document)
+        
+        # 3. Update Customer Profile
+        update_customer_profile(customer, graph_doc, intel_doc, source, source_document)
     except Exception as e:
-        for doctype in ["SMRITI Customer Graph", "SMRITI Customer Profile"]:
+        for doctype in ["SMRITI Customer Graph", "SMRITI Customer Intelligence Graph", "SMRITI Customer Profile"]:
             if frappe.db.exists(doctype, customer):
                 frappe.db.set_value(doctype, customer, {
                     "calculation_status": "Failed",
@@ -188,7 +196,7 @@ def update_customer_graph(customer, source=None, source_document=None):
     doc.save()
     return doc
 
-def update_customer_profile(customer, graph_doc, source=None, source_document=None):
+def update_customer_profile(customer, graph_doc, intel_doc, source=None, source_document=None):
     doc = frappe.get_doc("SMRITI Customer Profile", customer)
     
     # Read derived variables from Customer Graph
@@ -230,11 +238,19 @@ def update_customer_profile(customer, graph_doc, source=None, source_document=No
     else:
         doc.average_basket_value = flt(graph_doc.net_revenue / graph_doc.purchases_count) if graph_doc.purchases_count > 0 else 0.0
         
-    # Pull PDT Predictions
-    pdt_pred = get_pdt_predictions(customer)
-    doc.likely_purchase_prediction = pdt_pred.get("likely_purchase")
-    doc.prediction_confidence = pdt_pred.get("confidence", 0.0)
-    doc.next_visit_prediction = pdt_pred.get("predicted_next_visit")
+    # Map derived intelligence fields from SMRITI Customer Intelligence Graph
+    doc.churn_risk_score = intel_doc.churn_risk_score
+    doc.churn_risk_level = intel_doc.churn_risk_level
+    doc.vip_candidate_score = intel_doc.vip_candidate_score
+    doc.vip_candidate_level = intel_doc.vip_candidate_level
+    doc.is_vip = intel_doc.is_vip
+    doc.campaign_affinity_score = intel_doc.campaign_affinity_score
+    
+    doc.next_visit_prediction = intel_doc.next_visit_prediction
+    doc.next_visit_confidence = intel_doc.next_visit_confidence
+    doc.likely_purchase_prediction = intel_doc.next_purchase_prediction
+    doc.prediction_confidence = intel_doc.next_purchase_confidence
+    doc.next_purchase_confidence = intel_doc.next_purchase_confidence
     
     # Engagement Score Calculation
     doc.engagement_score = calculate_engagement_score(graph_doc.purchases_count, graph_doc.net_revenue, graph_doc.returns_count)
@@ -246,6 +262,177 @@ def update_customer_profile(customer, graph_doc, source=None, source_document=No
     
     doc.flags.ignore_permissions = True
     doc.save()
+
+def update_customer_intelligence_graph(customer, graph_doc, source=None, source_document=None):
+    doc = frappe.get_doc("SMRITI Customer Intelligence Graph", customer)
+    
+    # 1. Fetch settings
+    settings = frappe.get_single("SMRITI Clienteling Settings")
+    vip_threshold = flt(settings.vip_threshold) if settings.vip_threshold is not None else 80.0
+    dormancy_days = int(settings.dormancy_days) if settings.dormancy_days is not None else 90
+    enable_predictions = settings.enable_predictions if settings.enable_predictions is not None else 1
+
+    # 2. Calculate days since last visit
+    last_visit_date = graph_doc.last_visit_date
+    if last_visit_date:
+        days_since_last_visit = (getdate(today()) - getdate(last_visit_date)).days
+    else:
+        days_since_last_visit = 0
+    visit_frequency_days = flt(graph_doc.visit_frequency_days)
+
+    # 3. Churn Risk Score
+    churn_risk_score = 0.0
+    churn_risk_level = "Healthy"
+    churn_expr, churn_ver = get_formula_details("TST-CHURN")
+    if not churn_expr:
+        churn_expr = "(days_since_last_visit - visit_frequency_days) / visit_frequency_days * 100"
+        churn_ver = "1.0.0"
+        
+    if visit_frequency_days > 0:
+        context = {
+            "days_since_last_visit": days_since_last_visit,
+            "visit_frequency_days": visit_frequency_days
+        }
+        try:
+            churn_risk_score = flt(eval(churn_expr, {"min": min, "max": max}, context))
+        except Exception:
+            churn_risk_score = flt((days_since_last_visit - visit_frequency_days) / visit_frequency_days * 100)
+    else:
+        churn_risk_score = 0.0
+        
+    churn_risk_score = max(0.0, min(100.0, churn_risk_score))
+    
+    if churn_risk_score < 40.0:
+        churn_risk_level = "Healthy"
+    elif churn_risk_score < 70.0:
+        churn_risk_level = "Warning"
+    else:
+        churn_risk_level = "Critical"
+
+    # 4. VIP Candidate Score
+    net_revenue = flt(graph_doc.net_revenue)
+    purchases_count = int(graph_doc.purchases_count)
+    abv = flt(net_revenue / purchases_count) if purchases_count > 0 else 0.0
+    
+    vip_expr, vip_ver = get_formula_details("TST-VIP")
+    if not vip_expr:
+        vip_expr = "(net_revenue / 50000 * 50) + (abv / 5000 * 30) + min(20, purchases_count * 2.0)"
+        vip_ver = "1.0.0"
+        
+    vip_context = {
+        "net_revenue": net_revenue,
+        "abv": abv,
+        "purchases_count": purchases_count
+    }
+    
+    try:
+        vip_candidate_score = flt(eval(vip_expr, {"min": min, "max": max}, vip_context))
+    except Exception:
+        vip_candidate_score = (net_revenue / 50000.0 * 50.0) + (abv / 5000.0 * 30.0) + min(20.0, purchases_count * 2.0)
+        
+    vip_candidate_score = max(0.0, min(100.0, vip_candidate_score))
+    
+    if vip_candidate_score < 40.0:
+        vip_candidate_level = "Low"
+    elif vip_candidate_score < 80.0:
+        vip_candidate_level = "Medium"
+    else:
+        vip_candidate_level = "High"
+        
+    is_vip = 1 if vip_candidate_score >= vip_threshold else 0
+
+    # 5. Campaign Affinity Score
+    campaign_responses = 0
+    if frappe.db.exists("DocType", "SMRITI Campaign Response"):
+        campaign_responses += frappe.db.count("SMRITI Campaign Response", {"customer": customer})
+    if frappe.db.exists("DocType", "SMRITI Benefit Ledger"):
+        campaign_responses += frappe.db.count("SMRITI Benefit Ledger", {"customer": customer, "event_type": "EARN"})
+        
+    affinity_expr, affinity_ver = get_formula_details("TST-AFFINITY")
+    if not affinity_expr:
+        affinity_expr = "campaign_responses * 20.0"
+        affinity_ver = "1.0.0"
+        
+    affinity_context = {
+        "campaign_responses": campaign_responses
+    }
+    
+    try:
+        campaign_affinity_score = flt(eval(affinity_expr, {"min": min, "max": max}, affinity_context))
+    except Exception:
+        campaign_affinity_score = campaign_responses * 20.0
+        
+    campaign_affinity_score = max(0.0, min(100.0, campaign_affinity_score))
+
+    # 6. Dormancy
+    is_dormant = 0
+    if last_visit_date:
+        is_dormant = 1 if days_since_last_visit >= dormancy_days else 0
+
+    # 7. Predictions
+    next_visit_prediction = None
+    next_visit_confidence = 0.0
+    next_purchase_prediction = None
+    next_purchase_confidence = 0.0
+    
+    if enable_predictions:
+        pdt_pred = get_pdt_predictions(customer)
+        next_purchase_prediction = pdt_pred.get("likely_purchase")
+        next_purchase_confidence = flt(pdt_pred.get("confidence", 0.0))
+        next_visit_prediction = pdt_pred.get("predicted_next_visit")
+        next_visit_confidence = flt(pdt_pred.get("next_visit_confidence", pdt_pred.get("confidence", 0.0)))
+        
+    # Confidence clamping
+    next_visit_confidence = max(0.0, min(100.0, next_visit_confidence))
+    next_purchase_confidence = max(0.0, min(100.0, next_purchase_confidence))
+
+    # 8. Save Doc Fields
+    doc.churn_risk_score = churn_risk_score
+    doc.churn_risk_level = churn_risk_level
+    doc.churn_formula_id = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": "TST-CHURN"}, "name")
+    doc.churn_formula_version = churn_ver
+    
+    doc.vip_candidate_score = vip_candidate_score
+    doc.vip_candidate_level = vip_candidate_level
+    doc.is_vip = is_vip
+    doc.vip_formula_id = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": "TST-VIP"}, "name")
+    doc.vip_formula_version = vip_ver
+    
+    doc.is_dormant = is_dormant
+    doc.next_visit_prediction = next_visit_prediction
+    doc.next_visit_confidence = next_visit_confidence
+    doc.next_purchase_prediction = next_purchase_prediction
+    doc.next_purchase_confidence = next_purchase_confidence
+    
+    doc.campaign_affinity_score = campaign_affinity_score
+    doc.affinity_formula_id = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": "TST-AFFINITY"}, "name")
+    doc.affinity_formula_version = affinity_ver
+    
+    doc.is_dirty = 0
+    doc.dirty_source = source
+    doc.dirty_document = source_document
+    doc.intelligence_graph_version = "v1"
+    doc.calculation_status = "Completed"
+    doc.last_calculated_on = now_datetime()
+    
+    doc.flags.ignore_permissions = True
+    doc.save()
+    
+    return doc
+
+def get_formula_details(formula_id):
+    """
+    Returns (expression, version) for active formula.
+    """
+    formula = frappe.db.get_value(
+        "SMRITI Formula Definition",
+        {"formula_id": formula_id, "is_active": 1},
+        ["formula_expression", "formula_version"],
+        as_dict=True
+    )
+    if formula:
+        return formula.formula_expression, formula.formula_version
+    return None, None
 
 def get_purchased_item_details(customer):
     items_raw = frappe.db.sql("""

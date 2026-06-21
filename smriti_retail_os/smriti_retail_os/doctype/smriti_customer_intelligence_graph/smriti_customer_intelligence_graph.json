@@ -1,36 +1,32 @@
 {
  "actions": [],
- "creation": "2026-06-22 02:30:00.000000",
+ "creation": "2026-06-22 03:50:00.000000",
  "doctype": "DocType",
  "editable_grid": 0,
  "engine": "InnoDB",
  "field_order": [
   "customer",
-  "preferred_brand",
-  "preferred_category",
-  "preferred_size",
-  "preferred_color",
-  "last_visit_date",
-  "visit_frequency_days",
-  "favorite_executive",
-  "average_basket_value",
-  "lifetime_value",
-  "likely_purchase_prediction",
-  "prediction_confidence",
-  "next_visit_prediction",
-  "next_visit_confidence",
-  "next_purchase_confidence",
   "churn_risk_score",
   "churn_risk_level",
+  "churn_formula_id",
+  "churn_formula_version",
   "vip_candidate_score",
   "vip_candidate_level",
   "is_vip",
+  "vip_formula_id",
+  "vip_formula_version",
+  "is_dormant",
+  "next_visit_prediction",
+  "next_visit_confidence",
+  "next_purchase_prediction",
+  "next_purchase_confidence",
   "campaign_affinity_score",
-  "engagement_score",
+  "affinity_formula_id",
+  "affinity_formula_version",
   "is_dirty",
   "dirty_source",
   "dirty_document",
-  "graph_version",
+  "intelligence_graph_version",
   "calculation_status",
   "last_calculated_on"
  ],
@@ -45,86 +41,6 @@
    "in_list_view": 1
   },
   {
-   "fieldname": "preferred_brand",
-   "fieldtype": "Link",
-   "label": "Preferred Brand",
-   "options": "Brand"
-  },
-  {
-   "fieldname": "preferred_category",
-   "fieldtype": "Link",
-   "label": "Preferred Category",
-   "options": "Item Group"
-  },
-  {
-   "fieldname": "preferred_size",
-   "fieldtype": "Data",
-   "label": "Preferred Size"
-  },
-  {
-   "fieldname": "preferred_color",
-   "fieldtype": "Data",
-   "label": "Preferred Color"
-  },
-  {
-   "fieldname": "last_visit_date",
-   "fieldtype": "Date",
-   "label": "Last Visit Date"
-  },
-  {
-   "fieldname": "visit_frequency_days",
-   "fieldtype": "Float",
-   "label": "Visit Frequency (Days)",
-   "default": "0.0"
-  },
-  {
-   "fieldname": "favorite_executive",
-   "fieldtype": "Link",
-   "label": "Favorite Executive",
-   "options": "Employee"
-  },
-  {
-   "fieldname": "average_basket_value",
-   "fieldtype": "Currency",
-   "label": "Average Basket Value (ABV)",
-   "default": "0.0"
-  },
-  {
-   "fieldname": "lifetime_value",
-   "fieldtype": "Currency",
-   "label": "Lifetime Value (LTV)",
-   "default": "0.0"
-  },
-  {
-   "fieldname": "likely_purchase_prediction",
-   "fieldtype": "Link",
-   "label": "Likely Purchase Prediction",
-   "options": "Item"
-  },
-  {
-   "fieldname": "prediction_confidence",
-   "fieldtype": "Percent",
-   "label": "Prediction Confidence",
-   "default": "0.0"
-  },
-  {
-   "fieldname": "next_visit_prediction",
-   "fieldtype": "Date",
-   "label": "Predicted Next Visit"
-  },
-  {
-   "fieldname": "next_visit_confidence",
-   "fieldtype": "Percent",
-   "label": "Next Visit Confidence",
-   "default": "0.0"
-  },
-  {
-   "fieldname": "next_purchase_confidence",
-   "fieldtype": "Percent",
-   "label": "Next Purchase Confidence",
-   "default": "0.0"
-  },
-  {
    "fieldname": "churn_risk_score",
    "fieldtype": "Percent",
    "label": "Churn Risk Score",
@@ -136,6 +52,17 @@
    "label": "Churn Risk Level",
    "options": "Healthy\nWarning\nCritical",
    "default": "Healthy"
+  },
+  {
+   "fieldname": "churn_formula_id",
+   "fieldtype": "Link",
+   "label": "Churn Formula Reference",
+   "options": "SMRITI Formula Definition"
+  },
+  {
+   "fieldname": "churn_formula_version",
+   "fieldtype": "Data",
+   "label": "Churn Formula Version"
   },
   {
    "fieldname": "vip_candidate_score",
@@ -157,16 +84,61 @@
    "default": "0"
   },
   {
+   "fieldname": "vip_formula_id",
+   "fieldtype": "Link",
+   "label": "VIP Formula Reference",
+   "options": "SMRITI Formula Definition"
+  },
+  {
+   "fieldname": "vip_formula_version",
+   "fieldtype": "Data",
+   "label": "VIP Formula Version"
+  },
+  {
+   "fieldname": "is_dormant",
+   "fieldtype": "Check",
+   "label": "Is Dormant",
+   "default": "0"
+  },
+  {
+   "fieldname": "next_visit_prediction",
+   "fieldtype": "Date",
+   "label": "Predicted Next Visit"
+  },
+  {
+   "fieldname": "next_visit_confidence",
+   "fieldtype": "Percent",
+   "label": "Next Visit Confidence",
+   "default": "0.0"
+  },
+  {
+   "fieldname": "next_purchase_prediction",
+   "fieldtype": "Link",
+   "label": "Predicted Next Purchase",
+   "options": "Item"
+  },
+  {
+   "fieldname": "next_purchase_confidence",
+   "fieldtype": "Percent",
+   "label": "Next Purchase Confidence",
+   "default": "0.0"
+  },
+  {
    "fieldname": "campaign_affinity_score",
    "fieldtype": "Percent",
    "label": "Campaign Affinity Score",
    "default": "0.0"
   },
   {
-   "fieldname": "engagement_score",
-   "fieldtype": "Percent",
-   "label": "Engagement Score",
-   "default": "0.0"
+   "fieldname": "affinity_formula_id",
+   "fieldtype": "Link",
+   "label": "Affinity Formula Reference",
+   "options": "SMRITI Formula Definition"
+  },
+  {
+   "fieldname": "affinity_formula_version",
+   "fieldtype": "Data",
+   "label": "Affinity Formula Version"
   },
   {
    "fieldname": "is_dirty",
@@ -185,9 +157,9 @@
    "label": "Dirty Document"
   },
   {
-   "fieldname": "graph_version",
+   "fieldname": "intelligence_graph_version",
    "fieldtype": "Data",
-   "label": "Graph Version",
+   "label": "Intelligence Graph Version",
    "default": "v1",
    "reqd": 1
   },
@@ -210,7 +182,7 @@
  "modified": "2026-06-22 03:50:00.000000",
  "modified_by": "Administrator",
  "module": "SMRITI Retail OS",
- "name": "SMRITI Customer Profile",
+ "name": "SMRITI Customer Intelligence Graph",
  "owner": "Administrator",
  "permissions": [
   {
