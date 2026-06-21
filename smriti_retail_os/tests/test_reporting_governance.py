@@ -692,3 +692,55 @@ class TestReportingGovernance(unittest.TestCase):
         
         final_doc = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
         self.assertEqual(final_doc.template_version, v1 + 2)
+
+    def test_incompatible_report_column(self):
+        # Create a business term that references POS Invoice Item (aliased as items)
+        self.t_meas_items = frappe.get_doc({
+            "doctype": "SMRITI Business Term",
+            "term_id": "tst_meas_items_qty",
+            "term_name": "Test Items Qty",
+            "term_category": "Sales",
+            "term_version": "1.0",
+            "status": "Approved",
+            "approval_status": "Approved",
+            "is_active": 1,
+            "is_reportable": 1,
+            "measure_or_dimension": "Measure",
+            "default_aggregation": "Sum",
+            "dictionary_key": "tst_meas_items_qty",
+            "projection_path": "POS Invoice Item.qty",
+            "entity_type": "POS Invoice Item",
+            "data_type": "Float",
+            "effective_date": "2026-06-20",
+            "definition": "Approved test items quantity.",
+            "hinglish_definition": "Approved test items quantity Hinglish."
+        }).insert(ignore_permissions=True)
+        frappe.db.commit()
+
+        # Update the report template columns to include this incompatible column
+        t_doc = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
+        original_columns = t_doc.columns_json
+        t_doc.columns_json = json.dumps([
+            {"fieldname": "tst_dim_approved", "label": "Date"},
+            {"fieldname": "tst_meas_items_qty", "label": "Incompatible Qty"}
+        ])
+        t_doc.save(ignore_permissions=True)
+        frappe.db.commit()
+
+        # base_sql does not join POS Invoice Item, so running the report should throw a ValidationError
+        engine = SMRITIReportEngine("tst_gov_report")
+        config = {
+            "base_sql": "SELECT parent.posting_date FROM `tabPOS Invoice` parent WHERE parent.docstatus = 1",
+            "group_by": None,
+            "order_by": "parent.posting_date DESC"
+        }
+        with self.assertRaises(frappe.ValidationError) as context:
+            engine._run_sql_report(config)
+        self.assertIn("cannot be displayed in this report because it requires the 'POS Invoice Item' table", str(context.exception))
+
+        # Restore original template columns and clean up term
+        t_doc.reload()
+        t_doc.columns_json = original_columns
+        t_doc.save(ignore_permissions=True)
+        frappe.db.delete("SMRITI Business Term", {"term_id": "tst_meas_items_qty"})
+        frappe.db.commit()

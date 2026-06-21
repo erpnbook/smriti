@@ -1789,6 +1789,30 @@ class SMRITIReportEngine:
                         resolved_proj = f"`tab{tbl}`.{col_name}"
                 else:
                     resolved_proj = proj or fieldname
+
+                # Validate table/alias presence in base_sql to prevent MySQLdb.OperationalError: Unknown column
+                if "." in resolved_proj:
+                    alias_part = resolved_proj.split(".", 1)[0]
+                    clean_alias = alias_part.replace("`", "").replace("\"", "").strip()
+                    rev_alias_map = {v: k for k, v in alias_map.items()}
+                    original_doctype = rev_alias_map.get(clean_alias)
+                    
+                    import re
+                    alias_pattern = rf"\b{re.escape(clean_alias)}\b"
+                    has_alias = bool(re.search(alias_pattern, base_sql, re.IGNORECASE))
+                    
+                    has_doctype = False
+                    if original_doctype:
+                        doctype_pattern = rf"\b{re.escape(original_doctype)}\b|\b{re.escape('tab' + original_doctype)}\b"
+                        has_doctype = bool(re.search(doctype_pattern, base_sql.replace(" ", "").replace("`", ""), re.IGNORECASE))
+                        
+                    if not has_alias and not has_doctype:
+                        frappe.throw(
+                            _("Column '{0}' ({1}) cannot be displayed in this report because it requires the '{2}' table, which is not part of this report's query configuration.")
+                            .format(col.get("label") or fieldname, fieldname, original_doctype or clean_alias),
+                            frappe.ValidationError,
+                            title=_("Incompatible Report Column")
+                        )
                 
                 if term.measure_or_dimension == "Measure":
                     agg = term.default_aggregation or "Sum"
