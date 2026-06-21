@@ -16,20 +16,20 @@ import frappe
 import json
 
 FORMULA_INDEX = {
-    "INV-001": "Sales Velocity",
-    "INV-002": "Weeks of Cover (WOC)",
-    "INV-003": "Dead Stock Score",
-    "INV-004": "Inventory Turnover",
-    "INV-005": "Variant Curve Health",
-    "FRC-001": "Forecast Confidence",
-    "OHS-001": "Outlet Health Score",
-    "TRF-001": "Transfer Benefit Score",
-    "SAL-001": "Sell Through %",
-    "AUD-001": "Stock Accuracy %",
-    "VAR-001": "Variant Curve Health",
-    "KGF-001": "KGF Coverage %",
-    "SMRITI-SCAN-REL-01": "Scan Reliability Score",
-    "SMRITI-PRN-SCORE-01": "Printability Score"
+    "INV-001",
+    "INV-002",
+    "INV-003",
+    "INV-004",
+    "INV-005",
+    "FRC-001",
+    "OHS-001",
+    "TRF-001",
+    "SAL-001",
+    "AUD-001",
+    "VAR-001",
+    "KGF-001",
+    "SMRITI-SCAN-REL-01",
+    "SMRITI-PRN-SCORE-01"
 }
 
 @frappe.whitelist()

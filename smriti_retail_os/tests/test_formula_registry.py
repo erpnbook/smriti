@@ -153,3 +153,35 @@ class TestFormulaRegistry(unittest.TestCase):
         coverage = calculate_kgf_coverage()
         self.assertEqual(coverage, 100.0)
 
+    def test_formula_index_integrity(self):
+        # Checks that every FORMULA_INDEX code must exist in Formula Definition
+        from smriti_retail_os.services.formula_service import FORMULA_INDEX
+        
+        created_inv_005 = False
+        if not frappe.db.exists("SMRITI Formula Definition", {"formula_id": "INV-005"}):
+            inv_005_doc = frappe.get_doc({
+                "doctype": "SMRITI Formula Definition",
+                "formula_id": "INV-005",
+                "formula_name": "Promo Conversion Rate",
+                "formula_version": "1.0.0",
+                "formula_category": "Sales Analytics",
+                "status": "Approved",
+                "is_active": 1,
+                "effective_date": "2026-06-19",
+                "formula_expression": "promo_sales_qty / total_sales_qty"
+            })
+            inv_005_doc.insert(ignore_permissions=True)
+            frappe.db.commit()
+            created_inv_005 = True
+            
+        try:
+            for fid in FORMULA_INDEX:
+                self.assertTrue(
+                    frappe.db.exists("SMRITI Formula Definition", {"formula_id": fid}),
+                    f"Formula ID {fid} in FORMULA_INDEX does not exist in SMRITI Formula Definition."
+                )
+        finally:
+            if created_inv_005:
+                frappe.db.delete("SMRITI Formula Definition", {"formula_id": "INV-005"})
+                frappe.db.commit()
+
