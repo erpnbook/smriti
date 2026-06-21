@@ -1122,5 +1122,69 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             log_doc = frappe.get_doc("Error Log", log_exists)
             self.assertIn("SMRITI-PRN-SCORE-01", log_doc.error)
 
+    def test_32_expand_item_variants(self):
+        """test_32: expand_item_variants on templates and standard items"""
+        from smriti_retail_os.barcode_api import expand_item_variants
+        
+        # Create standard test items if not exists
+        if not frappe.db.exists("Item", "TEST-ITEM-123"):
+            doc = frappe.new_doc("Item")
+            doc.item_code = "TEST-ITEM-123"
+            doc.item_name = "Test Item 123"
+            doc.item_group = "All Item Groups"
+            doc.insert(ignore_permissions=True)
+            frappe.db.commit()
+
+        # Test Standard Item
+        res_std = expand_item_variants("TEST-ITEM-123", 5)
+        self.assertEqual(len(res_std), 1)
+        self.assertEqual(res_std[0]["item_code"], "TEST-ITEM-123")
+        self.assertEqual(res_std[0]["print_qty"], 5)
+
+        # Cleanup
+        frappe.delete_doc("Item", "TEST-ITEM-123", ignore_permissions=True)
+        frappe.db.commit()
+
+    def test_33_get_items_by_range(self):
+        """test_33: numerical and alphabetical range loading"""
+        from smriti_retail_os.barcode_api import get_items_by_range
+        
+        # Create standard test items with ranges
+        for i in range(1, 6):
+            code = f"BBM-{i:04d}"
+            if not frappe.db.exists("Item", code):
+                doc = frappe.new_doc("Item")
+                doc.item_code = code
+                doc.item_name = f"Test Range Item {i}"
+                doc.item_group = "All Item Groups"
+                doc.insert(ignore_permissions=True)
+                
+        frappe.db.commit()
+        
+        # Numerical range BBM-0002 to BBM-0004
+        res_num = get_items_by_range("BBM-0002", "BBM-0004")
+        self.assertEqual(len(res_num), 3)
+        codes = [r["item_code"] for r in res_num]
+        self.assertIn("BBM-0002", codes)
+        self.assertIn("BBM-0003", codes)
+        self.assertIn("BBM-0004", codes)
+        
+        # Alphabetical range
+        res_alpha = get_items_by_range("BBM-0001", "BBM-0003")
+        self.assertEqual(len(res_alpha), 3)
+        
+        # Clean up
+        for i in range(1, 6):
+            frappe.delete_doc("Item", f"BBM-{i:04d}", ignore_permissions=True)
+        frappe.db.commit()
+
+    def test_34_get_transaction_items_checklist(self):
+        """test_34: get_transaction_items_checklist returns transaction checklist data"""
+        from smriti_retail_os.barcode_api import get_transaction_items_checklist
+        
+        # Check empty or missing transaction returns empty list
+        res = get_transaction_items_checklist("Purchase Receipt", "PR-NONEXISTENT")
+        self.assertEqual(res, [])
+
 
 

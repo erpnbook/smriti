@@ -24,7 +24,8 @@ from frappe import _
 def get_barcode_filters():
     """
     Returns available brands, categories, barcode sizes and print templates
-    to populate filters/dropdowns on the barcode printing interface.
+    to populate filters/dropdowns on the barcode printing interface, along with
+    departments, genders, seasons, collections, and suppliers.
     """
     brands = [b.name for b in frappe.get_all("Brand", fields=["name"], order_by="name asc")]
     categories = [ig.name for ig in frappe.get_all("Item Group", fields=["name"], order_by="name asc")]
@@ -41,11 +42,41 @@ def get_barcode_filters():
         for t in templates:
             t["template_name"] = t["template_title"]
 
+    # Retail Fashion Filters
+    departments = [d.name for d in frappe.get_all("Department", fields=["name"], order_by="name asc")]
+    
+    genders = []
+    if frappe.db.exists("DocType", "SMRITI Gender"):
+        genders = [g.name for g in frappe.get_all("SMRITI Gender", fields=["name"], order_by="name asc")]
+    else:
+        genders = ["MENS", "LADIES", "BOYS", "GIRLS", "UNISEX", "KIDS"]
+
+    # Seasons from Item Attributes or fallback
+    seasons_res = frappe.db.get_all("Item Attribute Value", filters={"parent": ["like", "%season%"]}, fields=["attribute_value"], distinct=True)
+    seasons = [s.attribute_value for s in seasons_res] if seasons_res else []
+    if not seasons:
+        seasons = ["Spring/Summer", "Autumn/Winter", "Festive", "Core", "All Season"]
+    seasons = sorted(list(set(seasons)))
+
+    # Collections from Item Attributes or fallback
+    collections_res = frappe.db.get_all("Item Attribute Value", filters={"parent": ["like", "%collection%"]}, fields=["attribute_value"], distinct=True)
+    collections = [c.attribute_value for c in collections_res] if collections_res else []
+    if not collections:
+        collections = ["Classic", "Sportswear", "Casuals", "Formal", "Limited Edition"]
+    collections = sorted(list(set(collections)))
+
+    suppliers = [s.name for s in frappe.get_all("Supplier", fields=["name"], order_by="name asc")]
+
     return {
         "brands": brands,
         "categories": categories,
         "sizes": sizes,
-        "print_templates": templates
+        "print_templates": templates,
+        "departments": departments,
+        "genders": genders,
+        "seasons": seasons,
+        "collections": collections,
+        "suppliers": suppliers
     }
 
 
@@ -73,6 +104,132 @@ def get_print_templates():
 # ---------------------------------------------------------------------------
 
 @frappe.whitelist()
+def expand_item_variants(item_code, default_print_qty=1):
+    """
+    Checks if item has variants. If yes, returns list of print details for all
+    non-disabled variants. If no, returns list with print details for the item itself.
+    """
+    has_variants = frappe.db.get_value("Item", item_code, "has_variants")
+    if has_variants:
+        variants = frappe.db.get_all(
+            "Item",
+            filters={"variant_of": item_code, "disabled": 0},
+            fields=["name"]
+        )
+        res = []
+        for v in variants:
+            res.append(get_item_print_details(v.name, default_print_qty))
+        return res
+    else:
+        return [get_item_print_details(item_code, default_print_qty)]
+
+
+@frappe.whitelist()
+def get_transaction_items_checklist(source_doctype, source_name):
+    """
+    Returns all items in the specified Purchase Receipt or Stock Entry transaction
+    to populate the frontend checklist modal.
+    """
+    if source_doctype not in ["Purchase Receipt", "Stock Entry"]:
+        return []
+        
+    if not frappe.db.exists(source_doctype, source_name):
+        return []
+        
+    items = []
+    doc = frappe.get_doc(source_doctype, source_name)
+    
+    for it in doc.items:
+        # Check if barcode exists in child table
+        has_barcode = frappe.db.exists("Item Barcode", {"parent": it.item_code})
+        # Check if item is recently created (within 30 days)
+        creation = frappe.db.get_value("Item", it.item_code, "creation")
+        is_new = False
+        if creation:
+            from frappe.utils import add_days, now_datetime
+            is_new = creation >= add_days(now_datetime(), -30)
+            
+        items.append({
+            "item_code": it.item_code,
+            "item_name": it.item_name or "",
+            "qty": flt(it.qty),
+            "has_barcode": bool(has_barcode),
+            "is_new": is_new
+        })
+        
+    return items
+
+
+@frappe.whitelist()
+def get_items_by_range(from_article, to_article):
+    """
+    Returns items in the specified article range.
+    Supports numerical range filtering if prefixes match (e.g. BBM-0001 to BBM-0100).
+    Otherwise, filters alphabetically on item_code.
+    """
+    if not from_article or not to_article:
+        return []
+
+    from_article = from_article.strip()
+    to_article = to_article.strip()
+
+    import re
+    def parse_prefix_num(article):
+        # Match alphanumeric prefix followed by a hyphen and digits (e.g. BBM-0001)
+        match = re.match(r'^([a-zA-Z0-9\-]+?\-)(\d+)$', article)
+        if match:
+            return match.group(1), int(match.group(2)), len(match.group(2))
+        return None, None, None
+
+    prefix_from, num_from, len_from = parse_prefix_num(from_article)
+    prefix_to, num_to, len_to = parse_prefix_num(to_article)
+
+    item_codes = []
+    if prefix_from and prefix_to and prefix_from == prefix_to:
+        # Range is numerical
+        lower = min(num_from, num_to)
+        upper = max(num_from, num_to)
+        
+        # Query items with this prefix
+        items = frappe.db.get_all(
+            "Item",
+            filters={"item_code": ["like", f"{prefix_from}%"], "disabled": 0},
+            fields=["name"]
+        )
+        
+        for item in items:
+            code = item.name
+            suffix = code[len(prefix_from):]
+            if suffix.isdigit():
+                val = int(suffix)
+                if lower <= val <= upper:
+                    item_codes.append(code)
+    else:
+        # Range is alphabetical/lexicographical
+        items = frappe.db.get_all(
+            "Item",
+            filters={
+                "item_code": [">=", from_article],
+                "disabled": 0
+            },
+            fields=["name"],
+            order_by="item_code asc"
+        )
+        for item in items:
+            if item.name <= to_article:
+                item_codes.append(item.name)
+            else:
+                break
+
+    # Expand variants and get print details
+    res_items = []
+    for code in item_codes:
+        res_items.extend(expand_item_variants(code, 1))
+        
+    return res_items
+
+
+@frappe.whitelist()
 def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
     """
     Loads items for barcode printing based on either a transaction source
@@ -88,7 +245,7 @@ def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
 
             pr = frappe.get_doc("Purchase Receipt", source_name)
             for it in pr.items:
-                items.append(get_item_print_details(it.item_code, it.qty))
+                items.extend(expand_item_variants(it.item_code, it.qty))
 
         elif source_doctype == "Stock Entry":
             if not frappe.db.exists("Stock Entry", source_name):
@@ -96,7 +253,7 @@ def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
 
             se = frappe.get_doc("Stock Entry", source_name)
             for it in se.items:
-                items.append(get_item_print_details(it.item_code, it.qty))
+                items.extend(expand_item_variants(it.item_code, it.qty))
 
     elif filters:
         # Manual bulk filter mode
@@ -109,6 +266,57 @@ def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
             db_filters["item_group"] = flt_dict.get("item_group")
         if flt_dict.get("custom_barcode_size"):
             db_filters["custom_barcode_size"] = flt_dict.get("custom_barcode_size")
+
+        # Fashion Retail Filters
+        if flt_dict.get("department"):
+            db_filters["custom_department"] = flt_dict.get("department")
+        if flt_dict.get("gender"):
+            db_filters["custom_gender"] = flt_dict.get("gender")
+
+        # Upgrade-safe guards for Season and Collection
+        if flt_dict.get("season"):
+            season_val = flt_dict.get("season")
+            if frappe.db.has_column("Item", "custom_season"):
+                db_filters["custom_season"] = season_val
+            else:
+                # Fallback: search in Item Attributes
+                items_with_season = frappe.get_all(
+                    "Item Attribute",
+                    filters={"attribute": ["like", "%season%"], "attribute_value": season_val},
+                    fields=["parent"]
+                )
+                db_filters["name"] = ["in", [i.parent for i in items_with_season]]
+
+        if flt_dict.get("collection"):
+            collection_val = flt_dict.get("collection")
+            if frappe.db.has_column("Item", "custom_collection"):
+                db_filters["custom_collection"] = collection_val
+            else:
+                # Fallback: search in Item Attributes
+                items_with_collection = frappe.get_all(
+                    "Item Attribute",
+                    filters={"attribute": ["like", "%collection%"], "attribute_value": collection_val},
+                    fields=["parent"]
+                )
+                if "name" in db_filters and isinstance(db_filters["name"], list) and db_filters["name"][0] == "in":
+                    # Intersect existing list
+                    db_filters["name"][1] = list(set(db_filters["name"][1]) & set([i.parent for i in items_with_collection]))
+                else:
+                    db_filters["name"] = ["in", [i.parent for i in items_with_collection]]
+
+        if flt_dict.get("supplier"):
+            supplier = flt_dict.get("supplier")
+            # Query items that have this supplier in tabItem Supplier child table
+            item_list = frappe.db.get_all(
+                "Item Supplier",
+                filters={"supplier": supplier},
+                fields=["parent"]
+            )
+            item_codes = [i.parent for i in item_list]
+            if "name" in db_filters and isinstance(db_filters["name"], list) and db_filters["name"][0] == "in":
+                db_filters["name"][1] = list(set(db_filters["name"][1]) & set(item_codes))
+            else:
+                db_filters["name"] = ["in", item_codes]
 
         # Style / Article No Filter with schema check-guards
         if flt_dict.get("style"):
@@ -137,7 +345,7 @@ def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
         )
 
         for it in item_list:
-            items.append(get_item_print_details(it.name, 1))
+            items.extend(expand_item_variants(it.name, 1))
 
     return items
 
@@ -194,6 +402,13 @@ def get_item_print_details(item_code, default_print_qty):
     # 6. Packing Date
     pkd_date = datetime.datetime.now().strftime("%m/%y")
 
+    # 7. Pack Size / Carton Size
+    pack_size = None
+    if item_doc.meta.has_field("custom_pack_size"):
+        pack_size = item_doc.get("custom_pack_size")
+    elif item_doc.meta.has_field("custom_carton_size"):
+        pack_size = item_doc.get("custom_carton_size")
+
     return {
         "item_code": item_doc.name,
         "item_name": item_doc.item_name or "",
@@ -205,6 +420,7 @@ def get_item_print_details(item_code, default_print_qty):
         "color": color,
         "style": style,
         "pkd_date": pkd_date,
+        "pack_size": flt(pack_size) if pack_size else None,
         # Custom Footwear Attributes
         "gender": item_doc.get("custom_gender") or "",
         "heel_type": item_doc.get("custom_heel_type") or "",
@@ -1645,49 +1861,6 @@ def restore_print_template_version(template_name, version_number, expected_check
     return get_print_templates()
 
 
-@frappe.whitelist()
-def cleanup_old_print_jobs():
-    import os
-    from frappe.utils import add_days, now_datetime
-    from smriti_retail_os.backup_api import log_audit_event
-    
-    cutoff_success = add_days(now_datetime(), -30)
-    cutoff_failed = add_days(now_datetime(), -90)
-    
-    # Delete Success jobs older than 30 days
-    success_jobs = frappe.get_all(
-        "SMRITI Print Job",
-        filters={
-            "status": "Success",
-            "completed_on": ["<", cutoff_success]
-        },
-        fields=["job_id", "name"]
-    )
-    for job in success_jobs:
-        frappe.delete_doc("SMRITI Print Job", job.name, ignore_permissions=True)
-        
-    # Delete Failed jobs older than 90 days
-    failed_jobs = frappe.get_all(
-        "SMRITI Print Job",
-        filters={
-            "status": "Failed",
-            "completed_on": ["<", cutoff_failed]
-        },
-        fields=["job_id", "name"]
-    )
-    for job in failed_jobs:
-        prn_path = frappe.get_site_path('private', 'print_jobs', f"{job.job_id}.prn")
-        try:
-            os.unlink(prn_path)
-        except FileNotFoundError:
-            pass
-        frappe.delete_doc("SMRITI Print Job", job.name, ignore_permissions=True)
-        
-    frappe.db.commit()
-    log_audit_event(
-        "Print Job Cleanup",
-        f"Deleted {len(success_jobs)} success jobs and {len(failed_jobs)} failed jobs"
-    )
 
 
 def get_barcode_hrt_reserved_height():
@@ -2091,6 +2264,7 @@ def validate_layout_diagnostics(layout_json, label_size, item_data=None):
     }
 
 
+@frappe.whitelist()
 def cleanup_old_print_jobs():
     """
     Success jobs older than 30 days → delete

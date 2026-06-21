@@ -68,12 +68,73 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .topbtn { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:var(--radius-sm); font-size:12px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); white-space:nowrap; }
 .topbtn span { font-size:16px; }
 .topbtn:hover { border-color:var(--primary); color:var(--primary-lt); }
+.topbtn:disabled, .btn-submit:disabled, .form-input:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 
 /* Layout Panels */
 .split-layout { flex:1; display:flex; overflow:hidden; min-height:0; }
-.left-form { width:310px; flex-shrink:0; border-right:1px solid var(--border); background:var(--bg2); display:flex; flex-direction:column; overflow-y:auto; }
-.right-table { flex:1; display:flex; flex-direction:column; overflow:hidden; background:rgba(10,15,30,0.2); border-right:1px solid var(--border); }
-.preview-pane { width:340px; flex-shrink:0; background:var(--bg2); display:flex; flex-direction:column; overflow-y:auto; padding:18px; gap:18px; }
+.left-controls { width:10%; min-width:180px; flex-shrink:0; border-right:1px solid var(--border); background:var(--bg2); display:flex; flex-direction:column; overflow-y:auto; }
+.right-table { width:70%; flex:1; display:flex; flex-direction:column; overflow:hidden; background:rgba(10,15,30,0.2); border-right:1px solid var(--border); }
+.preview-pane { width:20%; min-width:320px; flex-shrink:0; background:var(--bg2); display:flex; flex-direction:column; overflow-y:auto; padding:18px; gap:18px; }
+
+/* Top Search Ribbon (AUD-BAR-09) */
+.search-ribbon {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+.search-ribbon .ribbon-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.search-ribbon-search-box {
+    flex: 2;
+    min-width: 250px;
+}
+.search-ribbon select, .search-ribbon input {
+    height: 36px;
+}
+
+/* Collapsible Advanced Filters (AUD-BAR-08) */
+.advanced-filters-drawer {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: none;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    flex-shrink: 0;
+}
+.advanced-filters-drawer.open {
+    display: grid;
+}
+.drawer-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Sticky Worksheet Toolbar (AUD-BAR-10) */
+.sticky-worksheet-toolbar {
+    background: var(--card2);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+.sticky-worksheet-toolbar .toolbar-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
 
 .panel-section { padding:16px 18px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:10px; }
 .panel-section-title { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--primary-lt); display:flex; align-items:center; gap:6px; }
@@ -370,70 +431,114 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
             </div>
         </div>
 
+        <!-- Top Search Ribbon (AUD-BAR-09) -->
+        <div class="search-ribbon">
+            <div class="ribbon-item search-ribbon-search-box">
+                <span class="form-label" style="margin-right: 8px;">Search Article / Barcode</span>
+                <div style="position: relative; flex: 1;">
+                    <input type="text" class="form-input" style="width: 100%;" id="flt-search" placeholder="Search Code, Name or Barcode..." autocomplete="off">
+                    <div id="autocomplete-list" class="autocomplete-items" style="display: none;"></div>
+                </div>
+            </div>
+            
+            <div class="ribbon-item">
+                <span class="form-label">Brand</span>
+                <select class="form-input" id="flt-brand" style="width: 150px;">
+                    <option value="">All Brands</option>
+                </select>
+            </div>
+
+            <div class="ribbon-item">
+                <span class="form-label">Category</span>
+                <select class="form-input" id="flt-category" style="width: 160px;">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+
+            <div class="ribbon-item">
+                <span class="form-label">Size</span>
+                <select class="form-input" id="flt-size" style="width: 110px;">
+                    <option value="">All Sizes</option>
+                </select>
+            </div>
+
+            <button class="topbtn" onclick="toggleAdvancedFilters()" style="height: 36px; padding: 0 16px;">
+                <span class="material-symbols-outlined">tune</span> More Filters <span id="adv-filter-caret">▼</span>
+            </button>
+            
+            <button class="btn-search" onclick="loadManualItems()" style="width: auto; height: 36px; padding: 0 16px; margin-left: auto;">
+                <span class="material-symbols-outlined">search</span> Search & Add
+            </button>
+        </div>
+
+        <!-- Collapsible Advanced Filters Drawer (AUD-BAR-08) -->
+        <div class="advanced-filters-drawer" id="advanced-filters-drawer">
+            <!-- Article Range Loader -->
+            <div class="drawer-section" style="grid-column: span 2; border-right: 1px solid var(--border); padding-right: 16px;">
+                <div class="panel-section-title"><span class="material-symbols-outlined">dataset</span> Article Range Loader</div>
+                <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+                    <input type="text" class="form-input" id="flt-from-article" placeholder="From Article (e.g. BBM-0001)">
+                    <span style="color: var(--text-muted);">to</span>
+                    <input type="text" class="form-input" id="flt-to-article" placeholder="To Article (e.g. BBM-0100)">
+                    <button class="btn-search" onclick="loadRangeItems()" style="width: auto; height: 36px; padding: 0 12px;">Load Range</button>
+                </div>
+            </div>
+
+            <!-- Load from Transaction -->
+            <div class="drawer-section" style="grid-column: span 2; border-right: 1px solid var(--border); padding-right: 16px;">
+                <div class="panel-section-title"><span class="material-symbols-outlined">receipt_long</span> Load from Transaction</div>
+                <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+                    <select class="form-input" id="tx-doctype" style="max-width: 140px;">
+                        <option value="Purchase Receipt">Purchase Receipt</option>
+                        <option value="Stock Entry">Stock Entry</option>
+                    </select>
+                    <div class="form-input-wrap" style="flex: 1;">
+                        <input type="text" class="form-input" id="tx-name" placeholder="e.g. PR-000145">
+                        <button class="btn-icon-input" onclick="openTxSearchModal()" title="Search recent transactions" style="height: 36px;">
+                            <span class="material-symbols-outlined">search</span>
+                        </button>
+                    </div>
+                    <button class="btn-search" onclick="loadTransactionItems()" style="width: auto; height: 36px; padding: 0 12px;">Fetch Transaction</button>
+                </div>
+            </div>
+
+            <!-- Fashion Filters -->
+            <div class="drawer-section">
+                <label class="form-label">Department</label>
+                <select class="form-input" id="flt-department">
+                    <option value="">All Departments</option>
+                </select>
+            </div>
+            <div class="drawer-section">
+                <label class="form-label">Gender</label>
+                <select class="form-input" id="flt-gender">
+                    <option value="">All Genders</option>
+                </select>
+            </div>
+            <div class="drawer-section">
+                <label class="form-label">Season</label>
+                <select class="form-input" id="flt-season">
+                    <option value="">All Seasons</option>
+                </select>
+            </div>
+            <div class="drawer-section">
+                <label class="form-label">Collection</label>
+                <select class="form-input" id="flt-collection">
+                    <option value="">All Collections</option>
+                </select>
+            </div>
+            <div class="drawer-section">
+                <label class="form-label">Supplier</label>
+                <select class="form-input" id="flt-supplier">
+                    <option value="">All Suppliers</option>
+                </select>
+            </div>
+        </div>
+
         <!-- Split Layout -->
         <div class="split-layout">
-            <!-- Left Filters & Config Panel (310px) -->
-            <div class="left-form">
-                <!-- Manual Loading -->
-                <div class="panel-section">
-                    <div class="panel-section-title"><span class="material-symbols-outlined">filter_alt</span> Load Items manually</div>
-                    <div class="form-group">
-                        <label class="form-label">Style / Article No</label>
-                        <div style="position: relative;">
-                            <input type="text" class="form-input" style="width: 100%;" id="flt-style" placeholder="e.g. BBM-01, sport-04..." autocomplete="off">
-                            <div id="autocomplete-list" class="autocomplete-items" style="display: none;"></div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Search Keyword</label>
-                        <input type="text" class="form-input" id="flt-search" placeholder="Code, name or barcode...">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Brand</label>
-                        <select class="form-input" id="flt-brand">
-                            <option value="">All Brands</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Category</label>
-                        <select class="form-input" id="flt-category">
-                            <option value="">All Categories</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Barcode Size</label>
-                        <select class="form-input" id="flt-size">
-                            <option value="">All Sizes</option>
-                        </select>
-                    </div>
-                    <button class="btn-search" onclick="loadManualItems()">
-                        <span class="material-symbols-outlined">search</span> Search & Add
-                    </button>
-                </div>
-
-                <!-- Transaction Loading -->
-                <div class="panel-section">
-                    <div class="panel-section-title"><span class="material-symbols-outlined">receipt_long</span> Load from Transaction</div>
-                    <div class="form-group">
-                        <label class="form-label">Source Document</label>
-                        <select class="form-input" id="tx-doctype">
-                            <option value="Purchase Receipt">Purchase Receipt</option>
-                            <option value="Stock Entry">Stock Entry</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Transaction ID</label>
-                        <div class="form-input-wrap">
-                            <input type="text" class="form-input" id="tx-name" placeholder="e.g. MAT-STE-2026-00012">
-                            <button class="btn-icon-input" onclick="openTxSearchModal()" title="Search recent transactions">
-                                <span class="material-symbols-outlined">search</span>
-                            </button>
-                        </div>
-                    </div>
-                    <button class="btn-search" onclick="loadTransactionItems()">
-                        <span class="material-symbols-outlined">download</span> Fetch Transaction
-                    </button>
-                </div>
+            <!-- Left Config Panel (10% Space) -->
+            <div class="left-controls">
 
                 <!-- Print Options -->
                 <div class="panel-section">
@@ -518,11 +623,28 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 <!-- Table Header Actions -->
                 <div class="table-header-bar">
                     <div class="table-header-title">Print Worksheet</div>
-                    <div class="table-header-actions" id="action-buttons" style="display: none;">
-                        <button class="topbtn" onclick="openAddCustomRowModal()" style="color:var(--primary-lt); border-color:var(--primary);"><span class="material-symbols-outlined">add_circle</span> Add Custom Item</button>
-                        <button class="topbtn" onclick="clearQueue()" style="color:var(--danger); border-color:rgba(239,68,68,0.3);"><span class="material-symbols-outlined">delete_sweep</span> Clear All</button>
-                        <button class="topbtn" onclick="downloadPRN()" style="color:var(--primary-lt); border-color:var(--primary);"><span class="material-symbols-outlined">download</span> Download PRN</button>
-                        <button class="btn-submit" onclick="triggerPrintConfirmation()" style="padding:6px 16px; font-size:12px; width:auto; height:32px; box-shadow:none;"><span class="material-symbols-outlined">print</span> Direct Print</button>
+                    <div class="table-header-actions" id="action-buttons" style="display: flex;">
+                        <button class="topbtn" id="btn-header-add-custom" onclick="openAddCustomRowModal()" style="color:var(--primary-lt); border-color:var(--primary);"><span class="material-symbols-outlined">add_circle</span> Add Custom Item</button>
+                        <button class="topbtn" id="btn-header-clear-all" onclick="clearQueue()" style="color:var(--danger); border-color:rgba(239,68,68,0.3);"><span class="material-symbols-outlined">delete_sweep</span> Clear All</button>
+                        <button class="topbtn" id="btn-header-download-prn" onclick="downloadPRN()" style="color:var(--primary-lt); border-color:var(--primary);"><span class="material-symbols-outlined">download</span> Download PRN</button>
+                    </div>
+                </div>
+
+                <!-- Sticky Worksheet Toolbar (AUD-BAR-10) -->
+                <div class="sticky-worksheet-toolbar" id="sticky-worksheet-toolbar" style="display: flex;">
+                    <div class="toolbar-actions">
+                        <button class="topbtn" id="btn-toolbar-select-all" onclick="toggleSelectAll(true)"><span class="material-symbols-outlined">check_box</span> Select All</button>
+                        <button class="topbtn" id="btn-toolbar-load-variants" onclick="triggerLoadVariants()"><span class="material-symbols-outlined">schema</span> Load Variants</button>
+                        <button class="topbtn" id="btn-toolbar-set-labels" onclick="triggerSetLabels()"><span class="material-symbols-outlined">edit</span> Set Labels</button>
+                        <button class="topbtn" id="btn-toolbar-preview" onclick="triggerPrintConfirmation()"><span class="material-symbols-outlined">visibility</span> Preview</button>
+                        <button class="btn-submit" id="btn-toolbar-print" onclick="triggerPrintConfirmation()" style="padding:6px 16px; font-size:12px; width:auto; height:32px; box-shadow:none;"><span class="material-symbols-outlined">print</span> Print</button>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="form-label" style="margin: 0; white-space: nowrap; font-size: 0.72rem;">Quantity Rule:</span>
+                        <select class="form-input" id="cfg-qty-rule" onchange="updateQtyRule(this.value)" style="width: 200px; height: 30px; font-size: 0.8rem; padding: 2px 8px; background:var(--card); border:1px solid var(--border2); color:var(--text); border-radius:var(--radius-sm);">
+                            <option value="piece" selected>Piece Mode (1 Label per Qty)</option>
+                            <option value="carton">Box/Carton Mode (Qty / Pack Size)</option>
+                        </select>
                     </div>
                 </div>
 
@@ -538,7 +660,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 <div class="placeholder-panel" id="table-placeholder">
                     <span class="material-symbols-outlined icon">barcode_scanner</span>
                     <h3>Worksheet is Empty</h3>
-                    <p>Load variants manually by Style, search items, or select a Purchase Receipt / Stock Entry to populate the printing queue.</p>
+                    <p>Load variants manually, search items, or select a Purchase Receipt / Stock Entry to populate the printing queue.</p>
                 </div>
 
                 <!-- Product Rows Worksheet -->
@@ -547,14 +669,15 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                         <thead>
                             <tr>
                                 <th style="width: 40px; text-align:center;"><input type="checkbox" id="smriti-chk-all" checked onchange="toggleSelectAll(this.checked)"></th>
-                                <th>Item Code / Name</th>
+                                <th>Article</th>
+                                <th>Name</th>
+                                <th>Color</th>
+                                <th>Size</th>
                                 <th>Barcode</th>
-                                <th>Style / Brand</th>
-                                <th>Attributes</th>
                                 <th>MRP</th>
                                 <th style="text-align:center; width:80px;">Qty</th>
-                                <th style="text-align:center; width:100px;">Size</th>
-                                <th></th>
+                                <th style="text-align:center; width:100px;">Labels</th>
+                                <th style="width: 40px;"></th>
                             </tr>
                         </thead>
                         <tbody id="barcode-tbody"></tbody>
@@ -667,6 +790,31 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                     <span class="material-symbols-outlined">save</span> Save Current Settings Preset
                 </button>
 
+                <!-- Token Mapping Card (Collapsible) (AUD-BAR-11) -->
+                <div class="preview-card" style="margin-top: 10px;">
+                    <div class="preview-header" onclick="toggleTokenMappingCollapsed()" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+                        <span style="display: flex; align-items: center; gap: 6px;">
+                            <span class="material-symbols-outlined">analytics</span> Token Mapping
+                        </span>
+                        <span class="material-symbols-outlined" id="token-mapping-toggle-icon">expand_more</span>
+                    </div>
+                    <div id="token-mapping-body" style="display: none; padding: 12px; font-size: 0.8rem; line-height: 1.5; border-top: 1px solid var(--border);">
+                        <div id="token-mapping-content" style="font-family: 'JetBrains Mono', monospace; display: flex; flex-direction: column; gap: 6px;">
+                            <div style="color: var(--text-muted); text-align: center;">Select an item in the worksheet to view token mapping</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Jobs Reprint Queue (AUD-BAR-12) -->
+                <div class="preview-card" style="margin-top: 10px;">
+                    <div class="preview-header">
+                        <span class="material-symbols-outlined">history</span> Recent Jobs
+                    </div>
+                    <div style="padding: 12px; display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto;" id="recent-jobs-list">
+                        <div style="color:var(--text-sub); text-align:center; padding: 10px;">No recent jobs</div>
+                    </div>
+                </div>
+
                 <!-- Print Queue Dashboard Card -->
                 <div class="preview-card" style="margin-top: 10px;">
                     <div class="preview-header">
@@ -709,6 +857,44 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
         </div>
     </div>
 </div>
+
+<!-- Modal: Transaction Items Checklist Modal (AUD-BAR-05) -->
+<div class="modal-backdrop" id="tx-items-modal" onclick="closeModal('tx-items-modal')">
+    <div class="modal" onclick="event.stopPropagation()" style="max-width: 650px;">
+        <div class="modal-header">
+            <div class="modal-title"><span class="material-symbols-outlined">fact_check</span> Select Transaction Items</div>
+            <button class="modal-close" onclick="closeModal('tx-items-modal')">&times;</button>
+        </div>
+        <div class="modal-body" style="gap: 12px; display: flex; flex-direction: column;">
+            <div style="display: flex; gap: 8px; align-items: center; background: rgba(255,255,255,0.03); padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+                <button class="topbtn" onclick="toggleTxChecklist('all')">Select All</button>
+                <button class="topbtn" onclick="toggleTxChecklist('missing')">Only Missing Labels</button>
+                <button class="topbtn" onclick="toggleTxChecklist('new')">Only New SKUs</button>
+            </div>
+            <div style="max-height:300px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius-sm); margin-top: 8px;">
+                <table class="smriti-table" style="font-size:0.82rem;">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align:center;"><input type="checkbox" id="chk-tx-all" checked onchange="toggleTxAllCheck(this.checked)"></th>
+                            <th>Item Code / Name</th>
+                            <th>Qty</th>
+                            <th style="text-align:center;">Barcode Status</th>
+                            <th style="text-align:center;">Age Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tx-items-tbody">
+                        <!-- populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="topbtn" onclick="closeModal('tx-items-modal')">Cancel</button>
+            <button class="btn-submit" onclick="submitTxChecklist()" style="width:auto; padding:8px 20px;">Load Selected Items</button>
+        </div>
+    </div>
+</div>
+
 
 <!-- Modal: Add Custom Temporary Item -->
 <div class="modal-backdrop" id="custom-row-modal" onclick="closeModal('custom-row-modal')">
@@ -1435,6 +1621,61 @@ async function init() {
         });
         sizeOptions = filters.sizes;
 
+        // Department selector
+        const deptSel = document.getElementById('flt-department');
+        if (deptSel && filters.departments) {
+            filters.departments.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                deptSel.appendChild(opt);
+            });
+        }
+
+        // Gender selector
+        const genderSel = document.getElementById('flt-gender');
+        if (genderSel && filters.genders) {
+            filters.genders.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g;
+                opt.textContent = g;
+                genderSel.appendChild(opt);
+            });
+        }
+
+        // Season selector
+        const seasonSel = document.getElementById('flt-season');
+        if (seasonSel && filters.seasons) {
+            filters.seasons.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                seasonSel.appendChild(opt);
+            });
+        }
+
+        // Collection selector
+        const collSel = document.getElementById('flt-collection');
+        if (collSel && filters.collections) {
+            filters.collections.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                collSel.appendChild(opt);
+            });
+        }
+
+        // Supplier selector
+        const suppSel = document.getElementById('flt-supplier');
+        if (suppSel && filters.suppliers) {
+            filters.suppliers.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                suppSel.appendChild(opt);
+            });
+        }
+
         // Render Templates dropdown
         printTemplatesList = filters.print_templates || [];
         populateTemplatesDropdown();
@@ -1450,6 +1691,7 @@ async function init() {
         
         // Render empty state initially
         renderQueue();
+        renderRecentJobs();
         
         // Bind text-area change validation in designer
         document.getElementById('design-raw').addEventListener('input', function() {
@@ -1522,7 +1764,7 @@ function debounce(func, wait) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const styleInput = document.getElementById('flt-style');
+    const styleInput = document.getElementById('flt-search');
     const autoList = document.getElementById('autocomplete-list');
     if (!styleInput || !autoList) return;
 
@@ -1652,26 +1894,47 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// Toggle advanced filters drawer (AUD-BAR-08)
+function toggleAdvancedFilters() {
+    const drawer = document.getElementById('advanced-filters-drawer');
+    const caret = document.getElementById('adv-filter-caret');
+    if (drawer.classList.contains('open')) {
+        drawer.classList.remove('open');
+        caret.textContent = '▼';
+    } else {
+        drawer.classList.add('open');
+        caret.textContent = '▲';
+    }
+}
+
 // Load manual search
 async function loadManualItems() {
-    const style = document.getElementById('flt-style').value.trim();
     const brand = document.getElementById('flt-brand').value;
     const category = document.getElementById('flt-category').value;
     const size = document.getElementById('flt-size').value;
     const search_text = document.getElementById('flt-search').value.trim();
+    const dept = document.getElementById('flt-department').value;
+    const gender = document.getElementById('flt-gender').value;
+    const season = document.getElementById('flt-season').value;
+    const collection = document.getElementById('flt-collection').value;
+    const supplier = document.getElementById('flt-supplier').value;
 
-    if (!style && !brand && !category && !size && !search_text) {
+    if (!brand && !category && !size && !search_text && !dept && !gender && !season && !collection && !supplier) {
         toast('Please specify at least one search filter or search keyword', 'info');
         return;
     }
 
     try {
         const filters = {
-            style: style || null,
             brand: brand || null,
             item_group: category || null,
             custom_barcode_size: size || null,
-            search_text: search_text || null
+            search_text: search_text || null,
+            department: dept || null,
+            gender: gender || null,
+            season: season || null,
+            collection: collection || null,
+            supplier: supplier || null
         };
         const items = await api('smriti_retail_os.barcode_api.get_items_for_printing', {
             filters: JSON.stringify(filters)
@@ -1689,7 +1952,36 @@ async function loadManualItems() {
     }
 }
 
-// Load from transaction
+// Article Range Loader (AUD-BAR-UI-01)
+async function loadRangeItems() {
+    const from_article = document.getElementById('flt-from-article').value.trim();
+    const to_article = document.getElementById('flt-to-article').value.trim();
+
+    if (!from_article || !to_article) {
+        toast('Please specify both From and To Article Numbers', 'info');
+        return;
+    }
+
+    try {
+        const items = await api('smriti_retail_os.barcode_api.get_items_by_range', {
+            from_article,
+            to_article
+        });
+
+        if (!items || !items.length) {
+            toast('No items found in this article range', 'info');
+            return;
+        }
+
+        addItemsToQueue(items);
+        toast(`Loaded ${items.length} items from range ${from_article} to ${to_article}`, 'success');
+    } catch(e) {
+        toast('Range load failed: ' + e.message, 'error');
+    }
+}
+
+// Load from transaction with checklist modal (AUD-BAR-05)
+let activeTxItems = [];
 async function loadTransactionItems() {
     const doctype = document.getElementById('tx-doctype').value;
     const name = document.getElementById('tx-name').value.trim();
@@ -1700,20 +1992,303 @@ async function loadTransactionItems() {
     }
 
     try {
-        const items = await api('smriti_retail_os.barcode_api.get_items_for_printing', {
+        // Fetch transaction items checklist payload
+        const checklist = await api('smriti_retail_os.barcode_api.get_transaction_items_checklist', {
             source_doctype: doctype,
             source_name: name
         });
 
-        if (!items || !items.length) {
+        if (!checklist || !checklist.length) {
             toast('No items found in this transaction', 'info');
             return;
         }
 
-        addItemsToQueue(items);
-        toast(`Loaded ${items.length} items from ${doctype} ${name}`, 'success');
+        activeTxItems = checklist;
+        populateTxChecklistUI();
+        openModal('tx-items-modal');
     } catch(e) {
-        toast('Failed to fetch transaction items: ' + e.message, 'error');
+        toast('Failed to fetch transaction checklist: ' + e.message, 'error');
+    }
+}
+
+function populateTxChecklistUI() {
+    const tbody = document.getElementById('tx-items-tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = activeTxItems.map((item, index) => {
+        const barcodeBadge = item.has_barcode 
+            ? `<span class="badge" style="background:#065f46; color:#10b981; font-weight:700; padding:2px 6px; border-radius:4px; font-size:10px;">Active Barcode</span>`
+            : `<span class="badge" style="background:#7f1d1d; color:#f87171; font-weight:700; padding:2px 6px; border-radius:4px; font-size:10px;">Missing Barcode</span>`;
+            
+        const ageBadge = item.is_new
+            ? `<span class="badge" style="background:#1e1b4b; color:#818cf8; font-weight:700; padding:2px 6px; border-radius:4px; font-size:10px;">New SKU</span>`
+            : `<span class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-muted); padding:2px 6px; border-radius:4px; font-size:10px;">Existing SKU</span>`;
+
+        return `
+            <tr>
+                <td style="text-align:center;">
+                    <input type="checkbox" class="tx-item-chk" data-idx="${index}" checked>
+                </td>
+                <td>
+                    <div style="font-weight:600;">${esc(item.item_name)}</div>
+                    <div style="margin-top:2px; font-family:monospace; font-size:0.75rem; color:var(--text-muted);">${esc(item.item_code)}</div>
+                </td>
+                <td>${parseInt(item.qty)}</td>
+                <td style="text-align:center;">${barcodeBadge}</td>
+                <td style="text-align:center;">${ageBadge}</td>
+            </tr>
+        `;
+    }).join('');
+    
+    document.getElementById('chk-tx-all').checked = true;
+}
+
+function toggleTxAllCheck(checked) {
+    const checkboxes = document.querySelectorAll('.tx-item-chk');
+    checkboxes.forEach(cb => cb.checked = checked);
+}
+
+function toggleTxChecklist(mode) {
+    const checkboxes = document.querySelectorAll('.tx-item-chk');
+    checkboxes.forEach(cb => {
+        const idx = parseInt(cb.getAttribute('data-idx'));
+        const item = activeTxItems[idx];
+        if (mode === 'all') {
+            cb.checked = true;
+        } else if (mode === 'missing') {
+            cb.checked = !item.has_barcode;
+        } else if (mode === 'new') {
+            cb.checked = item.is_new;
+        }
+    });
+    
+    // Update main header checkbox based on selection
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    document.getElementById('chk-tx-all').checked = allChecked;
+}
+
+async function submitTxChecklist() {
+    const checkboxes = document.querySelectorAll('.tx-item-chk');
+    const checkedIdxs = Array.from(checkboxes).filter(cb => cb.checked).map(cb => parseInt(cb.getAttribute('data-idx')));
+    
+    if (!checkedIdxs.length) {
+        toast('Please select at least one item to load', 'info');
+        return;
+    }
+    
+    closeModal('tx-items-modal');
+    
+    const doctype = document.getElementById('tx-doctype').value;
+    const name = document.getElementById('tx-name').value.trim();
+    
+    try {
+        toast('Loading selected items details...', 'info');
+        
+        // Fetch print details for each selected item code and quantity
+        const promises = checkedIdxs.map(idx => {
+            const item = activeTxItems[idx];
+            return api('smriti_retail_os.barcode_api.expand_item_variants', {
+                item_code: item.item_code,
+                default_print_qty: item.qty
+            });
+        });
+        
+        const results = await Promise.all(promises);
+        const allItems = results.flat();
+        
+        addItemsToQueue(allItems);
+        toast(`Successfully loaded ${allItems.length} variant items from ${doctype} ${name}`, 'success');
+    } catch(e) {
+        toast('Failed to load transaction items details: ' + e.message, 'error');
+    }
+}
+
+// Global quantity rule state
+let activeQtyRule = 'piece';
+
+function updateQtyRule(rule) {
+    activeQtyRule = rule;
+    printQueue.forEach(item => {
+        if (activeQtyRule === 'carton') {
+            if (item.pack_size && item.pack_size > 0) {
+                item.print_qty = Math.ceil((item.qty || 1) / item.pack_size);
+                item.show_pack_warning = false;
+            } else {
+                item.print_qty = 1;
+                item.show_pack_warning = true;
+            }
+        } else {
+            item.print_qty = item.qty || 1;
+            item.show_pack_warning = false;
+        }
+    });
+    renderQueue();
+    toast(`Switched quantity rule to ${activeQtyRule === 'carton' ? 'Box/Carton Mode' : 'Piece Mode'}`, 'success');
+}
+
+// Bulk variants expander for selected worksheet items (AUD-BAR-UI-02)
+async function triggerLoadVariants() {
+    const selectedIdxs = printQueue.map((item, idx) => item.selected ? idx : -1).filter(idx => idx !== -1);
+    if (!selectedIdxs.length) {
+        toast('Please select at least one item in the worksheet to expand variants', 'info');
+        return;
+    }
+    
+    try {
+        toast('Expanding selected items to variants...', 'info');
+        const expandedQueue = [];
+        
+        for (let i = 0; i < printQueue.length; i++) {
+            const item = printQueue[i];
+            if (item.selected) {
+                const variants = await api('smriti_retail_os.barcode_api.expand_item_variants', {
+                    item_code: item.item_code,
+                    default_print_qty: item.qty || 1
+                });
+                variants.forEach(v => {
+                    expandedQueue.push({
+                        ...v,
+                        selected: true
+                    });
+                });
+            } else {
+                expandedQueue.push(item);
+            }
+        }
+        
+        printQueue = expandedQueue;
+        // Recalculate print quantities under active rule
+        updateQtyRule(activeQtyRule);
+        toast('Expanded selected style templates to variants', 'success');
+    } catch(e) {
+        toast('Variant expansion failed: ' + e.message, 'error');
+    }
+}
+
+// Bulk set labels print quantity for selected worksheet rows
+function triggerSetLabels() {
+    const selectedIdxs = printQueue.map((item, idx) => item.selected ? idx : -1).filter(idx => idx !== -1);
+    if (!selectedIdxs.length) {
+        toast('Please select at least one item in the worksheet to set labels', 'info');
+        return;
+    }
+    
+    const inputVal = prompt('Enter print labels quantity for selected items:');
+    if (inputVal === null) return;
+    const qty = parseInt(inputVal);
+    if (isNaN(qty) || qty <= 0) {
+        toast('Please enter a valid positive number', 'error');
+        return;
+    }
+    
+    selectedIdxs.forEach(idx => {
+        printQueue[idx].print_qty = qty;
+        printQueue[idx].qty = qty * (printQueue[idx].pack_size || 1); // update qty ref accordingly
+    });
+    renderQueue();
+    toast(`Set labels count to ${qty} for ${selectedIdxs.length} item(s)`, 'success');
+}
+
+// Token Mapping collapsible panel state and toggle (AUD-BAR-11)
+let tokenMappingCollapsed = true;
+function toggleTokenMappingCollapsed() {
+    const body = document.getElementById('token-mapping-body');
+    const icon = document.getElementById('token-mapping-toggle-icon');
+    if (body.style.display === 'none') {
+        body.style.display = 'block';
+        icon.textContent = 'expand_less';
+        tokenMappingCollapsed = false;
+    } else {
+        body.style.display = 'none';
+        icon.textContent = 'expand_more';
+        tokenMappingCollapsed = true;
+    }
+}
+
+function updateTokenMappingUI(item) {
+    const container = document.getElementById('token-mapping-content');
+    if (!container) return;
+    if (!item) {
+        container.innerHTML = `<div style="color: var(--text-muted); text-align: center;">Select an item in the worksheet to view token mapping</div>`;
+        return;
+    }
+    
+    const tokens = [
+        { name: 'Barcode', val: item.barcode || 'N/A' },
+        { name: 'MRP', val: item.mrp },
+        { name: 'Color', val: item.color || 'N/A' },
+        { name: 'Size', val: item.size || 'N/A' },
+        { name: 'Style', val: item.style || 'N/A' },
+        { name: 'Brand', val: item.brand || 'N/A' },
+        { name: 'Item Code', val: item.item_code },
+        { name: 'Item Name', val: item.item_name }
+    ];
+    
+    container.innerHTML = tokens.map(t => 
+        `<div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 4px;">
+            <span style="color: var(--primary-lt); font-size: 11px;">{${t.name.toLowerCase().replace(' ', '_')}} &rarr;</span>
+            <span style="color: var(--text); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; font-size: 11px;" title="${esc(t.val)}">${esc(t.val)}</span>
+         </div>`
+    ).join('');
+}
+
+// Recent Jobs Reprint Queue (AUD-BAR-12)
+function recordPrintJob(jobRef, totalQty) {
+    let jobs = [];
+    try {
+        jobs = JSON.parse(localStorage.getItem('smriti_recent_jobs')) || [];
+    } catch(e) {}
+    
+    const newJob = {
+        id: 'job_' + Date.now(),
+        ref: jobRef || 'Manual Print',
+        date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString([], { month: 'short', day: 'numeric' }),
+        total_qty: totalQty,
+        items: JSON.parse(JSON.stringify(printQueue))
+    };
+    
+    jobs.unshift(newJob);
+    jobs = jobs.slice(0, 5); // Keep last 5 runs
+    localStorage.setItem('smriti_recent_jobs', JSON.stringify(jobs));
+    renderRecentJobs();
+}
+
+function renderRecentJobs() {
+    const listEl = document.getElementById('recent-jobs-list');
+    if (!listEl) return;
+    
+    let jobs = [];
+    try {
+        jobs = JSON.parse(localStorage.getItem('smriti_recent_jobs')) || [];
+    } catch(e) {}
+    
+    if (!jobs.length) {
+        listEl.innerHTML = `<div style="color:var(--text-sub); text-align:center; padding: 10px; font-size: 0.8rem;">No recent jobs</div>`;
+        return;
+    }
+    
+    listEl.innerHTML = jobs.map(j => `
+        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 10px; font-size:0.8rem;">
+            <div>
+                <div style="font-weight:600; color:var(--text);">${esc(j.ref)}</div>
+                <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">${esc(j.date)} &bull; ${j.total_qty} Labels</div>
+            </div>
+            <button class="topbtn" onclick="reprintJob('${j.id}')" style="padding:4px 8px; font-size:10px;">Reprint</button>
+        </div>
+    `).join('');
+}
+
+function reprintJob(jobId) {
+    let jobs = [];
+    try {
+        jobs = JSON.parse(localStorage.getItem('smriti_recent_jobs')) || [];
+    } catch(e) {}
+    
+    const job = jobs.find(j => j.id === jobId);
+    if (job && job.items) {
+        printQueue = JSON.parse(JSON.stringify(job.items));
+        renderQueue();
+        toast(`Reloaded job: ${job.ref} (${job.total_qty} Labels)`, 'success');
     }
 }
 
@@ -1722,15 +2297,17 @@ function addItemsToQueue(items) {
     items.forEach(it => {
         const existing = printQueue.find(q => q.item_code === it.item_code);
         if (existing) {
-            existing.print_qty += it.print_qty || 1;
+            existing.qty = (existing.qty || 1) + (it.qty || 1);
         } else {
             printQueue.push({
                 ...it,
-                selected: true // Default checkbox value
+                qty: it.qty || 1,
+                selected: true
             });
         }
     });
-    renderQueue();
+    // Recalculate print quantities under active rule
+    updateQtyRule(activeQtyRule);
 }
 
 // Render queue worksheet
@@ -1738,21 +2315,49 @@ function renderQueue() {
     const placeholder = document.getElementById('table-placeholder');
     const wrap = document.getElementById('table-wrap');
     const actions = document.getElementById('action-buttons');
+    const stickyToolbar = document.getElementById('sticky-worksheet-toolbar');
     const bulkToolbar = document.getElementById('bulk-toolbar');
     const tbody = document.getElementById('barcode-tbody');
 
-    if (!printQueue.length) {
+    const hasItems = printQueue.length > 0;
+
+    if (hasItems) {
+        placeholder.style.display = 'none';
+        wrap.style.display = 'flex';
+    } else {
         placeholder.style.display = 'flex';
         wrap.style.display = 'none';
-        actions.style.display = 'none';
-        bulkToolbar.style.display = 'none';
         drawLivePreview(null);
-        return;
+        updateTokenMappingUI(null);
     }
 
-    placeholder.style.display = 'none';
-    wrap.style.display = 'flex';
+    // Always show actions bar, but toggle individual item-dependent buttons
     actions.style.display = 'flex';
+    const clearAllBtn = document.getElementById('btn-header-clear-all');
+    const downloadPrnBtn = document.getElementById('btn-header-download-prn');
+    if (clearAllBtn) clearAllBtn.style.display = hasItems ? 'inline-flex' : 'none';
+    if (downloadPrnBtn) downloadPrnBtn.style.display = hasItems ? 'inline-flex' : 'none';
+
+    // Sticky Toolbar is always visible, but we enable/disable buttons
+    stickyToolbar.style.display = 'flex';
+    const selectAllBtn = document.getElementById('btn-toolbar-select-all');
+    const loadVariantsBtn = document.getElementById('btn-toolbar-load-variants');
+    const setLabelsBtn = document.getElementById('btn-toolbar-set-labels');
+    const previewBtn = document.getElementById('btn-toolbar-preview');
+    const printBtn = document.getElementById('btn-toolbar-print');
+    const qtyRuleSelect = document.getElementById('cfg-qty-rule');
+
+    if (selectAllBtn) selectAllBtn.disabled = !hasItems;
+    if (loadVariantsBtn) loadVariantsBtn.disabled = !hasItems;
+    if (setLabelsBtn) setLabelsBtn.disabled = !hasItems;
+    if (previewBtn) previewBtn.disabled = !hasItems;
+    if (printBtn) printBtn.disabled = !hasItems;
+    if (qtyRuleSelect) qtyRuleSelect.disabled = !hasItems;
+
+    if (!hasItems) {
+        bulkToolbar.style.display = 'none';
+        return;
+    }
     
     // Update bulk toolbar visibility
     const checkedCount = printQueue.filter(q => q.selected).length;
@@ -1764,44 +2369,30 @@ function renderQueue() {
     }
 
     tbody.innerHTML = printQueue.map((item, index) => {
-        const optionsHtml = sizeOptions.map(sz => 
-            `<option value="${sz}" ${item.label_size === sz ? 'selected' : ''}>${sz}</option>`
-        ).join('');
-
         const isChecked = item.selected ? 'checked' : '';
         const rowClass = item.selected ? 'selected' : '';
 
-        // esc() applied to all DB-sourced strings — prevents XSS from crafted item names/barcodes
         return `
             <tr class="${rowClass}" onclick="selectRowIndex(${index}, event)">
-                <td style="text-align:center;">
+                <td style="text-align:center;" onclick="event.stopPropagation()">
                     <input type="checkbox" class="grid-select-chk" ${isChecked} onchange="toggleSelectRow(${index}, this.checked, event)">
                 </td>
-                <td>
-                    <div style="font-weight:600; color:var(--text);">${esc(item.item_name)}</div>
-                    <div style="margin-top:4px;"><span class="item-code-badge">${esc(item.item_code)}</span></div>
-                </td>
+                <td style="font-family:monospace; font-weight:600; color:var(--text);">${esc(item.item_code)}</td>
+                <td style="font-weight:500;">${esc(item.item_name)}</td>
+                <td>${esc(item.color || 'N/A')}</td>
+                <td><span class="item-code-badge" style="background:rgba(99,102,241,0.1); color:var(--primary-lt); font-weight:600;">${esc(item.size || 'N/A')}</span></td>
                 <td style="font-family:monospace; color:var(--primary-lt); font-weight:600;">${esc(item.barcode)}</td>
-                <td>
-                    <div style="font-weight:500;">${esc(item.style)}</div>
-                    <div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">${esc(item.brand)}</div>
-                </td>
-                <td>
-                    <div style="font-size:0.78rem; color:var(--text-muted);">Sz: <strong style="color:var(--text)">${esc(item.size || 'N/A')}</strong></div>
-                    <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">Col: <strong style="color:var(--text)">${esc(item.color || 'N/A')}</strong></div>
-                </td>
                 <td style="font-weight:700; color:var(--success);">Rs. ${parseInt(item.mrp)}</td>
+                <td style="text-align:center;">${item.qty !== undefined ? parseInt(item.qty) : 1}</td>
                 <td style="text-align:center;" onclick="event.stopPropagation()">
-                    <input type="number" class="tbl-input qty-input" value="${item.print_qty}" min="1" onchange="updateQty(${index}, this.value)">
-                </td>
-                <td style="text-align:center;" onclick="event.stopPropagation()">
-                    <select class="tbl-input size-select" onchange="updateSize(${index}, this.value)">
-                        ${optionsHtml}
-                    </select>
+                    <div style="display:flex; align-items:center; justify-content:center; gap:4px;">
+                        <input type="number" class="tbl-input qty-input" value="${item.print_qty}" min="1" onchange="updateQty(${index}, this.value)" style="width:70px; text-align:center;">
+                        ${item.show_pack_warning ? `<span class="material-symbols-outlined" style="color:var(--warning); font-size:16px; cursor:help;" title="Pack Size Missing: Using 1 Label">warning</span>` : ''}
+                    </div>
                 </td>
                 <td style="text-align:right;" onclick="event.stopPropagation()">
-                    <button class="btn-del-row" onclick="removeRow(${index})">
-                        <span class="material-symbols-outlined">delete</span>
+                    <button class="btn-del-row" onclick="removeRow(${index})" title="Delete row">
+                        <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
                     </button>
                 </td>
             </tr>
@@ -1812,13 +2403,16 @@ function renderQueue() {
     const activeIdx = printQueue.findIndex(q => q.selected);
     if (activeIdx !== -1) {
         drawLivePreview(printQueue[activeIdx]);
+        updateTokenMappingUI(printQueue[activeIdx]);
     } else if (printQueue.length > 0) {
         drawLivePreview(printQueue[0]);
+        updateTokenMappingUI(printQueue[0]);
     }
 }
 
 function selectRowIndex(idx, event) {
     drawLivePreview(printQueue[idx]);
+    updateTokenMappingUI(printQueue[idx]);
 }
 
 function toggleSelectRow(idx, checked, event) {
@@ -1834,11 +2428,13 @@ function toggleSelectAll(checked) {
 function updateQty(idx, val) {
     const qty = parseInt(val) || 1;
     printQueue[idx].print_qty = qty;
+    printQueue[idx].qty = qty * (printQueue[idx].pack_size || 1); // keep reference quantity aligned
     
     // If active preview is this item, redraw preview
     const activeItemCode = document.getElementById('sim-barcode').textContent;
     if (printQueue[idx].barcode === activeItemCode) {
         drawLivePreview(printQueue[idx]);
+        updateTokenMappingUI(printQueue[idx]);
     }
 }
 
@@ -1847,6 +2443,7 @@ function updateSize(idx, val) {
     const activeItemCode = document.getElementById('sim-barcode').textContent;
     if (printQueue[idx].barcode === activeItemCode) {
         drawLivePreview(printQueue[idx]);
+        updateTokenMappingUI(printQueue[idx]);
     }
 }
 
@@ -1854,6 +2451,7 @@ function removeRow(idx) {
     printQueue.splice(idx, 1);
     renderQueue();
 }
+
 
 // Bulk Actions
 function clearQueue() {
@@ -3788,6 +4386,9 @@ async function downloadPRN() {
         
         // Log locally
         logSessionPrint('LOCAL', `PRN DOWNLOADED (${checkedItems.length} lines)`, true);
+        const jobRef = document.getElementById('tx-name').value.trim() || 'Manual PRN';
+        const totalQty = checkedItems.reduce((acc, q) => acc + q.print_qty, 0);
+        recordPrintJob(jobRef, totalQty);
         
     } catch(e) {
         toast('PRN generation error: ' + e.message, 'error');
@@ -3927,6 +4528,9 @@ async function executeDirectLANPrint(checkedItems, template, ip, port, totalQty)
             toast(`Print job queued successfully: ${res.job_id}`, 'success');
             logSessionPrint(ip, `DIRECT LAN QUEUED (${res.job_id})`, true);
             
+            const jobRef = document.getElementById('tx-name').value.trim() || 'LAN Direct';
+            recordPrintJob(jobRef, totalQty);
+            
             // Poll for job status and refresh dashboard
             pollPrintJobStatus(res.job_id);
             refreshPrintJobsDashboard();
@@ -3973,6 +4577,9 @@ async function executeDirectUSBPrint(checkedItems, template, usbPrinter, totalQt
         
         toast(`Successfully sent ${totalQty} labels to printer '${usbPrinter}'`, 'success');
         logSessionPrint(usbPrinter, `USB PRINT SUCCESS (${totalQty} labels)`, true);
+        
+        const jobRef = document.getElementById('tx-name').value.trim() || 'USB Direct';
+        recordPrintJob(jobRef, totalQty);
         
         // Log to backend print audit log
         await api('smriti_retail_os.barcode_api.log_print_job', {
