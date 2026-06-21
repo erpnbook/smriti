@@ -1128,10 +1128,13 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         
         # Create standard test items if not exists
         if not frappe.db.exists("Item", "TEST-ITEM-123"):
+            if not frappe.db.exists("GST HSN Code", "641590"):
+                frappe.get_doc({"doctype": "GST HSN Code", "name": "641590"}).insert(ignore_permissions=True)
             doc = frappe.new_doc("Item")
             doc.item_code = "TEST-ITEM-123"
             doc.item_name = "Test Item 123"
             doc.item_group = "All Item Groups"
+            doc.gst_hsn_code = "641590"
             doc.insert(ignore_permissions=True)
             frappe.db.commit()
 
@@ -1153,10 +1156,13 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         for i in range(1, 6):
             code = f"BBM-{i:04d}"
             if not frappe.db.exists("Item", code):
+                if not frappe.db.exists("GST HSN Code", "641590"):
+                    frappe.get_doc({"doctype": "GST HSN Code", "name": "641590"}).insert(ignore_permissions=True)
                 doc = frappe.new_doc("Item")
                 doc.item_code = code
                 doc.item_name = f"Test Range Item {i}"
                 doc.item_group = "All Item Groups"
+                doc.gst_hsn_code = "641590"
                 doc.insert(ignore_permissions=True)
                 
         frappe.db.commit()

@@ -864,6 +864,45 @@ HELP_CENTER_REGISTRY = {
                 "answer": _("The unified Knowledge Center portal is scheduled for deployment during Sprint 4 (Q3 2026). The menu item is currently reserved in the navigation sidebar.")
             }
         ]
+    },
+    "barcode_studio": {
+        "title": _("Barcode Studio V2.4a Operations"),
+        "category": "Operations Guides",
+        "description": _("Warehouse barcode printing workspace, range loading, variant expansion, and print queue management."),
+        "about": _("Detailed guide for SMRITI Barcode Studio V2.4a enhancements, including worksheet grids, mapping previews, and box modes."),
+        "author": {
+            "name": "Jawahar R. Mallah",
+            "title": _("Founder & Chief Architect, AITDL"),
+            "quote": _("High-volume warehouse operations demand frictionless barcode labeling and zero-touch variant generation.")
+        },
+        "content": _(
+            "SMRITI Barcode Studio V2.4a introduces a widescreen 3-panel warehouse barcode printing workspace designed for high-throughput retail fulfillment.\n\n"
+            "1. Article Range Loader & Variant Expansion\n"
+            "Warehouse operators can load a range of sequential style codes (e.g., BBM-0001 to BBM-0100) using the Range Loader. For fashion retail, styles automatically expand into their size-color variant combinations (e.g., BBM-001 expands to S, M, L, XL variants) by scanning existing database records.\n\n"
+            "2. Interactive Worksheet Grid\n"
+            "The center worksheet presents an always-visible grid featuring:\n"
+            "- Select checkbox: Mark rows for printing.\n"
+            "- Article/Barcode/MRP/Color/Size columns.\n"
+            "- Qty input and dynamic Labels counter.\n\n"
+            "3. Dynamic Mapping Preview & Fallbacks\n"
+            "The sidebar renders real-time mappings showing how layout tags (such as {barcode}, {brand}, and {mrp}) map to actual values (e.g., Barcode -> 8901234567890). If a variant lacks pricing, fallback logic queries price lists and template parameters to prevent blank labels.\n\n"
+            "4. Box/Carton Mode & Reprint Queue\n"
+            "Box Mode calculates labels based on carton capacity multiplier limits. The Reprint Queue caches recent jobs for instant re-execution without re-querying transactions."
+        ),
+        "faqs": [
+            {
+                "question": _("How does the system handle missing prices during barcode layout mapping?"),
+                "answer": _("It triggers the fallback price resolution rule: checking Variant Price, standard Price Lists, and finally Parent Template prices in order.")
+            },
+            {
+                "question": _("Can I reprint labels without searching for the transaction again?"),
+                "answer": _("Yes. The persistent Reprint Queue holds history data of recent print jobs, enabling one-click re-printing from the toolbar.")
+            },
+            {
+                "question": _("What selection options are available for transaction imports?"),
+                "answer": _("When importing a Purchase Receipt or PO, the expansion modal allows you to choose 'Select All', 'Only Missing Labels', or 'Only New SKUs' to optimize print volume.")
+            }
+        ]
     }
 }
 
