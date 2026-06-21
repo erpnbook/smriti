@@ -1211,7 +1211,8 @@ class SMRITIReportEngine:
             "payment_register", "receipt_register", "cash_book", "day_book",
             "customer_outstanding", "supplier_outstanding", "security_audit_log", "address_change_log"
         ]
-        if self.report_key in bypassed_reports:
+        query_config = REPORT_QUERIES.get(self.report_key)
+        if self.report_key in bypassed_reports or (query_config and query_config.get("is_custom")):
             return
 
         columns = []
@@ -1747,6 +1748,7 @@ class SMRITIReportEngine:
         order_by = config.get("order_by")
 
         # Safe SQL Resolver & Dynamic Auto-Aggregation
+        base_alias_map = extract_select_alias_map(base_sql)
         columns = []
         bypassed_reports = [
             "payment_register", "receipt_register", "cash_book", "day_book",
@@ -1767,7 +1769,11 @@ class SMRITIReportEngine:
             "POS Invoice": "parent",
             "Item": "item",
             "Bin": "b",
-            "SMRITI Party Stock Account": "psa"
+            "SMRITI Party Stock Account": "psa",
+            "Sales Invoice Payment": "p",
+            "POS Closing Entry Detail": "cd",
+            "POS Closing Entry": "ce",
+            "Item Variant Attribute": "va"
         }
 
         for col in columns:
@@ -1798,21 +1804,44 @@ class SMRITIReportEngine:
                     original_doctype = rev_alias_map.get(clean_alias)
                     
                     import re
-                    alias_pattern = rf"\b{re.escape(clean_alias)}\b"
-                    has_alias = bool(re.search(alias_pattern, base_sql, re.IGNORECASE))
-                    
+                    has_alias = False
                     has_doctype = False
                     if original_doctype:
+                        normalized_sql = " ".join(base_sql.split()).replace("`", "").replace('"', "")
+                        alias_pattern = rf"\b(?:tab)?{re.escape(original_doctype)}\s+(?:AS\s+)?\b{re.escape(clean_alias)}\b"
+                        has_alias = bool(re.search(alias_pattern, normalized_sql, re.IGNORECASE))
+                        
                         doctype_pattern = rf"\b{re.escape(original_doctype)}\b|\b{re.escape('tab' + original_doctype)}\b"
-                        has_doctype = bool(re.search(doctype_pattern, base_sql.replace(" ", "").replace("`", ""), re.IGNORECASE))
+                        has_doctype = bool(re.search(doctype_pattern, normalized_sql, re.IGNORECASE))
                         
                     if not has_alias and not has_doctype:
-                        frappe.throw(
-                            _("Column '{0}' ({1}) cannot be displayed in this report because it requires the '{2}' table, which is not part of this report's query configuration.")
-                            .format(col.get("label") or fieldname, fieldname, original_doctype or clean_alias),
-                            frappe.ValidationError,
-                            title=_("Incompatible Report Column")
-                        )
+                        RESERVED_ALIASES = {"*", "__all__", "parent", "idx", "doctype", "owner", "modified", "creation"}
+                        if fieldname.lower() in RESERVED_ALIASES:
+                            frappe.throw(
+                                _("Column '{0}' ({1}) is a framework-reserved alias and cannot be resolved dynamically.")
+                                .format(col.get("label") or fieldname, fieldname),
+                                frappe.ValidationError
+                            )
+                        recovered = base_alias_map.get(fieldname)
+                        if recovered and not expression_contains_subquery(recovered):
+                            log_explain_audit_event(
+                                event_type="projection_recovery",
+                                report=self.report_key,
+                                fieldname=fieldname,
+                                recovered_expression=recovered
+                            )
+                            resolved_proj = recovered
+                            dynamic_projections.append(f"{resolved_proj} as {fieldname}")
+                            if term.measure_or_dimension == "Measure":
+                                measures.append(fieldname)
+                            continue
+                        else:
+                            frappe.throw(
+                                _("Column '{0}' ({1}) cannot be displayed in this report because it requires the '{2}' table, which is not part of this report's query configuration.")
+                                .format(col.get("label") or fieldname, fieldname, original_doctype or clean_alias),
+                                frappe.ValidationError,
+                                title=_("Incompatible Report Column")
+                            )
                 
                 if term.measure_or_dimension == "Measure":
                     agg = term.default_aggregation or "Sum"
@@ -1841,7 +1870,7 @@ class SMRITIReportEngine:
 
         # Company filter (always applicable if source contains company)
         company = self.filters.get("company")
-        if company:
+        if company and table_supports_company_filter(base_sql):
             where_clauses.append("parent.company = %(company)s" if "parent ON" in base_sql else "b.company = %(company)s" if "tabBin" in base_sql else "ce.company = %(company)s" if "tabPOS Closing Entry" in base_sql else "company = %(company)s")
             params["company"] = company
         elif self.template.company_restricted:
@@ -2133,6 +2162,123 @@ def get_smriti_cashiers():
         WHERE r.role IN ('SMRITI Cashier', 'SMRITI Store Manager') AND u.enabled = 1
         ORDER BY fullname ASC
     """, as_dict=True)
+
+
+def log_explain_audit_event(event_type, report, fieldname, recovered_expression):
+    try:
+        ip_addr = "127.0.0.1"
+        if hasattr(frappe.local, "request_ip") and frappe.local.request_ip:
+            ip_addr = frappe.local.request_ip
+            
+        company = frappe.defaults.get_user_default("Company") or ""
+        
+        details = {
+            "report": report,
+            "fieldname": fieldname,
+            "recovered_expression": recovered_expression
+        }
+        
+        log_doc = frappe.get_doc({
+            "doctype": "SMRITI Audit Event",
+            "timestamp": frappe.utils.now_datetime(),
+            "user": frappe.session.user or "Administrator",
+            "event_type": event_type,
+            "company": company,
+            "ip_address": ip_addr,
+            "before_state": "",
+            "after_state": json.dumps(details)
+        })
+        log_doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+    except Exception as e:
+        frappe.log_error(f"Error in log_explain_audit_event: {str(e)}")
+
+
+REPORT_FILTER_CAPABILITIES = {
+    "tabActivity Log": {
+        "company": False
+    }
+}
+
+def table_supports_company_filter(base_sql):
+    for table, capabilities in REPORT_FILTER_CAPABILITIES.items():
+        if table in base_sql and not capabilities.get("company", True):
+            return False
+    return True
+
+def expression_contains_subquery(expr):
+    import re
+    clean_expr = expr.upper()
+    return bool(re.search(r"\bSELECT\b", clean_expr) or re.search(r"\bEXISTS\b", clean_expr))
+
+def extract_select_alias_map(base_sql):
+    """
+    Parses base_sql to map fieldnames/aliases to their SQL expressions.
+    Handles nested functions, CASE statements, and complex formatting.
+    """
+    import re
+    alias_map = {}
+    sql_upper = base_sql.upper()
+    select_index = sql_upper.find("SELECT")
+    if select_index == -1:
+        return alias_map
+
+    # Scan for top-level FROM clause, ignoring nested subqueries
+    start_pos = select_index + 6
+    depth = 0
+    from_index = -1
+    for i in range(start_pos, len(base_sql)):
+        char = base_sql[i]
+        if char == '(':
+            depth += 1
+        elif char == ')':
+            depth -= 1
+        elif depth == 0:
+            if base_sql[i:i+4].upper() == "FROM" and (i == 0 or base_sql[i-1].isspace()) and (i+4 == len(base_sql) or base_sql[i+4].isspace() or base_sql[i+4] == '`'):
+                from_index = i
+                break
+
+    if from_index == -1:
+        return alias_map
+
+    select_clause = base_sql[start_pos:from_index].strip()
+    
+    # Split select clause by comma at depth 0
+    projections = []
+    current_proj = []
+    depth = 0
+    for char in select_clause:
+        if char == '(':
+            depth += 1
+            current_proj.append(char)
+        elif char == ')':
+            depth -= 1
+            current_proj.append(char)
+        elif char == ',' and depth == 0:
+            projections.append("".join(current_proj).strip())
+            current_proj = []
+        else:
+            current_proj.append(char)
+    if current_proj:
+        projections.append("".join(current_proj).strip())
+
+    # Map aliases to expressions
+    for proj in projections:
+        proj = proj.strip()
+        # Match "expression as alias"
+        match = re.search(r"^(.*?)\s+as\s+([a-zA-Z0-9_`'\"\s]+)$", proj, re.IGNORECASE | re.DOTALL)
+        if match:
+            expr = match.group(1).strip()
+            alias = match.group(2).replace("`", "").replace("\"", "").replace("'", "").strip()
+            alias_map[alias] = expr
+        else:
+            # Fallback for plain column references (e.g., "tbl.col" -> alias is "col")
+            parts = proj.split(".")
+            last_part = parts[-1].strip().replace("`", "").replace("\"", "").replace("'", "")
+            if re.match(r"^[a-zA-Z0-9_]+$", last_part):
+                alias_map[last_part] = proj
+            
+    return alias_map
 
 
 def validate_query_safety(sql_query):

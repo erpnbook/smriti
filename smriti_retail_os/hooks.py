@@ -272,10 +272,12 @@ doc_events = {
             "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
         ],
         "on_submit": [
-            "smriti_retail_os.cge.service.cge_service.process_invoice_submit"
+            "smriti_retail_os.cge.service.cge_service.process_invoice_submit",
+            "smriti_retail_os.sfm.service.attribution_service.process_invoice_submit"
         ],
         "on_cancel": [
-            "smriti_retail_os.cge.service.cge_service.process_invoice_cancel"
+            "smriti_retail_os.cge.service.cge_service.process_invoice_cancel",
+            "smriti_retail_os.sfm.service.attribution_service.process_invoice_cancel"
         ],
         "on_trash": [
             "smriti_retail_os.hooks_logic.release_reserved_budget_on_trash"
@@ -297,11 +299,13 @@ doc_events = {
         ],
         "on_submit": [
             "smriti_retail_os.psv_service.process_sales_invoice_submit",
-            "smriti_retail_os.cge.service.cge_service.process_invoice_submit"
+            "smriti_retail_os.cge.service.cge_service.process_invoice_submit",
+            "smriti_retail_os.sfm.service.attribution_service.process_invoice_submit"
         ],
         "on_cancel": [
             "smriti_retail_os.psv_service.process_sales_invoice_cancel",
-            "smriti_retail_os.cge.service.cge_service.process_invoice_cancel"
+            "smriti_retail_os.cge.service.cge_service.process_invoice_cancel",
+            "smriti_retail_os.sfm.service.attribution_service.process_invoice_cancel"
         ],
         "on_trash": [
             "smriti_retail_os.hooks_logic.release_reserved_budget_on_trash"
@@ -382,6 +386,9 @@ doc_events = {
             "smriti_retail_os.services.knowledge_service.cleanup_knowledge_asset_on_trash",
             "smriti_retail_os.reports_api.invalidate_glossary_cache"
         ]
+    },
+    "SMRITI Attribution Ledger": {
+        "after_insert": "smriti_retail_os.sfm.service.commission_service.process_attribution_ledger_insert"
     }
 }
 
@@ -504,6 +511,7 @@ website_route_rules = [
     # ─── Coming Soon Route Alias ────────────────────────────────────
     {"from_route": "/coming-soon", "to_route": "smriti-coming-soon"},
     {"from_route": "/smriti-cge", "to_route": "smriti-cge"},
+    {"from_route": "/smriti-sfm", "to_route": "smriti-sfm"},
     {"from_route": "/cge-benefit-instruments", "to_route": "cge_generic"},
     {"from_route": "/cge-membership-tiers", "to_route": "cge_generic"},
     {"from_route": "/cge-loyalty-programs", "to_route": "cge_generic"},

@@ -1,0 +1,16 @@
+# -*- coding: utf-8 -*-
+#
+# @file: smriti_commission_adjustment_detail.py
+# @description: Document controller class for SMRITI Commission Adjustment Detail.
+# @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+# @date: 2026-06-22
+# @version: 1.0.0
+# @license: MIT
+# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+#
+
+import frappe
+from frappe.model.document import Document
+
+class SMRITICommissionAdjustmentDetail(Document):
+    pass

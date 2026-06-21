@@ -9,6 +9,7 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 import frappe
+import frappe.auth
 import json
 import importlib
 

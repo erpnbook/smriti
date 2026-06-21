@@ -15,30 +15,67 @@ import json
 from smriti_retail_os.reports_api import SMRITIReportEngine
 
 class TestReportingGovernance(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        try:
+            frappe.db.rollback()
+        except Exception:
+            pass
+        # Clean up test users once at start
+        frappe.db.delete("User", {"email": ["in", ["user_a@example.com", "user_b@example.com", "test_user@example.com"]]})
+        frappe.db.commit()
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            frappe.db.rollback()
+        except Exception:
+            pass
+        # Clean up test users at the end of class
+        frappe.db.delete("User", {"email": ["in", ["user_a@example.com", "user_b@example.com", "test_user@example.com"]]})
+        frappe.db.commit()
+
     def setUp(self):
-        # We will create temporary test terms and templates
+        frappe.clear_cache()
         self.cleanup_records()
         self.create_test_records()
 
     def tearDown(self):
         self.cleanup_records()
+        frappe.clear_cache()
 
     def cleanup_records(self):
+        try:
+            frappe.db.rollback()
+        except Exception:
+            pass
         # Clean up test business terms
-        test_terms = ["tst_dim_approved", "tst_meas_approved", "tst_meas_no_agg", "tst_term_deprecated", "tst_term_blocked", "tst_term_unapproved"]
-        frappe.db.delete("SMRITI Business Term", {"term_id": ["in", test_terms]})
-        frappe.db.delete("SMRITI Business Term", {"dictionary_key": ["in", test_terms]})
+        test_terms = ["tst_dim_approved", "tst_meas_approved", "tst_meas_no_agg", "tst_term_deprecated", "tst_term_blocked", "tst_term_unapproved", "tst_meas_items_qty"]
+        for term_id in test_terms:
+            frappe.db.delete("SMRITI Business Term", {"term_id": term_id})
+            frappe.db.delete("SMRITI Business Term", {"dictionary_key": term_id})
         
         # Clean up test formulas
         test_formulas = ["TST-FRM-001", "TST-FRM-002", "TST-FRM-003"]
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", test_formulas]})
+        for formula_id in test_formulas:
+            frappe.db.delete("SMRITI Formula Definition", {"formula_id": formula_id})
         
         # Clean up test report template
         frappe.db.delete("SMRITI Report Template", {"name": "tst_gov_report"})
         frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": "tst_gov_report"})
         
-        # Clean up test users
-        frappe.db.delete("User", {"email": ["in", ["user_a@example.com", "user_b@example.com", "test_user@example.com"]]})
+        # Clean up saved views for test report template
+        frappe.db.delete("SMRITI Saved View", {"report_template": "tst_gov_report"})
+
+        # Clean up Knowledge Asset and Knowledge Relation
+        all_asset_uris = [f"smriti:term:{t}" for t in test_terms] + [f"smriti:formula:{f}" for f in test_formulas]
+        asset_names = frappe.get_all("SMRITI Knowledge Asset", filters={"asset_uri": ["in", all_asset_uris]}, pluck="name")
+        if asset_names:
+            frappe.db.delete("SMRITI Knowledge Relation", {"source_asset_id": ["in", asset_names]})
+            frappe.db.delete("SMRITI Knowledge Relation", {"target_asset_id": ["in", asset_names]})
+            frappe.db.delete("SMRITI Knowledge Asset", {"name": ["in", asset_names]})
+            for uri in all_asset_uris:
+                frappe.cache().delete_value(f"smriti:skos:asset:{uri}")
         
         frappe.db.commit()
 
@@ -48,7 +85,7 @@ class TestReportingGovernance(unittest.TestCase):
             del REPORT_QUERIES["tst_gov_report"]
 
     def create_test_records(self):
-        # Create test users to satisfy link validation
+        # Create test users once to satisfy link validation
         for email, name in [("user_a@example.com", "User A"), ("user_b@example.com", "User B"), ("test_user@example.com", "Test User")]:
             if not frappe.db.exists("User", email):
                 frappe.get_doc({
@@ -744,3 +781,5 @@ class TestReportingGovernance(unittest.TestCase):
         t_doc.save(ignore_permissions=True)
         frappe.db.delete("SMRITI Business Term", {"term_id": "tst_meas_items_qty"})
         frappe.db.commit()
+
+

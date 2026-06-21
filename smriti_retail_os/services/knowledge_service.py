@@ -713,7 +713,7 @@ def sync_knowledge_asset_on_save(doc, method=None):
         asset_doc.save(ignore_permissions=True)
     else:
         # Create new
-        frappe.get_doc({
+        new_asset = frappe.get_doc({
             "doctype": "SMRITI Knowledge Asset",
             "asset_code": asset_code,
             "asset_uri": asset_uri,
@@ -726,7 +726,46 @@ def sync_knowledge_asset_on_save(doc, method=None):
             "access_policy": access_policy,
             "reference_doctype": doc.doctype,
             "reference_name": doc.name
-        }).insert(ignore_permissions=True)
+        })
+        new_asset.insert(ignore_permissions=True)
+        asset_name = new_asset.name
+
+    # For SMRITI Business Term, sync related formulas and terms into SMRITI Knowledge Relation (KGR-01)
+    if doc.doctype == "SMRITI Business Term":
+        # Delete existing outgoing relations for this term to avoid duplicate/stale relations
+        frappe.db.delete("SMRITI Knowledge Relation", {"source_asset_id": asset_name})
+        
+        for rf in doc.get("related_formulas", []):
+            if not rf.formula_id:
+                continue
+            target_asset = frappe.db.get_value("SMRITI Knowledge Asset", {"reference_doctype": "SMRITI Formula Definition", "reference_name": rf.formula_id})
+            if target_asset:
+                frappe.get_doc({
+                    "doctype": "SMRITI Knowledge Relation",
+                    "source_asset_id": asset_name,
+                    "target_asset_id": target_asset,
+                    "relationship_type": "defines",
+                    "strength": "Strong",
+                    "is_primary": 1,
+                    "tenant_scope": "Global",
+                    "visibility": "Internal"
+                }).insert(ignore_permissions=True)
+                
+        for rt in doc.get("related_terms", []):
+            if not rt.related_term_id:
+                continue
+            target_asset = frappe.db.get_value("SMRITI Knowledge Asset", {"reference_doctype": "SMRITI Business Term", "reference_name": rt.related_term_id})
+            if target_asset:
+                frappe.get_doc({
+                    "doctype": "SMRITI Knowledge Relation",
+                    "source_asset_id": asset_name,
+                    "target_asset_id": target_asset,
+                    "relationship_type": "defines",
+                    "strength": "Strong",
+                    "is_primary": 1,
+                    "tenant_scope": "Global",
+                    "visibility": "Internal"
+                }).insert(ignore_permissions=True)
         
     frappe.db.commit()
 

@@ -48,7 +48,7 @@
       "fieldname": "alert_type",
       "fieldtype": "Select",
       "label": "Alert Type",
-      "options": "\nNegative Balance\nLate Upload\nNever Audited\nDuplicate Upload",
+      "options": "\nNegative Balance\nLate Upload\nNever Audited\nDuplicate Upload\nHook Failure",
       "read_only": 1,
       "in_list_view": 1
     },

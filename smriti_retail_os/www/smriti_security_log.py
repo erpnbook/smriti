@@ -1,0 +1,66 @@
+# -*- coding: utf-8 -*-
+#
+# @file: smriti_retail_os/www/smriti_security_log.py
+# @description: Handles user login, registration, and JWT token generation.
+# @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+# @date: 2026-05-28
+# @version: 1.0.0
+# @license: MIT
+# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+#
+# -*- coding: utf-8 -*-
+#
+# @file: smriti_security_log.py
+# @description: Page controller for SMRITI Security Audit Log.
+#               Enforces System Manager / Administrator access only.
+#               No Frappe desk routes are exposed to end users.
+#
+
+import frappe
+
+no_cache = 1
+title = "SMRITI Security Audit Log"
+
+def get_context(context):
+    """
+    Access policy:
+      - Guest               → redirect to /smriti-login
+      - Non-System Manager  → 403 PermissionError
+      - System Manager      → full access
+      - Administrator       → full access
+    """
+    user = frappe.session.user
+
+    if user == "Guest":
+        frappe.local.flags.redirect_location = "/smriti-login"
+        raise frappe.Redirect
+
+    roles = frappe.get_roles(user)
+    if "System Manager" not in roles and user != "Administrator":
+        frappe.throw(
+            "Access Denied: SMRITI Security Audit Log requires System Manager role.",
+            frappe.PermissionError,
+        )
+
+    # Strip all Frappe web chrome — render as pure SMRITI page
+    context.web_include_js  = []
+    context.web_include_css = []
+    context.no_header       = True
+    context.no_breadcrumbs  = True
+    context.no_cache        = True
+    context.show_sidebar    = False
+    context.base_template_path = "smriti_retail_os/templates/blank.html"
+
+    csrf_token = None
+    if getattr(frappe.local, "session_obj", None):
+        try:
+            csrf_token = frappe.sessions.get_csrf_token()
+        except Exception:
+            pass
+    if not csrf_token and hasattr(frappe.local, "session") and getattr(frappe.local.session, "data", None):
+        csrf_token = frappe.local.session.data.get("csrf_token")
+    context.csrf_token = csrf_token or ""
+    context.current_user = user
+    context.title        = "SMRITI Security Audit Log"
+
+    return context

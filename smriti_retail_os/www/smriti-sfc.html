@@ -1,0 +1,1013 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/smriti-sfc.html
+  @description: SMRITI Sales Force Commission (SFC) Studio — Standalone UI
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @version: 1.0.0
+  @license: MIT
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMRITI SFC Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-base:     #0a0f1e;
+      --bg-surface:  #0f1629;
+      --bg-card:     #131d35;
+      --bg-input:    #172040;
+      --border:      rgba(255,255,255,0.07);
+      --border-glow: rgba(99,102,241,0.2);
+      --accent:      #6366f1;
+      --accent-glow: rgba(99,102,241,0.5);
+      --accent-2:    #818cf8;
+      --success:     #10b981;
+      --warning:     #f59e0b;
+      --danger:      #ef4444;
+      --text-1:      #e2e8f0;
+      --text-2:      #94a3b8;
+      --text-3:      #475569;
+      --radius:      12px;
+      --radius-sm:   8px;
+      --radius-lg:   16px;
+      --shadow:      0 8px 32px rgba(0,0,0,0.5);
+      --t:           0.2s ease;
+    }
+
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg-base); color: var(--text-1); font-family: 'Inter', sans-serif; font-size: 14px; }
+
+    .bg-grid {
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+      background-size: 50px 50px;
+      z-index: 0;
+    }
+    .bg-glow {
+      position: fixed; width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,0.04) 0%, transparent 70%);
+      top: -100px; left: -100px; z-index: 0; filter: blur(40px);
+    }
+
+    #app { position: relative; z-index: 1; width: 100vw; height: 100vh; display: flex; overflow: hidden; }
+
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    .topbar { height: 56px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0; }
+    .topbar-breadcrumbs { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-2); }
+    .topbar-breadcrumbs span.sep { color: var(--text-3); }
+    .topbar-breadcrumbs span.active { color: var(--text-1); }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .topbtn { background: none; border: none; color: var(--text-2); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all var(--t); }
+    .topbtn:hover { background: rgba(255,255,255,0.05); color: var(--text-1); }
+
+    /* Tabs Bar */
+    .tabs-bar {
+      display: flex;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      gap: 16px;
+      flex-shrink: 0;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-2);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 16px 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      transition: color var(--t);
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--text-1); }
+    .tab-btn.active { color: var(--accent-2); }
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 3px 3px 0 0;
+      box-shadow: 0 -2px 10px var(--accent);
+    }
+
+    /* Content Pane */
+    .content-pane {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: none;
+    }
+    .content-pane.active {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      padding: 16px;
+      border-radius: var(--radius);
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .filter-group label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .filter-group select {
+      padding: 6px 12px;
+      min-width: 140px;
+    }
+
+    /* Layouts */
+    .two-col-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .two-col-grid { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0,0,0,0.1);
+    }
+    .panel-title { font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .panel-title span { color: var(--accent-2); }
+    .panel-body { padding: 20px; }
+
+    /* Tables */
+    .table-container { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-surface); }
+    .smriti-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
+    .smriti-table th { background: rgba(0,0,0,0.15); padding: 12px 16px; font-weight: 700; color: var(--text-2); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
+    .smriti-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text-1); vertical-align: middle; }
+    .smriti-table tr:last-child td { border-bottom: none; }
+    .smriti-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Forms */
+    .form-group { display: flex; flex-direction: column; gap: 6px; width: 100%; margin-bottom: 16px; }
+    .form-label { font-size: 0.75rem; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+    input[type="text"], input[type="number"], input[type="date"], select, textarea {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-1); font-size: 0.88rem; padding: 10px 14px; outline: none; transition: all var(--t); font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--border-glow); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-sm); border: none; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all var(--t); text-decoration: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; box-shadow: 0 4px 12px var(--border-glow); }
+    .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.1); }
+    .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text-2); }
+    .btn-secondary:hover { border-color: var(--text-2); color: var(--text-1); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { filter: brightness(1.1); }
+    .btn-sm { padding: 6px 12px; font-size: 0.78rem; border-radius: 6px; }
+    .btn-xs { padding: 4px 8px; font-size: 0.72rem; border-radius: 4px; }
+
+    /* Badges */
+    .status-badge { font-size: 0.75rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+    .status-badge.active { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
+    .status-badge.superseded { background: rgba(245,158,11,0.1); color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
+    .status-badge.reversed { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+
+    /* Modals */
+    .modal-backdrop { position: fixed; inset: 0; z-index: 9000; background: rgba(3,7,18,0.85); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.22s; }
+    .modal-backdrop.open { opacity: 1; display: flex; }
+    .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; width: min(520px, 95vw); transform: translateY(20px); transition: transform 0.22s; box-shadow: var(--shadow); }
+    .modal-backdrop.open .modal { transform: translateY(0); }
+    .modal-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-1); display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .modal-close { margin-left: auto; background: none; border: none; color: var(--text-2); cursor: pointer; display: flex; align-items: center; }
+    .modal-close:hover { color: var(--danger); }
+
+    /* Toast Container */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 99999; }
+    .toast { padding: 12px 18px; border-radius: var(--radius); font-size: 0.88rem; font-weight: 600; color: white; min-width: 240px; display: flex; align-items: center; gap: 10px; animation: toast-in 0.3s ease; box-shadow: var(--shadow); }
+    .toast.success { background: #065f46; border: 1px solid rgba(16,185,129,0.3); }
+    .toast.error   { background: #7f1d1d; border: 1px solid rgba(239,68,68,0.3); }
+    .toast.info    { background: #1e1b4b; border: 1px solid rgba(99,102,241,0.3); }
+    @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+  </style>
+  <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div id="app">
+  <!-- Standalone Sidebar -->
+  <div id="smriti-sidebar-target" class="sidebar"></div>
+
+  <!-- Main Workspace -->
+  <div class="main-wrapper">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-breadcrumbs">
+        <span>SMRITI</span>
+        <span class="sep">/</span>
+        <span class="active">SFC Studio</span>
+      </div>
+      <div class="topbar-right">
+        <button class="topbtn" onclick="history.back()" title="Go Back">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <button class="topbtn" onclick="history.forward()" title="Go Forward">
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="switchTab('calculator')">
+        <span class="material-symbols-outlined">calculate</span> Payout Calculator
+      </button>
+      <button class="tab-btn" onclick="switchTab('rules')">
+        <span class="material-symbols-outlined">gavel</span> Commission Rules
+      </button>
+      <button class="tab-btn" onclick="switchTab('ledger')">
+        <span class="material-symbols-outlined">receipt_long</span> Commission Ledger
+      </button>
+    </div>
+
+    <!-- Pane 1: Payout Calculator -->
+    <div class="content-pane active" id="pane-calculator">
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>Company</label>
+          <select id="calc-company" onchange="loadCalculator()"></select>
+        </div>
+        <div class="filter-group">
+          <label>Fiscal Year</label>
+          <select id="calc-fiscal" onchange="loadCalculator()"></select>
+        </div>
+        <div class="filter-group">
+          <label>Month</label>
+          <select id="calc-month" onchange="loadCalculator()">
+            <option value="Jan">Jan</option>
+            <option value="Feb">Feb</option>
+            <option value="Mar">Mar</option>
+            <option value="Apr">Apr</option>
+            <option value="May">May</option>
+            <option value="Jun" selected>Jun</option>
+            <option value="Jul">Jul</option>
+            <option value="Aug">Aug</option>
+            <option value="Sep">Sep</option>
+            <option value="Oct">Oct</option>
+            <option value="Nov">Nov</option>
+            <option value="Dec">Dec</option>
+          </select>
+        </div>
+        <div style="margin-left: auto;">
+          <button class="btn btn-primary btn-sm" onclick="runBulkCalculation()">
+            <span class="material-symbols-outlined" style="font-size:16px;">autorenew</span> Calculate & Payout Drafts
+          </button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title"><span class="material-symbols-outlined">payments</span> Monthly Settlements Review</span>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <div class="table-container" style="border:none; border-radius:0;">
+            <table class="smriti-table">
+              <thead>
+                <tr>
+                  <th>Employee ID</th>
+                  <th>Employee Name</th>
+                  <th>Attributed Revenue</th>
+                  <th>Gross Commission</th>
+                  <th>Net Payout</th>
+                  <th>Status</th>
+                  <th style="text-align: center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="calculator-tbody">
+                <tr><td colspan="7" style="text-align:center;">Select filters to view settlements.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pane 2: Commission Rules -->
+    <div class="content-pane" id="pane-rules">
+      <div style="display: flex; justify-content: flex-end; margin-bottom:16px;">
+        <button class="btn btn-primary btn-sm" onclick="openNewRuleModal()">
+          <span class="material-symbols-outlined" style="font-size:16px;">add</span> Add Commission Rule
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table class="smriti-table">
+          <thead>
+            <tr>
+              <th>Rule Name</th>
+              <th>Employee Override</th>
+              <th>Commission Rate</th>
+              <th>Min Revenue Threshold</th>
+              <th>Effective Period</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th style="text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rules-tbody">
+            <tr><td colspan="8" style="text-align:center;">Loading Commission Rules...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pane 3: Commission Ledger -->
+    <div class="content-pane" id="pane-ledger">
+      <div class="two-col-grid" style="grid-template-columns: 2fr 1fr;">
+        <div class="table-container">
+          <table class="smriti-table">
+            <thead>
+              <tr>
+                <th>Date/Time</th>
+                <th>Employee</th>
+                <th>Commission Event</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="ledger-tbody">
+              <tr><td colspan="5" style="text-align:center;">Loading Commission Ledger logs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title"><span class="material-symbols-outlined">help</span> Formula Transparency (DOC-01)</span>
+          </div>
+          <div class="panel-body" style="color:var(--text-2); display:flex; flex-direction:column; gap:12px;">
+            <p><strong>A. Business Meaning:</strong> Incentivizes floor executives and primary customer owners based on sales performance thresholds.</p>
+            <p><strong>B. Formula Definition:</strong>
+              <br>• Gross Commission = Σ (Commission Ledger active entries for month).
+              <br>• Net Commission = Gross Commission + adjustments.
+            </p>
+            <p><strong>C. Threshold Enforcement:</strong> If Attributed Monthly Revenue &lt; Min Revenue Threshold, Gross Commission defaults to ₹0.00.</p>
+            <p><strong>D. Worked Example:</strong>
+              <br>• Total Attributed Rev = ₹150,000 (Threshold: ₹100,000).
+              <br>• Rate: 2.0% -> Commission = ₹3,000.
+              <br>• Adjustments: -₹500 -> Net Payout = ₹2,500.
+            </p>
+            <p><strong>E. Ledger Immutability:</strong> Commission Ledger rows cannot be updated. Corrections require reversing matching invoice sequences.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal: New/Edit Rule -->
+<div class="modal-backdrop" id="modal-rule" onclick="closeModal('modal-rule')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">
+      <span class="material-symbols-outlined">gavel</span> Save Commission Rule
+      <button class="modal-close" onclick="closeModal('modal-rule')"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <input type="hidden" id="rule-name">
+      <div class="form-group">
+        <label class="form-label">Rule Name *</label>
+        <input type="text" id="rule-title" placeholder="e.g. June Floor Staff Rate">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Employee Override (Optional)</label>
+        <select id="rule-employee"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Company *</label>
+        <select id="rule-company"></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Commission Rate (%) *</label>
+          <input type="number" id="rule-rate" step="0.01" min="0" max="100" placeholder="e.g. 2.5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Min Revenue Threshold (₹)</label>
+          <input type="number" id="rule-threshold" min="0" placeholder="e.g. 50000">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Effective From</label>
+          <input type="date" id="rule-from">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Effective To</label>
+          <input type="date" id="rule-to">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <input type="number" id="rule-priority" value="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Is Active</label>
+          <select id="rule-active">
+            <option value="1" selected>Yes</option>
+            <option value="0">No</option>
+          </select>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-rule')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitRule()">Save Rule</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Adjustments -->
+<div class="modal-backdrop" id="modal-adjustments" onclick="closeModal('modal-adjustments')">
+  <div class="modal" style="width: min(650px, 95vw);" onclick="event.stopPropagation()">
+    <div class="modal-title">
+      <span class="material-symbols-outlined">edit_note</span> Manage Adjustments & Approval
+      <button class="modal-close" onclick="closeModal('modal-adjustments')"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display:flex; justify-content:space-between; font-size:0.92rem; border-bottom:1px solid var(--border); padding-bottom:8px;">
+        <div>Employee: <strong id="adj-emp-lbl">-</strong></div>
+        <div>Gross: <strong id="adj-gross-lbl">₹0.00</strong></div>
+        <div>Net: <strong id="adj-net-lbl">₹0.00</strong></div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Adjustments Ledger Table</label>
+        <div class="table-container" style="max-height:160px; overflow-y:auto; margin-top:4px;">
+          <table class="smriti-table" style="font-size:0.82rem;">
+            <thead>
+              <tr>
+                <th>Reason *</th>
+                <th>Amount (₹) *</th>
+                <th>Remarks</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="adj-table-tbody">
+              <!-- Dynamically populated rows -->
+            </tbody>
+          </table>
+        </div>
+        <button class="btn btn-secondary btn-xs" onclick="addAdjustmentRow()" style="align-self:flex-start; margin-top:8px;">
+          <span class="material-symbols-outlined" style="font-size:12px;">add</span> Add Adjustment Row
+        </button>
+      </div>
+
+      <div class="form-group" id="payment-details-group" style="display:none;">
+        <label class="form-label">Payment Information (Required to mark Paid)</label>
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Payment Reference *</label>
+            <input type="text" id="settle-payment-ref" placeholder="e.g. TXN928198A">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Payment Date</label>
+            <input type="date" id="settle-payment-date">
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;" id="adj-footer-btns">
+        <!-- Rendered dynamically depending on Draft/Approved/Paid state -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-wrap"></div>
+
+<script>
+  const CSRF_TOKEN = '{{ csrf_token }}';
+  window.loggedUser = '{{ user }}';
+
+  const API = {
+    call(method, args = {}) {
+      return fetch('/api/method/' + method, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-frappe-csrf-token': CSRF_TOKEN
+        },
+        body: JSON.stringify(args)
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.exc) throw new Error(data._error_message || data.exc);
+        return data.message !== undefined ? data.message : data;
+      });
+    }
+  };
+
+  function toast(msg, type = 'success') {
+    const wrap = document.getElementById('toast-wrap');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    const icons = { success: 'check_circle', error: 'error', info: 'info' };
+    el.innerHTML = `<span class="material-symbols-outlined">${icons[type] || 'info'}</span><span>${msg}</span>`;
+    wrap.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+
+  function formatINR(val) {
+    return parseFloat(val || 0).toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  // --- Tab Management ---
+  let activeTab = 'calculator';
+  function switchTab(tabId) {
+    activeTab = tabId;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.innerText.toLowerCase().includes(tabId)) btn.classList.add('active');
+    });
+
+    document.querySelectorAll('.content-pane').forEach(pane => pane.classList.remove('active'));
+    const activePane = document.getElementById('pane-' + tabId);
+    if (activePane) activePane.classList.add('active');
+
+    loadTabData();
+  }
+
+  function loadTabData() {
+    if (activeTab === 'calculator') loadCalculator();
+    else if (activeTab === 'rules') loadRules();
+    else if (activeTab === 'ledger') loadLedger();
+  }
+
+  // --- Select Dropdown Population ---
+  let cachedLists = {
+    companies: [],
+    fiscalYears: [],
+    employees: []
+  };
+
+  function loadSelectDropdowns() {
+    API.call('frappe.client.get_list', { doctype: 'Company', fields: ['name'] })
+      .then(list => {
+        cachedLists.companies = list || [];
+        populateSelect('calc-company', cachedLists.companies);
+        populateSelect('rule-company', cachedLists.companies);
+
+        const defaultCompany = '{{ smriti.company }}' || (list[0] ? list[0].name : '');
+        if (defaultCompany) {
+          document.getElementById('calc-company').value = defaultCompany;
+          document.getElementById('rule-company').value = defaultCompany;
+        }
+        loadCalculator();
+      });
+
+    API.call('frappe.client.get_list', { doctype: 'Fiscal Year', fields: ['name'], order_by: 'year_start_date desc' })
+      .then(list => {
+        cachedLists.fiscalYears = list || [];
+        populateSelect('calc-fiscal', cachedLists.fiscalYears);
+      });
+
+    API.call('frappe.client.get_list', { doctype: 'Employee', filters: { status: 'Active' }, fields: ['name', 'employee_name'], limit: 500 })
+      .then(list => {
+        cachedLists.employees = list.map(e => ({ name: e.name, label: `${e.name} - ${e.employee_name}` }));
+        populateSelect('rule-employee', [{name: '', label: 'None (Global Fallback Rule)'}].concat(cachedLists.employees), true);
+      });
+  }
+
+  function populateSelect(id, list, isObject = false) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = list.map(item => {
+      const val = isObject ? item.name : item.name;
+      const lbl = isObject ? item.label : item.name;
+      return `<option value="${val}">${lbl}</option>`;
+    }).join('');
+  }
+
+  // --- Calculator Tab ---
+  let activeCalculatorList = [];
+
+  function loadCalculator() {
+    const comp = document.getElementById('calc-company').value;
+    const fiscal = document.getElementById('calc-fiscal').value;
+    const month = document.getElementById('calc-month').value;
+
+    if (!comp || !fiscal) return;
+
+    API.call('smriti_retail_os.sfm.api.sfc_api.get_monthly_commissions', {
+      company: comp,
+      fiscal_year: fiscal,
+      month: month
+    })
+    .then(list => {
+      activeCalculatorList = list || [];
+      const tbody = document.getElementById('calculator-tbody');
+      if (!list || !list.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--text-2);">No active salesperson ledger entries found for this period.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map((item, idx) => {
+        const badge = item.status === 'Paid' ? '<span class="status-badge active">Paid</span>' :
+                      item.status === 'Approved' ? '<span class="status-badge superseded">Approved</span>' :
+                      '<span class="status-badge">Draft</span>';
+        
+        const actionLabel = item.settlement_name ? 'Manage Payout' : 'Create Draft';
+
+        return `
+          <tr>
+            <td style="font-weight:600;">${item.employee}</td>
+            <td>${item.employee_name}</td>
+            <td>₹${formatINR(item.attributed_revenue)}</td>
+            <td>₹${formatINR(item.gross_commission)}</td>
+            <td style="font-weight:700; color:var(--accent-2);">₹${formatINR(item.net_commission)}</td>
+            <td>${badge}</td>
+            <td style="text-align: center;">
+              <button class="btn btn-secondary btn-xs" onclick="openAdjustmentsModal(${idx})">${actionLabel}</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    })
+    .catch(e => {
+      toast('Failed to load commissions: ' + e.message, 'error');
+    });
+  }
+
+  function runBulkCalculation() {
+    const comp = document.getElementById('calc-company').value;
+    const fiscal = document.getElementById('calc-fiscal').value;
+    const month = document.getElementById('calc-month').value;
+
+    API.call('smriti_retail_os.sfm.api.sfc_api.run_monthly_calculation', {
+      company: comp,
+      fiscal_year: fiscal,
+      month: month
+    })
+    .then(res => {
+      toast(`Successfully generated ${res.length} commission settlement drafts!`);
+      loadCalculator();
+    })
+    .catch(e => {
+      toast('Calculation failed: ' + e.message, 'error');
+    });
+  }
+
+  // --- Adjustments Modal ---
+  let activeCalcItem = null;
+  let activeAdjustments = [];
+
+  function openAdjustmentsModal(idx) {
+    activeCalcItem = activeCalculatorList[idx];
+    activeAdjustments = JSON.parse(JSON.stringify(activeCalcItem.adjustments || []));
+
+    document.getElementById('adj-emp-lbl').innerText = `${activeCalcItem.employee} - ${activeCalcItem.employee_name}`;
+    document.getElementById('adj-gross-lbl').innerText = `₹${formatINR(activeCalcItem.gross_commission)}`;
+    
+    renderAdjustmentsTable();
+    updateModalNetCalculations();
+
+    const paymentGroup = document.getElementById('payment-details-group');
+    paymentGroup.style.display = 'none';
+    document.getElementById('settle-payment-ref').value = '';
+    document.getElementById('settle-payment-date').value = new Date().toISOString().split('T')[0];
+
+    const footer = document.getElementById('adj-footer-btns');
+    
+    if (!activeCalcItem.settlement_name) {
+      // First save draft
+      footer.innerHTML = `
+        <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-adjustments')">Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick="saveActiveSettlement('Draft')">Save Draft Payout</button>
+      `;
+    } else {
+      if (activeCalcItem.status === 'Draft') {
+        footer.innerHTML = `
+          <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-adjustments')">Cancel</button>
+          <button class="btn btn-secondary btn-sm" onclick="saveActiveSettlement('Draft')">Update Draft</button>
+          <button class="btn btn-primary btn-sm" onclick="saveActiveSettlement('Approved')">Approve & Lock</button>
+        `;
+      } else if (activeCalcItem.status === 'Approved') {
+        paymentGroup.style.display = 'block';
+        footer.innerHTML = `
+          <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-adjustments')">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="saveActiveSettlement('Paid')">Disburse & Mark Paid</button>
+        `;
+      } else {
+        // Paid (locked)
+        footer.innerHTML = `
+          <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-adjustments')">Close</button>
+        `;
+      }
+    }
+
+    openModal('modal-adjustments');
+  }
+
+  function renderAdjustmentsTable() {
+    const tbody = document.getElementById('adj-table-tbody');
+    const isLocked = activeCalcItem.status === 'Approved' || activeCalcItem.status === 'Paid';
+    
+    if (!activeAdjustments.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-3);">No adjustments added yet.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = activeAdjustments.map((adj, i) => `
+      <tr>
+        <td>
+          <input type="text" value="${adj.reason || ''}" onchange="updateAdjField(${i}, 'reason', this.value)" ${isLocked ? 'disabled' : ''} style="padding:4px 8px; font-size:0.8rem;">
+        </td>
+        <td>
+          <input type="number" value="${adj.amount || 0}" onchange="updateAdjField(${i}, 'amount', this.value)" ${isLocked ? 'disabled' : ''} style="padding:4px 8px; font-size:0.8rem;">
+        </td>
+        <td>
+          <input type="text" value="${adj.remarks || ''}" onchange="updateAdjField(${i}, 'remarks', this.value)" ${isLocked ? 'disabled' : ''} style="padding:4px 8px; font-size:0.8rem;">
+        </td>
+        <td>
+          <button class="btn btn-danger btn-xs" onclick="removeAdjustmentRow(${i})" ${isLocked ? 'disabled' : ''}>Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function addAdjustmentRow() {
+    if (activeCalcItem.status === 'Approved' || activeCalcItem.status === 'Paid') return;
+    activeAdjustments.push({ reason: 'Manual Adjustment', amount: 0, remarks: '' });
+    renderAdjustmentsTable();
+  }
+
+  function removeAdjustmentRow(i) {
+    if (activeCalcItem.status === 'Approved' || activeCalcItem.status === 'Paid') return;
+    activeAdjustments.splice(i, 1);
+    renderAdjustmentsTable();
+    updateModalNetCalculations();
+  }
+
+  function updateAdjField(i, field, val) {
+    if (field === 'amount') activeAdjustments[i][field] = parseFloat(val) || 0.0;
+    else activeAdjustments[i][field] = val;
+    updateModalNetCalculations();
+  }
+
+  function updateModalNetCalculations() {
+    const gross = parseFloat(activeCalcItem.gross_commission || 0.0);
+    const adjustments = activeAdjustments.reduce((sum, item) => sum + parseFloat(item.amount || 0.0), 0.0);
+    document.getElementById('adj-net-lbl').innerText = `₹${formatINR(gross + adjustments)}`;
+  }
+
+  function saveActiveSettlement(targetStatus) {
+    const comp = document.getElementById('calc-company').value;
+    const fiscal = document.getElementById('calc-fiscal').value;
+    const month = document.getElementById('calc-month').value;
+
+    const doc = {
+      doctype: 'SMRITI Commission Settlement',
+      employee: activeCalcItem.employee,
+      company: comp,
+      fiscal_year: fiscal,
+      month: month,
+      gross_commission: activeCalcItem.gross_commission,
+      status: targetStatus,
+      adjustments: activeAdjustments.map(row => ({
+        doctype: 'SMRITI Commission Adjustment Detail',
+        reason: row.reason,
+        amount: row.amount,
+        remarks: row.remarks
+      }))
+    };
+
+    if (targetStatus === 'Paid') {
+      doc.payment_reference = document.getElementById('settle-payment-ref').value;
+      doc.payment_date = document.getElementById('settle-payment-date').value;
+      if (!doc.payment_reference) {
+        toast('Payment Reference is required to mark Paid!', 'error');
+        return;
+      }
+    }
+
+    const name = activeCalcItem.settlement_name;
+    const action = name ? API.call('frappe.client.update', { doctype: 'SMRITI Commission Settlement', name: name, doc: doc })
+                         : API.call('frappe.client.insert', { doc: doc });
+
+    action.then(() => {
+      toast(`Commission Settlement status saved as ${targetStatus}!`);
+      closeModal('modal-adjustments');
+      loadCalculator();
+    })
+    .catch(e => {
+      toast('Failed to save settlement: ' + e.message, 'error');
+    });
+  }
+
+  // --- Commission Rules Tab ---
+  function loadRules() {
+    API.call('frappe.client.get_list', {
+      doctype: 'SMRITI Commission Rule',
+      fields: ['name', 'rule_name', 'employee', 'commission_rate', 'min_revenue_threshold', 'effective_from', 'effective_to', 'priority', 'is_active', 'company'],
+      order_by: 'priority desc, creation desc',
+      limit: 100
+    })
+    .then(list => {
+      const tbody = document.getElementById('rules-tbody');
+      if (!list || !list.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color: var(--text-2);">No commission rules registered yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map(r => {
+        const emp = r.employee || '<span style="color:var(--text-3);">Global Fallback</span>';
+        const start = r.effective_from || 'Open';
+        const end = r.effective_to || 'Open';
+        const badge = r.is_active ? '<span class="status-badge active">Active</span>' : '<span class="status-badge reversed">Inactive</span>';
+
+        return `
+          <tr>
+            <td style="font-weight:600;">${r.rule_name}</td>
+            <td>${emp}</td>
+            <td style="font-weight:700; color:var(--success);">${r.commission_rate}%</td>
+            <td>₹${formatINR(r.min_revenue_threshold)}</td>
+            <td>${start} to ${end}</td>
+            <td>${r.priority}</td>
+            <td>${badge}</td>
+            <td style="text-align: center;">
+              <button class="btn btn-secondary btn-xs" onclick="editRule('${r.name}')">Edit</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    })
+    .catch(e => {
+      document.getElementById('rules-tbody').innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--danger);">Error loading rules.</td></tr>';
+    });
+  }
+
+  function openNewRuleModal() {
+    document.getElementById('rule-name').value = '';
+    document.getElementById('rule-title').value = '';
+    document.getElementById('rule-employee').value = '';
+    document.getElementById('rule-rate').value = '';
+    document.getElementById('rule-threshold').value = '0';
+    document.getElementById('rule-from').value = '';
+    document.getElementById('rule-to').value = '';
+    document.getElementById('rule-priority').value = '0';
+    document.getElementById('rule-active').value = '1';
+    openModal('modal-rule');
+  }
+
+  function editRule(name) {
+    API.call('frappe.client.get', { doctype: 'SMRITI Commission Rule', name: name })
+      .then(doc => {
+        document.getElementById('rule-name').value = doc.name;
+        document.getElementById('rule-title').value = doc.rule_name;
+        document.getElementById('rule-employee').value = doc.employee || '';
+        document.getElementById('rule-company').value = doc.company;
+        document.getElementById('rule-rate').value = doc.commission_rate;
+        document.getElementById('rule-threshold').value = doc.min_revenue_threshold || '0';
+        document.getElementById('rule-from').value = doc.effective_from || '';
+        document.getElementById('rule-to').value = doc.effective_to || '';
+        document.getElementById('rule-priority').value = doc.priority || '0';
+        document.getElementById('rule-active').value = doc.is_active ? '1' : '0';
+        openModal('modal-rule');
+      });
+  }
+
+  function submitRule() {
+    const name = document.getElementById('rule-name').value;
+    const doc = {
+      doctype: 'SMRITI Commission Rule',
+      rule_name: document.getElementById('rule-title').value,
+      employee: document.getElementById('rule-employee').value || undefined,
+      company: document.getElementById('rule-company').value,
+      commission_rate: parseFloat(document.getElementById('rule-rate').value),
+      min_revenue_threshold: parseFloat(document.getElementById('rule-threshold').value) || 0.0,
+      effective_from: document.getElementById('rule-from').value || undefined,
+      effective_to: document.getElementById('rule-to').value || undefined,
+      priority: parseInt(document.getElementById('rule-priority').value) || 0,
+      is_active: parseInt(document.getElementById('rule-active').value)
+    };
+
+    if (!doc.rule_name || isNaN(doc.commission_rate)) {
+      toast('Please enter Rule Name and Commission Rate!', 'error');
+      return;
+    }
+
+    const action = name ? API.call('frappe.client.update', { doctype: 'SMRITI Commission Rule', name: name, doc: doc })
+                         : API.call('frappe.client.insert', { doc: doc });
+                         
+    action.then(() => {
+      toast('Commission rule saved successfully!');
+      closeModal('modal-rule');
+      loadRules();
+    })
+    .catch(e => {
+      toast('Failed to save rule: ' + e.message, 'error');
+    });
+  }
+
+  // --- Commission Ledger Tab ---
+  function loadLedger() {
+    API.call('frappe.client.get_list', {
+      doctype: 'SMRITI Commission Ledger',
+      fields: ['name', 'posting_date', 'posting_time', 'employee', 'commission_event', 'amount', 'ledger_status', 'reversal_reference'],
+      order_by: 'posting_date desc, posting_time desc',
+      limit: 100
+    })
+    .then(list => {
+      const tbody = document.getElementById('ledger-tbody');
+      if (!list || !list.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-2);">No commission ledger records found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map(l => {
+        let statusBadge = '<span class="status-badge active">Active</span>';
+        if (l.ledger_status === 'Reversed') statusBadge = '<span class="status-badge reversed">Reversed</span>';
+        else if (l.ledger_status === 'Superseded') statusBadge = '<span class="status-badge superseded">Superseded</span>';
+
+        return `
+          <tr>
+            <td style="white-space:nowrap;">${l.posting_date} ${l.posting_time}</td>
+            <td style="font-weight:600;">${l.employee}</td>
+            <td>${l.commission_event || '-'}</td>
+            <td style="font-weight:700;">₹${formatINR(l.amount)}</td>
+            <td>${statusBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    })
+    .catch(e => {
+      document.getElementById('ledger-tbody').innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--danger);">Error loading ledger.</td></tr>';
+    });
+  }
+
+  // --- Modal Helpers ---
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  // --- Page Boot ---
+  window.onload = function() {
+    if (window.SMRITI && typeof SMRITI.injectSidebar === 'function') {
+      SMRITI.injectSidebar('smriti-sidebar-target', 'calculator');
+    }
+    loadSelectDropdowns();
+  };
+</script>
+
+</body>
+</html>
+{% endblock %}

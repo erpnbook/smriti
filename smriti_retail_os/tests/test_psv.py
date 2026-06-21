@@ -29,6 +29,19 @@ class TestPSV(FrappeTestCase):
         frappe.db.delete("SMRITI Party Physical Item")
         frappe.db.delete("SMRITI PSV Reorder Rule")
         frappe.db.delete("SMRITI PSV Exception Record")
+
+        # Clean up Sales Invoices and POS Invoices under Test PSV Company to prevent state leaks
+        invoice_names = frappe.get_all("Sales Invoice", filters={"company": "Test PSV Company"}, pluck="name")
+        if invoice_names:
+            frappe.db.delete("Sales Invoice Item", {"parent": ["in", invoice_names]})
+            frappe.db.delete("Sales Invoice Payment", {"parent": ["in", invoice_names]})
+            frappe.db.delete("Sales Invoice", {"name": ["in", invoice_names]})
+
+        pos_invoice_names = frappe.get_all("POS Invoice", filters={"company": "Test PSV Company"}, pluck="name")
+        if pos_invoice_names:
+            frappe.db.delete("POS Invoice Item", {"parent": ["in", pos_invoice_names]})
+            frappe.db.delete("POS Invoice", {"name": ["in", pos_invoice_names]})
+
         frappe.db.commit()
 
         # 1. Resolve or Create basic link dependencies

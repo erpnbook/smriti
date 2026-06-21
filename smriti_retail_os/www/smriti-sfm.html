@@ -1,0 +1,1129 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/smriti-sfm.html
+  @description: SMRITI Sales Force Management (SFM) Studio — Standalone UI
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @version: 1.0.0
+  @license: MIT
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMRITI SFM Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-base:     #0a0f1e;
+      --bg-surface:  #0f1629;
+      --bg-card:     #131d35;
+      --bg-input:    #172040;
+      --border:      rgba(255,255,255,0.07);
+      --border-glow: rgba(99,102,241,0.2);
+      --accent:      #6366f1;
+      --accent-glow: rgba(99,102,241,0.5);
+      --accent-2:    #818cf8;
+      --success:     #10b981;
+      --warning:     #f59e0b;
+      --danger:      #ef4444;
+      --text-1:      #e2e8f0;
+      --text-2:      #94a3b8;
+      --text-3:      #475569;
+      --radius:      12px;
+      --radius-sm:   8px;
+      --radius-lg:   16px;
+      --shadow:      0 8px 32px rgba(0,0,0,0.5);
+      --t:           0.2s ease;
+    }
+
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg-base); color: var(--text-1); font-family: 'Inter', sans-serif; font-size: 14px; }
+
+    .bg-grid {
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+      background-size: 50px 50px;
+      z-index: 0;
+    }
+    .bg-glow {
+      position: fixed; width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,0.04) 0%, transparent 70%);
+      top: -100px; left: -100px; z-index: 0; filter: blur(40px);
+    }
+
+    #app { position: relative; z-index: 1; width: 100vw; height: 100vh; display: flex; overflow: hidden; }
+
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    .topbar { height: 56px; background: var(--bg-card); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 14px; flex-shrink: 0; }
+    .topbar-breadcrumbs { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; color: var(--text-2); }
+    .topbar-breadcrumbs span.sep { color: var(--text-3); }
+    .topbar-breadcrumbs span.active { color: var(--text-1); }
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .topbtn { background: none; border: none; color: var(--text-2); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all var(--t); }
+    .topbtn:hover { background: rgba(255,255,255,0.05); color: var(--text-1); }
+
+    /* Tabs Bar */
+    .tabs-bar {
+      display: flex;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      gap: 16px;
+      flex-shrink: 0;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-2);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 16px 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      transition: color var(--t);
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--text-1); }
+    .tab-btn.active { color: var(--accent-2); }
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 3px 3px 0 0;
+      box-shadow: 0 -2px 10px var(--accent);
+    }
+
+    /* Content Pane */
+    .content-pane {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: none;
+    }
+    .content-pane.active {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Dashboard Filters */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      padding: 16px;
+      border-radius: var(--radius);
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .filter-group label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .filter-group select {
+      padding: 6px 12px;
+      min-width: 140px;
+    }
+
+    /* Dashboard Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .metric-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: all var(--t);
+    }
+    .metric-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-glow);
+      box-shadow: 0 8px 24px rgba(99,102,241,0.15);
+    }
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0; width: 4px;
+      background: var(--accent);
+    }
+    .metric-card.success-green::before { background: var(--success); }
+    .metric-card.warning-amber::before { background: var(--warning); }
+    .metric-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .metric-title { font-size: 0.8rem; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+    .metric-icon { color: var(--text-3); }
+    .metric-value { font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; color: var(--text-1); margin-bottom: 6px; }
+    .metric-desc { font-size: 0.78rem; color: var(--text-2); }
+
+    /* Core Layouts (Two Columns) */
+    .two-col-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .two-col-grid { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0,0,0,0.1);
+    }
+    .panel-title { font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .panel-title span { color: var(--accent-2); }
+    .panel-body { padding: 20px; }
+
+    /* Tables */
+    .table-container { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-surface); }
+    .smriti-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
+    .smriti-table th { background: rgba(0,0,0,0.15); padding: 12px 16px; font-weight: 700; color: var(--text-2); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
+    .smriti-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text-1); vertical-align: middle; }
+    .smriti-table tr:last-child td { border-bottom: none; }
+    .smriti-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Forms */
+    .form-group { display: flex; flex-direction: column; gap: 6px; width: 100%; margin-bottom: 16px; }
+    .form-label { font-size: 0.75rem; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+    input[type="text"], input[type="number"], input[type="date"], select, textarea {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-1); font-size: 0.88rem; padding: 10px 14px; outline: none; transition: all var(--t); font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--border-glow); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-sm); border: none; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all var(--t); text-decoration: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; box-shadow: 0 4px 12px var(--border-glow); }
+    .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.1); }
+    .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text-2); }
+    .btn-secondary:hover { border-color: var(--text-2); color: var(--text-1); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { filter: brightness(1.1); }
+    .btn-sm { padding: 6px 12px; font-size: 0.78rem; border-radius: 6px; }
+    .btn-xs { padding: 4px 8px; font-size: 0.72rem; border-radius: 4px; }
+
+    /* Badges */
+    .status-badge { font-size: 0.75rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+    .status-badge.active { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
+    .status-badge.superseded { background: rgba(245,158,11,0.1); color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
+    .status-badge.reversed { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+
+    /* Modals */
+    .modal-backdrop { position: fixed; inset: 0; z-index: 9000; background: rgba(3,7,18,0.85); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.22s; }
+    .modal-backdrop.open { opacity: 1; display: flex; }
+    .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; width: min(480px, 95vw); transform: translateY(20px); transition: transform 0.22s; box-shadow: var(--shadow); }
+    .modal-backdrop.open .modal { transform: translateY(0); }
+    .modal-title { font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-1); display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .modal-close { margin-left: auto; background: none; border: none; color: var(--text-2); cursor: pointer; display: flex; align-items: center; }
+    .modal-close:hover { color: var(--danger); }
+
+    /* Toast Container */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 99999; }
+    .toast { padding: 12px 18px; border-radius: var(--radius); font-size: 0.88rem; font-weight: 600; color: white; min-width: 240px; display: flex; align-items: center; gap: 10px; animation: toast-in 0.3s ease; box-shadow: var(--shadow); }
+    .toast.success { background: #065f46; border: 1px solid rgba(16,185,129,0.3); }
+    .toast.error   { background: #7f1d1d; border: 1px solid rgba(239,68,68,0.3); }
+    .toast.info    { background: #1e1b4b; border: 1px solid rgba(99,102,241,0.3); }
+    @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-2); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .empty-icon { font-size: 2.5rem; color: var(--text-3); }
+
+    /* Progress bar */
+    .progress-container { margin-top: 10px; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-2); margin-bottom: 4px; }
+    .progress-bar-bg { height: 6px; background: var(--bg-input); border-radius: 3px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 3px; transition: width 0.4s ease; }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+  </style>
+  <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<div id="app">
+  <!-- Standalone Sidebar -->
+  <div id="smriti-sidebar-target" class="sidebar"></div>
+
+  <!-- Main Workspace -->
+  <div class="main-wrapper">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-breadcrumbs">
+        <span>SMRITI</span>
+        <span class="sep">/</span>
+        <span class="active">SFM Studio</span>
+      </div>
+      <div class="topbar-right">
+        <button class="topbtn" onclick="history.back()" title="Go Back">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <button class="topbtn" onclick="history.forward()" title="Go Forward">
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="switchTab('dashboard')">
+        <span class="material-symbols-outlined">analytics</span> Leaderboard
+      </button>
+      <button class="tab-btn" onclick="switchTab('targets')">
+        <span class="material-symbols-outlined">track_changes</span> Sales Targets
+      </button>
+      <button class="tab-btn" onclick="switchTab('ownership')">
+        <span class="material-symbols-outlined">assignment_ind</span> Customer Ownership
+      </button>
+      <button class="tab-btn" onclick="switchTab('ledger')">
+        <span class="material-symbols-outlined">receipt_long</span> Attribution Ledger
+      </button>
+      <button class="tab-btn" onclick="switchTab('settings')">
+        <span class="material-symbols-outlined">settings</span> SFM Settings
+      </button>
+    </div>
+
+    <!-- Pane 1: Dashboard -->
+    <div class="content-pane active" id="pane-dashboard">
+      <div class="filter-bar">
+        <div class="filter-group">
+          <label>Company</label>
+          <select id="dash-company" onchange="loadDashboard()"></select>
+        </div>
+        <div class="filter-group">
+          <label>Fiscal Year</label>
+          <select id="dash-fiscal" onchange="loadDashboard()"></select>
+        </div>
+        <div class="filter-group">
+          <label>Month</label>
+          <select id="dash-month" onchange="loadDashboard()">
+            <option value="Jan">Jan</option>
+            <option value="Feb">Feb</option>
+            <option value="Mar">Mar</option>
+            <option value="Apr">Apr</option>
+            <option value="May">May</option>
+            <option value="Jun">Jun</option>
+            <option value="Jul">Jul</option>
+            <option value="Aug">Aug</option>
+            <option value="Sep">Sep</option>
+            <option value="Oct">Oct</option>
+            <option value="Nov">Nov</option>
+            <option value="Dec" selected>Dec</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Store</label>
+          <select id="dash-store" onchange="loadDashboard()"></select>
+        </div>
+      </div>
+
+      <div class="metrics-grid" id="metrics-grid">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title"><span class="material-symbols-outlined">military_tech</span> Employee Leaderboard & Rankings</span>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <div class="table-container" style="border:none; border-radius:0;">
+            <table class="smriti-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Employee ID</th>
+                  <th>Employee Name</th>
+                  <th>Attributed Revenue</th>
+                  <th>Transactions</th>
+                  <th>Unique Customers</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-tbody">
+                <tr><td colspan="6" style="text-align:center;">Loading Leaderboard...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pane 2: Sales Targets -->
+    <div class="content-pane" id="pane-targets">
+      <div style="display: flex; justify-content: flex-end; margin-bottom:16px;">
+        <button class="btn btn-primary btn-sm" onclick="openNewTargetModal()"><span class="material-symbols-outlined" style="font-size:16px;">add</span> Set Sales Target</button>
+      </div>
+
+      <div class="table-container">
+        <table class="smriti-table">
+          <thead>
+            <tr>
+              <th>Employee ID</th>
+              <th>Employee Name</th>
+              <th>Fiscal Year</th>
+              <th>Month</th>
+              <th>Target Amount</th>
+              <th>Target Qty</th>
+              <th style="text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="targets-tbody">
+            <tr><td colspan="7" style="text-align:center;">Loading Sales Targets...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pane 3: Customer Ownership -->
+    <div class="content-pane" id="pane-ownership">
+      <div style="display: flex; justify-content: flex-end; margin-bottom:16px;">
+        <button class="btn btn-primary btn-sm" onclick="openNewOwnershipModal()"><span class="material-symbols-outlined" style="font-size:16px;">add</span> Assign Customer Owner</button>
+      </div>
+
+      <div class="table-container">
+        <table class="smriti-table">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Primary Owner</th>
+              <th>Secondary Owner</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Status</th>
+              <th style="text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ownership-tbody">
+            <tr><td colspan="7" style="text-align:center;">Loading Customer Ownership timelines...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pane 4: Attribution Ledger -->
+    <div class="content-pane" id="pane-ledger">
+      <div class="table-container">
+        <table class="smriti-table">
+          <thead>
+            <tr>
+              <th>Date/Time</th>
+              <th>Invoice</th>
+              <th>Customer</th>
+              <th>Employee</th>
+              <th>Credit Type</th>
+              <th>Credit %</th>
+              <th>Attributed Revenue</th>
+              <th>Store</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="ledger-tbody">
+            <tr><td colspan="9" style="text-align:center;">Loading Attribution Ledger entries...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pane 5: SFM Settings -->
+    <div class="content-pane" id="pane-settings">
+      <div class="two-col-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title"><span class="material-symbols-outlined">tune</span> Split Rules & Configuration</span>
+          </div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label class="form-label">Enable SFM Module</label>
+              <select id="settings-enable">
+                <option value="1">Enabled</option>
+                <option value="0" selected>Disabled</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ownership Precedence</label>
+              <select id="settings-precedence">
+                <option value="1" selected>Enabled (Use Customer Owner first)</option>
+                <option value="0">Disabled (Fall back to Invoice Sales Team)</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Primary Split (%)</label>
+                <input type="number" id="settings-primary-split" value="70" min="0" max="100">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Secondary Split (%)</label>
+                <input type="number" id="settings-secondary-split" value="30" min="0" max="100">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Walk-In Fallback Employee *</label>
+              <select id="settings-walkin"></select>
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+              <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title"><span class="material-symbols-outlined">help</span> Transparency Registry (DOC-01)</span>
+          </div>
+          <div class="panel-body" style="color:var(--text-2); display:flex; flex-direction:column; gap:12px;">
+            <p><strong>A. Business Meaning:</strong> Attributes net retail revenue splits to assigned customer owners or floor executives to measure true productivity.</p>
+            <p><strong>B. Formula Definition:</strong> Revenue Credit = Net Invoice Total * (Allocation % / 100).</p>
+            <p><strong>C. Split Precedence Cascade:</strong>
+              <br>1. Check active Customer Ownership primary/secondary splits.
+              <br>2. Check invoice standard sales team child table.
+              <br>3. Check Settings Walk-In Fallback Employee.
+            </p>
+            <p><strong>D. Immutability Governance:</strong> Ledger records are immutable; corrections require negative reversal pairs.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Modal: New/Edit Target -->
+<div class="modal-backdrop" id="modal-target" onclick="closeModal('modal-target')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">
+      <span class="material-symbols-outlined">track_changes</span> Set Sales Target
+      <button class="modal-close" onclick="closeModal('modal-target')"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <input type="hidden" id="target-name">
+      <div class="form-group">
+        <label class="form-label">Employee *</label>
+        <select id="target-employee"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Company *</label>
+        <select id="target-company"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fiscal Year *</label>
+        <select id="target-fiscal"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Month *</label>
+        <select id="target-month">
+          <option value="Jan">Jan</option>
+          <option value="Feb">Feb</option>
+          <option value="Mar">Mar</option>
+          <option value="Apr">Apr</option>
+          <option value="May">May</option>
+          <option value="Jun">Jun</option>
+          <option value="Jul">Jul</option>
+          <option value="Aug">Aug</option>
+          <option value="Sep">Sep</option>
+          <option value="Oct">Oct</option>
+          <option value="Nov">Nov</option>
+          <option value="Dec">Dec</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Target Revenue Amount (₹) *</label>
+        <input type="number" id="target-amount" min="1" placeholder="e.g. 500000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Target Quantity (Optional)</label>
+        <input type="number" id="target-qty" min="0" placeholder="e.g. 500">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-target')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitTarget()">Save Target</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: New/Edit Ownership -->
+<div class="modal-backdrop" id="modal-ownership" onclick="closeModal('modal-ownership')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">
+      <span class="material-symbols-outlined">assignment_ind</span> Assign Customer Owner
+      <button class="modal-close" onclick="closeModal('modal-ownership')"><span class="material-symbols-outlined">close</span></button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <input type="hidden" id="ownership-name">
+      <div class="form-group">
+        <label class="form-label">Customer *</label>
+        <select id="ownership-customer"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Primary Owner (Employee) *</label>
+        <select id="ownership-primary-owner"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Secondary Owner (Optional)</label>
+        <select id="ownership-secondary-owner"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Start Date *</label>
+        <input type="date" id="ownership-start-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">End Date (Optional)</label>
+        <input type="date" id="ownership-end-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Company *</label>
+        <select id="ownership-company"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Is Active</label>
+        <select id="ownership-is-active">
+          <option value="1" selected>Yes</option>
+          <option value="0">No</option>
+        </select>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+        <button class="btn btn-secondary" onclick="closeModal('modal-ownership')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitOwnership()">Save Assignment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-wrap"></div>
+
+<script>
+  const CSRF_TOKEN = '{{ csrf_token }}';
+  window.loggedUser = '{{ user }}';
+
+  const API = {
+    call(method, args = {}) {
+      return fetch('/api/method/' + method, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-frappe-csrf-token': CSRF_TOKEN
+        },
+        body: JSON.stringify(args)
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.exc) throw new Error(data._error_message || data.exc);
+        return data.message !== undefined ? data.message : data;
+      });
+    }
+  };
+
+  function toast(msg, type = 'success') {
+    const wrap = document.getElementById('toast-wrap');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    const icons = { success: 'check_circle', error: 'error', info: 'info' };
+    el.innerHTML = `<span class="material-symbols-outlined">${icons[type] || 'info'}</span><span>${msg}</span>`;
+    wrap.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+
+  function formatINR(val) {
+    return parseFloat(val || 0).toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  // --- Tab Management ---
+  let activeTab = 'dashboard';
+  function switchTab(tabId) {
+    activeTab = tabId;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.innerText.toLowerCase().includes(tabId) || (tabId === 'targets' && btn.innerText.toLowerCase().includes('targets')) || (tabId === 'ownership' && btn.innerText.toLowerCase().includes('ownership'))) {
+        btn.classList.add('active');
+      }
+    });
+
+    document.querySelectorAll('.content-pane').forEach(pane => {
+      pane.classList.remove('active');
+    });
+    const activePane = document.getElementById('pane-' + tabId);
+    if (activePane) activePane.classList.add('active');
+
+    loadTabData();
+  }
+
+  function loadTabData() {
+    if (activeTab === 'dashboard') loadDashboard();
+    else if (activeTab === 'targets') loadTargets();
+    else if (activeTab === 'ownership') loadOwnerships();
+    else if (activeTab === 'ledger') loadLedger();
+    else if (activeTab === 'settings') loadSettings();
+  }
+
+  // --- Dynamic Select Population ---
+  let cachedLists = {
+    companies: [],
+    fiscalYears: [],
+    employees: [],
+    customers: [],
+    stores: []
+  };
+
+  function loadSelectDropdowns() {
+    // Populate Companies
+    API.call('frappe.client.get_list', { doctype: 'Company', fields: ['name'] })
+      .then(list => {
+        cachedLists.companies = list || [];
+        populateSelect('dash-company', cachedLists.companies);
+        populateSelect('target-company', cachedLists.companies);
+        populateSelect('ownership-company', cachedLists.companies);
+        
+        // Auto select default company
+        const defaultCompany = '{{ smriti.company }}' || (list[0] ? list[0].name : '');
+        if (defaultCompany) {
+          document.getElementById('dash-company').value = defaultCompany;
+          document.getElementById('target-company').value = defaultCompany;
+          document.getElementById('ownership-company').value = defaultCompany;
+        }
+        
+        // Load initial dashboard after default company set
+        loadDashboard();
+      });
+
+    // Populate Fiscal Years
+    API.call('frappe.client.get_list', { doctype: 'Fiscal Year', fields: ['name'], order_by: 'year_start_date desc' })
+      .then(list => {
+        cachedLists.fiscalYears = list || [];
+        populateSelect('dash-fiscal', cachedLists.fiscalYears);
+        populateSelect('target-fiscal', cachedLists.fiscalYears);
+      });
+
+    // Populate Employees
+    API.call('frappe.client.get_list', { doctype: 'Employee', filters: { status: 'Active' }, fields: ['name', 'employee_name'], limit: 500 })
+      .then(list => {
+        cachedLists.employees = list.map(e => ({ name: e.name, label: `${e.name} - ${e.employee_name}` }));
+        populateSelect('target-employee', cachedLists.employees, true);
+        populateSelect('ownership-primary-owner', cachedLists.employees, true);
+        populateSelect('ownership-secondary-owner', [{name: '', label: 'None (100% split to primary)'}].concat(cachedLists.employees), true);
+        populateSelect('settings-walkin', cachedLists.employees, true);
+      });
+
+    // Populate Customers
+    API.call('frappe.client.get_list', { doctype: 'Customer', fields: ['name', 'customer_name'], limit: 500 })
+      .then(list => {
+        cachedLists.customers = list.map(c => ({ name: c.name, label: `${c.name} - ${c.customer_name}` }));
+        populateSelect('ownership-customer', cachedLists.customers, true);
+      });
+
+    // Populate Stores
+    API.call('frappe.client.get_list', { doctype: 'SMRITI Store', fields: ['name', 'store_name'] })
+      .then(list => {
+        cachedLists.stores = [{name: '', label: 'All Stores'}].concat(list.map(s => ({ name: s.name, label: s.store_name })));
+        populateSelect('dash-store', cachedLists.stores, true);
+      });
+  }
+
+  function populateSelect(id, list, isObject = false) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = list.map(item => {
+      const val = isObject ? item.name : item.name;
+      const lbl = isObject ? item.label : item.name;
+      return `<option value="${val}">${lbl}</option>`;
+    }).join('');
+  }
+
+  // --- Dashboard Tab ---
+  function loadDashboard() {
+    const comp = document.getElementById('dash-company').value;
+    const fiscal = document.getElementById('dash-fiscal').value;
+    const month = document.getElementById('dash-month').value;
+    const store = document.getElementById('dash-store').value;
+    
+    if (!comp || !fiscal) return;
+
+    API.call('smriti_retail_os.sfm.api.sfm_api.get_store_performance_center', {
+      company: comp,
+      fiscal_year: fiscal,
+      month: month,
+      store: store || undefined
+    })
+    .then(data => {
+      const grid = document.getElementById('metrics-grid');
+      const topName = data.top_performer ? data.top_performer.employee_name : 'N/A';
+      const topRevenue = data.top_performer ? `₹${formatINR(data.top_performer.revenue)}` : '₹0.00';
+      
+      grid.innerHTML = `
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Sales Target</span>
+            <span class="material-symbols-outlined metric-icon">track_changes</span>
+          </div>
+          <div class="metric-value">₹${formatINR(data.total_target)}</div>
+          <div class="metric-desc">Total target allocated for current filters</div>
+        </div>
+
+        <div class="metric-card success-green">
+          <div class="metric-header">
+            <span class="metric-title">Revenue Achievement</span>
+            <span class="material-symbols-outlined metric-icon">payments</span>
+          </div>
+          <div class="metric-value">₹${formatINR(data.total_achievement)}</div>
+          <div class="metric-desc">Net attributed revenue credit</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Transactions</span>
+            <span class="material-symbols-outlined metric-icon">receipt</span>
+          </div>
+          <div class="metric-value">${data.total_transactions}</div>
+          <div class="metric-desc">Unique sales transactions credited</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-title">Top Performer</span>
+            <span class="material-symbols-outlined metric-icon">emoji_events</span>
+          </div>
+          <div class="metric-value" style="font-size:1.4rem; line-height:1.2;">${topName}</div>
+          <div class="metric-desc">Revenue contribution: ${topRevenue}</div>
+        </div>
+      `;
+
+      loadLeaderboard(comp, fiscal, month, store);
+    })
+    .catch(e => {
+      toast('Failed to load store metrics: ' + e.message, 'error');
+    });
+  }
+
+  function loadLeaderboard(comp, fiscal, month, store) {
+    API.call('smriti_retail_os.sfm.api.sfm_api.get_sfm_leaderboard', {
+      company: comp,
+      fiscal_year: fiscal,
+      month: month,
+      store: store || undefined
+    })
+    .then(list => {
+      const tbody = document.getElementById('leaderboard-tbody');
+      if (!list || !list.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--text-2);">No attributed sales logs found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map(item => `
+        <tr>
+          <td style="font-weight:700; color:var(--accent-2);">${item.rank}</td>
+          <td>${item.employee}</td>
+          <td style="font-weight:600;">${item.employee_name}</td>
+          <td style="font-weight:700;">₹${formatINR(item.revenue)}</td>
+          <td>${item.transactions}</td>
+          <td>${item.customers}</td>
+        </tr>
+      `).join('');
+    })
+    .catch(e => {
+      document.getElementById('leaderboard-tbody').innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--danger);">Error loading rankings.</td></tr>';
+    });
+  }
+
+  // --- Targets Tab ---
+  function loadTargets() {
+    API.call('frappe.client.get_list', {
+      doctype: 'SMRITI Sales Target',
+      fields: ['name', 'employee', 'fiscal_year', 'month', 'target_amount', 'target_qty', 'company'],
+      order_by: 'fiscal_year desc, month desc',
+      limit: 100
+    })
+    .then(list => {
+      const tbody = document.getElementById('targets-tbody');
+      if (!list || !list.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--text-2);">No targets set yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map(t => `
+        <tr>
+          <td>${t.employee}</td>
+          <td style="font-weight:600;">${t.employee}</td>
+          <td>${t.fiscal_year}</td>
+          <td>${t.month}</td>
+          <td style="font-weight:700; color:var(--success);">₹${formatINR(t.target_amount)}</td>
+          <td>${t.target_qty || 'N/A'}</td>
+          <td style="text-align: center;">
+            <button class="btn btn-secondary btn-xs" onclick="editTarget('${t.name}')">Edit</button>
+          </td>
+        </tr>
+      `).join('');
+    })
+    .catch(e => {
+      document.getElementById('targets-tbody').innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--danger);">Error loading targets.</td></tr>';
+    });
+  }
+
+  function openNewTargetModal() {
+    document.getElementById('target-name').value = '';
+    document.getElementById('target-amount').value = '';
+    document.getElementById('target-qty').value = '';
+    openModal('modal-target');
+  }
+
+  function editTarget(name) {
+    API.call('frappe.client.get', { doctype: 'SMRITI Sales Target', name: name })
+      .then(doc => {
+        document.getElementById('target-name').value = doc.name;
+        document.getElementById('target-employee').value = doc.employee;
+        document.getElementById('target-company').value = doc.company;
+        document.getElementById('target-fiscal').value = doc.fiscal_year;
+        document.getElementById('target-month').value = doc.month;
+        document.getElementById('target-amount').value = doc.target_amount;
+        document.getElementById('target-qty').value = doc.target_qty || '';
+        openModal('modal-target');
+      });
+  }
+
+  function submitTarget() {
+    const name = document.getElementById('target-name').value;
+    const doc = {
+      doctype: 'SMRITI Sales Target',
+      employee: document.getElementById('target-employee').value,
+      company: document.getElementById('target-company').value,
+      fiscal_year: document.getElementById('target-fiscal').value,
+      month: document.getElementById('target-month').value,
+      target_amount: parseFloat(document.getElementById('target-amount').value),
+      target_qty: parseFloat(document.getElementById('target-qty').value) || undefined
+    };
+
+    const action = name ? API.call('frappe.client.update', { doctype: 'SMRITI Sales Target', name: name, doc: doc })
+                         : API.call('frappe.client.insert', { doc: doc });
+                         
+    action.then(() => {
+      toast('Sales target saved successfully!');
+      closeModal('modal-target');
+      loadTargets();
+    })
+    .catch(e => {
+      toast('Failed to save sales target: ' + e.message, 'error');
+    });
+  }
+
+  // --- Customer Ownership Tab ---
+  function loadOwnerships() {
+    API.call('frappe.client.get_list', {
+      doctype: 'SMRITI Customer Ownership',
+      fields: ['name', 'customer', 'primary_owner', 'secondary_owner', 'start_date', 'end_date', 'is_active', 'company'],
+      order_by: 'start_date desc',
+      limit: 100
+    })
+    .then(list => {
+      const tbody = document.getElementById('ownership-tbody');
+      if (!list || !list.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--text-2);">No customer ownership records.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map(o => {
+        const sec = o.secondary_owner || 'None';
+        const badge = o.is_active ? '<span class="status-badge active">Active</span>' : '<span class="status-badge reversed">Inactive</span>';
+        return `
+          <tr>
+            <td style="font-weight:600;">${o.customer}</td>
+            <td>${o.primary_owner}</td>
+            <td>${sec}</td>
+            <td>${o.start_date}</td>
+            <td>${o.end_date || 'Ongoing'}</td>
+            <td>${badge}</td>
+            <td style="text-align: center;">
+              <button class="btn btn-secondary btn-xs" onclick="editOwnership('${o.name}')">Edit</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    })
+    .catch(e => {
+      document.getElementById('ownership-tbody').innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--danger);">Error loading ownership records.</td></tr>';
+    });
+  }
+
+  function openNewOwnershipModal() {
+    document.getElementById('ownership-name').value = '';
+    document.getElementById('ownership-start-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('ownership-end-date').value = '';
+    document.getElementById('ownership-is-active').value = '1';
+    openModal('modal-ownership');
+  }
+
+  function editOwnership(name) {
+    API.call('frappe.client.get', { doctype: 'SMRITI Customer Ownership', name: name })
+      .then(doc => {
+        document.getElementById('ownership-name').value = doc.name;
+        document.getElementById('ownership-customer').value = doc.customer;
+        document.getElementById('ownership-primary-owner').value = doc.primary_owner;
+        document.getElementById('ownership-secondary-owner').value = doc.secondary_owner || '';
+        document.getElementById('ownership-start-date').value = doc.start_date;
+        document.getElementById('ownership-end-date').value = doc.end_date || '';
+        document.getElementById('ownership-company').value = doc.company;
+        document.getElementById('ownership-is-active').value = doc.is_active ? '1' : '0';
+        openModal('modal-ownership');
+      });
+  }
+
+  function submitOwnership() {
+    const name = document.getElementById('ownership-name').value;
+    const doc = {
+      doctype: 'SMRITI Customer Ownership',
+      customer: document.getElementById('ownership-customer').value,
+      primary_owner: document.getElementById('ownership-primary-owner').value,
+      secondary_owner: document.getElementById('ownership-secondary-owner').value || undefined,
+      start_date: document.getElementById('ownership-start-date').value,
+      end_date: document.getElementById('ownership-end-date').value || undefined,
+      company: document.getElementById('ownership-company').value,
+      is_active: parseInt(document.getElementById('ownership-is-active').value)
+    };
+
+    const action = name ? API.call('frappe.client.update', { doctype: 'SMRITI Customer Ownership', name: name, doc: doc })
+                         : API.call('frappe.client.insert', { doc: doc });
+
+    action.then(() => {
+      toast('Customer ownership assignment saved!');
+      closeModal('modal-ownership');
+      loadOwnerships();
+    })
+    .catch(e => {
+      toast('Failed to assign customer owner: ' + e.message, 'error');
+    });
+  }
+
+  // --- Settings Tab ---
+  function loadSettings() {
+    API.call('frappe.client.get_value', { doctype: 'SMRITI SFM Settings', filters: {}, fieldname: ['enable_sfm', 'ownership_precedence', 'primary_split_pct', 'secondary_split_pct', 'walkin_employee'] })
+      .then(settings => {
+        document.getElementById('settings-enable').value = settings.enable_sfm ? '1' : '0';
+        document.getElementById('settings-precedence').value = settings.ownership_precedence ? '1' : '0';
+        document.getElementById('settings-primary-split').value = settings.primary_split_pct || '70';
+        document.getElementById('settings-secondary-split').value = settings.secondary_split_pct || '30';
+        document.getElementById('settings-walkin').value = settings.walkin_employee || '';
+      });
+  }
+
+  function saveSettings() {
+    const doc = {
+      doctype: 'SMRITI SFM Settings',
+      enable_sfm: parseInt(document.getElementById('settings-enable').value),
+      ownership_precedence: parseInt(document.getElementById('settings-precedence').value),
+      primary_split_pct: parseFloat(document.getElementById('settings-primary-split').value),
+      secondary_split_pct: parseFloat(document.getElementById('settings-secondary-split').value),
+      walkin_employee: document.getElementById('settings-walkin').value || undefined
+    };
+
+    API.call('frappe.client.save', { doc: doc })
+      .then(() => {
+        toast('SFM settings saved successfully!');
+      })
+      .catch(e => {
+        toast('Settings validation failed: ' + e.message, 'error');
+      });
+  }
+
+  // --- Attribution Ledger Tab ---
+  function loadLedger() {
+    API.call('frappe.client.get_list', {
+      doctype: 'SMRITI Attribution Ledger',
+      fields: ['name', 'posting_date', 'posting_time', 'invoice_reference', 'customer', 'employee', 'ownership_type', 'credit_percentage', 'revenue_credit', 'store', 'ledger_status'],
+      order_by: 'posting_date desc, posting_time desc',
+      limit: 100
+    })
+    .then(list => {
+      const tbody = document.getElementById('ledger-tbody');
+      if (!list || !list.length) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color: var(--text-2);">No ledger records found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map(l => {
+        let statusBadge = '<span class="status-badge active">Active</span>';
+        if (l.ledger_status === 'Reversed') statusBadge = '<span class="status-badge reversed">Reversed</span>';
+        else if (l.ledger_status === 'Superseded') statusBadge = '<span class="status-badge superseded">Superseded</span>';
+
+        return `
+          <tr>
+            <td style="white-space:nowrap;">${l.posting_date} ${l.posting_time}</td>
+            <td style="font-weight:600;">${l.invoice_reference}</td>
+            <td>${l.customer}</td>
+            <td>${l.employee}</td>
+            <td>${l.ownership_type}</td>
+            <td>${l.credit_percentage}%</td>
+            <td style="font-weight:700;">₹${formatINR(l.revenue_credit)}</td>
+            <td>${l.store}</td>
+            <td>${statusBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    })
+    .catch(e => {
+      document.getElementById('ledger-tbody').innerHTML = '<tr><td colspan="9" style="text-align:center; color: var(--danger);">Error loading ledger.</td></tr>';
+    });
+  }
+
+  // --- Modal Helpers ---
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  // --- Page Boot ---
+  window.onload = function() {
+    // Injects the standard SMRITI standalone sidebar
+    if (window.SMRITI && typeof SMRITI.injectSidebar === 'function') {
+      SMRITI.injectSidebar('smriti-sidebar-target', 'leaderboard');
+    }
+    loadSelectDropdowns();
+  };
+</script>
+
+</body>
+</html>
+{% endblock %}

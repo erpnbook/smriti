@@ -142,8 +142,7 @@ def process_sales_invoice_submit(doc, method=None):
             "last_seen": now_datetime(),
             "party_stock_account": doc.custom_party_stock_account,
             "alert_type": "Hook Failure",
-            "reference_doctype": doc.doctype,
-            "reference_name": doc.name,
+            "sales_invoice": doc.name,
             "reconciliation_notes": str(e),
             "status": "Pending Reconciliation"
         }).insert(ignore_permissions=True)
@@ -162,8 +161,7 @@ def process_sales_invoice_cancel(doc, method=None):
             "last_seen": now_datetime(),
             "party_stock_account": doc.custom_party_stock_account,
             "alert_type": "Hook Failure",
-            "reference_doctype": doc.doctype,
-            "reference_name": doc.name,
+            "sales_invoice": doc.name,
             "reconciliation_notes": str(e),
             "status": "Pending Reconciliation"
         }).insert(ignore_permissions=True)
