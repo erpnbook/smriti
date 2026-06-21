@@ -48,7 +48,7 @@ class SMRITISavedView(Document):
             if db_user != frappe.session.user and "System Manager" not in frappe.get_roles():
                 frappe.throw(frappe._("Not authorized to modify this saved view."), frappe.PermissionError)
 
-    def before_delete(self):
+    def on_trash(self):
         # 4. Ownership check on delete
         if self.user != frappe.session.user and "System Manager" not in frappe.get_roles():
             frappe.throw(frappe._("Not authorized to delete this saved view."), frappe.PermissionError)
