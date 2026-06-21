@@ -1057,6 +1057,57 @@ HELP_CENTER_REGISTRY = {
                 "answer": _("Aggregations run daily at 03:00 AM local time via background scheduler to prevent database locks during store hours.")
             }
         ]
+    },
+    "clienteling_intelligence": {
+        "title": _("Clienteling & Customer Intelligence Graph"),
+        "category": "Analytics Guides",
+        "description": _("Detailed guide explaining SMRITI Customer Intelligence Graph (CIG) architecture, settings, and the Explainability UI workflow."),
+        "about": _("This guide explains SMRITI's Customer Intelligence Graph (CIG), settings-based thresholds, and how to verify calculations via the Explainability UI."),
+        "author": {
+            "name": "Jawahar R. Mallah",
+            "title": _("Founder & Chief Architect, AITDL"),
+            "quote": _("Light begins with learning.")
+        },
+        "content": _(
+            "SMRITI Customer Intelligence Graph (CIG) is the core analytical engine for modern retail clienteling, enabling stores to dynamically evaluate customer loyalty, risk profiles, and next-purchase affinity.\n\n"
+            "1. CIG Architecture & Flow\n"
+            "Adhering to SMRITI's Service-First constitution, frontend clients never manipulate the database directly. All operations route through service controllers. The data flow is:\n"
+            "Customer Checkout Event → SMRITI Customer Graph → CIG Calculation → SMRITI Customer Profile Update.\n\n"
+            "2. Settings-Based Thresholds\n"
+            "Calculations avoid hardcoded values by retrieving limits dynamically from SMRITI Clienteling Settings:\n"
+            "- vip_threshold (default 80.0): Min candidate score required to auto-flag a profile as VIP (is_vip = 1).\n"
+            "- dormancy_days (default 90): Number of days since last visit after which a customer is flagged as dormant.\n"
+            "- enable_predictions (default 1): Enforces or disables execution of predictive model calculations for next-visit and product recommendations.\n\n"
+            "3. Why did this customer receive this score? (Explainability Workflow)\n"
+            "To understand any intelligence metric (such as Churn Risk or VIP Candidate Score) on the SMRITI UI, use the following transparency workflow:\n"
+            "Open Customer Profile\n"
+            "↓\n"
+            "Click ⓘ Explain next to the metric\n"
+            "↓\n"
+            "View active Formula ID (resolves to central SMRITI Formula Registry)\n"
+            "↓\n"
+            "View Formula Version\n"
+            "↓\n"
+            "View Inputs (shows customer's actual live transaction variables)\n"
+            "↓\n"
+            "View Output (displays step-by-step arithmetic worked example)\n\n"
+            "4. Dynamic Formula Resolution\n"
+            "CIG retrieves mathematical expressions from the central SMRITI Formula Registry. It executes formulas using Churn Risk Score (TST-CHURN), VIP Candidate Score (TST-VIP), and Campaign Affinity Score (TST-AFFINITY). See the Formula Registry for active expressions."
+        ),
+        "faqs": [
+            {
+                "question": _("Who has permission to change Clienteling settings?"),
+                "answer": _("SMRITI Clienteling Settings is restricted. Only users with the 'SMRITI Store Manager' or 'System Manager' roles are permitted to modify thresholds and toggle predictions.")
+            },
+            {
+                "question": _("What happens if a formula definition is modified?"),
+                "answer": _("Because CIG resolves expressions dynamically, any update to active formulas in the Formula Registry immediately applies to subsequent customer profile recalculations, avoiding documentation drift.")
+            },
+            {
+                "question": _("Does CIG affect standard ERPNext stock or financial ledgers?"),
+                "answer": _("No. SMRITI constitution prohibits CIG from altering stock ledger entries or general ledger entries. It writes exclusively to SMRITI shadow tables and Customer Profile fields.")
+            }
+        ]
     }
 }
 

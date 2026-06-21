@@ -33,4 +33,5 @@ smriti_retail_os.patches.seed_printability_formula
 smriti_retail_os.patches.seed_telemetry_meta
 
 # v3.0.0 — Seed SMRITI Customer Intelligence Graph Formulas
-smriti_retail_os.patches.seed_intelligence_formulas
+smriti_retail_os.patches.seed_intelligence_formulas
+smriti_retail_os.patches.seed_intelligence_terms

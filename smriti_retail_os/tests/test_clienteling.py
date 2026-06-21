@@ -66,7 +66,12 @@ class TestClienteling(FrappeTestCase):
         frappe.db.delete("SMRITI Walk In Visit", {"store": self.warehouse})
         frappe.db.delete("SMRITI Walk In Analytics", {"store": self.warehouse})
         frappe.db.delete("SMRITI Customer Interaction", {"customer": self.customer})
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-ABV", "TST-LTV"]]})
+        frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-ABV", "TST-LTV", "TST-VIP"]]})
+        frappe.db.commit()
+
+    def tearDown(self):
+        # Clean up formulas to keep database clean
+        frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-ABV", "TST-LTV", "TST-VIP"]]})
         frappe.db.commit()
 
     def test_materialization_invariant(self):

@@ -26,15 +26,17 @@ from smriti_retail_os.services.knowledge_service import (
 class TestKnowledgeCenter(unittest.TestCase):
     def setUp(self):
         # Clean up test terms and formulas to avoid collision
-        frappe.db.delete("SMRITI Business Term", {"term_id": ["in", ["TST-T-001", "TST-T-002", "TST-RANK-MATCH"]]})
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-F-001", "TST-F-002", "TST-RANK-MATCH"]]})
+        frappe.db.delete("SMRITI Business Term", {"term_id": ["in", ["TST-T-001", "TST-T-002", "TST-TERM-RANK-MATCH"]]})
+        frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-F-001", "TST-F-002", "TST-FORM-RANK-MATCH"]]})
+        frappe.db.delete("SMRITI Knowledge Asset", {"asset_code": ["in", ["TST-T-001", "TST-T-002", "TST-F-001", "TST-F-002", "TST-TERM-RANK-MATCH", "TST-FORM-RANK-MATCH"]]})
         frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": ["in", ["TST-T-001", "TST-F-001"]]})
         frappe.db.commit()
         frappe.cache().delete_value(REDIS_INDEX_KEY)
 
     def tearDown(self):
-        frappe.db.delete("SMRITI Business Term", {"term_id": ["in", ["TST-T-001", "TST-T-002", "TST-RANK-MATCH"]]})
-        frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-F-001", "TST-F-002", "TST-RANK-MATCH"]]})
+        frappe.db.delete("SMRITI Business Term", {"term_id": ["in", ["TST-T-001", "TST-T-002", "TST-TERM-RANK-MATCH"]]})
+        frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-F-001", "TST-F-002", "TST-FORM-RANK-MATCH"]]})
+        frappe.db.delete("SMRITI Knowledge Asset", {"asset_code": ["in", ["TST-T-001", "TST-T-002", "TST-F-001", "TST-F-002", "TST-TERM-RANK-MATCH", "TST-FORM-RANK-MATCH"]]})
         frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": ["in", ["TST-T-001", "TST-F-001"]]})
         frappe.db.commit()
         frappe.cache().delete_value(REDIS_INDEX_KEY)
@@ -104,7 +106,7 @@ class TestKnowledgeCenter(unittest.TestCase):
         # When searched, they should score the same on matching, but term should be ordered first
         t_doc = frappe.get_doc({
             "doctype": "SMRITI Business Term",
-            "term_id": "TST-RANK-MATCH",
+            "term_id": "TST-TERM-RANK-MATCH",
             "term_name": "SharedKeyword Term",
             "term_category": "Inventory",
             "term_version": "1.0.0",
@@ -119,7 +121,7 @@ class TestKnowledgeCenter(unittest.TestCase):
 
         f_doc = frappe.get_doc({
             "doctype": "SMRITI Formula Definition",
-            "formula_id": "TST-RANK-MATCH",
+            "formula_id": "TST-FORM-RANK-MATCH",
             "formula_name": "SharedKeyword Formula",
             "formula_version": "1.0.0",
             "formula_category": "Inventory",
@@ -143,11 +145,11 @@ class TestKnowledgeCenter(unittest.TestCase):
         
         # Verify the top is the Dictionary Term
         self.assertEqual(results[0]["type"], "Dictionary Term")
-        self.assertEqual(results[0]["id"], "dict:TST-RANK-MATCH")
+        self.assertEqual(results[0]["id"], "dict:TST-TERM-RANK-MATCH")
         
         # Verify the second is the Formula
         self.assertEqual(results[1]["type"], "Formula Definition")
-        self.assertEqual(results[1]["id"], "formula:TST-RANK-MATCH")
+        self.assertEqual(results[1]["id"], "formula:TST-FORM-RANK-MATCH")
 
     def test_knowledge_coverage_calculation(self):
         # Delete existing terms so we control the math completely

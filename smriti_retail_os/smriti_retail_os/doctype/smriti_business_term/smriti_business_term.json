@@ -21,6 +21,9 @@
     "hinglish_definition",
     "related_formulas",
     "related_terms",
+    "formula_definition_ref",
+    "formula_version",
+    "explainability_note",
     "faq",
     "common_mistakes",
     "manual_reference",
@@ -139,6 +142,22 @@
       "fieldtype": "Table",
       "label": "Related Terms",
       "options": "SMRITI Related Term"
+    },
+    {
+      "fieldname": "formula_definition_ref",
+      "fieldtype": "Link",
+      "label": "Formula Definition Ref",
+      "options": "SMRITI Formula Definition"
+    },
+    {
+      "fieldname": "formula_version",
+      "fieldtype": "Data",
+      "label": "Formula Version"
+    },
+    {
+      "fieldname": "explainability_note",
+      "fieldtype": "Long Text",
+      "label": "Explainability Note"
     },
     {
       "fieldname": "faq",
