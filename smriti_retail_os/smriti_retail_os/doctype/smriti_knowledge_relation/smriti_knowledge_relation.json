@@ -1,0 +1,105 @@
+{
+  "actions": [],
+  "creation": "2026-06-21 17:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "source_asset_id",
+    "target_asset_id",
+    "relationship_type",
+    "strength",
+    "is_primary",
+    "tenant_scope",
+    "visibility"
+  ],
+  "fields": [
+    {
+      "fieldname": "source_asset_id",
+      "fieldtype": "Link",
+      "label": "Source Asset ID",
+      "options": "SMRITI Knowledge Asset",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "target_asset_id",
+      "fieldtype": "Link",
+      "label": "Target Asset ID",
+      "options": "SMRITI Knowledge Asset",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "relationship_type",
+      "fieldtype": "Select",
+      "label": "Relationship Type",
+      "options": "\ncalculates\ndefines\nanalyzed_in\ntrained_by\nannotates\nrelated_to",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "strength",
+      "fieldtype": "Select",
+      "label": "Strength",
+      "options": "\nStrong\nMedium\nWeak",
+      "default": "Medium"
+    },
+    {
+      "fieldname": "is_primary",
+      "fieldtype": "Check",
+      "label": "Is Primary",
+      "default": 0
+    },
+    {
+      "fieldname": "tenant_scope",
+      "fieldtype": "Select",
+      "label": "Tenant Scope",
+      "options": "\nGlobal\nOrganization\nStore",
+      "default": "Global"
+    },
+    {
+      "fieldname": "visibility",
+      "fieldtype": "Select",
+      "label": "Visibility",
+      "options": "\nPublic\nInternal\nManager\nSystem Manager",
+      "default": "Public"
+    }
+  ],
+  "links": [],
+  "modified": "2026-06-21 17:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "SMRITI Knowledge Relation",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "read": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1,
+      "delete": 1
+    },
+    {
+      "create": 0,
+      "read": 1,
+      "role": "SMRITI Store Manager",
+      "share": 1,
+      "write": 0
+    },
+    {
+      "create": 1,
+      "read": 1,
+      "role": "Administrator",
+      "share": 1,
+      "write": 1,
+      "delete": 1
+    }
+  ],
+  "quick_entry": 0,
+  "sort_field": "source_asset_id",
+  "sort_order": "ASC",
+  "track_changes": 1,
+  "autoname": "KGR-.#####."
+}

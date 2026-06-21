@@ -30,6 +30,43 @@ REQUIRED_COLS = ["BARCODE NO", "PRODUCT STYLE CODE", "ITEM DESCRIPTION", "COLOR"
 VALID_GST = {0, 5, 12, 18, 28}
 
 
+def normalize_lookup(value):
+    """Normalize lookups uniformly by stripping whitespace and converting to uppercase."""
+    if value is None:
+        return ""
+    return str(value).strip().upper()
+
+
+def validate_barcode(barcode, raise_exception=True):
+    """
+    Centralized validation for barcode value and format.
+    Checks:
+    - Non-empty
+    - Alphanumeric, hyphens, and underscores only (no spaces, special characters)
+    - Length between 3 and 30 characters.
+    """
+    if not barcode:
+        msg = _("Barcode cannot be empty.")
+        if raise_exception:
+            frappe.throw(msg, title=_("Invalid Barcode"))
+        return False, msg
+        
+    import re
+    if not re.match(r"^[a-zA-Z0-9\-_]+$", str(barcode)):
+        msg = _("Barcode '{0}' contains invalid characters. Only alphanumeric, hyphens, and underscores are allowed (no spaces).").format(barcode)
+        if raise_exception:
+            frappe.throw(msg, title=_("Invalid Barcode"))
+        return False, msg
+        
+    if len(str(barcode)) < 3 or len(str(barcode)) > 30:
+        msg = _("Barcode must be between 3 and 30 characters.")
+        if raise_exception:
+            frappe.throw(msg, title=_("Invalid Barcode"))
+        return False, msg
+        
+    return True, ""
+
+
 def _build_import_lookup_cache():
     """
     Pre-loads all lookup sets needed by validate_import_rows and import_item_master
@@ -59,11 +96,11 @@ def _build_import_lookup_cache():
         "SELECT custom_vendor_code FROM `tabSupplier` WHERE custom_vendor_code IS NOT NULL AND custom_vendor_code != ''",
         as_dict=True
     )
-    existing_vendors = {r.custom_vendor_code for r in vendor_rows}
+    existing_vendors = {normalize_lookup(r.custom_vendor_code) for r in vendor_rows}
 
     # 4. All brand names (covers brand soft check)
     existing_brands = set(
-        r[0] for r in frappe.db.sql("SELECT name FROM `tabBrand`")
+        normalize_lookup(r[0]) for r in frappe.db.sql("SELECT name FROM `tabBrand`")
     )
 
     # 5. Which attribute DocTypes exist on this install (avoids 7×N DocType exists() checks)
@@ -149,6 +186,12 @@ def validate_import_rows(rows_json):
         if barcode.lower() in ("", "0"):
             barcode = ""
 
+        # Centralized barcode validation (VAL-ITEM-002)
+        if barcode:
+            is_valid, err_msg = validate_barcode(barcode, raise_exception=False)
+            if not is_valid:
+                errors.append(err_msg)
+
         # Compute variant_code early to allow re-import of same barcode on same item
         _style  = _clean_str(row.get("PRODUCT STYLE CODE", ""))
         _color  = _clean_str(row.get("COLOR", ""))
@@ -202,18 +245,17 @@ def validate_import_rows(rows_json):
         # ── Vendor / Supplier hard check (uses pre-loaded cache) ───────────
         vendor = _clean_str(row.get("VENDOR CODE", ""))
         if vendor:
-            vendor_clean = str(vendor).strip()
-            vendor_clean_upper = vendor_clean.upper()
-            if vendor_clean_upper not in ("", "NA", "N/A", "NONE", "NULL", "NAN", "DV"):
-                if vendor_clean not in _existing_vendors:
+            vendor_norm = normalize_lookup(vendor)
+            if vendor_norm not in ("", "NA", "N/A", "NONE", "NULL", "NAN", "DV"):
+                if vendor_norm not in _existing_vendors:
                     errors.append(
-                        f"Vendor Code '{vendor_clean}' not found in Supplier Master. "
-                        f"Please create a Supplier with Vendor Code '{vendor_clean}' before importing items."
+                        f"Vendor Code '{vendor}' not found in Supplier Master. "
+                        f"Please create a Supplier with Vendor Code '{vendor}' before importing items."
                     )
 
         # ── Brand soft check (uses pre-loaded cache) ───────────────────────
         brand = _clean_str(row.get("BRAND NAME", ""))
-        if brand and brand not in _existing_brands:
+        if brand and normalize_lookup(brand) not in _existing_brands:
             warnings.append(f"Brand '{brand}' not found — will be auto-created")
 
         # ── Attribute Soft Checks (uses pre-loaded DocType set) ───────────
@@ -257,6 +299,7 @@ def import_item_master(rows_json):
     Duplicate barcodes are hard-rejected (should already be filtered by frontend).
     Returns a summary dict: created, skipped, failed.
     """
+    check_store_manager_role()
     rows = frappe.parse_json(rows_json)
 
     # Clear per-batch HSN resolution cache for this import run
@@ -285,6 +328,8 @@ def import_item_master(rows_json):
             # Guard: Excel blank cells come through as 'nan' or 'None' or '0'
             if barcode.lower() in ("", "0"):
                 barcode = ""
+            if barcode:
+                validate_barcode(barcode, raise_exception=True)
             style_code      = _clean_str(row.get("PRODUCT STYLE CODE", ""))
             item_name       = _clean_str(row.get("ITEM DESCRIPTION", ""))
             color           = _clean_str(row.get("COLOR", ""))
@@ -587,7 +632,7 @@ def _ensure_hsn_code(hsn_code):
 
 
 def _resolve_hsn_code(hsn_code):
-    """Clean, format/pad to correct length, and determine if it can be safely set based on GST validation settings.
+    """Clean, validate length against GST settings, and determine if it can be safely set.
     If the HSN code is empty, invalid, or non-numeric, fallbacks to the standard footwear default '641590'.
     Also ensures the resolved HSN code is created in the database.
     """
@@ -610,14 +655,12 @@ def _resolve_hsn_code(hsn_code):
         valid_lengths = (6, 8)
 
     if validate_enabled:
-        # Standard rules for padding/truncating to conform to valid_lengths (usually 6 or 8)
         length = len(hsn_digits)
-        if length < 6:
-            hsn_digits = hsn_digits.ljust(6, "0")
-        elif length == 7:
-            hsn_digits = hsn_digits.ljust(8, "0")
-        elif length > 8:
-            hsn_digits = hsn_digits[:8]
+        if length not in valid_lengths:
+            frappe.throw(
+                _("HSN Code '{0}' has invalid length {1}. Valid HSN lengths are {2}.").format(hsn_code, length, ", ".join(map(str, valid_lengths))),
+                title=_("Invalid HSN Code")
+            )
     
     # Auto-create in database if missing
     _ensure_hsn_code(hsn_digits)
@@ -1036,29 +1079,38 @@ def create_style_with_variants(base_details, sizes_config):
         _ensure_item_attribute("Color")
         _ensure_attribute_value("Color", color)
         
-        # Determine barcode
-        if barcode_mode == "manual":
-            if not manual_barcode:
-                frappe.throw(frappe._("Manual barcode is required for size {0}").format(size))
-            import re
-            if not re.match(r"^[a-zA-Z0-9\-_]+$", manual_barcode):
-                frappe.throw(frappe._("Manual barcode '{0}' contains invalid characters. Only alphanumeric, hyphens, and underscores are allowed.").format(manual_barcode))
-            if len(manual_barcode) < 3 or len(manual_barcode) > 30:
-                frappe.throw(frappe._("Manual barcode must be between 3 and 30 characters."))
-            barcode = manual_barcode
-        else:
-            existing_barcode = frappe.db.get_value("Item Barcode", {"parent": variant_code, "custom_is_primary": 1}, "barcode")
-            if existing_barcode:
-                barcode = existing_barcode
+        # Determine barcode (VAL-ITEM-002 and ARCH-ITEM-001)
+        max_retries = 10
+        barcode = None
+        for attempt in range(max_retries):
+            if barcode_mode == "manual":
+                validate_barcode(manual_barcode, raise_exception=True)
+                barcode = manual_barcode
             else:
-                barcode = generate_ean13_barcode()
-
-        # Check barcode uniqueness
-        duplicate = frappe.db.get_value("Item Barcode", {"barcode": barcode, "parent": ["!=", variant_code]}, "parent")
-        if duplicate:
-            frappe.throw(frappe._("Barcode '{0}' is already registered on item '{1}'!").format(barcode, duplicate))
-        if frappe.db.exists("Item", barcode) and barcode != variant_code:
-            frappe.throw(frappe._("Barcode '{0}' collides with an existing Item Code in the system!").format(barcode))
+                existing_barcode = frappe.db.get_value("Item Barcode", {"parent": variant_code, "custom_is_primary": 1}, "barcode")
+                if existing_barcode:
+                    barcode = existing_barcode
+                else:
+                    barcode = generate_ean13_barcode()
+            
+            # Check barcode uniqueness
+            duplicate = frappe.db.get_value("Item Barcode", {"barcode": barcode, "parent": ["!=", variant_code]}, "parent")
+            if duplicate:
+                if barcode_mode == "manual":
+                    frappe.throw(frappe._("Barcode '{0}' is already registered on item '{1}'!").format(barcode, duplicate))
+                else:
+                    continue  # generated barcode collided, try again
+            
+            if frappe.db.exists("Item", barcode) and barcode != variant_code:
+                if barcode_mode == "manual":
+                    frappe.throw(frappe._("Barcode '{0}' collides with an existing Item Code in the system!").format(barcode))
+                else:
+                    continue  # generated barcode collided, try again
+            
+            # Uniqueness checks passed
+            break
+        else:
+            frappe.throw(frappe._("Could not generate a unique barcode for size {0} after 10 attempts.").format(size))
             
         # Create or update variant Item doc
         if not frappe.db.exists("Item", variant_code):
@@ -1216,12 +1268,12 @@ def validate_pivot_values(styles_json):
     all_groups = frappe.db.get_all(
         "Item Group", fields=["name", "is_group"], order_by="name"
     )
-    existing_group_names = {g.name for g in all_groups}
+    existing_group_names = {normalize_lookup(g.name) for g in all_groups}
     leaf_groups = [g.name for g in all_groups if not g.is_group]
 
     new_categories = []
     for cat in sorted(categories):
-        if cat not in existing_group_names:
+        if normalize_lookup(cat) not in existing_group_names:
             new_categories.append({"value": cat, "suggestions": leaf_groups[:8]})
 
     # ── Colors (Item Attribute Values) ─────────────────────────────────────
@@ -1233,11 +1285,11 @@ def validate_pivot_values(styles_json):
             pluck="attribute_value",
             order_by="attribute_value"
         )
-    existing_colors_upper = {c.upper() for c in existing_colors}
+    existing_colors_norm = {normalize_lookup(c) for c in existing_colors}
 
     new_colors = []
     for color in sorted(colors):
-        if color.upper() not in existing_colors_upper:
+        if normalize_lookup(color) not in existing_colors_norm:
             new_colors.append({"value": color, "suggestions": existing_colors[:10]})
 
     # ── Sub-Categories (SMRITI Sub Category if doctype exists) ─────────────
@@ -1248,9 +1300,9 @@ def validate_pivot_values(styles_json):
             existing_sub_cats = frappe.db.get_all(
                 "SMRITI Sub Category", pluck="name", order_by="name"
             )
-            existing_sub_upper = {s.upper() for s in existing_sub_cats}
+            existing_sub_norm = {normalize_lookup(s) for s in existing_sub_cats}
             for sub in sorted(sub_cats):
-                if sub.upper() not in existing_sub_upper:
+                if normalize_lookup(sub) not in existing_sub_norm:
                     new_sub_cats.append({
                         "value": sub,
                         "suggestions": existing_sub_cats[:8]
@@ -1379,12 +1431,21 @@ def import_pivot_item_master(styles_json):
                 
                 variant_code = f"{style_code}-{color}-{size}"
                 
-                # Check for existing barcode, or generate mock
+                # Check for existing barcode, or generate mock (ARCH-ITEM-001)
                 existing_barcode = frappe.db.get_value("Item Barcode", {"parent": variant_code, "custom_is_primary": 1}, "barcode")
                 if existing_barcode:
                     barcode = existing_barcode
                 else:
-                    barcode = generate_ean13_barcode()
+                    max_retries = 10
+                    barcode = None
+                    for attempt in range(max_retries):
+                        barcode = generate_ean13_barcode()
+                        duplicate = frappe.db.get_value("Item Barcode", {"barcode": barcode, "parent": ["!=", variant_code]}, "parent")
+                        collides = frappe.db.exists("Item", barcode) and barcode != variant_code
+                        if not duplicate and not collides:
+                            break
+                    else:
+                        frappe.throw(frappe._("Could not generate a unique barcode for size {0} after 10 attempts.").format(size))
                     
                 if not frappe.db.exists("Item", variant_code):
                     var = frappe.new_doc("Item")
@@ -1478,6 +1539,17 @@ def reset_all_transactions():
     if "System Manager" not in roles and "Administrator" not in roles:
         frappe.throw(_("Restricted: This destructive operation requires System Manager or Administrator role."), frappe.PermissionError)
     
+    # Safety toggle: allow reset only if (developer_mode AND smriti_factory_reset_enabled) OR smriti_demo_site is enabled
+    allow_reset = (
+        (cint(frappe.conf.get("developer_mode") or 0) == 1 and cint(frappe.conf.get("smriti_factory_reset_enabled") or 0) == 1) or
+        cint(frappe.conf.get("smriti_demo_site") or 0) == 1
+    )
+    if not allow_reset:
+        frappe.throw(
+            _("Destructive reset operations are disabled on this site. Enable developer_mode AND smriti_factory_reset_enabled, or smriti_demo_site in site config to allow this action."),
+            title=_("Action Disabled")
+        )
+
     tables = [
         "Sales Invoice",
         "Sales Invoice Item",
@@ -1521,6 +1593,9 @@ def reset_all_transactions():
         
     frappe.db.commit()
     
+    from smriti_retail_os.backup_api import log_audit_event
+    log_audit_event("Factory Reset", f"Wiped all transaction history (cleared: {', '.join(deleted)}). User: {frappe.session.user}")
+
     return {
         "success": True,
         "message": "All transactions have been cleanly reset to 0. Counters will start from 1!",
@@ -1537,6 +1612,34 @@ def reset_all_items():
     if "System Manager" not in roles and "Administrator" not in roles:
         frappe.throw(_("Restricted: This destructive operation requires System Manager or Administrator role."), frappe.PermissionError)
     
+    # Safety toggle: allow reset only if (developer_mode AND smriti_factory_reset_enabled) OR smriti_demo_site is enabled
+    allow_reset = (
+        (cint(frappe.conf.get("developer_mode") or 0) == 1 and cint(frappe.conf.get("smriti_factory_reset_enabled") or 0) == 1) or
+        cint(frappe.conf.get("smriti_demo_site") or 0) == 1
+    )
+    if not allow_reset:
+        frappe.throw(
+            _("Destructive reset operations are disabled on this site. Enable developer_mode AND smriti_factory_reset_enabled, or smriti_demo_site in site config to allow this action."),
+            title=_("Action Disabled")
+        )
+
+    # Check for active transactions first before destroying master data
+    transaction_doctypes = [
+        "Sales Invoice",
+        "Purchase Invoice",
+        "Stock Entry",
+        "Delivery Note",
+        "Purchase Receipt",
+        "Stock Ledger Entry",
+        "GL Entry"
+    ]
+    for dt in transaction_doctypes:
+        if frappe.db.exists(dt):
+            frappe.throw(
+                _("Cannot reset Item Master because active transactions exist in {0}. Please reset all transactions first.").format(dt),
+                title=_("Active Transactions Found")
+            )
+
     tables = [
         "Item",
         "Item Barcode",
@@ -1562,6 +1665,9 @@ def reset_all_items():
             
     frappe.db.commit()
     
+    from smriti_retail_os.backup_api import log_audit_event
+    log_audit_event("Factory Reset", f"Wiped all Item Master data (cleared: {', '.join(deleted)}). User: {frappe.session.user}")
+
     return {
         "success": True,
         "message": "All Item Masters, variants, prices, and barcodes have been cleanly reset to 0!",

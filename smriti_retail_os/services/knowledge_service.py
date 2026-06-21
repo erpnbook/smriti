@@ -477,3 +477,283 @@ def get_governance_stats():
         "top_terms": top_terms,
         "top_formulas": top_formulas
     }
+
+
+# =============================================================================
+# SMRITI Knowledge Operating System (SKOS) Platform APIs
+# =============================================================================
+
+MAX_GRAPH_DEPTH = 5
+
+
+def get_skos_cache_key(prefix, key):
+    return f"smriti:skos:{prefix}:{key}"
+
+
+@frappe.whitelist()
+def get_asset_by_uri(uri):
+    """
+    Retrieves the raw document values pointed to by the asset URI.
+    Enforces authorization check according to the asset's access policy.
+    Uses SMRITI Redis Cache to optimize repetitive fetches.
+    """
+    cache_key = get_skos_cache_key("asset", uri)
+    cached_data = frappe.cache().get_value(cache_key)
+    if cached_data:
+        asset_info = cached_data
+    else:
+        asset_info = frappe.db.get_value(
+            "SMRITI Knowledge Asset",
+            {"asset_uri": uri},
+            ["reference_doctype", "reference_name", "access_policy", "status", "is_active"],
+            as_dict=True
+        )
+        if not asset_info:
+            frappe.throw(frappe._("Asset with URI {0} not found.").format(uri), frappe.DoesNotExistError)
+        frappe.cache().set_value(cache_key, asset_info, expires_in_sec=3600)
+        
+    # Enforce runtime active check
+    if not asset_info.is_active:
+        frappe.throw(frappe._("This asset is currently inactive."), frappe.PermissionError)
+
+    # Enforce asset lifecycle status check
+    if asset_info.status in ("Deprecated", "Archived") and "System Manager" not in frappe.get_roles():
+        frappe.throw(frappe._("This asset is no longer active."), frappe.PermissionError)
+
+    # Validate access policy
+    _validate_access_policy(asset_info.access_policy)
+
+    return frappe.get_doc(asset_info.reference_doctype, asset_info.reference_name)
+
+
+@frappe.whitelist()
+def resolve_relations(asset_id, tenant_context=None, max_depth=1):
+    """
+    Resolves bidirectional relations for a registered asset, checking permissions,
+    visibility levels, and tenant boundaries. Supports multi-level depth traversals (capped at 5).
+    """
+    if max_depth > MAX_GRAPH_DEPTH:
+        max_depth = MAX_GRAPH_DEPTH
+        
+    return _traverse_graph(asset_id, tenant_context, max_depth, current_depth=1, visited=set())
+
+
+def _traverse_graph(asset_id, tenant_context, max_depth, current_depth, visited):
+    if current_depth > max_depth or asset_id in visited:
+        return []
+        
+    visited.add(asset_id)
+    
+    # 1. Fetch outgoing connections
+    outgoing = frappe.get_all(
+        "SMRITI Knowledge Relation",
+        filters={"source_asset_id": asset_id},
+        fields=["target_asset_id as asset_id", "relationship_type", "strength", "is_primary", "tenant_scope", "visibility"]
+    )
+    for r in outgoing:
+        r["direction"] = "outgoing"
+
+    # 2. Fetch incoming connections
+    incoming = frappe.get_all(
+        "SMRITI Knowledge Relation",
+        filters={"target_asset_id": asset_id},
+        fields=["source_asset_id as asset_id", "relationship_type", "strength", "is_primary", "tenant_scope", "visibility"]
+    )
+    for r in incoming:
+        r["direction"] = "incoming"
+
+    relations = outgoing + incoming
+
+    # 3. Filter based on tenant scope if context is provided
+    if tenant_context:
+        relations = [r for r in relations if r.tenant_scope == "Global" or r.tenant_scope == tenant_context]
+
+    # 4. Filter relations based on edge visibility permissions
+    relations = [r for r in relations if _has_visibility_access(r.visibility)]
+
+    # Sort by primary status and connection weight
+    strength_weight = {"Strong": 3, "Medium": 2, "Weak": 1}
+    relations.sort(
+        key=lambda r: (r.is_primary, strength_weight.get(r.strength, 0)),
+        reverse=True
+    )
+    
+    # Recursive lookup if depth > 1
+    if current_depth < max_depth:
+        extended_relations = []
+        for r in relations:
+            sub_rels = _traverse_graph(r["asset_id"], tenant_context, max_depth, current_depth + 1, visited)
+            extended_relations.extend(sub_rels)
+        relations.extend(extended_relations)
+        
+    return relations
+
+
+@frappe.whitelist()
+def search_assets(query, asset_type=None):
+    """
+    Indexed text search across registry asset codes, titles, and reference contents.
+    Enforces role-based access policy filters to prevent information leakage.
+    """
+    filters = {"is_active": 1, "status": "Approved"}
+    if asset_type:
+        filters["asset_type"] = asset_type
+        
+    # Build policy filters based on user roles
+    allowed_policies = ["Public"]
+    user_roles = frappe.get_roles()
+    if not (len(user_roles) == 1 and "Guest" in user_roles):
+        allowed_policies.append("Authenticated")
+    if "SMRITI Store Manager" in user_roles or "System Manager" in user_roles:
+        allowed_policies.append("Manager")
+    if "System Manager" in user_roles:
+        allowed_policies.append("System Manager")
+        
+    filters["access_policy"] = ["in", allowed_policies]
+        
+    results = frappe.get_all(
+        "SMRITI Knowledge Asset",
+        filters=filters,
+        or_filters={
+            "asset_code": ["like", f"%{query}%"],
+            "title": ["like", f"%{query}%"]
+        },
+        fields=["name", "asset_code", "asset_uri", "asset_type", "asset_icon", "title", "access_policy"],
+        limit=20
+    )
+    return results
+
+
+def invalidate_asset_cache(doc):
+    """
+    Invalidation hook to clear cached values in Redis when assets are modified.
+    Call from save/on_update hooks.
+    """
+    if doc.get("asset_uri"):
+        frappe.cache().delete_value(get_skos_cache_key("asset", doc.asset_uri))
+
+
+def _validate_access_policy(policy):
+    """Auxiliary role authorization validator."""
+    if policy == "Public":
+        return
+    
+    user_roles = frappe.get_roles()
+    if policy == "Authenticated" and "Guest" in user_roles and len(user_roles) == 1:
+        frappe.throw(frappe._("Authentication required to view this asset."), frappe.PermissionError)
+        
+    if policy == "Manager" and "SMRITI Store Manager" not in user_roles and "System Manager" not in user_roles:
+        frappe.throw(frappe._("Restricted: Manager privileges required."), frappe.PermissionError)
+        
+    if policy == "System Manager" and "System Manager" not in user_roles:
+        frappe.throw(frappe._("Restricted: System Manager privileges required."), frappe.PermissionError)
+
+
+def _has_visibility_access(visibility):
+    """Check if current user roles satisfy visibility permission requirements."""
+    if not visibility or visibility == "Public":
+        return True
+        
+    user_roles = frappe.get_roles()
+    if visibility == "Internal" and "Guest" in user_roles and len(user_roles) == 1:
+        return False
+    if visibility == "Manager" and "SMRITI Store Manager" not in user_roles and "System Manager" not in user_roles:
+        return False
+    if visibility == "System Manager" and "System Manager" not in user_roles:
+        return False
+        
+    return True
+
+
+def sync_knowledge_asset_on_save(doc, method=None):
+    """
+    Auto-syncs a SMRITI Business Term or SMRITI Formula Definition to the 
+    SMRITI Knowledge Asset Registry (KAR-01) upon insertion or update.
+    """
+    if doc.doctype == "SMRITI Business Term":
+        asset_type = "Term"
+        asset_code = doc.term_id
+        asset_uri = f"smriti:term:{doc.term_id}"
+        asset_icon = "📖"
+        title = doc.term_name
+    elif doc.doctype == "SMRITI Formula Definition":
+        asset_type = "Formula"
+        asset_code = doc.formula_id
+        asset_uri = f"smriti:formula:{doc.formula_id}"
+        asset_icon = "∑"
+        title = doc.formula_name
+    else:
+        return
+
+    # Check if asset already exists
+    asset_name = frappe.db.get_value("SMRITI Knowledge Asset", {"asset_uri": asset_uri})
+    
+    status_mapping = {
+        "Draft": "Draft",
+        "Under Review": "Review",
+        "Approved": "Approved",
+        "Deprecated": "Deprecated"
+    }
+    
+    asset_status = status_mapping.get(doc.status, "Draft")
+    
+    # Default access policy based on status or active flags
+    access_policy = "Public" if doc.status == "Approved" else "Authenticated"
+
+    if asset_name:
+        # Update existing
+        asset_doc = frappe.get_doc("SMRITI Knowledge Asset", asset_name)
+        asset_doc.asset_code = asset_code
+        asset_doc.title = title
+        asset_doc.status = asset_status
+        asset_doc.is_active = doc.is_active
+        asset_doc.reference_doctype = doc.doctype
+        asset_doc.reference_name = doc.name
+        asset_doc.access_policy = access_policy
+        asset_doc.save(ignore_permissions=True)
+    else:
+        # Create new
+        frappe.get_doc({
+            "doctype": "SMRITI Knowledge Asset",
+            "asset_code": asset_code,
+            "asset_uri": asset_uri,
+            "asset_type": asset_type,
+            "asset_icon": asset_icon,
+            "title": title,
+            "status": asset_status,
+            "is_active": doc.is_active,
+            "visibility": "Internal",
+            "access_policy": access_policy,
+            "reference_doctype": doc.doctype,
+            "reference_name": doc.name
+        }).insert(ignore_permissions=True)
+        
+    frappe.db.commit()
+
+
+def cleanup_knowledge_asset_on_trash(doc, method=None):
+    """
+    Cleans up any registered SMRITI Knowledge Asset and directed relations
+    pointing to or from the deleted document.
+    """
+    if doc.doctype == "SMRITI Business Term":
+        asset_uri = f"smriti:term:{doc.term_id}"
+    elif doc.doctype == "SMRITI Formula Definition":
+        asset_uri = f"smriti:formula:{doc.formula_id}"
+    else:
+        return
+
+    asset_name = frappe.db.get_value("SMRITI Knowledge Asset", {"asset_uri": asset_uri})
+    if asset_name:
+        # 1. Delete directed relations where this asset is source or target
+        frappe.db.delete("SMRITI Knowledge Relation", {"source_asset_id": asset_name})
+        frappe.db.delete("SMRITI Knowledge Relation", {"target_asset_id": asset_name})
+        
+        # 2. Delete the asset registry index record itself
+        frappe.db.delete("SMRITI Knowledge Asset", {"name": asset_name})
+        
+        # 3. Clear cached values
+        frappe.cache().delete_value(get_skos_cache_key("asset", asset_uri))
+        
+        frappe.db.commit()
+

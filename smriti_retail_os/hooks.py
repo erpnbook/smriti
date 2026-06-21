@@ -360,6 +360,16 @@ doc_events = {
     },
     "SMRITI Barcode Settings": {
         "on_update": "smriti_retail_os.barcode_api.clear_barcode_feature_flags_cache"
+    },
+    "SMRITI Business Term": {
+        "on_update": "smriti_retail_os.services.knowledge_service.sync_knowledge_asset_on_save",
+        "after_insert": "smriti_retail_os.services.knowledge_service.sync_knowledge_asset_on_save",
+        "on_trash": "smriti_retail_os.services.knowledge_service.cleanup_knowledge_asset_on_trash"
+    },
+    "SMRITI Formula Definition": {
+        "on_update": "smriti_retail_os.services.knowledge_service.sync_knowledge_asset_on_save",
+        "after_insert": "smriti_retail_os.services.knowledge_service.sync_knowledge_asset_on_save",
+        "on_trash": "smriti_retail_os.services.knowledge_service.cleanup_knowledge_asset_on_trash"
     }
 }
 

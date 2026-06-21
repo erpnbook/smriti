@@ -1007,3 +1007,160 @@ class TestSaveUserNoHardcodedPassword(unittest.TestCase):
                 if frappe.db.exists("User", e):
                     frappe.delete_doc("User", e, ignore_missing=True, force=True)
             frappe.db.commit()
+
+
+class TestAuditRemediations(unittest.TestCase):
+    def setUp(self):
+        self.company = frappe.db.exists("Company", "_Test Company")
+        if not self.company:
+            comp = frappe.new_doc("Company")
+            comp.company_name = "_Test Company"
+            comp.country = "India"
+            comp.default_currency = "INR"
+            comp.insert(ignore_permissions=True)
+            self.company = comp.name
+        frappe.db.commit()
+
+    def test_import_requires_store_manager(self):
+        """
+        SEC-ITEM-001: Cashier and Guest must be blocked from running import_item_master.
+        """
+        # Switch session user to Guest
+        orig_user = frappe.session.user
+        frappe.set_user("Guest")
+        try:
+            with self.assertRaises(frappe.PermissionError):
+                import_item_master(frappe.as_json([]))
+        finally:
+            frappe.set_user(orig_user)
+
+        # Switch to cashier (without Store Manager / System Manager role)
+        cashier_email = "test_cashier_remediation@test.internal"
+        if not frappe.db.exists("User", cashier_email):
+            user = frappe.new_doc("User")
+            user.email = cashier_email
+            user.first_name = "Test"
+            user.last_name = "Cashier"
+            user.insert(ignore_permissions=True)
+            
+            # Add Cashier role
+            if not frappe.db.exists("Role", "SMRITI Cashier"):
+                r = frappe.new_doc("Role")
+                r.role_name = "SMRITI Cashier"
+                r.insert(ignore_permissions=True)
+            
+            user.append("roles", {"role": "SMRITI Cashier"})
+            user.save(ignore_permissions=True)
+            frappe.db.commit()
+
+        frappe.set_user(cashier_email)
+        try:
+            with self.assertRaises(frappe.PermissionError):
+                import_item_master(frappe.as_json([]))
+        finally:
+            frappe.set_user(orig_user)
+            frappe.delete_doc("User", cashier_email, ignore_missing=True, force=True)
+            frappe.db.commit()
+
+    def test_reset_blocked_with_transactions(self):
+        """
+        DATA-ITEM-001: Wiping Item Master is blocked if active transactions exist.
+        """
+        # Ensure a valid Customer exists for link validation
+        customer = frappe.db.get_value("Customer", {}, "name")
+        created_customer = None
+        if not customer:
+            customer = "_Test Customer"
+            cust = frappe.new_doc("Customer")
+            cust.customer_name = customer
+            cg = frappe.db.get_value("Customer Group", {}, "name")
+            t = frappe.db.get_value("Territory", {}, "name")
+            if cg: cust.customer_group = cg
+            if t: cust.territory = t
+            cust.insert(ignore_permissions=True)
+            created_customer = cust.name
+            frappe.db.commit()
+
+        # Force a dummy Sales Invoice record in DB using direct SQL to bypass ERPNext validations
+        invoice_name = "TEST-SINV-REMEDIATION-0001"
+        frappe.db.sql(
+            "INSERT INTO `tabSales Invoice` (name, company, customer, docstatus) VALUES (%s, %s, %s, 0)",
+            (invoice_name, self.company, customer)
+        )
+        frappe.db.commit()
+
+        try:
+            # Enable factory reset mode in conf temporarily for the check
+            orig_reset = frappe.conf.get("smriti_factory_reset_enabled")
+            frappe.conf.smriti_factory_reset_enabled = 1
+            try:
+                from smriti_retail_os.item_master_api import reset_all_items
+                with self.assertRaises(frappe.ValidationError):
+                    reset_all_items()
+            finally:
+                if orig_reset is None:
+                    del frappe.conf["smriti_factory_reset_enabled"]
+                else:
+                    frappe.conf.smriti_factory_reset_enabled = orig_reset
+        finally:
+            frappe.db.sql("DELETE FROM `tabSales Invoice` WHERE name = %s", (invoice_name,))
+            if created_customer:
+                frappe.delete_doc("Customer", created_customer, ignore_permissions=True, force=True)
+            frappe.db.commit()
+
+    def test_barcode_validation(self):
+        """
+        VAL-ITEM-002: Barcodes containing spaces, tabs, or special characters must fail.
+        """
+        from smriti_retail_os.item_master_api import validate_barcode
+        
+        # Must fail
+        self.assertFalse(validate_barcode("ABC 123", raise_exception=False)[0])
+        self.assertFalse(validate_barcode("ABC\t123", raise_exception=False)[0])
+        self.assertFalse(validate_barcode("ABC@123", raise_exception=False)[0])
+        self.assertFalse(validate_barcode("AB", raise_exception=False)[0])  # too short
+        self.assertFalse(validate_barcode("1" * 31, raise_exception=False)[0])  # too long
+        self.assertFalse(validate_barcode("", raise_exception=False)[0])
+
+        # Must pass
+        self.assertTrue(validate_barcode("ABC-123", raise_exception=False)[0])
+        self.assertTrue(validate_barcode("ABC_123", raise_exception=False)[0])
+        self.assertTrue(validate_barcode("1234567890", raise_exception=False)[0])
+
+    def test_hsn_validation(self):
+        """
+        GST-ITEM-001: HSN validation behaves strictly according to GST settings.
+        """
+        from smriti_retail_os.item_master_api import _resolve_hsn_code
+        
+        import sys
+        try:
+            from india_compliance.gst_india.utils import get_hsn_settings
+            orig_get_hsn_settings = get_hsn_settings
+        except Exception:
+            orig_get_hsn_settings = None
+
+        # Define mock
+        def mock_get_hsn_settings():
+            return True, (4, 6, 8)
+
+        # Patch it in the module
+        import india_compliance.gst_india.utils as gst_utils
+        gst_utils.get_hsn_settings = mock_get_hsn_settings
+
+        try:
+            # 4-digit valid
+            self.assertEqual(_resolve_hsn_code("1234"), "1234")
+            # 6-digit valid
+            self.assertEqual(_resolve_hsn_code("123456"), "123456")
+            # 8-digit valid
+            self.assertEqual(_resolve_hsn_code("12345678"), "12345678")
+            
+            # 5-digit invalid (length 5 is not in (4, 6, 8))
+            with self.assertRaises(frappe.ValidationError):
+                _resolve_hsn_code("12345")
+        finally:
+            if orig_get_hsn_settings:
+                gst_utils.get_hsn_settings = orig_get_hsn_settings
+            else:
+                del gst_utils.get_hsn_settings
