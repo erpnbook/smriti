@@ -23,6 +23,8 @@ TYPE_WEIGHTS = {
     "Training Exercise": 80,
     "FAQ": 70,
     "Manual Section": 60,
+    "About Page": 55,
+    "Governance": 50,
     "KB Article": 50
 }
 
@@ -166,7 +168,7 @@ def _index_markdown_directory(docs_dir, index):
     for root, dirs, files in os.walk(docs_dir):
         # Only index user_manual and kb directories to prevent indexing node_modules, etc.
         relative_dir = os.path.relpath(root, docs_dir).replace("\\", "/")
-        if not (relative_dir.startswith("user_manual") or relative_dir.startswith("kb")):
+        if not (relative_dir.startswith("user_manual") or relative_dir.startswith("kb") or relative_dir.startswith("about") or relative_dir.startswith("governance")):
             continue
             
         for file in files:
@@ -181,13 +183,29 @@ def _parse_and_index_markdown_file(file_path, docs_dir, index):
     Parses a single markdown file, extracts YAML metadata, splits sections by headings,
     and categorizes them (Manual Section, KB Article, FAQ, or Training Exercise).
     """
-    rel_path = os.path.relpath(file_path, docs_dir).replace("\\", "/")
     file_basename = os.path.splitext(os.path.basename(file_path))[0]
+    rel_path = os.path.relpath(file_path, docs_dir).replace("\\", "/")
+
+    from smriti_retail_os.api.help_api import DOCUMENT_REGISTRY
+    registry_entry = DOCUMENT_REGISTRY.get(file_basename)
     
-    # Determine default type/source based on location
+    # Skip indexing if the document is explicitly marked not searchable
+    if registry_entry and not registry_entry.get("searchable", True):
+        return
+        
     is_user_manual = "user_manual" in rel_path
-    default_type = "Manual Section" if is_user_manual else "KB Article"
-    default_weight = TYPE_WEIGHTS[default_type]
+    
+    # Determine the default type and weight
+    if is_user_manual:
+        default_type = "Manual Section"
+    elif "about" in rel_path:
+        default_type = "About Page"
+    elif "governance" in rel_path:
+        default_type = "Governance"
+    else:
+        default_type = "KB Article"
+        
+    default_weight = TYPE_WEIGHTS.get(default_type, 50)
     
     with open(file_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -264,7 +282,8 @@ def _parse_and_index_markdown_file(file_path, docs_dir, index):
                 "source_file": file_basename,
                 "parent_title": title,
                 "author": author,
-                "raw_markdown": content_text
+                "raw_markdown": content_text,
+                "visibility": registry_entry.get("visibility") if registry_entry else "all"
             }
         })
 

@@ -263,3 +263,52 @@ class TestKnowledgeCenter(unittest.TestCase):
         formula_ids = [f["id"] for f in stats["top_formulas"]]
         self.assertIn("TST-T-001", term_ids)
         self.assertIn("TST-F-001", formula_ids)
+
+    def test_document_registry_role_visibility(self):
+        from smriti_retail_os.api.help_api import get_document_registry, get_manual_html, search_knowledge
+
+        # Test as System Manager (Administrator)
+        frappe.set_user('Administrator')
+        admin_registry = get_document_registry()
+        
+        # Verify Governance docs are present for Administrator
+        self.assertIn("BRD-01_BRANDING_ATTRIBUTION_DOCUMENTATION", admin_registry)
+        self.assertIn("AI_CONTENT_POLICY", admin_registry)
+        
+        # Verify direct file read works for Administrator
+        brd_html = get_manual_html("BRD-01_BRANDING_ATTRIBUTION_DOCUMENTATION")
+        self.assertIn("Branding", brd_html)
+        
+        # Test as Store Manager (manager@smriti.com) - SMRITI Store Manager is not a System Manager
+        frappe.set_user('manager@smriti.com')
+        manager_registry = get_document_registry()
+        
+        # Verify Governance docs are hidden for Store Manager
+        self.assertNotIn("BRD-01_BRANDING_ATTRIBUTION_DOCUMENTATION", manager_registry)
+        self.assertNotIn("AI_CONTENT_POLICY", manager_registry)
+        
+        # Verify direct file read raises PermissionError for Store Manager
+        with self.assertRaises(frappe.PermissionError):
+            get_manual_html("BRD-01_BRANDING_ATTRIBUTION_DOCUMENTATION")
+            
+        # Verify search does not return governance results for Store Manager
+        manager_search = search_knowledge("Branding")
+        for res in manager_search:
+            self.assertNotEqual(res.get("type"), "Governance")
+            self.assertNotEqual(res.get("metadata", {}).get("visibility"), "admin")
+
+        # Test as Cashier (cashier@smriti.com)
+        frappe.set_user('cashier@smriti.com')
+        cashier_registry = get_document_registry()
+        
+        # Verify Governance docs are hidden for Cashier
+        self.assertNotIn("BRD-01_BRANDING_ATTRIBUTION_DOCUMENTATION", cashier_registry)
+        self.assertNotIn("AI_CONTENT_POLICY", cashier_registry)
+        
+        # Verify direct file read raises PermissionError for Cashier
+        with self.assertRaises(frappe.PermissionError):
+            get_manual_html("BRD-01_BRANDING_ATTRIBUTION_DOCUMENTATION")
+
+        # Reset user back to Administrator
+        frappe.set_user('Administrator')
+

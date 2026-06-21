@@ -12,6 +12,119 @@
 import frappe
 from frappe import _
 
+DOCUMENT_REGISTRY = {
+    "volume_1_daily_operations": {
+        "name": "volume_1_daily_operations",
+        "title": _("Vol 1: Daily Operations"),
+        "category": "User Manuals",
+        "file_name": "volume_1_daily_operations.md",
+        "document_type": "user_manual",
+        "audience": "customer",
+        "visibility": "all",
+        "searchable": True
+    },
+    "volume_2_manager_guide": {
+        "name": "volume_2_manager_guide",
+        "title": _("Vol 2: Manager Guide"),
+        "category": "User Manuals",
+        "file_name": "volume_2_manager_guide.md",
+        "document_type": "user_manual",
+        "audience": "customer",
+        "visibility": "all",
+        "searchable": True
+    },
+    "volume_3_executive_guide": {
+        "name": "volume_3_executive_guide",
+        "title": _("Vol 3: Executive Guide"),
+        "category": "User Manuals",
+        "file_name": "volume_3_executive_guide.md",
+        "document_type": "user_manual",
+        "audience": "customer",
+        "visibility": "all",
+        "searchable": True
+    },
+    "volume_4_troubleshooting_faq": {
+        "name": "volume_4_troubleshooting_faq",
+        "title": _("Vol 4: Support & FAQs"),
+        "category": "User Manuals",
+        "file_name": "volume_4_troubleshooting_faq.md",
+        "document_type": "user_manual",
+        "audience": "customer",
+        "visibility": "all",
+        "searchable": True
+    },
+    "volume_5_training_workbook": {
+        "name": "volume_5_training_workbook",
+        "title": _("Vol 5: Training Workbook"),
+        "category": "User Manuals",
+        "file_name": "volume_5_training_workbook.md",
+        "document_type": "user_manual",
+        "audience": "customer",
+        "visibility": "all",
+        "searchable": True
+    },
+    "about_smriti": {
+        "name": "about_smriti",
+        "title": _("About SMRITI (Legacy)"),
+        "category": "User Manuals",
+        "file_name": "about_smriti.md",
+        "document_type": "user_manual",
+        "audience": "customer",
+        "visibility": "all",
+        "searchable": True
+    },
+    "ABOUT_SMRITI": {
+        "name": "ABOUT_SMRITI",
+        "title": _("About SMRITI"),
+        "category": "about",
+        "file_name": "ABOUT_SMRITI.md",
+        "document_type": "about",
+        "audience": "customer",
+        "visibility": "all",
+        "searchable": True
+    },
+    "ABOUT_AITDL": {
+        "name": "ABOUT_AITDL",
+        "title": _("About AITDL"),
+        "category": "about",
+        "file_name": "ABOUT_AITDL.md",
+        "document_type": "about",
+        "audience": "customer",
+        "visibility": "all",
+        "searchable": True
+    },
+    "ABOUT_AUTHOR": {
+        "name": "ABOUT_AUTHOR",
+        "title": _("About the Author"),
+        "category": "about",
+        "file_name": "ABOUT_AUTHOR.md",
+        "document_type": "about",
+        "audience": "customer",
+        "visibility": "all",
+        "searchable": True
+    },
+    "BRD-01_BRANDING_ATTRIBUTION_DOCUMENTATION": {
+        "name": "BRD-01_BRANDING_ATTRIBUTION_DOCUMENTATION",
+        "title": _("BRD-01: Branding & Attributions"),
+        "category": "Governance",
+        "file_name": "BRD-01_BRANDING_ATTRIBUTION_DOCUMENTATION.md",
+        "document_type": "governance",
+        "audience": "internal",
+        "visibility": "admin",
+        "searchable": False
+    },
+    "AI_CONTENT_POLICY": {
+        "name": "AI_CONTENT_POLICY",
+        "title": _("AI Content Policy"),
+        "category": "Governance",
+        "file_name": "AI_CONTENT_POLICY.md",
+        "document_type": "governance",
+        "audience": "internal",
+        "visibility": "admin",
+        "searchable": False
+    }
+}
+
 HELP_CENTER_REGISTRY = {
     # Analytics Guides
     "inventory_productivity": {
@@ -1006,6 +1119,7 @@ def get_help_toc():
 def search_knowledge(query=None):
     """
     Exposes SMRITI Knowledge Center search endpoint to query the Redis index.
+    Filters out Governance results for non-System Manager users.
     """
     if not query:
         query = frappe.form_dict.get("query")
@@ -1013,7 +1127,14 @@ def search_knowledge(query=None):
         return []
     
     from smriti_retail_os.services.knowledge_service import search_knowledge_index
-    return search_knowledge_index(query)
+    results = search_knowledge_index(query)
+    
+    # Filter results by visibility
+    is_sys_admin = "System Manager" in frappe.get_roles(frappe.session.user)
+    if not is_sys_admin:
+        results = [r for r in results if r.get("type") != "Governance" and r.get("metadata", {}).get("visibility") != "admin"]
+        
+    return results
 
 
 @frappe.whitelist()
@@ -1043,12 +1164,28 @@ def get_governance_data():
 
 
 @frappe.whitelist()
+def get_document_registry():
+    """
+    Exposes SMRITI DOCUMENT_REGISTRY.
+    Filters out visibility: admin documents for non-System Managers.
+    """
+    is_sys_admin = "System Manager" in frappe.get_roles(frappe.session.user)
+    
+    filtered_registry = {}
+    for key, doc in DOCUMENT_REGISTRY.items():
+        if doc.get("visibility") == "admin" and not is_sys_admin:
+            continue
+        filtered_registry[key] = doc
+        
+    return filtered_registry
+
+
+@frappe.whitelist()
 def get_manual_html(volume_name=None):
     """
     Reads the target manual markdown file and returns compiled HTML.
-    Restricted to secure, valid alphanumeric basenames inside docs/.
+    Enforces role-based visibility restrictions via the DOCUMENT_REGISTRY.
     """
-    import re
     import os
     from frappe.utils import markdown
     
@@ -1058,26 +1195,39 @@ def get_manual_html(volume_name=None):
     if not volume_name:
         frappe.throw(_("Document name is required"), frappe.ValidationError)
         
-    if not re.match(r"^[a-zA-Z0-9_/.-]+$", volume_name):
-        frappe.throw(_("Invalid document name"), frappe.ValidationError)
+    registry_entry = DOCUMENT_REGISTRY.get(volume_name)
+    if not registry_entry:
+        frappe.throw(_("Document '{0}' is not registered").format(volume_name), frappe.DoesNotExistError)
         
+    # Check System Manager role for admin-only documents
+    if registry_entry.get("visibility") == "admin":
+        if "System Manager" not in frappe.get_roles(frappe.session.user):
+            frappe.throw(_("Not permitted to view governance documents"), frappe.PermissionError)
+            
     docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "..", "..", "docs"))
     
-    # Check paths
-    file_path = os.path.join(docs_root, "user_manual", f"{volume_name}.md")
+    # Determine the directory based on the document type
+    doc_type = registry_entry.get("document_type")
+    if doc_type == "about":
+        sub_dir = "about"
+    elif doc_type == "governance":
+        sub_dir = "governance"
+    else:
+        sub_dir = "user_manual"
+        
+    file_path = os.path.join(docs_root, sub_dir, registry_entry.get("file_name"))
     if not os.path.exists(file_path):
-        file_path = os.path.join(docs_root, "kb", f"{volume_name}.md")
-        if not os.path.exists(file_path):
-            # Check subdirectories
-            found = False
-            for root, dirs, files in os.walk(os.path.join(docs_root, "kb")):
-                if f"{volume_name}.md" in files:
-                    file_path = os.path.join(root, f"{volume_name}.md")
-                    found = True
-                    break
-            if not found:
-                frappe.throw(_("Document '{0}' not found").format(volume_name), frappe.DoesNotExistError)
-                
+        # Fallback to search recursively if folder structures differ
+        found_path = None
+        for root, dirs, files in os.walk(docs_root):
+            if registry_entry.get("file_name") in files:
+                found_path = os.path.join(root, registry_entry.get("file_name"))
+                break
+        if found_path:
+            file_path = found_path
+        else:
+            frappe.throw(_("Document file not found: {0}").format(registry_entry.get("file_name")), frappe.DoesNotExistError)
+            
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
         

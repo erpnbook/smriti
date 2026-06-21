@@ -811,12 +811,7 @@
                 <span class="material-symbols-outlined">menu_book</span> User Manuals
             </button>
             <!-- Sub-levels for manual volumes -->
-            <a class="sidebar-sub-item" onclick="loadManualVolume('volume_1_daily_operations')" id="sub-manual-vol1">Vol 1: Daily Operations</a>
-            <a class="sidebar-sub-item" onclick="loadManualVolume('volume_2_manager_guide')" id="sub-manual-vol2">Vol 2: Manager Guide</a>
-            <a class="sidebar-sub-item" onclick="loadManualVolume('volume_3_executive_guide')" id="sub-manual-vol3">Vol 3: Executive Guide</a>
-            <a class="sidebar-sub-item" onclick="loadManualVolume('volume_4_troubleshooting_faq')" id="sub-manual-vol4">Vol 4: Support & FAQs</a>
-            <a class="sidebar-sub-item" onclick="loadManualVolume('volume_5_training_workbook')" id="sub-manual-vol5">Vol 5: Training Workbook</a>
-            <a class="sidebar-sub-item" onclick="loadManualVolume('about_smriti')" id="sub-manual-about">About SMRITI</a>
+            <div id="sidebar-doc-registry-container"></div>
             
             <div class="sidebar-divider"></div>
             
@@ -984,6 +979,7 @@
 
         document.addEventListener('DOMContentLoaded', async function () {
             // Load base lists
+            await loadDocumentRegistry();
             await loadKnowledgeAssets();
             loadCategorySidebar();
             loadDictionaryList();
@@ -1044,6 +1040,40 @@
             }
         }
 
+        let documentRegistry = {};
+
+        async function loadDocumentRegistry() {
+            const registry = await api('smriti_retail_os.api.help_api.get_document_registry');
+            if (registry) {
+                documentRegistry = registry;
+                renderDocumentRegistry();
+            }
+        }
+
+        function renderDocumentRegistry() {
+            const container = document.getElementById('sidebar-doc-registry-container');
+            if (!container) return;
+
+            let html = '';
+            for (const [key, doc] of Object.entries(documentRegistry)) {
+                html += `<a class="sidebar-sub-item" onclick="loadManualVolume('${key}')" id="sub-manual-${key}">${doc.title}</a>`;
+            }
+            container.innerHTML = html;
+
+            // Check if governance exists in registry to toggle governance elements
+            const hasGovernance = Object.values(documentRegistry).some(doc => doc.document_type === 'governance');
+            
+            const govBtn = document.getElementById('btn-tab-governance');
+            if (govBtn) {
+                govBtn.style.display = hasGovernance ? '' : 'none';
+            }
+            
+            const govExBtn = document.getElementById('ex-filter-Governance');
+            if (govExBtn) {
+                govExBtn.style.display = hasGovernance ? '' : 'none';
+            }
+        }
+
         async function loadKnowledgeAssets() {
             const assets = await api('smriti_retail_os.api.help_api.get_knowledge_assets');
             if (assets) {
@@ -1079,16 +1109,7 @@
             
             document.querySelectorAll('.sidebar-sub-item').forEach(s => s.classList.remove('active'));
             
-            // Map key to sub-item
-            let subId = '';
-            if (volumeName === 'volume_1_daily_operations') subId = 'sub-manual-vol1';
-            else if (volumeName === 'volume_2_manager_guide') subId = 'sub-manual-vol2';
-            else if (volumeName === 'volume_3_executive_guide') subId = 'sub-manual-vol3';
-            else if (volumeName === 'volume_4_troubleshooting_faq') subId = 'sub-manual-vol4';
-            else if (volumeName === 'volume_5_training_workbook') subId = 'sub-manual-vol5';
-            else if (volumeName === 'about_smriti') subId = 'sub-manual-about';
-            
-            const subLink = document.getElementById(subId);
+            const subLink = document.getElementById(`sub-manual-${volumeName}`);
             if (subLink) {
                 subLink.classList.add('active');
             }
