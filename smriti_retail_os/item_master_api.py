@@ -18,16 +18,39 @@ from frappe import _
 #  COLUMN DEFINITIONS
 # ─────────────────────────────────────────────────────────────────────────────
 
-TEMPLATE_HEADERS = [
-    "BARCODE NO", "SECONDARY BARCODES", "PURCHASE CLASS", "DEPARTMENT", "MERCHANDISE CATEGORY",
-    "Category", "Sub category", "ITEM DESCRIPTION", "HEELS", "GENDER",
-    "UPPER MATERIAL", "OUTSOLE", "VENDOR CODE", "PRODUCT STYLE CODE",
-    "BRAND NAME", "COLOR", "SIZE", "COST PRICE", "PLANNED MRP",
-    "PRODUCT TAX", "IMAGE LINK", "HSN CODE", "Product Tax Group"
+IMPORT_COLUMN_DEFS = [
+    {"key": "BARCODE NO",           "label": "Barcode",           "width": "150px", "required": False},
+    {"key": "PRODUCT STYLE CODE",   "label": "Style/Article No",  "width": "150px", "required": True},
+    {"key": "ITEM DESCRIPTION",     "label": "Description",       "width": "220px", "required": True},
+    {"key": "BRAND NAME",           "label": "Brand",             "width": "110px", "required": True},
+    {"key": "COLOR",                "label": "Color",             "width": "100px", "required": True},
+    {"key": "SIZE",                 "label": "Size",              "width": "65px",  "required": True},
+    {"key": "PLANNED MRP",          "label": "MRP ₹",             "width": "90px",  "required": True, "type": "number"},
+    {"key": "COST PRICE",           "label": "Cost ₹",            "width": "90px",  "required": False, "type": "number"},
+    {"key": "PRODUCT TAX",          "label": "GST%",              "width": "65px",  "required": False, "type": "number", "choices": ["", "0", "5", "12", "18", "28"]},
+    {"key": "HSN CODE",             "label": "HSN Code",          "width": "100px", "required": False},
+    {"key": "GENDER",               "label": "Gender",            "width": "90px",  "required": True, "choices": ["", "MENS", "LADIES", "BOYS", "GIRLS", "UNISEX", "KIDS"]},
+    {"key": "VENDOR CODE",          "label": "Vendor/Supplier",   "width": "130px", "required": True},
+    {"key": "PURCHASE CLASS",       "label": "Purch. Class",      "width": "110px", "required": True, "choices": ["", "SIS", "FW", "MFW", "LFW", "BFW", "GFW", "KFW", "ASSTED", "SPORTS", "ACC", "BAG", "FORMAL", "CASUAL"]},
+    {"key": "DEPARTMENT",           "label": "Department",        "width": "120px", "required": True},
+    {"key": "MERCHANDISE CATEGORY", "label": "Merch. Cat.",       "width": "120px", "required": True},
+    {"key": "Sub category",         "label": "Sub Category",      "width": "120px", "required": True},
+    {"key": "HEELS",                "label": "Heels",             "width": "90px",  "required": True},
+    {"key": "UPPER MATERIAL",       "label": "Upper Mat.",        "width": "120px", "required": True},
+    {"key": "OUTSOLE",              "label": "Outsole",           "width": "100px", "required": False},
+    {"key": "IMAGE LINK",           "label": "Image URL",         "width": "130px", "required": False},
+    {"key": "Product Tax Group",    "label": "Tax Group",         "width": "120px", "required": False}
 ]
 
-REQUIRED_COLS = ["BARCODE NO", "PRODUCT STYLE CODE", "ITEM DESCRIPTION", "COLOR", "SIZE", "PLANNED MRP"]
+TEMPLATE_HEADERS = [c["key"] for c in IMPORT_COLUMN_DEFS]
+REQUIRED_COLS = [c["key"] for c in IMPORT_COLUMN_DEFS if c.get("required")]
 VALID_GST = {0, 5, 12, 18, 28}
+
+
+@frappe.whitelist()
+def get_import_column_defs():
+    """Returns the single source of truth column definitions list for SMRITI Item Master Import."""
+    return IMPORT_COLUMN_DEFS
 
 
 def normalize_lookup(value):
@@ -368,6 +391,22 @@ def import_item_master(rows_json):
             # ── Hard duplicate barcode check ───────────────────────────────
             variant_code_early = f"{style_code}-{color}-{size}" if style_code and color and size else ""
 
+            if not barcode:
+                # auto-generate EAN-13 barcodes with collision retries (up to 5 attempts)
+                max_retries = 5
+                for attempt in range(max_retries):
+                    generated = generate_ean13_barcode()
+                    duplicate = frappe.db.get_value("Item Barcode", {"barcode": generated}, "parent")
+                    collides = frappe.db.exists("Item", generated) and generated != variant_code_early
+                    if not duplicate and not collides:
+                        barcode = generated
+                        break
+                else:
+                    frappe.throw(
+                        _("Could not generate a unique barcode for {0} after 5 attempts.").format(variant_code_early),
+                        frappe.ValidationError
+                    )
+
             if barcode:
                 if barcode in batch_barcodes:
                     skipped_duplicates.append({
@@ -476,6 +515,7 @@ def import_item_master(rows_json):
 
             # ── Attach barcode to variant (enforcing single primary, preserving secondary barcodes) ──
             var_doc = frappe.get_doc("Item", variant_code)
+            _safe_set(var_doc, "custom_style_code", style_code)
 
             if barcode:
                 # Separate existing barcodes: keep secondaries, replace primary
@@ -727,6 +767,9 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
                              tax_group, vendor_code, company):
     if frappe.db.exists("Item", style_code):
         item = frappe.get_doc("Item", style_code)
+        if not item.get("custom_style_code"):
+            _safe_set(item, "custom_style_code", style_code)
+            item.save(ignore_permissions=True)
     else:
         # Auto-create brand if missing
         if brand and not frappe.db.exists("Brand", brand):
@@ -762,6 +805,7 @@ def _get_or_create_template(style_code, item_name, item_group, brand, mrp, cost,
         _safe_set(item, "custom_mrp", mrp)
         _safe_set(item, "valuation_rate", cost)
         _safe_set(item, "custom_gst_percentage", gst_pct)
+        _safe_set(item, "custom_style_code", style_code)
 
         # Custom SMRITI classification fields — silently skip if field missing
         _safe_set(item, "custom_gender",               _ensure_master_value("SMRITI Gender", gender))

@@ -164,6 +164,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 <thead>
                     <tr>
                         <th>Item Details</th>
+                        <th>Style / Article No</th>
                         <th>Brand / Category</th>
                         <th style="text-align:right;">MRP Price</th>
                         <th style="text-align:right;">Purchase Cost</th>
@@ -172,7 +173,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                     </tr>
                 </thead>
                 <tbody id="products-tbody">
-                    <tr><td colspan="6" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading items...</td></tr>
+                    <tr><td colspan="7" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading items...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -194,6 +195,10 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
             <div class="form-group">
                 <label class="form-label">Barcode / Item Code *</label>
                 <input type="text" class="form-input" id="add-barcode" placeholder="e.g. 890103001">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Style / Article No (Optional)</label>
+                <input type="text" class="form-input" id="add-style" placeholder="e.g. D-20001-SND">
             </div>
             <div style="display: flex; gap: 12px;">
                 <div class="form-group" style="flex: 1;">
@@ -269,6 +274,7 @@ async function init() {
 
     await loadProducts();
     await loadFilterOptions();
+    SMRITI.injectLabelStudioShortcut();
 }
 
 async function loadProducts() {
@@ -276,7 +282,7 @@ async function loadProducts() {
         const items = await api('frappe.client.get_list', {
             doctype: 'Item',
             filters: { disabled: 0 },
-            fields: ['name', 'item_name', 'brand', 'item_group', 'custom_mrp', 'valuation_rate', 'custom_gst_percentage', 'stock_uom'],
+            fields: ['name', 'item_name', 'brand', 'item_group', 'custom_mrp', 'valuation_rate', 'custom_gst_percentage', 'stock_uom', 'custom_style_code', 'variant_of'],
             order_by: 'creation desc',
             limit_page_length: 200
         });
@@ -326,7 +332,7 @@ async function loadFilterOptions() {
 function renderTable(list) {
     const tbody = document.getElementById('products-tbody');
     if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-sub);padding:40px 0;">No products found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-sub);padding:40px 0;">No products found.</td></tr>';
         return;
     }
     tbody.innerHTML = list.map(item => `
@@ -334,6 +340,9 @@ function renderTable(list) {
             <td>
                 <div style="font-weight:600; color:var(--text);">${item.item_name}</div>
                 <div style="margin-top:4px;"><span class="item-code-badge">${item.name}</span></div>
+            </td>
+            <td>
+                <div style="font-weight:600; color:var(--primary-lt); font-family:monospace;">${item.custom_style_code || item.variant_of || '-'}</div>
             </td>
             <td>
                 <div style="font-weight:500;">${item.brand || 'No Brand'}</div>
@@ -361,7 +370,9 @@ function applyFilters() {
     if (q) {
         filtered = filtered.filter(item => 
             item.item_name.toLowerCase().includes(q) ||
-            item.name.toLowerCase().includes(q)
+            item.name.toLowerCase().includes(q) ||
+            (item.custom_style_code && item.custom_style_code.toLowerCase().includes(q)) ||
+            (item.variant_of && item.variant_of.toLowerCase().includes(q))
         );
     }
     if (brand) {
@@ -384,6 +395,7 @@ function closeAddProductModal() {
     // Clear fields
     document.getElementById('add-name').value = '';
     document.getElementById('add-barcode').value = '';
+    document.getElementById('add-style').value = '';
     document.getElementById('add-cost').value = '';
     document.getElementById('add-mrp').value = '';
 }
@@ -391,6 +403,7 @@ function closeAddProductModal() {
 async function saveProduct() {
     const name = document.getElementById('add-name').value.trim();
     const barcode = document.getElementById('add-barcode').value.trim();
+    const style = document.getElementById('add-style').value.trim();
     const cost = parseFloat(document.getElementById('add-cost').value) || 0;
     const mrp = parseFloat(document.getElementById('add-mrp').value) || 0;
     const gst = parseInt(document.getElementById('add-gst').value) || 0;
@@ -409,7 +422,8 @@ async function saveProduct() {
             barcode: barcode,
             rate: cost,
             mrp: mrp,
-            gst_percentage: gst
+            gst_percentage: gst,
+            style_code: style
         });
 
         toast('Product added to catalog successfully!', 'success');

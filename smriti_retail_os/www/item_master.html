@@ -740,40 +740,13 @@ const frappe = {
 };
 
 // ── SmritiItemMasterController and Grid JS ─────────────────────────
-const SIM_COLS = [
-    { key: 'BARCODE NO',           label: 'Barcode',     width: '150px', required: true },
-    { key: 'PRODUCT STYLE CODE',   label: 'Style/Article No', width: '150px', required: true },
-    { key: 'ITEM DESCRIPTION',     label: 'Description', width: '220px', required: true },
-    { key: 'BRAND NAME',           label: 'Brand',       width: '110px' },
-    { key: 'COLOR',                label: 'Color',       width: '100px', required: true },
-    { key: 'SIZE',                 label: 'Size',        width: '65px',  required: true },
-    { key: 'PLANNED MRP',          label: 'MRP ₹',       width: '90px',  required: true, type: 'number' },
-    { key: 'COST PRICE',           label: 'Cost ₹',      width: '90px',  type: 'number' },
-    { key: 'PRODUCT TAX',          label: 'GST%',        width: '65px',  type: 'number', choices: ['', '0', '5', '12', '18', '28'] },
-    { key: 'HSN CODE',             label: 'HSN Code',    width: '100px' },
-    { key: 'GENDER',               label: 'Gender',      width: '90px',  choices: ['', 'MENS', 'LADIES', 'BOYS', 'GIRLS', 'UNISEX', 'KIDS'] },
-    { key: 'VENDOR CODE',          label: 'Vendor/Supplier', width: '130px' },
-    { key: 'PURCHASE CLASS',       label: 'Purch. Class', width: '110px',  choices: ['', 'SIS', 'FW', 'MFW', 'LFW', 'BFW', 'GFW', 'KFW', 'ASSTED', 'SPORTS', 'ACC', 'BAG', 'FORMAL', 'CASUAL'] },
-    { key: 'DEPARTMENT',           label: 'Department',  width: '120px' },
-    { key: 'MERCHANDISE CATEGORY', label: 'Merch. Cat.', width: '120px' },
-    { key: 'Sub category',         label: 'Sub Category', width: '120px' },
-    { key: 'HEELS',                label: 'Heels',       width: '90px' },
-    { key: 'UPPER MATERIAL',       label: 'Upper Mat.',  width: '120px' },
-    { key: 'OUTSOLE',              label: 'Outsole',     width: '100px' },
-    { key: 'IMAGE LINK',           label: 'Image URL',   width: '130px' },
-    { key: 'Product Tax Group',    label: 'Tax Group',   width: '120px' },
-];
-
-const REQUIRED_KEYS = SIM_COLS.filter(c => c.required).map(c => c.key);
+let SIM_COLS = [];
+const REQUIRED_KEYS = [];
 const HEADER_ALIASES = {};
-SIM_COLS.forEach(c => {
-    HEADER_ALIASES[c.key.toLowerCase()] = c.key;
-    HEADER_ALIASES[c.label.toLowerCase()] = c.key;
-});
 
 const EXTRA_ALIASES = {
     'barcode': 'BARCODE NO', 'barcode no': 'BARCODE NO', 'barcode number': 'BARCODE NO',
-    'style code': 'PRODUCT STYLE CODE', 'article': 'PRODUCT STYLE CODE', 'article no': 'PRODUCT STYLE CODE',
+    'style code': 'PRODUCT STYLE CODE', 'article': 'PRODUCT STYLE CODE', 'article no': 'PRODUCT STYLE CODE', 'style/article': 'PRODUCT STYLE CODE', 'style / article': 'PRODUCT STYLE CODE',
     'item description': 'ITEM DESCRIPTION', 'description': 'ITEM DESCRIPTION', 'name': 'ITEM DESCRIPTION',
     'brand': 'BRAND NAME', 'brand name': 'BRAND NAME',
     'mrp': 'PLANNED MRP', 'planned mrp': 'PLANNED MRP', 'selling price': 'PLANNED MRP',
@@ -1325,8 +1298,80 @@ function _esc(str) {
         .replace(/"/g, '&quot;');
 }
 
-$(document).ready(function() {
-    new SmritiItemMasterController($('#item-master-content-wrapper'));
+$(document).ready(async function() {
+    try {
+        const defs = await frappe.call({
+            method: 'smriti_retail_os.item_master_api.get_import_column_defs'
+        });
+        SIM_COLS = defs.message || [];
+        
+        REQUIRED_KEYS.length = 0;
+        REQUIRED_KEYS.push(...SIM_COLS.filter(c => c.required).map(c => c.key));
+        
+        for (const key in HEADER_ALIASES) delete HEADER_ALIASES[key];
+        SIM_COLS.forEach(c => {
+            HEADER_ALIASES[c.key.toLowerCase()] = c.key;
+            HEADER_ALIASES[c.label.toLowerCase()] = c.key;
+        });
+        Object.assign(HEADER_ALIASES, EXTRA_ALIASES);
+        
+        // Fetch attribute order and sort SIM_COLS
+        const attrRes = await frappe.call({
+            method: 'smriti_retail_os.company_api.get_item_attributes'
+        });
+        const sortedAttrs = attrRes.message || [];
+        const attrIndexMap = {};
+        const weightedKeys = new Set();
+        
+        sortedAttrs.forEach((attr, idx) => {
+            attrIndexMap[attr.attribute_id] = idx;
+            if (attr.weight !== null && attr.weight !== undefined) {
+                weightedKeys.add(attr.attribute_id);
+            }
+        });
+        
+        SIM_COLS.sort((a, b) => {
+            const keyA = a.key;
+            const keyB = b.key;
+            const labelA = (a.label || '').toLowerCase();
+            const labelB = (b.label || '').toLowerCase();
+            
+            const getCategory = (key) => {
+                if (weightedKeys.has(key)) return 0;
+                if (key in attrIndexMap) return 1;
+                
+                const standardDims = [
+                    'PRODUCT STYLE CODE', 'ITEM DESCRIPTION', 'BRAND NAME', 
+                    'GENDER', 'VENDOR CODE', 'PURCHASE CLASS', 'DEPARTMENT', 
+                    'MERCHANDISE CATEGORY', 'Sub category', 'HEELS', 'UPPER MATERIAL', 'OUTSOLE'
+                ];
+                if (standardDims.includes(key)) return 2;
+                
+                const measures = ['PLANNED MRP', 'COST PRICE'];
+                if (measures.includes(key)) return 3;
+                
+                return 4;
+            };
+            
+            const catA = getCategory(keyA);
+            const catB = getCategory(keyB);
+            
+            if (catA !== catB) return catA - catB;
+            
+            if (catA === 0) {
+                return attrIndexMap[keyA] - attrIndexMap[keyB];
+            }
+            
+            return labelA.localeCompare(labelB);
+        });
+        
+        new SmritiItemMasterController($('#item-master-content-wrapper'));
+        SMRITI.injectLabelStudioShortcut();
+    } catch (err) {
+        console.error('Failed to initialize column definitions:', err);
+        new SmritiItemMasterController($('#item-master-content-wrapper'));
+        SMRITI.injectLabelStudioShortcut();
+    }
 });
 </script>
 

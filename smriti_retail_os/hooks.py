@@ -362,14 +362,26 @@ doc_events = {
         "on_update": "smriti_retail_os.barcode_api.clear_barcode_feature_flags_cache"
     },
     "SMRITI Business Term": {
-        "on_update": "smriti_retail_os.services.knowledge_service.sync_knowledge_asset_on_save",
+        "on_update": [
+            "smriti_retail_os.services.knowledge_service.sync_knowledge_asset_on_save",
+            "smriti_retail_os.reports_api.invalidate_glossary_cache"
+        ],
         "after_insert": "smriti_retail_os.services.knowledge_service.sync_knowledge_asset_on_save",
-        "on_trash": "smriti_retail_os.services.knowledge_service.cleanup_knowledge_asset_on_trash"
+        "on_trash": [
+            "smriti_retail_os.services.knowledge_service.cleanup_knowledge_asset_on_trash",
+            "smriti_retail_os.reports_api.invalidate_glossary_cache"
+        ]
     },
     "SMRITI Formula Definition": {
-        "on_update": "smriti_retail_os.services.knowledge_service.sync_knowledge_asset_on_save",
+        "on_update": [
+            "smriti_retail_os.services.knowledge_service.sync_knowledge_asset_on_save",
+            "smriti_retail_os.reports_api.invalidate_glossary_cache"
+        ],
         "after_insert": "smriti_retail_os.services.knowledge_service.sync_knowledge_asset_on_save",
-        "on_trash": "smriti_retail_os.services.knowledge_service.cleanup_knowledge_asset_on_trash"
+        "on_trash": [
+            "smriti_retail_os.services.knowledge_service.cleanup_knowledge_asset_on_trash",
+            "smriti_retail_os.reports_api.invalidate_glossary_cache"
+        ]
     }
 }
 
@@ -388,7 +400,8 @@ scheduler_events = {
         "smriti_retail_os.cge.service.cge_service.expire_wallet_credits",
         "smriti_retail_os.cge.service.cge_service.generate_all_liability_snapshots",
         "smriti_retail_os.cge.service.cge_service.execute_snapshot_cleanup",
-        "smriti_retail_os.cge.service.cge_service.cleanup_expired_budget_reservations"
+        "smriti_retail_os.cge.service.cge_service.cleanup_expired_budget_reservations",
+        "smriti_retail_os.reports_api.execute_audit_retention_archival"
     ],
     "cron": {
         "*/30 * * * *": [

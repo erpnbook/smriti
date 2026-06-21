@@ -14,7 +14,7 @@ from frappe.utils import flt, cint
 from frappe import _
 
 @frappe.whitelist()
-def quick_create_item(item_name, barcode, rate, mrp, gst_percentage):
+def quick_create_item(item_name, barcode, rate, mrp, gst_percentage, style_code=None):
     """
     Creates a new Item, Barcode, and Price List entry in one step.
     Designed for "Dumb User" speed — minimal fields, maximum automation.
@@ -47,6 +47,28 @@ def quick_create_item(item_name, barcode, rate, mrp, gst_percentage):
         import sys
         _frappe = sys.modules.get('frappe')
         if _frappe: _frappe.logger().warning(f"SMRITI Warning: Financial/Data-integrity-adjacent exception in master_api.py:40: {sys.exc_info()[1]}")
+    try: item.custom_style_code = style_code or barcode
+    except Exception:
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().warning(f"SMRITI Warning: exception setting custom_style_code in master_api.py: {sys.exc_info()[1]}")
+
+    # Set default HSN code for India Compliance
+    try:
+        default_hsn = "641590"
+        if not frappe.db.exists("GST HSN Code", default_hsn):
+            hsn_doc = frappe.new_doc("GST HSN Code")
+            hsn_doc.name = default_hsn
+            hsn_doc.hsn_code = default_hsn
+            hsn_doc.description = "Auto-created Footwear HSN"
+            hsn_doc.insert(ignore_permissions=True)
+        item.gst_hsn_code = default_hsn
+        try: item.gn_hsn_code = default_hsn
+        except Exception: pass
+    except Exception:
+        import sys
+        _frappe = sys.modules.get('frappe')
+        if _frappe: _frappe.logger().warning(f"SMRITI Warning: exception setting default HSN code in master_api.py: {sys.exc_info()[1]}")
     
     # Auto-resolve Item Tax Template from percentage
     template_name = frappe.db.get_value(
@@ -93,13 +115,21 @@ def create_item_price(item_code, price_list, rate):
         pl.currency = "INR"
         pl.insert(ignore_permissions=True)
 
-    ip = frappe.new_doc("Item Price")
-    ip.item_code = item_code
-    ip.price_list = price_list
-    ip.price_list_rate = flt(rate)
-    ip.currency = "INR"
-    ip.uom = "Nos"
-    ip.insert(ignore_permissions=True)
+    existing = frappe.db.get_value(
+        "Item Price",
+        {"item_code": item_code, "price_list": price_list},
+        "name"
+    )
+    if existing:
+        frappe.db.set_value("Item Price", existing, "price_list_rate", flt(rate))
+    else:
+        ip = frappe.new_doc("Item Price")
+        ip.item_code = item_code
+        ip.price_list = price_list
+        ip.price_list_rate = flt(rate)
+        ip.currency = "INR"
+        ip.uom = "Nos"
+        ip.insert(ignore_permissions=True)
 
 @frappe.whitelist()
 def quick_create_customer(customer_name, mobile_no):

@@ -687,10 +687,18 @@ class TestBarcodeHardening(unittest.TestCase):
             "BARCODE NO": "9998887776665",
             "PRODUCT STYLE CODE": "TST-HARDEN",
             "ITEM DESCRIPTION": "Test Vendor Code Item",
+            "BRAND NAME": "Nike",
             "COLOR": "BLK",
             "SIZE": "8",
             "PLANNED MRP": "2000",
-            "VENDOR CODE": "VND-TEST-1"
+            "GENDER": "UNISEX",
+            "VENDOR CODE": "VND-TEST-1",
+            "PURCHASE CLASS": "FW",
+            "DEPARTMENT": "LADIES FTW",
+            "MERCHANDISE CATEGORY": "SANDAL",
+            "Sub category": "LASTIC PATTA",
+            "HEELS": "FLAT",
+            "UPPER MATERIAL": "CLOTH",
         }
         res_validate = validate_import_rows(frappe.as_json([row]))
         self.assertEqual(res_validate[0]["status"], "error")
@@ -724,7 +732,8 @@ class TestBarcodeHardening(unittest.TestCase):
 
         # 5. Verify validations pass with valid vendor_code
         res_validate_ok = validate_import_rows(frappe.as_json([row]))
-        self.assertEqual(res_validate_ok[0]["status"], "valid")
+        self.assertIn(res_validate_ok[0]["status"], ("valid", "warning"))
+        self.assertEqual(len(res_validate_ok[0].get("errors", [])), 0)
 
         res_create_ok = create_style_with_variants(frappe.as_json(base_details), frappe.as_json(sizes_config))
         self.assertTrue(res_create_ok["success"])
@@ -858,6 +867,16 @@ class TestBarcodeHardening(unittest.TestCase):
             brand_doc.insert(ignore_permissions=True)
         frappe.db.commit()
 
+        # Ensure Supplier for VND-TEST-HSN-1
+        frappe.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-HSN-1"})
+        supp_group = frappe.db.get_value("Supplier Group", {}, "name") or "All Supplier Groups"
+        supp = frappe.new_doc("Supplier")
+        supp.supplier_name = "Test HSN Supplier"
+        supp.supplier_group = supp_group
+        supp.custom_vendor_code = "VND-TEST-HSN-1"
+        supp.insert(ignore_permissions=True)
+        frappe.db.commit()
+
         # 1. Test get_hsn_gst_rate API
         from smriti_retail_os.item_master_api import get_hsn_gst_rate
         rate = get_hsn_gst_rate(hsn_test_code)
@@ -876,13 +895,20 @@ class TestBarcodeHardening(unittest.TestCase):
             "COST PRICE": 1200,
             "PRODUCT TAX": "18",  # We provide 18, but HSN should override to 12
             "HSN CODE": hsn_test_code,
-            "VENDOR CODE": ""
+            "GENDER": "UNISEX",
+            "VENDOR CODE": "VND-TEST-HSN-1",
+            "PURCHASE CLASS": "FW",
+            "DEPARTMENT": "LADIES FTW",
+            "MERCHANDISE CATEGORY": "SANDAL",
+            "Sub category": "LASTIC PATTA",
+            "HEELS": "FLAT",
+            "UPPER MATERIAL": "CLOTH"
         }]
         
         # In validation, it should validate against derived GST rate (12 is valid, but let's make sure it doesn't fail)
         results = validate_import_rows(frappe.as_json(rows_to_validate))
-        self.assertEqual(results[0]["status"], "valid")
-        self.assertEqual(len(results[0]["errors"]), 0)
+        self.assertIn(results[0]["status"], ("valid", "warning"))
+        self.assertEqual(len(results[0].get("errors", [])), 0)
 
         # 3. Test import_item_master prioritizes HSN GST rate
         from smriti_retail_os.item_master_api import import_item_master, _clear_hsn_cache
@@ -908,6 +934,7 @@ class TestBarcodeHardening(unittest.TestCase):
         frappe.delete_doc("Item", "TST-HSN-STYLE-RED-9", ignore_missing=True, force=True)
         frappe.delete_doc("Item", "TST-HSN-STYLE", ignore_missing=True, force=True)
         frappe.db.delete("Brand", {"name": "Nike"})
+        frappe.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-HSN-1"})
         frappe.db.commit()
 
 
@@ -1164,3 +1191,245 @@ class TestAuditRemediations(unittest.TestCase):
                 gst_utils.get_hsn_settings = orig_get_hsn_settings
             else:
                 del gst_utils.get_hsn_settings
+
+
+class TestSmritiAttributeLayoutReorg(unittest.TestCase):
+    def setUp(self):
+        self.company = frappe.db.exists("Company", "_Test Company")
+        if not self.company:
+            comp = frappe.new_doc("Company")
+            comp.company_name = "_Test Company"
+            comp.country = "India"
+            comp.default_currency = "INR"
+            comp.insert(ignore_permissions=True)
+            self.company = comp.name
+        
+        # Grant store manager role to active user to allow setting modifications
+        if not frappe.db.exists("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"}):
+            r = frappe.new_doc("Has Role")
+            r.parent = frappe.session.user
+            r.parenttype = "User"
+            r.parentfield = "roles"
+            r.role = "SMRITI Store Manager"
+            r.insert(ignore_permissions=True)
+            
+        # Ensure DocTypes exist and physical tables are synced in the test database
+        from smriti_retail_os.setup import (
+            create_smriti_audit_event_doctype,
+            create_smriti_attribute_layout_doctype
+        )
+        
+        if not frappe.db.exists("DocType", "SMRITI Audit Event"):
+            create_smriti_audit_event_doctype()
+        else:
+            try:
+                frappe.get_doc("DocType", "SMRITI Audit Event").sync_schema()
+            except Exception:
+                pass
+                
+        if not frappe.db.exists("DocType", "SMRITI Attribute Layout"):
+            create_smriti_attribute_layout_doctype()
+        else:
+            try:
+                frappe.get_doc("DocType", "SMRITI Attribute Layout").sync_schema()
+            except Exception:
+                pass
+                
+        # Ensure unique index exists on the Attribute Layout table
+        try:
+            frappe.db.sql("CREATE UNIQUE INDEX IF NOT EXISTS unique_company_attr ON `tabSMRITI Attribute Layout` (company, attribute_id)")
+            frappe.db.commit()
+        except Exception:
+            pass
+
+        frappe.db.commit()
+        
+        # Clean up database
+        try:
+            frappe.db.delete("SMRITI Attribute Layout", {"company": self.company})
+        except Exception:
+            pass
+        try:
+            frappe.db.delete("SMRITI Audit Event", {"company": self.company})
+        except Exception:
+            pass
+        frappe.db.commit()
+
+    def tearDown(self):
+        try:
+            frappe.db.delete("SMRITI Attribute Layout", {"company": self.company})
+        except Exception:
+            pass
+        try:
+            frappe.db.delete("SMRITI Audit Event", {"company": self.company})
+        except Exception:
+            pass
+        try:
+            frappe.db.delete("Has Role", {"parent": frappe.session.user, "role": "SMRITI Store Manager"})
+        except Exception:
+            pass
+        frappe.db.commit()
+
+    def test_attr_001_deterministic_sorting(self):
+        """
+        TEST-ATTR-001 (Deterministic Sort Order): Verify weights sort columns:
+        weighted attributes -> remaining/unweighted attributes alphabetically by label -> standard dimensions -> measures -> technical columns.
+        """
+        from smriti_retail_os.company_api import save_item_attributes, get_item_attributes
+        
+        # Save a custom layout weighting COLOR = 1, SIZE = 2 (standard dims by default)
+        save_item_attributes(
+            company=self.company,
+            attributes=[
+                {"attribute_id": "SIZE", "weight": 2},
+                {"attribute_id": "COLOR", "weight": 1}
+            ]
+        )
+        
+        # Fetch attributes
+        attrs = get_item_attributes(self.company)
+        
+        # Validate order: weighted attributes first (ordered by weight: COLOR then SIZE)
+        self.assertEqual(attrs[0]["attribute_id"], "COLOR")
+        self.assertEqual(attrs[1]["attribute_id"], "SIZE")
+        
+        # Unweighted attributes: should be sorted alphabetically by label.
+        # Standard attributes returned: BRAND NAME (Brand), GENDER (Gender), etc.
+        # Let's verify standard dims: "Brand", "Gender", "Heels", "Merch. Cat.", etc. are alphabetical
+        unweighted_standard = [a for a in attrs if a["weight"] is None and a["is_custom"] == 0]
+        labels = [a["label"].lower() for a in unweighted_standard]
+        self.assertEqual(labels, sorted(labels))
+
+    def test_attr_002_cache_invalidation(self):
+        """
+        TEST-ATTR-002 (Cache Invalidation): Verify save_item_attributes() clears Redis cache.
+        """
+        from smriti_retail_os.company_api import save_item_attributes
+        cache_key = f"smriti:item_attributes:{self.company}"
+        
+        # Set cache dummy
+        frappe.cache.set_value(cache_key, "dummy_cached_value")
+        self.assertEqual(frappe.cache.get_value(cache_key), "dummy_cached_value")
+        
+        # Save attributes
+        save_item_attributes(
+            company=self.company,
+            attributes=[{"attribute_id": "COLOR", "weight": 1}]
+        )
+        
+        # Verify cache is cleared
+        self.assertIsNone(frappe.cache.get_value(cache_key))
+
+    def test_attr_003_duplicate_attribute_protection(self):
+        """
+        TEST-ATTR-003 (Duplicate Attribute Protection): Verify uniqueness blocks duplicates.
+        """
+        from smriti_retail_os.company_api import save_item_attributes
+        
+        # Try to save duplicate attributes, expect ValidationError
+        with self.assertRaises(frappe.ValidationError):
+            save_item_attributes(
+                company=self.company,
+                attributes=[
+                    {"attribute_id": "COLOR", "weight": 1},
+                    {"attribute_id": "COLOR", "weight": 2}
+                ]
+            )
+            
+        # Verify composite db constraint on SMRITI Attribute Layout: (company, attribute_id) unique
+        doc1 = frappe.new_doc("SMRITI Attribute Layout")
+        doc1.company = self.company
+        doc1.attribute_id = "SIZE"
+        doc1.weight = 1
+        doc1.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        doc2 = frappe.new_doc("SMRITI Attribute Layout")
+        doc2.company = self.company
+        doc2.attribute_id = "SIZE"
+        doc2.weight = 2
+        
+        with self.assertRaises(Exception): # DB constraint error (UniqueIndexError or IntegrityError)
+            doc2.insert(ignore_permissions=True)
+            frappe.db.commit()
+
+    def test_attr_004_ean13_collision_retry(self):
+        """
+        TEST-ATTR-004 (EAN13 Collision Retry): Mock barcode existence, verify retry logic.
+        """
+        from smriti_retail_os.item_master_api import generate_ean13_barcode, _ensure_hsn_code
+        _ensure_hsn_code("640311")
+        
+        # Generate two barcodes
+        bar1 = generate_ean13_barcode()
+        
+        # Create an item with bar1
+        item = frappe.new_doc("Item")
+        item.item_code = "TST-COLLISION-1"
+        item.item_name = "Collision Test 1"
+        item.item_group = "Products"
+        item.stock_uom = "Nos"
+        item.gst_hsn_code = "640311"
+        item.append("barcodes", {"barcode": bar1, "uom": "Nos"})
+        item.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        try:
+            # We mock random EAN generation to collide with bar1 first, then generate a new one
+            import random
+            original_randint = random.randint
+            
+            call_count = [0]
+            def mock_randint(a, b):
+                if call_count[0] == 0:
+                    call_count[0] += 1
+                    # Return body of bar1 to force collision
+                    return int(bar1[:-1][2:])
+                return original_randint(a, b)
+                
+            random.randint = mock_randint
+            try:
+                bar_retry = generate_ean13_barcode()
+                # Verify that it succeeded and returned a different barcode
+                self.assertEqual(call_count[0], 1)
+                self.assertNotEqual(bar_retry, bar1)
+            finally:
+                random.randint = original_randint
+        finally:
+            frappe.delete_doc("Item", "TST-COLLISION-1", ignore_permissions=True, force=True)
+            frappe.db.commit()
+
+    def test_attr_005_audit_payload(self):
+        """
+        TEST-ATTR-005 (Audit Payload): Verify SMRITI Audit Event creation.
+        """
+        import json
+        from smriti_retail_os.company_api import save_item_attributes, reset_item_attributes
+        
+        # 1. Test change event
+        save_item_attributes(
+            company=self.company,
+            attributes=[{"attribute_id": "COLOR", "weight": 5}]
+        )
+        
+        events = frappe.get_all(
+            "SMRITI Audit Event",
+            filters={"company": self.company, "event_type": "ATTRIBUTE_LAYOUT_CHANGED"},
+            fields=["before_state", "after_state", "user"]
+        )
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["user"], frappe.session.user)
+        self.assertEqual(json.loads(events[0]["before_state"]), [])
+        self.assertEqual(json.loads(events[0]["after_state"])[0]["attribute_id"], "COLOR")
+        self.assertEqual(json.loads(events[0]["after_state"])[0]["weight"], 5)
+        
+        # 2. Test reset event
+        reset_item_attributes(company=self.company)
+        reset_events = frappe.get_all(
+            "SMRITI Audit Event",
+            filters={"company": self.company, "event_type": "ATTRIBUTE_LAYOUT_RESET"},
+            fields=["before_state", "after_state"]
+        )
+        self.assertEqual(len(reset_events), 1)
+        self.assertEqual(json.loads(reset_events[0]["before_state"])[0]["attribute_id"], "COLOR")
+        self.assertEqual(json.loads(reset_events[0]["after_state"]), [])

@@ -27,7 +27,8 @@ no_cache = 1
 
 def get_context(context):
     if frappe.session.user == "Guest":
-        frappe.throw(_("Please log in to access the SMRITI Category Master."), frappe.AuthenticationError)
+        frappe.local.flags.redirect_location = "/login"
+        return
 
     roles = frappe.get_roles(frappe.session.user)
     allowed = {"SMRITI Store Manager", "System Manager", "Administrator"}

@@ -36,6 +36,10 @@ class TestReportingGovernance(unittest.TestCase):
         # Clean up test report template
         frappe.db.delete("SMRITI Report Template", {"name": "tst_gov_report"})
         frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": "tst_gov_report"})
+        
+        # Clean up test users
+        frappe.db.delete("User", {"email": ["in", ["user_a@example.com", "user_b@example.com", "test_user@example.com"]]})
+        
         frappe.db.commit()
 
         # Clean up dynamic report config
@@ -44,12 +48,22 @@ class TestReportingGovernance(unittest.TestCase):
             del REPORT_QUERIES["tst_gov_report"]
 
     def create_test_records(self):
+        # Create test users to satisfy link validation
+        for email, name in [("user_a@example.com", "User A"), ("user_b@example.com", "User B"), ("test_user@example.com", "Test User")]:
+            if not frappe.db.exists("User", email):
+                frappe.get_doc({
+                    "doctype": "User",
+                    "email": email,
+                    "first_name": name,
+                    "send_welcome_email": 0
+                }).insert(ignore_permissions=True)
+
         # Register dynamic report config
         from smriti_retail_os.reports_api import REPORT_QUERIES
         REPORT_QUERIES["tst_gov_report"] = {
-            "base_sql": "SELECT posting_date, grand_total FROM `tabPOS Invoice` WHERE docstatus = 1",
+            "base_sql": "SELECT parent.posting_date, parent.grand_total FROM `tabPOS Invoice` parent WHERE parent.docstatus = 1",
             "group_by": None,
-            "order_by": "posting_date DESC"
+            "order_by": "parent.posting_date DESC"
         }
 
         # 1. Create active, approved formulas
@@ -407,3 +421,274 @@ class TestReportingGovernance(unittest.TestCase):
         self.assertIn("tst_meas_approved", details["selected_terms"])
         self.assertEqual(details["aggregation"]["tst_meas_approved"], "Sum")
         self.assertIn("tst_dim_approved", details["group_by"])
+
+    def test_cache_partitioning_and_isolation_test_rep_001(self):
+        # TEST-REP-001 (Tenant Cache Partitioning)
+        # Verify cache keys are user-and-company specific and include sorted user roles.
+        engine = SMRITIReportEngine("tst_gov_report", filters={"company": "Company A"})
+        
+        # Mock session user and roles
+        frappe.session.user = "user_a@example.com"
+        original_get_roles = frappe.get_roles
+        
+        # Test Case 1: user_a, roles ["Role B", "Role A"], Company A
+        frappe.get_roles = lambda *args, **kwargs: ["Role B", "Role A"]
+        key1 = engine.get_cache_key()
+        
+        # Test Case 2: same user and company, but different order of roles -> should match because we sort roles
+        frappe.get_roles = lambda *args, **kwargs: ["Role A", "Role B"]
+        key2 = engine.get_cache_key()
+        self.assertEqual(key1, key2)
+        
+        # Test Case 3: different company -> key should change
+        engine_comp_b = SMRITIReportEngine("tst_gov_report", filters={"company": "Company B"})
+        key3 = engine_comp_b.get_cache_key()
+        self.assertNotEqual(key1, key3)
+        
+        # Test Case 4: different user -> key should change
+        frappe.session.user = "user_b@example.com"
+        key4 = engine.get_cache_key()
+        self.assertNotEqual(key1, key4)
+        
+        # Restore original functions
+        frappe.get_roles = original_get_roles
+        frappe.session.user = "Administrator"
+
+    def test_export_logging_test_rep_002(self):
+        # TEST-REP-002 (Export Logging)
+        # Verify that invoking export_smriti_report generates a valid SMRITI Audit Event log with expected payload schema
+        from smriti_retail_os.reports_api import export_smriti_report
+        
+        # Clear existing logs for report
+        frappe.db.delete("SMRITI Audit Event", {"event_type": "REPORT_EXPORTED"})
+        frappe.db.commit()
+        
+        # Run export
+        export_smriti_report("tst_gov_report", filters={"company": "_Test Company"})
+        
+        # Fetch log
+        logs = frappe.get_all("SMRITI Audit Event", filters={"event_type": "REPORT_EXPORTED"}, fields=["after_state", "user", "company"])
+        self.assertTrue(len(logs) > 0)
+        
+        payload = json.loads(logs[0]["after_state"])
+        self.assertEqual(payload["report_key"], "tst_gov_report")
+        self.assertEqual(payload["export_format"], "csv")
+        self.assertEqual(payload["company"], "_Test Company")
+        self.assertEqual(payload["user"], frappe.session.user)
+        self.assertIn("template_version", payload)
+        self.assertIn("rows", payload)
+        self.assertIn("filters", payload)
+
+    def test_read_only_query_policy_test_rep_003(self):
+        # TEST-REP-003 (Read-Only Query Policy)
+        # Verify queries violating REPORT_QUERY_POLICY_V1 are rejected.
+        from smriti_retail_os.reports_api import validate_query_safety
+        
+        # Valid queries
+        validate_query_safety("SELECT name FROM tabUser")
+        validate_query_safety("WITH cte AS (SELECT 1) SELECT * FROM cte")
+        
+        # Violations: Multi-statement execution (semicolons)
+        with self.assertRaises(frappe.ValidationError) as context:
+            validate_query_safety("SELECT name FROM tabUser; DELETE FROM tabUser")
+        self.assertIn("Multi-statement", str(context.exception))
+        
+        # Violations: Must start with SELECT or WITH
+        with self.assertRaises(frappe.ValidationError) as context:
+            validate_query_safety("INSERT INTO tabUser (name) VALUES ('test')")
+        self.assertIn("start with SELECT or WITH", str(context.exception))
+        
+        # Violations: Mutation keywords
+        with self.assertRaises(frappe.ValidationError) as context:
+            validate_query_safety("SELECT name FROM tabUser WHERE name = 'test' OR EXISTS (DROP TABLE tabUser)")
+        self.assertIn("DDL/DML mutation keywords", str(context.exception))
+
+    def test_default_deny_test_rep_004(self):
+        # TEST-REP-004 (Default Deny)
+        # Verify empty role access templates block non-manager users.
+        self.template.set("role_access", [])
+        self.template.save(ignore_permissions=True)
+        frappe.db.commit()
+        
+        # Mock session user with custom non-admin roles
+        original_get_roles = frappe.get_roles
+        frappe.get_roles = lambda *args, **kwargs: ["SMRITI Cashier"]
+        frappe.session.user = "cashier@example.com"
+        
+        engine = SMRITIReportEngine("tst_gov_report")
+        with self.assertRaises(frappe.PermissionError):
+            engine.check_permissions(action="run")
+            
+        # Restore original
+        frappe.get_roles = original_get_roles
+        frappe.session.user = "Administrator"
+
+    def test_saved_view_constraints_test_rep_005(self):
+        # TEST-REP-005 (Saved View Constraints)
+        # Verify uniqueness and JSON validation gates in SMRITI Saved View.
+        view1 = frappe.get_doc({
+            "doctype": "SMRITI Saved View",
+            "view_name": "Test Saved View 1",
+            "report_template": "tst_gov_report",
+            "user": "test_user@example.com",
+            "applied_filters_json": '{"company": "Test Company"}',
+            "visible_columns_json": '["tst_dim_approved"]'
+        })
+        view1.insert(ignore_permissions=True)
+        
+        # Try duplicate uniqueness -> should fail
+        view2 = frappe.get_doc({
+            "doctype": "SMRITI Saved View",
+            "view_name": "Test Saved View 1",
+            "report_template": "tst_gov_report",
+            "user": "test_user@example.com",
+            "applied_filters_json": '{"company": "Test Company"}',
+            "visible_columns_json": '["tst_dim_approved"]'
+        })
+        with self.assertRaises(frappe.ValidationError) as context:
+            view2.insert(ignore_permissions=True)
+        self.assertIn("already exists", str(context.exception))
+        
+        # Invalid JSON filters -> should fail
+        view3 = frappe.get_doc({
+            "doctype": "SMRITI Saved View",
+            "view_name": "Test Saved View 2",
+            "report_template": "tst_gov_report",
+            "user": "test_user@example.com",
+            "applied_filters_json": '{company: Test Company}',
+            "visible_columns_json": '["tst_dim_approved"]'
+        })
+        with self.assertRaises(frappe.ValidationError) as context:
+            view3.insert(ignore_permissions=True)
+        self.assertIn("Invalid JSON format", str(context.exception))
+        
+        # Clean up
+        frappe.db.delete("SMRITI Saved View", {"report_template": "tst_gov_report"})
+        frappe.db.commit()
+
+    def test_template_audit_and_versioning_test_rep_006(self):
+        # TEST-REP-006 (Template Audit & Versioning)
+        # Verify modifying a template's details logs audit payload and increments version.
+        frappe.db.delete("SMRITI Audit Event", {"event_type": "REPORT_TEMPLATE_MODIFIED"})
+        frappe.db.commit()
+        
+        template_doc = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
+        old_version = template_doc.template_version or 1
+        template_doc.report_name = "Test Governance Report Modified"
+        template_doc.save(ignore_permissions=True)
+        frappe.db.commit()
+        
+        # Check version incremented
+        updated_template = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
+        self.assertEqual(updated_template.template_version, old_version + 1)
+        
+        # Check audit event log
+        logs = frappe.get_all("SMRITI Audit Event", filters={"event_type": "REPORT_TEMPLATE_MODIFIED"}, fields=["before_state", "after_state"])
+        self.assertTrue(len(logs) > 0)
+        
+        before = json.loads(logs[0]["before_state"])
+        after = json.loads(logs[0]["after_state"])
+        self.assertEqual(before["report_name"], "Test Governance Report")
+        self.assertEqual(after["report_name"], "Test Governance Report Modified")
+
+    def test_saved_view_ownership_isolation_test_rep_007(self):
+        # TEST-REP-007 (Saved Views Ownership Protection)
+        # Verify User A cannot modify or delete User B's saved view.
+        view = frappe.get_doc({
+            "doctype": "SMRITI Saved View",
+            "view_name": "User B View",
+            "report_template": "tst_gov_report",
+            "user": "user_b@example.com",
+            "applied_filters_json": '{}',
+            "visible_columns_json": '[]'
+        })
+        view.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        # Login as User A and try to edit -> should fail
+        frappe.session.user = "user_a@example.com"
+        original_get_roles = frappe.get_roles
+        frappe.get_roles = lambda *args, **kwargs: ["SMRITI Store Manager"]
+        
+        view_doc = frappe.get_doc("SMRITI Saved View", view.name)
+        view_doc.view_name = "User B View Edited"
+        with self.assertRaises(frappe.PermissionError):
+            view_doc.save(ignore_permissions=True)
+            
+        # Login as User A and try to delete -> should fail
+        with self.assertRaises(frappe.PermissionError):
+            view_doc.delete(ignore_permissions=True)
+            
+        # Restore original
+        frappe.get_roles = original_get_roles
+        frappe.session.user = "Administrator"
+        frappe.db.delete("SMRITI Saved View", {"name": view.name})
+        frappe.db.commit()
+
+    def test_export_permission_enforcement_test_rep_008(self):
+        # TEST-REP-008 (Export Permission Enforcement)
+        # Verify a user with cashier role cannot call export_smriti_report without explicit permission.
+        self.template.set("role_access", [])
+        self.template.append("role_access", {
+            "role": "SMRITI Cashier",
+            "export_allowed": 0
+        })
+        self.template.save(ignore_permissions=True)
+        frappe.db.commit()
+        
+        original_get_roles = frappe.get_roles
+        frappe.get_roles = lambda *args, **kwargs: ["SMRITI Cashier"]
+        frappe.session.user = "cashier@example.com"
+        
+        engine = SMRITIReportEngine("tst_gov_report")
+        with self.assertRaises(frappe.PermissionError) as context:
+            engine.check_permissions(action="export")
+        self.assertIn("Export Denied", str(context.exception))
+        
+        # Now explicitly grant template-level export role
+        frappe.session.user = "Administrator"
+        frappe.get_roles = original_get_roles
+        
+        t_doc = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
+        t_doc.set("role_access", [])
+        t_doc.append("role_access", {
+            "role": "SMRITI Cashier",
+            "export_allowed": 1
+        })
+        t_doc.save(ignore_permissions=True)
+        frappe.db.commit()
+        
+        # Test again as cashier -> should now succeed
+        frappe.get_roles = lambda *args, **kwargs: ["SMRITI Cashier"]
+        frappe.session.user = "cashier@example.com"
+        
+        engine2 = SMRITIReportEngine("tst_gov_report")
+        self.assertTrue(engine2.check_permissions(action="export"))
+        
+        # Restore original
+        frappe.get_roles = original_get_roles
+        frappe.session.user = "Administrator"
+
+    def test_concurrent_template_versioning_test_rep_009(self):
+        # TEST-REP-009 (Concurrent Template Versioning)
+        # Verify template version assignment is serialized and increments sequentially.
+        template_doc = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
+        v1 = template_doc.template_version or 1
+        
+        # Simulating concurrent fetch:
+        doc1 = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
+        doc2 = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
+        
+        doc1.save(ignore_permissions=True)
+        
+        # doc2 has stale modified timestamp. Saving it directly raises TimestampMismatchError
+        with self.assertRaises(frappe.TimestampMismatchError):
+            doc2.save(ignore_permissions=True)
+            
+        # Reloading doc2 gets the new version and timestamp, then saving increments version again
+        doc2.reload()
+        doc2.save(ignore_permissions=True)
+        frappe.db.commit()
+        
+        final_doc = frappe.get_doc("SMRITI Report Template", "tst_gov_report")
+        self.assertEqual(final_doc.template_version, v1 + 2)

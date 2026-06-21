@@ -13,6 +13,98 @@ import frappe
 import json
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
+def create_smriti_audit_event_doctype():
+    """Creates the SMRITI Audit Event custom DocType for storing audit logs."""
+    if frappe.db.exists("DocType", "SMRITI Audit Event"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Audit Event"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.autoname = "hash"
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 0
+        doc.issingle = 0
+
+        fields = [
+            {"fieldname": "timestamp", "fieldtype": "Datetime", "label": "Timestamp", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "user", "fieldtype": "Link", "options": "User", "label": "User", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "event_type", "fieldtype": "Data", "label": "Event Type", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "before_state", "fieldtype": "Long Text", "label": "Before State"},
+            {"fieldname": "after_state", "fieldtype": "Long Text", "label": "After State"},
+            {"fieldname": "company", "fieldtype": "Link", "options": "Company", "label": "Company", "in_list_view": 1},
+            {"fieldname": "ip_address", "fieldtype": "Data", "label": "IP Address"}
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {
+            "role": "System Manager",
+            "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+        })
+        doc.append("permissions", {
+            "role": "Administrator",
+            "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+        })
+        doc.append("permissions", {
+            "role": "SMRITI Store Manager",
+            "read": 1, "write": 0, "create": 0, "delete": 0
+        })
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print(f"[SMRITI] Created SMRITI Audit Event DocType")
+    except Exception as e:
+        frappe.log_error(f"Error creating SMRITI Audit Event DocType: {str(e)}")
+
+
+def create_smriti_attribute_layout_doctype():
+    """Creates the SMRITI Attribute Layout custom DocType for storing attribute weights per company."""
+    if frappe.db.exists("DocType", "SMRITI Attribute Layout"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Attribute Layout"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.autoname = "hash"
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 1
+        doc.issingle = 0
+
+        fields = [
+            {"fieldname": "company", "fieldtype": "Link", "options": "Company", "label": "Company", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "attribute_id", "fieldtype": "Data", "label": "Attribute ID", "reqd": 1, "in_list_view": 1},
+            {"fieldname": "weight", "fieldtype": "Int", "label": "Weight", "reqd": 1, "in_list_view": 1}
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {
+            "role": "System Manager",
+            "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+        })
+        doc.append("permissions", {
+            "role": "Administrator",
+            "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1
+        })
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        # Create unique constraint index
+        try:
+            frappe.db.sql("CREATE UNIQUE INDEX IF NOT EXISTS unique_company_attr ON `tabSMRITI Attribute Layout` (company, attribute_id)")
+            frappe.db.commit()
+        except Exception as e:
+            pass
+            
+        print(f"[SMRITI] Created SMRITI Attribute Layout DocType")
+    except Exception as e:
+        frappe.log_error(f"Error creating SMRITI Attribute Layout DocType: {str(e)}")
+
+
 def create_smriti_company_settings_doctype():
     """Creates the SMRITI Company Settings custom DocType for per-company retail configuration."""
     if frappe.db.exists("DocType", "SMRITI Company Settings"):
@@ -1790,6 +1882,8 @@ def setup_smriti_retail_os():
 
     # 0. Provision SMRITI Company Settings DocType
     create_smriti_company_settings_doctype()
+    create_smriti_audit_event_doctype()
+    create_smriti_attribute_layout_doctype()
 
     # 0a. Provision SMRITI Address Audit Log DocType
     create_audit_log_doctype()

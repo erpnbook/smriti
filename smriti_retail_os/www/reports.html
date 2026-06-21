@@ -517,6 +517,11 @@
     .toast.info    { background: #1e1b4b; border: 1px solid rgba(99,102,241,0.3); }
     @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 
+    @keyframes modal-in {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
     /* Badge highlight states */
     .badge-status { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
     .badge-status.low { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
@@ -753,6 +758,11 @@
             </div>
             
             <div class="report-actions">
+              <!-- Explain Metric Modal Toggle -->
+              <button class="btn-export" onclick="showExplainModal()" id="btn-explain-toggle" title="Glossary & Metric Explainability">
+                <span class="material-symbols-outlined" style="font-size:16px;">info</span> Explain
+              </button>
+
               <!-- Column Toggle Dropdown -->
               <div class="dropdown-wrapper">
                 <button class="btn-export" onclick="toggleColumnDropdown()" id="btn-col-toggle">
@@ -900,6 +910,27 @@
 
 <div class="toast-container" id="toast-wrap"></div>
 
+<!-- Explain Modal -->
+<div id="smriti-explain-modal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(10, 15, 30, 0.8); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
+  <div class="modal-content" style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); width: 100%; max-width: 700px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: var(--shadow); overflow: hidden; animation: modal-in 0.3s ease;">
+    <!-- Modal Header -->
+    <div style="padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg-card);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="material-symbols-outlined" style="color: var(--accent); font-size: 24px;">info</span>
+        <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--text-1);">SMRITI Glossary & Metric Explainability</h3>
+      </div>
+      <button class="topbtn" onclick="closeExplainModal()" style="color: var(--text-2);">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    
+    <!-- Modal Body -->
+    <div id="explain-modal-body" style="padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; color: var(--text-2); font-size: 0.92rem; line-height: 1.6;">
+      <!-- Glossary content will be loaded dynamically -->
+    </div>
+  </div>
+</div>
+
 <script>
   const CSRF_TOKEN = '{{ csrf_token }}';
   const loggedUser = '{{ cashier }}';
@@ -924,6 +955,88 @@
   let currentSortDesc = false;
   let hiddenColumns = [];
   let currentReportColumns = []; // Store current active columns (with custom ordering)
+  let sortedAttrs = [];
+  const fieldnameToAttrId = {
+    'style_code': 'PRODUCT STYLE CODE',
+    'product_style_code': 'PRODUCT STYLE CODE',
+    'style_name': 'ITEM DESCRIPTION',
+    'item_description': 'ITEM DESCRIPTION',
+    'item_name': 'ITEM DESCRIPTION',
+    'brand': 'BRAND NAME',
+    'brand_name': 'BRAND NAME',
+    'color': 'COLOR',
+    'size': 'SIZE',
+    'gender': 'GENDER',
+    'vendor_code': 'VENDOR CODE',
+    'purchase_class': 'PURCHASE CLASS',
+    'department': 'DEPARTMENT',
+    'merchandise_category': 'MERCHANDISE CATEGORY',
+    'sub_category': 'Sub category',
+    'heels': 'HEELS',
+    'upper_material': 'UPPER MATERIAL',
+    'outsole': 'OUTSOLE',
+    'mrp': 'PLANNED MRP',
+    'planned_mrp': 'PLANNED MRP',
+    'cost_price': 'COST PRICE',
+    'barcode': 'BARCODE NO',
+    'barcode_no': 'BARCODE NO',
+    'gst': 'PRODUCT TAX',
+    'gst_percentage': 'PRODUCT TAX',
+    'hsn_code': 'HSN CODE',
+    'image_link': 'IMAGE LINK',
+    'product_tax_group': 'Product Tax Group',
+  };
+
+  function sortReportColumns(cols) {
+    const attrIndexMap = {};
+    const weightedKeys = new Set();
+    
+    sortedAttrs.forEach((attr, idx) => {
+      attrIndexMap[attr.attribute_id] = idx;
+      if (attr.weight !== null && attr.weight !== undefined) {
+        weightedKeys.add(attr.attribute_id);
+      }
+    });
+
+    const getCategory = (attrId) => {
+      if (weightedKeys.has(attrId)) return 0;
+      if (attrId in attrIndexMap) return 1;
+      
+      const standardDims = [
+        'PRODUCT STYLE CODE', 'ITEM DESCRIPTION', 'BRAND NAME', 
+        'GENDER', 'VENDOR CODE', 'PURCHASE CLASS', 'DEPARTMENT', 
+        'MERCHANDISE CATEGORY', 'Sub category', 'HEELS', 'UPPER MATERIAL', 'OUTSOLE'
+      ];
+      if (standardDims.includes(attrId)) return 2;
+      
+      const measures = ['PLANNED MRP', 'COST PRICE'];
+      if (measures.includes(attrId)) return 3;
+      
+      return 4;
+    };
+
+    cols.sort((a, b) => {
+      const fnameA = a.fieldname || '';
+      const fnameB = b.fieldname || '';
+      
+      const attrIdA = fieldnameToAttrId[fnameA] || fnameA.toUpperCase();
+      const attrIdB = fieldnameToAttrId[fnameB] || fnameB.toUpperCase();
+      
+      const labelA = (a.label || a.fieldname || '').toLowerCase();
+      const labelB = (b.label || b.fieldname || '').toLowerCase();
+      
+      const catA = getCategory(attrIdA);
+      const catB = getCategory(attrIdB);
+      
+      if (catA !== catB) return catA - catB;
+      
+      if (catA === 0) {
+        return attrIndexMap[attrIdA] - attrIndexMap[attrIdB];
+      }
+      
+      return labelA.localeCompare(labelB);
+    });
+  }
   let pivotRows = [];
   let pivotCols = [];
   let pivotVals = [];
@@ -962,7 +1075,12 @@
     // Run parallel lookup fetches and fetch reports templates
     Promise.all([
       fetchFilterLookups(),
-      fetchReportsList()
+      fetchReportsList(),
+      api('smriti_retail_os.company_api.get_item_attributes').then(res => {
+        sortedAttrs = res || [];
+      }).catch(e => {
+        console.error('Failed to load item attributes:', e);
+      })
     ]).then(() => {
       buildExplorerTree();
       buildMobileSwitcher();
@@ -974,6 +1092,8 @@
       if (rKey) {
         loadReportByKey(rKey);
       }
+      
+      SMRITI.injectLabelStudioShortcut();
     }).catch(err => {
       showLoading(false);
       toast('Error loading Reports Center: ' + err.message, 'error');
@@ -1202,6 +1322,9 @@
     // Parse columns
     try {
       currentReportColumns = JSON.parse(activeReportTemplate.columns_json || '[]');
+      if (typeof sortReportColumns === 'function') {
+        sortReportColumns(currentReportColumns);
+      }
     } catch(e) {
       currentReportColumns = [];
       console.error(e);
@@ -1447,7 +1570,12 @@
     } catch(e) {}
 
     let cols = [];
-    try { cols = JSON.parse(activeReportTemplate.columns_json || '[]'); } catch(e) {}
+    try {
+      cols = JSON.parse(activeReportTemplate.columns_json || '[]');
+      if (typeof sortReportColumns === 'function') {
+        sortReportColumns(cols);
+      }
+    } catch(e) {}
 
     if (visibleCols.length > 0) {
       // Reorder currentReportColumns based on saved visibleCols order
@@ -1775,73 +1903,18 @@
   }
 
   // Exports handlers
-  // Exports handlers
   window.exportExcel = function() {
     if (!activeReportKey || activeReportData.length === 0) {
       toast('No data to export.', 'error');
       return;
     }
-    
-    const includeMethodology = document.getElementById('methodology-checkbox') && document.getElementById('methodology-checkbox').checked;
-    
-    const doStandardExcelExport = () => {
-      const table = document.getElementById('generic-grid-table');
-      const wb = XLSX.utils.table_to_book(table, { sheet: "SMRITI Report" });
-      XLSX.writeFile(wb, `SMRITI_${activeReportKey}_${formatDateLocal(new Date())}.xlsx`);
-      toast('Excel export complete!', 'success');
-    };
-
-    if (includeMethodology && activeReportKey === 'inventory_productivity') {
-      api('smriti_retail_os.psv_service.get_inventory_productivity_methodology').then(methodology => {
-        if (methodology) {
-          const table = document.getElementById('generic-grid-table');
-          const wb = XLSX.utils.table_to_book(table, { sheet: "Productivity Data" });
-          
-          // Build methodology rows
-          const rows = [
-            [methodology.title],
-            ["Category", methodology.category],
-            ["Methodology Version", methodology.version],
-            ["Effective Date", methodology.effective_date],
-            ["OS Version", "v" + methodology.smriti_version],
-            ["Author", methodology.author.name + ", " + methodology.author.title + " (" + methodology.author.org + ")"],
-            [""],
-            ["Summary", methodology.summary],
-            [""],
-            ["Calculations & Formulas"],
-            ["Metric Name", "Formula", "Explanation"]
-          ];
-          
-          methodology.formulas.forEach(f => {
-            rows.push([f.name, f.formula, f.explanation]);
-          });
-          
-          rows.push([""]);
-          rows.push(["Classification Matrix"]);
-          rows.push(["Category", "Velocity Rule", "GMROI Rule", "Action", "Description"]);
-          
-          methodology.classification_rules.forEach(r => {
-            rows.push([r.category, r.velocity, r.gmroi, r.action, r.description]);
-          });
-          
-          rows.push([""]);
-          rows.push(["About This Methodology"]);
-          rows.push([methodology.about]);
-          
-          const ws = XLSX.utils.aoa_to_sheet(rows);
-          XLSX.utils.book_append_sheet(wb, ws, "Methodology Appendix");
-          XLSX.writeFile(wb, `SMRITI_${activeReportKey}_${formatDateLocal(new Date())}.xlsx`);
-          toast('Excel export with methodology complete!', 'success');
-        } else {
-          doStandardExcelExport();
-        }
-      }).catch(err => {
-        console.error(err);
-        doStandardExcelExport();
-      });
-    } else {
-      doStandardExcelExport();
-    }
+    const filters = {};
+    document.querySelectorAll('.filter-input').forEach(input => {
+      filters[input.getAttribute('data-key')] = input.value;
+    });
+    const url = '/api/method/smriti_retail_os.reports_api.export_smriti_report?report_key=' + encodeURIComponent(activeReportKey) + '&filters=' + encodeURIComponent(JSON.stringify(filters)) + '&format_type=excel';
+    window.location.href = url;
+    toast('Excel export initiated.', 'success');
   };
 
   window.exportCSV = function() {
@@ -1849,84 +1922,95 @@
       toast('No data to export.', 'error');
       return;
     }
-    
-    const includeMethodology = document.getElementById('methodology-checkbox') && document.getElementById('methodology-checkbox').checked;
-    
-    const generateBaseCSV = () => {
-      const table = document.getElementById('generic-grid-table');
-      let csv = [];
-      const rows = table.querySelectorAll('tr');
-      
-      for (let i = 0; i < rows.length; i++) {
-        const row = [], cols = rows[i].querySelectorAll('td, th');
-        for (let j = 0; j < cols.length; j++) {
-          let text = cols[j].innerText.trim().replace(/"/g, '""');
-          row.push('"' + text + '"');
-        }
-        csv.push(row.join(','));
-      }
-      return csv;
-    };
-    
-    const downloadCSVFile = (csvLines) => {
-      const csvContent = "data:text/csv;charset=utf-8," + csvLines.join("\n");
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `SMRITI_${activeReportKey}_${formatDateLocal(new Date())}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast('CSV export complete!', 'success');
-    };
+    const filters = {};
+    document.querySelectorAll('.filter-input').forEach(input => {
+      filters[input.getAttribute('data-key')] = input.value;
+    });
+    const url = '/api/method/smriti_retail_os.reports_api.export_smriti_report?report_key=' + encodeURIComponent(activeReportKey) + '&filters=' + encodeURIComponent(JSON.stringify(filters)) + '&format_type=csv';
+    window.location.href = url;
+    toast('CSV export initiated.', 'success');
+  };
 
-    if (includeMethodology && activeReportKey === 'inventory_productivity') {
-      api('smriti_retail_os.psv_service.get_inventory_productivity_methodology').then(methodology => {
-        if (methodology) {
-          let csv = generateBaseCSV();
-          
-          csv.push("");
-          csv.push("");
-          csv.push(`"--- Methodology Appendix ---"`);
-          csv.push(`"Title","${methodology.title.replace(/"/g, '""')}"`);
-          csv.push(`"Category","${methodology.category.replace(/"/g, '""')}"`);
-          csv.push(`"Methodology Version","${methodology.version}"`);
-          csv.push(`"Effective Date","${methodology.effective_date}"`);
-          csv.push(`"OS Version","v${methodology.smriti_version}"`);
-          csv.push(`"Author","${methodology.author.name.replace(/"/g, '""')} (${methodology.author.title.replace(/"/g, '""')})"`);
-          csv.push("");
-          csv.push(`"Summary","${methodology.summary.replace(/"/g, '""')}"`);
-          csv.push("");
-          csv.push(`"Calculations & Formulas"`);
-          csv.push(`"Metric Name","Formula","Explanation"`);
-          
-          methodology.formulas.forEach(f => {
-            csv.push(`"${f.name.replace(/"/g, '""')}","${f.formula.replace(/"/g, '""')}","${f.explanation.replace(/"/g, '""')}"`);
-          });
-          
-          csv.push("");
-          csv.push(`"Classification Matrix"`);
-          csv.push(`"Category","Velocity Rule","GMROI Rule","Action","Description"`);
-          
-          methodology.classification_rules.forEach(r => {
-            csv.push(`"${r.category.replace(/"/g, '""')}","${r.velocity.replace(/"/g, '""')}","${r.gmroi.replace(/"/g, '""')}","${r.action.replace(/"/g, '""')}","${r.description.replace(/"/g, '""')}"`);
-          });
-          
-          csv.push("");
-          csv.push(`"About This Methodology"`);
-          csv.push(`"${methodology.about.replace(/"/g, '""')}"`);
-          
-          downloadCSVFile(csv);
-        } else {
-          downloadCSVFile(generateBaseCSV());
-        }
-      }).catch(err => {
-        console.error(err);
-        downloadCSVFile(generateBaseCSV());
-      });
-    } else {
-      downloadCSVFile(generateBaseCSV());
+  window.showExplainModal = function() {
+    if (!activeReportKey) {
+      toast('No report selected.', 'error');
+      return;
     }
+    
+    const modal = document.getElementById('smriti-explain-modal');
+    const body = document.getElementById('explain-modal-body');
+    body.innerHTML = '<div style="text-align:center; padding:40px;"><div class="spinner" style="margin:0 auto 12px;"></div><div>Loading glossary definitions...</div></div>';
+    modal.style.display = 'flex';
+    
+    api('get_report_glossary', { report_key: activeReportKey })
+      .then(glossary => {
+        body.innerHTML = '';
+        const keys = Object.keys(glossary);
+        if (keys.length === 0) {
+          body.innerHTML = '<div style="text-align:center; color:var(--text-3); padding:40px;">No glossary entries defined for this report template.</div>';
+          return;
+        }
+        
+        keys.forEach(k => {
+          const item = glossary[k];
+          const formulasHtml = (item.formulas || []).map(f => `
+            <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-top: 10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <strong style="color:var(--accent-2); font-size:0.85rem;">🧮 Formula: ${f.formula_name} (${f.formula_id})</strong>
+              </div>
+              <div style="font-family:var(--font-mono); background:var(--bg-input); padding:6px 10px; border-radius:4px; font-size:0.85rem; color:var(--text-1); margin-bottom:6px; border:1px solid rgba(255,255,255,0.03); white-space:pre-wrap; word-break:break-all;">
+                ${f.formula_expression}
+              </div>
+              <div style="font-size:0.82rem; color:var(--text-2); margin-bottom: 6px;">
+                <strong>Meaning:</strong> ${f.formula_meaning}
+              </div>
+              <div style="font-size:0.82rem; color:var(--text-2); margin-bottom: 6px;">
+                <strong>Worked Example:</strong> A arithmetic walk-through using real retail numbers should be calculated based on formula logic.
+              </div>
+              <div style="font-size:0.82rem; color:var(--text-2);">
+                <strong>Recommended Action:</strong> Clear guidelines on what the user should do next based on this value.
+              </div>
+            </div>
+          `).join('');
+          
+          const termCard = document.createElement('div');
+          termCard.style.background = 'var(--bg-card)';
+          termCard.style.border = '1px solid var(--border)';
+          termCard.style.borderRadius = 'var(--radius)';
+          termCard.style.padding = '16px 20px';
+          termCard.style.display = 'flex';
+          termCard.style.flexDirection = 'column';
+          termCard.style.gap = '10px';
+          termCard.style.marginBottom = '12px';
+          
+          termCard.innerHTML = `
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+              <h4 style="font-family:'Outfit', sans-serif; font-size:1.05rem; font-weight:700; color:var(--text-1);">${item.term_name}</h4>
+              <div style="display:flex; gap:6px;">
+                <span class="badge-status ok" style="font-size:0.65rem;">${item.measure_or_dimension}</span>
+                ${item.measure_or_dimension === 'Measure' ? `<span class="badge-status due" style="font-size:0.65rem;">Agg: ${item.default_aggregation}</span>` : ''}
+              </div>
+            </div>
+            <div style="font-size:0.88rem; color:var(--text-1);">
+              <strong>Definition:</strong> ${item.definition}
+            </div>
+            ${item.hinglish_definition ? `
+            <div style="font-size:0.85rem; color:var(--text-2); font-style:italic; padding-left:10px; border-left:2px solid var(--accent); margin-top:4px;">
+              <strong>Hinglish (हिंदी):</strong> ${item.hinglish_definition}
+            </div>
+            ` : ''}
+            ${formulasHtml}
+          `;
+          body.appendChild(termCard);
+        });
+      })
+      .catch(err => {
+        body.innerHTML = `<div style="color:var(--danger); text-align:center; padding:40px;">Failed to load glossary: ${err.message}</div>`;
+      });
+  };
+
+  window.closeExplainModal = function() {
+    document.getElementById('smriti-explain-modal').style.display = 'none';
   };
 
   // ────────── Pivot Matrix Builder Suite ──────────

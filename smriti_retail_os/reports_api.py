@@ -1153,24 +1153,50 @@ class SMRITIReportEngine:
         else:
             frappe.throw(_("Report Template '{0}' not found").format(self.report_key))
 
-    def check_permissions(self):
-        """Checks if current user has role permission to run this report."""
+    def check_permissions(self, action="run"):
+        """Checks if current user has role permission to run or export this report."""
         user = frappe.session.user
         if user == "Administrator" or "System Manager" in frappe.get_roles():
             return True
             
-        allowed_roles = [r.role for r in self.template.get("role_access", [])]
-        if not allowed_roles:
-            return True # If no specific roles are defined, permit access
+        if action == "run":
+            allowed_roles = [r.role for r in self.template.get("role_access", [])]
+            if not allowed_roles:
+                frappe.throw(_("Access Denied for Report '{0}'").format(self.template.report_name), frappe.PermissionError)
+                
+            user_roles = frappe.get_roles()
+            if not set(allowed_roles).intersection(set(user_roles)):
+                frappe.throw(_("Access Denied for Report '{0}'").format(self.template.report_name), frappe.PermissionError)
+            return True
             
-        user_roles = frappe.get_roles()
-        if not set(allowed_roles).intersection(set(user_roles)):
-            frappe.throw(_("Access Denied for Report '{0}'").format(self.template.report_name), frappe.PermissionError)
+        elif action == "export":
+            self.check_permissions(action="run")
+            
+            template_export_roles = [r.role for r in self.template.get("role_access", []) if r.get("export_allowed")]
+            
+            user_roles = frappe.get_roles()
+            if template_export_roles:
+                if not set(template_export_roles).intersection(set(user_roles)):
+                    frappe.throw(_("Export Denied for Report '{0}'").format(self.template.report_name), frappe.PermissionError)
+            else:
+                platform_default_export_roles = {"System Manager", "SMRITI Store Manager", "SMRITI Admin"}
+                if not platform_default_export_roles.intersection(set(user_roles)):
+                    frappe.throw(_("Export Denied for Report '{0}'").format(self.template.report_name), frappe.PermissionError)
+            return True
 
     def get_cache_key(self):
-        """Generates MD5 hash of filter options for secure caching."""
+        """Generates MD5 hash of filter options, company, user, and roles for secure caching."""
+        company = self.filters.get("company") or frappe.defaults.get_user_default("Company") or ""
+        user = frappe.session.user or "Guest"
+        roles = sorted(frappe.get_roles(user))
+        cache_dict = {
+            "filters": self.filters,
+            "company": company,
+            "user": user,
+            "roles": roles
+        }
         filter_hash = hashlib.md5(
-            json.dumps(self.filters, sort_keys=True).encode("utf-8")
+            json.dumps(cache_dict, sort_keys=True).encode("utf-8")
         ).hexdigest()
         return f"smriti:{self.report_key}:{filter_hash}"
 
@@ -1716,6 +1742,7 @@ class SMRITIReportEngine:
 
     def _run_sql_report(self, config):
         base_sql = config["base_sql"]
+        validate_query_safety(base_sql)
         group_by = config.get("group_by")
         order_by = config.get("order_by")
 
@@ -1947,6 +1974,8 @@ class SMRITIReportEngine:
         # Large Dataset Protection: limit to 10000 rows
         full_sql += " LIMIT 10000"
 
+        validate_query_safety(full_sql)
+
         return frappe.db.sql(full_sql, params, as_dict=True)
 
 
@@ -2080,5 +2109,202 @@ def get_smriti_cashiers():
         WHERE r.role IN ('SMRITI Cashier', 'SMRITI Store Manager') AND u.enabled = 1
         ORDER BY fullname ASC
     """, as_dict=True)
+
+
+def validate_query_safety(sql_query):
+    """
+    Enforces REPORT_QUERY_POLICY_V1 at a behavior level.
+    Only single read-only SELECT and WITH queries are allowed.
+    All state mutations (DML, DDL), stored procedures, and multi-statements are blocked.
+    """
+    clean_sql = (sql_query or "").strip().lower()
+    
+    # 1. Reject multi-statement execution (semicolons)
+    if ";" in clean_sql:
+        frappe.throw(_("SQL Safety Violation: Multi-statement execution is strictly prohibited."), frappe.ValidationError)
+        
+    # 2. Must start with SELECT or WITH
+    if not (clean_sql.startswith("select") or clean_sql.startswith("with")):
+        frappe.throw(_("SQL Safety Violation: Report queries must start with SELECT or WITH (read-only only)."), frappe.ValidationError)
+        
+    # 3. Reject mutation keywords as standalone tokens
+    import re
+    forbidden_verbs = ["insert", "update", "delete", "truncate", "drop", "alter", "grant", "revoke", "replace", "create", "into"]
+    for verb in forbidden_verbs:
+        pattern = rf"\b{verb}\b"
+        if re.search(pattern, clean_sql):
+            frappe.throw(_("SQL Safety Violation: DDL/DML mutation keywords are prohibited in report queries."), frappe.ValidationError)
+
+
+@frappe.whitelist()
+def export_smriti_report(report_key, filters=None, format_type="csv"):
+    """
+    Exports report to CSV/Excel on the server. Checks permissions,
+    generates CSV content, logs REPORT_EXPORTED, and returns downloadable file.
+    """
+    if isinstance(filters, str):
+        filters = json.loads(filters) if filters else {}
+    
+    engine = SMRITIReportEngine(report_key, filters)
+    engine.check_permissions(action="export")
+    
+    # Run report to get data
+    results = engine.run()
+    
+    # Generate CSV content
+    columns = []
+    if engine.template.columns_json:
+        try:
+            columns = json.loads(engine.template.columns_json)
+        except Exception:
+            columns = []
+            
+    fieldnames = [col.get("fieldname") for col in columns if col.get("fieldname")]
+    labels = [col.get("label") or col.get("fieldname") for col in columns if col.get("fieldname")]
+    
+    if not fieldnames and results:
+        fieldnames = list(results[0].keys())
+        labels = fieldnames
+        
+    import io
+    import csv
+    
+    output = io.StringIO()
+    writer = csv.writer(output, lineterminator='\n')
+    writer.writerow(labels)
+    
+    for row in results:
+        row_val = []
+        for field in fieldnames:
+            val = row.get(field)
+            row_val.append("" if val is None else str(val))
+        writer.writerow(row_val)
+        
+    csv_data = output.getvalue()
+    output.close()
+    
+    # Log export audit event
+    company = filters.get("company") or frappe.defaults.get_user_default("Company") or ""
+    ip_addr = "127.0.0.1"
+    if hasattr(frappe.local, "request_ip") and frappe.local.request_ip:
+        ip_addr = frappe.local.request_ip
+        
+    audit_payload = {
+        "report_key": report_key,
+        "export_format": format_type,
+        "company": company,
+        "user": frappe.session.user,
+        "rows": len(results),
+        "template_version": cint(engine.template.template_version or 1),
+        "filters": filters
+    }
+    
+    log_doc = frappe.get_doc({
+        "doctype": "SMRITI Audit Event",
+        "timestamp": frappe.utils.now_datetime(),
+        "user": frappe.session.user,
+        "event_type": "REPORT_EXPORTED",
+        "company": company,
+        "ip_address": ip_addr,
+        "before_state": "",
+        "after_state": json.dumps(audit_payload)
+    })
+    log_doc.insert(ignore_permissions=True)
+    frappe.db.commit()
+    
+    # Return file download response
+    frappe.response['filename'] = f"{report_key}_{frappe.utils.nowdate()}.csv"
+    frappe.response['filecontent'] = csv_data.encode('utf-8')
+    frappe.response['type'] = 'download'
+
+
+@frappe.whitelist()
+def get_report_glossary(report_key):
+    """
+    Returns column definitions, formulas, and worked examples from the SMRITI Business Dictionary
+    and Formula Registry, cached in Redis to prevent database performance overhead.
+    """
+    cache_key = f"smriti:report_glossary:{report_key}"
+    cached = frappe.cache().get_value(cache_key)
+    if cached:
+        return json.loads(cached)
+        
+    template = frappe.get_doc("SMRITI Report Template", report_key)
+    columns = []
+    if template.columns_json:
+        try:
+            columns = json.loads(template.columns_json)
+        except Exception:
+            columns = []
+            
+    glossary = {}
+    for col in columns:
+        fieldname = col.get("fieldname")
+        if not fieldname:
+            continue
+            
+        term_name = frappe.db.get_value("SMRITI Business Term", {"term_id": fieldname}, "name")
+        if not term_name:
+            term_name = frappe.db.get_value("SMRITI Business Term", {"dictionary_key": fieldname}, "name")
+            
+        if term_name:
+            term = frappe.get_doc("SMRITI Business Term", term_name)
+            
+            # Fetch formulas
+            formulas = []
+            for f_row in term.get("related_formulas", []):
+                if frappe.db.exists("SMRITI Formula Definition", f_row.formula_id):
+                    f_doc = frappe.get_doc("SMRITI Formula Definition", f_row.formula_id)
+                    formulas.append({
+                        "formula_id": f_doc.formula_id,
+                        "formula_name": f_doc.formula_name,
+                        "formula_expression": f_doc.formula_expression,
+                        "formula_meaning": f_doc.formula_meaning
+                    })
+                    
+            glossary[fieldname] = {
+                "term_name": term.term_name,
+                "definition": term.definition,
+                "hinglish_definition": term.hinglish_definition or "",
+                "measure_or_dimension": term.measure_or_dimension,
+                "default_aggregation": term.default_aggregation or "None",
+                "formulas": formulas
+            }
+            
+    frappe.cache().set_value(cache_key, json.dumps(glossary), expires_in_sec=3600)
+    return glossary
+
+
+def invalidate_glossary_cache(doc, method=None):
+    """
+    Invalidates glossary caches when SMRITI Business Term or SMRITI Formula Definition changes.
+    """
+    try:
+        keys = frappe.cache().get_keys("smriti:report_glossary:*")
+        for k in keys:
+            k_str = k.decode("utf-8") if isinstance(k, bytes) else k
+            if ":" in k_str:
+                frappe.cache().delete_key(k_str)
+            else:
+                frappe.cache().delete_value(k_str)
+    except Exception:
+        pass
+
+
+def execute_audit_retention_archival():
+    """
+    Daily scheduler task to archive/delete SMRITI Audit Event logs older than 365 days.
+    """
+    try:
+        from frappe.utils import add_days, nowdate
+        cutoff_date = add_days(nowdate(), -365)
+        frappe.db.sql("""
+            DELETE FROM `tabSMRITI Audit Event`
+            WHERE timestamp < %s
+        """, cutoff_date)
+        frappe.db.commit()
+    except Exception as e:
+        frappe.log_error(f"Error in execute_audit_retention_archival: {str(e)}")
+
 
 

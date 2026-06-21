@@ -367,3 +367,23 @@ SMRITI.triggerPopout = function(e, url) {
     e.stopPropagation();
     openPopout(url);
 };
+
+
+SMRITI.injectLabelStudioShortcut = function() {
+    const topbarRight = document.querySelector(".topbar-right");
+    if (!topbarRight) return;
+    
+    if (document.getElementById("label-studio-shortcut")) return;
+    
+    const btn = document.createElement("button");
+    btn.id = "label-studio-shortcut";
+    btn.className = "topbtn";
+    btn.title = "Label Studio";
+    btn.innerHTML = `<span class="material-symbols-outlined">qr_code_scanner</span><span>Label Studio</span>`;
+    
+    btn.addEventListener("click", function() {
+        window.location.href = "/barcode-center";
+    });
+    
+    topbarRight.insertBefore(btn, topbarRight.firstChild);
+};

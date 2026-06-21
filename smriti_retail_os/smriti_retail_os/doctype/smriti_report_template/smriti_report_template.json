@@ -18,6 +18,7 @@
   "company_restricted",
   "cache_minutes",
   "schema_version",
+  "template_version",
   "layout_json",
   "chart_json",
   "pivot_json",
@@ -97,6 +98,12 @@
    "fieldname": "schema_version",
    "fieldtype": "Int",
    "label": "Schema Version",
+   "default": "1"
+  },
+  {
+   "fieldname": "template_version",
+   "fieldtype": "Int",
+   "label": "Template Version",
    "default": "1"
   },
   {

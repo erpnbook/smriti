@@ -544,3 +544,224 @@ def get_backup_settings(company=None):
         return json.loads(raw)
     except Exception:
         return {}
+
+
+@frappe.whitelist()
+def get_item_attributes(company=None):
+    """
+    Returns the list of standard and custom attributes sorted by SMRITI Attribute Layout weights.
+    """
+    if not company:
+        company = get_active_company()
+        
+    # Standard attributes
+    standard_attrs = [
+        {"attribute_id": "COLOR", "label": "Color", "is_custom": 0},
+        {"attribute_id": "SIZE", "label": "Size", "is_custom": 0},
+        {"attribute_id": "PRODUCT STYLE CODE", "label": "Style/Article No", "is_custom": 0},
+        {"attribute_id": "BRAND NAME", "label": "Brand", "is_custom": 0},
+        {"attribute_id": "GENDER", "label": "Gender", "is_custom": 0},
+        {"attribute_id": "DEPARTMENT", "label": "Department", "is_custom": 0},
+        {"attribute_id": "PURCHASE CLASS", "label": "Purch. Class", "is_custom": 0},
+        {"attribute_id": "MERCHANDISE CATEGORY", "label": "Merch. Cat.", "is_custom": 0},
+        {"attribute_id": "Sub category", "label": "Sub Category", "is_custom": 0},
+        {"attribute_id": "HEELS", "label": "Heels", "is_custom": 0},
+        {"attribute_id": "UPPER MATERIAL", "label": "Upper Mat.", "is_custom": 0},
+        {"attribute_id": "OUTSOLE", "label": "Outsole", "is_custom": 0}
+    ]
+    
+    # Custom attributes from SMRITI Custom Attribute DocType
+    custom_attrs = []
+    if frappe.db.exists("DocType", "SMRITI Custom Attribute"):
+        try:
+            db_attrs = frappe.get_all(
+                "SMRITI Custom Attribute",
+                fields=["attribute_code", "attribute_name"]
+            )
+            for db_attr in db_attrs:
+                custom_attrs.append({
+                    "attribute_id": db_attr.attribute_code,
+                    "label": db_attr.attribute_name,
+                    "is_custom": 1
+                })
+        except Exception:
+            pass
+            
+    all_attrs = standard_attrs + custom_attrs
+    
+    # Fetch weights from SMRITI Attribute Layout
+    weights = {}
+    if company:
+        layout_entries = frappe.get_all(
+            "SMRITI Attribute Layout",
+            filters={"company": company},
+            fields=["attribute_id", "weight"]
+        )
+        weights = {le.attribute_id: le.weight for le in layout_entries}
+        
+    # Sort them using the deterministic fallback sorting rule:
+    # 1. Weighted attributes (by weight)
+    # 2. Remaining/unweighted attributes (alphabetically by label)
+    
+    def sort_key(attr):
+        attr_id = attr["attribute_id"]
+        label = attr["label"]
+        if attr_id in weights:
+            # Category 1: Weighted attributes (by weight)
+            return (0, weights[attr_id], label.lower())
+        else:
+            # Category 2: Remaining/unweighted attributes (alphabetically by label)
+            return (1, 0, label.lower())
+            
+    all_attrs.sort(key=sort_key)
+    
+    # Include weight info in returned objects
+    for attr in all_attrs:
+        attr["weight"] = weights.get(attr["attribute_id"], None)
+        
+    return all_attrs
+
+
+@frappe.whitelist()
+def save_item_attributes(company=None, attributes=None):
+    """
+    Saves the custom attribute weights order for a company.
+    Executes as a single atomic transaction. Rollback on any failure.
+    """
+    _check_manager_permission()
+    
+    if not company:
+        company = get_active_company()
+        
+    if not company:
+        frappe.throw(_("Company is required."))
+        
+    if isinstance(attributes, str):
+        attributes = json.loads(attributes)
+        
+    if not isinstance(attributes, list):
+        frappe.throw(_("Attributes must be a list of dicts/objects."))
+
+    ip_address = frappe.local.request_ip if hasattr(frappe.local, "request_ip") else "127.0.0.1"
+
+    try:
+        # Step 1: Capture before_state
+        existing_entries = frappe.get_all(
+            "SMRITI Attribute Layout",
+            filters={"company": company},
+            fields=["attribute_id", "weight"],
+            order_by="weight asc"
+        )
+        before_state = json.dumps(existing_entries)
+        
+        # Step 2: Delete existing weights for this company
+        frappe.db.delete("SMRITI Attribute Layout", {"company": company})
+        
+        # Step 3: Insert new weights validating uniqueness
+        seen_attributes = set()
+        after_state_list = []
+        
+        for idx, attr in enumerate(attributes):
+            attr_id = attr.get("attribute_id")
+            weight = attr.get("weight")
+            if weight is None:
+                weight = idx + 1
+                
+            if not attr_id:
+                continue
+                
+            if attr_id in seen_attributes:
+                frappe.throw(
+                    _("Duplicate attribute '{0}' detected in layout save request.").format(attr_id),
+                    frappe.ValidationError
+                )
+            seen_attributes.add(attr_id)
+            
+            doc = frappe.new_doc("SMRITI Attribute Layout")
+            doc.company = company
+            doc.attribute_id = attr_id
+            doc.weight = weight
+            doc.insert(ignore_permissions=True)
+            
+            after_state_list.append({"attribute_id": attr_id, "weight": weight})
+            
+        after_state = json.dumps(after_state_list)
+        
+        # Step 4: Invalidate Redis cache key `smriti:item_attributes:{company}`
+        cache_key = f"smriti:item_attributes:{company}"
+        frappe.cache.delete_key(cache_key)
+        
+        # Step 5: Log audit event
+        audit_doc = frappe.new_doc("SMRITI Audit Event")
+        audit_doc.timestamp = frappe.utils.now_datetime()
+        audit_doc.user = frappe.session.user
+        audit_doc.event_type = "ATTRIBUTE_LAYOUT_CHANGED"
+        audit_doc.before_state = before_state
+        audit_doc.after_state = after_state
+        audit_doc.company = company
+        audit_doc.ip_address = ip_address
+        audit_doc.insert(ignore_permissions=True)
+        
+        frappe.db.commit()
+        
+    except Exception as e:
+        frappe.db.rollback()
+        frappe.log_error(title="Failed to save attribute layout", message=frappe.get_traceback())
+        raise e
+        
+    return {"success": True, "message": _("Attribute layout saved successfully.")}
+
+
+@frappe.whitelist()
+def reset_item_attributes(company=None):
+    """
+    Resets (deletes) custom attribute order weights for a company.
+    Executes as a single atomic transaction. Rollback on failure.
+    """
+    _check_manager_permission()
+    
+    if not company:
+        company = get_active_company()
+        
+    if not company:
+        frappe.throw(_("Company is required."))
+        
+    ip_address = frappe.local.request_ip if hasattr(frappe.local, "request_ip") else "127.0.0.1"
+    
+    try:
+        # Capture before_state
+        existing_entries = frappe.get_all(
+            "SMRITI Attribute Layout",
+            filters={"company": company},
+            fields=["attribute_id", "weight"],
+            order_by="weight asc"
+        )
+        before_state = json.dumps(existing_entries)
+        
+        # Delete entries
+        frappe.db.delete("SMRITI Attribute Layout", {"company": company})
+        
+        # Invalidate Redis cache key `smriti:item_attributes:{company}`
+        cache_key = f"smriti:item_attributes:{company}"
+        frappe.cache.delete_key(cache_key)
+        
+        # Log audit event
+        audit_doc = frappe.new_doc("SMRITI Audit Event")
+        audit_doc.timestamp = frappe.utils.now_datetime()
+        audit_doc.user = frappe.session.user
+        audit_doc.event_type = "ATTRIBUTE_LAYOUT_RESET"
+        audit_doc.before_state = before_state
+        audit_doc.after_state = json.dumps([])
+        audit_doc.company = company
+        audit_doc.ip_address = ip_address
+        audit_doc.insert(ignore_permissions=True)
+        
+        frappe.db.commit()
+        
+    except Exception as e:
+        frappe.db.rollback()
+        frappe.log_error(title="Failed to reset attribute layout", message=frappe.get_traceback())
+        raise e
+        
+    return {"success": True, "message": _("Attribute layout reset successfully.")}
+
