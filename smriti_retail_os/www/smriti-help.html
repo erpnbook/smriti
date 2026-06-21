@@ -39,7 +39,7 @@
 
         body {
             font-family: 'Arial', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-page);
+            background: radial-gradient(at 50% 0%, #EEF2F6 0%, var(--bg-page) 100%);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
@@ -49,16 +49,18 @@
 
         /* Top Header Navigation */
         .help-header {
-            background: var(--primary-navy);
+            background: linear-gradient(135deg, var(--primary-navy) 0%, #0F172A 100%);
             color: #FFFFFF;
             padding: 16px 32px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
             position: sticky;
             top: 0;
             z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
         }
 
         .logo-section {
@@ -187,18 +189,21 @@
             border-radius: 8px;
             cursor: pointer;
             text-align: left;
-            transition: all 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .tab-btn:hover {
             background: rgba(37, 99, 235, 0.05);
             color: var(--primary-blue);
+            transform: translateX(4px);
         }
 
         .tab-btn.active {
-            background: rgba(37, 99, 235, 0.1);
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
             color: var(--primary-blue);
             font-weight: 700;
+            border-left: 3px solid var(--primary-blue);
+            padding-left: 13px;
         }
 
         .sidebar-divider {
@@ -438,12 +443,13 @@
             border-radius: 12px;
             padding: 16px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
         }
 
         .dict-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(26, 43, 92, 0.04);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(26, 43, 92, 0.08);
             border-color: var(--primary-blue);
         }
 
@@ -961,6 +967,7 @@
             loadDictionaryList();
             loadFormulasGrid();
             loadGovernanceDashboard();
+            filterExercises('All');
             
             // Check query parameters
             const urlParams = new URLSearchParams(window.location.search);

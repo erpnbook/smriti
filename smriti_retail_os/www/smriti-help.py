@@ -21,6 +21,8 @@ def get_context(context):
 
     context.no_cache = 1
     context.title = "Help Center — SMRITI Retail OS"
+    context.csrf_token = frappe.sessions.get_csrf_token()
+    context.base_template_path = "smriti_retail_os/templates/blank.html"
     
     # Get article key from query param
     article_key = frappe.form_dict.get("article")
