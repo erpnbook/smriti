@@ -1,12 +1,3 @@
-/**
- * @file: smriti_retail_os/www/smriti-presentation.html
- * @description: Handles user login, registration, and JWT token generation.
- * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
- * @date: 2026-05-28
- * @version: 1.0.0
- * @license: MIT
- * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
- */
 {% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/smriti-presentation.html
@@ -207,6 +198,8 @@
     <button onclick="selectDeck('barcode')" id="btn-mode-barcode" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300">Label &amp; Scan Studio</button>
     <button onclick="selectDeck('itemmaster')" id="btn-mode-itemmaster" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300">Item Master Studio</button>
     <button onclick="selectDeck('psv')" id="btn-mode-psv" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300">Inventory Visibility</button>
+    <button onclick="selectDeck('cge')" id="btn-mode-cge" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300">Customer Growth</button>
+    <button onclick="selectDeck('sfm')" id="btn-mode-sfm" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300">Sales Performance</button>
   </div>
 
   <!-- Outline Sidebar Drawer -->
@@ -243,12 +236,12 @@
 
                 <!-- Mode Group Sections (SMRITI Experience Center Reorganization) -->
         <div class="space-y-8 pt-4">
-          <!-- Business View Group -->
+          <!-- Executive Center Group -->
           <div class="space-y-3">
-            <h2 class="text-lg font-outfit font-extrabold text-emerald-400 flex items-center gap-2 border-b border-white/5 pb-2">
-              <span>💼</span> Business View
+            <h2 class="text-lg font-outfit font-extrabold text-lime-400 flex items-center gap-2 border-b border-white/5 pb-2">
+              <span>💼</span> Executive Center
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <!-- Owner Deck -->
               <div class="glass-card p-6 rounded-2xl flex flex-col justify-between border-t-4 border-emerald-500 hover:scale-[1.02] transition cursor-pointer" onclick="selectDeck('owner')">
                 <div>
@@ -274,13 +267,39 @@
                   <span class="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 text-[10px] font-bold uppercase">Wholesale</span>
                 </div>
               </div>
+
+              <!-- Customer Intelligence & Growth Center Card -->
+              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between border-t-4 border-lime-500 hover:scale-[1.02] transition cursor-pointer" onclick="selectDeck('cge')">
+                <div>
+                  <span class="text-xs text-lime-400 font-bold uppercase tracking-wider block mb-2">15 Slides</span>
+                  <h3 class="text-xl font-outfit font-bold text-white mb-2">Customer Intelligence &amp; Growth</h3>
+                  <p class="text-slate-400 text-sm">Focuses on VIP identification, customer health, churn prevention, loyalty rewards, and targeted campaign conversion.</p>
+                </div>
+                <div class="mt-6 flex justify-between items-center">
+                  <span class="text-xs text-lime-400 font-bold">Start Growth Deck →</span>
+                  <span class="px-2 py-0.5 rounded bg-lime-500/10 text-lime-400 text-[10px] font-bold uppercase">Growth</span>
+                </div>
+              </div>
+
+              <!-- Sales Performance & Incentive Center Card -->
+              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between border-t-4 border-red-600 hover:scale-[1.02] transition cursor-pointer" onclick="selectDeck('sfm')">
+                <div>
+                  <span class="text-xs text-red-500 font-bold uppercase tracking-wider block mb-2">15 Slides</span>
+                  <h3 class="text-xl font-outfit font-bold text-white mb-2">Sales Performance</h3>
+                  <p class="text-slate-400 text-sm">Focuses on target planning, relationship ownership boundaries, multi-layered credit splitting, and automated team incentive payouts.</p>
+                </div>
+                <div class="mt-6 flex justify-between items-center">
+                  <span class="text-xs text-red-500 font-bold">Start Sales Deck →</span>
+                  <span class="px-2 py-0.5 rounded bg-red-500/10 text-red-400 text-[10px] font-bold uppercase">Performance</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Operations View Group -->
+          <!-- Operations Center Group -->
           <div class="space-y-3">
             <h2 class="text-lg font-outfit font-extrabold text-blue-400 flex items-center gap-2 border-b border-white/5 pb-2">
-              <span>⚙️</span> Operations View
+              <span>⚙️</span> Operations Center
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <!-- Manager Deck -->
@@ -337,10 +356,10 @@
             </div>
           </div>
 
-          <!-- Technical View Group -->
+          <!-- Technical Center Group -->
           <div class="space-y-3">
             <h2 class="text-lg font-outfit font-extrabold text-purple-400 flex items-center gap-2 border-b border-white/5 pb-2">
-              <span>🛡️</span> Technical View
+              <span>🛡️</span> Technical Center
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <!-- Technical Deck -->
@@ -443,6 +462,7 @@
             <li>4 - 8 weeks: Optimal cover. Keep monitoring.</li>
             <li>&gt; 12 weeks: Overstocked. Trigger sales campaigns or return to supplier.</li>
           </ul>
+          <p class="text-[10px] text-slate-500 italic mt-2">*Note: Production thresholds are configured dynamically in SMRITI PSV Settings to match brand-specific buffers.*</p>
         </div>
       </div>
 
@@ -3021,7 +3041,7 @@
               <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col items-center text-center space-y-2">
                 <div class="w-10 h-10 rounded-full bg-indigo-500/15 text-indigo-400 flex items-center justify-center font-bold font-outfit text-sm">5</div>
                 <span class="font-outfit font-bold text-xs text-white">Checkout Scan</span>
-                <p class="text-[10px] text-slate-400 leading-relaxed">Scan checkouts trigger pricing and stock count updates instantly in 0.8 seconds.</p>
+                <p class="text-[10px] text-slate-400 leading-relaxed">scan checkouts update pricing and stock count updates instantly in 0.8 seconds.</p>
               </div>
             </div>
           </div>
@@ -3259,12 +3279,12 @@
         `
       },
       {
-        title: "Warehouse Receiving Workflow",
+        title: "Warehouse Receiving Procedures",
         html: `
           <div class="max-w-6xl mx-auto space-y-4">
             <div class="text-center space-y-1">
               <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Supply Chain Verification</span>
-              <h2 class="text-3xl font-outfit font-extrabold text-white">Warehouse Receiving Workflow</h2>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Warehouse Receiving Procedures</h2>
               <p class="text-slate-400 text-xs">Verify packing slips against physical scans automatically, logging shortage variances instantly.</p>
             </div>
 
@@ -3468,7 +3488,7 @@
 
               <div class="glass-card p-5 rounded-2xl border-l-4 border-brand-blue space-y-2">
                 <h4 class="font-outfit font-bold text-white text-sm">Variant Auto-Match</h4>
-                <p class="text-xs text-slate-400 leading-relaxed">Cross-references barcodes against style, color, and size options. Mismatched codes trigger an immediate alert on the printing queue.</p>
+                <p class="text-xs text-slate-400 leading-relaxed">Cross-references barcodes against style, color, and size options. Mismatched codes prompt an immediate alert on the printing register.</p>
               </div>
 
               <div class="glass-card p-5 rounded-2xl border-l-4 border-brand-blue space-y-2">
@@ -4100,7 +4120,7 @@
             <div class="text-center space-y-1">
               <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Data Quality Auditor</span>
               <h2 class="text-3xl font-outfit font-extrabold text-white">Item Quality Auditor</h2>
-              <p class="text-slate-400 text-xs">Run automated item audits to inspect catalog anomalies. Click any alert trigger to review severity and correction steps.</p>
+              <p class="text-slate-400 text-xs">Run automated item audits to inspect catalog anomalies. Click any alert item to review severity and correction steps.</p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
@@ -4484,6 +4504,7 @@ const SLIDES_PSV = [
                   <span class="text-slate-400 text-[10px] uppercase font-bold block">Weeks of Cover (WOC)</span>
                   <div class="text-3xl font-outfit font-extrabold text-emerald-400 mt-1" id="psv-sim-woc">8.2 Weeks</div>
                   <div class="mt-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400" id="psv-sim-status">Healthy</span></div>
+                  <span class="text-[8px] text-slate-500 mt-1.5">*Production thresholds are configured dynamically in SMRITI PSV Settings.*</span>
                 </div>
               </div>
             </div>
@@ -4568,29 +4589,33 @@ const SLIDES_PSV = [
             </div>
 
             <div class="glass-card p-5 rounded-2xl max-w-xl mx-auto space-y-4">
-              <div class="grid grid-cols-4 gap-2 text-center text-xs border-b border-white/5 pb-2 font-bold text-slate-400">
-                <div>Variant Size</div>
-                <div>Mumbai Outlet</div>
-                <div>Pune Outlet</div>
-                <div>Thane Outlet</div>
-              </div>
-              <div class="grid grid-cols-4 gap-2 text-center text-xs items-center">
-                <div class="font-bold text-white">Size S</div>
-                <input type="number" id="psv-m-s" value="12" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
-                <input type="number" id="psv-p-s" value="8" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
-                <input type="number" id="psv-t-s" value="15" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
-              </div>
-              <div class="grid grid-cols-4 gap-2 text-center text-xs items-center">
-                <div class="font-bold text-white">Size M</div>
-                <input type="number" id="psv-m-m" value="22" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
-                <input type="number" id="psv-p-m" value="14" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
-                <input type="number" id="psv-t-m" value="19" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
-              </div>
-              <div class="grid grid-cols-4 gap-2 text-center text-xs items-center">
-                <div class="font-bold text-white">Size L</div>
-                <input type="number" id="psv-m-l" value="5" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
-                <input type="number" id="psv-p-l" value="0" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
-                <input type="number" id="psv-t-l" value="12" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+              <div class="overflow-x-auto w-full">
+                <div class="min-w-[400px] space-y-4">
+                  <div class="grid grid-cols-4 gap-2 text-center text-xs border-b border-white/5 pb-2 font-bold text-slate-400">
+                    <div>Variant Size</div>
+                    <div>Mumbai Outlet</div>
+                    <div>Pune Outlet</div>
+                    <div>Thane Outlet</div>
+                  </div>
+                  <div class="grid grid-cols-4 gap-2 text-center text-xs items-center">
+                    <div class="font-bold text-white">Size S</div>
+                    <input type="number" id="psv-m-s" value="12" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+                    <input type="number" id="psv-p-s" value="8" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+                    <input type="number" id="psv-t-s" value="15" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+                  </div>
+                  <div class="grid grid-cols-4 gap-2 text-center text-xs items-center">
+                    <div class="font-bold text-white">Size M</div>
+                    <input type="number" id="psv-m-m" value="22" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+                    <input type="number" id="psv-p-m" value="14" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+                    <input type="number" id="psv-t-m" value="19" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+                  </div>
+                  <div class="grid grid-cols-4 gap-2 text-center text-xs items-center">
+                    <div class="font-bold text-white">Size L</div>
+                    <input type="number" id="psv-m-l" value="5" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+                    <input type="number" id="psv-p-l" value="0" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+                    <input type="number" id="psv-t-l" value="12" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+                  </div>
+                </div>
               </div>
               <div class="border-t border-white/5 pt-3 flex justify-between items-center text-xs font-bold">
                 <span class="text-slate-400">Total Network Stock:</span>
@@ -4920,6 +4945,1425 @@ const SLIDES_PSV = [
       }
     ];
 
+const SLIDES_CGE = [
+      {
+        title: "Customer Intelligence & Growth",
+        html: `
+          <div class="max-w-4xl mx-auto text-center space-y-6">
+            <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-lime-500/10 border border-lime-500/20 text-lime-400 font-bold text-sm tracking-wider uppercase mb-2">
+              Customer Intelligence &amp; Growth Center
+            </div>
+            <h1 class="text-5xl font-outfit font-extrabold text-white">SMRITI Customer Growth</h1>
+            <p class="text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
+              Unlock customer retention, identify high-value VIP shoppers, prevent churn, and drive revenue expansion.
+            </p>
+            
+            <div class="glass-card max-w-lg mx-auto p-5 rounded-2xl border-accent space-y-4 text-xs mt-6">
+              <div class="border-b border-white/5 pb-2 text-slate-400 font-bold uppercase tracking-wider">AITDL Founder Commitment</div>
+              <div class="flex flex-col md:flex-row items-center gap-4 text-left">
+                <div class="w-16 h-16 rounded-full bg-slate-900 border border-lime-500/30 flex items-center justify-center text-2xl">👨‍💼</div>
+                <div class="space-y-1">
+                  <p class="text-sm font-bold text-white">Jawahar R. Mallah</p>
+                  <p class="text-[10px] text-slate-400">Founder &amp; Chief Architect, AITDL</p>
+                  <p class="text-[10px] text-slate-500 leading-relaxed">
+                    "Every customer health score, retention alert, and campaign forecast is fully auditable. We empower marketing and retail growth teams with total clarity and zero black boxes."
+                  </p>
+                </div>
+              </div>
+              <p class="text-[10px] text-lime-400 font-bold italic mt-2">"Light begins with learning." — Jawahar R. Mallah</p>
+            </div>
+            
+            <div class="pt-4">
+              <button onclick="nextSlide()" class="px-6 py-3 rounded-lg bg-lime-500 hover:bg-lime-600 text-white font-bold text-xs uppercase tracking-wider transition shadow-lg shadow-lime-500/20">Begin Presentation</button>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Retention & Acquisition Objections",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Retention Challenges</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Retention &amp; Acquisition Objections</h2>
+              <p class="text-slate-400 text-xs">Why standard outreach systems fail to retain customers and how SMRITI solves it.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              <div id="cge-obj-tab-churn" onclick="showCgeObjectionDetails('churn')" class="glass-card p-4 rounded-xl border border-white/5 hover:border-lime-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">📉</span>
+                <h3 class="font-bold text-white text-xs">Customer Churn</h3>
+                <p class="text-[10px] text-slate-400">High-value customers stop visiting without any visible alert.</p>
+              </div>
+              <div id="cge-obj-tab-vips" onclick="showCgeObjectionDetails('vips')" class="glass-card p-4 rounded-xl border border-white/5 hover:border-lime-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">👑</span>
+                <h3 class="font-bold text-white text-xs">Inactive VIPs</h3>
+                <p class="text-[10px] text-slate-400">Failure to identify and engage high-potential shoppers early.</p>
+              </div>
+              <div id="cge-obj-tab-campaigns" onclick="showCgeObjectionDetails('campaigns')" class="glass-card p-4 rounded-xl border border-white/5 hover:border-lime-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">💬</span>
+                <h3 class="font-bold text-white text-xs">Poor Campaign Conversions</h3>
+                <p class="text-[10px] text-slate-400">Generic messages cause high opt-outs and low response.</p>
+              </div>
+            </div>
+
+            <div id="cge-obj-detail-box" class="glass-card p-5 rounded-2xl border border-lime-500/30 bg-lime-950/10 hidden mt-4">
+              <div id="cge-obj-detail-content" class="text-xs text-slate-300">
+                <!-- Click one of the cards above to see details -->
+              </div>
+            </div>
+            <p class="text-center text-[11px] text-slate-500">Click one of the objections above to trace its operational and business impacts.</p>
+          </div>
+        `
+      },
+      {
+        title: "Customer Profile Explorer",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">360-Degree Profile</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Customer Profile Explorer</h2>
+              <p class="text-slate-400 text-xs">A unified customer journey card detailing transaction histories and communications.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              <div class="lg:col-span-5 glass-card p-5 rounded-2xl border border-white/5 space-y-4 text-xs">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-full bg-lime-500/10 border border-lime-500/30 flex items-center justify-center text-xl font-bold">👩</div>
+                  <div>
+                    <h3 class="font-bold text-white text-sm">Sunita Sharma</h3>
+                    <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-lime-500/10 text-lime-400">VIP Customer</span>
+                  </div>
+                </div>
+                <div class="space-y-2 border-t border-white/5 pt-3">
+                  <div class="flex justify-between">
+                    <span class="text-slate-400">Mobile:</span>
+                    <span class="text-white">+91 98765 43210</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-400">Total Visits:</span>
+                    <span class="text-white">24 times</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-400">LTV Value:</span>
+                    <span class="text-emerald-400 font-bold">₹48,500</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Customer Journey Timeline -->
+              <div class="lg:col-span-7 glass-card p-5 rounded-2xl border border-white/5 space-y-3">
+                <div class="text-teal-400 font-bold text-sm">Customer Journey Timeline</div>
+                <div class="grid grid-cols-6 gap-2 text-center text-[10px] relative pt-2">
+                  <div class="space-y-1 relative z-10">
+                    <div class="w-7 h-7 rounded-full bg-lime-500 text-white flex items-center justify-center font-bold mx-auto">1</div>
+                    <span class="font-bold text-white block">Joined</span>
+                    <span class="text-slate-400 block">Day 1</span>
+                    <span class="text-[9px] text-slate-500 font-semibold block mt-0.5">₹0</span>
+                  </div>
+                  <div class="space-y-1 relative z-10">
+                    <div class="w-7 h-7 rounded-full bg-lime-500 text-white flex items-center justify-center font-bold mx-auto">2</div>
+                    <span class="font-bold text-white block">First Purchase</span>
+                    <span class="text-slate-400 block">Day 3</span>
+                    <span class="text-[9px] text-lime-400 font-semibold block mt-0.5">₹2,500</span>
+                  </div>
+                  <div class="space-y-1 relative z-10">
+                    <div class="w-7 h-7 rounded-full bg-lime-500 text-white flex items-center justify-center font-bold mx-auto">3</div>
+                    <span class="font-bold text-white block">Repeat Purchase</span>
+                    <span class="text-slate-400 block">Month 1</span>
+                    <span class="text-[9px] text-lime-400 font-semibold block mt-0.5">₹8,000</span>
+                  </div>
+                  <div class="space-y-1 relative z-10">
+                    <div class="w-7 h-7 rounded-full bg-lime-500 text-white flex items-center justify-center font-bold mx-auto">4</div>
+                    <span class="font-bold text-white block">VIP</span>
+                    <span class="text-slate-400 block">Month 6</span>
+                    <span class="text-[9px] text-lime-400 font-semibold block mt-0.5">₹45,000</span>
+                  </div>
+                  <div class="space-y-1 relative z-10">
+                    <div class="w-7 h-7 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold mx-auto">5</div>
+                    <span class="font-bold text-white block">Dormant</span>
+                    <span class="text-slate-400 block">Month 12</span>
+                    <span class="text-[8px] text-red-400 font-bold block mt-0.5 bg-red-500/10 px-1 py-0.5 rounded">Risk Detected</span>
+                  </div>
+                  <div class="space-y-1 relative z-10">
+                    <div class="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold mx-auto">6</div>
+                    <span class="font-bold text-white block">Recovered</span>
+                    <span class="text-slate-400 block">Month 13</span>
+                    <span class="text-[9px] text-emerald-400 font-bold block mt-0.5">₹52,000</span>
+                  </div>
+                  <div class="absolute top-[22px] left-[8%] right-[8%] h-0.5 bg-white/10 z-0"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Customer Health Score",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Explainable Growth Metrics</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Customer Health Score</h2>
+              <p class="text-slate-400 text-xs">Verify explainable health scores. Toggle parameters to see the live math calculation.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              <div class="lg:col-span-6 space-y-4">
+                <div class="text-lime-400 font-bold text-xs uppercase tracking-wider mb-2">Select Active Parameters</div>
+                <div class="grid grid-cols-1 gap-3">
+                  <!-- Parameter 1: Repeat Purchase -->
+                  <div id="cge-card-repeat" onclick="toggleCgeHealthParam('repeat')" class="glass-card p-4 rounded-xl border border-lime-500 bg-lime-500/10 transition cursor-pointer select-none flex justify-between items-center">
+                    <div>
+                      <h3 class="font-bold text-white text-sm">Repeat Purchase</h3>
+                      <p class="text-[10px] text-slate-400 mt-1">Tracks typical cycle repurchases.</p>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-2xl font-outfit font-extrabold text-lime-400 block">40%</span>
+                      <span class="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase bg-lime-500/15 text-lime-400 block mt-1" id="cge-badge-repeat">Active</span>
+                    </div>
+                  </div>
+                  <!-- Parameter 2: Visit Frequency -->
+                  <div id="cge-card-visit" onclick="toggleCgeHealthParam('visit')" class="glass-card p-4 rounded-xl border border-lime-500 bg-lime-500/10 transition cursor-pointer select-none flex justify-between items-center">
+                    <div>
+                      <h3 class="font-bold text-white text-sm">Visit Frequency</h3>
+                      <p class="text-[10px] text-slate-400 mt-1">Consistency of store visits.</p>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-2xl font-outfit font-extrabold text-lime-400 block">40%</span>
+                      <span class="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase bg-lime-500/15 text-lime-400 block mt-1" id="cge-badge-visit">Active</span>
+                    </div>
+                  </div>
+                  <!-- Parameter 3: Engagement -->
+                  <div id="cge-card-engage" onclick="toggleCgeHealthParam('engage')" class="glass-card p-4 rounded-xl border border-lime-500 bg-lime-500/10 transition cursor-pointer select-none flex justify-between items-center">
+                    <div>
+                      <h3 class="font-bold text-white text-sm">Engagement</h3>
+                      <p class="text-[10px] text-slate-400 mt-1">Campaign click-through interaction.</p>
+                    </div>
+                    <div class="text-right">
+                      <span class="text-2xl font-outfit font-extrabold text-lime-400 block">20%</span>
+                      <span class="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase bg-lime-500/15 text-lime-400 block mt-1" id="cge-badge-engage">Active</span>
+                    </div>
+                  </div>
+                </div>
+                <!-- Hidden checkboxes for calculator script -->
+                <input type="checkbox" id="cge-health-repeat" checked class="hidden" onchange="calcCgeHealth()">
+                <input type="checkbox" id="cge-health-visit" checked class="hidden" onchange="calcCgeHealth()">
+                <input type="checkbox" id="cge-health-engage" checked class="hidden" onchange="calcCgeHealth()">
+              </div>
+
+              <div class="lg:col-span-6 flex flex-col justify-center">
+                <div class="glass-card p-5 rounded-2xl border border-lime-500/20 bg-lime-950/5 flex flex-col justify-center text-center min-h-[220px]">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Live Customer Health Score</span>
+                  <div class="text-6xl font-outfit font-extrabold text-lime-400 mt-2" id="cge-health-score">82%</div>
+                  <div class="mt-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-lime-500/10 text-lime-400" id="cge-health-badge">Vibrant</span></div>
+                  
+                  <div class="mt-4 border-t border-white/5 pt-3 text-[11px] text-slate-400 text-left space-y-1">
+                    <div class="font-bold text-white">Math Walkthrough:</div>
+                    <div id="cge-health-walk" class="font-mono text-cyan-400">Repeat Purchases (40%) + Visit Frequency (32%) + Campaign Engagement (10%) = 82%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "VIP Opportunity Detector",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">VIP Retention</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">VIP Opportunity Detector</h2>
+              <p class="text-slate-400 text-xs">Identify and protect your top 20% customers contributing to 80% of revenue.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-2">
+                <span class="text-lime-400 text-lg">👑</span>
+                <h4 class="font-outfit font-bold text-white text-base">VIP Identification</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">Automatic threshold categorization based on purchase value and visit intervals.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-2">
+                <span class="text-lime-400 text-lg">⚡</span>
+                <h4 class="font-outfit font-bold text-white text-base">Checkout Alerts</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">POS terminal alerts cashiers of VIP profiles instantly for priority treatment.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-2 bg-lime-950/10 border-lime-500/20">
+                <span class="text-lime-400 text-lg">❤️</span>
+                <h4 class="font-outfit font-bold text-white text-base">Priority Outreach</h4>
+                <p class="text-xs text-slate-300 leading-relaxed">Direct channels route priority vouchers and seasonal previews to retain VIP margins.</p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Churn Prevention",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Dormancy Mitigation</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Churn Prevention &amp; Recovery</h2>
+              <p class="text-slate-400 text-xs">Simulate SMRITI recovery actions as customer status transitions from Active to Recovered.</p>
+            </div>
+
+            <!-- Stepper Progress Bar -->
+            <div class="max-w-3xl mx-auto glass-card p-4 rounded-xl border border-white/5 relative pt-5 pb-3 mb-2">
+              <div class="grid grid-cols-4 gap-2 text-center text-[10px] relative">
+                <!-- Step 1 -->
+                <div id="cge-churn-step-1" class="space-y-1 relative z-10 cursor-pointer" onclick="setChurnStage(1)">
+                  <div class="w-8 h-8 rounded-full bg-lime-500 text-white flex items-center justify-center font-bold mx-auto border-2 border-lime-400 shadow-lg shadow-lime-500/20 transition-all duration-300" id="cge-churn-circle-1">1</div>
+                  <span class="font-bold text-white block">Active</span>
+                  <span class="text-[9px] text-lime-400 block font-medium" id="cge-churn-action-1">Thank Customer</span>
+                </div>
+                <!-- Step 2 -->
+                <div id="cge-churn-step-2" class="space-y-1 relative z-10 cursor-pointer" onclick="setChurnStage(2)">
+                  <div class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold mx-auto border border-white/5 transition-all duration-300" id="cge-churn-circle-2">2</div>
+                  <span class="font-bold text-slate-400 block" id="cge-churn-text-2">Slipping</span>
+                  <span class="text-[9px] text-slate-500 block font-medium" id="cge-churn-action-2">Reminder Campaign</span>
+                </div>
+                <!-- Step 3 -->
+                <div id="cge-churn-step-3" class="space-y-1 relative z-10 cursor-pointer" onclick="setChurnStage(3)">
+                  <div class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold mx-auto border border-white/5 transition-all duration-300" id="cge-churn-circle-3">3</div>
+                  <span class="font-bold text-slate-400 block" id="cge-churn-text-3">Dormant</span>
+                  <span class="text-[9px] text-slate-500 block font-medium" id="cge-churn-action-3">Special Offer</span>
+                </div>
+                <!-- Step 4 -->
+                <div id="cge-churn-step-4" class="space-y-1 relative z-10 cursor-pointer" onclick="setChurnStage(4)">
+                  <div class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold mx-auto border border-white/5 transition-all duration-300" id="cge-churn-circle-4">4</div>
+                  <span class="font-bold text-slate-400 block" id="cge-churn-text-4">Recovered</span>
+                  <span class="text-[9px] text-slate-500 block font-medium" id="cge-churn-action-4">Welcome Back Reward</span>
+                </div>
+                <div class="absolute top-[20px] left-[12%] right-[12%] h-[2px] bg-slate-800 z-0 transition-all duration-500" id="cge-churn-line"></div>
+              </div>
+            </div>
+
+            <!-- Two-Column content area -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto pt-1">
+              <!-- Column 1: Live Terminal logs -->
+              <div class="glass-card p-4 rounded-2xl border border-white/5 flex flex-col justify-between min-h-[190px]">
+                <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold">Churn Recovery Terminal</span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" id="churn-terminal-light"></span>
+                    <span class="text-[10px] font-bold text-emerald-400 uppercase" id="churn-terminal-status">ACTIVE</span>
+                  </div>
+                </div>
+                
+                <div class="bg-black/40 border border-white/5 rounded-lg p-3 font-mono text-[11px] text-slate-400 space-y-1.5 flex-1 my-3 overflow-y-auto min-h-[90px]" id="churn-terminal-logs">
+                  <div class="text-slate-500">[SYSTEM] Monitoring visit intervals. Next checkout check scheduled.</div>
+                  <div class="text-slate-500">[SYSTEM] Visits status: Normal. Churn Risk: Low.</div>
+                </div>
+              </div>
+
+              <!-- Column 2: Stage description & action button -->
+              <div class="glass-card p-4 rounded-2xl border border-white/5 flex flex-col justify-between min-h-[190px]">
+                <div class="text-lime-400 font-bold text-xs uppercase tracking-wider border-b border-white/5 pb-2">Current Intervention</div>
+                <div class="text-xs text-slate-300 leading-relaxed font-medium py-3 flex-1" id="churn-stage-explanation">
+                  <p>🟢 <strong>Active State:</strong> Customer visits regularly within their average 21-day order cycle. No special outreach prompted.</p>
+                </div>
+                
+                <div>
+                  <button id="btn-next-intervention" onclick="advanceChurnStage()" class="w-full py-2 rounded-lg bg-lime-500 hover:bg-lime-600 text-white font-bold text-xs uppercase tracking-wider transition shadow-lg shadow-lime-500/20">
+                    Next Intervention ➔
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Campaign Performance Tracker",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Campaign Analysis</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Campaign Performance Tracker</h2>
+              <p class="text-slate-400 text-xs">Simulate conversions to monitor ROI, opt-out percentages, and marketing spend efficiency.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              <div class="lg:col-span-5 glass-card p-5 rounded-2xl border border-white/5 space-y-4">
+                <div class="text-lime-400 font-bold text-sm">Simulate Conversions</div>
+                <div class="space-y-4 text-xs">
+                  <p class="text-slate-400 leading-relaxed">Simulate a high-performing WhatsApp campaign dispatch. Click the button to add conversions.</p>
+                  <button onclick="changeSimCampaign(20)" class="w-full py-2.5 rounded-lg bg-lime-500 hover:bg-lime-600 text-white font-bold transition">Log 20 Conversions</button>
+                  <button onclick="changeSimCampaign(-20)" class="w-full py-2.5 rounded-lg border border-white/10 text-slate-300 hover:bg-white/5 font-bold transition">Reset Simulator</button>
+                </div>
+              </div>
+
+              <div class="lg:col-span-7 grid grid-cols-2 gap-4">
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Opt-Out Rate</span>
+                  <div class="text-3xl font-outfit font-extrabold text-red-400 mt-1" id="cge-sim-opt">1.2%</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Customer unsubscribes</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Campaign Revenue Generated</span>
+                  <div class="text-3xl font-outfit font-extrabold text-emerald-400 mt-1" id="cge-sim-revenue">₹45,000</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Direct checkout values</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center col-span-2 bg-lime-950/10 border-lime-500/20">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Conversion Rate</span>
+                  <div class="text-3xl font-outfit font-extrabold text-lime-400 mt-1" id="cge-sim-conv">6.0%</div>
+                  <div class="mt-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-lime-500/10 text-lime-400" id="cge-sim-badge">Industry Bestseller</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Rewards & Loyalty Experience",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Customer Loyalty</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Rewards &amp; Loyalty Experience</h2>
+              <p class="text-slate-400 text-xs">Flexible point structures, cashback wallets, and personalized gift credits.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 max-w-4xl mx-auto">
+              <div class="glass-card p-5 rounded-2xl border border-white/5 text-center space-y-2">
+                <div class="text-2xl">💳</div>
+                <h3 class="font-outfit font-bold text-white text-base">Point Accumulations</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Earn points automatically based on basket size, product categories, or VIP multiplier levels.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 text-center space-y-2">
+                <div class="text-2xl">👛</div>
+                <h3 class="font-outfit font-bold text-white text-base">Cashback Wallet</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Direct cashback credits issued to customer profiles, redeemable instantly at checkout lanes.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 text-center space-y-2 bg-lime-950/10 border-lime-500/20">
+                <div class="text-2xl">🎁</div>
+                <h3 class="font-outfit font-bold text-white text-base">Gift Certificates</h3>
+                <p class="text-xs text-slate-300 leading-relaxed">Generate targeted digital gift codes to recover slipping VIPs or celebrate birthdays.</p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Customer Lifetime Value Calculator",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">LTV Analytics</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Customer Lifetime Value Calculator</h2>
+              <p class="text-slate-400 text-xs">Evaluate the true long-term value of your customer cohorts to justify acquisition costs.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              <div class="lg:col-span-5 glass-card p-5 rounded-2xl border border-white/5 space-y-4">
+                <div class="text-lime-400 font-bold text-sm">Customer Metrics</div>
+                <div class="space-y-4">
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold">
+                      <span>AVERAGE ORDER VALUE (AOV)</span>
+                      <span id="cge-ltv-aov-val" class="text-white">₹1,500</span>
+                    </div>
+                    <input type="range" id="input-cge-ltv-aov" min="500" max="10000" step="500" value="1500" oninput="calcCgeLtv()" class="w-full accent-lime-500 bg-slate-900 border border-white/5 rounded-lg h-2">
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold">
+                      <span>ANNUAL PURCHASE FREQUENCY</span>
+                      <span id="cge-ltv-freq-val" class="text-white">8 Times</span>
+                    </div>
+                    <input type="range" id="input-cge-ltv-freq" min="1" max="24" step="1" value="8" oninput="calcCgeLtv()" class="w-full accent-lime-500 bg-slate-900 border border-white/5 rounded-lg h-2">
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold">
+                      <span>RETENTION LIFESPAN (YEARS)</span>
+                      <span id="cge-ltv-span-val" class="text-white">3 Years</span>
+                    </div>
+                    <input type="range" id="input-cge-ltv-span" min="1" max="10" step="1" value="3" oninput="calcCgeLtv()" class="w-full accent-lime-500 bg-slate-900 border border-white/5 rounded-lg h-2">
+                  </div>
+                </div>
+              </div>
+
+              <div class="lg:col-span-7 grid grid-cols-2 gap-4">
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Annual Value</span>
+                  <div class="text-2xl font-outfit font-extrabold text-white mt-1" id="cge-ltv-annual">₹12,000</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Yearly cohort contribution</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Retention Target</span>
+                  <div class="text-2xl font-outfit font-extrabold text-teal-400 mt-1">94%</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Recommended rate</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center col-span-2 bg-lime-950/10 border-lime-500/20">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Total Customer Lifetime Value (LTV)</span>
+                  <div class="text-3xl font-outfit font-extrabold text-emerald-400 mt-1" id="cge-ltv-total">₹36,000</div>
+                  <span class="text-[9px] text-slate-400 mt-0.5 block">Total value expected from this profile</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Store Visit Frequency Dashboard",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Visits Telemetry</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Store Visit Frequency Dashboard</h2>
+              <p class="text-slate-400 text-xs">Audit cohort behaviors and configure customized interventions.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              <div class="lg:col-span-4 flex flex-col gap-2">
+                <button id="cge-vis-tab-regular" onclick="setCgeVisTab('regular')" class="w-full text-left p-3 rounded-lg border transition text-white border-lime-500 flex justify-between items-center text-xs font-bold" style="background-color: var(--accent);">
+                  <span>🟢 Regular Shoppers</span>
+                  <span>➜</span>
+                </button>
+                <button id="cge-vis-tab-occasional" onclick="setCgeVisTab('occasional')" class="w-full text-left p-3 rounded-lg border transition bg-slate-900/40 border-white/5 text-slate-400 hover:text-white flex justify-between items-center text-xs font-bold">
+                  <span>🟡 Occasional Buyers</span>
+                  <span>➜</span>
+                </button>
+                <button id="cge-vis-tab-dormant" onclick="setCgeVisTab('dormant')" class="w-full text-left p-3 rounded-lg border transition bg-slate-900/40 border-white/5 text-slate-400 hover:text-white flex justify-between items-center text-xs font-bold">
+                  <span>🔴 Dormant Profiles</span>
+                  <span>➜</span>
+                </button>
+              </div>
+
+              <div class="lg:col-span-8 glass-card p-5 rounded-2xl border border-white/5 space-y-4">
+                <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                  <h3 class="font-outfit font-bold text-white text-base" id="cge-vis-title">Regular Shoppers</h3>
+                  <span class="text-[10px] text-lime-400 font-bold uppercase bg-lime-500/10 px-2 py-0.5 rounded" id="cge-vis-badge">High Value</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                  <table class="w-full text-xs" id="cge-vis-table">
+                    <!-- Injected dynamically -->
+                  </table>
+                </div>
+                <div class="text-[10px] text-slate-500 border-t border-white/5 pt-2 mt-2" id="cge-vis-tip">Regular shoppers ensure continuous store revenue.</div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Repeat Purchase Cohort Analysis",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Cohort Analysis</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Repeat Purchase Cohort Analysis</h2>
+              <p class="text-slate-400 text-xs">Review variant size-color preferences and repeat purchase intervals.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 max-w-4xl mx-auto">
+              <div class="glass-card p-5 rounded-2xl border border-white/5 text-center space-y-2">
+                <div class="text-2xl">📊</div>
+                <h3 class="font-outfit font-bold text-white text-base">Variant Preferences</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Tracks color and size choices to align your store stocks with actual consumer fit demands.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 text-center space-y-2">
+                <div class="text-2xl">⏳</div>
+                <h3 class="font-outfit font-bold text-white text-base">Repeat Intervals</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Identifies average days elapsed between checkouts to establish optimal campaign timers.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 text-center space-y-2 bg-lime-950/10 border-lime-500/20">
+                <div class="text-2xl">❤️</div>
+                <h3 class="font-outfit font-bold text-white text-base">Category Affinity</h3>
+                <p class="text-xs text-slate-300 leading-relaxed">Groups shoppers by department affinity (Garments, Shoes) to personalize vouchers.</p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Campaign Targeting Simulator",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Segmented Outreach</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Campaign Targeting Simulator</h2>
+              <p class="text-slate-400 text-xs">Select a target cohort segment to simulate estimated conversions and revenue.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2 max-w-4xl mx-auto">
+              <div class="lg:col-span-5 glass-card p-5 rounded-2xl border border-white/5 space-y-4 flex flex-col justify-center">
+                <div class="text-lime-400 font-bold text-sm">Select Target Segment</div>
+                <select id="cge-target-segment" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-xs text-white accent-lime-500" onchange="runCgeCampaignSim()">
+                  <option value="vip">VIP Shoppers (250 members)</option>
+                  <option value="high">High Potential (400 members)</option>
+                  <option value="slipping">Slipping Profiles (600 members)</option>
+                  <option value="dormant">Dormant Cohort (800 members)</option>
+                  <option value="new">New Customers (300 members)</option>
+                </select>
+                <p class="text-[10px] text-slate-500 leading-relaxed">Sends a highly personalized WhatsApp coupon campaign tailored to the selected cohort's variant preferences.</p>
+                <button onclick="runCgeCampaignSim()" class="w-full py-2.5 rounded-lg bg-lime-500 hover:bg-lime-600 text-white font-bold transition text-xs">Send Coupon Campaign</button>
+              </div>
+
+              <div class="lg:col-span-7 grid grid-cols-2 gap-4">
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Estimated Conversion</span>
+                  <div class="text-3xl font-outfit font-extrabold text-white mt-1" id="cge-target-conv">8.5%</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Estimated conversion rate</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Estimated Opt-Outs</span>
+                  <div class="text-3xl font-outfit font-extrabold text-red-400 mt-1" id="cge-target-opt">0.4%</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Minimal customer spam impact</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center col-span-2 bg-lime-950/10 border-lime-500/20">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Estimated Reclaimed Value</span>
+                  <div class="text-3xl font-outfit font-extrabold text-emerald-400 mt-1" id="cge-target-revenue">₹42,500</div>
+                  <span class="text-[9px] text-slate-400 mt-0.5 block">Expected revenue generated from this dispatch</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Customer Growth ROI Calculator",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Return on Investment</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Retention Revenue Calculator</h2>
+              <p class="text-slate-400 text-xs">Evaluate annual revenues reclaimed by preventing VIP churn and targeting promotions.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              <div class="lg:col-span-5 glass-card p-5 rounded-2xl border border-white/5 space-y-4">
+                <div class="text-lime-400 font-bold text-sm">Growth Parameters</div>
+                <div class="space-y-4">
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold">
+                      <span>CUSTOMER REGISTRY SIZE</span>
+                      <span id="cge-roi-db-val" class="text-white">5,000</span>
+                    </div>
+                    <input type="range" id="input-cge-roi-db" min="1000" max="50000" step="1000" value="5000" oninput="calcCgeRoi()" class="w-full accent-lime-500 bg-slate-900 border border-white/5 rounded-lg h-2">
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold">
+                      <span>AVERAGE BASKET SIZE (₹)</span>
+                      <span id="cge-roi-basket-val" class="text-white">1,500</span>
+                    </div>
+                    <input type="range" id="input-cge-roi-basket" min="500" max="5000" step="100" value="1500" oninput="calcCgeRoi()" class="w-full accent-lime-500 bg-slate-900 border border-white/5 rounded-lg h-2">
+                  </div>
+                </div>
+              </div>
+
+              <div class="lg:col-span-7 grid grid-cols-2 gap-4">
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Churn Prevented</span>
+                  <div class="text-2xl font-outfit font-extrabold text-lime-400 mt-1" id="cge-roi-prevented">300 Shoppers</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">High-value VIPs preserved yearly</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Outreach Savings</span>
+                  <div class="text-2xl font-outfit font-extrabold text-lime-400 mt-1" id="cge-roi-savings">₹45,000</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Compared to generic print ads</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center col-span-2 bg-lime-950/10 border-lime-500/20">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Annual Revenue Reclaimed</span>
+                  <div class="text-3xl font-outfit font-extrabold text-emerald-400 mt-1" id="cge-roi-reclaimed">₹4,50,000</div>
+                  <span class="text-[9px] text-slate-400 mt-0.5 block">Reclaimed cash profit protected by targeted customer retention</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Why Teams Choose SMRITI Growth",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Business Outcomes</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Why Teams Choose SMRITI Growth</h2>
+              <p class="text-slate-400 text-xs">The growth engine that maximizes customer lifetime value.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-2">
+                <span class="text-lime-400 text-lg">📈</span>
+                <h4 class="font-outfit font-bold text-white text-base">Maximized LTV</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">Turn single-purchase walkins into multi-year VIPs through targeted retention campaigns.</p>
+              </div>
+
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-2">
+                <span class="text-lime-400 text-lg">💡</span>
+                <h4 class="font-outfit font-bold text-white text-base">Explainable Health Scores</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">No black box scoring. Review customer health percentages using transparent formulas.</p>
+              </div>
+
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-2">
+                <span class="text-lime-400 text-lg">⚡</span>
+                <h4 class="font-outfit font-bold text-white text-base">Frictionless Loyalty</h4>
+                <p class="text-xs text-slate-300 leading-relaxed">POS integration allows cashiers to redeem wallet cashbacks in under 2 seconds.</p>
+              </div>
+            </div>
+
+            <!-- Interactive Growth Confidence Simulator -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 pt-4 max-w-4xl mx-auto">
+              <!-- Left: Risk list with progress bars -->
+              <div class="md:col-span-7 glass-card p-4 rounded-xl border border-white/5 space-y-3 text-left">
+                <div class="text-lime-400 font-bold text-[10px] uppercase tracking-wider mb-1">Growth Risk Vector Analytics</div>
+                
+                <!-- Risk 1: Retention Risk -->
+                <div class="space-y-1">
+                  <div class="flex justify-between text-[9px]">
+                    <span class="text-slate-300 font-medium">Retention Risk</span>
+                    <span class="text-red-400 font-bold text-[10px]" id="cge-risk-val-retention">78% (High)</span>
+                  </div>
+                  <div class="w-full bg-slate-950 rounded-full h-1 overflow-hidden">
+                    <div id="cge-risk-bar-retention" class="bg-red-500 h-1 transition-all duration-1000" style="width: 78%;"></div>
+                  </div>
+                </div>
+
+                <!-- Risk 2: Churn Risk -->
+                <div class="space-y-1">
+                  <div class="flex justify-between text-[9px]">
+                    <span class="text-slate-300 font-medium">Churn Risk</span>
+                    <span class="text-red-400 font-bold text-[10px]" id="cge-risk-val-churn">85% (High)</span>
+                  </div>
+                  <div class="w-full bg-slate-950 rounded-full h-1 overflow-hidden">
+                    <div id="cge-risk-bar-churn" class="bg-red-500 h-1 transition-all duration-1000" style="width: 85%;"></div>
+                  </div>
+                </div>
+
+                <!-- Risk 3: Campaign Risk -->
+                <div class="space-y-1">
+                  <div class="flex justify-between text-[9px]">
+                    <span class="text-slate-300 font-medium">Campaign Risk</span>
+                    <span class="text-amber-400 font-bold text-[10px]" id="cge-risk-val-campaign">60% (Moderate)</span>
+                  </div>
+                  <div class="w-full bg-slate-950 rounded-full h-1 overflow-hidden">
+                    <div id="cge-risk-bar-campaign" class="bg-amber-500 h-1 transition-all duration-1000" style="width: 60%;"></div>
+                  </div>
+                </div>
+
+                <!-- Risk 4: VIP Risk -->
+                <div class="space-y-1">
+                  <div class="flex justify-between text-[9px]">
+                    <span class="text-slate-300 font-medium">VIP Churn Risk</span>
+                    <span class="text-amber-400 font-bold text-[10px]" id="cge-risk-val-vip">70% (Moderate)</span>
+                  </div>
+                  <div class="w-full bg-slate-950 rounded-full h-1 overflow-hidden">
+                    <div id="cge-risk-bar-vip" class="bg-amber-500 h-1 transition-all duration-1000" style="width: 70%;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Overall Confidence Gauge & Revenue Protected -->
+              <div class="md:col-span-5 glass-card p-4 rounded-xl border border-lime-500/20 bg-lime-950/5 flex flex-col justify-between text-center min-h-[160px]">
+                <div>
+                  <span class="text-slate-400 text-[9px] uppercase font-bold block">Growth Confidence Level</span>
+                  <div class="text-4xl font-outfit font-extrabold text-red-500 mt-1 transition-colors duration-1000" id="cge-confidence-pct">35%</div>
+                  <div class="mt-1"><span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-red-500/10 text-red-400 transition-colors duration-1000" id="cge-confidence-status">High Risk Exposure</span></div>
+                </div>
+
+                <div class="border-t border-white/5 pt-2 my-2 text-[10px] text-slate-400">
+                  <span class="block text-[8px] uppercase font-bold">Estimated Revenue Protected</span>
+                  <span class="text-lg font-outfit font-extrabold text-slate-500 transition-colors duration-1000" id="cge-confidence-rev">₹0</span>
+                </div>
+
+                <div>
+                  <button id="btn-cge-mitigate" onclick="runCgeMitigationSim()" class="w-full py-2 rounded bg-lime-500 hover:bg-lime-600 text-white font-bold text-[10px] uppercase tracking-wider transition shadow-lg shadow-lime-500/20">
+                    Apply Mitigation ⚡
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Thank You",
+        html: `
+          <div class="max-w-4xl mx-auto text-center space-y-6">
+            <h1 class="text-5xl font-outfit font-extrabold text-white">Thank You</h1>
+            <p class="text-base text-slate-300">Unlock complete customer retention with SMRITI Customer Intelligence.</p>
+            
+            <div class="glass-card max-w-lg mx-auto p-5 rounded-2xl border-accent space-y-4 text-xs">
+              <div class="border-b border-white/5 pb-2 text-slate-400 font-bold uppercase tracking-wider">AITDL Founder Commitment</div>
+              <div class="flex flex-col md:flex-row items-center gap-4 text-left">
+                <div class="w-16 h-16 rounded-full bg-slate-900 border border-lime-500/30 flex items-center justify-center text-2xl">👨‍💼</div>
+                <div class="space-y-1">
+                  <p class="text-sm font-bold text-white">Jawahar R. Mallah</p>
+                  <p class="text-[10px] text-slate-400">Founder &amp; Chief Architect, AITDL</p>
+                  <p class="text-[10px] text-slate-500 leading-relaxed">
+                    "Growth begins with understanding. Our primary mission is to provide clear, auditable customer insights that build true loyalty and drive revenue expansion."
+                  </p>
+                </div>
+              </div>
+              <p class="text-[10px] text-lime-400 font-bold italic mt-2">"Light begins with learning." — Jawahar R. Mallah</p>
+            </div>
+            
+            <div class="pt-4 flex justify-center gap-4">
+              <button onclick="goToSlide(0)" class="px-5 py-2.5 rounded-lg border border-lime-500 text-lime-400 hover:bg-lime-500 hover:text-white transition font-bold text-xs uppercase">Restart Presentation</button>
+              <button onclick="exitDeck()" class="px-5 py-2.5 rounded-lg bg-lime-500 hover:bg-lime-600 text-white transition font-bold text-xs uppercase">Exit Suite</button>
+            </div>
+          </div>
+        `
+      }
+    ];
+
+
+    const SLIDES_SFM = [
+      {
+        title: "Sales Performance & Incentive Center",
+        html: `
+          <div class="max-w-4xl mx-auto text-center space-y-8">
+            <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 font-bold text-sm tracking-wider uppercase mb-2">
+              Sales Performance &amp; Incentive Center
+            </div>
+            <h1 class="text-6xl md:text-7xl font-outfit font-extrabold text-white tracking-tight leading-none">
+              SMRITI <span class="text-accent">Sales Performance</span>
+            </h1>
+            <p class="text-2xl md:text-3xl font-light text-slate-300 italic">"Maximizing Representative Value &amp; Directing Sales Team Growth"</p>
+            <div class="h-[1px] w-48 bg-gradient-to-r from-transparent via-red-500 to-transparent mx-auto"></div>
+            <div class="pt-6 space-y-2">
+              <p class="text-xs text-slate-500 uppercase tracking-widest font-bold">Powered by AITDL Network</p>
+              <div class="glass-card max-w-md mx-auto p-4 rounded-xl border border-red-500/20 bg-red-950/5">
+                <p class="text-sm font-bold text-white">Jawahar R. Mallah</p>
+                <p class="text-xs text-slate-400">Founder &amp; Chief Architect, AITDL</p>
+                <p class="text-[11px] text-slate-500 mt-1">20+ Years Experience in Retail Technology, POS Solutions, &amp; Enterprise Design</p>
+              </div>
+              <p class="text-xs text-accent italic mt-2">"Light begins with learning." — Jawahar R. Mallah</p>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Sales Team Challenges",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-red-500 font-bold uppercase tracking-wider text-[10px]">Team Alignment</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Sales Team Challenges</h2>
+              <p class="text-slate-400 text-xs">Why standard commission management setups fail to align sales teams and how SMRITI resolves them.</p>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
+              <div onclick="showSfmObjectionDetails('lost')" id="sfm-obj-tab-lost" class="glass-card p-4 rounded-xl border border-white/5 hover:border-red-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">📉</span>
+                <span class="font-outfit font-bold text-xs text-white block">Lost Leads</span>
+              </div>
+              <div onclick="showSfmObjectionDetails('ownership')" id="sfm-obj-tab-ownership" class="glass-card p-4 rounded-xl border border-white/5 hover:border-red-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">👥</span>
+                <span class="font-outfit font-bold text-xs text-white block">Unclear Ownership</span>
+              </div>
+              <div onclick="showSfmObjectionDetails('misses')" id="sfm-obj-tab-misses" class="glass-card p-4 rounded-xl border border-white/5 hover:border-red-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">🎯</span>
+                <span class="font-outfit font-bold text-xs text-white block">Target Misses</span>
+              </div>
+              <div onclick="showSfmObjectionDetails('disputes')" id="sfm-obj-tab-disputes" class="glass-card p-4 rounded-xl border border-white/5 hover:border-red-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">💸</span>
+                <span class="font-outfit font-bold text-xs text-white block">Incentive Disputes</span>
+              </div>
+              <div onclick="showSfmObjectionDetails('overlap')" id="sfm-obj-tab-overlap" class="glass-card p-4 rounded-xl border border-white/5 hover:border-red-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">🗺️</span>
+                <span class="font-outfit font-bold text-xs text-white block">Territory Overlap</span>
+              </div>
+            </div>
+            <div id="sfm-obj-detail-box" class="glass-card p-5 rounded-2xl border border-red-500/20 bg-red-950/5 min-h-[140px] flex flex-col justify-center">
+              <div id="sfm-obj-detail-content" class="text-xs text-slate-300">
+                Click any of the challenge cards above to analyze how SMRITI aligns team operations.
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Sales Risk Detector",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Strategic Risk Mitigation</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Sales Risk Detector</h2>
+              <p class="text-slate-400 text-xs">Identify core operational risks in your sales force and apply coaching plans to boost performance.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              <div class="lg:col-span-5 glass-card p-5 rounded-2xl border border-white/5 space-y-4 flex flex-col justify-between">
+                <div class="space-y-3">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Sales Confidence Meter</span>
+                  <div class="flex items-center gap-4">
+                    <div class="text-4xl font-outfit font-extrabold text-red-500 transition-colors duration-1000" id="sfm-risk-percent">35%</div>
+                    <div id="sfm-risk-status" class="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-red-500/10 text-red-400 transition-colors duration-1000">High Risk Exposure</div>
+                  </div>
+                  <p class="text-[11px] text-slate-400 leading-relaxed" id="sfm-risk-desc">Representative motivation is low due to target misalignment and unclear credit distributions.</p>
+                </div>
+                <button onclick="triggerSfmCoaching(this)" class="w-full py-2.5 rounded bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider transition shadow-lg shadow-red-600/20">Apply Coaching Plan ⚡</button>
+              </div>
+              <div class="lg:col-span-7 glass-card p-5 rounded-2xl border border-white/5 space-y-3">
+                <span class="text-slate-400 text-[10px] uppercase font-bold block">Core Team Risk Indicators</span>
+                <div class="space-y-3 pt-1">
+                  <div>
+                    <div class="flex justify-between text-[10px] font-bold mb-1">
+                      <span class="text-slate-400">TARGET RISKS</span>
+                      <span id="sfm-val-target" class="text-red-400">78% (Critical)</span>
+                    </div>
+                    <div class="bg-slate-950 rounded-full h-1 overflow-hidden border border-white/5">
+                      <div id="sfm-bar-target" class="bg-red-500 h-1 transition-all duration-1000" style="width: 78%;"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[10px] font-bold mb-1">
+                      <span class="text-slate-400">TERRITORY RISKS</span>
+                      <span id="sfm-val-territory" class="text-red-400">82% (Critical)</span>
+                    </div>
+                    <div class="bg-slate-950 rounded-full h-1 overflow-hidden border border-white/5">
+                      <div id="sfm-bar-territory" class="bg-red-500 h-1 transition-all duration-1000" style="width: 82%;"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[10px] font-bold mb-1">
+                      <span class="text-slate-400">REPRESENTATIVE ATTRITION RISKS</span>
+                      <span id="sfm-val-attrition" class="text-amber-400">60% (Moderate)</span>
+                    </div>
+                    <div class="bg-slate-950 rounded-full h-1 overflow-hidden border border-white/5">
+                      <div id="sfm-bar-attrition" class="bg-amber-500 h-1 transition-all duration-1000" style="width: 60%;"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-[10px] font-bold mb-1">
+                      <span class="text-slate-400">COMMISSION DISPUTE RISKS</span>
+                      <span id="sfm-val-dispute" class="text-red-400">72% (Critical)</span>
+                    </div>
+                    <div class="bg-slate-950 rounded-full h-1 overflow-hidden border border-white/5">
+                      <div id="sfm-bar-dispute" class="bg-red-500 h-1 transition-all duration-1000" style="width: 72%;"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Sales Growth Framework",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Team Coverage</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Sales Growth Framework &amp; Territory Map</h2>
+              <p class="text-slate-400 text-xs">Direct representative activities to move accounts from initial contact to high-volume repeat business.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-3">
+                <span class="text-slate-400 text-[10px] uppercase font-bold block">Sales Growth Framework</span>
+                <div class="space-y-2 pt-1 font-sans text-xs">
+                  <div class="flex items-center gap-3 p-2 rounded bg-white/5 border border-white/5">
+                    <span class="w-5 h-5 rounded-full bg-red-500/20 text-red-400 font-bold flex items-center justify-center text-[10px]">1</span>
+                    <div>
+                      <span class="font-bold text-white">Lead Phase</span>
+                      <p class="text-[10px] text-slate-400">Capture initial contact and route to active representatives.</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3 p-2 rounded bg-white/5 border border-white/5">
+                    <span class="w-5 h-5 rounded-full bg-red-500/20 text-red-400 font-bold flex items-center justify-center text-[10px]">2</span>
+                    <div>
+                      <span class="font-bold text-white">Customer Phase</span>
+                      <p class="text-[10px] text-slate-400">Account profiles generated with defined ownership bounds.</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3 p-2 rounded bg-white/5 border border-white/5">
+                    <span class="w-5 h-5 rounded-full bg-red-500/20 text-red-400 font-bold flex items-center justify-center text-[10px]">3</span>
+                    <div>
+                      <span class="font-bold text-white">Order Phase</span>
+                      <p class="text-[10px] text-slate-400">First transactions registered and splits calculated instantly.</p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3 p-2 rounded bg-white/5 border border-white/5">
+                    <span class="w-5 h-5 rounded-full bg-red-500/20 text-red-400 font-bold flex items-center justify-center text-[10px]">4</span>
+                    <div>
+                      <span class="font-bold text-white">Repeat Business</span>
+                      <p class="text-[10px] text-slate-400">Customer loyalty programs activated for retention.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-3">
+                <span class="text-slate-400 text-[10px] uppercase font-bold block">Regional Representative Distribution</span>
+                <div class="space-y-3 pt-2 text-xs">
+                  <div class="flex justify-between items-center p-2 rounded bg-slate-900/40 border border-white/5">
+                    <span class="font-bold text-white">North Region</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400">12 Representatives (Active)</span>
+                  </div>
+                  <div class="flex justify-between items-center p-2 rounded bg-slate-900/40 border border-white/5">
+                    <span class="font-bold text-white">South Region</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400">8 Representatives (Active)</span>
+                  </div>
+                  <div class="flex justify-between items-center p-2 rounded bg-slate-900/40 border border-white/5">
+                    <span class="font-bold text-white">West Region</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-500/10 text-red-400">15 Representatives (High Growth)</span>
+                  </div>
+                  <div class="flex justify-between items-center p-2 rounded bg-slate-900/40 border border-white/5">
+                    <span class="font-bold text-white">East Region</span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-500/10 text-amber-400">6 Representatives (Needs Attention)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Territory Ownership Map",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Relationship Boundaries</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Customer Relationship Ownership</h2>
+              <p class="text-slate-400 text-xs">Prevent conflicts by establishing clear, timeline-bound account assignments with automatic transfer guards.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
+              <div class="glass-card p-5 rounded-2xl border border-white/5 text-center space-y-2">
+                <div class="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-xs font-bold text-red-400 mx-auto">1</div>
+                <h3 class="font-outfit font-bold text-white text-sm">Assigned</h3>
+                <p class="text-[10px] text-slate-400">Account is linked to a primary representative on a specific starting date.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 text-center space-y-2">
+                <div class="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-xs font-bold text-red-400 mx-auto">2</div>
+                <h3 class="font-outfit font-bold text-white text-sm">Active</h3>
+                <p class="text-[10px] text-slate-400">Sales credits flow automatically to the active representatives without manual inputs.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 text-center space-y-2 border-l-4 border-l-red-500 bg-red-950/5">
+                <div class="w-8 h-8 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center text-xs font-bold text-red-400 mx-auto">3</div>
+                <h3 class="font-outfit font-bold text-white text-sm">Transferred</h3>
+                <p class="text-[10px] text-slate-400">Departing representative records close out at yesterday, new representative starts today.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 text-center space-y-2">
+                <div class="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-xs font-bold text-red-400 mx-auto">4</div>
+                <h3 class="font-outfit font-bold text-white text-sm">Retained</h3>
+                <p class="text-[10px] text-slate-400">Historical records are locked, and customer relationships transition smoothly.</p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Customer Relationship Ownership",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Goal Setting</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Sales Target Planning</h2>
+              <p class="text-slate-400 text-xs">Align representative priorities across monthly, quarterly, and annual targets to drive growth.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-3">
+                <span class="text-xs text-red-400 font-bold uppercase block">Monthly Horizons</span>
+                <p class="text-slate-300 text-xs leading-relaxed">Focuses on high-frequency goals, seasonal launches, and immediate sales velocity tracking. Keeps representatives responsive.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-3 border-t-4 border-red-500 bg-red-950/5">
+                <span class="text-xs text-red-400 font-bold uppercase block">Quarterly Horizons</span>
+                <p class="text-slate-300 text-xs leading-relaxed">Aligns with regional marketing campaigns, clearance drives, and bulk distribution incentives to build momentum.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-3">
+                <span class="text-xs text-red-400 font-bold uppercase block">Annual Horizons</span>
+                <p class="text-slate-300 text-xs leading-relaxed">Focused on strategic business growth, territory market share targets, customer retention values, and career promotions.</p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Sales Target Planning",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Real-Time Progress</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Achievement Tracker</h2>
+              <p class="text-slate-400 text-xs">Keep sales managers and area representatives motivated with real-time target status bars.</p>
+            </div>
+            <div class="max-w-xl mx-auto glass-card p-6 rounded-2xl border border-white/5 space-y-4">
+              <div>
+                <div class="flex justify-between text-xs font-bold mb-1">
+                  <span class="text-slate-400 uppercase">MONTHLY REVENUE TARGET</span>
+                  <span class="text-white">₹10,00,000</span>
+                </div>
+                <div class="bg-slate-950 rounded-full h-2 overflow-hidden border border-white/5">
+                  <div class="bg-red-600 h-2" style="width: 100%;"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-xs font-bold mb-1">
+                  <span class="text-slate-400 uppercase">CURRENTLY ACHIEVED</span>
+                  <span class="text-emerald-400 font-bold">₹7,50,000 (75%)</span>
+                </div>
+                <div class="bg-slate-950 rounded-full h-2 overflow-hidden border border-white/5">
+                  <div class="bg-emerald-500 h-2 transition-all duration-1000" style="width: 75%;"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-xs font-bold mb-1">
+                  <span class="text-slate-400 uppercase">REMAINING GAP</span>
+                  <span class="text-red-400 font-bold">₹2,50,000 (25%)</span>
+                </div>
+                <div class="bg-slate-950 rounded-full h-2 overflow-hidden border border-white/5">
+                  <div class="bg-red-500/30 h-2" style="width: 25%;"></div>
+                </div>
+              </div>
+              <div class="text-center pt-2 text-xs font-bold text-emerald-400">
+                ✨ Team is currently on track to exceed monthly minimum thresholds.
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Achievement Tracker",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Calculations Simulator</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Interactive Credit Split Calculator</h2>
+              <p class="text-slate-400 text-xs">Simulate how sales credits are shared when multiple representatives collaborate on a deal.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              <div class="lg:col-span-5 glass-card p-5 rounded-2xl border border-white/5 space-y-4">
+                <div class="text-red-400 font-bold text-sm">Split Inputs</div>
+                <div class="space-y-4">
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold">
+                      <span>INVOICE VALUE (₹)</span>
+                      <span id="sfm-split-val-display" class="text-white">₹1,00,000</span>
+                    </div>
+                    <input type="range" id="input-sfm-split-val" min="10000" max="500000" step="10000" value="100000" oninput="calcSfmSplit()" class="w-full accent-red-600 bg-slate-900 border border-white/5 rounded-lg h-2">
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold">
+                      <span>PRIMARY REPRESENTATIVE (%)</span>
+                      <span id="sfm-split-pri-display" class="text-white">70%</span>
+                    </div>
+                    <input type="range" id="input-sfm-split-pri" min="0" max="100" step="5" value="70" oninput="calcSfmSplit('pri')" class="w-full accent-red-600 bg-slate-900 border border-white/5 rounded-lg h-2">
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold">
+                      <span>SECONDARY REPRESENTATIVE (%)</span>
+                      <span id="sfm-split-sec-display" class="text-white">30%</span>
+                    </div>
+                    <input type="range" id="input-sfm-split-sec" min="0" max="100" step="5" value="30" oninput="calcSfmSplit('sec')" class="w-full accent-red-600 bg-slate-900 border border-white/5 rounded-lg h-2">
+                  </div>
+                </div>
+              </div>
+              <div class="lg:col-span-7 grid grid-cols-2 gap-4">
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Primary Representative Credit</span>
+                  <div class="text-2xl font-outfit font-extrabold text-red-500 mt-1" id="sfm-split-pri-credit">₹70,000</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Allocated to account manager</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Secondary Representative Credit</span>
+                  <div class="text-2xl font-outfit font-extrabold text-red-400 mt-1" id="sfm-split-sec-credit">₹30,000</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Allocated to assistant manager</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center col-span-2 bg-red-950/10 border-red-500/20">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Shared Credit Summary</span>
+                  <div class="text-xl font-outfit font-extrabold text-emerald-400 mt-1" id="sfm-split-total">70% / 30% Split Configured</div>
+                  <span class="text-[9px] text-slate-400 mt-0.5 block">Sales credit distributed in full compliance with store rules</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Interactive Credit Split Calculator",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Sales Integrity</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Commission Transparency Center</h2>
+              <p class="text-slate-400 text-xs">Build sales team trust by making every calculation audit-safe and explainable.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 text-center">
+              <div class="glass-card p-4 rounded-xl border border-white/5 space-y-1.5">
+                <span class="text-[10px] text-slate-500 uppercase font-bold block">1. Sales Value</span>
+                <div class="text-lg font-outfit font-bold text-white">₹1,00,000</div>
+                <p class="text-[9px] text-slate-400">Total invoice value registered by representative.</p>
+              </div>
+              <div class="glass-card p-4 rounded-xl border border-white/5 space-y-1.5 border-t-2 border-red-500">
+                <span class="text-[10px] text-slate-500 uppercase font-bold block">2. Achievement Rate</span>
+                <div class="text-lg font-outfit font-bold text-white">100%</div>
+                <p class="text-[9px] text-slate-400">Representative performance matches assigned monthly target.</p>
+              </div>
+              <div class="glass-card p-4 rounded-xl border border-white/5 space-y-1.5 border-t-2 border-red-500">
+                <span class="text-[10px] text-slate-500 uppercase font-bold block">3. Commission Rate</span>
+                <div class="text-lg font-outfit font-bold text-white">5.0%</div>
+                <p class="text-[9px] text-slate-400">Incentive percentage mapped to target tier slab.</p>
+              </div>
+              <div class="glass-card p-4 rounded-xl border border-white/5 space-y-1.5 bg-red-950/10 border-red-500/20">
+                <span class="text-[10px] text-slate-500 uppercase font-bold block">4. Final Payout</span>
+                <div class="text-lg font-outfit font-bold text-emerald-400">₹5,000</div>
+                <p class="text-[9px] text-slate-400">Calculated payout released after validation.</p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Commission Transparency Center",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Net Payout Adjustments</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Commission Adjustment Simulator</h2>
+              <p class="text-slate-400 text-xs">Simulate sales modifications (such as transaction returns or credit corrections) to see net adjustments on representative payouts.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              <div class="lg:col-span-5 glass-card p-5 rounded-2xl border border-white/5 space-y-4">
+                <div class="text-red-400 font-bold text-sm">Adjustment Parameters</div>
+                <div class="space-y-4">
+                  <div>
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold mb-1">
+                      <span>BASE INCENTIVE (₹)</span>
+                      <span class="text-white">₹50,000</span>
+                    </div>
+                    <div class="bg-slate-900 p-2 rounded font-mono text-xs text-center border border-white/5">₹50,000</div>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold">
+                      <span>RETURN / ADJUSTMENT (₹)</span>
+                      <span id="sfm-adj-display" class="text-red-400">-₹12,000</span>
+                    </div>
+                    <input type="range" id="input-sfm-adj" min="0" max="30000" step="2000" value="12000" oninput="calcSfmAdjustment()" class="w-full accent-red-600 bg-slate-900 border border-white/5 rounded-lg h-2">
+                  </div>
+                </div>
+              </div>
+              <div class="lg:col-span-7 flex flex-col justify-center gap-4">
+                <div class="glass-card p-5 rounded-xl border border-white/5 text-center space-y-1">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Incentive Adjustment</span>
+                  <div class="text-2xl font-outfit font-extrabold text-red-500 mt-1" id="sfm-adj-payout-deduction">-₹600</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Calculated at 5% rate on returned value</span>
+                </div>
+                <div class="glass-card p-5 rounded-xl border border-red-500/20 bg-red-950/10 text-center space-y-1">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Net Adjusted Payout</span>
+                  <div class="text-3xl font-outfit font-extrabold text-emerald-400 mt-1" id="sfm-adj-net-payout">₹49,400</div>
+                  <span class="text-[9px] text-slate-300 mt-0.5 block">Net commission payout after return adjustment</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Commission Adjustment Simulator",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Multiplier Simulator</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Target Achievement Simulator</h2>
+              <p class="text-slate-400 text-xs">Simulate actual sales performance against target to view dynamic level changes.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              <div class="lg:col-span-5 glass-card p-5 rounded-2xl border border-white/5 space-y-4">
+                <div class="text-red-400 font-bold text-sm">Simulation Inputs</div>
+                <div class="space-y-4 font-sans text-xs">
+                  <div>
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold mb-1">
+                      <span>MONTHLY TARGET (₹)</span>
+                      <span class="text-white">₹10,00,000</span>
+                    </div>
+                    <div class="bg-slate-900 p-2 rounded font-mono text-xs text-center border border-white/5">₹10,00,000</div>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold">
+                      <span>ACTUAL SALES CREDIT (₹)</span>
+                      <span id="sfm-target-sim-sales-display" class="text-white">₹12,50,000</span>
+                    </div>
+                    <input type="range" id="input-sfm-target-sim-sales" min="400000" max="1800000" step="50000" value="1250000" oninput="calcSfmTargetSim()" class="w-full accent-red-600 bg-slate-900 border border-white/5 rounded-lg h-2">
+                  </div>
+                </div>
+              </div>
+              <div class="lg:col-span-7 glass-card p-5 rounded-2xl border border-white/5 space-y-4">
+                <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Incentive Progression Slab</span>
+                  <div class="text-xl font-outfit font-extrabold text-red-500" id="sfm-target-sim-rate">125%</div>
+                </div>
+                <div class="grid grid-cols-3 gap-2 pt-2 text-center text-xs">
+                  <div id="sfm-slab-silver" class="p-3 rounded-lg border border-white/5 bg-slate-900/40 text-slate-400">
+                    <div class="font-bold text-white">Silver</div>
+                    <div class="text-[10px] mt-1">80% - 100%</div>
+                    <div class="text-[10px] text-slate-500 font-mono mt-1">1.0X Multiplier</div>
+                  </div>
+                  <div id="sfm-slab-gold" class="p-3 rounded-lg border border-white/5 bg-slate-900/40 text-slate-400">
+                    <div class="font-bold text-white">Gold</div>
+                    <div class="text-[10px] mt-1">100% - 120%</div>
+                    <div class="text-[10px] text-slate-500 font-mono mt-1">1.2X Multiplier</div>
+                  </div>
+                  <div id="sfm-slab-platinum" class="p-3 rounded-lg border border-white/5 bg-slate-900/40 text-slate-400">
+                    <div class="font-bold text-white">Platinum</div>
+                    <div class="text-[10px] mt-1">&gt; 120%</div>
+                    <div class="text-[10px] text-slate-500 font-mono mt-1">1.5X Multiplier</div>
+                  </div>
+                </div>
+                <div class="text-[10px] text-slate-400 text-center border-t border-white/5 pt-3" id="sfm-target-sim-summary">
+                  Actual sales of ₹12,50,000 leads to 125% achievement and qualifies for Platinum Multiplier!
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Target Achievement Simulator",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Command Center</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Sales Performance Dashboard</h2>
+              <p class="text-slate-400 text-xs">Monitor team progress, top performing regions, and regional growth trends.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2">
+              <div class="glass-card p-4 rounded-xl border border-white/5 text-center space-y-1">
+                <span class="text-slate-400 text-[10px] uppercase font-bold block">West Region</span>
+                <div class="text-xl font-outfit font-extrabold text-white">125% of Target</div>
+                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-500/10 text-emerald-400">High Growth</span>
+              </div>
+              <div class="glass-card p-4 rounded-xl border border-white/5 text-center space-y-1">
+                <span class="text-slate-400 text-[10px] uppercase font-bold block">North Region</span>
+                <div class="text-xl font-outfit font-extrabold text-white">102% of Target</div>
+                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-blue-500/10 text-blue-400">Stable</span>
+              </div>
+              <div class="glass-card p-4 rounded-xl border border-white/5 text-center space-y-1">
+                <span class="text-slate-400 text-[10px] uppercase font-bold block">East Region</span>
+                <div class="text-xl font-outfit font-extrabold text-white">74% of Target</div>
+                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-red-500/10 text-red-400">Needs Attention</span>
+              </div>
+              <div class="glass-card p-4 rounded-xl border border-white/5 text-center space-y-1">
+                <span class="text-slate-400 text-[10px] uppercase font-bold block">South Region</span>
+                <div class="text-xl font-outfit font-extrabold text-white">98% of Target</div>
+                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-blue-500/10 text-blue-400">Stable</span>
+              </div>
+            </div>
+            <div class="glass-card p-4 rounded-xl border border-white/5 text-xs text-slate-300">
+              <div class="border-b border-white/5 pb-2 text-[10px] uppercase font-bold text-slate-400">Top Performing Representatives (West Region)</div>
+              <div class="grid grid-cols-3 gap-4 pt-2 font-mono text-[11px] text-slate-400">
+                <div>• Priya Sharma: <span class="text-emerald-400 font-bold">₹14,50,000 (145%)</span></div>
+                <div>• Amit Verma: <span class="text-emerald-400 font-bold">₹12,80,000 (128%)</span></div>
+                <div>• Rahul Mehta: <span class="text-emerald-400 font-bold">₹12,10,000 (121%)</span></div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Sales Performance Dashboard",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Formula Transparency</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Explainable Incentive Formula</h2>
+              <p class="text-slate-400 text-xs">Verify payout math using SMRITI's Explainable Incentive calculation parameters.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-3">
+                <span class="text-red-400 font-bold text-xs">Target Achievement Rate Formula</span>
+                <div class="bg-black/30 border border-white/5 rounded-lg p-3 font-mono text-red-400 text-xs mt-1">
+                  Achievement Rate = Assigned Sales Credit / Monthly Target
+                </div>
+                <p class="text-slate-400 text-[11px] leading-relaxed">
+                  The basic metric to calculate representative performance. Credits are derived from client orders within the active timeline.
+                </p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-3">
+                <span class="text-red-400 font-bold text-xs">Worked Example</span>
+                <div class="bg-slate-900/60 p-3 rounded border border-white/5 font-mono text-[11px] space-y-1 text-slate-300">
+                  <div>• Assigned Sales Credit: ₹7,50,000</div>
+                  <div>• Monthly Target: ₹10,00,000</div>
+                  <div class="border-t border-white/10 pt-1 text-white font-bold mt-1">Achievement Rate: 7,50,000 / 10,00,000 = 75.0%</div>
+                </div>
+                <p class="text-slate-400 text-[10px]">
+                  Interpretation: Representative achievement is at 75%. Coaching plan is recommended to close the 25% gap.
+                </p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Explainable Incentive Formula",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Payout Estimator</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Interactive Incentive Calculator</h2>
+              <p class="text-slate-400 text-xs">Estimate final payouts based on base sales, achievement rate, and performance slabs.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              <div class="lg:col-span-5 glass-card p-5 rounded-2xl border border-white/5 space-y-4">
+                <div class="text-red-400 font-bold text-sm">Payout Settings</div>
+                <div class="space-y-4 font-sans text-xs">
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold">
+                      <span>BASE SALES VALUE (₹)</span>
+                      <span id="sfm-calc-sales-display" class="text-white">₹10,00,000</span>
+                    </div>
+                    <input type="range" id="input-sfm-calc-sales" min="200000" max="2000000" step="50000" value="1000000" oninput="calcSfmPayout()" class="w-full accent-red-600 bg-slate-900 border border-white/5 rounded-lg h-2">
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold">
+                      <span>COMMISSION SLAB</span>
+                      <span id="sfm-calc-slab-display" class="text-white">Gold (5%)</span>
+                    </div>
+                    <select id="input-sfm-calc-slab" onchange="calcSfmPayout()" class="w-full bg-slate-900 border border-white/5 rounded p-2 text-white text-xs">
+                      <option value="bronze">Bronze (2%)</option>
+                      <option value="silver">Silver (3.5%)</option>
+                      <option value="gold" selected>Gold (5%)</option>
+                      <option value="platinum">Platinum (7.5%)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="lg:col-span-7 glass-card p-5 rounded-2xl border border-white/5 flex flex-col justify-center text-center space-y-2 bg-red-950/10 border-red-500/20">
+                <span class="text-slate-400 text-[10px] uppercase font-bold block">Estimated Commission Payout</span>
+                <div class="text-4xl font-outfit font-extrabold text-emerald-400" id="sfm-calc-payout-total">₹50,000</div>
+                <span class="text-xs text-slate-300 mt-1 block" id="sfm-calc-payout-desc">Calculated at 5% Gold rate on ₹10,00,000 sales value.</span>
+                <div class="flex justify-center gap-2 pt-2 text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                  <span>Bronze</span><span>•</span><span>Silver</span><span>•</span><span class="text-red-400">Gold</span><span>•</span><span>Platinum</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Interactive Incentive Calculator",
+        html: `
+          <div class="max-w-4xl mx-auto text-center space-y-6">
+            <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 font-bold text-sm tracking-wider uppercase mb-2">
+              Leadership &amp; Governance
+            </div>
+            <h2 class="text-4xl font-outfit font-extrabold text-white">Continuous Sales Growth</h2>
+            <p class="text-base text-slate-300 max-w-xl mx-auto">
+              SMRITI Retail OS secures your sales performance, target alignment, and incentive distribution under clear governance.
+            </p>
+            <div class="glass-card max-w-lg mx-auto p-5 rounded-2xl border-accent space-y-4 text-xs">
+              <div class="border-b border-white/5 pb-2 text-slate-400 font-bold uppercase tracking-wider">AITDL Founder Commitment</div>
+              <div class="flex flex-col md:flex-row items-center gap-4 text-left">
+                <div class="w-16 h-16 rounded-full bg-slate-900 border border-red-500/30 flex items-center justify-center text-2xl">👨‍💼</div>
+                <div class="space-y-1">
+                  <p class="text-sm font-bold text-white">Jawahar R. Mallah</p>
+                  <p class="text-[10px] text-slate-400">Founder &amp; Chief Architect, AITDL</p>
+                  <p class="text-[10px] text-slate-500 leading-relaxed">
+                    "Sales growth thrives on trust. SMRITI replaces commission complexity with explainable targets and total audit trails, ensuring every representative is aligned and rewarded."
+                  </p>
+                </div>
+              </div>
+              <p class="text-[10px] text-red-400 font-bold italic mt-2">"Light begins with learning." — Jawahar R. Mallah</p>
+            </div>
+            <div class="pt-4 flex justify-center gap-4">
+              <button onclick="goToSlide(0)" class="px-5 py-2.5 rounded-lg border border-red-500 text-red-400 hover:bg-red-500 hover:text-white transition font-bold text-xs uppercase">Restart Presentation</button>
+              <button onclick="exitDeck()" class="px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition font-bold text-xs uppercase">Exit Suite</button>
+            </div>
+          </div>
+        `
+      }
+    ];
+
+
     // Presentation HUD variables
     let currentSlideIndex = 0;
     let currentDeck = [];
@@ -4939,6 +6383,8 @@ const SLIDES_PSV = [
       const btnBarcode = document.getElementById('btn-mode-barcode');
       const btnItemMaster = document.getElementById('btn-mode-itemmaster');
       const btnPsv = document.getElementById('btn-mode-psv');
+      const btnCge = document.getElementById('btn-mode-cge');
+      const btnSfm = document.getElementById('btn-mode-sfm');
 
       // Hide mode selector and display deck workspace
       modeSelectorSlide.classList.remove('active');
@@ -4959,6 +6405,10 @@ const SLIDES_PSV = [
         currentDeck = SLIDES_ITEMMASTER;
       } else if (deckType === 'psv') {
         currentDeck = SLIDES_PSV;
+      } else if (deckType === 'cge') {
+        currentDeck = SLIDES_CGE;
+      } else if (deckType === 'sfm') {
+        currentDeck = SLIDES_SFM;
       }
 
       // Show controls and navigation dots
@@ -4974,7 +6424,7 @@ const SLIDES_PSV = [
       const logoBox = document.getElementById('logo-icon-box');
 
       // Reset styles
-      [btnOwner, btnManager, btnTech, btnDistributor, btnBarcode, btnItemMaster, btnPsv].forEach(btn => {
+      [btnOwner, btnManager, btnTech, btnDistributor, btnBarcode, btnItemMaster, btnPsv, btnCge, btnSfm].forEach(btn => {
         if (btn) {
           btn.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 text-slate-400 hover:text-white bg-transparent";
         }
@@ -5044,6 +6494,24 @@ const SLIDES_PSV = [
         document.getElementById('btn-whatif-hud').classList.remove('flex');
         document.getElementById('btn-whatif-hud').classList.add('hidden');
         document.getElementById('whatif-separator').classList.add('hidden');
+      } else if (deckType === 'cge') {
+        accentColor = '#84cc16'; // Lime
+        if (btnCge) btnCge.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 bg-lime-500 text-white shadow-lg shadow-lime-500/20";
+        logoBox.className = "w-8 h-8 rounded flex items-center justify-center shadow-lg transition-all duration-300 bg-lime-500 shadow-lime-500/20";
+
+        // Hide What-If button
+        document.getElementById('btn-whatif-hud').classList.remove('flex');
+        document.getElementById('btn-whatif-hud').classList.add('hidden');
+        document.getElementById('whatif-separator').classList.add('hidden');
+      } else if (deckType === 'sfm') {
+        accentColor = '#dc2626'; // Crimson Red
+        if (btnSfm) btnSfm.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 bg-red-600 text-white shadow-lg shadow-red-600/20";
+        logoBox.className = "w-8 h-8 rounded flex items-center justify-center shadow-lg transition-all duration-300 bg-red-600 shadow-red-600/20";
+
+        // Hide What-If button
+        document.getElementById('btn-whatif-hud').classList.remove('flex');
+        document.getElementById('btn-whatif-hud').classList.add('hidden');
+        document.getElementById('whatif-separator').classList.add('hidden');
       }
 
       document.documentElement.style.setProperty('--accent', accentColor);
@@ -5098,6 +6566,14 @@ const SLIDES_PSV = [
       const btnPsv = document.getElementById('btn-mode-psv');
       if (btnPsv) {
         btnPsv.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 text-slate-400 hover:text-white bg-transparent";
+      }
+      const btnCge = document.getElementById('btn-mode-cge');
+      if (btnCge) {
+        btnCge.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 text-slate-400 hover:text-white bg-transparent";
+      }
+      const btnSfm = document.getElementById('btn-mode-sfm');
+      if (btnSfm) {
+        btnSfm.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 text-slate-400 hover:text-white bg-transparent";
       }
       // Hide What-If button
       document.getElementById('btn-whatif-hud').classList.remove('flex');
@@ -5256,6 +6732,51 @@ const SLIDES_PSV = [
         }
         if (currentSlideIndex === 13) { // Slide 14: Day in the Life
           setTimelineActive('morning');
+        }
+      }
+
+      if (currentDeck === SLIDES_CGE) {
+        if (currentSlideIndex === 1) { // Slide 2: objections
+          showCgeObjectionDetails('churn');
+        }
+        if (currentSlideIndex === 3) { // Slide 4: Health Score
+          calcCgeHealth();
+        }
+        if (currentSlideIndex === 5) { // Slide 6: Churn Lifecycle
+          setChurnStage(1);
+        }
+        if (currentSlideIndex === 6) { // Slide 7: Campaign simulator
+          changeSimCampaign(0);
+        }
+        if (currentSlideIndex === 8) { // Slide 9: CLV LTV
+          calcCgeLtv();
+        }
+        if (currentSlideIndex === 9) { // Slide 10: Cohort Table
+          setCgeVisTab('regular');
+        }
+        if (currentSlideIndex === 11) { // Slide 12: Campaign Targeting
+          runCgeCampaignSim();
+        }
+        if (currentSlideIndex === 12) { // Slide 13: Growth ROI
+          calcCgeRoi();
+        }
+      }
+
+      if (currentDeck === SLIDES_SFM) {
+        if (currentSlideIndex === 1) { // Slide 2: objections
+          showSfmObjectionDetails('lost');
+        }
+        if (currentSlideIndex === 7) { // Slide 8: split credit calc
+          calcSfmSplit();
+        }
+        if (currentSlideIndex === 9) { // Slide 10: adjustment simulator
+          calcSfmAdjustment();
+        }
+        if (currentSlideIndex === 10) { // Slide 11: target actual simulator
+          calcSfmTargetSim();
+        }
+        if (currentSlideIndex === 13) { // Slide 14: incentive calculator
+          calcSfmPayout();
         }
       }
 
@@ -6068,6 +7589,44 @@ const SLIDES_PSV = [
           status = "Supply Loops Connected";
         } else {
           status = "Network Security: Excellent";
+        }
+      } else if (currentDeck === SLIDES_CGE) {
+        if (slideIndex === 0) {
+          status = "Customer Visibility Starting";
+        } else if (slideIndex < 3) {
+          status = "Customer Visibility Starting";
+        } else if (slideIndex < 7) {
+          status = "Customer Understanding Increasing";
+        } else if (slideIndex < 11) {
+          status = "Loyalty Engine Active";
+        } else if (slideIndex < 13) {
+          status = "Growth Opportunities Identified";
+        } else {
+          status = "Growth Confidence: 94%";
+        }
+      } else if (currentDeck === SLIDES_PSV) {
+        if (slideIndex === 0) {
+          status = "Visibility Established";
+        } else if (slideIndex < 4) {
+          status = "Visibility Established";
+        } else if (slideIndex < 7) {
+          status = "Coverage Monitored";
+        } else if (slideIndex < 13) {
+          status = "Replenishment Optimized";
+        } else {
+          status = "Stock Risks Reduced";
+        }
+      } else if (currentDeck === SLIDES_SFM) {
+        if (slideIndex === 0) {
+          status = "Target Visibility Established";
+        } else if (slideIndex < 4) {
+          status = "Target Visibility Established";
+        } else if (slideIndex < 8) {
+          status = "Performance Measured";
+        } else if (slideIndex < 13) {
+          status = "Incentives Optimized";
+        } else {
+          status = "Sales Confidence: 96%";
         }
       }
 
@@ -7824,6 +9383,836 @@ const SLIDES_PSV = [
       if (holdingEl) holdingEl.textContent = `₹${holding.toLocaleString()}`;
       const recoveryEl = document.getElementById('psv-roi-recovery');
       if (recoveryEl) recoveryEl.textContent = `₹${recovery.toLocaleString()}`;
+    }
+
+// ==========================================
+    // SMRITI CUSTOMER GROWTH INTERACTIONS
+    // ==========================================
+
+    // Slide 2: Retention Concerns
+    function showCgeObjectionDetails(scenario) {
+      const textEl = document.getElementById('cge-obj-detail-content');
+      const box = document.getElementById('cge-obj-detail-box');
+      if (!textEl || !box) return;
+      box.classList.remove('hidden');
+
+      const tabs = ['churn', 'vips', 'campaigns'];
+      tabs.forEach(t => {
+        const card = document.getElementById(`cge-obj-tab-${t}`);
+        if (card) {
+          if (t === scenario) {
+            card.className = "glass-card p-4 rounded-xl border border-lime-500/80 bg-lime-950/20 scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]";
+          } else {
+            card.className = "glass-card p-4 rounded-xl border border-white/5 hover:border-lime-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]";
+          }
+        }
+      });
+
+      const details = {
+        churn: {
+          title: "Objection: High-Value Customers Slipping Away Silently",
+          impact: "Valued VIP shoppers stop visiting the store, causing silent profit declines.",
+          path: "Slipping shopper -> Unnoticed departure -> Lost sales -> Higher acquisition spend.",
+          mitigation: "SMRITI monitors checkout intervals and automatically alerts managers when VIP visit trends decline."
+        },
+        vips: {
+          title: "Objection: Failure to Identify VIP Opportunities",
+          impact: "Store staffs treat high-potential shoppers as generic walk-ins, missing loyalty opportunities.",
+          path: "VIP unrecognized -> Ordinary checkout experience -> Low repeat likelihood -> Lost lifetime margins.",
+          mitigation: "SMRITI highlights VIP status at the cashier screen, prompting priority treatments and rewards."
+        },
+        campaigns: {
+          title: "Objection: Inefficient Campaign Conversions",
+          impact: "Sending generic bulk ads results in high opt-outs and low response rates.",
+          path: "Spam campaigns -> Annoyed customers -> Mismatched offers -> Waste of marketing budgets.",
+          mitigation: "SMRITI groups customers by variant preferences to ensure outreach is personalized."
+        }
+      };
+
+      const data = details[scenario];
+      if (data) {
+        textEl.innerHTML = `
+          <div class="space-y-3">
+            <h4 class="font-outfit font-bold text-white text-sm border-b border-white/5 pb-1 flex items-center gap-2">
+              <span class="text-lime-400">⚠️</span> ${data.title}
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div>
+                <span class="text-lime-400 font-bold block">Business Impact:</span>
+                <p class="text-slate-300 mt-0.5">${data.impact}</p>
+              </div>
+              <div>
+                <span class="text-red-400 font-bold block">Operational Path:</span>
+                <p class="text-slate-300 mt-0.5">${data.path}</p>
+              </div>
+              <div>
+                <span class="text-emerald-400 font-bold block">SMRITI Mitigation:</span>
+                <p class="text-slate-300 mt-0.5">${data.mitigation}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Slide 4: Health Score
+    function calcCgeHealth() {
+      const repeatChecked = document.getElementById('cge-health-repeat').checked;
+      const visitChecked = document.getElementById('cge-health-visit').checked;
+      const engageChecked = document.getElementById('cge-health-engage').checked;
+
+      const repeatW = repeatChecked ? 40 : 0;
+      const visitW = visitChecked ? 40 : 0;
+      const engageW = engageChecked ? 20 : 0;
+
+      const total = repeatW + visitW + engageW;
+      
+      const scoreEl = document.getElementById('cge-health-score');
+      if (scoreEl) scoreEl.textContent = `${total}%`;
+
+      const badgeEl = document.getElementById('cge-health-badge');
+      if (badgeEl) {
+        if (total >= 80) {
+          badgeEl.textContent = "Vibrant";
+          badgeEl.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400";
+        } else if (total >= 50) {
+          badgeEl.textContent = "Average Activity";
+          badgeEl.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-500/10 text-amber-400";
+        } else {
+          badgeEl.textContent = "Critical Churn Alert";
+          badgeEl.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-500/10 text-red-400";
+        }
+      }
+
+      const walkEl = document.getElementById('cge-health-walk');
+      if (walkEl) {
+        walkEl.textContent = `Repeat Purchases (${repeatW}%) + Visit Frequency (${visitW}%) + Campaign Click (${engageW}%) = ${total}%`;
+      }
+    }
+
+    // Slide 6: Churn Stage
+    function setChurnStage(stage) {
+      const btn1 = document.getElementById('btn-churn-s1');
+      const btn2 = document.getElementById('btn-churn-s2');
+      const btn3 = document.getElementById('btn-churn-s3');
+      const btn4 = document.getElementById('btn-churn-s4');
+      const light = document.getElementById('churn-terminal-light');
+      const statText = document.getElementById('churn-terminal-status');
+      const logs = document.getElementById('churn-terminal-logs');
+      const explain = document.getElementById('churn-stage-explanation');
+
+      // Reset buttons
+      [btn1, btn2, btn3, btn4].forEach(btn => {
+        if (btn) btn.className = "py-2 rounded-lg font-bold text-[10px] bg-slate-800 text-slate-300 hover:text-white transition";
+      });
+
+      if (stage === 1) {
+        if (btn1) btn1.className = "py-2 rounded-lg font-bold text-[10px] bg-lime-500 text-white transition";
+        if (light) light.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+        if (statText) {
+          statText.textContent = "ACTIVE";
+          statText.className = "text-emerald-400 font-bold uppercase";
+        }
+        if (logs) {
+          logs.innerHTML = `
+            <div class="text-slate-500">[SYSTEM] Monitoring visit intervals. Next checkout check scheduled.</div>
+            <div class="text-slate-500">[SYSTEM] Visits status: Normal. Churn Risk: Low.</div>
+          `;
+        }
+        if (explain) {
+          explain.innerHTML = `
+            <p>🟢 <strong>Active State:</strong> Customer visits regularly within their average 21-day order cycle. No special outreach prompted.</p>
+          `;
+        }
+      } else if (stage === 2) {
+        if (btn2) btn2.className = "py-2 rounded-lg font-bold text-[10px] bg-amber-500 text-white transition";
+        if (light) light.className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse";
+        if (statText) {
+          statText.textContent = "SLIPPING";
+          statText.className = "text-amber-400 font-bold uppercase";
+        }
+        if (logs) {
+          logs.innerHTML = `
+            <div class="text-amber-400">[WARN] Order interval exceeded average by 15 days.</div>
+            <div class="text-slate-400">[SYSTEM] Profiling customer preference tags for targeted outreach.</div>
+          `;
+        }
+        if (explain) {
+          explain.innerHTML = `
+            <p>🟡 <strong>Slipping State:</strong> Customer has missed their typical purchase window. SMRITI automatically prepares a personalized discount code based on their size and category preferences.</p>
+          `;
+        }
+      } else if (stage === 3) {
+        if (btn3) btn3.className = "py-2 rounded-lg font-bold text-[10px] bg-red-500 text-white transition";
+        if (light) light.className = "w-2.5 h-2.5 rounded-full bg-red-500";
+        if (statText) {
+          statText.textContent = "DORMANT";
+          statText.className = "text-red-500 font-bold uppercase";
+        }
+        if (logs) {
+          logs.innerHTML = `
+            <div class="text-red-400">[CRIT] Customer dormant for 45+ days. Churn Risk: High.</div>
+            <div class="text-emerald-400">[SYSTEM] Automatic WhatsApp voucher dispatched: 15% VIP discount.</div>
+          `;
+        }
+        if (explain) {
+          explain.innerHTML = `
+            <p>🔴 <strong>Dormant State:</strong> Customer is flagged as dormant. SMRITI dispatches a personalized recovery WhatsApp message containing a custom discount voucher for their favorite items.</p>
+          `;
+        }
+      } else if (stage === 4) {
+        if (btn4) btn4.className = "py-2 rounded-lg font-bold text-[10px] bg-blue-500 text-white transition";
+        if (light) light.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+        if (statText) {
+          statText.textContent = "RECOVERED";
+          statText.className = "text-emerald-400 font-bold uppercase";
+        }
+        if (logs) {
+          logs.innerHTML = `
+            <div class="text-blue-400">[OUTREACH] WhatsApp voucher code [VIP-REC-15] scanned at register 2.</div>
+            <div class="text-emerald-400 font-bold">[SUCCESS] Checkout value: ₹3,200. VIP status restored.</div>
+          `;
+        }
+        if (explain) {
+          explain.innerHTML = `
+            <p>🔵 <strong>Recovered State:</strong> Customer returns to the store and redeems the voucher. SMRITI registers the sale and restores their health profile to Vibrant.</p>
+          `;
+        }
+      }
+    }
+
+    // Slide 7: Campaign Performance Tracker
+    let cgeSimConversions = 0;
+    function changeSimCampaign(val) {
+      if (val === 0) {
+        cgeSimConversions = 0;
+      } else {
+        cgeSimConversions += val;
+        if (cgeSimConversions > 300) cgeSimConversions = 300;
+        if (cgeSimConversions < 0) cgeSimConversions = 0;
+      }
+
+      const baseRevenue = 45000;
+      const totalRevenue = baseRevenue + (cgeSimConversions * 1500);
+      const conv = (6.0 + (cgeSimConversions / 10)).toFixed(1);
+      const opt = (1.2 - (cgeSimConversions / 200)).toFixed(2);
+
+      const convEl = document.getElementById('cge-sim-conv');
+      if (convEl) convEl.textContent = `${conv}%`;
+
+      const revEl = document.getElementById('cge-sim-revenue');
+      if (revEl) revEl.textContent = `₹${totalRevenue.toLocaleString()}`;
+
+      const optEl = document.getElementById('cge-sim-opt');
+      if (optEl) optEl.textContent = `${Math.max(0.1, opt)}%`;
+
+      const badgeEl = document.getElementById('cge-sim-badge');
+      if (badgeEl) {
+        if (conv >= 15) {
+          badgeEl.textContent = "Elite Performance";
+          badgeEl.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-teal-500/10 text-teal-400";
+        } else if (conv >= 10) {
+          badgeEl.textContent = "High Performance";
+          badgeEl.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400";
+        } else {
+          badgeEl.textContent = "Industry Bestseller";
+          badgeEl.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-lime-500/10 text-lime-400";
+        }
+      }
+    }
+
+    // Slide 9: Customer LTV Calculator
+    function calcCgeLtv() {
+      const aov = parseInt(document.getElementById('input-cge-ltv-aov').value) || 1500;
+      const freq = parseInt(document.getElementById('input-cge-ltv-freq').value) || 8;
+      const span = parseInt(document.getElementById('input-cge-ltv-span').value) || 3;
+
+      const aovEl = document.getElementById('cge-ltv-aov-val');
+      if (aovEl) aovEl.textContent = `₹${aov.toLocaleString()}`;
+      const freqEl = document.getElementById('cge-ltv-freq-val');
+      if (freqEl) freqEl.textContent = `${freq} Times`;
+      const spanEl = document.getElementById('cge-ltv-span-val');
+      if (spanEl) spanEl.textContent = `${span} Years`;
+
+      const annual = aov * freq;
+      const total = annual * span;
+
+      const annualEl = document.getElementById('cge-ltv-annual');
+      if (annualEl) annualEl.textContent = `₹${annual.toLocaleString()}`;
+      const totalEl = document.getElementById('cge-ltv-total');
+      if (totalEl) totalEl.textContent = `₹${total.toLocaleString()}`;
+    }
+
+    // Slide 10: Visit Frequency
+    function setCgeVisTab(tab) {
+      const tabs = ['regular', 'occasional', 'dormant'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`cge-vis-tab-${t}`);
+        if (btn) {
+          if (t === tab) {
+            btn.className = "w-full text-left p-3 rounded-lg border transition text-white border-lime-500 flex justify-between items-center text-xs font-bold";
+            btn.style.backgroundColor = 'var(--accent)';
+          } else {
+            btn.className = "w-full text-left p-3 rounded-lg border transition bg-slate-900/40 border-white/5 text-slate-400 hover:text-white flex justify-between items-center text-xs font-bold";
+            btn.style.backgroundColor = '';
+          }
+        }
+      });
+
+      const titleEl = document.getElementById('cge-vis-title');
+      const tableEl = document.getElementById('cge-vis-table');
+      const tipEl = document.getElementById('cge-vis-tip');
+      const badgeEl = document.getElementById('cge-vis-badge');
+      if (!titleEl || !tableEl || !tipEl || !badgeEl) return;
+
+      const data = {
+        regular: {
+          title: "Regular Shoppers",
+          badge: "High Value",
+          badgeClass: "text-[10px] text-lime-400 font-bold uppercase bg-lime-500/10 px-2 py-0.5 rounded",
+          tip: "Regular shoppers ensure continuous store revenue. Recommend sending seasonal arrivals early.",
+          rows: `
+            <thead><tr class="border-b border-white/5 text-slate-500"><th class="py-1.5 text-left">CUSTOMER</th><th class="py-1.5 text-right">LAST VISIT</th><th class="py-1.5 text-right">ANNUAL SPEND</th></tr></thead>
+            <tbody class="divide-y divide-white/5 text-slate-300">
+              <tr><td class="py-1.5 text-white font-bold">Sunita Sharma</td><td class="py-1.5 text-right">4 days ago</td><td class="py-1.5 text-right text-emerald-400">₹48,500</td></tr>
+              <tr><td class="py-1.5 text-white font-bold">Rajesh Patel</td><td class="py-1.5 text-right">6 days ago</td><td class="py-1.5 text-right text-emerald-400">₹32,000</td></tr>
+            </tbody>
+          `
+        },
+        occasional: {
+          title: "Occasional Buyers",
+          badge: "Growth Potential",
+          badgeClass: "text-[10px] text-teal-400 font-bold uppercase bg-teal-500/10 px-2 py-0.5 rounded",
+          tip: "Occasional buyers visit during sales periods. Recommending birthday gift cards helps increase loyalty.",
+          rows: `
+            <thead><tr class="border-b border-white/5 text-slate-500"><th class="py-1.5 text-left">CUSTOMER</th><th class="py-1.5 text-right">LAST VISIT</th><th class="py-1.5 text-right">ANNUAL SPEND</th></tr></thead>
+            <tbody class="divide-y divide-white/5 text-slate-300">
+              <tr><td class="py-1.5 text-white font-bold">Amit Verma</td><td class="py-1.5 text-right">24 days ago</td><td class="py-1.5 text-right text-teal-400">₹14,500</td></tr>
+              <tr><td class="py-1.5 text-white font-bold">Neha Singh</td><td class="py-1.5 text-right">35 days ago</td><td class="py-1.5 text-right text-teal-400">₹11,200</td></tr>
+            </tbody>
+          `
+        },
+        dormant: {
+          title: "Dormant Profiles",
+          badge: "Reclaim Focus",
+          badgeClass: "text-[10px] text-red-400 font-bold uppercase bg-red-500/10 px-2 py-0.5 rounded",
+          tip: "Dormant profiles have missed visits for 45+ days. Execute personalized recovery outreach.",
+          rows: `
+            <thead><tr class="border-b border-white/5 text-slate-500"><th class="py-1.5 text-left">CUSTOMER</th><th class="py-1.5 text-right">DORMANT DAYS</th><th class="py-1.5 text-right">PAST VALUE</th></tr></thead>
+            <tbody class="divide-y divide-white/5 text-slate-300">
+              <tr><td class="py-1.5 text-white font-bold">Karan Malhotra</td><td class="py-1.5 text-right text-red-400">54 days</td><td class="py-1.5 text-right text-slate-400">₹24,000</td></tr>
+              <tr><td class="py-1.5 text-white font-bold">Priya Sen</td><td class="py-1.5 text-right text-red-400">62 days</td><td class="py-1.5 text-right text-slate-400">₹18,500</td></tr>
+            </tbody>
+          `
+        }
+      };
+
+      const current = data[tab];
+      if (current) {
+        titleEl.textContent = current.title;
+        badgeEl.textContent = current.badge;
+        badgeEl.className = current.badgeClass;
+        tableEl.innerHTML = current.rows;
+        tipEl.textContent = current.tip;
+      }
+    }
+
+    // Slide 12: Campaign Targeting Simulator
+    function runCgeCampaignSim() {
+      const segment = document.getElementById('cge-target-segment').value || 'vip';
+      const convEl = document.getElementById('cge-target-conv');
+      const optEl = document.getElementById('cge-target-opt');
+      const revEl = document.getElementById('cge-target-revenue');
+      if (!convEl || !optEl || !revEl) return;
+
+      const data = {
+        vip: {
+          conv: "22.0%",
+          opt: "0.10%",
+          rev: "₹75,000"
+        },
+        high: {
+          conv: "14.0%",
+          opt: "0.20%",
+          rev: "₹48,000"
+        },
+        frequent: {
+          conv: "18.5%",
+          opt: "0.15%",
+          rev: "₹62,000"
+        },
+        slipping: {
+          conv: "8.5%",
+          opt: "0.40%",
+          rev: "₹42,500"
+        },
+        dormant: {
+          conv: "4.0%",
+          opt: "0.80%",
+          rev: "₹24,000"
+        },
+        new: {
+          conv: "12.0%",
+          opt: "0.30%",
+          rev: "₹36,000"
+        }
+      };
+
+      const res = data[segment];
+      if (res) {
+        convEl.textContent = res.conv;
+        optEl.textContent = res.opt;
+        revEl.textContent = res.rev;
+      }
+    }
+
+    // Slide 14: Growth Confidence Mitigation Simulator
+    let cgeMitigated = false;
+    function runCgeMitigationSim() {
+      const btn = document.getElementById('btn-cge-mitigate');
+      const pctEl = document.getElementById('cge-confidence-pct');
+      const statusEl = document.getElementById('cge-confidence-status');
+      const revEl = document.getElementById('cge-confidence-rev');
+      
+      const valRet = document.getElementById('cge-risk-val-retention');
+      const barRet = document.getElementById('cge-risk-bar-retention');
+      
+      const valChu = document.getElementById('cge-risk-val-churn');
+      const barChu = document.getElementById('cge-risk-bar-churn');
+      
+      const valCam = document.getElementById('cge-risk-val-campaign');
+      const barCam = document.getElementById('cge-risk-bar-campaign');
+      
+      const valVip = document.getElementById('cge-risk-val-vip');
+      const barVip = document.getElementById('cge-risk-bar-vip');
+
+      if (!cgeMitigated) {
+        cgeMitigated = true;
+        if (btn) {
+          btn.textContent = "Reset Risk Vectors 🔄";
+          btn.className = "w-full py-2 rounded border border-white/10 text-slate-300 hover:bg-white/5 font-bold text-[10px] uppercase tracking-wider transition";
+        }
+        if (pctEl) {
+          pctEl.textContent = "94%";
+          pctEl.className = "text-4xl font-outfit font-extrabold text-lime-400 mt-1 transition-colors duration-1000";
+        }
+        if (statusEl) {
+          statusEl.textContent = "Risks Reduced";
+          statusEl.className = "px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-lime-500/10 text-lime-400 transition-colors duration-1000";
+        }
+        if (revEl) {
+          revEl.textContent = "₹4,25,000";
+          revEl.className = "text-lg font-outfit font-extrabold text-emerald-400 transition-colors duration-1000";
+        }
+
+        // Mitigate risks to low
+        if (valRet && barRet) {
+          valRet.textContent = "12% (Low)";
+          valRet.className = "text-lime-400 font-bold text-[10px]";
+          barRet.style.width = "12%";
+          barRet.className = "bg-lime-500 h-1 transition-all duration-1000";
+        }
+        if (valChu && barChu) {
+          valChu.textContent = "8% (Low)";
+          valChu.className = "text-lime-400 font-bold text-[10px]";
+          barChu.style.width = "8%";
+          barChu.className = "bg-lime-500 h-1 transition-all duration-1000";
+        }
+        if (valCam && barCam) {
+          valCam.textContent = "15% (Low)";
+          valCam.className = "text-lime-400 font-bold text-[10px]";
+          barCam.style.width = "15%";
+          barCam.className = "bg-lime-500 h-1 transition-all duration-1000";
+        }
+        if (valVip && barVip) {
+          valVip.textContent = "6% (Low)";
+          valVip.className = "text-lime-400 font-bold text-[10px]";
+          barVip.style.width = "6%";
+          barVip.className = "bg-lime-500 h-1 transition-all duration-1000";
+        }
+      } else {
+        cgeMitigated = false;
+        if (btn) {
+          btn.textContent = "Apply Mitigation ⚡";
+          btn.className = "w-full py-2 rounded bg-lime-500 hover:bg-lime-600 text-white font-bold text-[10px] uppercase tracking-wider transition shadow-lg shadow-lime-500/20";
+        }
+        if (pctEl) {
+          pctEl.textContent = "35%";
+          pctEl.className = "text-4xl font-outfit font-extrabold text-red-500 mt-1 transition-colors duration-1000";
+        }
+        if (statusEl) {
+          statusEl.textContent = "High Risk Exposure";
+          statusEl.className = "px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-red-500/10 text-red-400 transition-colors duration-1000";
+        }
+        if (revEl) {
+          revEl.textContent = "₹0";
+          revEl.className = "text-lg font-outfit font-extrabold text-slate-500 transition-colors duration-1000";
+        }
+
+        // Restore risks to high/moderate
+        if (valRet && barRet) {
+          valRet.textContent = "78% (High)";
+          valRet.className = "text-red-400 font-bold text-[10px]";
+          barRet.style.width = "78%";
+          barRet.className = "bg-red-500 h-1 transition-all duration-1000";
+        }
+        if (valChu && barChu) {
+          valChu.textContent = "85% (High)";
+          valChu.className = "text-red-400 font-bold text-[10px]";
+          barChu.style.width = "85%";
+          barChu.className = "bg-red-500 h-1 transition-all duration-1000";
+        }
+        if (valCam && barCam) {
+          valCam.textContent = "60% (Moderate)";
+          valCam.className = "text-amber-400 font-bold text-[10px]";
+          barCam.style.width = "60%";
+          barCam.className = "bg-amber-500 h-1 transition-all duration-1000";
+        }
+        if (valVip && barVip) {
+          valVip.textContent = "70% (Moderate)";
+          valVip.className = "text-amber-400 font-bold text-[10px]";
+          barVip.style.width = "70%";
+          barVip.className = "bg-amber-500 h-1 transition-all duration-1000";
+        }
+      }
+    }
+
+    // Slide 13: Customer Growth ROI Calculator
+    function calcCgeRoi() {
+      const db = parseInt(document.getElementById('input-cge-roi-db').value) || 5000;
+      const basket = parseInt(document.getElementById('input-cge-roi-basket').value) || 1500;
+
+      const dbEl = document.getElementById('cge-roi-db-val');
+      if (dbEl) dbEl.textContent = db.toLocaleString();
+      const basketEl = document.getElementById('cge-roi-basket-val');
+      if (basketEl) basketEl.textContent = `₹${basket.toLocaleString()}`;
+
+      const prevented = Math.round(db * 0.06);
+      const savings = Math.round(db * 9);
+      const reclaimed = prevented * basket;
+
+      const preventedEl = document.getElementById('cge-roi-prevented');
+      if (preventedEl) preventedEl.textContent = `${prevented.toLocaleString()} Shoppers`;
+      const savingsEl = document.getElementById('cge-roi-savings');
+      if (savingsEl) savingsEl.textContent = `₹${savings.toLocaleString()}`;
+      const reclaimedEl = document.getElementById('cge-roi-reclaimed');
+      if (reclaimedEl) reclaimedEl.textContent = `₹${reclaimed.toLocaleString()}`;
+    }
+
+    // ==========================================
+    // SMRITI SALES PERFORMANCE & INCENTIVE CENTER (SFM)
+    // ==========================================
+
+    function showSfmObjectionDetails(scenario) {
+      const textEl = document.getElementById('sfm-obj-detail-content');
+      const box = document.getElementById('sfm-obj-detail-box');
+      if (!textEl || !box) return;
+      box.classList.remove('hidden');
+
+      const tabs = ['lost', 'ownership', 'misses', 'disputes', 'overlap'];
+      tabs.forEach(t => {
+        const card = document.getElementById(`sfm-obj-tab-${t}`);
+        if (card) {
+          if (t === scenario) {
+            card.className = "glass-card p-4 rounded-xl border border-red-500 bg-red-950/20 scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]";
+          } else {
+            card.className = "glass-card p-4 rounded-xl border border-white/5 hover:border-red-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]";
+          }
+        }
+      });
+
+      const details = {
+        lost: {
+          title: "Challenge: Customer Inquiries Fall Through the Cracks",
+          impact: "Prospects are left unassigned, resulting in lost sales and poor brand trust.",
+          path: "Unregistered lead -> Representative delay -> Competitor alternative chosen.",
+          mitigation: "SMRITI routes incoming inquiries automatically to active representatives on the spot."
+        },
+        ownership: {
+          title: "Challenge: Representative Conflicts Over Customer Accounts",
+          impact: "Overlapping territories lead to commission disputes and unaligned team members.",
+          path: "Representative dispute -> Customer relationship confusion -> Unprofessional service.",
+          mitigation: "SMRITI establishes clear, timeline-bound relationship boundaries to ensure single account ownership."
+        },
+        misses: {
+          title: "Challenge: Unachieved Sales Target Goals",
+          impact: "Representative targets are set but rarely reviewed, leading to end-of-month panic.",
+          path: "Targets forgotten -> Ineffective daily calls -> Monthly target misses.",
+          mitigation: "SMRITI aggregates daily progress metrics so representatives stay motivated and aware of gaps."
+        },
+        disputes: {
+          title: "Challenge: Inaccurate Multi-layered Credit Splits",
+          impact: "Representatives argue over commission shares for co-managed customer accounts.",
+          path: "Manual split calculations -> Delayed paychecks -> Lowered team morale.",
+          mitigation: "SMRITI allows pre-configured splits that distribute transaction credits instantly at checkout."
+        },
+        overlap: {
+          title: "Challenge: Territory Conflicts and Duplicated Sales Work",
+          impact: "Representatives visit the same locations, wasting travel budgets and annoying retailers.",
+          path: "Representative overlap -> Annoyed retailer -> Duplicated travel costs.",
+          mitigation: "SMRITI maps clients to distinct geographic accounts with automated coverage guards."
+        }
+      };
+
+      const data = details[scenario];
+      if (data) {
+        textEl.innerHTML = `
+          <div class="space-y-3">
+            <h4 class="font-outfit font-bold text-white text-sm border-b border-white/5 pb-1 flex items-center gap-2">
+              <span class="text-red-500">⚠️</span> ${data.title}
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div>
+                <span class="text-red-400 font-bold block">Business Impact:</span>
+                <p class="text-slate-300 mt-0.5">${data.impact}</p>
+              </div>
+              <div>
+                <span class="text-red-400 font-bold block">Representative Path:</span>
+                <p class="text-slate-300 mt-0.5">${data.path}</p>
+              </div>
+              <div>
+                <span class="text-emerald-400 font-bold block">SMRITI Solution:</span>
+                <p class="text-slate-300 mt-0.5">${data.mitigation}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    let sfmCoached = false;
+    function triggerSfmCoaching(btn) {
+      const pctEl = document.getElementById('sfm-risk-percent');
+      const statusEl = document.getElementById('sfm-risk-status');
+      const descEl = document.getElementById('sfm-risk-desc');
+      
+      const valTarget = document.getElementById('sfm-val-target');
+      const barTarget = document.getElementById('sfm-bar-target');
+      const valTerritory = document.getElementById('sfm-val-territory');
+      const barTerritory = document.getElementById('sfm-bar-territory');
+      const valAttrition = document.getElementById('sfm-val-attrition');
+      const barAttrition = document.getElementById('sfm-bar-attrition');
+      const valDispute = document.getElementById('sfm-val-dispute');
+      const barDispute = document.getElementById('sfm-bar-dispute');
+
+      if (!sfmCoached) {
+        sfmCoached = true;
+        if (btn) {
+          btn.textContent = "Coaching Plan Applied ✓";
+          btn.className = "w-full py-2.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider transition shadow-lg shadow-emerald-600/20";
+        }
+        if (pctEl) {
+          pctEl.textContent = "96%";
+          pctEl.className = "text-4xl font-outfit font-extrabold text-emerald-400 mt-1 transition-colors duration-1000";
+        }
+        if (statusEl) {
+          statusEl.textContent = "Performance Optimized";
+          statusEl.className = "px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-500/10 text-emerald-400 transition-colors duration-1000";
+        }
+        if (descEl) {
+          descEl.textContent = "Representative alignment secured. Risks are minimized through active target tracking and clear credit rules.";
+        }
+
+        // Apply low risk states
+        if (valTarget && barTarget) {
+          valTarget.textContent = "12% (Low)";
+          valTarget.className = "text-emerald-400 font-bold text-[10px]";
+          barTarget.style.width = "12%";
+          barTarget.className = "bg-emerald-500 h-1 transition-all duration-1000";
+        }
+        if (valTerritory && barTerritory) {
+          valTerritory.textContent = "10% (Low)";
+          valTerritory.className = "text-emerald-400 font-bold text-[10px]";
+          barTerritory.style.width = "10%";
+          barTerritory.className = "bg-emerald-500 h-1 transition-all duration-1000";
+        }
+        if (valAttrition && barAttrition) {
+          valAttrition.textContent = "15% (Low)";
+          valAttrition.className = "text-emerald-400 font-bold text-[10px]";
+          barAttrition.style.width = "15%";
+          barAttrition.className = "bg-emerald-500 h-1 transition-all duration-1000";
+        }
+        if (valDispute && barDispute) {
+          valDispute.textContent = "8% (Low)";
+          valDispute.className = "text-emerald-400 font-bold text-[10px]";
+          barDispute.style.width = "8%";
+          barDispute.className = "bg-emerald-500 h-1 transition-all duration-1000";
+        }
+      } else {
+        sfmCoached = false;
+        if (btn) {
+          btn.textContent = "Apply Coaching Plan ⚡";
+          btn.className = "w-full py-2.5 rounded bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider transition shadow-lg shadow-red-600/20";
+        }
+        if (pctEl) {
+          pctEl.textContent = "35%";
+          pctEl.className = "text-4xl font-outfit font-extrabold text-red-500 mt-1 transition-colors duration-1000";
+        }
+        if (statusEl) {
+          statusEl.textContent = "High Risk Exposure";
+          statusEl.className = "px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-red-500/10 text-red-400 transition-colors duration-1000";
+        }
+        if (descEl) {
+          descEl.textContent = "Representative motivation is low due to target misalignment and unclear credit distributions.";
+        }
+
+        // Restore risks to high
+        if (valTarget && barTarget) {
+          valTarget.textContent = "78% (Critical)";
+          valTarget.className = "text-red-400 font-bold text-[10px]";
+          barTarget.style.width = "78%";
+          barTarget.className = "bg-red-500 h-1 transition-all duration-1000";
+        }
+        if (valTerritory && barTerritory) {
+          valTerritory.textContent = "82% (Critical)";
+          valTerritory.className = "text-red-400 font-bold text-[10px]";
+          barTerritory.style.width = "82%";
+          barTerritory.className = "bg-red-500 h-1 transition-all duration-1000";
+        }
+        if (valAttrition && barAttrition) {
+          valAttrition.textContent = "60% (Moderate)";
+          valAttrition.className = "text-amber-400 font-bold text-[10px]";
+          barAttrition.style.width = "60%";
+          barAttrition.className = "bg-amber-500 h-1 transition-all duration-1000";
+        }
+        if (valDispute && barDispute) {
+          valDispute.textContent = "72% (Critical)";
+          valDispute.className = "text-red-400 font-bold text-[10px]";
+          barDispute.style.width = "72%";
+          barDispute.className = "bg-red-500 h-1 transition-all duration-1000";
+        }
+      }
+    }
+
+    function calcSfmSplit(mode) {
+      const valInput = document.getElementById('input-sfm-split-val');
+      const priInput = document.getElementById('input-sfm-split-pri');
+      const secInput = document.getElementById('input-sfm-split-sec');
+
+      const valDisplay = document.getElementById('sfm-split-val-display');
+      const priDisplay = document.getElementById('sfm-split-pri-display');
+      const secDisplay = document.getElementById('sfm-split-sec-display');
+
+      const priCreditEl = document.getElementById('sfm-split-pri-credit');
+      const secCreditEl = document.getElementById('sfm-split-sec-credit');
+      const totalSummaryEl = document.getElementById('sfm-split-total');
+
+      if (!valInput || !priInput || !secInput) return;
+
+      let val = parseInt(valInput.value) || 100000;
+      let pri = parseInt(priInput.value) || 70;
+      let sec = parseInt(secInput.value) || 30;
+
+      if (mode === 'pri') {
+        sec = 100 - pri;
+        secInput.value = sec;
+      } else if (mode === 'sec') {
+        pri = 100 - sec;
+        priInput.value = pri;
+      }
+
+      valDisplay.textContent = `₹${val.toLocaleString()}`;
+      priDisplay.textContent = `${pri}%`;
+      secDisplay.textContent = `${sec}%`;
+
+      const priAmt = Math.round(val * (pri / 100));
+      const secAmt = Math.round(val * (sec / 100));
+
+      priCreditEl.textContent = `₹${priAmt.toLocaleString()}`;
+      secCreditEl.textContent = `₹${secAmt.toLocaleString()}`;
+      totalSummaryEl.textContent = `${pri}% / ${sec}% Split Configured`;
+    }
+
+    function calcSfmAdjustment() {
+      const baseAmt = 50000;
+      const adjInput = document.getElementById('input-sfm-adj');
+      const adjDisplay = document.getElementById('sfm-adj-display');
+      const deductionEl = document.getElementById('sfm-adj-payout-deduction');
+      const netPayoutEl = document.getElementById('sfm-adj-net-payout');
+
+      if (!adjInput) return;
+
+      const adj = parseInt(adjInput.value) || 0;
+      adjDisplay.textContent = `-₹${adj.toLocaleString()}`;
+
+      const deduction = Math.round(adj * 0.05);
+      const net = baseAmt - deduction;
+
+      deductionEl.textContent = `-₹${deduction.toLocaleString()}`;
+      netPayoutEl.textContent = `₹${net.toLocaleString()}`;
+    }
+
+    function calcSfmTargetSim() {
+      const salesInput = document.getElementById('input-sfm-target-sim-sales');
+      const salesDisplay = document.getElementById('sfm-target-sim-sales-display');
+      const rateEl = document.getElementById('sfm-target-sim-rate');
+      const summaryEl = document.getElementById('sfm-target-sim-summary');
+
+      const slabSilver = document.getElementById('sfm-slab-silver');
+      const slabGold = document.getElementById('sfm-slab-gold');
+      const slabPlatinum = document.getElementById('sfm-slab-platinum');
+
+      if (!salesInput) return;
+
+      const target = 1000000;
+      const sales = parseInt(salesInput.value) || 1250000;
+      salesDisplay.textContent = `₹${sales.toLocaleString()}`;
+
+      const rate = Math.round((sales / target) * 100);
+      rateEl.textContent = `${rate}%`;
+
+      slabSilver.className = "p-3 rounded-lg border border-white/5 bg-slate-900/40 text-slate-400";
+      slabGold.className = "p-3 rounded-lg border border-white/5 bg-slate-900/40 text-slate-400";
+      slabPlatinum.className = "p-3 rounded-lg border border-white/5 bg-slate-900/40 text-slate-400";
+
+      let activeSlab = "Silver";
+      if (rate < 100) {
+        slabSilver.className = "p-3 rounded-lg border border-red-500/80 bg-red-950/20 text-white font-bold scale-[1.02] transition duration-300";
+        activeSlab = "Silver";
+      } else if (rate <= 120) {
+        slabGold.className = "p-3 rounded-lg border border-red-500/80 bg-red-950/20 text-white font-bold scale-[1.02] transition duration-300";
+        activeSlab = "Gold";
+      } else {
+        slabPlatinum.className = "p-3 rounded-lg border border-red-500/80 bg-red-950/20 text-white font-bold scale-[1.02] transition duration-300";
+        activeSlab = "Platinum";
+      }
+
+      summaryEl.textContent = `Actual sales of ₹${sales.toLocaleString()} leads to ${rate}% achievement and qualifies for ${activeSlab} tier!`;
+    }
+
+    function calcSfmPayout() {
+      const salesInput = document.getElementById('input-sfm-calc-sales');
+      const salesDisplay = document.getElementById('sfm-calc-sales-display');
+      const slabSelect = document.getElementById('input-sfm-calc-slab');
+      const payoutTotalEl = document.getElementById('sfm-calc-payout-total');
+      const payoutDescEl = document.getElementById('sfm-calc-payout-desc');
+
+      if (!salesInput || !slabSelect) return;
+
+      const sales = parseInt(salesInput.value) || 1000000;
+      const slab = slabSelect.value || 'gold';
+
+      salesDisplay.textContent = `₹${sales.toLocaleString()}`;
+
+      let rate = 0.05;
+      let label = "Gold";
+      if (slab === 'bronze') {
+        rate = 0.02;
+        label = "Bronze";
+      } else if (slab === 'silver') {
+        rate = 0.035;
+        label = "Silver";
+      } else if (slab === 'gold') {
+        rate = 0.05;
+        label = "Gold";
+      } else if (slab === 'platinum') {
+        rate = 0.075;
+        label = "Platinum";
+      }
+
+      const payout = Math.round(sales * rate);
+      payoutTotalEl.textContent = `₹${payout.toLocaleString()}`;
+      payoutDescEl.textContent = `Calculated at ${(rate * 100)}% ${label} rate on ₹${sales.toLocaleString()} sales value.`;
     }
 
     </script>
