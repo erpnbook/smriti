@@ -206,6 +206,7 @@
     <button onclick="selectDeck('distributor')" id="btn-mode-distributor" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300">Distributor View</button>
     <button onclick="selectDeck('barcode')" id="btn-mode-barcode" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300">Label &amp; Scan Studio</button>
     <button onclick="selectDeck('itemmaster')" id="btn-mode-itemmaster" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300">Item Master Studio</button>
+    <button onclick="selectDeck('psv')" id="btn-mode-psv" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300">Inventory Visibility</button>
   </div>
 
   <!-- Outline Sidebar Drawer -->
@@ -281,7 +282,7 @@
             <h2 class="text-lg font-outfit font-extrabold text-blue-400 flex items-center gap-2 border-b border-white/5 pb-2">
               <span>⚙️</span> Operations View
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <!-- Manager Deck -->
               <div class="glass-card p-6 rounded-2xl flex flex-col justify-between border-t-4 border-blue-500 hover:scale-[1.02] transition cursor-pointer" onclick="selectDeck('manager')">
                 <div>
@@ -318,6 +319,19 @@
                 <div class="mt-6 flex justify-between items-center">
                   <span class="text-xs text-rose-400 font-bold">Start Catalog Deck →</span>
                   <span class="px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 text-[10px] font-bold uppercase">Foundation</span>
+                </div>
+              </div>
+
+              <!-- Inventory Visibility Intelligence Center Card -->
+              <div class="glass-card p-6 rounded-2xl flex flex-col justify-between border-t-4 border-teal-500 hover:scale-[1.02] transition cursor-pointer" onclick="selectDeck('psv')">
+                <div>
+                  <span class="text-xs text-teal-400 font-bold uppercase tracking-wider block mb-2">15 Slides</span>
+                  <h3 class="text-xl font-outfit font-bold text-white mb-2">Inventory Visibility</h3>
+                  <p class="text-slate-400 text-sm">Focuses on distributor inventories, sell-through tracking, capital efficiency, stockout alert prevention, and reorder rules.</p>
+                </div>
+                <div class="mt-6 flex justify-between items-center">
+                  <span class="text-xs text-teal-400 font-bold">Start Visibility Deck →</span>
+                  <span class="px-2 py-0.5 rounded bg-teal-500/10 text-teal-400 text-[10px] font-bold uppercase">Supply Chain</span>
                 </div>
               </div>
             </div>
@@ -1088,7 +1102,7 @@
 
                 <div class="space-y-1 text-slate-300 bg-black/30 p-3 rounded-xl min-h-[140px] overflow-y-auto" id="recovery-terminal-logs">
                   <div class="text-red-500">[CRIT] Hardware device failure detected on terminal POS-01.</div>
-                  <div class="text-red-400">[WARN] Service offline. Cash drawer locked.</div>
+                  <div class="text-red-400">[WARN] System offline. Cash drawer locked.</div>
                 </div>
               </div>
             </div>
@@ -2751,7 +2765,7 @@
                   </div>
                   <div class="flex items-center gap-2 text-slate-300">
                     <span class="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">3</span>
-                    <span>Recommended Source Reserved (Shadow Ledger Reconciles)</span>
+                    <span>Recommended Source Reserved (Channel Stock Reconciles)</span>
                   </div>
                   <div class="flex items-center gap-2 text-slate-300">
                     <span class="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">4</span>
@@ -2864,7 +2878,7 @@
               <div class="glass-card p-4 rounded-xl border-amber-500/20 bg-amber-950/5 space-y-1 hover:border-amber-500/40 transition">
                 <span class="text-lg">⭐</span>
                 <h4 class="font-outfit font-bold text-white text-xs">Operate With Confidence</h4>
-                <p class="text-slate-400 text-[10px] leading-relaxed">Ensure continuous logistics operations under internet outages with offline browser-based ledger backups.</p>
+                <p class="text-slate-400 text-[10px] leading-relaxed">Ensure continuous logistics operations under internet outages with offline browser-based transaction backups.</p>
               </div>
             </div>
           </div>
@@ -3007,7 +3021,7 @@
               <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col items-center text-center space-y-2">
                 <div class="w-10 h-10 rounded-full bg-indigo-500/15 text-indigo-400 flex items-center justify-center font-bold font-outfit text-sm">5</div>
                 <span class="font-outfit font-bold text-xs text-white">Checkout Scan</span>
-                <p class="text-[10px] text-slate-400 leading-relaxed">Scan checkouts trigger pricing and stock ledger decriments instantly in 0.8 seconds.</p>
+                <p class="text-[10px] text-slate-400 leading-relaxed">Scan checkouts trigger pricing and stock count updates instantly in 0.8 seconds.</p>
               </div>
             </div>
           </div>
@@ -4287,7 +4301,7 @@
               <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-2">
                 <span class="text-rose-400 text-lg">🛡️</span>
                 <h4 class="font-outfit font-bold text-white text-base">Perfect Inventory Control</h4>
-                <p class="text-xs text-slate-400 leading-relaxed">Correct barcodes link stock ledger transactions to size curves, eliminating variances.</p>
+                <p class="text-xs text-slate-400 leading-relaxed">Correct barcodes link stock records to size curves, eliminating variances.</p>
               </div>
 
               <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-2">
@@ -4334,6 +4348,577 @@
       }
     ];
 
+const SLIDES_PSV = [
+      {
+        title: "Visibility Network Introduction",
+        html: `
+          <div class="max-w-4xl mx-auto text-center space-y-6">
+            <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 font-bold text-sm tracking-wider uppercase mb-2">
+              SMRITI PSV Intelligence Center
+            </div>
+            <h1 class="text-5xl font-outfit font-extrabold text-white">SMRITI Inventory Visibility</h1>
+            <p class="text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
+              Real-time stock visibility across your entire distribution network. Gain instant sell-through insights and eliminate stockout risks.
+            </p>
+            
+            <div class="glass-card max-w-lg mx-auto p-5 rounded-2xl border-accent space-y-4 text-xs mt-6">
+              <div class="border-b border-white/5 pb-2 text-slate-400 font-bold uppercase tracking-wider">AITDL Founder Commitment</div>
+              <div class="flex flex-col md:flex-row items-center gap-4 text-left">
+                <div class="w-16 h-16 rounded-full bg-slate-900 border border-teal-500/30 flex items-center justify-center text-2xl">👨‍💼</div>
+                <div class="space-y-1">
+                  <p class="text-sm font-bold text-white">Jawahar R. Mallah</p>
+                  <p class="text-[10px] text-slate-400">Founder &amp; Chief Architect, AITDL</p>
+                  <p class="text-[10px] text-slate-500 leading-relaxed">
+                    "Every computed metric, stockout prediction, and replenishment alert is fully explainable. We empower supply chains to run with absolute transparency and zero blind spots."
+                  </p>
+                </div>
+              </div>
+              <p class="text-[10px] text-teal-400 font-bold italic mt-2">"Light begins with learning." — Jawahar R. Mallah</p>
+            </div>
+            
+            <div class="pt-4">
+              <button onclick="nextSlide()" class="px-6 py-3 rounded-lg bg-teal-500 hover:bg-teal-600 text-white font-bold text-xs uppercase tracking-wider transition shadow-lg shadow-teal-500/20">Begin Presentation</button>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Distribution Visibility Gap",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Supply Chain Objections</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">The Distribution Visibility Gap</h2>
+              <p class="text-slate-400 text-xs">Why standard invoicing fails to track partner stocks and how SMRITI solves it.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              <div id="psv-obj-tab-blind" onclick="showPsvObjectionDetails('blind')" class="glass-card p-4 rounded-xl border border-white/5 hover:border-teal-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">👁️‍🗨️</span>
+                <h3 class="font-bold text-white text-xs">Blind Channels</h3>
+                <p class="text-[10px] text-slate-400">Stock is invisible after invoice is raised.</p>
+              </div>
+              <div id="psv-obj-tab-reorders" onclick="showPsvObjectionDetails('reorders')" class="glass-card p-4 rounded-xl border border-white/5 hover:border-teal-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">🚨</span>
+                <h3 class="font-bold text-white text-xs">Excess Reorders</h3>
+                <p class="text-[10px] text-slate-400">Distributors order based on guesswork, piling up dead stock.</p>
+              </div>
+              <div id="psv-obj-tab-stale" onclick="showPsvObjectionDetails('stale')" class="glass-card p-4 rounded-xl border border-white/5 hover:border-teal-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">📉</span>
+                <h3 class="font-bold text-white text-xs">Stale Stock</h3>
+                <p class="text-[10px] text-slate-400">Slow variants accumulate silently, diluting your margins.</p>
+              </div>
+            </div>
+
+            <div id="psv-obj-detail-box" class="glass-card p-5 rounded-2xl border border-teal-500/30 bg-teal-950/10 hidden mt-4">
+              <div id="psv-obj-detail-content" class="text-xs text-slate-300">
+                <!-- Click one of the cards above to see details -->
+              </div>
+            </div>
+            <p class="text-center text-[11px] text-slate-500">Click one of the objections above to trace its operational and business impacts.</p>
+          </div>
+        `
+      },
+      {
+        title: "Inventory Visibility Network",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Connected Supply Chain</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Inventory Visibility Network</h2>
+              <p class="text-slate-400 text-xs">Seamless coordination from central warehouse to local partners.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 max-w-4xl mx-auto">
+              <div class="glass-card p-5 rounded-2xl border border-white/5 text-center space-y-2">
+                <div class="w-12 h-12 rounded-full bg-teal-500/10 text-teal-400 flex items-center justify-center text-xl mx-auto font-bold">1</div>
+                <h3 class="font-outfit font-bold text-white text-base">Central Warehouse</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Hosts primary bulk inventory, processing shipments to partners.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 text-center space-y-2">
+                <div class="w-12 h-12 rounded-full bg-teal-500/10 text-teal-400 flex items-center justify-center text-xl mx-auto font-bold">2</div>
+                <h3 class="font-outfit font-bold text-white text-base">Distributor Hubs</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Local secondary depots holding regional stock reserves closer to demand.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 text-center space-y-2">
+                <div class="w-12 h-12 rounded-full bg-teal-500/10 text-teal-400 flex items-center justify-center text-xl mx-auto font-bold">3</div>
+                <h3 class="font-outfit font-bold text-white text-base">Retail Outlets</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Frontline lanes selling to end customers, pulling stock dynamically.</p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Distributor Sell-Through Tracker",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Interactive Simulation</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Distributor Sell-Through Tracker</h2>
+              <p class="text-slate-400 text-xs">Simulate secondary sales updates to see sell-through rate, current stock, and cover metrics.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              <div class="lg:col-span-5 glass-card p-5 rounded-2xl border border-white/5 space-y-4">
+                <div class="text-teal-400 font-bold text-sm">Simulate Sales Ticks</div>
+                <div class="space-y-4 text-xs">
+                  <p class="text-slate-400 leading-relaxed">Simulate a sudden spike in consumer demand at retail outlets. Click the button to log secondary sales.</p>
+                  <button onclick="changeSimSales(50)" class="w-full py-2.5 rounded-lg bg-teal-500 hover:bg-teal-600 text-white font-bold transition">Log 50 Secondary Sales</button>
+                  <button onclick="changeSimSales(-50)" class="w-full py-2.5 rounded-lg border border-white/10 text-slate-300 hover:bg-white/5 font-bold transition">Reset Sales Metric</button>
+                </div>
+              </div>
+
+              <div class="lg:col-span-7 grid grid-cols-2 gap-4">
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Sell-Through Rate</span>
+                  <div class="text-3xl font-outfit font-extrabold text-teal-400 mt-1" id="psv-sim-rate">45%</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Secondary sales ratio</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Current Channel Stock</span>
+                  <div class="text-3xl font-outfit font-extrabold text-white mt-1" id="psv-sim-stock">550 pcs</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Held by partners</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center col-span-2 bg-teal-950/10 border-teal-500/20">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Weeks of Cover (WOC)</span>
+                  <div class="text-3xl font-outfit font-extrabold text-emerald-400 mt-1" id="psv-sim-woc">8.2 Weeks</div>
+                  <div class="mt-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400" id="psv-sim-status">Healthy</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Reorder & Replenishment Intelligence",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Supply Replenishment</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Reorder &amp; Replenishment Intelligence</h2>
+              <p class="text-slate-400 text-xs">Automated computation of lead times and safety stocks ensures prompt fulfillment.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-2">
+                <span class="text-teal-400 text-lg">⏳</span>
+                <h4 class="font-outfit font-bold text-white text-base">Lead Time Buffer</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">Computes regional transit delays dynamically to adjust delivery estimates.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-2">
+                <span class="text-teal-400 text-lg">🛡️</span>
+                <h4 class="font-outfit font-bold text-white text-base">Safety Stock Target</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">Maintains safety units based on local sales swings, shielding against stockouts.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-2">
+                <span class="text-teal-400 text-lg">🔔</span>
+                <h4 class="font-outfit font-bold text-white text-base">Replenishment Alert</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">Triggers early warnings when weeks of cover dip below the target thresholds.</p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Exception Monitoring Center",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Exception Audits</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Exception Monitoring Center</h2>
+              <p class="text-slate-400 text-xs">Monitor stock variances, returns, and coverage errors across channels.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+              <div id="psv-exc-tab-variance" onclick="showPsvExceptionDetails('variance')" class="glass-card p-4 rounded-xl border border-white/5 hover:border-teal-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">⚖️</span>
+                <h3 class="font-bold text-white text-xs">Stock Variance</h3>
+                <p class="text-[10px] text-slate-400">Differences between warehouse records and partner declarations.</p>
+              </div>
+              <div id="psv-exc-tab-return" onclick="showPsvExceptionDetails('return')" class="glass-card p-4 rounded-xl border border-white/5 hover:border-teal-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">🔄</span>
+                <h3 class="font-bold text-white text-xs">Return Mismatch</h3>
+                <p class="text-[10px] text-slate-400">Returned products containing serial mismatch errors.</p>
+              </div>
+              <div id="psv-exc-tab-coverage" onclick="showPsvExceptionDetails('coverage')" class="glass-card p-4 rounded-xl border border-white/5 hover:border-teal-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">⚠️</span>
+                <h3 class="font-bold text-white text-xs">Coverage Alerts</h3>
+                <p class="text-[10px] text-slate-400">Outlets running dangerously low on high-demand variants.</p>
+              </div>
+            </div>
+
+            <div id="psv-exc-detail-box" class="glass-card p-5 rounded-2xl border border-teal-500/30 bg-teal-950/10 hidden mt-4">
+              <div id="psv-exc-detail-content" class="text-xs text-slate-300">
+                <!-- Details injected here -->
+              </div>
+            </div>
+            <p class="text-center text-[11px] text-slate-500">Click one of the exception categories above to inspect details and mitigation.</p>
+          </div>
+        `
+      },
+      {
+        title: "Store-wise Stock Distribution Matrix",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Variant Matrix</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Store-wise Stock Distribution Matrix</h2>
+              <p class="text-slate-400 text-xs">Review variant distributions by sizes and compute total stock counts.</p>
+            </div>
+
+            <div class="glass-card p-5 rounded-2xl max-w-xl mx-auto space-y-4">
+              <div class="grid grid-cols-4 gap-2 text-center text-xs border-b border-white/5 pb-2 font-bold text-slate-400">
+                <div>Variant Size</div>
+                <div>Mumbai Outlet</div>
+                <div>Pune Outlet</div>
+                <div>Thane Outlet</div>
+              </div>
+              <div class="grid grid-cols-4 gap-2 text-center text-xs items-center">
+                <div class="font-bold text-white">Size S</div>
+                <input type="number" id="psv-m-s" value="12" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+                <input type="number" id="psv-p-s" value="8" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+                <input type="number" id="psv-t-s" value="15" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+              </div>
+              <div class="grid grid-cols-4 gap-2 text-center text-xs items-center">
+                <div class="font-bold text-white">Size M</div>
+                <input type="number" id="psv-m-m" value="22" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+                <input type="number" id="psv-p-m" value="14" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+                <input type="number" id="psv-t-m" value="19" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+              </div>
+              <div class="grid grid-cols-4 gap-2 text-center text-xs items-center">
+                <div class="font-bold text-white">Size L</div>
+                <input type="number" id="psv-m-l" value="5" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+                <input type="number" id="psv-p-l" value="0" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+                <input type="number" id="psv-t-l" value="12" oninput="calcPsvMatrix()" class="w-full text-center bg-black/40 border border-white/10 rounded py-1 text-white">
+              </div>
+              <div class="border-t border-white/5 pt-3 flex justify-between items-center text-xs font-bold">
+                <span class="text-slate-400">Total Network Stock:</span>
+                <span class="text-teal-400 text-sm" id="psv-matrix-total">107 pcs</span>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Capital Efficiency Analytics",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Capital Optimization</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Capital Efficiency Analytics</h2>
+              <p class="text-slate-400 text-xs">Unlock working capital trapped in stagnant partner inventories.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 max-w-4xl mx-auto">
+              <div class="glass-card p-5 rounded-2xl border border-white/5 text-center space-y-2">
+                <div class="text-2xl">💰</div>
+                <h3 class="font-outfit font-bold text-white text-base">Locked Capital</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Identify stagnant merchandise sitting at low-velocity outlets.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 text-center space-y-2">
+                <div class="text-2xl">⏳</div>
+                <h3 class="font-outfit font-bold text-white text-base">Inventory Age Curve</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Visual aging bands track inventory shelf life in partners depots.</p>
+              </div>
+              <div class="glass-card p-5 rounded-2xl border border-white/5 text-center space-y-2 bg-teal-950/10 border-teal-500/20">
+                <div class="text-2xl">📈</div>
+                <h3 class="font-outfit font-bold text-white text-base">Reclaimed Margin</h3>
+                <p class="text-xs text-slate-300 leading-relaxed">Direct stock movements protect initial retail margins, limiting discount write-offs.</p>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Lead Time & Fulfillment Tracker",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Fulfillment Simulator</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Lead Time &amp; Fulfillment Tracker</h2>
+              <p class="text-slate-400 text-xs">Simulate regional transit delays to evaluate localized stockout risks and triggers.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              <div class="lg:col-span-5 glass-card p-5 rounded-2xl border border-white/5 space-y-4">
+                <div class="text-teal-400 font-bold text-sm">Adjust Transit Days</div>
+                <div class="space-y-4">
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold">
+                      <span>TRANSIT TIME (DAYS)</span>
+                      <span id="psv-transit-val" class="text-white">5 Days</span>
+                    </div>
+                    <input type="range" id="input-psv-transit" min="2" max="14" step="1" value="5" oninput="calcPsvLeadTime()" class="w-full accent-teal-500 bg-slate-900 border border-white/5 rounded-lg h-2">
+                  </div>
+                </div>
+              </div>
+
+              <div class="lg:col-span-7 grid grid-cols-2 gap-4">
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Safety Stock Threshold</span>
+                  <div class="text-2xl font-outfit font-extrabold text-white mt-1" id="psv-safety-units">250 Units</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Minimum buffer required</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Stockout Risk Level</span>
+                  <div class="text-2xl font-outfit font-extrabold text-teal-400 mt-1" id="psv-stockout-risk">Low</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Estimated threat score</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center col-span-2 bg-teal-950/10 border-teal-500/20">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Recommended Order Speed</span>
+                  <div class="text-2xl font-outfit font-extrabold text-emerald-400 mt-1" id="psv-reorder-action">Standard Dispatch</div>
+                  <span class="text-[9px] text-slate-400 mt-0.5 block">Replenishment priority status</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Sell-Through Performance Dashboard",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Secondary Performance</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Sell-Through Performance Dashboard</h2>
+              <p class="text-slate-400 text-xs">Review secondary velocity metrics grouped by core merchandise categories.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              <div class="lg:col-span-4 flex flex-col gap-2">
+                <button id="psv-perf-tab-denim" onclick="setPsvPerformanceTab('denim')" class="w-full text-left p-3 rounded-lg border transition text-white border-teal-500 flex justify-between items-center text-xs font-bold" style="background-color: var(--accent);">
+                  <span>👖 Denim Variant Line</span>
+                  <span>➜</span>
+                </button>
+                <button id="psv-perf-tab-sneakers" onclick="setPsvPerformanceTab('sneakers')" class="w-full text-left p-3 rounded-lg border transition bg-slate-900/40 border-white/5 text-slate-400 hover:text-white flex justify-between items-center text-xs font-bold">
+                  <span>👟 Sports Sneakers</span>
+                  <span>➜</span>
+                </button>
+                <button id="psv-perf-tab-tees" onclick="setPsvPerformanceTab('tees')" class="w-full text-left p-3 rounded-lg border transition bg-slate-900/40 border-white/5 text-slate-400 hover:text-white flex justify-between items-center text-xs font-bold">
+                  <span>👕 Graphic Tees</span>
+                  <span>➜</span>
+                </button>
+              </div>
+
+              <div class="lg:col-span-8 glass-card p-5 rounded-2xl border border-white/5 space-y-4">
+                <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                  <h3 class="font-outfit font-bold text-white text-base" id="psv-perf-title">Denim Variant Line</h3>
+                  <span class="text-[10px] text-teal-400 font-bold uppercase bg-teal-500/10 px-2 py-0.5 rounded">Active Sales</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                  <table class="w-full text-xs" id="psv-perf-table">
+                    <!-- Loaded dynamically -->
+                  </table>
+                </div>
+                <div class="text-[10px] text-slate-500 border-t border-white/5 pt-2 mt-2" id="psv-perf-tip">High velocity variant lines with regular weekly checkouts.</div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Inventory Freshness & Aging",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Aging Diagnostics</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Inventory Freshness &amp; Aging</h2>
+              <p class="text-slate-400 text-xs">Track partner stock aging bands to protect margins from dead stock write-downs.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2">
+              <div id="psv-aging-tab-active" onclick="showPsvAgingDetails('active')" class="glass-card p-4 rounded-xl border border-white/5 hover:border-teal-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">🟢</span>
+                <h3 class="font-bold text-white text-xs">Active (0-30 Days)</h3>
+                <p class="text-[10px] text-slate-400">Regular turns and checkout sales.</p>
+              </div>
+              <div id="psv-aging-tab-slowing" onclick="showPsvAgingDetails('slowing')" class="glass-card p-4 rounded-xl border border-white/5 hover:border-teal-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">🟡</span>
+                <h3 class="font-bold text-white text-xs">Slowing (31-60 Days)</h3>
+                <p class="text-[10px] text-slate-400">Declining sales velocity.</p>
+              </div>
+              <div id="psv-aging-tab-aging" onclick="showPsvAgingDetails('aging')" class="glass-card p-4 rounded-xl border border-white/5 hover:border-teal-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">🟠</span>
+                <h3 class="font-bold text-white text-xs">Aging (61-90 Days)</h3>
+                <p class="text-[10px] text-slate-400">High risk of inventory lockup.</p>
+              </div>
+              <div id="psv-aging-tab-dead" onclick="showPsvAgingDetails('dead')" class="glass-card p-4 rounded-xl border border-white/5 hover:border-teal-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]">
+                <span class="text-lg">🔴</span>
+                <h3 class="font-bold text-white text-xs">Dead Stock (90+ Days)</h3>
+                <p class="text-[10px] text-slate-400">No checkout activity recorded.</p>
+              </div>
+            </div>
+
+            <div id="psv-aging-detail-box" class="glass-card p-5 rounded-2xl border border-teal-500/30 bg-teal-950/10 hidden mt-4">
+              <div id="psv-aging-detail-content" class="text-xs text-slate-300">
+                <!-- Dynamic aging details -->
+              </div>
+            </div>
+            <p class="text-center text-[11px] text-slate-500">Click one of the stock aging bands above to view exposure risks and actions.</p>
+          </div>
+        `
+      },
+      {
+        title: "Network Stock Transfer Simulator",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Network Optimization</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Network Stock Transfer Simulator</h2>
+              <p class="text-slate-400 text-xs">Shift variant surpluses from overstocked depots to short-supply hubs.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2 max-w-4xl mx-auto">
+              <div class="lg:col-span-5 glass-card p-5 rounded-2xl border border-white/5 space-y-4 flex flex-col justify-center">
+                <div class="text-teal-400 font-bold text-sm">Optimize Regional Balances</div>
+                <p class="text-xs text-slate-400 leading-relaxed">Mumbai Depot shows excess Denim size 32 (120 units surplus). Pune Depot reports stockouts. Click to transfer and balance the network stock levels.</p>
+                <button onclick="triggerPsvTransfer()" class="w-full py-2.5 rounded-lg bg-teal-500 hover:bg-teal-600 text-white font-bold transition">Balance Network Stock</button>
+              </div>
+
+              <div class="lg:col-span-7 grid grid-cols-2 gap-4">
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Mumbai Surplus</span>
+                  <div class="text-3xl font-outfit font-extrabold text-white mt-1" id="psv-transfer-mumbai">120 pcs</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Held at source</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Pune Stock Level</span>
+                  <div class="text-3xl font-outfit font-extrabold text-red-400 mt-1" id="psv-transfer-pune">0 pcs</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Shortage alert</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center col-span-2 bg-teal-950/10 border-teal-500/20">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Margin Protection Gained</span>
+                  <div class="text-3xl font-outfit font-extrabold text-emerald-400 mt-1" id="psv-transfer-protected">₹0</div>
+                  <span class="text-[9px] text-slate-400 mt-0.5 block">Revenue protected from local stockout</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Distribution ROI Calculator",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Return on Investment</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">PSV Margin Recovery Calculator</h2>
+              <p class="text-slate-400 text-xs">Evaluate annual margins reclaimed by eliminating partner stockouts and excess stocks.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+              <div class="lg:col-span-5 glass-card p-5 rounded-2xl border border-white/5 space-y-4">
+                <div class="text-teal-400 font-bold text-sm">Network Parameters</div>
+                <div class="space-y-4">
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold">
+                      <span>ANNUAL COHORT SALES (PCS)</span>
+                      <span id="psv-roi-sales-val" class="text-white">50,000</span>
+                    </div>
+                    <input type="range" id="input-psv-roi-sales" min="10000" max="200000" step="10000" value="50000" oninput="calcPsvRoi()" class="w-full accent-teal-500 bg-slate-900 border border-white/5 rounded-lg h-2">
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-[11px] text-slate-400 font-bold">
+                      <span>ESTIMATED STOCKOUT RATE (%)</span>
+                      <span id="psv-roi-rate-val" class="text-white">6%</span>
+                    </div>
+                    <input type="range" id="input-psv-roi-rate" min="2" max="20" step="1" value="6" oninput="calcPsvRoi()" class="w-full accent-teal-500 bg-slate-900 border border-white/5 rounded-lg h-2">
+                  </div>
+                </div>
+              </div>
+
+              <div class="lg:col-span-7 grid grid-cols-2 gap-4">
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Prevented Stockouts</span>
+                  <div class="text-2xl font-outfit font-extrabold text-teal-400 mt-1" id="psv-roi-prevented">3,000 items</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Bestseller opportunities saved</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Holding Cost Saved</span>
+                  <div class="text-2xl font-outfit font-extrabold text-teal-400 mt-1" id="psv-roi-holding">₹1,50,000</div>
+                  <span class="text-[9px] text-slate-500 mt-0.5 block">Reduced storage costs</span>
+                </div>
+                <div class="glass-card p-4 rounded-xl border border-white/5 flex flex-col justify-center text-center col-span-2 bg-teal-950/10 border-teal-500/20">
+                  <span class="text-slate-400 text-[10px] uppercase font-bold block">Total Margin Recovery</span>
+                  <div class="text-3xl font-outfit font-extrabold text-emerald-400 mt-1" id="psv-roi-recovery">₹15,00,000</div>
+                  <span class="text-[9px] text-slate-400 mt-0.5 block">Annual cash profit protected by intelligent replenishment coordination</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Why Brands Choose Inventory Visibility",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-4">
+            <div class="text-center space-y-1">
+              <span class="text-accent font-bold uppercase tracking-wider text-[10px]">Business Outcomes</span>
+              <h2 class="text-3xl font-outfit font-extrabold text-white">Why Brands Choose Inventory Visibility</h2>
+              <p class="text-slate-400 text-xs">Drive absolute precision across partner distribution networks.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-2">
+                <span class="text-teal-400 text-lg">📈</span>
+                <h4 class="font-outfit font-bold text-white text-base">Protected Margins</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">Prevent stockouts of bestsellers while re-routing slow variants to clear them at full price.</p>
+              </div>
+
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-2">
+                <span class="text-teal-400 text-lg">💡</span>
+                <h4 class="font-outfit font-bold text-white text-base">Explainable Metrics</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">No black box analytics. Every inventory cover score is fully explainable with clear input transparency.</p>
+              </div>
+
+              <div class="glass-card p-5 rounded-2xl border border-white/5 space-y-2">
+                <span class="text-teal-400 text-lg">⚡</span>
+                <h4 class="font-outfit font-bold text-white text-base">Network Resilience</h4>
+                <p class="text-xs text-slate-400 leading-relaxed">Coordinate bulk reserves and partner depot levels automatically to maintain continuous supply.</p>
+              </div>
+            </div>
+
+            <!-- Dynamic Stock Risk Meter -->
+            <div class="glass-card p-4 rounded-xl border border-teal-500/20 bg-teal-950/5 max-w-xl mx-auto mt-4 text-center">
+              <span class="text-slate-400 text-[10px] uppercase font-bold block">Network Stock Risk Status</span>
+              <div class="text-base font-bold text-teal-400 mt-1" id="psv-risk-meter">Risks Reduced</div>
+              <p class="text-[10px] text-slate-400 mt-1">Calculations based on verified secondary sales coverage parameters.</p>
+            </div>
+          </div>
+        `
+      },
+      {
+        title: "Thank You",
+        html: `
+          <div class="max-w-4xl mx-auto text-center space-y-6">
+            <h1 class="text-5xl font-outfit font-extrabold text-white">Thank <span class="text-accent">You</span></h1>
+            <p class="text-base text-slate-300">Achieve absolute supply chain accuracy with SMRITI PSV.</p>
+            
+            <div class="glass-card max-w-lg mx-auto p-5 rounded-2xl border-accent space-y-4 text-xs">
+              <div class="border-b border-white/5 pb-2 text-slate-400 font-bold uppercase tracking-wider">AITDL Founder Commitment</div>
+              <div class="flex flex-col md:flex-row items-center gap-4 text-left">
+                <div class="w-16 h-16 rounded-full bg-slate-900 border border-teal-500/30 flex items-center justify-center text-2xl">👨‍💼</div>
+                <div class="space-y-1">
+                  <p class="text-sm font-bold text-white">Jawahar R. Mallah</p>
+                  <p class="text-[10px] text-slate-400">Founder &amp; Chief Architect, AITDL</p>
+                  <p class="text-[10px] text-slate-500 leading-relaxed">
+                    "Transparency builds trust. Our primary mission is to make supply chain decisions clear, verifiable, and productive for every brand and distribution partner."
+                  </p>
+                </div>
+              </div>
+              <p class="text-[10px] text-teal-400 font-bold italic mt-2">"Light begins with learning." — Jawahar R. Mallah</p>
+            </div>
+            
+            <div class="pt-4 flex justify-center gap-4">
+              <button onclick="goToSlide(0)" class="px-5 py-2.5 rounded-lg border border-teal-500 text-teal-400 hover:bg-teal-500 hover:text-white transition font-bold text-xs uppercase">Restart Presentation</button>
+              <button onclick="exitDeck()" class="px-5 py-2.5 rounded-lg bg-teal-500 hover:bg-teal-600 text-white transition font-bold text-xs uppercase">Exit Suite</button>
+            </div>
+          </div>
+        `
+      }
+    ];
 
     // Presentation HUD variables
     let currentSlideIndex = 0;
@@ -4353,6 +4938,7 @@
       const btnDistributor = document.getElementById('btn-mode-distributor');
       const btnBarcode = document.getElementById('btn-mode-barcode');
       const btnItemMaster = document.getElementById('btn-mode-itemmaster');
+      const btnPsv = document.getElementById('btn-mode-psv');
 
       // Hide mode selector and display deck workspace
       modeSelectorSlide.classList.remove('active');
@@ -4371,6 +4957,8 @@
         currentDeck = SLIDES_BARCODE;
       } else if (deckType === 'itemmaster') {
         currentDeck = SLIDES_ITEMMASTER;
+      } else if (deckType === 'psv') {
+        currentDeck = SLIDES_PSV;
       }
 
       // Show controls and navigation dots
@@ -4386,7 +4974,7 @@
       const logoBox = document.getElementById('logo-icon-box');
 
       // Reset styles
-      [btnOwner, btnManager, btnTech, btnDistributor, btnBarcode, btnItemMaster].forEach(btn => {
+      [btnOwner, btnManager, btnTech, btnDistributor, btnBarcode, btnItemMaster, btnPsv].forEach(btn => {
         if (btn) {
           btn.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 text-slate-400 hover:text-white bg-transparent";
         }
@@ -4447,6 +5035,15 @@
         document.getElementById('btn-whatif-hud').classList.remove('flex');
         document.getElementById('btn-whatif-hud').classList.add('hidden');
         document.getElementById('whatif-separator').classList.add('hidden');
+      } else if (deckType === 'psv') {
+        accentColor = '#0d9488'; // Teal
+        if (btnPsv) btnPsv.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 bg-teal-500 text-white shadow-lg shadow-teal-500/20";
+        logoBox.className = "w-8 h-8 rounded flex items-center justify-center shadow-lg transition-all duration-300 bg-teal-500 shadow-teal-500/20";
+
+        // Hide What-If button
+        document.getElementById('btn-whatif-hud').classList.remove('flex');
+        document.getElementById('btn-whatif-hud').classList.add('hidden');
+        document.getElementById('whatif-separator').classList.add('hidden');
       }
 
       document.documentElement.style.setProperty('--accent', accentColor);
@@ -4497,6 +5094,10 @@
       const btnItemMaster = document.getElementById('btn-mode-itemmaster');
       if (btnItemMaster) {
         btnItemMaster.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 text-slate-400 hover:text-white bg-transparent";
+      }
+      const btnPsv = document.getElementById('btn-mode-psv');
+      if (btnPsv) {
+        btnPsv.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 text-slate-400 hover:text-white bg-transparent";
       }
       // Hide What-If button
       document.getElementById('btn-whatif-hud').classList.remove('flex');
@@ -4655,6 +5256,33 @@
         }
         if (currentSlideIndex === 13) { // Slide 14: Day in the Life
           setTimelineActive('morning');
+        }
+      }
+
+      if (currentDeck === SLIDES_PSV) {
+        if (currentSlideIndex === 1) { // Slide 2: objections
+          showPsvObjectionDetails('blind');
+        }
+        if (currentSlideIndex === 3) { // Slide 4: Sell-through tracker
+          changeSimSales(0);
+        }
+        if (currentSlideIndex === 5) { // Slide 6: exceptions
+          showPsvExceptionDetails('variance');
+        }
+        if (currentSlideIndex === 6) { // Slide 7: Matrix grid
+          calcPsvMatrix();
+        }
+        if (currentSlideIndex === 8) { // Slide 9: Lead time
+          calcPsvLeadTime();
+        }
+        if (currentSlideIndex === 9) { // Slide 10: Performance Dashboard
+          setPsvPerformanceTab('denim');
+        }
+        if (currentSlideIndex === 10) { // Slide 11: Freshness & Aging
+          showPsvAgingDetails('active');
+        }
+        if (currentSlideIndex === 12) { // Slide 13: ROI recovery
+          calcPsvRoi();
         }
       }
 
@@ -6771,6 +7399,431 @@
       if (invErrEl) invErrEl.textContent = `${invErr.toLocaleString()} SKUs`;
       const revenueLeakEl = document.getElementById('roi-cat-revenue-leak');
       if (revenueLeakEl) revenueLeakEl.textContent = `₹${revenueLeak.toLocaleString()}`;
+    }
+
+// ==========================================
+    // SMRITI PSV INTELLIGENCE CENTER INTERACTIONS
+    // ==========================================
+
+    // Slide 2: Objections
+    function showPsvObjectionDetails(scenario) {
+      const textEl = document.getElementById('psv-obj-detail-content');
+      const box = document.getElementById('psv-obj-detail-box');
+      if (!textEl || !box) return;
+      box.classList.remove('hidden');
+
+      const tabs = ['blind', 'reorders', 'stale'];
+      tabs.forEach(t => {
+        const card = document.getElementById(`psv-obj-tab-${t}`);
+        if (card) {
+          if (t === scenario) {
+            card.className = "glass-card p-4 rounded-xl border border-teal-500/80 bg-teal-950/20 scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]";
+          } else {
+            card.className = "glass-card p-4 rounded-xl border border-white/5 hover:border-teal-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]";
+          }
+        }
+      });
+
+      const details = {
+        blind: {
+          title: "Objection: Partner Stocks are Completely Blind",
+          impact: "Invoiced stock leaves the company warehouse and becomes completely invisible to brand supply planners.",
+          path: "Blind invoicing -> Stockout of hot variants -> Accumulation of slow variants -> Margin leak.",
+          mitigation: "SMRITI registers secondary sales from partner depots to establish real-time channel stock visibility."
+        },
+        reorders: {
+          title: "Objection: Excess Reorders and Inventory Bloat",
+          impact: "Partners place reorders using guesswork, leading to excess inventory of wrong sizes and colors.",
+          path: "Guesswork reorders -> Stock congestion -> High capital lockup -> Cash flow squeeze.",
+          mitigation: "SMRITI computes variant-level Weeks of Cover (WOC) metrics, ensuring reorders match actual velocity."
+        },
+        stale: {
+          title: "Objection: Stale Variants Accumulating Silently",
+          impact: "Slow-moving variant sizes and colors sit in regional depots for 90+ days without alerts.",
+          path: "Silent aging -> Value depreciation -> Forced discount clearances -> ERODED profit margins.",
+          mitigation: "SMRITI flags stale variant balances and suggests stock transfers to high-velocity store outlets."
+        }
+      };
+
+      const data = details[scenario];
+      if (data) {
+        textEl.innerHTML = `
+          <div class="space-y-3">
+            <h4 class="font-outfit font-bold text-white text-sm border-b border-white/5 pb-1 flex items-center gap-2">
+              <span class="text-teal-400">⚠️</span> ${data.title}
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div>
+                <span class="text-teal-400 font-bold block">Business Impact:</span>
+                <p class="text-slate-300 mt-0.5">${data.impact}</p>
+              </div>
+              <div>
+                <span class="text-red-400 font-bold block">Operational Path:</span>
+                <p class="text-slate-300 mt-0.5">${data.path}</p>
+              </div>
+              <div>
+                <span class="text-emerald-400 font-bold block">SMRITI Mitigation:</span>
+                <p class="text-slate-300 mt-0.5">${data.mitigation}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Slide 4: Sell-Through Tracker
+    let psvSimSalesAdded = 0;
+    function changeSimSales(val) {
+      if (val === 0) {
+        psvSimSalesAdded = 0;
+      } else {
+        psvSimSalesAdded += val;
+        if (psvSimSalesAdded > 450) psvSimSalesAdded = 450;
+        if (psvSimSalesAdded < 0) psvSimSalesAdded = 0;
+      }
+
+      const baseSales = 450;
+      const totalSales = baseSales + psvSimSalesAdded;
+      const baseStock = 550;
+      const currentStock = baseStock - psvSimSalesAdded;
+      const totalStock = 1000;
+
+      const rate = Math.round((totalSales / totalStock) * 100);
+      const rateEl = document.getElementById('psv-sim-rate');
+      if (rateEl) rateEl.textContent = `${rate}%`;
+
+      const stockEl = document.getElementById('psv-sim-stock');
+      if (stockEl) stockEl.textContent = `${currentStock} pcs`;
+
+      // Velocity = sales per week (approx sales per week rate)
+      const velocity = 50 + (psvSimSalesAdded / 5);
+      const woc = (currentStock / velocity).toFixed(1);
+      const wocEl = document.getElementById('psv-sim-woc');
+      if (wocEl) wocEl.textContent = `${woc} Weeks`;
+
+      const statusEl = document.getElementById('psv-sim-status');
+      if (statusEl) {
+        if (woc < 2) {
+          statusEl.textContent = "Action Needed (Stockout Risk)";
+          statusEl.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-500/10 text-red-400";
+        } else if (woc < 4) {
+          statusEl.textContent = "Watch (Low Buffer)";
+          statusEl.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-500/10 text-amber-400";
+        } else if (woc < 8) {
+          statusEl.textContent = "Healthy";
+          statusEl.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400";
+        } else {
+          statusEl.textContent = "Excellent (High Coverage)";
+          statusEl.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-teal-500/10 text-teal-400";
+        }
+      }
+    }
+
+    // Slide 6: Exceptions
+    function showPsvExceptionDetails(exc) {
+      const textEl = document.getElementById('psv-exc-detail-content');
+      const box = document.getElementById('psv-exc-detail-box');
+      if (!textEl || !box) return;
+      box.classList.remove('hidden');
+
+      const tabs = ['variance', 'return', 'coverage'];
+      tabs.forEach(t => {
+        const card = document.getElementById(`psv-exc-tab-${t}`);
+        if (card) {
+          if (t === exc) {
+            card.className = "glass-card p-4 rounded-xl border border-teal-500/80 bg-teal-950/20 scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]";
+          } else {
+            card.className = "glass-card p-4 rounded-xl border border-white/5 hover:border-teal-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]";
+          }
+        }
+      });
+
+      const details = {
+        variance: {
+          title: "Exception: Stock Variance Found",
+          impact: "Discrepancies between company registers and distributor physical counts.",
+          path: "Mismatched stock logs -> Inaccurate coverage planning -> Excess inventory.",
+          mitigation: "SMRITI flags variations during physical checks and alerts managers to correct logs."
+        },
+        return: {
+          title: "Exception: Return Mismatch Detected",
+          impact: "Returned variants do not match invoice codes, distorting outlet counts.",
+          path: "Variant mismatch -> Damaged stocks returned -> Corrupt master data records.",
+          mitigation: "SMRITI runs size-color verification at return points, validating codes before entry."
+        },
+        coverage: {
+          title: "Exception: Coverage Alert Tripped",
+          impact: "Bestseller variant sizes drop below 1.5 Weeks of Cover (WOC) limits.",
+          path: "Low buffer -> Immediate stockout -> Revenue loss -> Customer churn.",
+          mitigation: "SMRITI monitors velocities and recommends stock transfers from nearby overstocked depot locations."
+        }
+      };
+
+      const data = details[exc];
+      if (data) {
+        textEl.innerHTML = `
+          <div class="space-y-3">
+            <h4 class="font-outfit font-bold text-white text-sm border-b border-white/5 pb-1 flex items-center gap-2">
+              <span class="text-teal-400">⚖️</span> ${data.title}
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div>
+                <span class="text-teal-400 font-bold block">Business Problem:</span>
+                <p class="text-slate-300 mt-0.5">${data.impact}</p>
+              </div>
+              <div>
+                <span class="text-red-400 font-bold block">Operational Path:</span>
+                <p class="text-slate-300 mt-0.5">${data.path}</p>
+              </div>
+              <div>
+                <span class="text-emerald-400 font-bold block">SMRITI Mitigation:</span>
+                <p class="text-slate-300 mt-0.5">${data.mitigation}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Slide 7: Store-wise Stock Distribution Matrix
+    function calcPsvMatrix() {
+      const ms = parseInt(document.getElementById('psv-m-s').value) || 0;
+      const ps = parseInt(document.getElementById('psv-p-s').value) || 0;
+      const ts = parseInt(document.getElementById('psv-t-s').value) || 0;
+      
+      const mm = parseInt(document.getElementById('psv-m-m').value) || 0;
+      const pm = parseInt(document.getElementById('psv-p-m').value) || 0;
+      const tm = parseInt(document.getElementById('psv-t-m').value) || 0;
+      
+      const ml = parseInt(document.getElementById('psv-m-l').value) || 0;
+      const pl = parseInt(document.getElementById('psv-p-l').value) || 0;
+      const tl = parseInt(document.getElementById('psv-t-l').value) || 0;
+
+      const total = ms + ps + ts + mm + pm + tm + ml + pl + tl;
+      const totalEl = document.getElementById('psv-matrix-total');
+      if (totalEl) {
+        totalEl.textContent = `${total} pcs`;
+      }
+    }
+
+    // Slide 9: Lead Time & Fulfillment Tracker
+    function calcPsvLeadTime() {
+      const transit = parseInt(document.getElementById('input-psv-transit').value) || 5;
+      const transitEl = document.getElementById('psv-transit-val');
+      if (transitEl) transitEl.textContent = `${transit} Days`;
+
+      // Safety Stock buffer depends on lead time
+      const safetyUnits = transit * 50;
+      const safetyEl = document.getElementById('psv-safety-units');
+      if (safetyEl) safetyEl.textContent = `${safetyUnits} Units`;
+
+      const riskEl = document.getElementById('psv-stockout-risk');
+      const actionEl = document.getElementById('psv-reorder-action');
+
+      if (transit >= 10) {
+        if (riskEl) {
+          riskEl.textContent = "Critical Risk";
+          riskEl.className = "text-2xl font-outfit font-extrabold text-red-500 mt-1 animate-pulse";
+        }
+        if (actionEl) actionEl.textContent = "Air Freight Override Required";
+      } else if (transit >= 7) {
+        if (riskEl) {
+          riskEl.textContent = "High Risk";
+          riskEl.className = "text-2xl font-outfit font-extrabold text-red-400 mt-1";
+        }
+        if (actionEl) actionEl.textContent = "Expedited Express Routing";
+      } else if (transit >= 5) {
+        if (riskEl) {
+          riskEl.textContent = "Moderate Risk";
+          riskEl.className = "text-2xl font-outfit font-extrabold text-amber-400 mt-1";
+        }
+        if (actionEl) actionEl.textContent = "Fast Track Dispatch";
+      } else {
+        if (riskEl) {
+          riskEl.textContent = "Low Risk";
+          riskEl.className = "text-2xl font-outfit font-extrabold text-emerald-400 mt-1";
+        }
+        if (actionEl) actionEl.textContent = "Standard Dispatch";
+      }
+    }
+
+    // Slide 10: Performance Dashboard
+    function setPsvPerformanceTab(tab) {
+      const tabs = ['denim', 'sneakers', 'tees'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`psv-perf-tab-${t}`);
+        if (btn) {
+          if (t === tab) {
+            btn.className = "w-full text-left p-3 rounded-lg border transition text-white border-teal-500 flex justify-between items-center text-xs font-bold";
+            btn.style.backgroundColor = 'var(--accent)';
+          } else {
+            btn.className = "w-full text-left p-3 rounded-lg border transition bg-slate-900/40 border-white/5 text-slate-400 hover:text-white flex justify-between items-center text-xs font-bold";
+            btn.style.backgroundColor = '';
+          }
+        }
+      });
+
+      const titleEl = document.getElementById('psv-perf-title');
+      const tableEl = document.getElementById('psv-perf-table');
+      const tipEl = document.getElementById('psv-perf-tip');
+      if (!titleEl || !tableEl || !tipEl) return;
+
+      const data = {
+        denim: {
+          title: "Denim Variant Line",
+          tip: "High velocity variant lines with regular weekly checkouts.",
+          rows: `
+            <thead><tr class="border-b border-white/5 text-slate-500"><th class="py-1.5 text-left">SKU CODE</th><th class="py-1.5 text-left">VARIANT SIZE</th><th class="py-1.5 text-right">NET SALES</th><th class="py-1.5 text-right">SELL THROUGH</th></tr></thead>
+            <tbody class="divide-y divide-white/5 text-slate-300">
+              <tr><td class="py-1.5 font-mono text-white">DNM-BLU-32</td><td class="py-1.5">Size 32 (M)</td><td class="py-1.5 text-right">340 pcs</td><td class="py-1.5 text-right font-bold text-emerald-400">72%</td></tr>
+              <tr><td class="py-1.5 font-mono text-white">DNM-BLK-34</td><td class="py-1.5">Size 34 (L)</td><td class="py-1.5 text-right">290 pcs</td><td class="py-1.5 text-right font-bold text-emerald-400">68%</td></tr>
+            </tbody>
+          `
+        },
+        sneakers: {
+          title: "Sports Sneakers",
+          tip: "Moderate demand with regional size variances. Monitor stock levels closely.",
+          rows: `
+            <thead><tr class="border-b border-white/5 text-slate-500"><th class="py-1.5 text-left">SKU CODE</th><th class="py-1.5 text-left">SIZE</th><th class="py-1.5 text-right">NET SALES</th><th class="py-1.5 text-right">SELL THROUGH</th></tr></thead>
+            <tbody class="divide-y divide-white/5 text-slate-300">
+              <tr><td class="py-1.5 font-mono text-white">SNK-BLK-09</td><td class="py-1.5">Size 9</td><td class="py-1.5 text-right">120 pairs</td><td class="py-1.5 text-right font-bold text-amber-400">45%</td></tr>
+              <tr><td class="py-1.5 font-mono text-white">SNK-WHT-10</td><td class="py-1.5">Size 10</td><td class="py-1.5 text-right">80 pairs</td><td class="py-1.5 text-right font-bold text-amber-400">38%</td></tr>
+            </tbody>
+          `
+        },
+        tees: {
+          title: "Graphic Tees",
+          tip: "Fast turns but high stock holding. Discount schemes recommended for surplus.",
+          rows: `
+            <thead><tr class="border-b border-white/5 text-slate-500"><th class="py-1.5 text-left">SKU CODE</th><th class="py-1.5 text-left">SIZE</th><th class="py-1.5 text-right">NET SALES</th><th class="py-1.5 text-right">SELL THROUGH</th></tr></thead>
+            <tbody class="divide-y divide-white/5 text-slate-300">
+              <tr><td class="py-1.5 font-mono text-white">TEE-WHT-S</td><td class="py-1.5">Size S</td><td class="py-1.5 text-right">410 pcs</td><td class="py-1.5 text-right font-bold text-emerald-400">82%</td></tr>
+              <tr><td class="py-1.5 font-mono text-white">TEE-BLK-M</td><td class="py-1.5">Size M</td><td class="py-1.5 text-right">150 pcs</td><td class="py-1.5 text-right font-bold text-red-400">22%</td></tr>
+            </tbody>
+          `
+        }
+      };
+
+      const current = data[tab];
+      if (current) {
+        titleEl.textContent = current.title;
+        tableEl.innerHTML = current.rows;
+        tipEl.textContent = current.tip;
+      }
+    }
+
+    // Slide 11: Inventory Freshness & Aging
+    function showPsvAgingDetails(age) {
+      const textEl = document.getElementById('psv-aging-detail-content');
+      const box = document.getElementById('psv-aging-detail-box');
+      if (!textEl || !box) return;
+      box.classList.remove('hidden');
+
+      const tabs = ['active', 'slowing', 'aging', 'dead'];
+      tabs.forEach(t => {
+        const card = document.getElementById(`psv-aging-tab-${t}`);
+        if (card) {
+          if (t === age) {
+            card.className = "glass-card p-4 rounded-xl border border-teal-500/80 bg-teal-950/20 scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]";
+          } else {
+            card.className = "glass-card p-4 rounded-xl border border-white/5 hover:border-teal-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]";
+          }
+        }
+      });
+
+      const details = {
+        active: {
+          title: "Fresh Inventory (0-30 Days)",
+          days: "0-30 Days shelf life",
+          risk: "Low Risk. Fast turns ensure stock sells out within normal margin limits.",
+          action: "No action needed. Monitor normal checkout velocities."
+        },
+        slowing: {
+          title: "Slowing Stock (31-60 Days)",
+          days: "31-60 Days shelf life",
+          risk: "Moderate Risk. Velocity drops, indicating potential variant oversaturation.",
+          action: "Highlight in regional lists. Keep close watch on size performance curves."
+        },
+        aging: {
+          title: "Aging Inventory (61-90 Days)",
+          days: "61-90 Days shelf life",
+          risk: "High Risk. High capital lockup. Variants sit stagnant at regional depots.",
+          action: "Enforce discount schemes or bundle promotional offers to accelerate sales."
+        },
+        dead: {
+          title: "Dead Stock (90+ Days)",
+          days: "90+ Days shelf life",
+          risk: "Critical Risk. Merchandise sits completely frozen, tying up significant working capital.",
+          action: "Trigger stock transfers to high-demand locations or execute inventory write-offs."
+        }
+      };
+
+      const data = details[age];
+      if (data) {
+        textEl.innerHTML = `
+          <div class="space-y-3">
+            <h4 class="font-outfit font-bold text-white text-sm border-b border-white/5 pb-1 flex items-center gap-2">
+              <span class="text-teal-400">📊</span> ${data.title}
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div>
+                <span class="text-teal-400 font-bold block">Shelf Life:</span>
+                <p class="text-slate-300 mt-0.5">${data.days}</p>
+              </div>
+              <div>
+                <span class="text-red-400 font-bold block">Capital Exposure:</span>
+                <p class="text-slate-300 mt-0.5">${data.risk}</p>
+              </div>
+              <div>
+                <span class="text-emerald-400 font-bold block">Recommended Action:</span>
+                <p class="text-slate-300 mt-0.5">${data.action}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Slide 12: Network Stock Transfer
+    let psvTransferTriggered = false;
+    function triggerPsvTransfer() {
+      if (psvTransferTriggered) {
+        // Reset
+        document.getElementById('psv-transfer-mumbai').textContent = "120 pcs";
+        document.getElementById('psv-transfer-pune').textContent = "0 pcs";
+        document.getElementById('psv-transfer-pune').className = "text-3xl font-outfit font-extrabold text-red-400 mt-1";
+        document.getElementById('psv-transfer-protected').textContent = "₹0";
+        psvTransferTriggered = false;
+      } else {
+        // Execute transfer simulation
+        document.getElementById('psv-transfer-mumbai').textContent = "20 pcs";
+        document.getElementById('psv-transfer-pune').textContent = "100 pcs";
+        document.getElementById('psv-transfer-pune').className = "text-3xl font-outfit font-extrabold text-emerald-400 mt-1";
+        document.getElementById('psv-transfer-protected').textContent = "₹60,000";
+        psvTransferTriggered = true;
+      }
+    }
+
+    // Slide 13: ROI Calculator
+    function calcPsvRoi() {
+      const sales = parseInt(document.getElementById('input-psv-roi-sales').value) || 50000;
+      const rate = parseInt(document.getElementById('input-psv-roi-rate').value) || 6;
+
+      const salesValEl = document.getElementById('psv-roi-sales-val');
+      if (salesValEl) salesValEl.textContent = sales.toLocaleString();
+      const rateValEl = document.getElementById('psv-roi-rate-val');
+      if (rateValEl) rateValEl.textContent = `${rate}%`;
+
+      const prevented = Math.round(sales * (rate / 100));
+      const holding = Math.round(sales * 3);
+      const recovery = prevented * 500;
+
+      const preventedEl = document.getElementById('psv-roi-prevented');
+      if (preventedEl) preventedEl.textContent = `${prevented.toLocaleString()} items`;
+      const holdingEl = document.getElementById('psv-roi-holding');
+      if (holdingEl) holdingEl.textContent = `₹${holding.toLocaleString()}`;
+      const recoveryEl = document.getElementById('psv-roi-recovery');
+      if (recoveryEl) recoveryEl.textContent = `₹${recovery.toLocaleString()}`;
     }
 
     </script>
