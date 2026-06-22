@@ -6417,6 +6417,362 @@
       }
     }
 
+    // Item Master Slide 2: Data Quality Objections
+    function showItemObjectionDetails(issue) {
+      const textEl = document.getElementById('item-obj-detail-content');
+      const box = document.getElementById('item-obj-detail-box');
+      if (!textEl || !box) return;
+      box.classList.remove('hidden');
+
+      const tabs = ['size', 'price', 'category', 'image', 'duplicate'];
+      tabs.forEach(t => {
+        const card = document.getElementById(`item-obj-tab-${t}`);
+        if (card) {
+          if (t === issue) {
+            card.className = "glass-card p-3 rounded-xl border border-rose-500/80 bg-rose-950/20 scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]";
+          } else {
+            card.className = "glass-card p-3 rounded-xl border border-white/5 hover:border-rose-500/40 hover:scale-[1.02] transition cursor-pointer text-center space-y-1 flex flex-col justify-center min-h-[95px]";
+          }
+        }
+      });
+
+      const details = {
+        size: {
+          title: "Catalog Issue: Wrong Size Mapping",
+          impact: "Incorrect size labels on tags lead to wrong cashier billing, higher return rates, and stock count variances.",
+          path: "Wrong Size Tag → Incorrect billing → Returns → Customer dissatisfaction.",
+          mitigation: "SMRITI checks size variations against parent-style matrix curves before barcode creation."
+        },
+        price: {
+          title: "Catalog Issue: Wrong Price Assigned",
+          impact: "Cashiers bill items with wrong prices, leading to immediate profit leakage or customer pricing disputes at checkout lanes.",
+          path: "Price typo in catalog → Wrong cashier checkout → Margin loss or customer dispute.",
+          mitigation: "SMRITI enforces automated price validation checks, checking margins before approving price lists."
+        },
+        category: {
+          title: "Catalog Issue: Wrong Category Classification",
+          impact: "Inaccurate category assignment leads to distorted sales reports, corrupting stock planning models.",
+          path: "Product misclassified → Distorted category reports → Bad purchase orders → Excess stock.",
+          mitigation: "SMRITI requires department-to-category validation checks on saving new articles."
+        },
+        image: {
+          title: "Catalog Issue: Missing Catalog Images",
+          impact: "E-commerce channels and store sales displays cannot visual-match items, causing cashier scan errors.",
+          path: "No photo in catalog → Cashier cannot visual-verify product → Wrong variant selected → Inventory mismatch.",
+          mitigation: "SMRITI flags products missing images in the quality scorecard, prompting image uploads."
+        },
+        duplicate: {
+          title: "Catalog Issue: Duplicate Product Entries",
+          impact: "Duplicate items created for the same product split stock counts and histories, rendering reports useless.",
+          path: "Twin product records → Split sales data → Distorted demand calculations → Bad business decisions.",
+          mitigation: "SMRITI checks style codes and barcode fields dynamically to prevent duplicate registrations."
+        }
+      };
+
+      const data = details[issue];
+      if (data) {
+        textEl.innerHTML = `
+          <div class="space-y-3">
+            <h4 class="font-outfit font-bold text-white text-sm border-b border-white/5 pb-1 flex items-center gap-2">
+              <span class="text-rose-400">⚠️</span> ${data.title}
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div>
+                <span class="text-rose-400 font-bold block">Business Impact:</span>
+                <p class="text-slate-300 mt-0.5">${data.impact}</p>
+              </div>
+              <div>
+                <span class="text-red-400 font-bold block">Operational Path:</span>
+                <p class="text-slate-300 mt-0.5">${data.path}</p>
+              </div>
+              <div>
+                <span class="text-emerald-400 font-bold block">SMRITI Mitigation:</span>
+                <p class="text-slate-300 mt-0.5">${data.mitigation}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Item Master Slide 5: Preset Variant Generator JS
+    function updateVariantCount() {
+      const colors = ['blue', 'black', 'grey'].filter(c => {
+        const el = document.getElementById(`v-col-${c}`);
+        return el ? el.checked : false;
+      }).length;
+      const sizes = ['xs', 's', 'm', 'l', 'xl', 'xxl'].filter(s => {
+        const el = document.getElementById(`v-sz-${s}`);
+        return el ? el.checked : false;
+      }).length;
+      const fits = ['slim', 'reg'].filter(f => {
+        const el = document.getElementById(`v-fit-${f}`);
+        return el ? el.checked : false;
+      }).length;
+      
+      const total = colors * sizes * fits;
+      const calcCountEl = document.getElementById('v-calc-count');
+      if (calcCountEl) {
+        calcCountEl.textContent = `${total} Variants`;
+      }
+    }
+
+    function triggerVariantGeneration() {
+      const colors = ['blue', 'black', 'grey'].filter(c => {
+        const el = document.getElementById(`v-col-${c}`);
+        return el ? el.checked : false;
+      });
+      const sizes = ['xs', 's', 'm', 'l', 'xl', 'xxl'].filter(s => {
+        const el = document.getElementById(`v-sz-${s}`);
+        return el ? el.checked : false;
+      });
+      const fits = ['slim', 'reg'].filter(f => {
+        const el = document.getElementById(`v-fit-${f}`);
+        return el ? el.checked : false;
+      });
+      const container = document.getElementById('v-list-container');
+      if (!container) return;
+
+      if (colors.length === 0 || sizes.length === 0 || fits.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-red-400 text-xs">Error: Select at least one color, size, and fit.</div>`;
+        return;
+      }
+
+      let html = '<table class="w-full text-[10px] border-collapse"><thead class="border-b border-white/5 text-slate-500 bg-black/10"><tr><th class="p-2 text-left">SKU CODE</th><th class="p-2 text-left">COLOR</th><th class="p-2 text-left">SIZE</th><th class="p-2 text-left">FIT</th><th class="p-2 text-right">BARCODE</th></tr></thead><tbody class="divide-y divide-white/5 text-slate-300">';
+      let codeBase = 890332211000;
+      let count = 0;
+      
+      colors.forEach(col => {
+        sizes.forEach(sz => {
+          fits.forEach(fit => {
+            count++;
+            const sku = `ART-DENIM-${col.substring(0,3).toUpperCase()}-${sz.toUpperCase()}-${fit.substring(0,3).toUpperCase()}`;
+            const barcode = codeBase + count;
+            html += `<tr>
+              <td class="p-2 font-mono font-bold text-white">${sku}</td>
+              <td class="p-2 uppercase">${col}</td>
+              <td class="p-2 uppercase">${sz}</td>
+              <td class="p-2 uppercase">${fit}</td>
+              <td class="p-2 text-right font-mono text-cyan-400">${barcode}</td>
+            </tr>`;
+          });
+        });
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // Item Master Slide 6: Garment Size Matrix
+    function calcGarmentMatrix() {
+      const xs = parseInt(document.getElementById('gmatrix-xs').value) || 0;
+      const s = parseInt(document.getElementById('gmatrix-s').value) || 0;
+      const m = parseInt(document.getElementById('gmatrix-m').value) || 0;
+      const l = parseInt(document.getElementById('gmatrix-l').value) || 0;
+      const xl = parseInt(document.getElementById('gmatrix-xl').value) || 0;
+      const xxl = parseInt(document.getElementById('gmatrix-xxl').value) || 0;
+      
+      const total = xs + s + m + l + xl + xxl;
+      const totalEl = document.getElementById('gmatrix-total');
+      if (totalEl) totalEl.textContent = total;
+    }
+
+    // Item Master Slide 7: Footwear Size Matrix
+    function calcFootwearMatrix() {
+      const f6 = parseInt(document.getElementById('fmatrix-6').value) || 0;
+      const f7 = parseInt(document.getElementById('fmatrix-7').value) || 0;
+      const f8 = parseInt(document.getElementById('fmatrix-8').value) || 0;
+      const f9 = parseInt(document.getElementById('fmatrix-9').value) || 0;
+      const f10 = parseInt(document.getElementById('fmatrix-10').value) || 0;
+      const f11 = parseInt(document.getElementById('fmatrix-11').value) || 0;
+      
+      const total = f6 + f7 + f8 + f9 + f10 + f11;
+      const totalEl = document.getElementById('fmatrix-total');
+      if (totalEl) totalEl.textContent = total;
+    }
+
+    // Item Master Slide 9: Catalog Completeness
+    function calcCompleteness() {
+      const img = document.getElementById('comp-img').checked ? 29 : 0;
+      const desc = document.getElementById('comp-desc').checked ? 27 : 0;
+      const size = document.getElementById('comp-size').checked ? 30 : 0;
+      const attr = document.getElementById('comp-attr').checked ? 14 : 0;
+      
+      const total = img + desc + size + attr;
+      const scoreEl = document.getElementById('comp-score-text');
+      if (scoreEl) scoreEl.textContent = `${total}%`;
+      
+      const scoreCircle = document.getElementById('comp-score-circle');
+      const badgeText = document.getElementById('comp-badge-text');
+      const descText = document.getElementById('comp-desc-text');
+      
+      if (total >= 90) {
+        if (badgeText) {
+          badgeText.textContent = "Catalog Status: Excellent";
+          badgeText.className = "text-xs font-bold text-emerald-400";
+        }
+        if (descText) descText.textContent = "High-quality master catalog. Supports accurate inventory analytics and classifications.";
+        if (scoreCircle) scoreCircle.className = "w-32 h-32 rounded-full border-8 border-emerald-500/80 flex items-center justify-center relative bg-emerald-950/5 shadow-lg shadow-emerald-500/10 transition-all duration-300";
+      } else if (total >= 70) {
+        if (badgeText) {
+          badgeText.textContent = "Catalog Status: Good";
+          badgeText.className = "text-xs font-bold text-white";
+        }
+        if (descText) descText.textContent = "Minimum operational quality met. Complete attribute mappings to maximize searchability and reporting accuracy.";
+        if (scoreCircle) scoreCircle.className = "w-32 h-32 rounded-full border-8 border-rose-500/40 flex items-center justify-center relative bg-rose-950/5 shadow-lg shadow-rose-500/5 transition-all duration-300";
+      } else {
+        if (badgeText) {
+          badgeText.textContent = "Catalog Status: Critical Needs Attention";
+          badgeText.className = "text-xs font-bold text-red-400";
+        }
+        if (descText) descText.textContent = "Low completeness. Missing fields may cause barcode printing halts and cashier lane classification errors.";
+        if (scoreCircle) scoreCircle.className = "w-32 h-32 rounded-full border-8 border-red-500/80 flex items-center justify-center relative bg-red-950/5 shadow-lg shadow-red-500/10 transition-all duration-300";
+      }
+    }
+
+    // Item Master Slide 11: Anomaly Details
+    function showAuditAnomalyDetails(anomaly) {
+      const textEl = document.getElementById('item-audit-detail-content');
+      if (!textEl) return;
+
+      const details = {
+        image: {
+          title: "Anomaly: Missing Product Images",
+          severity: "Medium",
+          impact: "Limits cashiers from visually matching products during scanning at POS checkout lanes.",
+          recovery: "Export the list of 14 SKUs and upload JPEG file attachments to complete catalog profiles."
+        },
+        category: {
+          title: "Anomaly: Missing Category Assignments",
+          severity: "High",
+          impact: "Skewed tax reports and inaccurate sales analytics for departments.",
+          recovery: "Open bulk editing grid and select valid categories for the 4 affected style records."
+        },
+        price: {
+          title: "Anomaly: Missing Price List Entries",
+          severity: "Critical",
+          impact: "Blocks cashiers from billing these items. Checkout scan will return zero value errors.",
+          recovery: "Set selling prices in standard price list immediately to authorize billing."
+        }
+      };
+
+      const data = details[anomaly];
+      if (data) {
+        textEl.innerHTML = `
+          <div class="space-y-3">
+            <h4 class="font-outfit font-bold text-white text-sm border-b border-white/5 pb-1">
+              ${data.title}
+            </h4>
+            <div class="space-y-2 text-xs">
+              <div><span class="text-rose-400 font-bold block">Severity Level:</span> <span class="text-white">${data.severity}</span></div>
+              <div><span class="text-rose-400 font-bold block">Operational Risk:</span> <span class="text-slate-300">${data.impact}</span></div>
+              <div><span class="text-emerald-400 font-bold block">Correction Steps:</span> <span class="text-slate-300">${data.recovery}</span></div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Item Master Slide 12: Product Health Dashboard Tabs
+    function setProductHealthTab(tab) {
+      const tabs = ['active', 'dormant', 'slow', 'never'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`phealth-tab-${t}`);
+        if (btn) {
+          if (t === tab) {
+            btn.className = "w-full text-left p-3 rounded-lg border transition bg-accent text-white border-accent flex justify-between items-center";
+            btn.style.backgroundColor = 'var(--accent)';
+            btn.style.borderColor = 'var(--accent)';
+          } else {
+            btn.className = "w-full text-left p-3 rounded-lg border transition bg-slate-900/40 border-white/5 text-slate-400 hover:text-white flex justify-between items-center";
+            btn.style.backgroundColor = '';
+            btn.style.borderColor = '';
+          }
+        }
+      });
+
+      const titleEl = document.getElementById('phealth-title');
+      const tableEl = document.getElementById('phealth-table');
+      const tipEl = document.getElementById('phealth-tip');
+      if (!titleEl || !tableEl || !tipEl) return;
+
+      const data = {
+        active: {
+          title: "Active (Healthy)",
+          tip: "Active products have regular sales transactions and correct master codes.",
+          rows: `
+            <thead><tr class="border-b border-white/5 text-slate-500"><th class="py-1.5 text-left">SKU CODE</th><th class="py-1.5 text-left">ARTICLE NAME</th><th class="py-1.5 text-right">STOCK</th><th class="py-1.5 text-right">VELOCITY</th></tr></thead>
+            <tbody class="divide-y divide-white/5 text-slate-300">
+              <tr><td class="py-1.5 font-mono text-white">ART-DENIM-BLU-32</td><td class="py-1.5">Slim Fit Denim Blue</td><td class="py-1.5 text-right">144 pcs</td><td class="py-1.5 text-right font-bold text-emerald-400">12.5 pcs/day</td></tr>
+              <tr><td class="py-1.5 font-mono text-white">ART-SNEAK-BLK-09</td><td class="py-1.5">Sport Sneakers Black</td><td class="py-1.5 text-right">60 pairs</td><td class="py-1.5 text-right font-bold text-emerald-400">8.2 pairs/day</td></tr>
+            </tbody>
+          `
+        },
+        dormant: {
+          title: "Dormant (Needs Attention)",
+          tip: "Dormant products have stock but zero transactions in the last 45+ days. Action: check price setups.",
+          rows: `
+            <thead><tr class="border-b border-white/5 text-slate-500"><th class="py-1.5 text-left">SKU CODE</th><th class="py-1.5 text-left">ARTICLE NAME</th><th class="py-1.5 text-right">STOCK</th><th class="py-1.5 text-right">DORMANT DAYS</th></tr></thead>
+            <tbody class="divide-y divide-white/5 text-slate-300">
+              <tr><td class="py-1.5 font-mono text-white">ART-GOLD-RING-12</td><td class="py-1.5">Gold Ring 22K</td><td class="py-1.5 text-right">8 pcs</td><td class="py-1.5 text-right font-bold text-amber-400">57 Days</td></tr>
+              <tr><td class="py-1.5 font-mono text-white">ART-TEE-WHT-LARGE</td><td class="py-1.5">Casual Tee White</td><td class="py-1.5 text-right">45 pcs</td><td class="py-1.5 text-right font-bold text-amber-400">48 Days</td></tr>
+            </tbody>
+          `
+        },
+        slow: {
+          title: "Slow Moving (Action Recommended)",
+          tip: "Slow items have low velocity relative to inventory levels. Recommend promotional discount scheme.",
+          rows: `
+            <thead><tr class="border-b border-white/5 text-slate-500"><th class="py-1.5 text-left">SKU CODE</th><th class="py-1.5 text-left">ARTICLE NAME</th><th class="py-1.5 text-right">STOCK</th><th class="py-1.5 text-right">COVERAGE</th></tr></thead>
+            <tbody class="divide-y divide-white/5 text-slate-300">
+              <tr><td class="py-1.5 font-mono text-white">ART-JACKET-LEATHER</td><td class="py-1.5">Premium Leather Jacket</td><td class="py-1.5 text-right">30 pcs</td><td class="py-1.5 text-right font-bold text-orange-400">120 Days WOC</td></tr>
+             </tbody>
+          `
+        },
+        never: {
+          title: "Never Sold (Investigate)",
+          tip: "Never sold items have zero transactions since catalog creation. Check for barcode printing or price list issues.",
+          rows: `
+            <thead><tr class="border-b border-white/5 text-slate-500"><th class="py-1.5 text-left">SKU CODE</th><th class="py-1.5 text-left">ARTICLE NAME</th><th class="py-1.5 text-right">STOCK</th><th class="py-1.5 text-right">LOG DAYS</th></tr></thead>
+            <tbody class="divide-y divide-white/5 text-slate-300">
+              <tr><td class="py-1.5 font-mono text-white">ART-SOCKS-WOOL</td><td class="py-1.5">Woolen Winter Socks</td><td class="py-1.5 text-right">100 pairs</td><td class="py-1.5 text-right font-bold text-red-400">90 Days</td></tr>
+            </tbody>
+          `
+        }
+      };
+
+      const current = data[tab];
+      if (current) {
+        titleEl.textContent = current.title;
+        tableEl.innerHTML = current.rows;
+        tipEl.textContent = current.tip;
+      }
+    }
+
+    // Item Master Slide 13: Bad Data Calculator
+    function calcItemMasterRoi() {
+      const size = parseInt(document.getElementById('input-roi-cat-size').value) || 1500;
+      const errRate = parseInt(document.getElementById('input-roi-cat-err').value) || 4;
+      const trans = parseInt(document.getElementById('input-roi-cat-trans').value) || 5000;
+
+      const sizeValEl = document.getElementById('roi-cat-size-val');
+      if (sizeValEl) sizeValEl.textContent = size.toLocaleString();
+      const errValEl = document.getElementById('roi-cat-err-val');
+      if (errValEl) errValEl.textContent = `${errRate}%`;
+      const transValEl = document.getElementById('roi-cat-trans-val');
+      if (transValEl) transValEl.textContent = trans.toLocaleString();
+
+      const billingErr = Math.round(trans * (errRate / 100) * 12);
+      const invErr = Math.round(size * (errRate / 100));
+      const revenueLeak = billingErr * 50;
+
+      const billingErrEl = document.getElementById('roi-cat-billing-err');
+      if (billingErrEl) billingErrEl.textContent = `${billingErr.toLocaleString()} Items`;
+      const invErrEl = document.getElementById('roi-cat-inv-err');
+      if (invErrEl) invErrEl.textContent = `${invErr.toLocaleString()} SKUs`;
+      const revenueLeakEl = document.getElementById('roi-cat-revenue-leak');
+      if (revenueLeakEl) revenueLeakEl.textContent = `₹${revenueLeak.toLocaleString()}`;
+    }
+
     </script>
 </body>
 </html>
