@@ -11,7 +11,10 @@
   "total_conversions",
   "conversion_rate",
   "total_revenue",
-  "avg_engagement_minutes"
+  "avg_engagement_minutes",
+  "outlet_conversion_index",
+  "executive_performance_index",
+  "store_retention_index"
  ],
  "fields": [
   {
@@ -64,6 +67,24 @@
    "label": "Avg Engagement (Minutes)",
    "default": "0.0",
    "reqd": 1
+  },
+  {
+   "fieldname": "outlet_conversion_index",
+   "fieldtype": "Float",
+   "label": "Outlet Conversion Index",
+   "default": "0.0"
+  },
+  {
+   "fieldname": "executive_performance_index",
+   "fieldtype": "Float",
+   "label": "Executive Performance Index",
+   "default": "0.0"
+  },
+  {
+   "fieldname": "store_retention_index",
+   "fieldtype": "Float",
+   "label": "Store Retention Index",
+   "default": "0.0"
   }
  ],
  "index_web_pages_for_search": 0,

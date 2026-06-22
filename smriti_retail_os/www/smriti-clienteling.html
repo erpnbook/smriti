@@ -930,6 +930,15 @@
     if (!selectedCustomerData) return;
     const p = selectedCustomerData;
     
+    // Log explain audit event for composite metrics
+    API.call('smriti_retail_os.clienteling.api.clienteling_api.log_explain_audit', {
+      metric: 'Composite Customer Intelligence Dashboard',
+      customer: p.customer,
+      formula_id: 'TST-HEALTH',
+      session_id: CSRF_TOKEN,
+      source_screen: 'Customer Profile Drawer'
+    }).catch(console.error);
+    
     // ABV Explain
     document.getElementById('explain-abv-calc').innerHTML = `
       LTV (₹${formatINR(p.lifetime_value)}) ÷ Purchases Count (${p.purchases_count || 0}) <br>

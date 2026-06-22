@@ -44,17 +44,20 @@ def regenerate_customer_data(customer, source=None, source_document=None):
     """
     Background queue execution to rebuild Graph, Intelligence Graph, and Profile databases.
     """
+    import time
+    start_time = time.time()
+    
     # Create entries if they do not exist
     for doctype in ["SMRITI Customer Graph", "SMRITI Customer Intelligence Graph", "SMRITI Customer Profile"]:
         if not frappe.db.exists(doctype, customer):
             doc = frappe.new_doc(doctype)
             doc.customer = customer
             if doctype == "SMRITI Customer Graph":
-                doc.graph_version = "v1"
+                doc.graph_version = "CIG-1.1"
             elif doctype == "SMRITI Customer Intelligence Graph":
                 doc.intelligence_graph_version = "v1"
             elif doctype == "SMRITI Customer Profile":
-                doc.graph_version = "v1"
+                doc.graph_version = "CIG-1.1"
             doc.calculation_status = "Pending"
             doc.flags.ignore_permissions = True
             doc.insert()
@@ -65,7 +68,7 @@ def regenerate_customer_data(customer, source=None, source_document=None):
         
     try:
         # 1. Update Customer Graph
-        graph_doc = update_customer_graph(customer, source, source_document)
+        graph_doc = update_customer_graph(customer, source, source_document, start_time)
         
         # 2. Update Customer Intelligence Graph
         intel_doc = update_customer_intelligence_graph(customer, graph_doc, source, source_document)
@@ -73,16 +76,30 @@ def regenerate_customer_data(customer, source=None, source_document=None):
         # 3. Update Customer Profile
         update_customer_profile(customer, graph_doc, intel_doc, source, source_document)
     except Exception as e:
-        for doctype in ["SMRITI Customer Graph", "SMRITI Customer Intelligence Graph", "SMRITI Customer Profile"]:
+        duration_ms = (time.time() - start_time) * 1000.0
+        err_msg = str(e)
+        if frappe.db.exists("SMRITI Customer Graph", customer):
+            frappe.db.set_value("SMRITI Customer Graph", customer, {
+                "calculation_status": "Failed",
+                "graph_status": "Failed",
+                "graph_generation_error": err_msg,
+                "graph_last_generated_at": now_datetime(),
+                "graph_generation_duration_ms": duration_ms
+            })
+        for doctype in ["SMRITI Customer Intelligence Graph", "SMRITI Customer Profile"]:
             if frappe.db.exists(doctype, customer):
                 frappe.db.set_value(doctype, customer, {
                     "calculation_status": "Failed",
                     "is_dirty": 0
                 })
-        frappe.log_error(f"SMRITI Clienteling Graph Update Failed for {customer}: {str(e)}")
+        frappe.log_error(f"SMRITI Clienteling Graph Update Failed for {customer}: {err_msg}")
         raise e
 
-def update_customer_graph(customer, source=None, source_document=None):
+def update_customer_graph(customer, source=None, source_document=None, start_time=None):
+    import time
+    if not start_time:
+        start_time = time.time()
+        
     doc = frappe.get_doc("SMRITI Customer Graph", customer)
     
     # 1. Fetch Invoices and Returns
@@ -177,6 +194,7 @@ def update_customer_graph(customer, source=None, source_document=None):
     doc.returns_count = returns_count
     doc.net_revenue = net_revenue
     doc.wallet_balance = wallet_balance
+    doc.campaign_responses_count = campaign_responses_count
     doc.attributed_revenue = attributed_revenue
     doc.owned_customer_revenue = owned_customer_revenue
     doc.preferred_brand = preferred_brand
@@ -191,6 +209,14 @@ def update_customer_graph(customer, source=None, source_document=None):
     doc.dirty_document = source_document
     doc.calculation_status = "Completed"
     doc.last_calculated_on = now_datetime()
+    
+    # GAP-01 Observability Fields
+    duration_ms = (time.time() - start_time) * 1000.0
+    doc.graph_last_generated_at = now_datetime()
+    doc.graph_generation_duration_ms = duration_ms
+    doc.graph_source_version = "CIG-1.1"
+    doc.graph_status = "Completed"
+    doc.graph_generation_error = None
     
     doc.flags.ignore_permissions = True
     doc.save()
@@ -245,6 +271,7 @@ def update_customer_profile(customer, graph_doc, intel_doc, source=None, source_
     doc.vip_candidate_level = intel_doc.vip_candidate_level
     doc.is_vip = intel_doc.is_vip
     doc.campaign_affinity_score = intel_doc.campaign_affinity_score
+    doc.customer_health_score = intel_doc.customer_health_score
     
     doc.next_visit_prediction = intel_doc.next_visit_prediction
     doc.next_visit_confidence = intel_doc.next_visit_confidence
@@ -271,7 +298,7 @@ def update_customer_intelligence_graph(customer, graph_doc, source=None, source_
     vip_threshold = flt(settings.vip_threshold) if settings.vip_threshold is not None else 80.0
     dormancy_days = int(settings.dormancy_days) if settings.dormancy_days is not None else 90
     enable_predictions = settings.enable_predictions if settings.enable_predictions is not None else 1
-
+ 
     # 2. Calculate days since last visit
     last_visit_date = graph_doc.last_visit_date
     if last_visit_date:
@@ -279,7 +306,7 @@ def update_customer_intelligence_graph(customer, graph_doc, source=None, source_
     else:
         days_since_last_visit = 0
     visit_frequency_days = flt(graph_doc.visit_frequency_days)
-
+ 
     # 3. Churn Risk Score
     churn_risk_score = 0.0
     churn_risk_level = "Healthy"
@@ -308,7 +335,7 @@ def update_customer_intelligence_graph(customer, graph_doc, source=None, source_
         churn_risk_level = "Warning"
     else:
         churn_risk_level = "Critical"
-
+ 
     # 4. VIP Candidate Score
     net_revenue = flt(graph_doc.net_revenue)
     purchases_count = int(graph_doc.purchases_count)
@@ -340,7 +367,7 @@ def update_customer_intelligence_graph(customer, graph_doc, source=None, source_
         vip_candidate_level = "High"
         
     is_vip = 1 if vip_candidate_score >= vip_threshold else 0
-
+ 
     # 5. Campaign Affinity Score
     campaign_responses = 0
     if frappe.db.exists("DocType", "SMRITI Campaign Response"):
@@ -363,12 +390,30 @@ def update_customer_intelligence_graph(customer, graph_doc, source=None, source_
         campaign_affinity_score = campaign_responses * 20.0
         
     campaign_affinity_score = max(0.0, min(100.0, campaign_affinity_score))
-
+ 
+    # 5.5. Composite Customer Health Score
+    health_expr, health_ver = get_formula_details("TST-HEALTH")
+    if not health_expr:
+        health_expr = "(100 - churn_risk_score) * 0.4 + vip_candidate_score * 0.4 + campaign_affinity_score * 0.2"
+        health_ver = "1.0.0"
+        
+    health_context = {
+        "churn_risk_score": churn_risk_score,
+        "vip_candidate_score": vip_candidate_score,
+        "campaign_affinity_score": campaign_affinity_score
+    }
+    try:
+        customer_health_score = flt(eval(health_expr, {"min": min, "max": max}, health_context))
+    except Exception:
+        customer_health_score = (100.0 - churn_risk_score) * 0.4 + vip_candidate_score * 0.4 + campaign_affinity_score * 0.2
+        
+    customer_health_score = max(0.0, min(100.0, customer_health_score))
+ 
     # 6. Dormancy
     is_dormant = 0
     if last_visit_date:
         is_dormant = 1 if days_since_last_visit >= dormancy_days else 0
-
+ 
     # 7. Predictions
     next_visit_prediction = None
     next_visit_confidence = 0.0
@@ -385,7 +430,7 @@ def update_customer_intelligence_graph(customer, graph_doc, source=None, source_
     # Confidence clamping
     next_visit_confidence = max(0.0, min(100.0, next_visit_confidence))
     next_purchase_confidence = max(0.0, min(100.0, next_purchase_confidence))
-
+ 
     # 8. Save Doc Fields
     doc.churn_risk_score = churn_risk_score
     doc.churn_risk_level = churn_risk_level
@@ -407,6 +452,12 @@ def update_customer_intelligence_graph(customer, graph_doc, source=None, source_
     doc.campaign_affinity_score = campaign_affinity_score
     doc.affinity_formula_id = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": "TST-AFFINITY"}, "name")
     doc.affinity_formula_version = affinity_ver
+    
+    # GAP-03, GAP-05 Customer Health & Governance versions
+    doc.customer_health_score = customer_health_score
+    doc.graph_version = "CIG-1.1"
+    doc.scoring_model_version = "SCORING-1.0"
+    doc.prediction_model_version = "PDT-1.0"
     
     doc.is_dirty = 0
     doc.dirty_source = source

@@ -27,6 +27,7 @@
   "is_vip",
   "campaign_affinity_score",
   "engagement_score",
+  "customer_health_score",
   "is_dirty",
   "dirty_source",
   "dirty_document",
@@ -166,6 +167,12 @@
    "fieldname": "engagement_score",
    "fieldtype": "Percent",
    "label": "Engagement Score",
+   "default": "0.0"
+  },
+  {
+   "fieldname": "customer_health_score",
+   "fieldtype": "Percent",
+   "label": "Customer Health Score",
    "default": "0.0"
   },
   {

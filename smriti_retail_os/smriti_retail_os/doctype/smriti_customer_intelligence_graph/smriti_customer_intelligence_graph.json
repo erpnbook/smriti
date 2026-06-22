@@ -28,7 +28,11 @@
   "dirty_document",
   "intelligence_graph_version",
   "calculation_status",
-  "last_calculated_on"
+  "last_calculated_on",
+  "customer_health_score",
+  "graph_version",
+  "scoring_model_version",
+  "prediction_model_version"
  ],
  "fields": [
   {
@@ -175,6 +179,27 @@
    "fieldname": "last_calculated_on",
    "fieldtype": "Datetime",
    "label": "Last Calculated On"
+  },
+  {
+   "fieldname": "customer_health_score",
+   "fieldtype": "Percent",
+   "label": "Customer Health Score",
+   "default": "0.0"
+  },
+  {
+   "fieldname": "graph_version",
+   "fieldtype": "Data",
+   "label": "Graph Version"
+  },
+  {
+   "fieldname": "scoring_model_version",
+   "fieldtype": "Data",
+   "label": "Scoring Model Version"
+  },
+  {
+   "fieldname": "prediction_model_version",
+   "fieldtype": "Data",
+   "label": "Prediction Model Version"
   }
  ],
  "index_web_pages_for_search": 0,

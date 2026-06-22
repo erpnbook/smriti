@@ -135,3 +135,28 @@ def get_store_walk_in_analytics(store, date=None):
         "total_revenue": 0.0,
         "avg_engagement_minutes": 0.0
     }
+
+@frappe.whitelist()
+def log_explain_audit(metric, customer, formula_id=None, session_id=None, source_screen=None):
+    """
+    Inserts a SMRITI Explain Audit Event record when a user explains a metric.
+    """
+    if not metric or not customer:
+        frappe.throw(_("Metric and Customer are required to log an explain audit event."))
+        
+    doc = frappe.new_doc("SMRITI Explain Audit Event")
+    doc.user = frappe.session.user
+    doc.metric = metric
+    doc.customer = customer
+    
+    # Resolve formula ref link if formula_id (e.g. TST-VIP) is provided
+    if formula_id:
+        doc.formula_id = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": formula_id}, "name")
+        
+    doc.timestamp = frappe.utils.now_datetime()
+    doc.session_id = session_id
+    doc.source_screen = source_screen
+    
+    doc.flags.ignore_permissions = True
+    doc.insert()
+    return doc.as_dict()

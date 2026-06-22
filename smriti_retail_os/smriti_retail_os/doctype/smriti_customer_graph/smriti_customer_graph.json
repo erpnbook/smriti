@@ -25,7 +25,12 @@
   "dirty_document",
   "graph_version",
   "calculation_status",
-  "last_calculated_on"
+  "last_calculated_on",
+  "graph_last_generated_at",
+  "graph_generation_duration_ms",
+  "graph_source_version",
+  "graph_status",
+  "graph_generation_error"
  ],
  "fields": [
   {
@@ -153,6 +158,35 @@
    "fieldname": "last_calculated_on",
    "fieldtype": "Datetime",
    "label": "Last Calculated On"
+  },
+  {
+   "fieldname": "graph_last_generated_at",
+   "fieldtype": "Datetime",
+   "label": "Graph Last Generated At"
+  },
+  {
+   "fieldname": "graph_generation_duration_ms",
+   "fieldtype": "Float",
+   "label": "Graph Generation Duration (ms)",
+   "default": "0.0"
+  },
+  {
+   "fieldname": "graph_source_version",
+   "fieldtype": "Data",
+   "label": "Graph Source Version"
+  },
+  {
+   "fieldname": "graph_status",
+   "fieldtype": "Select",
+   "label": "Graph Status",
+   "options": "Pending\nProcessing\nCompleted\nFailed",
+   "default": "Pending"
+  },
+  {
+   "fieldname": "graph_generation_error",
+   "fieldtype": "Small Text",
+   "label": "Graph Generation Error",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 0,

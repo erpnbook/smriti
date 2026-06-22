@@ -379,3 +379,97 @@ class TestClienteling(FrappeTestCase):
             
         intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
         self.assertEqual(intel.is_dormant, 1)
+
+    def test_health_score_clamping(self):
+        """Verify that health score is clamped to 100.0 when evaluated formula returns extreme values (TEST-04)."""
+        frappe.get_doc({
+            "doctype": "SMRITI Formula Definition",
+            "formula_id": "TST-HEALTH",
+            "formula_name": "Customer Health Score",
+            "formula_version": "1.0.0",
+            "formula_category": "Sales Analytics",
+            "status": "Approved",
+            "is_active": 1,
+            "effective_date": "2026-06-22",
+            "formula_expression": "(100 - churn_risk_score) * 10.0"
+        }).insert(ignore_permissions=True)
+        frappe.db.commit()
+
+        try:
+            clienteling_service.regenerate_customer_data(self.customer)
+            intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
+            profile = frappe.get_doc("SMRITI Customer Profile", self.customer)
+            self.assertEqual(intel.customer_health_score, 100.0)
+            self.assertEqual(profile.customer_health_score, 100.0)
+        finally:
+            frappe.db.delete("SMRITI Formula Definition", {"formula_id": "TST-HEALTH"})
+            frappe.db.commit()
+
+    def test_version_propagation(self):
+        """Verify CIG governance versions are correctly seeded and populated post-regeneration (TEST-05)."""
+        clienteling_service.regenerate_customer_data(self.customer)
+        
+        intel = frappe.get_doc("SMRITI Customer Intelligence Graph", self.customer)
+        graph = frappe.get_doc("SMRITI Customer Graph", self.customer)
+        
+        self.assertEqual(intel.graph_version, "CIG-1.1")
+        self.assertEqual(intel.scoring_model_version, "SCORING-1.0")
+        self.assertEqual(intel.prediction_model_version, "PDT-1.0")
+        self.assertEqual(graph.graph_source_version, "CIG-1.1")
+
+    def test_failed_regeneration_lifecycle(self):
+        """Simulates an exception during regeneration and asserts that failed status and error message are tracked (TEST-06)."""
+        from unittest import mock
+        
+        with mock.patch("smriti_retail_os.clienteling.service.clienteling_service.update_customer_intelligence_graph") as mock_err:
+            mock_err.side_effect = Exception("PDT prediction failure mock exception")
+            
+            self.assertRaises(
+                Exception,
+                clienteling_service.regenerate_customer_data,
+                customer=self.customer
+            )
+            
+        graph = frappe.get_doc("SMRITI Customer Graph", self.customer)
+        self.assertEqual(graph.graph_status, "Failed")
+        self.assertIn("PDT prediction failure mock exception", graph.graph_generation_error)
+
+    def test_explain_audit_log(self):
+        """Verifies that log_explain_audit API inserts correct audit logs securely (GAP-02)."""
+        frappe.db.delete("SMRITI Explain Audit Event", {"customer": self.customer})
+        frappe.db.delete("SMRITI Formula Definition", {"formula_id": "TST-VIP"})
+        frappe.db.commit()
+        
+        # Seed TST-VIP formula definition
+        f_doc = frappe.get_doc({
+            "doctype": "SMRITI Formula Definition",
+            "formula_id": "TST-VIP",
+            "formula_name": "VIP Candidate Score",
+            "formula_version": "1.0.0",
+            "formula_category": "Sales Analytics",
+            "status": "Approved",
+            "is_active": 1,
+            "effective_date": "2026-06-22",
+            "formula_expression": "net_revenue * 2"
+        }).insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        try:
+            res = clienteling_api.log_explain_audit(
+                metric="VIP Candidate Score",
+                customer=self.customer,
+                formula_id="TST-VIP",
+                session_id="MOCK_SESSION_123",
+                source_screen="Customer Profile Drawer"
+            )
+            
+            self.assertTrue(frappe.db.exists("SMRITI Explain Audit Event", res["name"]))
+            doc = frappe.get_doc("SMRITI Explain Audit Event", res["name"])
+            self.assertEqual(doc.customer, self.customer)
+            self.assertEqual(doc.metric, "VIP Candidate Score")
+            self.assertEqual(doc.formula_id, f_doc.name)
+            self.assertEqual(doc.session_id, "MOCK_SESSION_123")
+            self.assertEqual(doc.source_screen, "Customer Profile Drawer")
+        finally:
+            frappe.db.delete("SMRITI Formula Definition", {"formula_id": "TST-VIP"})
+            frappe.db.commit()
