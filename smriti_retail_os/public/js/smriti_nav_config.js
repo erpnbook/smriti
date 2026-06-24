@@ -68,10 +68,11 @@ const SMRITI_ROUTE_MAP = {
   "analytics_dashboard":              "/analytics",
   "platform_center":                  "/platform_center",
   "clienteling":                      "/smriti-clienteling",
-  // ── Commercial Sprint (OWNER-ROI-001) ────────────────────────────────
+  // ── Commercial Sprint (OWNER-ROI-001) ─────────────────────────────────────────────
   "smriti_pricing":                   "/smriti-pricing",
   "roi_calculator":                   "/smriti-roi-calculator",
   "trial_signup":                     "/smriti-trial",
+  "trial_leads":                      "/smriti-trial-leads",   // Sprint 2
 };
 
 function resolveSmritiRoute(key) {
@@ -608,12 +609,10 @@ const SMRITI_NAV = {
           standalone_route: "/smriti-trial",
           status: "active" },
         { id: "trial_leads",
-          label: "Trial Leads",
-          route: "/smriti-coming-soon?feature=Trial+Leads+CRM&progress=70&eta=Q3+2026",
-          standalone_route: "/smriti-coming-soon?feature=Trial+Leads+CRM&progress=70",
-          status: "coming_soon",
-          progress: 70,
-          eta: "Q3 2026" }
+          label: "Trial Leads CRM",
+          route: resolveSmritiRoute("trial_leads"),
+          standalone_route: "/smriti-trial-leads",
+          status: "active" }
       ]
     }
   ]

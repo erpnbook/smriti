@@ -86,3 +86,57 @@ def get_trial_leads(status=None, limit=50):
         limit=limit,
     )
     return leads
+
+
+@frappe.whitelist()
+def update_lead_status(lead_name, new_status, notes=None):
+    """Update trial lead status with audit trail (requires login)."""
+
+    ALLOWED_STATUSES = [
+        'New', 'Contacted', 'Demo Scheduled',
+        'Trial Started', 'Converted', 'Lost',
+    ]
+
+    if new_status not in ALLOWED_STATUSES:
+        frappe.throw(_(f'Invalid status: {new_status}'))
+
+    lead = frappe.get_doc('SMRITI Trial Lead', lead_name)
+
+    old_status  = lead.status
+    lead.status = new_status
+
+    # Append timestamped audit note
+    if notes or old_status != new_status:
+        timestamp   = datetime.now().strftime('%Y-%m-%d %H:%M')
+        changed_by  = frappe.session.user
+        note_line   = f'[{timestamp}] {changed_by}: {old_status} → {new_status}'
+        if notes:
+            note_line += f' | {notes.strip()}'
+        existing_notes = lead.notes or ''
+        lead.notes = (existing_notes + '\n' + note_line).strip()
+
+    lead.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    frappe.logger('smriti.trial').info(
+        f'STATUS UPDATE: {lead_name} | {old_status} → {new_status} | {frappe.session.user}'
+    )
+
+    return {
+        'status':     'success',
+        'lead':       lead_name,
+        'old_status': old_status,
+        'new_status': new_status,
+    }
+
+
+@frappe.whitelist()
+def get_lead_counts():
+    """Return count per status for pipeline summary badges."""
+    STATUSES = ['New', 'Contacted', 'Demo Scheduled',
+                'Trial Started', 'Converted', 'Lost']
+    counts = {}
+    for s in STATUSES:
+        counts[s] = frappe.db.count('SMRITI Trial Lead', {'status': s})
+    counts['total'] = sum(counts.values())
+    return counts
