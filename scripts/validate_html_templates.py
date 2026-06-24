@@ -220,8 +220,12 @@ def build_baseline(www_dir, force=False):
         except Exception as e:
             print("  Warning: could not scan " + fname + ": " + str(e))
 
-    # --- UI-GOV-008 enforcement ---
+    # --- UI-GOV-008 + UI-GOV-009 enforcement ---
     if not force:
+        old_combined = old_hex + old_rgba
+        new_combined = total_hex + total_rgba
+
+        # UI-GOV-008: Debt must not increase
         if total_hex > old_hex:
             print("")
             print("UI-GOV-008 BLOCKED: Baseline update REJECTED.")
@@ -239,23 +243,65 @@ def build_baseline(www_dir, force=False):
             print("  To override (not recommended): add --force flag.")
             return False
 
+        # UI-GOV-009: Minimum 5% combined reduction required
+        # Prevents accidental baseline drift from trivial cleanups.
+        # Use --approve="Reason" to bypass with recorded justification.
+        if old_combined > 0:
+            reduction_pct = (old_combined - new_combined) / old_combined * 100
+            if reduction_pct < 5.0:
+                approval = getattr(build_baseline, "_approval", None)
+                if not approval:
+                    print("")
+                    print("UI-GOV-009 BLOCKED: Minimum 5% debt reduction required.")
+                    print("  Combined before: " + str(old_combined))
+                    print("  Combined after:  " + str(new_combined))
+                    print("  Reduction:       " + str(round(reduction_pct, 2)) + "% (required >= 5%)")
+                    print("  To approve with justification: add --approve=\"Sprint X cleanup\"")
+                    print("  Founder approval overrides: add --force flag.")
+                    return False
+                else:
+                    print("UI-GOV-009 APPROVED: Reduction=" + str(round(reduction_pct, 2)) + "% < 5% but approved.")
+                    print("  Justification: " + str(approval))
+
     new_baseline["_meta"]["hex_total"]       = total_hex
     new_baseline["_meta"]["rgba_total"]      = total_rgba
     new_baseline["_meta"]["hex_prev"]        = old_hex
     new_baseline["_meta"]["rgba_prev"]       = old_rgba
     new_baseline["_meta"]["hex_delta"]       = total_hex  - old_hex
     new_baseline["_meta"]["rgba_delta"]      = total_rgba - old_rgba
+    new_baseline["_meta"]["combined_prev"]   = old_hex + old_rgba
+    new_baseline["_meta"]["combined_total"]  = total_hex + total_rgba
+    new_baseline["_meta"]["combined_delta"]  = (total_hex + total_rgba) - (old_hex + old_rgba)
     new_baseline["_meta"]["date"]            = datetime.date.today().isoformat()
+    # UI-GOV-009 audit trail
+    if old_hex + old_rgba > 0:
+        reduction_pct = ((old_hex + old_rgba) - (total_hex + total_rgba)) / (old_hex + old_rgba) * 100
+        new_baseline["_meta"]["reduction_pct"] = round(reduction_pct, 2)
+    approval = getattr(build_baseline, "_approval", None)
+    if approval:
+        import datetime as _dt
+        new_baseline["_meta"].setdefault("gov009_approvals", []).append({
+            "date":          datetime.date.today().isoformat(),
+            "justification": approval,
+            "reduction_pct": round(reduction_pct, 2) if old_hex + old_rgba > 0 else 0,
+        })
+    if force:
+        new_baseline["_meta"]["force_used"] = datetime.date.today().isoformat()
     save_baseline(new_baseline)
 
     hex_delta  = total_hex  - old_hex
     rgba_delta = total_rgba - old_rgba
+    comb_delta = (total_hex + total_rgba) - (old_hex + old_rgba)
     print("Baseline updated (UI-GOV-008 PASS):")
-    print("  hex:  " + str(old_hex)  + " -> " + str(total_hex)  + " (" + ("+" if hex_delta >= 0 else "") + str(hex_delta) + ")")
+    print("  hex:  " + str(old_hex)  + " -> " + str(total_hex)  + " (" + ("+" if hex_delta  >= 0 else "") + str(hex_delta)  + ")")
     print("  rgba: " + str(old_rgba) + " -> " + str(total_rgba) + " (" + ("+" if rgba_delta >= 0 else "") + str(rgba_delta) + ")")
+    if old_hex + old_rgba > 0:
+        print("  reduction: " + str(round(reduction_pct, 2)) + "%  (UI-GOV-009 gate = 5%)")
     print("  Files scanned: " + str(file_count))
     print("  Saved to: " + BASELINE_FILE)
     return True
+
+
 
 
 def compute_metrics(www_dir):
@@ -318,9 +364,11 @@ def main():
     parser = argparse.ArgumentParser(description="SMRITI HTML Template Validator")
     parser.add_argument("files", nargs="*", help="HTML files to validate")
     parser.add_argument("--update-baseline", action="store_true",
-                        help="Rebuild UI-GOV-006 color baseline (UI-GOV-008: only allowed if debt decreases)")
+                        help="Rebuild UI-GOV-006 color baseline (UI-GOV-008: decrease only, UI-GOV-009: >=5%%)")
     parser.add_argument("--force", action="store_true",
                         help="Force baseline update even if debt increases (use with caution)")
+    parser.add_argument("--approve", default=None, metavar="REASON",
+                        help="UI-GOV-009: Approve baseline update with <5%% reduction. Requires justification string.")
     parser.add_argument("--www-dir", default=None,
                         help="Path to www/ directory (used with --update-baseline or --metrics)")
     parser.add_argument("--no-gov006", action="store_true",
@@ -341,6 +389,8 @@ def main():
 
     # --update-baseline mode
     if args.update_baseline:
+        if args.approve:
+            build_baseline._approval = args.approve
         build_baseline(os.path.abspath(www_dir), force=args.force)
         sys.exit(0)
 
