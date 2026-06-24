@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ROI Calculator | SMRITI Retail OS</title>
+  <meta name="description" content="Calculate your exact ROI from SMRITI Retail OS — Dead stock recovery, lapsed customer revenue, reorder savings, and payback period." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --navy:      #1A2B5C;
+      --navy-dark: #111e42;
+      --blue:      #2563EB;
+      --blue-light:#3B82F6;
+      --blue-glow: rgba(37,99,235,0.18);
+      --green:     #10B981;
+      --amber:     #F59E0B;
+      --red:       #EF4444;
+      --slate:     #64748B;
+      --text:      #F1F5F9;
+      --text-muted:#94A3B8;
+      --card:      rgba(255,255,255,0.04);
+      --border:    rgba(255,255,255,0.08);
+      --radius:    14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: var(--navy-dark);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: var(--navy);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar-brand {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      color: var(--text);
+    }
+    .topbar-brand span { color: var(--blue-light); }
+    .topbar-badge {
+      font-size: 11px;
+      background: var(--blue-glow);
+      border: 1px solid var(--blue);
+      color: var(--blue-light);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    /* ── Page layout ── */
+    .page { max-width: 1100px; margin: 0 auto; padding: 36px 24px 80px; }
+
+    .page-header { text-align: center; margin-bottom: 40px; }
+    .page-header h1 {
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 800;
+      letter-spacing: -.5px;
+      background: linear-gradient(135deg, #fff 40%, var(--blue-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    .page-header p {
+      color: var(--text-muted);
+      font-size: 15px;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* ── Two-column layout ── */
+    .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    @media (max-width: 720px) { .layout { grid-template-columns: 1fr; } }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      backdrop-filter: blur(10px);
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--blue-light);
+      margin-bottom: 22px;
+    }
+
+    /* ── Inputs ── */
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      margin-bottom: 7px;
+    }
+    .field-hint {
+      font-size: 11px;
+      color: var(--slate);
+      margin-top: 4px;
+    }
+    .input-wrap { position: relative; }
+    .input-prefix {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 14px;
+      pointer-events: none;
+    }
+    input[type=range] {
+      width: 100%;
+      accent-color: var(--blue);
+      margin-top: 6px;
+    }
+    .field input[type=number] {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      padding: 10px 12px 10px 28px;
+      outline: none;
+      transition: border-color .2s;
+      font-family: 'Inter', Arial, sans-serif;
+    }
+    .field input[type=number]:focus { border-color: var(--blue); }
+    .field input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
+
+    .slider-row { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+    .slider-row input[type=range] { flex: 1; }
+    .slider-val {
+      min-width: 42px;
+      text-align: right;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--blue-light);
+    }
+
+    /* ── Result metrics ── */
+    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 480px) { .result-grid { grid-template-columns: 1fr; } }
+
+    .metric {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .metric-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      margin-bottom: 6px;
+    }
+    .metric-value {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--green);
+      letter-spacing: -.5px;
+    }
+    .metric-value.amber { color: var(--amber); }
+    .metric-value.blue  { color: var(--blue-light); }
+    .metric-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* ── Package recommendation ── */
+    .pkg-section { margin-top: 28px; }
+    .pkg-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+    .pkg-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    @media (max-width: 520px) { .pkg-cards { grid-template-columns: 1fr; } }
+
+    .pkg-card {
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      opacity: .55;
+    }
+    .pkg-card.active {
+      border-color: var(--blue);
+      background: var(--blue-glow);
+      opacity: 1;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(37,99,235,.2);
+    }
+    .pkg-card.active .pkg-name { color: var(--blue-light); }
+    .pkg-name { font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
+    .pkg-price { font-size: 20px; font-weight: 800; color: var(--text); }
+    .pkg-price-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .pkg-roi { font-size: 11px; color: var(--green); font-weight: 700; margin-top: 6px; }
+    .pkg-recommended {
+      font-size: 10px;
+      background: var(--blue);
+      color: #fff;
+      border-radius: 20px;
+      padding: 2px 8px;
+      margin-top: 6px;
+      display: inline-block;
+      font-weight: 700;
+    }
+
+    /* ── ROI summary box ── */
+    .roi-summary {
+      margin-top: 20px;
+      background: linear-gradient(135deg, rgba(37,99,235,.15), rgba(16,185,129,.1));
+      border: 1px solid rgba(37,99,235,.3);
+      border-radius: 12px;
+      padding: 22px 24px;
+    }
+    .roi-summary-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--blue-light);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+    }
+    .roi-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      font-size: 14px;
+    }
+    .roi-row:last-child { border: none; padding-top: 12px; font-size: 16px; font-weight: 800; }
+    .roi-row .lbl { color: var(--text-muted); }
+    .roi-row .val { font-weight: 700; color: var(--text); }
+    .roi-row .val.green { color: var(--green); }
+    .roi-row .val.blue  { color: var(--blue-light); }
+
+    /* ── Print / CTA ── */
+    .cta-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 11px 22px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      font-family: 'Inter', Arial, sans-serif;
+      transition: all .2s;
+    }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-primary:hover { background: var(--blue-light); transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--blue); color: var(--blue-light); }
+
+    /* ── Footer quote ── */
+    .footer-quote {
+      text-align: center;
+      margin-top: 52px;
+      padding-top: 28px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .footer-quote em { color: var(--text); font-style: normal; font-weight: 600; }
+
+    @media print {
+      .topbar, .btn { display: none !important; }
+      body { background: #fff; color: #000; }
+      .page { padding: 20px; }
+      .card { border: 1px solid #ccc; background: #f9f9f9; }
+      .metric-value { color: #2563EB; }
+      .roi-summary { background: #EFF6FF; border: 1px solid #BFDBFE; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-brand">SMRITI <span>Retail OS</span></div>
+    <div class="topbar-badge">ROI Calculator</div>
+  </div>
+
+  <div class="page">
+
+    <!-- Header -->
+    <div class="page-header">
+      <h1>Aapki Dukaan ka ROI</h1>
+      <p>Apne numbers daalo — SMRITI calculate karega ki aapke liye kitna bachega har mahine.</p>
+    </div>
+
+    <div class="layout">
+
+      <!-- LEFT: Inputs -->
+      <div class="card">
+        <div class="card-title">📊 Aapki Dukaan ke Numbers</div>
+
+        <div class="field">
+          <label>Monthly Sales (₹)</label>
+          <div class="input-wrap">
+            <span class="input-prefix">₹</span>
+            <input type="number" id="monthly_sales" value="1000000" step="50000" min="100000" max="10000000" oninput="calc()" />
+          </div>
+          <div class="field-hint">Monthly turnover (approx)</div>
+        </div>
+
+        <div class="field">
+          <label>Current Inventory Value (₹)</label>
+          <div class="input-wrap">
+            <span class="input-prefix">₹</span>
+            <input type="number" id="inventory_val" value="2000000" step="100000" min="100000" max="50000000" oninput="calc()" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Dead Stock % <span style="color:var(--amber)">(items not sold in 60 days)</span></label>
+          <div class="slider-row">
+            <input type="range" id="dead_pct" min="5" max="40" value="15" oninput="syncSlider('dead_pct','dead_pct_val'); calc()" />
+            <div class="slider-val" id="dead_pct_val">15%</div>
+          </div>
+          <div class="field-hint">Industry average: 15–25%</div>
+        </div>
+
+        <div class="field">
+          <label>Monthly Customers</label>
+          <div class="input-wrap">
+            <span class="input-prefix">#</span>
+            <input type="number" id="monthly_custs" value="500" step="50" min="50" max="5000" oninput="calc()" style="padding-left:28px" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Lapsed Customers % <span style="color:var(--amber)">(silent > 60 days)</span></label>
+          <div class="slider-row">
+            <input type="range" id="lapsed_pct" min="5" max="50" value="20" oninput="syncSlider('lapsed_pct','lapsed_pct_val'); calc()" />
+            <div class="slider-val" id="lapsed_pct_val">20%</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Average Bill Value (₹)</label>
+          <div class="input-wrap">
+            <span class="input-prefix">₹</span>
+            <input type="number" id="avg_bill" value="1500" step="100" min="200" max="20000" oninput="calc()" />
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Results -->
+      <div>
+
+        <!-- Metrics -->
+        <div class="card">
+          <div class="card-title">💰 SMRITI se Aapka Fayda</div>
+
+          <div class="result-grid">
+            <div class="metric">
+              <div class="metric-label">Dead Stock Recovery</div>
+              <div class="metric-value" id="out_dead">₹90,000</div>
+              <div class="metric-sub">One-time, Year 1</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Lapsed Customer Revenue</div>
+              <div class="metric-value" id="out_lapsed">₹34,500/mo</div>
+              <div class="metric-sub">From re-engaged customers</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Reorder Savings</div>
+              <div class="metric-value amber" id="out_reorder">₹20,000/mo</div>
+              <div class="metric-sub">Stockout prevention</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Payback Period</div>
+              <div class="metric-value blue" id="out_payback">< 1 week</div>
+              <div class="metric-sub">vs GROWTH subscription</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROI Summary -->
+        <div class="roi-summary" style="margin-top:18px">
+          <div class="roi-summary-title">📈 Annual ROI Summary</div>
+          <div class="roi-row">
+            <span class="lbl">Dead Stock Recovery</span>
+            <span class="val green" id="sum_dead">₹90,000</span>
+          </div>
+          <div class="roi-row">
+            <span class="lbl">Customer Recovery (12 mo)</span>
+            <span class="val green" id="sum_lapsed">₹4,14,000</span>
+          </div>
+          <div class="roi-row">
+            <span class="lbl">Reorder Savings (12 mo)</span>
+            <span class="val green" id="sum_reorder">₹2,40,000</span>
+          </div>
+          <div class="roi-row">
+            <span class="lbl">Gross Annual Benefit</span>
+            <span class="val green" id="sum_total">₹7,44,000</span>
+          </div>
+          <div class="roi-row">
+            <span class="lbl">Recommended Plan</span>
+            <span class="val blue" id="sum_plan">SMRITI GROWTH</span>
+          </div>
+          <div class="roi-row">
+            <span class="lbl">Annual Subscription</span>
+            <span class="val" id="sum_cost">₹39,999</span>
+          </div>
+          <div class="roi-row">
+            <span class="lbl" style="font-weight:800">Projected ROI</span>
+            <span class="val green" id="sum_roi" style="font-size:22px">18.6x</span>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-row">
+          <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save PDF</button>
+          <button class="btn btn-outline" onclick="resetCalc()">↺ Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Package Recommendation -->
+    <div class="pkg-section" style="margin-top:32px">
+      <div class="card">
+        <div class="card-title">📦 Recommended Plan for Your Business</div>
+        <div class="pkg-cards">
+          <div class="pkg-card" id="pkg_starter">
+            <div class="pkg-name">SMRITI STARTER</div>
+            <div class="pkg-price">₹1,999<span style="font-size:12px;font-weight:400">/mo</span></div>
+            <div class="pkg-price-sub">₹19,999/year</div>
+            <div class="pkg-roi">ROI: 17x</div>
+            <div class="pkg-recommended" style="display:none" id="badge_starter">Recommended</div>
+          </div>
+          <div class="pkg-card active" id="pkg_growth">
+            <div class="pkg-name">SMRITI GROWTH</div>
+            <div class="pkg-price">₹3,999<span style="font-size:12px;font-weight:400">/mo</span></div>
+            <div class="pkg-price-sub">₹39,999/year — save ₹7,989</div>
+            <div class="pkg-roi">ROI: 28x</div>
+            <div class="pkg-recommended" id="badge_growth">Recommended</div>
+          </div>
+          <div class="pkg-card" id="pkg_pro">
+            <div class="pkg-name">SMRITI PRO</div>
+            <div class="pkg-price">₹6,999<span style="font-size:12px;font-weight:400">/mo</span></div>
+            <div class="pkg-price-sub">₹69,999/year — save ₹13,989</div>
+            <div class="pkg-roi">ROI: 55x</div>
+            <div class="pkg-recommended" style="display:none" id="badge_pro">Best Value</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-quote">
+      <em>"Always decision-ready."</em><br />
+      — Jawahar R. Mallah, Founder &amp; Chief Architect, AITDL<br />
+      <span style="font-size:11px;margin-top:4px;display:block">SMRITI Retail OS — Inventory Intelligence. Customer Intelligence. Business ROI.</span>
+    </div>
+
+  </div>
+
+  <script>
+    const PACKAGES = {
+      starter: { annual: 19999,  monthly: 1999  },
+      growth:  { annual: 39999,  monthly: 3999  },
+      pro:     { annual: 69999,  monthly: 6999  },
+    };
+
+    function syncSlider(sliderId, valId) {
+      document.getElementById(valId).textContent = document.getElementById(sliderId).value + '%';
+    }
+
+    function fmt(n) {
+      if (n >= 100000) return '₹' + (n/100000).toFixed(1).replace(/\.0$/, '') + 'L';
+      return '₹' + n.toLocaleString('en-IN');
+    }
+
+    function fmtMo(n) {
+      return fmt(n) + '/mo';
+    }
+
+    function fmtDays(days) {
+      if (days < 7)  return '< 1 week';
+      if (days < 30) return Math.round(days/7) + ' weeks';
+      return Math.round(days/30) + ' months';
+    }
+
+    function calc() {
+      const sales      = +document.getElementById('monthly_sales').value  || 1000000;
+      const inv        = +document.getElementById('inventory_val').value   || 2000000;
+      const dead_pct   = +document.getElementById('dead_pct').value        / 100;
+      const custs      = +document.getElementById('monthly_custs').value   || 500;
+      const lapsed_pct = +document.getElementById('lapsed_pct').value      / 100;
+      const avg_bill   = +document.getElementById('avg_bill').value        || 1500;
+
+      // Dead stock
+      const dead_val      = inv * dead_pct;
+      const dead_recovery = dead_val * 0.30;
+
+      // Lapsed customer recovery
+      const lapsed_count    = Math.round(custs * lapsed_pct);
+      const recaptured      = Math.round(lapsed_count * 0.25);
+      const monthly_lapsed  = recaptured * avg_bill;
+      const annual_lapsed   = monthly_lapsed * 12;
+
+      // Reorder savings
+      const monthly_reorder = sales * 0.02;
+      const annual_reorder  = monthly_reorder * 12 * 0.80;
+
+      // Annual totals
+      const annual_benefit = dead_recovery + annual_lapsed + annual_reorder;
+
+      // Package recommendation
+      let pkg = 'growth', pkg_cost_annual = PACKAGES.growth.annual;
+      if (sales > 2500000 || custs > 1000) {
+        pkg = 'pro';
+        pkg_cost_annual = PACKAGES.pro.annual;
+      } else if (sales < 400000 && custs < 150) {
+        pkg = 'starter';
+        pkg_cost_annual = PACKAGES.starter.annual;
+      }
+
+      // ROI
+      const roi_multiple = annual_benefit / pkg_cost_annual;
+
+      // Payback (days)
+      const monthly_benefit = (annual_lapsed + annual_reorder) / 12;
+      const monthly_cost    = pkg_cost_annual / 12;
+      const payback_days    = monthly_benefit > 0 ? (monthly_cost / monthly_benefit) * 30 : 999;
+
+      // Update outputs
+      document.getElementById('out_dead').textContent    = fmt(dead_recovery);
+      document.getElementById('out_lapsed').textContent  = fmtMo(monthly_lapsed);
+      document.getElementById('out_reorder').textContent = fmtMo(monthly_reorder * 0.80);
+      document.getElementById('out_payback').textContent = fmtDays(payback_days);
+
+      document.getElementById('sum_dead').textContent    = fmt(dead_recovery);
+      document.getElementById('sum_lapsed').textContent  = fmt(annual_lapsed);
+      document.getElementById('sum_reorder').textContent = fmt(annual_reorder);
+      document.getElementById('sum_total').textContent   = fmt(annual_benefit);
+      document.getElementById('sum_cost').textContent    = fmt(pkg_cost_annual) + '/year';
+      document.getElementById('sum_roi').textContent     = roi_multiple.toFixed(1) + 'x';
+
+      const pkgNames = { starter: 'SMRITI STARTER', growth: 'SMRITI GROWTH', pro: 'SMRITI PRO' };
+      document.getElementById('sum_plan').textContent    = pkgNames[pkg];
+
+      // Update pkg cards
+      ['starter','growth','pro'].forEach(p => {
+        const card  = document.getElementById('pkg_' + p);
+        const badge = document.getElementById('badge_' + p);
+        card.classList.toggle('active', p === pkg);
+        badge.style.display = (p === pkg) ? 'inline-block' : 'none';
+      });
+    }
+
+    function resetCalc() {
+      document.getElementById('monthly_sales').value  = 1000000;
+      document.getElementById('inventory_val').value  = 2000000;
+      document.getElementById('dead_pct').value       = 15;
+      document.getElementById('monthly_custs').value  = 500;
+      document.getElementById('lapsed_pct').value     = 20;
+      document.getElementById('avg_bill').value       = 1500;
+      syncSlider('dead_pct',   'dead_pct_val');
+      syncSlider('lapsed_pct', 'lapsed_pct_val');
+      calc();
+    }
+
+    // Init
+    calc();
+  </script>
+</body>
+</html>
