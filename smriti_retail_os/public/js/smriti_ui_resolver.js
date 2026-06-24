@@ -275,32 +275,55 @@
         },
 
         /* ── sleek-compact ────────────────────────────────────────────────
+           SMRITI Midnight Edition — UI-MIDNIGHT-001
+           Founder Approved: Jawahar R. Mallah, AITDL — 2026-06-24
            High-density flat modern layout. Benchmark-aligned (Linear/Odoo).
-           Score: 8.2/10 | Pre-condition 1 PASSED — token adoption verified.
-           Audience: Inventory controllers, purchase team, PSV, reports.
+           Visual language: Dark navy + Teal primary + Purple secondary.
+           Score: 8.2/10 | Audience: Inventory, PSV, Reports, Operations.
+           Theme name = density + UX pattern (UNCHANGED).
+           Token values = visual expression (RESTYLED to Midnight palette).
         ────────────────────────────────────────────────────────────────── */
         "sleek-compact": {
-            "--smriti-color-bg-page":              "#f1f4f8",
-            "--smriti-color-bg-primary":           "#ffffff",
-            "--smriti-color-bg-secondary":         "#f8fafc",
-            "--smriti-color-bg-elevated":          "#ffffff",
-            "--smriti-color-text-primary":         "#111827",
-            "--smriti-color-text-muted":           "#4b5563",
-            "--smriti-color-text-subtle":          "#9ca3af",
-            "--smriti-color-brand-primary":        "#6941c6",
-            "--smriti-color-brand-light":          "#9e77ed",
-            "--smriti-color-brand-dark":           "#53389e",
-            "--smriti-color-border-default":       "#e5e7eb",
-            "--smriti-color-border-strong":        "#d1d5db",
-            "--smriti-color-bg-overlay":           "rgba(17,24,39,0.50)",
-            /* Flat shadows — no neumorphism on data surfaces */
-            "--smriti-shadow-xs":                  "0 1px 2px rgba(0,0,0,0.04)",
-            "--smriti-shadow-sm":                  "0 1px 2px rgba(0,0,0,0.06), 0 1px 1px rgba(0,0,0,0.04)",
-            "--smriti-shadow-md":                  "0 2px 6px rgba(0,0,0,0.08)",
-            "--smriti-shadow-lg":                  "0 4px 16px rgba(0,0,0,0.10)",
-            "--smriti-shadow-neu-float":           "0 1px 3px rgba(0,0,0,0.08)",
-            "--smriti-shadow-neu-pressed":         "inset 0 1px 2px rgba(0,0,0,0.06)",
-            /* Density: 32px rows, 40px toolbar, 36px card header */
+            /* ── Background ── */
+            "--smriti-color-bg-page":              "#0a0f1e",
+            "--smriti-color-bg-primary":           "#111827",
+            "--smriti-color-bg-secondary":         "#1a2236",
+            "--smriti-color-bg-elevated":          "#1e293b",
+            "--smriti-color-bg-overlay":           "rgba(0,0,0,0.72)",
+            /* ── Text ── */
+            "--smriti-color-text-primary":         "#f1f5f9",
+            "--smriti-color-text-muted":           "#94a3b8",
+            "--smriti-color-text-subtle":          "#475569",
+            /* ── Brand — Teal Primary, Purple Secondary ── */
+            "--smriti-color-brand-primary":        "#14B8A6",
+            "--smriti-color-brand-light":          "#2dd4bf",
+            "--smriti-color-brand-dark":           "#0d9488",
+            "--smriti-color-brand-secondary":      "#6941C6",
+            "--smriti-color-brand-secondary-light":"#9e77ed",
+            /* ── Borders ── */
+            "--smriti-color-border-default":       "#1e293b",
+            "--smriti-color-border-strong":        "#2d3748",
+            /* ── Status Colors (dark-optimised) ── */
+            "--smriti-color-status-success":       "#10b981",
+            "--smriti-color-status-success-bg":    "rgba(16,185,129,0.12)",
+            "--smriti-color-status-success-border":"rgba(16,185,129,0.30)",
+            "--smriti-color-status-danger":        "#f87171",
+            "--smriti-color-status-danger-bg":     "rgba(248,113,113,0.12)",
+            "--smriti-color-status-danger-border": "rgba(248,113,113,0.30)",
+            "--smriti-color-status-warning":       "#fbbf24",
+            "--smriti-color-status-warning-bg":    "rgba(251,191,36,0.12)",
+            "--smriti-color-status-warning-border":"rgba(251,191,36,0.30)",
+            "--smriti-color-status-info":          "#14B8A6",
+            "--smriti-color-status-info-bg":       "rgba(20,184,166,0.12)",
+            "--smriti-color-status-info-border":   "rgba(20,184,166,0.30)",
+            /* ── Shadows (dark-optimised flat) ── */
+            "--smriti-shadow-xs":                  "0 1px 2px rgba(0,0,0,0.4)",
+            "--smriti-shadow-sm":                  "0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3)",
+            "--smriti-shadow-md":                  "0 4px 12px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3)",
+            "--smriti-shadow-lg":                  "0 8px 24px rgba(0,0,0,0.55), 0 4px 8px rgba(0,0,0,0.3)",
+            "--smriti-shadow-neu-float":           "0 1px 3px rgba(0,0,0,0.5)",
+            "--smriti-shadow-neu-pressed":         "inset 0 1px 2px rgba(0,0,0,0.4)",
+            /* ── Density tokens — UNCHANGED from original sleek-compact ── */
             "--smriti-spacing-padding-y":          "6px",
             "--smriti-spacing-padding-x":          "10px",
             "--smriti-spacing-card":               "12px",
@@ -317,6 +340,7 @@
             "--smriti-radius-md":                  "6px",
             "--smriti-radius-lg":                  "8px"
         },
+
 
         /* ── minimalist ───────────────────────────────────────────────────
            Ultra-clean enterprise white. Maximum content focus.

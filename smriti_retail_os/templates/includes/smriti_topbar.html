@@ -1,0 +1,293 @@
+<!--
+  @file: smriti_retail_os/templates/includes/smriti_topbar.html
+  @description: SMRITI Midnight Topbar -- fixed top navigation bar.
+                Include ONCE per page inside .smriti-main div, before .smriti-content.
+  @governance: UI-GOV-005 compliant -- all colors via var(--smriti-*)
+  @usage: {%- include "smriti_retail_os/templates/includes/smriti_topbar.html" -%}
+  @sprint: UI-MIDNIGHT-001
+-->
+
+<style>
+/* ═══════════════════════════════════════════════════════
+   SMRITI Topbar — Midnight Edition
+   UI-GOV-005: zero hardcoded colors
+═══════════════════════════════════════════════════════ */
+.smriti-topbar {
+    position: sticky;
+    top: 0;
+    height: var(--smriti-toolbar-height);
+    background: var(--smriti-color-bg-primary);
+    border-bottom: 1px solid var(--smriti-color-border-default);
+    display: flex;
+    align-items: center;
+    padding: 0 var(--smriti-spacing-section);
+    gap: var(--smriti-spacing-lg);
+    z-index: var(--smriti-z-index-sticky);
+    flex-shrink: 0;
+}
+
+/* ── Page title breadcrumb ── */
+.topbar-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.topbar-page-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: var(--smriti-font-size-md);
+    font-weight: 600;
+    color: var(--smriti-color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.topbar-breadcrumb-sep {
+    color: var(--smriti-color-text-subtle);
+    font-size: var(--smriti-font-size-sm);
+}
+
+.topbar-breadcrumb-parent {
+    font-size: var(--smriti-font-size-sm);
+    color: var(--smriti-color-text-muted);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.topbar-breadcrumb-parent:hover {
+    color: var(--smriti-color-brand-primary);
+}
+
+/* ── Spacer ── */
+.topbar-spacer { flex: 1; }
+
+/* ── Search ── */
+.topbar-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--smriti-color-bg-secondary);
+    border: 1px solid var(--smriti-color-border-default);
+    border-radius: var(--smriti-radius-md);
+    padding: 0 12px;
+    height: 32px;
+    width: 220px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, width 0.2s ease;
+}
+
+.topbar-search:hover {
+    border-color: var(--smriti-color-border-strong);
+    width: 260px;
+}
+
+.topbar-search svg {
+    width: 14px;
+    height: 14px;
+    color: var(--smriti-color-text-subtle);
+    flex-shrink: 0;
+}
+
+.topbar-search-text {
+    font-size: var(--smriti-font-size-xs);
+    color: var(--smriti-color-text-subtle);
+    flex: 1;
+}
+
+.topbar-search-kbd {
+    font-size: 0.65rem;
+    color: var(--smriti-color-text-subtle);
+    background: var(--smriti-color-bg-elevated);
+    border: 1px solid var(--smriti-color-border-strong);
+    border-radius: 3px;
+    padding: 1px 5px;
+    white-space: nowrap;
+}
+
+/* ── Actions group ── */
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.topbar-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--smriti-radius-sm);
+    cursor: pointer;
+    color: var(--smriti-color-text-muted);
+    position: relative;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.topbar-btn:hover {
+    background: var(--smriti-color-bg-secondary);
+    color: var(--smriti-color-text-primary);
+    border-color: var(--smriti-color-border-default);
+}
+
+.topbar-btn svg { width: 16px; height: 16px; }
+
+/* Notification badge */
+.topbar-badge {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 8px;
+    height: 8px;
+    background: var(--smriti-color-status-danger);
+    border-radius: 50%;
+    border: 2px solid var(--smriti-color-bg-primary);
+}
+
+/* ── Status pill (Live indicator) ── */
+.topbar-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--smriti-color-status-success-bg);
+    border: 1px solid var(--smriti-color-status-success-border);
+    border-radius: var(--smriti-radius-full);
+    padding: 3px 10px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--smriti-color-status-success);
+    white-space: nowrap;
+}
+
+.topbar-status-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--smriti-color-status-success);
+    border-radius: 50%;
+    animation: pulse-dot 2s ease infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.6; transform: scale(0.85); }
+}
+
+/* ── User chip ── */
+.topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--smriti-color-bg-secondary);
+    border: 1px solid var(--smriti-color-border-default);
+    border-radius: var(--smriti-radius-md);
+    padding: 4px 10px 4px 6px;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+}
+
+.topbar-user:hover { border-color: var(--smriti-color-brand-primary); }
+
+.topbar-user-avatar {
+    width: 22px;
+    height: 22px;
+    background: var(--smriti-color-brand-secondary, #6941C6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--smriti-color-text-primary);
+}
+
+.topbar-user-name {
+    font-size: var(--smriti-font-size-xs);
+    font-weight: 600;
+    color: var(--smriti-color-text-primary);
+    white-space: nowrap;
+}
+
+.topbar-user-chevron {
+    width: 12px;
+    height: 12px;
+    color: var(--smriti-color-text-subtle);
+}
+</style>
+
+<header class="smriti-topbar" id="smriti-topbar">
+
+    <!-- Breadcrumb -->
+    <div class="topbar-breadcrumb">
+        <span class="topbar-page-title" id="topbar-page-title">Dashboard</span>
+    </div>
+
+    <div class="topbar-spacer"></div>
+
+    <!-- Search -->
+    <div class="topbar-search" id="topbar-search" role="search" tabindex="0" aria-label="Search SMRITI">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <span class="topbar-search-text">Search or type a command</span>
+        <span class="topbar-search-kbd">Ctrl G</span>
+    </div>
+
+    <!-- Actions -->
+    <div class="topbar-actions">
+
+        <!-- Live status -->
+        <div class="topbar-status">
+            <div class="topbar-status-dot"></div>
+            Live
+        </div>
+
+        <!-- Notifications -->
+        <button class="topbar-btn" id="topbar-notif-btn" aria-label="Notifications" title="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <span class="topbar-badge" id="notif-badge" style="display:none"></span>
+        </button>
+
+        <!-- Help -->
+        <button class="topbar-btn" aria-label="Help" title="Help">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+        </button>
+
+        <!-- User chip -->
+        <div class="topbar-user" id="topbar-user-chip">
+            <div class="topbar-user-avatar" id="topbar-avatar">JM</div>
+            <span class="topbar-user-name" id="topbar-username">User</span>
+            <svg class="topbar-user-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+            </svg>
+        </div>
+
+    </div>
+
+</header>
+
+<script>
+(function() {
+    /* ── Set page title from data attribute or document.title ── */
+    var el = document.getElementById('topbar-page-title');
+    var pageTitle = document.body.dataset.pageTitle || document.title.split(' — ')[0] || 'Dashboard';
+    el.textContent = pageTitle;
+
+    /* ── Populate user chip from frappe session ── */
+    try {
+        if (window.frappe && window.frappe.session) {
+            var name = window.frappe.session.user_fullname || window.frappe.session.user || 'User';
+            var initials = name.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0,2);
+            document.getElementById('topbar-username').textContent = name.split(' ')[0];
+            document.getElementById('topbar-avatar').textContent   = initials || 'U';
+        }
+    } catch(e) {}
+})();
+</script>

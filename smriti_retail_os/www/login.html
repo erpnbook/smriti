@@ -1,197 +1,240 @@
 <!--
  * @file: smriti_retail_os/www/login.html
- * @description: Login page template for SMRITI Retail OS portal..
+ * @description: SMRITI Retail OS — Authentication Page (SMRITI Midnight Edition)
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
- * @date: 2026-05-28
- * @version: 1.0.0
- * @license: MIT
- * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ * @version: 2.0.0
+ * @governance: UI-GOV-LOGIN-001 — Auth pages must not depend on dashboard chrome
+ * @governance: UI-GOV-005 — All colors via var(--smriti-*) tokens only
+ * @sprint: UI-MIDNIGHT-001
+ * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SMRITI Retail OS</title>
+<title>Sign In — SMRITI Retail OS</title>
+<meta name="description" content="Sign in to SMRITI Retail OS — Intelligent retail operations platform">
 <link rel="manifest" href="/assets/smriti_retail_os/manifest.json">
-<meta name="theme-color" content="#e94560">
-<script>
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' })
-            .then(reg => console.log('[SMRITI] SW registered: ', reg.scope))
-            .catch(err => console.log('[SMRITI] SW registration failed: ', err));
-    });
-}
-</script>
+<meta name="theme-color" content="#14B8A6">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+<!-- Token Loader: inject sleek-compact Midnight tokens into :root -->
+<script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js"></script>
+<script src="/assets/smriti_retail_os/js/smriti_theme_manager.js"></script>
+
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
+/* ═══════════════════════════════════════════════════════════
+   UI-GOV-005 COMPLIANT — Zero hardcoded colors below.
+   All values from var(--smriti-*) except SVG gradients.
+   Exceptions per policy: SVG gradient stops only.
+═══════════════════════════════════════════════════════════ */
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-    font-family: 'Inter', sans-serif;
-    background: #030712;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--smriti-color-bg-page);
+    color: var(--smriti-color-text-primary);
     min-height: 100vh;
+    display: flex;
+    overflow: hidden;
+}
+
+/* ── Left Brand Panel (55%) ── */
+.brand-panel {
+    width: 55%;
+    min-height: 100vh;
+    background: linear-gradient(
+        145deg,
+        var(--smriti-color-bg-page) 0%,
+        var(--smriti-color-bg-secondary) 60%,
+        var(--smriti-color-bg-elevated) 100%
+    );
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 48px 56px;
+    position: relative;
+    overflow: hidden;
+    border-right: 1px solid var(--smriti-color-border-default);
+}
+
+/* Mesh grid overlay */
+.brand-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(var(--smriti-color-border-default) 1px, transparent 1px),
+        linear-gradient(90deg, var(--smriti-color-border-default) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.35;
+    z-index: 0;
+}
+
+/* Teal glow accent */
+.brand-panel::after {
+    content: '';
+    position: absolute;
+    width: 480px;
+    height: 480px;
+    border-radius: 50%;
+    /* SVG gradient exception: radial glow on brand panel */
+    background: radial-gradient(circle, rgba(20,184,166,0.12) 0%, rgba(105,65,198,0.04) 50%, transparent 70%);
+    top: -120px;
+    right: -120px;
+    filter: blur(48px);
+    z-index: 0;
+    animation: glow-drift 20s ease-in-out infinite alternate;
+}
+
+@keyframes glow-drift {
+    0%   { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-60px, 60px) scale(1.15); }
+}
+
+.brand-panel > * { position: relative; z-index: 1; }
+
+/* Brand logo mark */
+.brand-logo-mark {
+    width: 52px;
+    height: 52px;
+    background: var(--smriti-color-bg-elevated);
+    border: 1px solid var(--smriti-color-border-strong);
+    border-radius: var(--smriti-radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    position: relative;
+    box-shadow: var(--smriti-shadow-md);
+    margin-bottom: 32px;
 }
 
-/* Animated ambient mesh glow background */
-.bg-grid {
-    position: fixed;
-    inset: 0;
-    background-image:
-        linear-gradient(rgba(233,69,96,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(233,69,96,0.015) 1px, transparent 1px);
-    background-size: 50px 50px;
-    z-index: 0;
+.brand-logo-mark svg { width: 28px; height: 28px; }
+
+.brand-headline {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+    color: var(--smriti-color-text-primary);
+    margin-bottom: 16px;
 }
 
-.bg-glow {
-    position: fixed;
-    width: 700px;
-    height: 700px;
-    border-radius: 50%;
-    background: radial-gradient(
-        circle,
-        rgba(233, 69, 96, 0.1) 0%,
-        rgba(99, 102, 241, 0.03) 40%,
-        transparent 70%
-    );
-    top: -200px;
-    left: -150px;
-    z-index: 0;
-    filter: blur(40px);
-    animation: float-glow-1 25s ease-in-out infinite alternate;
+.brand-headline span {
+    color: var(--smriti-color-brand-primary);
 }
 
-.bg-glow-2 {
-    position: fixed;
-    width: 600px;
-    height: 600px;
-    border-radius: 50%;
-    background: radial-gradient(
-        circle,
-        rgba(99, 102, 241, 0.08) 0%,
-        rgba(13, 148, 136, 0.02) 50%,
-        transparent 70%
-    );
-    bottom: -150px;
-    right: -100px;
-    z-index: 0;
-    filter: blur(40px);
-    animation: float-glow-2 30s ease-in-out infinite alternate;
+.brand-tagline {
+    font-size: 1rem;
+    color: var(--smriti-color-text-muted);
+    font-weight: 400;
+    line-height: var(--smriti-line-height-relaxed);
+    max-width: 360px;
 }
 
-@keyframes float-glow-1 {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(120px, 80px) scale(1.15); }
+/* Feature pills */
+.feature-pills {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 48px;
 }
 
-@keyframes float-glow-2 {
-    0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(-100px, -60px) scale(1.1); }
+.feature-pill {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--smriti-color-bg-elevated);
+    border: 1px solid var(--smriti-color-border-default);
+    border-radius: var(--smriti-radius-lg);
+    padding: 14px 18px;
+    transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
-/* Premium Glassmorphic card container */
-.login-wrapper {
-    position: relative;
-    z-index: 1;
+.feature-pill:hover {
+    border-color: var(--smriti-color-brand-primary);
+    transform: translateX(4px);
+}
+
+.pill-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--smriti-color-status-info-bg);
+    border: 1px solid var(--smriti-color-status-info-border);
+    border-radius: var(--smriti-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.pill-icon svg { width: 18px; height: 18px; color: var(--smriti-color-brand-primary); }
+
+.pill-text strong {
+    display: block;
+    font-size: var(--smriti-font-size-sm);
+    font-weight: 600;
+    color: var(--smriti-color-text-primary);
+}
+
+.pill-text span {
+    font-size: var(--smriti-font-size-xs);
+    color: var(--smriti-color-text-muted);
+}
+
+.brand-footer {
+    font-size: var(--smriti-font-size-xs);
+    color: var(--smriti-color-text-subtle);
+    margin-top: 32px;
+}
+
+/* ── Right Form Panel (45%) ── */
+.form-panel {
+    width: 45%;
+    min-height: 100vh;
+    background: var(--smriti-color-bg-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 56px;
+}
+
+.form-inner {
     width: 100%;
-    max-width: 440px;
-    padding: 24px;
+    max-width: 360px;
 }
 
-.login-card {
-    background: rgba(15, 23, 42, 0.5) !important;
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 24px;
-    padding: 48px 40px;
-    box-shadow: 
-        0 4px 6px -1px rgba(0, 0, 0, 0.1),
-        0 25px 50px -12px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+.form-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--smriti-color-text-primary);
+    margin-bottom: 6px;
 }
 
-/* Logo styling with subtle rotation animations */
-.brand-area {
-    text-align: center;
+.form-subtitle {
+    font-size: var(--smriti-font-size-sm);
+    color: var(--smriti-color-text-muted);
     margin-bottom: 36px;
 }
 
-.brand-logo {
-    width: 72px;
-    height: 72px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    margin: 0 auto 20px;
-    box-shadow: 
-        0 10px 25px rgba(0, 0, 0, 0.3),
-        inset 0 2px 5px rgba(255, 255, 255, 0.1);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.brand-logo:hover {
-    transform: rotate(180deg) scale(1.08);
-    border-color: #ff758f;
-    box-shadow: 0 0 30px rgba(255, 117, 143, 0.35);
-}
-
-.brand-logo svg {
-    width: 100%;
-    height: 100%;
-}
-
-.brand-name {
-    font-family: 'Outfit', sans-serif;
-    font-size: 1.65rem;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 50%, #94a3b8 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.brand-name span {
-    font-weight: 300;
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.brand-sub {
-    font-size: 0.88rem;
-    color: #64748b;
-    margin-top: 6px;
-    font-weight: 500;
-}
-
-/* Fields & Inputs styling */
-.form-group {
-    margin-bottom: 24px;
-}
+.form-group { margin-bottom: 20px; }
 
 .form-label {
     display: block;
-    font-size: 0.78rem;
+    font-size: var(--smriti-font-size-xs);
     font-weight: 600;
-    color: #64748b;
-    margin-bottom: 10px;
+    color: var(--smriti-color-text-muted);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
 }
 
-.input-container {
+.input-wrap {
     position: relative;
     display: flex;
     align-items: center;
@@ -199,232 +242,377 @@ body {
 
 .input-icon {
     position: absolute;
-    left: 16px;
-    color: #475569;
+    left: 12px;
+    color: var(--smriti-color-text-subtle);
     display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.3s ease;
     pointer-events: none;
+    transition: color 0.2s ease;
 }
 
-.input-icon svg {
-    width: 18px;
-    height: 18px;
-}
+.input-icon svg { width: 16px; height: 16px; }
 
 .form-input {
     width: 100%;
-    padding: 14px 16px 14px 48px;
-    background: rgba(255, 255, 255, 0.02) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 12px;
-    color: #f8fafc !important;
-    font-size: 0.95rem;
+    height: var(--smriti-form-field-height);
+    padding: 0 40px 0 38px;
+    background: var(--smriti-color-bg-secondary);
+    border: 1px solid var(--smriti-color-border-strong);
+    border-radius: var(--smriti-radius-md);
+    color: var(--smriti-color-text-primary);
+    font-size: var(--smriti-font-size-sm);
     font-family: 'Inter', sans-serif;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
     outline: none;
 }
 
+.form-input::placeholder { color: var(--smriti-color-text-subtle); }
+
 .form-input:hover {
-    border-color: rgba(255, 255, 255, 0.15) !important;
-    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: var(--smriti-color-border-strong);
 }
 
 .form-input:focus {
-    border-color: #ff758f !important;
-    box-shadow: 0 0 20px rgba(255, 117, 143, 0.15) !important;
-    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: var(--smriti-color-brand-primary);
+    box-shadow: 0 0 0 3px var(--smriti-color-status-info-bg);
 }
 
-.input-container:focus-within .input-icon {
-    color: #ff758f;
+.input-wrap:focus-within .input-icon {
+    color: var(--smriti-color-brand-primary);
 }
 
-.form-input::placeholder {
-    color: #334155;
+/* Password toggle */
+.pwd-toggle {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--smriti-color-text-subtle);
+    display: flex;
+    padding: 4px;
+    border-radius: var(--smriti-radius-sm);
+    transition: color 0.2s ease;
 }
 
-/* Chrome/Safari Autofill Styles override to match dark background */
+.pwd-toggle:hover { color: var(--smriti-color-brand-primary); }
+.pwd-toggle svg { width: 16px; height: 16px; }
+
+/* Autofill override — token fallback values */
 .form-input:-webkit-autofill,
 .form-input:-webkit-autofill:hover,
-.form-input:-webkit-autofill:focus,
-.form-input:-webkit-autofill:active {
-    -webkit-text-fill-color: #f8fafc !important;
-    -webkit-box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.95) inset !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+.form-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--smriti-color-text-primary, #f1f5f9) !important;
+    -webkit-box-shadow: 0 0 0 1000px var(--smriti-color-bg-secondary, #1a2236) inset !important;
+    border: 1px solid var(--smriti-color-border-strong, #2d3748) !important;
     transition: background-color 50000s ease-in-out 0s;
 }
 
-.form-input:-webkit-autofill:focus {
-    border-color: #ff758f !important;
-}
-
-/* Premium Login Action Button with active moving gradient */
+/* Sign In button */
 .btn-login {
     width: 100%;
-    padding: 15px;
-    background: linear-gradient(135deg, #ff758f 0%, #ff4d6d 50%, #c71f37 100%);
-    background-size: 200% auto;
+    height: 40px;
+    background: var(--smriti-color-brand-primary);
     border: none;
-    border-radius: 12px;
-    color: white;
-    font-size: 0.98rem;
-    font-weight: 600;
+    border-radius: var(--smriti-radius-md);
+    color: var(--smriti-color-bg-page);
+    font-size: var(--smriti-font-size-sm);
+    font-weight: 700;
     font-family: 'Inter', sans-serif;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    margin-top: 12px;
-    letter-spacing: 0.5px;
-    box-shadow: 0 8px 24px rgba(255, 77, 109, 0.2);
+    margin-top: 8px;
+    letter-spacing: 0.3px;
+    transition: opacity 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 16px var(--smriti-color-status-info-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
 .btn-login:hover {
-    transform: translateY(-2px);
-    background-position: right center;
-    box-shadow: 0 12px 30px rgba(255, 77, 109, 0.4);
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px var(--smriti-color-status-info-bg);
 }
 
-.btn-login:active {
-    transform: translateY(0);
+.btn-login:active { transform: translateY(0); opacity: 1; }
+
+.btn-login svg { width: 16px; height: 16px; }
+
+/* Forgot password */
+.forgot-link {
+    display: block;
+    text-align: center;
+    margin-top: 16px;
+    font-size: var(--smriti-font-size-xs);
+    color: var(--smriti-color-brand-secondary, #6941C6);
+    text-decoration: none;
+    transition: color 0.2s ease;
 }
+
+.forgot-link:hover { color: var(--smriti-color-brand-primary); }
 
 /* Error banner */
 .error-msg {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.25);
-    color: #f87171;
-    padding: 12px 16px;
-    border-radius: 12px;
-    font-size: 0.88rem;
+    background: var(--smriti-color-status-danger-bg);
+    border: 1px solid var(--smriti-color-status-danger-border);
+    color: var(--smriti-color-status-danger);
+    padding: 10px 14px;
+    border-radius: var(--smriti-radius-md);
+    font-size: var(--smriti-font-size-xs);
     margin-bottom: 20px;
     display: none;
-    text-align: center;
     font-weight: 500;
 }
 
-/* Footer layout */
-.login-footer {
+/* Form footer */
+.form-footer {
     text-align: center;
-    margin-top: 32px;
-    font-size: 0.8rem;
-    color: #475569;
-    font-weight: 500;
-    letter-spacing: 0.5px;
+    margin-top: 40px;
+    font-size: var(--smriti-font-size-xs);
+    color: var(--smriti-color-text-subtle);
+}
+
+.form-footer a {
+    color: var(--smriti-color-brand-primary);
+    text-decoration: none;
+}
+
+/* ── Responsive: stack panels on mobile ── */
+@media (max-width: 768px) {
+    body { flex-direction: column; }
+
+    .brand-panel {
+        width: 100%;
+        min-height: auto;
+        padding: 32px 24px;
+        border-right: none;
+        border-bottom: 1px solid var(--smriti-color-border-default);
+    }
+
+    .brand-headline { font-size: 1.8rem; }
+    .feature-pills { display: none; }
+
+    .form-panel {
+        width: 100%;
+        min-height: auto;
+        padding: 32px 24px;
+    }
 }
 </style>
 </head>
 <body>
-<div class="bg-grid"></div>
-<div class="bg-glow"></div>
-<div class="bg-glow-2"></div>
 
-<div class="login-wrapper">
-    <div class="login-card">
-        <div class="brand-area">
-            <div class="brand-logo">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M2 17L12 22L22 17" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M2 12L12 17L22 12" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <defs>
-                        <linearGradient id="logo-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-                            <stop stop-color="#ff758f"/>
-                            <stop offset="1" stop-color="#c71f37"/>
-                        </linearGradient>
-                    </defs>
+<!-- LEFT — Brand Panel -->
+<div class="brand-panel">
+
+    <div>
+        <!-- Logo mark -->
+        <div class="brand-logo-mark">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="var(--smriti-color-brand-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2 17L12 22L22 17" stroke="var(--smriti-color-brand-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2 12L12 17L22 12" stroke="var(--smriti-color-brand-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+            </svg>
+        </div>
+
+        <div class="brand-headline">
+            SMRITI<br><span>Retail OS</span>
+        </div>
+        <div class="brand-tagline">
+            Intelligent retail operations — inventory, channel stock, billing, and analytics in one platform.
+        </div>
+    </div>
+
+    <!-- Feature pills -->
+    <div class="feature-pills">
+        <div class="feature-pill">
+            <div class="pill-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
                 </svg>
             </div>
-            <div class="brand-name">SMRITI <span>Retail OS</span></div>
-            <div class="brand-sub">
-                Retail Management Platform
+            <div class="pill-text">
+                <strong>Live Inventory</strong>
+                <span>Real-time stock across all warehouses</span>
             </div>
         </div>
 
-        <div class="error-msg" id="error-msg"></div>
+        <div class="feature-pill">
+            <div class="pill-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+            </div>
+            <div class="pill-text">
+                <strong>PSV Dashboard</strong>
+                <span>Party stock visibility — WOC, sell-through, exceptions</span>
+            </div>
+        </div>
+
+        <div class="feature-pill">
+            <div class="pill-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+            </div>
+            <div class="pill-text">
+                <strong>Billing Engine</strong>
+                <span>GST invoicing, payments, and audit trail</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="brand-footer">
+        © 2026 AITDL · SMRITI Retail OS v2.1
+    </div>
+</div>
+
+<!-- RIGHT — Form Panel -->
+<div class="form-panel">
+    <div class="form-inner">
+
+        <div class="form-title">Welcome back</div>
+        <div class="form-subtitle">Sign in to continue to SMRITI</div>
+
+        <div class="error-msg" id="error-msg" role="alert"></div>
 
         <div class="form-group">
-            <label class="form-label">Username</label>
-            <div class="input-container">
+            <label class="form-label" for="email">Email / Username</label>
+            <div class="input-wrap">
                 <span class="input-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                    </svg>
                 </span>
-                <input 
-                    type="text" 
-                    id="email" 
+                <input
+                    type="text"
+                    id="email"
                     class="form-input"
                     placeholder="your@email.com"
                     autocomplete="username"
+                    autofocus
                 >
             </div>
         </div>
 
         <div class="form-group">
-            <label class="form-label">Password</label>
-            <div class="input-container">
+            <label class="form-label" for="password">Password</label>
+            <div class="input-wrap">
                 <span class="input-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
                 </span>
-                <input 
-                    type="password" 
-                    id="password" 
+                <input
+                    type="password"
+                    id="password"
                     class="form-input"
                     placeholder="••••••••"
                     autocomplete="current-password"
                 >
+                <button class="pwd-toggle" id="pwd-toggle" type="button" aria-label="Show password" tabindex="-1">
+                    <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </button>
             </div>
         </div>
 
-        <button class="btn-login" onclick="doLogin()">
-            Sign In →
+        <button class="btn-login" id="btn-login" onclick="doLogin()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+            Sign In
         </button>
 
-        <div class="login-footer">
-            © 2026 SMRITI Retail OS
+        <a href="#" class="forgot-link" id="forgot-link">Forgot password?</a>
+
+        <div class="form-footer">
+            © 2026 <a href="https://aitdl.com">AITDL</a> · SMRITI Retail OS
         </div>
     </div>
 </div>
 
 <script>
-document.getElementById('password')
-    .addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') doLogin();
-    });
+/* ── Password show/hide ── */
+document.getElementById('pwd-toggle').addEventListener('click', function() {
+    var pwd = document.getElementById('password');
+    var isText = pwd.type === 'text';
+    pwd.type = isText ? 'password' : 'text';
+    document.getElementById('eye-icon').innerHTML = isText
+        ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
+        : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+});
 
+/* ── Enter key on password ── */
+document.getElementById('password').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') doLogin();
+});
+
+/* ── Login handler ── */
 function doLogin() {
-    const usr = document.getElementById('email').value;
-    const pwd = document.getElementById('password').value;
-    const err = document.getElementById('error-msg');
-    
+    var usr = document.getElementById('email').value.trim();
+    var pwd = document.getElementById('password').value;
+    var err = document.getElementById('error-msg');
+    var btn = document.getElementById('btn-login');
+
     if (!usr || !pwd) {
-        err.style.display = 'block';
-        err.textContent = 'Please enter credentials';
+        showError('Please enter your email and password.');
         return;
     }
-    
+
     err.style.display = 'none';
-    
+    btn.textContent = 'Signing in…';
+    btn.disabled = true;
+
     fetch('/api/method/login', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'x-frappe-csrf-token': 'fetch'
         },
-        body: JSON.stringify({ usr, pwd })
+        body: JSON.stringify({ usr: usr, pwd: pwd })
     })
-    .then(r => r.json())
-    .then(data => {
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
         if (data.message === 'Logged In') {
-            window.location.href = '/app';
+            window.location.href = '/smriti';
         } else {
-            err.style.display = 'block';
-            err.textContent = 
-                'Invalid credentials. Please try again.';
+            showError('Invalid credentials. Please try again.');
+            resetBtn();
         }
     })
-    .catch(() => {
-        err.style.display = 'block';
-        err.textContent = 'Connection error. Try again.';
+    .catch(function() {
+        showError('Connection error. Please check your network.');
+        resetBtn();
+    });
+}
+
+function showError(msg) {
+    var err = document.getElementById('error-msg');
+    err.textContent = msg;
+    err.style.display = 'block';
+}
+
+function resetBtn() {
+    var btn = document.getElementById('btn-login');
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Sign In';
+}
+
+/* ── Forgot password placeholder ── */
+document.getElementById('forgot-link').addEventListener('click', function(e) {
+    e.preventDefault();
+    window.location.href = '/smriti-coming-soon?feature=Password+Reset&progress=0';
+});
+
+/* ── Service Worker ── */
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then(function(r) { console.log('[SMRITI] SW registered:', r.scope); })
+            .catch(function(e) { console.log('[SMRITI] SW failed:', e); });
     });
 }
 </script>

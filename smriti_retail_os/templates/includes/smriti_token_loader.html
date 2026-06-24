@@ -1,0 +1,70 @@
+<!--
+  @file: smriti_retail_os/templates/includes/smriti_token_loader.html
+  @description: Injects resolved SMRITI Midnight design tokens into :root.
+                Include this in EVERY SMRITI www page (except auth pages).
+  @governance: UI-GOV-005 -- All page colors must come from var(--smriti-*)
+  @usage: {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+  @sprint: UI-MIDNIGHT-001
+-->
+
+<!-- SMRITI Token Loader — must be first in <head> after charset/viewport -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js"></script>
+<script src="/assets/smriti_retail_os/js/smriti_theme_manager.js"></script>
+
+<style>
+/* ── Global reset ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: var(--smriti-font-family-primary, 'Inter', sans-serif);
+    font-size: var(--smriti-font-size-base);
+    background: var(--smriti-color-bg-page);
+    color: var(--smriti-color-text-primary);
+    line-height: var(--smriti-line-height-normal);
+    min-height: 100vh;
+}
+
+/* ── Scrollbar — dark-styled ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--smriti-color-bg-page); }
+::-webkit-scrollbar-thumb { background: var(--smriti-color-border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--smriti-color-brand-primary); }
+
+/* ── Selection ── */
+::selection {
+    background: var(--smriti-color-status-info-bg);
+    color: var(--smriti-color-brand-primary);
+}
+
+/* ── Focus ring ── */
+:focus-visible {
+    outline: 2px solid var(--smriti-color-brand-primary);
+    outline-offset: 2px;
+}
+
+/* ── Shell layout ── */
+.smriti-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+.smriti-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin-left: var(--smriti-dimension-sidebar-width);
+    transition: margin-left 0.25s ease;
+}
+
+.smriti-main.sidebar-collapsed {
+    margin-left: var(--smriti-dimension-sidebar-collapsed-width);
+}
+
+.smriti-content {
+    flex: 1;
+    padding: var(--smriti-spacing-section);
+    overflow-y: auto;
+}
+</style>
