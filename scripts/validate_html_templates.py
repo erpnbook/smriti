@@ -167,14 +167,27 @@ def validate_file(filepath, baseline=None, gov006_enabled=True):
     return errors
 
 
-def build_baseline(www_dir):
-    """Scan all HTML files and build a fresh baseline. Called with --update-baseline."""
-    baseline = load_baseline()
-    baseline.setdefault("files", {})
-    total_hex = 0
-    total_rgba = 0
+def build_baseline(www_dir, force=False):
+    """
+    Scan all HTML files and build a fresh baseline.
+    Called with --update-baseline.
 
-    for fname in os.listdir(www_dir):
+    UI-GOV-008: Baseline may only be updated when total debt DECREASES.
+    Increase is forbidden -- prevents developers from gaming the gate.
+    Use --force to override (requires explicit intent).
+    """
+    import datetime
+    old_baseline = load_baseline()
+    old_hex   = old_baseline.get("_meta", {}).get("hex_total",  999999)
+    old_rgba  = old_baseline.get("_meta", {}).get("rgba_total", 999999)
+
+    new_baseline = old_baseline.copy()
+    new_baseline.setdefault("files", {})
+    total_hex  = 0
+    total_rgba = 0
+    file_count = 0
+
+    for fname in sorted(os.listdir(www_dir)):
         if not fname.endswith(".html"):
             continue
         fpath = os.path.join(www_dir, fname)
@@ -182,38 +195,135 @@ def build_baseline(www_dir):
             with open(fpath, "r", encoding="utf-8") as f:
                 content = f.read()
             h, r = count_hardcoded_colors(content)
-            baseline["files"][fname] = {"hex": h, "rgba": r}
+            new_baseline["files"][fname] = {"hex": h, "rgba": r}
             total_hex  += h
             total_rgba += r
+            file_count += 1
         except Exception as e:
-            print(f"  Warning: could not scan {fname}: {e}")
+            print("  Warning: could not scan " + fname + ": " + str(e))
 
-    baseline["_meta"]["hex_total"]  = total_hex
-    baseline["_meta"]["rgba_total"] = total_rgba
-    baseline["_meta"]["date"] = __import__("datetime").date.today().isoformat()
-    save_baseline(baseline)
-    print(f"Baseline updated: {total_hex} hex, {total_rgba} rgba across {len(baseline['files'])} files.")
-    print(f"Saved to: {BASELINE_FILE}")
+    # --- UI-GOV-008 enforcement ---
+    if not force:
+        if total_hex > old_hex:
+            print("")
+            print("UI-GOV-008 BLOCKED: Baseline update REJECTED.")
+            print("  Hex violations INCREASED: " + str(old_hex) + " -> " + str(total_hex) + " (+" + str(total_hex - old_hex) + ")")
+            print("  Baseline may only be updated after debt DECREASES.")
+            print("  Fix violations first, then re-run --update-baseline.")
+            print("  To override (not recommended): add --force flag.")
+            return False
+        if total_rgba > old_rgba:
+            print("")
+            print("UI-GOV-008 BLOCKED: Baseline update REJECTED.")
+            print("  RGBA violations INCREASED: " + str(old_rgba) + " -> " + str(total_rgba) + " (+" + str(total_rgba - old_rgba) + ")")
+            print("  Baseline may only be updated after debt DECREASES.")
+            print("  Fix violations first, then re-run --update-baseline.")
+            print("  To override (not recommended): add --force flag.")
+            return False
+
+    new_baseline["_meta"]["hex_total"]       = total_hex
+    new_baseline["_meta"]["rgba_total"]      = total_rgba
+    new_baseline["_meta"]["hex_prev"]        = old_hex
+    new_baseline["_meta"]["rgba_prev"]       = old_rgba
+    new_baseline["_meta"]["hex_delta"]       = total_hex  - old_hex
+    new_baseline["_meta"]["rgba_delta"]      = total_rgba - old_rgba
+    new_baseline["_meta"]["date"]            = datetime.date.today().isoformat()
+    save_baseline(new_baseline)
+
+    hex_delta  = total_hex  - old_hex
+    rgba_delta = total_rgba - old_rgba
+    print("Baseline updated (UI-GOV-008 PASS):")
+    print("  hex:  " + str(old_hex)  + " -> " + str(total_hex)  + " (" + ("+" if hex_delta >= 0 else "") + str(hex_delta) + ")")
+    print("  rgba: " + str(old_rgba) + " -> " + str(total_rgba) + " (" + ("+" if rgba_delta >= 0 else "") + str(rgba_delta) + ")")
+    print("  Files scanned: " + str(file_count))
+    print("  Saved to: " + BASELINE_FILE)
+    return True
+
+
+def compute_metrics(www_dir):
+    """
+    Compute Metric A-E for sprint reporting.
+    Metric A: Total hardcoded hex count
+    Metric B: Total hardcoded rgba count
+    Metric C: Pages using smriti_sidebar include
+    Metric D: Pages using smriti_token_loader include
+    Metric E: Files at zero violations (hex + rgba = 0)
+    """
+    import datetime
+    metric_a = 0  # hex total
+    metric_b = 0  # rgba total
+    metric_c = 0  # pages with sidebar include
+    metric_d = 0  # pages with token loader include
+    metric_e = 0  # files at zero
+    total_files = 0
+
+    sidebar_pattern = re.compile(r'include.*smriti_sidebar')
+    loader_pattern  = re.compile(r'include.*smriti_token_loader')
+
+    for fname in sorted(os.listdir(www_dir)):
+        if not fname.endswith(".html"):
+            continue
+        fpath = os.path.join(www_dir, fname)
+        try:
+            with open(fpath, "r", encoding="utf-8") as f:
+                content = f.read()
+            h, r = count_hardcoded_colors(content)
+            metric_a += h
+            metric_b += r
+            if h + r == 0:
+                metric_e += 1
+            if sidebar_pattern.search(content):
+                metric_c += 1
+            if loader_pattern.search(content):
+                metric_d += 1
+            total_files += 1
+        except Exception:
+            pass
+
+    print("")
+    print("=" * 55)
+    print("SMRITI Midnight — UI Debt Metrics " + datetime.date.today().isoformat())
+    print("=" * 55)
+    print("Metric A  Hardcoded hex count         : " + str(metric_a))
+    print("Metric B  Hardcoded rgba() count       : " + str(metric_b))
+    print("Metric C  Pages using sidebar include  : " + str(metric_c) + " / " + str(total_files))
+    print("Metric D  Pages using token loader     : " + str(metric_d) + " / " + str(total_files))
+    print("Metric E  Files at zero violations     : " + str(metric_e) + " / " + str(total_files))
+    print("          Combined debt (A+B)          : " + str(metric_a + metric_b))
+    print("="* 55)
+    print("Run after each sprint to measure progress.")
+    print("")
+
 
 
 def main():
     parser = argparse.ArgumentParser(description="SMRITI HTML Template Validator")
     parser.add_argument("files", nargs="*", help="HTML files to validate")
     parser.add_argument("--update-baseline", action="store_true",
-                        help="Rebuild UI-GOV-006 color baseline from www/ directory")
+                        help="Rebuild UI-GOV-006 color baseline (UI-GOV-008: only allowed if debt decreases)")
+    parser.add_argument("--force", action="store_true",
+                        help="Force baseline update even if debt increases (use with caution)")
     parser.add_argument("--www-dir", default=None,
-                        help="Path to www/ directory (used with --update-baseline)")
+                        help="Path to www/ directory (used with --update-baseline or --metrics)")
     parser.add_argument("--no-gov006", action="store_true",
                         help="Skip UI-GOV-006 color regression check")
+    parser.add_argument("--metrics", action="store_true",
+                        help="Print Metric A-E sprint progress report")
     args = parser.parse_args()
+
+    www_dir = args.www_dir or os.path.join(
+        os.path.dirname(__file__), "..",
+        "smriti_retail_os", "www"
+    )
+
+    # --metrics mode
+    if args.metrics:
+        compute_metrics(os.path.abspath(www_dir))
+        sys.exit(0)
 
     # --update-baseline mode
     if args.update_baseline:
-        www_dir = args.www_dir or os.path.join(
-            os.path.dirname(__file__), "..",
-            "smriti_retail_os", "www"
-        )
-        build_baseline(os.path.abspath(www_dir))
+        build_baseline(os.path.abspath(www_dir), force=args.force)
         sys.exit(0)
 
     if not args.files:
