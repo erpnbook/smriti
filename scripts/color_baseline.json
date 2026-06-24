@@ -1,0 +1,275 @@
+{
+  "_meta": {
+    "sprint": "UI-MIDNIGHT-001",
+    "date": "2026-06-24",
+    "hex_total": 1365,
+    "rgba_total": 1310,
+    "note": "First measured baseline. Reduce each sprint."
+  },
+  "files": {
+    "403.html": {
+      "hex": 8,
+      "rgba": 10
+    },
+    "404.html": {
+      "hex": 8,
+      "rgba": 10
+    },
+    "analytics.html": {
+      "hex": 27,
+      "rgba": 18
+    },
+    "backup.html": {
+      "hex": 21,
+      "rgba": 29
+    },
+    "barcode.html": {
+      "hex": 79,
+      "rgba": 58
+    },
+    "billing.html": {
+      "hex": 29,
+      "rgba": 38
+    },
+    "brand_master.html": {
+      "hex": 15,
+      "rgba": 15
+    },
+    "category_master.html": {
+      "hex": 15,
+      "rgba": 19
+    },
+    "cge_generic.html": {
+      "hex": 15,
+      "rgba": 18
+    },
+    "configure.html": {
+      "hex": 33,
+      "rgba": 0
+    },
+    "customers.html": {
+      "hex": 17,
+      "rgba": 13
+    },
+    "delivery_challan.html": {
+      "hex": 16,
+      "rgba": 16
+    },
+    "eway_bill.html": {
+      "hex": 16,
+      "rgba": 17
+    },
+    "index.html": {
+      "hex": 0,
+      "rgba": 0
+    },
+    "inventory.html": {
+      "hex": 0,
+      "rgba": 12
+    },
+    "item_master.html": {
+      "hex": 33,
+      "rgba": 52
+    },
+    "login.html": {
+      "hex": 5,
+      "rgba": 2
+    },
+    "offline.html": {
+      "hex": 16,
+      "rgba": 19
+    },
+    "payments.html": {
+      "hex": 17,
+      "rgba": 22
+    },
+    "platform_center.html": {
+      "hex": 44,
+      "rgba": 43
+    },
+    "print_templates.html": {
+      "hex": 17,
+      "rgba": 19
+    },
+    "products.html": {
+      "hex": 17,
+      "rgba": 14
+    },
+    "psa.html": {
+      "hex": 17,
+      "rgba": 17
+    },
+    "psv-dashboard.html": {
+      "hex": 17,
+      "rgba": 54
+    },
+    "psv-opening-balance.html": {
+      "hex": 16,
+      "rgba": 16
+    },
+    "psv_exception_analysis.html": {
+      "hex": 16,
+      "rgba": 19
+    },
+    "psv_reconciliation.html": {
+      "hex": 17,
+      "rgba": 14
+    },
+    "purchase.html": {
+      "hex": 31,
+      "rgba": 48
+    },
+    "purchase_invoice.html": {
+      "hex": 16,
+      "rgba": 17
+    },
+    "purchase_receipt.html": {
+      "hex": 16,
+      "rgba": 16
+    },
+    "release_notes.html": {
+      "hex": 14,
+      "rgba": 10
+    },
+    "reports.html": {
+      "hex": 34,
+      "rgba": 46
+    },
+    "sales-upload.html": {
+      "hex": 17,
+      "rgba": 17
+    },
+    "sales_invoices.html": {
+      "hex": 20,
+      "rgba": 17
+    },
+    "sales_orders.html": {
+      "hex": 17,
+      "rgba": 24
+    },
+    "sales_return.html": {
+      "hex": 16,
+      "rgba": 25
+    },
+    "scheme_creator.html": {
+      "hex": 15,
+      "rgba": 25
+    },
+    "security.html": {
+      "hex": 4,
+      "rgba": 35
+    },
+    "setup_wizard.html": {
+      "hex": 26,
+      "rgba": 34
+    },
+    "shift.html": {
+      "hex": 18,
+      "rgba": 16
+    },
+    "sizewise_invoice.html": {
+      "hex": 0,
+      "rgba": 0
+    },
+    "sizewise_item.html": {
+      "hex": 0,
+      "rgba": 0
+    },
+    "smriti-403.html": {
+      "hex": 8,
+      "rgba": 10
+    },
+    "smriti-404.html": {
+      "hex": 8,
+      "rgba": 10
+    },
+    "smriti-cge.html": {
+      "hex": 15,
+      "rgba": 30
+    },
+    "smriti-clienteling.html": {
+      "hex": 21,
+      "rgba": 24
+    },
+    "smriti-coming-soon.html": {
+      "hex": 22,
+      "rgba": 1
+    },
+    "smriti-dictionary.html": {
+      "hex": 23,
+      "rgba": 12
+    },
+    "smriti-formula-registry.html": {
+      "hex": 17,
+      "rgba": 12
+    },
+    "smriti-go-live.html": {
+      "hex": 13,
+      "rgba": 30
+    },
+    "smriti-help.html": {
+      "hex": 147,
+      "rgba": 44
+    },
+    "smriti-home.html": {
+      "hex": 5,
+      "rgba": 29
+    },
+    "smriti-license.html": {
+      "hex": 21,
+      "rgba": 26
+    },
+    "smriti-login.html": {
+      "hex": 16,
+      "rgba": 28
+    },
+    "smriti-pdt.html": {
+      "hex": 21,
+      "rgba": 30
+    },
+    "smriti-presentation.html": {
+      "hex": 94,
+      "rgba": 6
+    },
+    "smriti-safe.html": {
+      "hex": 14,
+      "rgba": 0
+    },
+    "smriti-security-log.html": {
+      "hex": 19,
+      "rgba": 13
+    },
+    "smriti-sfc.html": {
+      "hex": 15,
+      "rgba": 21
+    },
+    "smriti-sfm.html": {
+      "hex": 15,
+      "rgba": 24
+    },
+    "smriti_support.html": {
+      "hex": 16,
+      "rgba": 13
+    },
+    "stock-audit.html": {
+      "hex": 17,
+      "rgba": 20
+    },
+    "suppliers.html": {
+      "hex": 17,
+      "rgba": 14
+    },
+    "supplier_returns.html": {
+      "hex": 16,
+      "rgba": 18
+    },
+    "sw.html": {
+      "hex": 0,
+      "rgba": 0
+    },
+    "verify-certificate.html": {
+      "hex": 30,
+      "rgba": 1
+    }
+  }
+}
