@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/platform_center.html
   @description: SMRITI Platform Center — Technical Administration, Site Health, Backups, Repairs
@@ -11,6 +11,7 @@
 -->
 <html lang="en">
 <head>
+{%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>SMRITI Platform Center</title>
@@ -88,7 +89,7 @@
     .sidebar-brand .brand-name {
       font-weight: 700; font-size: 1.1rem; letter-spacing: .5px;
       color: var(--text-1);
-      background: linear-gradient(to right, #fff, var(--accent-cyan));
+      background: linear-gradient(to right, var(--smriti-color-text-primary), var(--accent-cyan));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -115,17 +116,17 @@
       border: 1px solid transparent;
     }
     .nav-item:hover {
-      background: rgba(255, 255, 255, 0.03);
+      background: var(--overlay-white-sm);
       color: var(--text-1);
-      border-color: rgba(255, 255, 255, 0.05);
+      border-color: var(--overlay-white-md);
     }
     .nav-item.active {
-      background: linear-gradient(90deg, rgba(139, 92, 246, 0.15), rgba(6, 182, 212, 0.03));
-      color: #fff;
-      border-color: rgba(139, 92, 246, 0.3);
+      background: linear-gradient(90deg, var(--brand-alpha-12), var(--brand-alpha-03));
+      color:var(--smriti-color-text-primary);
+      border-color: var(--brand-alpha-20);
       border-left: 4px solid var(--accent);
       font-weight: 600;
-      box-shadow: inset 0 0 12px rgba(139, 92, 246, 0.08);
+      box-shadow: inset 0 0 12px var(--brand-alpha-08);
     }
     .nav-item .ni-icon { font-size: 18px; width: 22px; text-align: center; }
     
@@ -133,10 +134,10 @@
       padding: 16px 20px;
       border-top: 1px solid var(--border);
       font-size: .8rem; color: var(--text-3);
-      background: rgba(0, 0, 0, 0.2);
+      background: var(--overlay-black-sm);
     }
     .sidebar-footer a { color: var(--accent-cyan); text-decoration: none; transition: color .2s; }
-    .sidebar-footer a:hover { color: #fff; }
+    .sidebar-footer a:hover { color:var(--smriti-color-text-primary); }
 
     /* ── Main Content ── */
     .main {
@@ -156,7 +157,7 @@
       align-items: center;
       justify-content: space-between;
       position: sticky; top: 0; z-index: 90;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 20px var(--overlay-black-md);
     }
     .topbar-title { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 12px; }
     .topbar-title .badge {
@@ -164,12 +165,12 @@
       letter-spacing: 1px; text-transform: uppercase;
     }
     .badge-admin {
-      background: var(--danger); color: #fff;
-      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+      background: var(--danger); color:var(--smriti-color-text-primary);
+      box-shadow: 0 2px 8px var(--smriti-color-status-danger);
     }
     .badge-owner {
-      background: linear-gradient(135deg, #06b6d4, #3b82f6); color: #fff;
-      box-shadow: 0 2px 8px rgba(6, 182, 212, 0.4);
+      background: linear-gradient(135deg, var(--smriti-color-brand-primary), var(--smriti-color-brand-light)); color:var(--smriti-color-text-primary);
+      box-shadow: 0 2px 8px var(--brand-alpha-30);
     }
     .topbar-user { font-size: .88rem; color: var(--text-2); display: flex; align-items: center; gap: 10px; }
 
@@ -197,12 +198,12 @@
     .config-card-header {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 20px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid var(--overlay-white-md);
       padding-bottom: 16px;
     }
     .config-card-title {
       font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 10px;
-      color: #fff;
+      color:var(--smriti-color-text-primary);
     }
     .config-card-sub { font-size: .85rem; color: var(--text-2); margin-top: 4px; }
 
@@ -215,14 +216,14 @@
       font-family: inherit;
     }
     .btn-primary {
-      background: linear-gradient(135deg, var(--accent), #7c3aed);
-      color: #fff;
-      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+      background: linear-gradient(135deg, var(--accent), var(--smriti-color-brand-secondary));
+      color:var(--smriti-color-text-primary);
+      box-shadow: 0 4px 14px var(--brand-alpha-30);
     }
     .btn-primary:hover {
       filter: brightness(1.1);
       transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgba(139, 92, 246, 0.45);
+      box-shadow: 0 6px 18px var(--brand-alpha-30);
     }
     .btn-primary:active { transform: translateY(0); }
     
@@ -231,12 +232,12 @@
       border: 1px solid var(--border);
     }
     .btn-secondary:hover {
-      border-color: var(--accent); color: #fff;
-      background: rgba(255, 255, 255, 0.02);
+      border-color: var(--accent); color:var(--smriti-color-text-primary);
+      background: var(--overlay-white-xs);
     }
     .btn-danger {
-      background: linear-gradient(135deg, var(--danger), #dc2626); color: #fff;
-      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+      background: linear-gradient(135deg, var(--danger), var(--smriti-color-status-danger)); color:var(--smriti-color-text-primary);
+      box-shadow: 0 4px 14px var(--smriti-color-status-danger);
     }
     .btn-danger:hover {
       filter: brightness(1.1); transform: translateY(-2px);
@@ -256,14 +257,14 @@
     /* ── Health Badge Indicators ── */
     .health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
     .health-card {
-      background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border);
+      background: var(--overlay-white-xs); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 18px;
       display: flex; flex-direction: column; gap: 10px;
       transition: border-color .2s, box-shadow .2s;
     }
-    .health-card:hover { border-color: rgba(139, 92, 246, 0.3); box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .health-card:hover { border-color: var(--brand-alpha-20); box-shadow: 0 4px 20px var(--overlay-black-sm); }
     .health-label { font-size: .78rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-2); font-weight: 600; }
-    .health-value { font-size: 1.3rem; font-weight: 700; color: #fff; }
+    .health-value { font-size: 1.3rem; font-weight: 700; color:var(--smriti-color-text-primary); }
     .health-status { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 600; }
     
     .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
@@ -273,17 +274,17 @@
 
     /* ── Terminal Console ── */
     .console-panel {
-      background: #040409;
+      background: var(--smriti-color-bg-page);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 16px;
       font-family: var(--font-mono);
       font-size: .85rem;
-      color: #38bdf8;
+      color: var(--smriti-color-brand-primary);
       max-height: 250px;
       overflow-y: auto;
       margin-top: 16px;
-      box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);
+      box-shadow: inset 0 2px 10px var(--overlay-black-lg);
       position: relative;
     }
     .console-panel::before {
@@ -294,7 +295,7 @@
     .console-line.system { color: #a855f7; }
     .console-line.success { color: var(--success); }
     .console-line.error { color: var(--danger); }
-    .console-line.input { color: #f59e0b; }
+    .console-line.input { color: var(--smriti-color-status-warning); }
 
     /* ── Data Table ── */
     .data-table { width: 100%; border-collapse: collapse; font-size: .9rem; text-align: left; }
@@ -302,13 +303,13 @@
       padding: 12px 16px; border-bottom: 1px solid var(--border);
       color: var(--accent-cyan); font-weight: 600; font-size: .78rem;
       text-transform: uppercase; letter-spacing: 1px;
-      background: rgba(255, 255, 255, 0.01);
+      background: var(--overlay-white-xs);
     }
     .data-table td {
-      padding: 14px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 14px 16px; border-bottom: 1px solid var(--overlay-white-md);
       vertical-align: middle; color: var(--text-2);
     }
-    .data-table tr:hover td { background: rgba(255, 255, 255, 0.02); color: #fff; }
+    .data-table tr:hover td { background: var(--overlay-white-xs); color:var(--smriti-color-text-primary); }
     .data-table tr:last-child td { border-bottom: none; }
 
     /* ── Toast ── */
@@ -332,7 +333,7 @@
     /* ── Spinner ── */
     .spinner {
       display: inline-block; width: 18px; height: 18px;
-      border: 2px solid rgba(255, 255, 255, 0.1); border-top-color: var(--accent-cyan);
+      border: 2px solid var(--overlay-white-sm); border-top-color: var(--accent-cyan);
       border-radius: 50%; animation: spin .7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -340,7 +341,7 @@
     /* ── Modal Overlay ── */
     .modal-overlay {
       position: fixed; inset: 0; z-index: 9000;
-      background: rgba(0, 0, 0, 0.75);
+      background: var(--overlay-black-lg);
       backdrop-filter: blur(6px);
       display: flex; align-items: center; justify-content: center;
       animation: fadeIn .2s ease;
@@ -355,7 +356,7 @@
       max-width: 94vw;
       max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+      box-shadow: 0 20px 60px var(--overlay-black-lg);
       position: relative;
     }
     .modal-box::before {
@@ -364,7 +365,7 @@
       border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     }
     .modal-title {
-      font-size: 1.25rem; font-weight: 700; color: #fff;
+      font-size: 1.25rem; font-weight: 700; color:var(--smriti-color-text-primary);
       margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
     }
     .modal-sub { font-size: .85rem; color: var(--text-2); margin-bottom: 20px; }
@@ -373,7 +374,7 @@
       background: none; border: none; color: var(--text-3); font-size: 1.4rem;
       cursor: pointer; transition: color .2s;
     }
-    .modal-close:hover { color: #fff; }
+    .modal-close:hover { color:var(--smriti-color-text-primary); }
 
     /* ── Form Inputs ── */
     .form-group { margin-bottom: 18px; }
@@ -385,7 +386,7 @@
     .form-input {
       width: 100%; padding: 10px 14px;
       background: var(--bg-input); border: 1px solid var(--border);
-      border-radius: var(--radius); color: #fff;
+      border-radius: var(--radius); color:var(--smriti-color-text-primary);
       font-family: var(--font-mono); font-size: .9rem;
       outline: none; transition: border-color .2s;
     }
@@ -394,7 +395,7 @@
 
     /* ── Restore Summary Card ── */
     .restore-summary {
-      background: rgba(255, 255, 255, 0.02);
+      background: var(--overlay-white-xs);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 16px;
@@ -403,23 +404,23 @@
     .restore-summary-row {
       display: flex; justify-content: space-between; align-items: center;
       padding: 8px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid var(--overlay-white-md);
     }
     .restore-summary-row:last-child { border-bottom: none; }
     .restore-summary-label { font-size: .78rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-2); font-weight: 600; }
-    .restore-summary-value { font-family: var(--font-mono); font-size: .9rem; color: #fff; font-weight: 600; }
+    .restore-summary-value { font-family: var(--font-mono); font-size: .9rem; color:var(--smriti-color-text-primary); font-weight: 600; }
 
     /* ── Completion Report ── */
     .completion-report {
-      background: rgba(16, 185, 129, 0.06);
-      border: 1px solid rgba(16, 185, 129, 0.25);
+      background: var(--glow-success-xs, rgba(16,185,129,0.06));
+      border: 1px solid var(--glow-success-sm, rgba(16,185,129,0.25));
       border-radius: var(--radius);
       padding: 20px;
       margin-top: 16px;
     }
     .completion-report.failed {
-      background: rgba(239, 68, 68, 0.06);
-      border-color: rgba(239, 68, 68, 0.25);
+      background: var(--glow-danger-xs, rgba(239,68,68,0.06));
+      border-color: var(--glow-danger-sm, rgba(239,68,68,0.25));
     }
     .completion-title {
       font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;
@@ -430,7 +431,7 @@
       padding: 6px 0; font-size: .88rem;
     }
     .completion-row .cr-label { color: var(--text-2); }
-    .completion-row .cr-value { color: #fff; font-weight: 600; font-family: var(--font-mono); font-size: .85rem; }
+    .completion-row .cr-value { color:var(--smriti-color-text-primary); font-weight: 600; font-family: var(--font-mono); font-size: .85rem; }
 
     /* ── Stepper Progress ── */
     .restore-stepper { display: flex; gap: 8px; margin-bottom: 20px; }
@@ -563,7 +564,7 @@
 
           <div class="health-card" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding: 20px; margin-bottom: 24px; border-color: var(--border);">
             <div>
-              <div style="font-weight: 700; font-size: 1.05rem; color: #fff; display: flex; align-items: center; gap: 8px;">
+              <div style="font-weight: 700; font-size: 1.05rem; color:var(--smriti-color-text-primary); display: flex; align-items: center; gap: 8px;">
                 <span>🔒</span> Backup Security & Encryption
               </div>
               <div style="font-size: 0.85rem; color: var(--text-2); margin-top: 4px;">
@@ -638,7 +639,7 @@
               <div class="config-card-sub">Audit error logs, RQ background workers, scheduler activity, and active connections.</div>
             </div>
             <div class="flex-row">
-              <select id="log-selector" onchange="fetchDiagnostics(this.value)" style="background:var(--bg-input); border:1px solid var(--border); color:#fff; padding:6px 12px; border-radius:var(--radius); outline:none;">
+              <select id="log-selector" onchange="fetchDiagnostics(this.value)" style="background:var(--bg-input); border:1px solid var(--border); color:var(--smriti-color-text-primary); padding:6px 12px; border-radius:var(--radius); outline:none;">
                 <option value="error">Error Logs</option>
                 <option value="failed_jobs">Failed RQ Jobs</option>
                 <option value="jobs">Active Background Jobs</option>
@@ -673,22 +674,22 @@
 
           <div class="grid-2">
             <div class="health-card" style="gap:12px;">
-              <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:#fff;">🧹 Purge Stale Child Tables</div>
+              <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:var(--smriti-color-text-primary);">🧹 Purge Stale Child Tables</div>
               <div class="health-label">Scans and removes child records (like stale Mode of Payment accounts) referencing non-existent company IDs.</div>
               <button class="btn btn-secondary" onclick="runRepairTool('fix_broken_links')">Fix Broken Links</button>
             </div>
             <div class="health-card" style="gap:12px;">
-              <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:#fff;">🔑 Rebuild Role Permissions</div>
+              <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:var(--smriti-color-text-primary);">🔑 Rebuild Role Permissions</div>
               <div class="health-label">Re-provisions access guidelines, desk permissions, and custom views for Cashier and Store Manager profiles.</div>
               <button class="btn btn-secondary" onclick="runRepairTool('rebuild_permissions')">Rebuild Permissions</button>
             </div>
             <div class="health-card" style="gap:12px;">
-              <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:#fff;">👟 Verify Footwear Attribute Seeding</div>
+              <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:var(--smriti-color-text-primary);">👟 Verify Footwear Attribute Seeding</div>
               <div class="health-label">Checks and ensures standard masters (Gender, Heel Type, Outsole, Upper Material) are properly populated.</div>
               <button class="btn btn-secondary" onclick="runRepairTool('verify_master')">Verify Master Data</button>
             </div>
             <div class="health-card" style="gap:12px;">
-              <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:#fff;">🗂️ Check Company & GST Setup</div>
+              <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:var(--smriti-color-text-primary);">🗂️ Check Company & GST Setup</div>
               <div class="health-label">Verifies that GST templates, default cost centers, and primary address links exist and are valid.</div>
               <div class="flex-row">
                 <button class="btn btn-secondary" onclick="runRepairTool('verify_company')" style="flex:1; justify-content:center;">Verify Company Settings</button>
@@ -741,7 +742,7 @@
           </div>
 
           <div class="grid-2">
-            <div class="health-card" style="border-color: rgba(239, 68, 68, 0.2);">
+            <div class="health-card" style="border-color: var(--glow-danger-sm);">
               <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:var(--danger)">🔒 Emergency Maintenance Mode</div>
               <div class="health-label">Puts the site into maintenance lock, rejecting all HTTP requests with a 503 code. Only Administrator CLI can toggle off.</div>
               <div class="flex-row" style="margin-top: 10px;">
@@ -749,10 +750,10 @@
                 <button class="btn btn-secondary btn-sm" onclick="toggleMaintenance(0)">Disable</button>
               </div>
             </div>
-            <div class="health-card" style="border-color: rgba(255, 255, 255, 0.08);">
-              <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:#fff;">📋 Restore Guidelines</div>
+            <div class="health-card" style="border-color: var(--overlay-white-md);">
+              <div class="config-card-title" style="font-size:1.05rem; margin-bottom: 0; color:var(--smriti-color-text-primary);">📋 Restore Guidelines</div>
               <div class="health-label">To restore a database backup in docker, run the following inside the terminal:</div>
-              <div style="background:#000; padding:10px; border-radius:6px; font-family:var(--font-mono); font-size:.75rem; color:#10b981; line-height:1.4;">
+              <div style="background:#000; padding:10px; border-radius:6px; font-family:var(--font-mono); font-size:.75rem; color:var(--smriti-color-status-success); line-height:1.4;">
                 docker exec -it smriti_retail_os-backend-1 bench --site smriti_retail restore [backup_filepath]
               </div>
             </div>
@@ -813,7 +814,7 @@
           ⚠️ Warning
         </div>
         <div style="font-size:.82rem; color:var(--text-2); margin-top:6px; line-height:1.5;">
-          Restoring a backup will <strong style="color:#fff;">replace all current data</strong> with the selected backup snapshot.
+          Restoring a backup will <strong style="color:var(--smriti-color-text-primary);">replace all current data</strong> with the selected backup snapshot.
           A safety backup of the current system will be created automatically before proceeding.
         </div>
       </div>
@@ -890,7 +891,7 @@
 
       <div id="restore-progress-area" style="text-align:center; padding:32px;">
         <div class="spinner" style="width:36px; height:36px; border-width:3px; margin:0 auto 16px;"></div>
-        <div style="font-size:1.1rem; font-weight:700; color:#fff; margin-bottom:6px;">Restoring Your Business Data…</div>
+        <div style="font-size:1.1rem; font-weight:700; color:var(--smriti-color-text-primary); margin-bottom:6px;">Restoring Your Business Data…</div>
         <div style="font-size:.85rem; color:var(--text-2);">Creating safety backup and then restoring selected snapshot. Please do not close this window.</div>
       </div>
 
@@ -1060,7 +1061,7 @@ function fetchHealthData(forceRefresh = false) {
       if (data.migration_status.last_patches && data.migration_status.last_patches.length > 0) {
         patchTbody.innerHTML = data.migration_status.last_patches.map(p => `
           <tr>
-            <td style="font-family:var(--font-mono); font-size:.85rem; color:#fff;">${p.patch}</td>
+            <td style="font-family:var(--font-mono); font-size:.85rem; color:var(--smriti-color-text-primary);">${p.patch}</td>
             <td>${p.creation}</td>
           </tr>
         `).join('');
@@ -1086,7 +1087,7 @@ function fetchBackupHistory() {
           const isDatabase = b.filename.includes('-database');
           return `
           <tr>
-            <td style="font-family:var(--font-mono); font-size:.85rem; color:#fff;">${b.filename}</td>
+            <td style="font-family:var(--font-mono); font-size:.85rem; color:var(--smriti-color-text-primary);">${b.filename}</td>
             <td>${sizeMB} MB</td>
             <td>${b.modified}</td>
             <td style="text-align:right;">
@@ -1298,7 +1299,7 @@ function executeRestore() {
           </div>
         </div>
         <div style="margin-top:12px; font-size:.82rem; color:var(--text-2); line-height:1.5;">
-          ⚠️ The database has been replaced. Please <strong style="color:#fff;">reload the page</strong> or <strong style="color:#fff;">log in again</strong> to use the restored system.
+          ⚠️ The database has been replaced. Please <strong style="color:var(--smriti-color-text-primary);">reload the page</strong> or <strong style="color:var(--smriti-color-text-primary);">log in again</strong> to use the restored system.
         </div>
       `;
       log(`✅ RESTORE SUCCESS: ${restoreFileName} restored in ${elapsed}s. Pre-backup: ${res.pre_backup}`, 'success');
@@ -1396,9 +1397,9 @@ function fetchDiagnostics(logType) {
           tbody.innerHTML = logs.map(j => `
             <tr>
               <td style="font-family:var(--font-mono); font-size:.8rem; color:var(--accent-cyan);">${j.id}</td>
-              <td><span style="background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px; font-size:.8rem;">${j.queue}</span></td>
-              <td style="color:#fff; font-weight:600;">${j.name}</td>
-              <td><span style="color:#10b981; font-weight:700;">${j.status}</span></td>
+              <td><span style="background:var(--overlay-white-md); padding:2px 6px; border-radius:4px; font-size:.8rem;">${j.queue}</span></td>
+              <td style="color:var(--smriti-color-text-primary); font-weight:600;">${j.name}</td>
+              <td><span style="color:var(--smriti-color-status-success); font-weight:700;">${j.status}</span></td>
             </tr>
           `).join('');
         } else {
@@ -1410,7 +1411,7 @@ function fetchDiagnostics(logType) {
           tbody.innerHTML = logs.map(l => `
             <tr>
               <td style="white-space:nowrap;">${l.creation}</td>
-              <td style="font-family:var(--font-mono); font-size:.8rem; color:#fff; font-weight:600;">${l.method || 'N/A'}</td>
+              <td style="font-family:var(--font-mono); font-size:.8rem; color:var(--smriti-color-text-primary); font-weight:600;">${l.method || 'N/A'}</td>
               <td style="font-family:var(--font-mono); font-size:.8rem; color:var(--danger); white-space:pre-wrap; max-width:400px; overflow-x:auto;">${l.error || ''}</td>
             </tr>
           `).join('');
@@ -1486,7 +1487,7 @@ function showRepairModal(records) {
   } else {
     let rowsHtml = records.map(r => `
       <tr>
-        <td style="font-family:var(--font-mono); font-size:.8rem; color:#fff;">${r.name}</td>
+        <td style="font-family:var(--font-mono); font-size:.8rem; color:var(--smriti-color-text-primary);">${r.name}</td>
         <td>Row #${r.idx} in <strong>${r.parent}</strong></td>
         <td><span style="color:var(--danger);">${r.company}</span></td>
       </tr>

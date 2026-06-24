@@ -3,7 +3,7 @@
   @description: Unified SMRITI Knowledge Center (Sprint 4)
   @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
   @date: 2026-06-19
-  @version: 2.0.0
+  @version: 2.1.0 (UI-MIDNIGHT-003 — token migration)
   @license: MIT
 -->
 <!DOCTYPE html>
@@ -11,24 +11,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SMRITI Knowledge Center — Business Dictionary, Formula Registry, Training Manuals and Governance Rules">
     <title>Knowledge Center — SMRITI Retail OS</title>
     <link rel="icon" href="/assets/smriti_retail_os/images/smriti_logo.svg">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+    {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
     <style>
+        /* ── UI-GOV-005 compliant token bridges ──────────────────────────
+           Maps legacy Knowledge Center vars to SMRITI Midnight tokens.
+           All downstream CSS uses var(--primary-navy) etc. unchanged.
+           Phase 2 of this file: replace local var calls with direct
+           var(--smriti-*) references per component.
+           Sprint: UI-MIDNIGHT-003 P1
+        ────────────────────────────────────────────────────────────────── */
         :root {
-            --primary-navy: #1A2B5C;
-            --primary-blue: #2563EB;
-            --primary-blue-hover: #1D4ED8;
-            --text-dark: #0F172A;
-            --text-main: #334155;
-            --text-muted: #64748B;
-            --bg-glass: rgba(255, 255, 255, 0.95);
-            --bg-page: #F8FAFC;
-            --border-glass: rgba(226, 232, 240, 0.8);
-            --shadow-glass: 0 10px 30px rgba(26, 43, 92, 0.04);
-            --accent-green: #10B981;
-            --accent-yellow: #F59E0B;
-            --accent-red: #EF4444;
+            /* Brand — mapped to Midnight teal/purple palette */
+            --primary-navy:       var(--smriti-color-bg-page);
+            --primary-blue:       var(--smriti-color-brand-primary);
+            --primary-blue-hover: var(--smriti-color-brand-light);
+
+            /* Text */
+            --text-dark:          var(--smriti-color-text-primary);
+            --text-main:          var(--smriti-color-text-muted);
+            --text-muted:         var(--smriti-color-text-subtle);
+
+            /* Surfaces */
+            --bg-glass:           var(--smriti-color-bg-elevated);
+            --bg-page:            var(--smriti-color-bg-secondary);
+            --border-glass:       var(--smriti-color-border-default);
+            --shadow-glass:       var(--smriti-shadow-md);
+
+            /* Status accents */
+            --accent-green:       var(--smriti-color-status-success);
+            --accent-yellow:      var(--smriti-color-status-warning);
+            --accent-red:         var(--smriti-color-status-danger);
+
+            /* Surfaces & overlays */
+            --color-white:        #ffffff;
+            --color-white-85:     rgba(255,255,255,0.85);
+            --color-white-60:     rgba(255,255,255,0.60);
+            --color-white-15:     var(--color-white-15);
+            --color-white-10:     rgba(255,255,255,0.10);
+            --color-white-08:     rgba(255,255,255,0.08);
+
+            /* Shadow tokens (brand-neutral) */
+            --shadow-xs:          rgba(0,0,0,0.02);
+            --shadow-sm-kc:       rgba(0,0,0,0.04);
+            --shadow-md-kc:       rgba(0,0,0,0.08);
+            --shadow-lg-kc:       rgba(0,0,0,0.15);
+
+            /* Brand hover alpha variants */
+            --brand-alpha-03:     rgba(20,184,166,0.03);
+            --brand-alpha-05:     rgba(20,184,166,0.05);
+            --brand-alpha-08:     rgba(20,184,166,0.08);
+            --brand-alpha-10:     rgba(20,184,166,0.10);
+            --brand-alpha-12:     rgba(20,184,166,0.12);
+            --brand-alpha-20:     rgba(20,184,166,0.20);
+            --brand-alpha-30:     rgba(20,184,166,0.30);
+
+            /* Semantic badge palette (category-specific, not theme colors) */
+            --badge-dict-bg:      #DCFCE7; --badge-dict-fg:     #15803D;
+            --badge-formula-bg:   #DBEAFE; --badge-formula-fg:  #1D4ED8;
+            --badge-exercise-bg:  #F3E8FF; --badge-exercise-fg: #6B21A8;
+            --badge-faq-bg:       #FEF3C7; --badge-faq-fg:      #B45309;
+            --badge-manual-bg:    #F1F5F9; --badge-manual-fg:   #475569;
+            --badge-kb-bg:        #FFE4E6; --badge-kb-fg:       #BE123C;
+            --badge-psv-bg:       #F0FDF4; --badge-psv-fg:      #166534; --badge-psv-bd: var(--badge-psv-bd);
+            --badge-cert-bg:      #FAF5FF; --badge-cert-fg:     var(--badge-cert-fg); --badge-cert-bd: #E9D5FF;
         }
 
         * {
@@ -39,7 +88,7 @@
 
         body {
             font-family: 'Arial', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: radial-gradient(at 50% 0%, #EEF2F6 0%, var(--bg-page) 100%);
+            background: radial-gradient(at 50% 0%, var(--smriti-color-bg-secondary) 0%, var(--bg-page) 100%);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
@@ -49,17 +98,17 @@
 
         /* Top Header Navigation */
         .help-header {
-            background: linear-gradient(135deg, var(--primary-navy) 0%, #0F172A 100%);
-            color: #FFFFFF;
+            background: linear-gradient(135deg, var(--primary-navy) 0%, var(--smriti-color-bg-page) 100%);
+            color: var(--color-white);
             padding: 16px 32px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+            box-shadow: 0 4px 20px var(--shadow-md-kc);
             position: sticky;
             top: 0;
             z-index: 100;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid var(--color-white-08);
             backdrop-filter: blur(8px);
         }
 
@@ -88,22 +137,22 @@
             width: 100%;
             padding: 10px 16px 10px 44px;
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            background: rgba(255, 255, 255, 0.1);
-            color: #FFFFFF;
+            border: 1px solid var(--color-white-15);
+            background: var(--color-white-10);
+            color: var(--color-white);
             font-size: 14px;
             outline: none;
             transition: all 0.3s ease;
         }
 
         .header-search input::placeholder {
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--color-white-60);
         }
 
         .header-search input:focus {
-            background: #FFFFFF;
+            background: var(--smriti-color-bg-elevated);
             color: var(--text-dark);
-            box-shadow: 0 0 15px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 0 15px var(--brand-alpha-20);
             border-color: var(--primary-blue);
         }
 
@@ -112,7 +161,7 @@
             left: 14px;
             top: 50%;
             transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--color-white-60);
             pointer-events: none;
             transition: color 0.3s;
         }
@@ -128,7 +177,7 @@
         }
 
         .btn-header {
-            color: rgba(255, 255, 255, 0.85);
+            color: var(--color-white-85);
             text-decoration: none;
             font-size: 14px;
             font-weight: 600;
@@ -141,8 +190,8 @@
         }
 
         .btn-header:hover {
-            color: #FFFFFF;
-            background: rgba(255, 255, 255, 0.1);
+            color: var(--color-white);
+            background: var(--color-white-10);
         }
 
         /* Layout Container */
@@ -193,13 +242,13 @@
         }
 
         .tab-btn:hover {
-            background: rgba(37, 99, 235, 0.05);
+            background: var(--brand-alpha-05);
             color: var(--primary-blue);
             transform: translateX(4px);
         }
 
         .tab-btn.active {
-            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
+            background: linear-gradient(135deg, var(--brand-alpha-10) 0%, var(--brand-alpha-05) 100%);
             color: var(--primary-blue);
             font-weight: 700;
             border-left: 3px solid var(--primary-blue);
@@ -228,7 +277,7 @@
 
         .sidebar-sub-item:hover, .sidebar-sub-item.active {
             color: var(--primary-blue);
-            background: rgba(37, 99, 235, 0.03);
+            background: var(--brand-alpha-03);
         }
 
         /* Right Content Panel */
@@ -283,19 +332,19 @@
         }
 
         .result-card {
-            background: #FFFFFF;
+            background: var(--smriti-color-bg-elevated);
             border: 1px solid var(--border-glass);
             border-radius: 12px;
             padding: 20px;
             transition: all 0.2s ease;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(26, 43, 92, 0.01);
+            box-shadow: 0 4px 12px var(--shadow-xs);
         }
 
         .result-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(26, 43, 92, 0.06);
-            border-color: rgba(37, 99, 235, 0.3);
+            box-shadow: 0 8px 24px var(--shadow-md-kc);
+            border-color: var(--brand-alpha-30);
         }
 
         .result-header {
@@ -320,14 +369,14 @@
             letter-spacing: 0.5px;
         }
 
-        .badge-dict { background: #DCFCE7; color: #15803D; }
-        .badge-formula { background: #DBEAFE; color: #1D4ED8; }
-        .badge-exercise { background: #F3E8FF; color: #6B21A8; }
-        .badge-faq { background: #FEF3C7; color: #B45309; }
-        .badge-manual { background: #F1F5F9; color: #475569; }
-        .badge-kb { background: #FFE4E6; color: #BE123C; }
-        .badge-psv { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
-        .badge-cert { background: #FAF5FF; color: #7C3AED; border: 1px solid #E9D5FF; }
+        .badge-dict { background: var(--badge-dict-bg); color: var(--badge-dict-fg); }
+        .badge-formula { background: var(--badge-formula-bg); color: var(--badge-formula-fg); }
+        .badge-exercise { background: var(--badge-exercise-bg); color: var(--badge-exercise-fg); }
+        .badge-faq { background: var(--badge-faq-bg); color: var(--badge-faq-fg); }
+        .badge-manual { background: var(--badge-manual-bg); color: var(--badge-manual-fg); }
+        .badge-kb { background: var(--badge-kb-bg); color: var(--badge-kb-fg); }
+        .badge-psv { background: var(--badge-psv-bg); color: var(--badge-psv-fg); border: 1px solid var(--badge-psv-bd); }
+        .badge-cert { background: var(--badge-cert-bg); color: var(--badge-cert-fg); border: 1px solid var(--badge-cert-bd); }
 
         .result-snippet {
             font-size: 14px;
@@ -355,17 +404,17 @@
         }
 
         .formula-card {
-            background: #FFFFFF;
+            background: var(--smriti-color-bg-elevated);
             border: 1px solid var(--border-glass);
             border-radius: 12px;
             padding: 24px;
-            box-shadow: 0 4px 12px rgba(26, 43, 92, 0.02);
+            box-shadow: 0 4px 12px var(--shadow-xs);
             transition: all 0.2s;
         }
 
         .formula-card:hover {
-            box-shadow: 0 8px 24px rgba(26, 43, 92, 0.05);
-            border-color: rgba(37, 99, 235, 0.2);
+            box-shadow: 0 8px 24px var(--shadow-sm-kc);
+            border-color: var(--brand-alpha-20);
         }
 
         .formula-meta {
@@ -377,7 +426,7 @@
 
         .formula-id-badge {
             background: var(--primary-navy);
-            color: #FFFFFF;
+            color: var(--color-white);
             font-family: monospace;
             font-size: 12px;
             font-weight: 700;
@@ -387,7 +436,7 @@
 
         .formula-math-expr {
             font-family: monospace;
-            background: #F8FAFC;
+            background: var(--smriti-color-bg-secondary);
             padding: 12px 16px;
             border-radius: 8px;
             color: var(--primary-blue);
@@ -429,7 +478,7 @@
 
         .dict-cat-btn:hover, .dict-cat-btn.active {
             color: var(--primary-blue);
-            background: rgba(37, 99, 235, 0.04);
+            background: var(--brand-alpha-05);
         }
 
         .dict-list {
@@ -440,18 +489,18 @@
         }
 
         .dict-card {
-            background: #FFFFFF;
+            background: var(--smriti-color-bg-elevated);
             border: 1px solid var(--border-glass);
             border-radius: 12px;
             padding: 16px;
             cursor: pointer;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            box-shadow: 0 2px 8px var(--shadow-xs);
         }
 
         .dict-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(26, 43, 92, 0.08);
+            box-shadow: 0 12px 24px var(--shadow-md-kc);
             border-color: var(--primary-blue);
         }
 
@@ -503,11 +552,11 @@
             position: fixed;
             z-index: 9999;
             max-width: 300px;
-            background: #FFFFFF;
+            background: var(--smriti-color-bg-elevated);
             border: 1px solid var(--border-glass);
             border-radius: 10px;
             padding: 12px 14px;
-            box-shadow: 0 8px 32px rgba(26, 43, 92, 0.14), 0 2px 8px rgba(0,0,0,0.06);
+            box-shadow: 0 8px 32px var(--shadow-lg-kc), 0 2px 8px var(--shadow-sm-kc);
             pointer-events: none;
             opacity: 0;
             transform: translateY(6px);
@@ -562,8 +611,8 @@
             right: -550px;
             width: 500px;
             height: 100vh;
-            background: #FFFFFF;
-            box-shadow: -10px 0 40px rgba(26, 43, 92, 0.15);
+            background: var(--smriti-color-bg-elevated);
+            box-shadow: -10px 0 40px var(--shadow-lg-kc);
             z-index: 1000;
             transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
@@ -582,7 +631,7 @@
             justify-content: space-between;
             align-items: center;
             background: var(--primary-navy);
-            color: #FFFFFF;
+            color: var(--color-white);
         }
 
         .drawer-body {
@@ -597,7 +646,7 @@
         .drawer-close {
             background: transparent;
             border: none;
-            color: #FFFFFF;
+            color: var(--color-white);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -619,7 +668,7 @@
         }
 
         .relation-badge {
-            background: #F1F5F9;
+            background: var(--smriti-color-bg-elevated);
             color: var(--text-main);
             font-size: 12px;
             font-weight: 600;
@@ -634,13 +683,13 @@
         }
 
         .relation-badge:hover {
-            background: rgba(37, 99, 235, 0.08);
+            background: var(--brand-alpha-08);
             border-color: var(--primary-blue);
             color: var(--primary-blue);
         }
 
         .relation-badge-formula {
-            background: #EFF6FF;
+            background: var(--smriti-color-bg-elevated);
             color: var(--primary-blue);
         }
 
@@ -653,11 +702,11 @@
         }
 
         .gov-card {
-            background: #FFFFFF;
+            background: var(--smriti-color-bg-elevated);
             border: 1px solid var(--border-glass);
             border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 4px 12px rgba(26, 43, 92, 0.01);
+            box-shadow: 0 4px 12px var(--shadow-xs);
             text-align: center;
         }
 
@@ -684,7 +733,7 @@
         }
 
         .gov-sect-card {
-            background: #FFFFFF;
+            background: var(--smriti-color-bg-elevated);
             border: 1px solid var(--border-glass);
             border-radius: 12px;
             padding: 20px;
@@ -717,7 +766,7 @@
 
         .gov-table td {
             padding: 10px 8px;
-            border-bottom: 1px solid rgba(226,232,240,0.5);
+            border-bottom: 1px solid var(--smriti-color-border-default);
         }
 
         .gov-table tr:last-child td {
@@ -734,7 +783,7 @@
 
         .exercise-filter-btn {
             border: 1px solid var(--border-glass);
-            background: #FFFFFF;
+            background: var(--smriti-color-bg-elevated);
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 13px;
@@ -745,12 +794,12 @@
 
         .exercise-filter-btn.active, .exercise-filter-btn:hover {
             background: var(--primary-blue);
-            color: #FFFFFF;
+            color: var(--color-white);
             border-color: var(--primary-blue);
         }
 
         .exercise-row {
-            background: #FFFFFF;
+            background: var(--smriti-color-bg-elevated);
             border: 1px solid var(--border-glass);
             border-radius: 10px;
             padding: 16px;
@@ -760,7 +809,7 @@
 
         .exercise-row:hover {
             border-color: var(--primary-blue);
-            box-shadow: 0 4px 12px rgba(26,43,92,0.02);
+            box-shadow: 0 4px 12px var(--shadow-xs);
         }
 
         /* Markdown Manual contents */
@@ -786,7 +835,7 @@
         }
 
         .manual-viewport blockquote {
-            background: rgba(37,99,235,0.03);
+            background: var(--brand-alpha-03);
             border-left: 4px solid var(--primary-blue);
             padding: 12px 16px;
             margin: 16px 0;
@@ -801,7 +850,7 @@
         }
 
         .manual-viewport th {
-            background: #F8FAFC;
+            background: var(--smriti-color-bg-secondary);
             padding: 10px;
             border: 1px solid var(--border-glass);
             font-weight: 700;
@@ -835,7 +884,7 @@
         .detail-text-hinglish {
             font-size: 14px;
             color: var(--primary-navy);
-            background: rgba(26,43,92,0.03);
+            background: var(--shadow-xs);
             padding: 12px;
             border-radius: 8px;
             border-left: 3px solid var(--primary-navy);
@@ -941,11 +990,11 @@
                 <!-- Search bar for Enablement Center -->
                 <div class="enablement-search-bar" style="margin-bottom: 24px; position: relative;">
                     <span class="material-symbols-outlined" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;">search</span>
-                    <input type="text" id="enablement-search-input" placeholder="Search PSV resources..." onkeyup="filterEnablementCards(this.value)" style="width: 100%; padding: 10px 16px 10px 44px; border: 1px solid var(--border-glass); border-radius: 20px; outline: none; font-size: 14px; background: #FFFFFF; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-blue)'; this.style.boxShadow='0 0 10px rgba(37,99,235,0.1)';" onblur="this.style.borderColor='var(--border-glass)'; this.style.boxShadow='none';">
+                    <input type="text" id="enablement-search-input" placeholder="Search PSV resources..." onkeyup="filterEnablementCards(this.value)" style="width: 100%; padding: 10px 16px 10px 44px; border: 1px solid var(--border-glass); border-radius: 20px; outline: none; font-size: 14px; background:var(--smriti-color-bg-elevated); transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-blue)'; this.style.boxShadow='0 0 10px var(--brand-alpha-10)';" onblur="this.style.borderColor='var(--border-glass)'; this.style.boxShadow='none';">
                 </div>
 
                 <!-- Interactive ROI Calculator -->
-                <div class="calculator-container" style="background:#FFFFFF; border:1px solid var(--border-glass); border-radius:12px; padding:24px; box-shadow:0 4px 12px rgba(26,43,92,0.02); margin-bottom:32px; border-top: 4px solid var(--primary-blue);">
+                <div class="calculator-container" style="background:var(--smriti-color-bg-elevated); border:1px solid var(--border-glass); border-radius:12px; padding:24px; box-shadow:0 4px 12px var(--shadow-xs); margin-bottom:32px; border-top: 4px solid var(--primary-blue);">
                     <h3 style="color:var(--primary-navy); font-size:16px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
                         <span class="material-symbols-outlined" style="color:var(--primary-blue);">calculate</span> SMRITI PSV ROI Calculator
                     </h3>
@@ -968,7 +1017,7 @@
                         </div>
                     </div>
                     
-                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:20px; background:#F8FAFC; padding:20px; border-radius:8px; border:1px solid var(--border-glass);">
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:20px; background:var(--smriti-color-bg-secondary); padding:20px; border-radius:8px; border:1px solid var(--border-glass);">
                         <div style="position: relative;">
                             <div style="display:flex; justify-content:between; align-items:center; width:100%;">
                                 <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; flex:1;">Revenue Recovered</div>
@@ -1094,10 +1143,10 @@
                         <span class="material-symbols-outlined" style="color:var(--primary-blue);">download</span> Resource Download Center
                     </h3>
                     <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                        <button class="tab-btn" onclick="downloadEnablementFile('psv_demo_dataset')" style="display:inline-flex; width:auto; background:var(--primary-navy); color:#FFFFFF; border-radius:8px; padding: 10px 16px;">
+                        <button class="tab-btn" onclick="downloadEnablementFile('psv_demo_dataset')" style="display:inline-flex; width:auto; background:var(--primary-navy); color:var(--color-white); border-radius:8px; padding: 10px 16px;">
                             <span class="material-symbols-outlined" style="font-size:18px;">table_chart</span> Download CSV Dataset
                         </button>
-                        <button class="tab-btn" onclick="downloadEnablementFile('zip_bundle')" style="display:inline-flex; width:auto; background:var(--primary-blue); color:#FFFFFF; border-radius:8px; padding: 10px 16px;">
+                        <button class="tab-btn" onclick="downloadEnablementFile('zip_bundle')" style="display:inline-flex; width:auto; background:var(--primary-blue); color:var(--color-white); border-radius:8px; padding: 10px 16px;">
                             <span class="material-symbols-outlined" style="font-size:18px;">archive</span> Download Complete ZIP Bundle
                         </button>
                     </div>
@@ -1111,15 +1160,15 @@
                 <!-- If there is an active exam, we show the quiz panel, else we show the Exam Info / Attempts registry / Certified Planners list -->
                 <div id="cert-home-view">
                     <!-- Exam Details Card -->
-                    <div class="calculator-container" style="background:#FFFFFF; border:1px solid var(--border-glass); border-radius:12px; padding:24px; box-shadow:0 4px 12px rgba(26,43,92,0.02); margin-bottom:32px; border-top: 4px solid #7C3AED;">
+                    <div class="calculator-container" style="background:var(--smriti-color-bg-elevated); border:1px solid var(--border-glass); border-radius:12px; padding:24px; box-shadow:0 4px 12px var(--shadow-xs); margin-bottom:32px; border-top: 4px solid var(--badge-cert-fg);">
                         <h3 style="color:var(--primary-navy); font-size:18px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
-                            <span class="material-symbols-outlined" style="color:#7C3AED;">school</span> PSV Certified Planner Exam (Level 1)
+                            <span class="material-symbols-outlined" style="color:var(--badge-cert-fg);">school</span> PSV Certified Planner Exam (Level 1)
                         </h3>
                         <p style="font-size:14px; color:var(--text-main); margin-bottom:20px; line-height:1.6;">
                             This certification validates your understanding of SMRITI Retail OS Party Stock Visibility (PSV) architectures, Weeks of Cover (WOC) mathematical derivations, stock transfer decisions, and governance principles.
                         </p>
                         
-                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:24px; background:#F8FAFC; padding:20px; border-radius:8px; border:1px solid var(--border-glass);">
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:24px; background:var(--smriti-color-bg-secondary); padding:20px; border-radius:8px; border:1px solid var(--border-glass);">
                             <div>
                                 <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Duration</div>
                                 <div style="font-size:18px; font-weight:800; color:var(--primary-navy); margin-top:4px;">60 Minutes</div>
@@ -1134,15 +1183,15 @@
                             </div>
                             <div>
                                 <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Best Score</div>
-                                <div id="cert-best-score" style="font-size:18px; font-weight:800; color:#7C3AED; margin-top:4px;">N/A</div>
+                                <div id="cert-best-score" style="font-size:18px; font-weight:800; color:var(--badge-cert-fg); margin-top:4px;">N/A</div>
                             </div>
                         </div>
                         
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
-                            <button id="btn-start-exam" onclick="startExam()" style="display:inline-flex; align-items:center; gap:8px; background:#7C3AED; color:#FFFFFF; border:none; border-radius:8px; padding:12px 24px; font-weight:700; font-size:14px; cursor:pointer; transition:all 0.2s;">
+                            <button id="btn-start-exam" onclick="startExam()" style="display:inline-flex; align-items:center; gap:8px; background:var(--badge-cert-fg); color:var(--color-white); border:none; border-radius:8px; padding:12px 24px; font-weight:700; font-size:14px; cursor:pointer; transition:all 0.2s;">
                                 <span class="material-symbols-outlined">play_arrow</span> Start Certification Exam
                             </button>
-                            <span id="cert-status-badge" style="font-size:12px; font-weight:700; color:#6D28D9; background:#FAF5FF; border:1px solid #C084FC; padding:6px 14px; border-radius:20px;">Study Mode</span>
+                            <span id="cert-status-badge" style="font-size:12px; font-weight:700; color:var(--badge-cert-fg); background:var(--badge-cert-bg); border:1px solid var(--badge-cert-bd); padding:6px 14px; border-radius:20px;">Study Mode</span>
                         </div>
                     </div>
 
@@ -1151,7 +1200,7 @@
                         <h3 style="color:var(--primary-navy); font-size:16px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
                             <span class="material-symbols-outlined" style="color:var(--primary-blue);">history</span> My Exam Attempts
                         </h3>
-                        <table class="gov-table" style="background:#FFFFFF; border:1px solid var(--border-glass); border-radius:8px;">
+                        <table class="gov-table" style="background:var(--smriti-color-bg-elevated); border:1px solid var(--border-glass); border-radius:8px;">
                             <thead>
                                 <tr>
                                     <th>Date</th>
@@ -1172,7 +1221,7 @@
                         <h3 style="color:var(--primary-navy); font-size:16px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
                             <span class="material-symbols-outlined" style="color:var(--primary-blue);">badge</span> Certified Planners Registry
                         </h3>
-                        <table class="gov-table" style="background:#FFFFFF; border:1px solid var(--border-glass); border-radius:8px;">
+                        <table class="gov-table" style="background:var(--smriti-color-bg-elevated); border:1px solid var(--border-glass); border-radius:8px;">
                             <thead>
                                 <tr>
                                     <th>Candidate Name</th>
@@ -1189,20 +1238,20 @@
                 </div>
 
                 <!-- Interactive Quiz Panel -->
-                <div id="cert-exam-panel" style="display:none; background:#FFFFFF; border:1px solid var(--border-glass); border-radius:12px; padding:30px; box-shadow:0 4px 12px rgba(26,43,92,0.02); margin-bottom:32px; border-top: 4px solid var(--primary-blue);">
+                <div id="cert-exam-panel" style="display:none; background:var(--smriti-color-bg-elevated); border:1px solid var(--border-glass); border-radius:12px; padding:30px; box-shadow:0 4px 12px var(--shadow-xs); margin-bottom:32px; border-top: 4px solid var(--primary-blue);">
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-glass); padding-bottom:16px; margin-bottom:24px;">
                         <div>
                             <h2 style="color:var(--primary-navy); font-size:18px; font-weight:800;">Exam in Progress</h2>
                             <div style="font-size:13px; color:var(--text-muted); margin-top:2px;">Do not close or refresh this page.</div>
                         </div>
-                        <div id="exam-timer" style="font-size:20px; font-weight:800; color:var(--accent-red); display:flex; align-items:center; gap:6px; background:#FEF2F2; padding:6px 14px; border-radius:8px; border:1px solid #FCA5A5;">
+                        <div id="exam-timer" style="font-size:20px; font-weight:800; color:var(--accent-red); display:flex; align-items:center; gap:6px; background:var(--smriti-color-bg-elevated); padding:6px 14px; border-radius:8px; border:1px solid var(--smriti-color-status-danger);">
                             <span class="material-symbols-outlined" style="animation: pulse 1s infinite;">alarm</span> 60:00
                         </div>
                     </div>
 
                     <!-- Progress Bar -->
                     <div class="progress-wrap" style="height:10px; margin-bottom:24px;">
-                        <div class="progress-bar" id="exam-progress-bar" style="width:0%; background:linear-gradient(90deg, var(--primary-blue), #60A5FA);"></div>
+                        <div class="progress-bar" id="exam-progress-bar" style="width:0%; background:linear-gradient(90deg, var(--primary-blue), var(--smriti-color-brand-light));"></div>
                     </div>
 
                     <div style="display:grid; grid-template-columns: 1fr 240px; gap:30px;">
@@ -1238,7 +1287,7 @@
                                 <!-- Grid items loaded dynamically -->
                             </div>
                             
-                            <button onclick="confirmSubmitExam()" style="width:100%; display:inline-flex; justify-content:center; align-items:center; gap:8px; background:var(--accent-green); color:#FFFFFF; border:none; border-radius:8px; padding:12px 16px; font-weight:700; font-size:14px; cursor:pointer; transition:background-color 0.2s;">
+                            <button onclick="confirmSubmitExam()" style="width:100%; display:inline-flex; justify-content:center; align-items:center; gap:8px; background:var(--accent-green); color:var(--color-white); border:none; border-radius:8px; padding:12px 16px; font-weight:700; font-size:14px; cursor:pointer; transition:background-color 0.2s;">
                                 <span class="material-symbols-outlined">check_circle</span> Submit Exam
                             </button>
                         </div>
@@ -1246,7 +1295,7 @@
                 </div>
 
                 <!-- Result Card -->
-                <div id="cert-result-card" style="display:none; background:#FFFFFF; border:1px solid var(--border-glass); border-radius:12px; padding:30px; box-shadow:0 4px 12px rgba(26,43,92,0.02); margin-bottom:32px; border-top: 5px solid var(--accent-red);">
+                <div id="cert-result-card" style="display:none; background:var(--smriti-color-bg-elevated); border:1px solid var(--border-glass); border-radius:12px; padding:30px; box-shadow:0 4px 12px var(--shadow-xs); margin-bottom:32px; border-top: 5px solid var(--accent-red);">
                     <div style="text-align:center; margin-bottom:24px;">
                         <span id="result-icon" class="material-symbols-outlined" style="font-size:64px; color:var(--accent-red); margin-bottom:12px;">cancel</span>
                         <h2 id="result-title" style="color:var(--primary-navy); font-size:24px; font-weight:800;">Exam Attempt Graded</h2>
@@ -1255,13 +1304,13 @@
                     </div>
 
                     <!-- Certification Success Block -->
-                    <div id="result-success-actions" style="display:none; text-align:center; background:#F0FDF4; border:1px solid #BBF7D0; padding:20px; border-radius:8px; margin-bottom:24px;">
-                        <p style="color:#166534; font-size:14px; font-weight:600; margin-bottom:12px;">Congratulations! You are now a Certified SMRITI PSV Planner.</p>
+                    <div id="result-success-actions" style="display:none; text-align:center; background:var(--smriti-color-bg-elevated); border:1px solid var(--badge-psv-bd); padding:20px; border-radius:8px; margin-bottom:24px;">
+                        <p style="color:var(--badge-psv-fg); font-size:14px; font-weight:600; margin-bottom:12px;">Congratulations! You are now a Certified SMRITI PSV Planner.</p>
                         <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
-                            <button onclick="downloadCertificate()" style="display:inline-flex; align-items:center; gap:8px; background:var(--primary-navy); color:#FFFFFF; border:none; border-radius:8px; padding:10px 20px; font-weight:700; font-size:13px; cursor:pointer;">
+                            <button onclick="downloadCertificate()" style="display:inline-flex; align-items:center; gap:8px; background:var(--primary-navy); color:var(--color-white); border:none; border-radius:8px; padding:10px 20px; font-weight:700; font-size:13px; cursor:pointer;">
                                 <span class="material-symbols-outlined">download</span> Download Certificate
                             </button>
-                            <button onclick="printCertificateDirect()" style="display:inline-flex; align-items:center; gap:8px; background:var(--primary-blue); color:#FFFFFF; border:none; border-radius:8px; padding:10px 20px; font-weight:700; font-size:13px; cursor:pointer;">
+                            <button onclick="printCertificateDirect()" style="display:inline-flex; align-items:center; gap:8px; background:var(--primary-blue); color:var(--color-white); border:none; border-radius:8px; padding:10px 20px; font-weight:700; font-size:13px; cursor:pointer;">
                                 <span class="material-symbols-outlined">print</span> Print Certificate
                             </button>
                         </div>
@@ -1278,7 +1327,7 @@
                     </div>
 
                     <div style="text-align:center; border-top:1px solid var(--border-glass); padding-top:20px;">
-                        <button onclick="resetCertView()" class="btn" style="background-color:var(--primary-navy); color:#FFFFFF; padding:10px 24px; border-radius:8px; border:none; font-weight:700; cursor:pointer;">Back to Certification</button>
+                        <button onclick="resetCertView()" class="btn" style="background-color:var(--primary-navy); color:var(--color-white); padding:10px 24px; border-radius:8px; border:none; font-weight:700; cursor:pointer;">Back to Certification</button>
                     </div>
                 </div>
             </div>
@@ -1375,7 +1424,7 @@
                 </div>
 
                 <div style="margin-top:40px; text-align:right; border-top: 1px solid var(--border-glass); padding-top:24px;">
-                    <button class="tab-btn" style="display:inline-flex; width:auto; background:var(--primary-navy); color:#FFFFFF; border-radius:8px;" onclick="triggerRebuildCache()" id="btn-rebuild-cache">
+                    <button class="tab-btn" style="display:inline-flex; width:auto; background:var(--primary-navy); color:var(--color-white); border-radius:8px;" onclick="triggerRebuildCache()" id="btn-rebuild-cache">
                         <span class="material-symbols-outlined">sync</span> Force Rebuild Search Index
                     </button>
                 </div>
@@ -1396,16 +1445,16 @@
             <div style="display:flex; align-items:center; gap:12px; flex:1;">
                 <h2 id="drawer-title" style="font-size:18px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px;">Details</h2>
                 <div id="drawer-header-actions" style="display:none; align-items:center; gap:8px;">
-                    <button class="btn-header" onclick="drawerActionOpenNewTab()" title="Open in New Tab" style="padding:4px 8px; font-size:12px; background:rgba(255,255,255,0.15); border:none; border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                    <button class="btn-header" onclick="drawerActionOpenNewTab()" title="Open in New Tab" style="padding:4px 8px; font-size:12px; background:var(--color-white-15); border:none; border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
                         <span class="material-symbols-outlined" style="font-size:16px;">open_in_new</span>
                     </button>
-                    <button class="btn-header" onclick="drawerActionCopyLink()" title="Copy Link" style="padding:4px 8px; font-size:12px; background:rgba(255,255,255,0.15); border:none; border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                    <button class="btn-header" onclick="drawerActionCopyLink()" title="Copy Link" style="padding:4px 8px; font-size:12px; background:var(--color-white-15); border:none; border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
                         <span class="material-symbols-outlined" style="font-size:16px;">link</span>
                     </button>
-                    <button class="btn-header" onclick="drawerActionDownload()" title="Download" style="padding:4px 8px; font-size:12px; background:rgba(255,255,255,0.15); border:none; border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                    <button class="btn-header" onclick="drawerActionDownload()" title="Download" style="padding:4px 8px; font-size:12px; background:var(--color-white-15); border:none; border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
                         <span class="material-symbols-outlined" style="font-size:16px;">download</span>
                     </button>
-                    <button class="btn-header" onclick="drawerActionPrint()" title="Print" style="padding:4px 8px; font-size:12px; background:rgba(255,255,255,0.15); border:none; border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                    <button class="btn-header" onclick="drawerActionPrint()" title="Print" style="padding:4px 8px; font-size:12px; background:var(--color-white-15); border:none; border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
                         <span class="material-symbols-outlined" style="font-size:16px;">print</span>
                     </button>
                 </div>
@@ -1656,7 +1705,7 @@
                         const elem = document.getElementById(section) || [...document.querySelectorAll('h1, h2, h3')].find(h => h.textContent.toLowerCase().includes(section.replace(/-/g, ' ')));
                         if (elem) {
                             elem.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            elem.style.backgroundColor = 'rgba(255, 235, 59, 0.3)';
+                            elem.style.backgroundColor = 'var(--smriti-color-status-warning)';
                             setTimeout(() => elem.style.backgroundColor = 'transparent', 3000);
                         }
                     }, 500);
@@ -1885,7 +1934,7 @@
                 const answer   = f.answer   || f.a || '';
                 if (!question) return;
                 faqHtml += `
-                    <div style="margin-bottom:10px; background:#F8FAFC; padding:10px; border-radius:6px; border:1px solid var(--border-glass);">
+                    <div style="margin-bottom:10px; background:var(--smriti-color-bg-secondary); padding:10px; border-radius:6px; border:1px solid var(--border-glass);">
                         <strong style="font-size:13px; color:var(--primary-navy);">${question}</strong>
                         <p style="font-size:13px; color:var(--text-main); margin-top:4px;">${answer}</p>
                     </div>
@@ -2058,7 +2107,7 @@
 
                 <div class="detail-section">
                     <div class="detail-section-title">Arithmetic Worked Example</div>
-                    <div style="font-family:monospace; font-size:13px; background:#FFFBEB; padding:12px; border-left:3px solid var(--accent-yellow); color:#B45309; border-radius:6px; white-space:pre-line;">
+                    <div style="font-family:monospace; font-size:13px; background:var(--smriti-color-bg-secondary); padding:12px; border-left:3px solid var(--accent-yellow); color:var(--badge-faq-fg); border-radius:6px; white-space:pre-line;">
                         ${formula.worked_example}
                     </div>
                 </div>
@@ -2070,7 +2119,7 @@
 
                 <div class="detail-section">
                     <div class="detail-section-title">Recommended Action Protocol</div>
-                    <div style="font-size:13px; color:var(--text-dark); background:#EFF6FF; border-left:3px solid var(--primary-blue); padding:10px; border-radius:6px;">
+                    <div style="font-size:13px; color:var(--text-dark); background:var(--smriti-color-bg-elevated); border-left:3px solid var(--primary-blue); padding:10px; border-radius:6px;">
                         ${formula.recommended_action}
                     </div>
                 </div>
@@ -2316,22 +2365,22 @@
             
             const certContainer = document.getElementById('enablement-cert-cards');
             let certHtml = certList.map(doc => `
-                <div class="dict-card enablement-card" data-title="${doc.title.toLowerCase()} certification" onclick="openEnablementDocInDrawer('${doc.key}')" style="border-left: 4px solid #7C3AED; background: #FAF5FF; display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+                <div class="dict-card enablement-card" data-title="${doc.title.toLowerCase()} certification" onclick="openEnablementDocInDrawer('${doc.key}')" style="border-left: 4px solid var(--badge-cert-fg); background: #FAF5FF; display:flex; flex-direction:column; justify-content:space-between; height:100%;">
                     <div>
-                        <div style="font-size:12px; font-weight:700; color:#7C3AED; margin-bottom:4px; text-transform:uppercase;">Level 1 Planner Certification</div>
+                        <div style="font-size:12px; font-weight:700; color:var(--badge-cert-fg); margin-bottom:4px; text-transform:uppercase;">Level 1 Planner Certification</div>
                         <div class="dict-card-name" style="font-size:15px; margin-bottom:6px;">${doc.title}</div>
-                        <div style="font-size:12px; color:#5B21B6; margin-bottom:12px;">
+                        <div style="font-size:12px; color:var(--badge-cert-fg); margin-bottom:12px;">
                             <strong>Estimated Duration</strong>: 60 Minutes<br>
                             <strong>Exam Questions</strong>: 20 Questions<br>
                             <strong>Passing Score</strong>: 80% (16/20)<br>
-                            <strong>Certification Status</strong>: <span style="background:#EDE9FE; padding:2px 6px; border-radius:4px; font-weight:700;">Study Mode</span>
+                            <strong>Certification Status</strong>: <span style="background:var(--smriti-color-bg-secondary); padding:2px 6px; border-radius:4px; font-weight:700;">Study Mode</span>
                         </div>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
-                        <div style="font-size:12px; color:#6D28D9; font-weight:700; display:flex; align-items:center; gap:4px;">
+                        <div style="font-size:12px; color:var(--badge-cert-fg); font-weight:700; display:flex; align-items:center; gap:4px;">
                             <span class="material-symbols-outlined" style="font-size:14px;">school</span> Study Guide
                         </div>
-                        <button onclick="event.stopPropagation(); switchTab('certification')" style="font-size:11px; font-weight:700; color:#FFFFFF; background:#7C3AED; border:none; padding:6px 12px; border-radius:12px; cursor:pointer; transition:background-color 0.2s;" onmouseover="this.style.backgroundColor='#6D28D9'" onmouseout="this.style.backgroundColor='#7C3AED'">Take Exam</button>
+                        <button onclick="event.stopPropagation(); switchTab('certification')" style="font-size:11px; font-weight:700; color:var(--color-white); background:var(--badge-cert-fg); border:none; padding:6px 12px; border-radius:12px; cursor:pointer; transition:background-color 0.2s;" onmouseover="this.style.backgroundColor='var(--badge-cert-fg)'" onmouseout="this.style.backgroundColor='var(--badge-cert-fg)'">Take Exam</button>
                     </div>
                 </div>
             `).join('');
@@ -2394,7 +2443,7 @@
                     </div>
                     <div class="detail-section">
                         <div class="detail-section-title">Live Worked Calculation</div>
-                        <div style="font-family:monospace; font-size:13px; background:#FFFBEB; padding:12px; border-left:3px solid var(--accent-yellow); color:#B45309; border-radius:6px; white-space:pre-line;">
+                        <div style="font-family:monospace; font-size:13px; background:var(--smriti-color-bg-secondary); padding:12px; border-left:3px solid var(--accent-yellow); color:var(--badge-faq-fg); border-radius:6px; white-space:pre-line;">
                             Annual Sales = ${fmt(sales)}
                             Stockout Rate = ${stockout}%
                             Recovery Efficiency = 60.0%
@@ -2419,7 +2468,7 @@
                     </div>
                     <div class="detail-section">
                         <div class="detail-section-title">Live Worked Calculation</div>
-                        <div style="font-family:monospace; font-size:13px; background:#FFFBEB; padding:12px; border-left:3px solid var(--accent-yellow); color:#B45309; border-radius:6px; white-space:pre-line;">
+                        <div style="font-family:monospace; font-size:13px; background:var(--smriti-color-bg-secondary); padding:12px; border-left:3px solid var(--accent-yellow); color:var(--badge-faq-fg); border-radius:6px; white-space:pre-line;">
                             Active Inventory = ${fmt(inventory)}
                             Stagnant Ratio = 30.0%
                             Dead Stock Reduction = 40.0%
@@ -2445,7 +2494,7 @@
                     </div>
                     <div class="detail-section">
                         <div class="detail-section-title">Live Worked Calculation</div>
-                        <div style="font-family:monospace; font-size:13px; background:#FFFBEB; padding:12px; border-left:3px solid var(--accent-yellow); color:#B45309; border-radius:6px; white-space:pre-line;">
+                        <div style="font-family:monospace; font-size:13px; background:var(--smriti-color-bg-secondary); padding:12px; border-left:3px solid var(--accent-yellow); color:var(--badge-faq-fg); border-radius:6px; white-space:pre-line;">
                             Revenue Recovered = ${fmt(recovered)}
                             Net Profit Margin = ${margin}%
                             
@@ -2473,7 +2522,7 @@
                     </div>
                     <div class="detail-section">
                         <div class="detail-section-title">Live Worked Calculation</div>
-                        <div style="font-family:monospace; font-size:13px; background:#FFFBEB; padding:12px; border-left:3px solid var(--accent-yellow); color:#B45309; border-radius:6px; white-space:pre-line;">
+                        <div style="font-family:monospace; font-size:13px; background:var(--smriti-color-bg-secondary); padding:12px; border-left:3px solid var(--accent-yellow); color:var(--badge-faq-fg); border-radius:6px; white-space:pre-line;">
                             Invested Capital (Inventory) = ${fmt(inventory)}
                             Baseline Profit (20%) = ${fmt(baselineProfit)}
                             SMRITI Margin Gain = ${fmt(improvement)}
@@ -2510,7 +2559,7 @@
                     </div>
                     <div class="detail-section">
                         <div class="detail-section-title">Data</div>
-                        <div style="font-size:13px; color:var(--text-main); background:#F8FAFC; padding:12px; border-radius:6px; border:1px solid var(--border-glass);">
+                        <div style="font-size:13px; color:var(--text-main); background:var(--smriti-color-bg-secondary); padding:12px; border-radius:6px; border:1px solid var(--border-glass);">
                             &bull; <strong>Surplus Denim Size 32</strong>: 375 units<br>
                             &bull; <strong>Weeks of Cover (WOC)</strong>: 35.4 Weeks (Bloated; target is 7-14 WOC)<br>
                             &bull; <strong>Working Capital Locked</strong>: ₹6,06,000 on Denim variants alone (620 Denim-Blue × ₹600 + 390 Denim-Black × ₹600)
@@ -2522,7 +2571,7 @@
                     </div>
                     <div class="detail-section">
                         <div class="detail-section-title">Recommended Action</div>
-                        <div style="font-size:13px; color:var(--text-dark); background:#EFF6FF; border-left:3px solid var(--primary-blue); padding:10px; border-radius:6px;">
+                        <div style="font-size:13px; color:var(--text-dark); background:var(--smriti-color-bg-elevated); border-left:3px solid var(--primary-blue); padding:10px; border-radius:6px;">
                             Freeze new dispatches from the central factory. Run a stock rebalancing check and transfer surplus to Pune.
                         </div>
                     </div>
@@ -2540,7 +2589,7 @@
                     </div>
                     <div class="detail-section">
                         <div class="detail-section-title">Data</div>
-                        <div style="font-size:13px; color:var(--text-main); background:#F8FAFC; padding:12px; border-radius:6px; border:1px solid var(--border-glass);">
+                        <div style="font-size:13px; color:var(--text-main); background:var(--smriti-color-bg-secondary); padding:12px; border-radius:6px; border:1px solid var(--border-glass);">
                             &bull; <strong>Standard Size Sneakers</strong>: 0 units in stock<br>
                             &bull; <strong>Weeks of Cover (WOC)</strong>: 0 Weeks (Action Zone)<br>
                             &bull; <strong>Lost Sales Risk</strong>: High Opportunity Loss
@@ -2552,7 +2601,7 @@
                     </div>
                     <div class="detail-section">
                         <div class="detail-section-title">Recommended Action</div>
-                        <div style="font-size:13px; color:var(--text-dark); background:#EFF6FF; border-left:3px solid var(--primary-blue); padding:10px; border-radius:6px;">
+                        <div style="font-size:13px; color:var(--text-dark); background:var(--smriti-color-bg-elevated); border-left:3px solid var(--primary-blue); padding:10px; border-radius:6px;">
                             Run the Network Stock Transfer Simulator to transfer 100 units of Denim Size 32 from Mumbai's surplus to Pune.
                         </div>
                     </div>
@@ -2570,7 +2619,7 @@
                     </div>
                     <div class="detail-section">
                         <div class="detail-section-title">Data</div>
-                        <div style="font-size:13px; color:var(--text-main); background:#F8FAFC; padding:12px; border-radius:6px; border:1px solid var(--border-glass);">
+                        <div style="font-size:13px; color:var(--text-main); background:var(--smriti-color-bg-secondary); padding:12px; border-radius:6px; border:1px solid var(--border-glass);">
                             &bull; <strong>Stock Quantity</strong>: 380 units<br>
                             &bull; <strong>Sales Velocity</strong>: 1 unit/week<br>
                             &bull; <strong>Aging Profile</strong>: 100% in the 90+ Days (Dead) band
@@ -2582,7 +2631,7 @@
                     </div>
                     <div class="detail-section">
                         <div class="detail-section-title">Recommended Action</div>
-                        <div style="font-size:13px; color:var(--text-dark); background:#EFF6FF; border-left:3px solid var(--primary-blue); padding:10px; border-radius:6px;">
+                        <div style="font-size:13px; color:var(--text-dark); background:var(--smriti-color-bg-elevated); border-left:3px solid var(--primary-blue); padding:10px; border-radius:6px;">
                             Run a targeted clearance markdown campaign (e.g. 30% discount) or schedule returns to reclaim shelf space.
                         </div>
                     </div>
@@ -2649,12 +2698,12 @@
                     <head>
                         <title>${title}</title>
                         <style>
-                            body { font-family: Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
-                            h1, h2, h3 { color: #1A2B5C; }
+                            body { font-family: Arial, sans-serif; padding: 40px; color:var(--smriti-color-text-primary); line-height: 1.6; }
+                            h1, h2, h3 { color:var(--smriti-color-brand-primary); }
                             table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                            th { background-color: #f2f2f2; }
-                            pre, code { background-color: #f4f4f4; padding: 4px 8px; font-family: monospace; }
+                            th, td { border:1px solid var(--smriti-color-border-default); padding: 8px; text-align: left; }
+                            th { background-color:var(--smriti-color-bg-secondary); }
+                            pre, code { background-color:var(--smriti-color-bg-elevated); padding: 4px 8px; font-family: monospace; }
                         </style>
                     </head>
                     <body>
@@ -2688,15 +2737,15 @@
                 if (status.best_attempt) {
                     bestScoreEl.textContent = `${status.best_attempt.score}%`;
                     document.getElementById('cert-status-badge').textContent = 'Certified Planner';
-                    document.getElementById('cert-status-badge').style.backgroundColor = '#DCFCE7';
-                    document.getElementById('cert-status-badge').style.color = '#15803D';
-                    document.getElementById('cert-status-badge').style.borderColor = '#BBF7D0';
+                    document.getElementById('cert-status-badge').style.backgroundColor = 'var(--badge-dict-bg)';
+                    document.getElementById('cert-status-badge').style.color = 'var(--badge-psv-fg)';
+                    document.getElementById('cert-status-badge').style.borderColor = 'var(--badge-psv-bd)';
                 } else {
                     bestScoreEl.textContent = 'N/A';
                     document.getElementById('cert-status-badge').textContent = 'Study Mode';
-                    document.getElementById('cert-status-badge').style.backgroundColor = '#FAF5FF';
-                    document.getElementById('cert-status-badge').style.color = '#6D28D9';
-                    document.getElementById('cert-status-badge').style.borderColor = '#C084FC';
+                    document.getElementById('cert-status-badge').style.backgroundColor = 'var(--badge-cert-bg)';
+                    document.getElementById('cert-status-badge').style.color = 'var(--badge-cert-fg)';
+                    document.getElementById('cert-status-badge').style.borderColor = 'var(--badge-cert-bd)';
                 }
 
                 if (status.active_attempt) {
@@ -2835,7 +2884,7 @@
                 const choiceId = `choice-${q.question_number}-${choice.key}`;
                 const checked = selectedAns === choice.key ? 'checked' : '';
                 container.innerHTML += `
-                    <label for="${choiceId}" style="display:flex; align-items:center; gap:12px; background:#F8FAFC; border:1px solid ${selectedAns === choice.key ? 'var(--primary-blue)' : 'var(--border-glass)'}; border-radius:8px; padding:14px; cursor:pointer; transition:all 0.2s;">
+                    <label for="${choiceId}" style="display:flex; align-items:center; gap:12px; background:var(--smriti-color-bg-secondary); border:1px solid ${selectedAns === choice.key ? 'var(--primary-blue)' : 'var(--border-glass)'}; border-radius:8px; padding:14px; cursor:pointer; transition:all 0.2s;">
                         <input type="radio" name="question-${q.question_number}" id="${choiceId}" value="${choice.key}" ${checked} onchange="selectAnswer(${q.question_number}, '${choice.key}')" style="width:18px; height:18px; cursor:pointer;">
                         <span style="font-weight:700; color:var(--primary-navy);">${choice.key}.</span>
                         <span style="font-size:14px; color:var(--text-dark);">${choice.text}</span>
@@ -2875,8 +2924,8 @@
                 
                 if (isMarked) {
                     bg = '#FAF5FF';
-                    border = '2px solid #7C3AED';
-                    color = '#7C3AED';
+                    border = '2px solid var(--badge-cert-fg)';
+                    color = 'var(--badge-cert-fg)';
                 } else if (isAnswered) {
                     bg = '#EFF6FF';
                     border = '1px solid var(--primary-blue)';
@@ -2884,7 +2933,7 @@
                 }
                 
                 if (isSelected) {
-                    border = isMarked ? '2px solid #7C3AED' : '2px solid var(--primary-blue)';
+                    border = isMarked ? '2px solid var(--badge-cert-fg)' : '2px solid var(--primary-blue)';
                     if (!isMarked && !isAnswered) {
                         bg = '#E2E8F0';
                         color = 'var(--text-dark)';
@@ -2946,11 +2995,11 @@
                     if (examTimeRemaining < 300) {
                         timerEl.style.backgroundColor = '#FEE2E2';
                         timerEl.style.color = '#B91C1C';
-                        timerEl.style.borderColor = '#FCA5A5';
+                        timerEl.style.borderColor = 'var(--smriti-color-status-danger)';
                     } else {
                         timerEl.style.backgroundColor = '#FEF2F2';
                         timerEl.style.color = 'var(--accent-red)';
-                        timerEl.style.borderColor = '#FCA5A5';
+                        timerEl.style.borderColor = 'var(--smriti-color-status-danger)';
                     }
                 }
             }, 1000);

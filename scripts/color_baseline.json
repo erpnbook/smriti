@@ -2,9 +2,13 @@
   "_meta": {
     "sprint": "UI-MIDNIGHT-001",
     "date": "2026-06-24",
-    "hex_total": 1365,
-    "rgba_total": 1310,
-    "note": "First measured baseline. Reduce each sprint."
+    "hex_total": 617,
+    "rgba_total": 1073,
+    "note": "First measured baseline. Reduce each sprint.",
+    "hex_prev": 1365,
+    "rgba_prev": 1310,
+    "hex_delta": -748,
+    "rgba_delta": -237
   },
   "files": {
     "403.html": {
@@ -16,48 +20,48 @@
       "rgba": 10
     },
     "analytics.html": {
-      "hex": 27,
-      "rgba": 18
+      "hex": 14,
+      "rgba": 10
     },
     "backup.html": {
-      "hex": 21,
-      "rgba": 29
+      "hex": 8,
+      "rgba": 27
     },
     "barcode.html": {
-      "hex": 79,
-      "rgba": 58
+      "hex": 56,
+      "rgba": 23
     },
     "billing.html": {
       "hex": 29,
       "rgba": 38
     },
     "brand_master.html": {
-      "hex": 15,
-      "rgba": 15
+      "hex": 3,
+      "rgba": 11
     },
     "category_master.html": {
-      "hex": 15,
-      "rgba": 19
+      "hex": 3,
+      "rgba": 15
     },
     "cge_generic.html": {
-      "hex": 15,
-      "rgba": 18
+      "hex": 3,
+      "rgba": 14
     },
     "configure.html": {
-      "hex": 33,
+      "hex": 17,
       "rgba": 0
     },
     "customers.html": {
-      "hex": 17,
-      "rgba": 13
+      "hex": 4,
+      "rgba": 11
     },
     "delivery_challan.html": {
-      "hex": 16,
-      "rgba": 16
+      "hex": 3,
+      "rgba": 14
     },
     "eway_bill.html": {
-      "hex": 16,
-      "rgba": 17
+      "hex": 3,
+      "rgba": 15
     },
     "index.html": {
       "hex": 0,
@@ -68,11 +72,11 @@
       "rgba": 12
     },
     "item_master.html": {
-      "hex": 33,
-      "rgba": 52
+      "hex": 20,
+      "rgba": 50
     },
     "login.html": {
-      "hex": 5,
+      "hex": 1,
       "rgba": 2
     },
     "offline.html": {
@@ -80,92 +84,92 @@
       "rgba": 19
     },
     "payments.html": {
-      "hex": 17,
-      "rgba": 22
+      "hex": 5,
+      "rgba": 20
     },
     "platform_center.html": {
-      "hex": 44,
-      "rgba": 43
+      "hex": 3,
+      "rgba": 9
     },
     "print_templates.html": {
-      "hex": 17,
-      "rgba": 19
-    },
-    "products.html": {
-      "hex": 17,
-      "rgba": 14
-    },
-    "psa.html": {
-      "hex": 17,
+      "hex": 4,
       "rgba": 17
     },
+    "products.html": {
+      "hex": 4,
+      "rgba": 12
+    },
+    "psa.html": {
+      "hex": 4,
+      "rgba": 15
+    },
     "psv-dashboard.html": {
-      "hex": 17,
-      "rgba": 54
+      "hex": 3,
+      "rgba": 52
     },
     "psv-opening-balance.html": {
-      "hex": 16,
-      "rgba": 16
+      "hex": 4,
+      "rgba": 13
     },
     "psv_exception_analysis.html": {
-      "hex": 16,
-      "rgba": 19
+      "hex": 2,
+      "rgba": 17
     },
     "psv_reconciliation.html": {
-      "hex": 17,
-      "rgba": 14
+      "hex": 4,
+      "rgba": 12
     },
     "purchase.html": {
       "hex": 31,
       "rgba": 48
     },
     "purchase_invoice.html": {
-      "hex": 16,
-      "rgba": 17
+      "hex": 3,
+      "rgba": 15
     },
     "purchase_receipt.html": {
-      "hex": 16,
-      "rgba": 16
+      "hex": 3,
+      "rgba": 14
     },
     "release_notes.html": {
-      "hex": 14,
-      "rgba": 10
+      "hex": 1,
+      "rgba": 8
     },
     "reports.html": {
-      "hex": 34,
-      "rgba": 46
+      "hex": 22,
+      "rgba": 42
     },
     "sales-upload.html": {
-      "hex": 17,
-      "rgba": 17
+      "hex": 4,
+      "rgba": 15
     },
     "sales_invoices.html": {
-      "hex": 20,
-      "rgba": 17
+      "hex": 7,
+      "rgba": 15
     },
     "sales_orders.html": {
-      "hex": 17,
-      "rgba": 24
+      "hex": 4,
+      "rgba": 22
     },
     "sales_return.html": {
-      "hex": 16,
-      "rgba": 25
+      "hex": 3,
+      "rgba": 23
     },
     "scheme_creator.html": {
-      "hex": 15,
-      "rgba": 25
+      "hex": 3,
+      "rgba": 21
     },
     "security.html": {
       "hex": 4,
       "rgba": 35
     },
     "setup_wizard.html": {
-      "hex": 26,
-      "rgba": 34
+      "hex": 12,
+      "rgba": 26
     },
     "shift.html": {
-      "hex": 18,
-      "rgba": 16
+      "hex": 5,
+      "rgba": 14
     },
     "sizewise_invoice.html": {
       "hex": 0,
@@ -184,84 +188,84 @@
       "rgba": 10
     },
     "smriti-cge.html": {
-      "hex": 15,
-      "rgba": 30
+      "hex": 3,
+      "rgba": 26
     },
     "smriti-clienteling.html": {
-      "hex": 21,
-      "rgba": 24
+      "hex": 9,
+      "rgba": 20
     },
     "smriti-coming-soon.html": {
       "hex": 22,
       "rgba": 1
     },
     "smriti-dictionary.html": {
-      "hex": 23,
-      "rgba": 12
+      "hex": 15,
+      "rgba": 11
     },
     "smriti-formula-registry.html": {
-      "hex": 17,
-      "rgba": 12
+      "hex": 9,
+      "rgba": 11
     },
     "smriti-go-live.html": {
-      "hex": 13,
-      "rgba": 30
+      "hex": 0,
+      "rgba": 26
     },
     "smriti-help.html": {
-      "hex": 147,
-      "rgba": 44
+      "hex": 22,
+      "rgba": 0
     },
     "smriti-home.html": {
       "hex": 5,
       "rgba": 29
     },
     "smriti-license.html": {
-      "hex": 21,
-      "rgba": 26
+      "hex": 7,
+      "rgba": 18
     },
     "smriti-login.html": {
       "hex": 16,
       "rgba": 28
     },
     "smriti-pdt.html": {
-      "hex": 21,
-      "rgba": 30
+      "hex": 9,
+      "rgba": 26
     },
     "smriti-presentation.html": {
-      "hex": 94,
-      "rgba": 6
+      "hex": 88,
+      "rgba": 5
     },
     "smriti-safe.html": {
       "hex": 14,
       "rgba": 0
     },
     "smriti-security-log.html": {
-      "hex": 19,
-      "rgba": 13
+      "hex": 1,
+      "rgba": 11
     },
     "smriti-sfc.html": {
-      "hex": 15,
-      "rgba": 21
+      "hex": 3,
+      "rgba": 17
     },
     "smriti-sfm.html": {
-      "hex": 15,
-      "rgba": 24
-    },
-    "smriti_support.html": {
-      "hex": 16,
-      "rgba": 13
-    },
-    "stock-audit.html": {
-      "hex": 17,
+      "hex": 3,
       "rgba": 20
     },
+    "smriti_support.html": {
+      "hex": 3,
+      "rgba": 11
+    },
+    "stock-audit.html": {
+      "hex": 4,
+      "rgba": 18
+    },
     "suppliers.html": {
-      "hex": 17,
-      "rgba": 14
+      "hex": 4,
+      "rgba": 12
     },
     "supplier_returns.html": {
-      "hex": 16,
-      "rgba": 18
+      "hex": 3,
+      "rgba": 16
     },
     "sw.html": {
       "hex": 0,

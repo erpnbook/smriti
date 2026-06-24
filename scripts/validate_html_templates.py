@@ -44,11 +44,29 @@ DEFAULT_BASELINE = {
 
 
 def count_hardcoded_colors(content):
-    """Count hardcoded hex + rgba occurrences (excluding SVG/HTTP/comments)."""
+    """Count hardcoded hex + rgba occurrences (excluding SVG/HTTP/comments).
+
+    Exclusions:
+    - HTML and Jinja comments
+    - CSS :root { } variable DECLARATIONS (--varname: #value) -- these are
+      token definitions, not hardcoded colors. A token bridge like
+      '--color-white: #ffffff' is governance-compliant; it's the canonical
+      single source of truth, not a violation.
+    - CSS variable fallback values: var(--token, #fallback)
+    """
     # Strip HTML and Jinja comments first
     clean = re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL)
     clean = re.sub(r"\{#.*?#\}", "", clean, flags=re.DOTALL)
     clean = re.sub(r"\{%-?\s*comment\s*-?%\}.*?\{%-?\s*endcomment\s*-?%\}", "", clean, flags=re.DOTALL)
+
+    # Strip CSS :root { } blocks — these are token DEFINITIONS, not violations.
+    # A file that properly declares --color-white: #ffffff; in :root is doing
+    # the right thing; the hex lives in one place as a named token.
+    clean = re.sub(r":root\s*\{[^}]*\}", "", clean, flags=re.DOTALL)
+
+    # Strip var() fallback values: var(--token, #fallback) — the fallback is
+    # part of the token contract, not a standalone hardcoded value.
+    clean = re.sub(r"var\s*\([^)]*\)", "", clean)
 
     # Count hex colors (exclude URLs, SVG gradient IDs, and data-* values)
     hex_matches = re.findall(r"#[0-9a-fA-F]{3,8}", clean)

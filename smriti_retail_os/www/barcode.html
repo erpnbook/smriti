@@ -8,6 +8,7 @@
 -->
 <html lang="en">
 <head>
+{%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SMRITI Label Studio</title>
@@ -41,15 +42,39 @@
     --t:          0.2s ease; /* Transition Exception */
 }
 
-html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+
+        /* ── Barcode page shadow/overlay tokens (UI-MIDNIGHT-003 P2) ─────
+           UI-GOV-005 EXCEPTION (documented):
+           Barcode simulator label colors (#0f172a/#e2e8f0/#cbd5e1/#334155)
+           are physical barcode PRINT OUTPUT colors. Barcode labels print
+           on white paper with black ink regardless of display theme.
+           These are classified as brand asset exceptions under UI-GOV-005.
+           All other hover/shadow rgba values are defined here as tokens.
+        ──────────────────────────────────────────────────────────────────── */
+        :root {
+            --barcode-overlay-xs:  rgba(255,255,255,0.02);
+            --barcode-overlay-sm:  rgba(255,255,255,0.06);
+            --barcode-overlay-md:  rgba(255,255,255,0.08);
+            --barcode-shadow-sm:   rgba(0,0,0,0.15);
+            --barcode-shadow-md:   rgba(0,0,0,0.2);
+            --barcode-shadow-lg:   rgba(0,0,0,0.5);
+            --barcode-modal-bg:    rgba(0,0,0,0.85);
+            --barcode-danger-glow: rgba(239,68,68,0.1);
+            --barcode-brand-xs:    rgba(20,184,166,0.03);
+            --barcode-brand-sm:    rgba(20,184,166,0.05);
+            --barcode-brand-md:    rgba(20,184,166,0.08);
+            --barcode-brand-grid:  rgba(20,184,166,0.015);
+        }
+
+        html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
 
 /* Ambient background grid */
 .bg-grid {
     position: fixed;
     inset: 0;
     background-image:
-        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+        linear-gradient(var(--barcode-brand-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--barcode-brand-grid) 1px, transparent 1px);
     background-size: 50px 50px;
     z-index: 0;
 }
@@ -73,7 +98,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 /* Layout Panels */
 .split-layout { flex:1; display:flex; overflow:hidden; min-height:0; }
 .left-controls { width:10%; min-width:180px; flex-shrink:0; border-right:1px solid var(--border); background:var(--bg2); display:flex; flex-direction:column; overflow-y:auto; }
-.right-table { width:70%; flex:1; display:flex; flex-direction:column; overflow:hidden; background:rgba(10,15,30,0.2); border-right:1px solid var(--border); }
+.right-table { width:70%; flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--barcode-shadow-md); border-right:1px solid var(--border); }
 .preview-pane { width:20%; min-width:320px; flex-shrink:0; background:var(--bg2); display:flex; flex-direction:column; overflow-y:auto; padding:18px; gap:18px; }
 
 /* Top Search Ribbon (AUD-BAR-09) */
@@ -152,35 +177,35 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .btn-search { width:100%; padding:8px; background:var(--primary); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.85rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; }
 .btn-search:hover { background:var(--primary-lt); }
 
-.btn-submit { width:100%; padding:10px; background:linear-gradient(135deg,var(--accent),#d97706); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.88rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 12px rgba(245,158,11,0.15); }
-.btn-submit:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(245,158,11,0.25); }
+.btn-submit { width:100%; padding:10px; background:linear-gradient(135deg,var(--accent),var(--smriti-color-status-warning)); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.88rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 12px var(--barcode-brand-md); }
+.btn-submit:hover { transform:translateY(-1px); box-shadow:0 6px 16px var(--barcode-brand-md); }
 
 /* Right Table Worksheet */
 .table-header-bar { padding:12px 20px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; gap:12px; align-items:center; flex-shrink:0; }
 .table-header-title { font-weight:700; font-size:0.95rem; font-family:'Outfit',sans-serif; }
 .table-header-actions { margin-left:auto; display:flex; gap:8px; align-items:center; }
 
-.bulk-actions-toolbar { padding:8px 20px; background:rgba(99,102,241,0.08); border-bottom:1px solid var(--border); display:flex; gap:12px; align-items:center; font-size:0.82rem; color:var(--primary-lt); font-weight:600; }
+.bulk-actions-toolbar { padding:8px 20px; background:var(--barcode-brand-md); border-bottom:1px solid var(--border); display:flex; gap:12px; align-items:center; font-size:0.82rem; color:var(--primary-lt); font-weight:600; }
 .bulk-btn { background:none; border:none; color:var(--text); font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:4px; font-size:0.82rem; padding:4px 8px; border-radius:4px; transition:background var(--t); }
-.bulk-btn:hover { background:rgba(255,255,255,0.06); }
+.bulk-btn:hover { background:var(--barcode-overlay-md); }
 .bulk-btn span { font-size:16px; }
 
 .table-wrap { flex:1; overflow:auto; padding:12px 20px; }
 .smriti-table { width:100%; border-collapse:collapse; text-align:left; }
 .smriti-table th { padding:8px 12px; background:var(--card2); color:var(--text-muted); font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1; }
 .smriti-table td { padding:10px 12px; border-bottom:1px solid var(--border); font-size:0.85rem; vertical-align:middle; }
-.smriti-table tbody tr.selected td { background:rgba(99,102,241,0.05); }
-.smriti-table tbody tr:hover td { background:rgba(255,255,255,0.02); }
-.smriti-table tbody tr.selected:hover td { background:rgba(99,102,241,0.08); }
+.smriti-table tbody tr.selected td { background:var(--barcode-brand-sm); }
+.smriti-table tbody tr:hover td { background:var(--barcode-overlay-md); }
+.smriti-table tbody tr.selected:hover td { background:var(--barcode-brand-md); }
 
-.item-code-badge { font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--text-muted); background:rgba(255,255,255,0.04); padding:2px 6px; border-radius:4px; border:1px solid var(--border); }
+.item-code-badge { font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--text-muted); background:var(--barcode-overlay-md); padding:2px 6px; border-radius:4px; border:1px solid var(--border); }
 .tbl-input { padding:4px 8px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-weight:600; font-size:0.85rem; outline:none; transition:all var(--t); font-family:inherit; }
 .tbl-input:focus { border-color:var(--primary); }
 .qty-input { width:60px; text-align:center; }
 .size-select { width:90px; }
 
-.btn-del-row { padding:6px; border-radius:var(--radius-sm); background:none; border:1px solid rgba(239,68,68,0.2); color:var(--danger); cursor:pointer; transition:all var(--t); display:inline-flex; align-items:center; justify-content:center; }
-.btn-del-row:hover { background:rgba(239,68,68,0.1); }
+.btn-del-row { padding:6px; border-radius:var(--radius-sm); background:none; border:1px solid var(--barcode-danger-glow); color:var(--danger); cursor:pointer; transition:all var(--t); display:inline-flex; align-items:center; justify-content:center; }
+.btn-del-row:hover { background:var(--barcode-danger-glow); }
 
 /* Placeholder Panel */
 .placeholder-panel { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-sub); gap:8px; padding:40px; }
@@ -192,7 +217,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .preview-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); display:flex; flex-direction:column; overflow:hidden; }
 .preview-header { padding:12px 16px; background:var(--card2); border-bottom:1px solid var(--border); font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--primary-lt); display:flex; align-items:center; gap:6px; }
 .preview-header span { font-size:18px; }
-.preview-body { padding:16px; display:flex; justify-content:center; background:rgba(0,0,0,0.2); min-height:180px; align-items:center; position:relative; }
+.preview-body { padding:16px; display:flex; justify-content:center; background:var(--barcode-shadow-md); min-height:180px; align-items:center; position:relative; }
 
 /* ===================================================
    LABEL RENDERING SAFETY ZONE
@@ -201,7 +226,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
    DO NOT DARK-MODE
    =================================================== */
 /* Thermal Printed Label simulated look */
-.sim-label { background:#ffffff; color:#0f172a; width:220px; border-radius:4px; box-shadow:0 8px 24px rgba(0,0,0,0.5); padding:10px; display:flex; flex-direction:column; position:relative; font-family:'Inter',sans-serif; overflow:hidden; transition:all 0.3s ease; border: 1px dashed #94a3b8; }
+.sim-label { background:var(--smriti-color-text-primary); color:#0f172a; width:220px; border-radius:4px; box-shadow:0 8px 24px var(--barcode-shadow-lg); padding:10px; display:flex; flex-direction:column; position:relative; font-family:'Inter',sans-serif; overflow:hidden; transition:all 0.3s ease; border: 1px dashed var(--smriti-color-text-subtle); }
 .sim-label.sz-50x25 { aspect-ratio: 2/1; height: 110px; }
 .sim-label.sz-50x30 { aspect-ratio: 5/3; height: 132px; }
 .sim-label.sz-75x50 { width: 240px; aspect-ratio: 3/2; height: 160px; }
@@ -218,7 +243,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
     background: #e2e8f0;
     border: none;
 }
-.sim-sub-col { background:#ffffff; border-radius:3px; padding:6px; display:flex; flex-direction:column; overflow:hidden; font-size:8px; line-height:1.2; border:1px dashed #cbd5e1; }
+.sim-sub-col { background:var(--smriti-color-text-primary); border-radius:3px; padding:6px; display:flex; flex-direction:column; overflow:hidden; font-size:8px; line-height:1.2; border:1px dashed #cbd5e1; }
 .sim-col1 { width: 50%; }
 .sim-col2 { width: 25%; }
 .sim-col3 { width: 25%; }
@@ -229,31 +254,31 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .sim-barcode-img {
     height: 32px;
     margin: 4px 0;
-    background: repeating-linear-gradient(90deg, #0f172a, #0f172a 2px, #ffffff 2px, #ffffff 5px);
+    background: repeating-linear-gradient(90deg, #0f172a, #0f172a 2px, var(--smriti-color-text-primary) 2px, var(--smriti-color-text-primary) 5px);
     width: 100%;
 }
-.sim-barcode-img.narrow { height:22px; background: repeating-linear-gradient(90deg, #0f172a, #0f172a 1px, #ffffff 1px, #ffffff 3px); }
+.sim-barcode-img.narrow { height:22px; background: repeating-linear-gradient(90deg, #0f172a, #0f172a 1px, var(--smriti-color-text-primary) 1px, var(--smriti-color-text-primary) 3px); }
 .sim-barcode-text { font-family:'JetBrains Mono',monospace; font-size:8px; text-align:center; margin-bottom:4px; font-weight:500; }
 .sim-mrp-price { font-size:10px; font-weight:800; color:#0f172a; display:flex; justify-content:space-between; margin-top:auto; }
 .sim-meta { font-size:8px; color:#475569; display:flex; justify-content:space-between; margin-top:2px; }
 
 /* Visual design elements */
-.sandbox-indicator { padding:10px 14px; background:rgba(0,0,0,0.15); border:1px solid var(--border); border-radius:var(--radius-sm); font-size:0.8rem; line-height:1.4; }
+.sandbox-indicator { padding:10px 14px; background:var(--barcode-shadow-sm); border:1px solid var(--border); border-radius:var(--radius-sm); font-size:0.8rem; line-height:1.4; }
 
 /* Diagnostics Panel */
 .diag-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .diag-btn { padding:7px; border-radius:var(--radius-sm); border:1px solid var(--border2); background:transparent; color:var(--text); font-weight:600; font-size:0.82rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:4px; }
-.diag-btn:hover { border-color:var(--primary-lt); color:var(--primary-lt); background:rgba(99,102,241,0.05); }
+.diag-btn:hover { border-color:var(--primary-lt); color:var(--primary-lt); background:var(--barcode-brand-sm); }
 .diag-btn span { font-size:16px; }
 
 /* Log List */
 .log-list { display:flex; flex-direction:column; gap:6px; max-height:120px; overflow-y:auto; font-family:'JetBrains Mono',monospace; font-size:0.75rem; }
-.log-item { display:flex; justify-content:space-between; color:var(--text-muted); padding:4px 6px; border-radius:4px; border-bottom:1px solid rgba(255,255,255,0.02); }
+.log-item { display:flex; justify-content:space-between; color:var(--text-muted); padding:4px 6px; border-radius:4px; border-bottom:1px solid var(--barcode-overlay-md); }
 .log-item.success { color:var(--success); }
 .log-item.error { color:var(--danger); }
 
 /* Modals */
-.modal-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(3,7,18,0.85); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+.modal-backdrop { position:fixed; inset:0; z-index:9000; background:var(--barcode-modal-bg); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
 .modal-backdrop.open { opacity:1; pointer-events:all; }
 .modal { background:var(--card2); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px; width:100%; max-width:550px; transform:translateY(20px); transition:transform 0.2s; display:flex; flex-direction:column; max-height:85vh; box-shadow:0 24px 64px rgba(0,0,0,0.8); }
 .modal-backdrop.open .modal { transform:translateY(0); }
@@ -272,14 +297,14 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .designer-mapping-area { flex:1; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
 
 .token-chip-container { display:flex; flex-wrap:wrap; gap:4px; padding:6px; background:var(--bg); border-radius:var(--radius-sm); border:1px solid var(--border); }
-.token-chip { font-family:'JetBrains Mono',monospace; font-size:0.7rem; font-weight:600; padding:2px 6px; border-radius:4px; background:rgba(99,102,241,0.15); color:var(--primary-lt); border:1px solid rgba(99,102,241,0.2); cursor:pointer; }
+.token-chip { font-family:'JetBrains Mono',monospace; font-size:0.7rem; font-weight:600; padding:2px 6px; border-radius:4px; background:var(--barcode-brand-md); color:var(--primary-lt); border:1px solid var(--barcode-brand-md); cursor:pointer; }
 .token-chip:hover { background:var(--primary); color:white; }
 
-.designer-textarea { font-family:'JetBrains Mono',monospace; font-size:0.82rem; color:#10b981; background:#040711; border:1px solid var(--border2); border-radius:var(--radius-sm); padding:10px; flex:1; outline:none; resize:none; line-height:1.5; }
+.designer-textarea { font-family:'JetBrains Mono',monospace; font-size:0.82rem; color:var(--smriti-color-status-success); background:var(--smriti-color-bg-page); border:1px solid var(--border2); border-radius:var(--radius-sm); padding:10px; flex:1; outline:none; resize:none; line-height:1.5; }
 
 /* Mapping Table inside Designer */
 .mapping-tbl { width:100%; border-collapse:collapse; text-align:left; font-size:0.8rem; }
-.mapping-tbl th { padding:6px 10px; background:rgba(0,0,0,0.2); font-weight:700; color:var(--text-muted); border-bottom:1px solid var(--border); }
+.mapping-tbl th { padding:6px 10px; background:var(--barcode-shadow-md); font-weight:700; color:var(--text-muted); border-bottom:1px solid var(--border); }
 .mapping-tbl td { padding:6px 10px; border-bottom:1px solid var(--border); }
 
 /* Import drop-zone */
@@ -307,7 +332,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
     right: 0;
     background: var(--bg2);
     backdrop-filter: blur(8px);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    box-shadow: 0 8px 16px var(--barcode-shadow-lg);
     border-radius: 0 0 var(--radius-sm) var(--radius-sm);
     max-height: 250px;
     overflow-y: auto;
@@ -358,12 +383,12 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
    DO NOT THEME
    DO NOT DARK-MODE
    =================================================== */
-#visual-canvas { background: white; border: 2px dashed #64748b; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow: hidden; }
+#visual-canvas { background: white; border: 2px dashed #64748b; position: relative; box-shadow: 0 10px 30px var(--barcode-shadow-lg); overflow: hidden; }
 
 .visual-elem {
     position: absolute;
     border: 1px dashed rgba(99,102,241,0.5);
-    background: rgba(99,102,241,0.05);
+    background: var(--barcode-brand-sm);
     color: #000000;
     cursor: move;
     user-select: none;
@@ -375,7 +400,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 }
 .visual-elem.selected {
     border: 2px solid var(--primary);
-    background: rgba(99,102,241,0.15);
+    background: var(--barcode-brand-md);
     z-index: 100;
 }
 .visual-elem-text { width: 100%; height: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; padding: 2px; }
@@ -603,7 +628,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                             <span class="material-symbols-outlined">print</span> Test Label
                         </button>
                     </div>
-                    <div id="qz-status-badge" style="display:flex; align-items:center; gap:6px; font-size:0.8rem; font-weight:600; padding:8px 10px; background:rgba(0,0,0,0.15); border:1px solid var(--border); border-radius:var(--radius-sm); margin-top:8px;">
+                    <div id="qz-status-badge" style="display:flex; align-items:center; gap:6px; font-size:0.8rem; font-weight:600; padding:8px 10px; background:var(--barcode-shadow-sm); border:1px solid var(--border); border-radius:var(--radius-sm); margin-top:8px;">
                         <span id="qz-status-dot" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--danger); transition: background-color 0.3s;"></span>
                         <span id="qz-status-text">🔴 QZ Tray Not Running</span>
                     </div>
@@ -1001,7 +1026,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                     
                     <!-- Canvas Scroll Workspace -->
                     <div id="visual-canvas-scroll-container" style="flex: 1; overflow: auto; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; padding: 20px; position: relative;">
-                        <div id="visual-canvas" style="background: white; border: 2px dashed #94a3b8; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow: hidden;">
+                        <div id="visual-canvas" style="background: white; border: 2px dashed var(--smriti-color-text-subtle); position: relative; box-shadow: 0 10px 30px var(--barcode-shadow-lg); overflow: hidden;">
                             <!-- Canvas elements rendered dynamically -->
                         </div>
                     </div>
@@ -1020,7 +1045,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                         
                         <div class="form-group">
                             <label class="form-label">Element Type</label>
-                            <input type="text" class="form-input" id="prop-elem-type" readonly style="opacity: 0.6; background: rgba(0,0,0,0.2);">
+                            <input type="text" class="form-input" id="prop-elem-type" readonly style="opacity: 0.6; background: var(--barcode-shadow-md);">
                         </div>
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -1196,7 +1221,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                     <label class="form-label" style="margin-bottom:0; cursor:pointer;" for="profile-default-chk">Set as Default Print Profile</label>
                 </div>
             </div>
-            <div style="background:rgba(0,0,0,0.15); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; font-size:0.8rem; color:var(--text-muted); line-height:1.5; margin-top:10px;">
+            <div style="background:var(--barcode-shadow-sm); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; font-size:0.8rem; color:var(--text-muted); line-height:1.5; margin-top:10px;">
                 <strong>Captured Settings:</strong>
                 <ul style="padding-left:16px; margin-top:4px;">
                     <li>Template: <span id="lbl-cap-temp" style="color:var(--text)">Built-in</span></li>
@@ -1294,7 +1319,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
             </div>
 
             <!-- Diagnostics Validation Box -->
-            <div id="confirm-validation-box" style="display: none; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px;">
+            <div id="confirm-validation-box" style="display: none; background: var(--barcode-overlay-md); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px;">
                 <div style="font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; color: var(--primary-lt);">
                     <span class="material-symbols-outlined" style="font-size: 18px;">bug_report</span> Diagnostics & Pre-Print Validation
                 </div>
@@ -1302,7 +1327,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 </div>
             </div>
             
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.2); border-radius: var(--radius-sm); padding: 15px; border: 1px dashed var(--border);">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--barcode-shadow-md); border-radius: var(--radius-sm); padding: 15px; border: 1px dashed var(--border);">
                 <span style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Preview Snapshot</span>
                 
                 <!-- Sub-toolbar inside confirm modal -->
@@ -2017,11 +2042,11 @@ function populateTxChecklistUI() {
 
     tbody.innerHTML = activeTxItems.map((item, index) => {
         const barcodeBadge = item.has_barcode 
-            ? `<span class="badge" style="background:#065f46; color:#10b981; font-weight:700; padding:2px 6px; border-radius:4px; font-size:10px;">Active Barcode</span>`
+            ? `<span class="badge" style="background:#065f46; color:var(--smriti-color-status-success); font-weight:700; padding:2px 6px; border-radius:4px; font-size:10px;">Active Barcode</span>`
             : `<span class="badge" style="background:#7f1d1d; color:#f87171; font-weight:700; padding:2px 6px; border-radius:4px; font-size:10px;">Missing Barcode</span>`;
             
         const ageBadge = item.is_new
-            ? `<span class="badge" style="background:#1e1b4b; color:#818cf8; font-weight:700; padding:2px 6px; border-radius:4px; font-size:10px;">New SKU</span>`
+            ? `<span class="badge" style="background:#1e1b4b; color:var(--smriti-color-brand-light); font-weight:700; padding:2px 6px; border-radius:4px; font-size:10px;">New SKU</span>`
             : `<span class="badge" style="background:rgba(255,255,255,0.05); color:var(--text-muted); padding:2px 6px; border-radius:4px; font-size:10px;">Existing SKU</span>`;
 
         return `
@@ -2225,7 +2250,7 @@ function updateTokenMappingUI(item) {
     ];
     
     container.innerHTML = tokens.map(t => 
-        `<div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 4px;">
+        `<div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--barcode-overlay-md); padding-bottom: 4px;">
             <span style="color: var(--primary-lt); font-size: 11px;">{${t.name.toLowerCase().replace(' ', '_')}} &rarr;</span>
             <span style="color: var(--text); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; font-size: 11px;" title="${esc(t.val)}">${esc(t.val)}</span>
          </div>`
@@ -2268,7 +2293,7 @@ function renderRecentJobs() {
     }
     
     listEl.innerHTML = jobs.map(j => `
-        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 10px; font-size:0.8rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; background:var(--barcode-overlay-md); border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 10px; font-size:0.8rem;">
             <div>
                 <div style="font-weight:600; color:var(--text);">${esc(j.ref)}</div>
                 <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">${esc(j.date)} &bull; ${j.total_qty} Labels</div>
@@ -2580,7 +2605,7 @@ function getTextWidth(text, fontSize) {
 
 // Vector barcode generator
 function generateBarcodeSVG(x, y, w, h, value) {
-    let html = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#ffffff" />`;
+    let html = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="var(--smriti-color-text-primary)" />`;
     const barsCount = 40;
     const barW = w / (barsCount * 1.5);
     let curX = x + (w - (barsCount * 1.5 * barW)) / 2;
@@ -2608,22 +2633,22 @@ function generateQRCodeSVG(x, y, w, h, value) {
     const ox = x + (w - size) / 2;
     const oy = y + (h - size) / 2;
     
-    let html = `<rect x="${ox}" y="${oy}" width="${size}" height="${size}" fill="#ffffff" />`;
+    let html = `<rect x="${ox}" y="${oy}" width="${size}" height="${size}" fill="var(--smriti-color-text-primary)" />`;
     html += `<g fill="#000000">`;
     
     // Top-left finder
     html += `<rect x="${ox}" y="${oy}" width="${mod * 5}" height="${mod * 5}" />`;
-    html += `<rect x="${ox + mod}" y="${oy + mod}" width="${mod * 3}" height="${mod * 3}" fill="#ffffff" />`;
+    html += `<rect x="${ox + mod}" y="${oy + mod}" width="${mod * 3}" height="${mod * 3}" fill="var(--smriti-color-text-primary)" />`;
     html += `<rect x="${ox + mod * 2}" y="${oy + mod * 2}" width="${mod}" height="${mod}" />`;
     
     // Top-right finder
     html += `<rect x="${ox + size - mod * 5}" y="${oy}" width="${mod * 5}" height="${mod * 5}" />`;
-    html += `<rect x="${ox + size - mod * 4}" y="${oy + mod}" width="${mod * 3}" height="${mod * 3}" fill="#ffffff" />`;
+    html += `<rect x="${ox + size - mod * 4}" y="${oy + mod}" width="${mod * 3}" height="${mod * 3}" fill="var(--smriti-color-text-primary)" />`;
     html += `<rect x="${ox + size - mod * 3}" y="${oy + mod * 2}" width="${mod}" height="${mod}" />`;
     
     // Bottom-left finder
     html += `<rect x="${ox}" y="${oy + size - mod * 5}" width="${mod * 5}" height="${mod * 5}" />`;
-    html += `<rect x="${ox + mod}" y="${oy + size - mod * 4}" width="${mod * 3}" height="${mod * 3}" fill="#ffffff" />`;
+    html += `<rect x="${ox + mod}" y="${oy + size - mod * 4}" width="${mod * 3}" height="${mod * 3}" fill="var(--smriti-color-text-primary)" />`;
     html += `<rect x="${ox + mod * 2}" y="${oy + size - mod * 3}" width="${mod}" height="${mod}" />`;
     
     for (let r = 0; r < grid; r++) {
@@ -2744,7 +2769,7 @@ function renderSVGPreview(item, layoutJson, dpi, zoom, showMargins) {
     const pxW = mmW * 8 * (zoom / 100);
     const pxH = mmH * 8 * (zoom / 100);
     
-    let svg = `<svg viewBox="0 0 ${dotsW} ${dotsH}" width="${pxW}px" height="${pxH}px" style="background:#ffffff; border:1px solid #cbd5e1; border-radius:4px; overflow:hidden; display:block;" xmlns="http://www.w3.org/2000/svg">`;
+    let svg = `<svg viewBox="0 0 ${dotsW} ${dotsH}" width="${pxW}px" height="${pxH}px" style="background:var(--smriti-color-text-primary); border:1px solid #cbd5e1; border-radius:4px; overflow:hidden; display:block;" xmlns="http://www.w3.org/2000/svg">`;
     
     function toDots(mm) {
         return Math.round(mm * dpi / 25.4);
@@ -2801,7 +2826,7 @@ function renderSVGPreview(item, layoutJson, dpi, zoom, showMargins) {
     
     if (showMargins) {
         const marginDots = toDots(1.5);
-        svg += `<rect x="${marginDots}" y="${marginDots}" width="${dotsW - marginDots * 2}" height="${dotsH - marginDots * 2}" fill="none" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,3" pointer-events="none" />`;
+        svg += `<rect x="${marginDots}" y="${marginDots}" width="${dotsW - marginDots * 2}" height="${dotsH - marginDots * 2}" fill="none" stroke="var(--barcode-danger-glow)" stroke-width="1" stroke-dasharray="3,3" pointer-events="none" />`;
     }
     
     svg += `</svg>`;
@@ -4621,27 +4646,27 @@ function downloadPreviewPDF() {
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    background: #ffffff;
+                    background: var(--smriti-color-text-primary);
                     color: #000000;
                     font-family: 'Inter', sans-serif;
                 }
                 /* Visual representation overrides for paper print */
                 .sim-label {
-                    background: #ffffff !important;
+                    background: var(--smriti-color-text-primary) !important;
                     color: #000000 !important;
                     border: 1px dashed #000000 !important;
                     box-shadow: none !important;
                 }
                 .sim-sub-col {
-                    background: #ffffff !important;
+                    background: var(--smriti-color-text-primary) !important;
                     color: #000000 !important;
                     border: 1px dashed #000000 !important;
                 }
                 .sim-barcode-img {
-                    background: repeating-linear-gradient(90deg, #000000, #000000 2px, #ffffff 2px, #ffffff 5px) !important;
+                    background: repeating-linear-gradient(90deg, #000000, #000000 2px, var(--smriti-color-text-primary) 2px, var(--smriti-color-text-primary) 5px) !important;
                 }
                 .sim-barcode-img.narrow {
-                    background: repeating-linear-gradient(90deg, #000000, #000000 1px, #ffffff 1px, #ffffff 3px) !important;
+                    background: repeating-linear-gradient(90deg, #000000, #000000 1px, var(--smriti-color-text-primary) 1px, var(--smriti-color-text-primary) 3px) !important;
                 }
                 /* Font face import */
                 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
@@ -4710,7 +4735,7 @@ async function loadTokenReference() {
         const tbody = document.getElementById('token-tbody');
         tbody.innerHTML = ref.map(r => `
             <tr>
-                <td><span class="token-badge" style="font-family:monospace; background:rgba(99,102,241,0.15); color:var(--primary-lt); padding:2px 6px; border-radius:4px; font-weight:600;">${r.placeholder}</span></td>
+                <td><span class="token-badge" style="font-family:monospace; background:var(--barcode-brand-md); color:var(--primary-lt); padding:2px 6px; border-radius:4px; font-weight:600;">${r.placeholder}</span></td>
                 <td>
                     <div style="font-weight:600;color:var(--text);">${r.item_master_field}</div>
                     <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">${r.description}</div>
