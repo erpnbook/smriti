@@ -24,6 +24,21 @@
       --card:      rgba(255,255,255,0.04);
       --border:    rgba(255,255,255,0.08);
       --radius:    14px;
+      /* ── Print-mode palette (resolved once at :root, used via var in @media print) ── */
+      --pr-ink:      #1e293b;
+      --pr-ink-mid:  #475569;
+      --pr-ink-muted:#64748B;
+      --pr-ink-dim:  #94A3B8;
+      --pr-bg:       #F8FAFC;
+      --pr-border:   #E2E8F0;
+      --pr-divider:  #DBEAFE;
+      --pr-blue-bg:  #EFF6FF;
+      --pr-navy:     #1A2B5C;
+      --pr-blue:     #2563EB;
+      --pr-blue-lt:  #60A5FA;
+      --pr-blue-dim: #93C5FD;
+      --pr-green:    #10B981;
+      --pr-amber:    #F59E0B;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -305,13 +320,70 @@
     }
     .footer-quote em { color: var(--text); font-style: normal; font-weight: 600; }
 
+    /* ── Print: Business Opportunity Report ── */
+    .print-report { display: none; }
+
     @media print {
-      .topbar, .btn { display: none !important; }
-      body { background: #fff; color: #000; }
-      .page { padding: 20px; }
-      .card { border: 1px solid #ccc; background: #f9f9f9; }
-      .metric-value { color: #2563EB; }
-      .roi-summary { background: #EFF6FF; border: 1px solid #BFDBFE; }
+      .topbar, .page-header, .layout, .pkg-section, .footer-quote,
+      .btn, .no-print { display: none !important; }
+      body { background: #fff; color: var(--pr-ink); font-family: 'Inter', Arial, sans-serif; }
+      .page { padding: 0; max-width: 100%; }
+      .print-report { display: block !important; }
+
+      .pr-header {
+        background: var(--pr-navy); color: #fff;
+        padding: 28px 36px 20px;
+        display: flex; align-items: center; justify-content: space-between;
+      }
+      .pr-brand { font-size: 22px; font-weight: 900; letter-spacing: .3px; }
+      .pr-brand span { color: var(--pr-blue-lt); }
+      .pr-doc-title { font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+        text-transform: uppercase; color: var(--pr-blue-dim); margin-top: 3px; }
+      .pr-badge { background: var(--pr-blue); color: #fff; border-radius: 6px;
+        padding: 6px 14px; font-size: 11px; font-weight: 800;
+        letter-spacing: 1px; text-transform: uppercase; }
+
+      .pr-body { padding: 28px 36px; }
+      .pr-store { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid var(--pr-border); }
+      .pr-store-name { font-size: 20px; font-weight: 800; color: var(--pr-ink); }
+      .pr-store-meta { font-size: 12px; color: var(--pr-ink-muted); margin-top: 3px; }
+
+      .pr-section { margin-bottom: 20px; }
+      .pr-section-title { font-size: 11px; font-weight: 800; text-transform: uppercase;
+        letter-spacing: 1.2px; color: var(--pr-blue); margin-bottom: 10px; }
+      .pr-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+      .pr-metric { background: var(--pr-bg); border: 1px solid var(--pr-border); border-radius: 8px; padding: 12px 14px; }
+      .pr-metric-label { font-size: 10px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .7px; color: var(--pr-ink-muted); margin-bottom: 4px; }
+      .pr-metric-value { font-size: 18px; font-weight: 900; color: var(--pr-green); }
+      .pr-metric-value.amber { color: var(--pr-amber); }
+      .pr-metric-sub { font-size: 10px; color: var(--pr-ink-dim); margin-top: 2px; }
+
+      .pr-roi-box { background: var(--pr-blue-bg); border: 2px solid var(--pr-blue); border-radius: 10px;
+        padding: 18px 22px; margin: 16px 0; }
+      .pr-roi-row { display: flex; justify-content: space-between;
+        padding: 5px 0; border-bottom: 1px solid var(--pr-divider);
+        font-size: 13px; color: var(--pr-ink-mid); }
+      .pr-roi-row:last-child { border: none; padding-top: 10px;
+        font-size: 16px; font-weight: 900; color: var(--pr-ink); }
+      .pr-roi-val { font-weight: 700; color: var(--pr-ink); }
+      .pr-roi-val.green { color: var(--pr-green); }
+      .pr-roi-val.blue  { color: var(--pr-blue); }
+
+      .pr-pkg-box { background: var(--pr-navy); color: #fff; border-radius: 10px;
+        padding: 16px 22px; margin-top: 16px;
+        display: flex; align-items: center; justify-content: space-between; }
+      .pr-pkg-label { font-size: 11px; color: var(--pr-blue-dim); font-weight: 700;
+        text-transform: uppercase; letter-spacing: 1px; }
+      .pr-pkg-name { font-size: 18px; font-weight: 900; margin-top: 2px; }
+      .pr-pkg-price { text-align: right; }
+      .pr-pkg-amount { font-size: 22px; font-weight: 900; color: var(--pr-blue-lt); }
+      .pr-pkg-period { font-size: 11px; color: var(--pr-blue-dim); margin-top: 2px; }
+
+      .pr-footer { border-top: 1px solid var(--pr-border); padding: 14px 36px;
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 10px; color: var(--pr-ink-dim); }
+      .pr-footer em { color: var(--pr-ink-mid); font-style: normal; font-weight: 700; }
     }
   </style>
 </head>
@@ -336,6 +408,20 @@
       <!-- LEFT: Inputs -->
       <div class="card">
         <div class="card-title">📊 Aapki Dukaan ke Numbers</div>
+
+        <div class="field">
+          <label>Store / Business Name</label>
+          <div class="input-wrap">
+            <input type="text" id="store_name"
+              placeholder="e.g. Sharma Footwear, Mumbai"
+              style="width:100%;background:var(--card);border:1px solid var(--border);
+                     border-radius:8px;color:var(--text);font-size:14px;font-weight:600;
+                     padding:10px 12px;outline:none;transition:border-color .2s;
+                     font-family:'Inter',Arial,sans-serif;"
+              oninput="calc()" />
+          </div>
+          <div class="field-hint">Appears on the ROI Report PDF</div>
+        </div>
 
         <div class="field">
           <label>Monthly Sales (₹)</label>
@@ -478,8 +564,9 @@
 
         <!-- CTA -->
         <div class="cta-row">
-          <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save PDF</button>
+          <button class="btn btn-primary" onclick="printReport()">📄 Generate ROI Report PDF</button>
           <button class="btn btn-outline" onclick="resetCalc()">↺ Reset</button>
+          <a href="/smriti-trial" class="btn btn-outline" style="text-decoration:none;display:inline-flex;align-items:center">Start Free Trial →</a>
         </div>
       </div>
     </div>
@@ -519,6 +606,133 @@
       <em>"Always decision-ready."</em><br />
       — Jawahar R. Mallah, Founder &amp; Chief Architect, AITDL<br />
       <span style="font-size:11px;margin-top:4px;display:block">SMRITI Retail OS — Inventory Intelligence. Customer Intelligence. Business ROI.</span>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       PRINT-ONLY: SMRITI Business Opportunity Report
+       Hidden on screen, shown only when printing.
+       ════════════════════════════════════════════════════ -->
+  <div class="print-report" id="print_report">
+
+    <!-- Header -->
+    <div class="pr-header">
+      <div>
+        <div class="pr-brand">SMRITI <span>Retail OS</span></div>
+        <div class="pr-doc-title">Business Opportunity Report</div>
+      </div>
+      <div class="pr-badge">Confidential</div>
+    </div>
+
+    <!-- Body -->
+    <div class="pr-body">
+
+      <!-- Store Info -->
+      <div class="pr-store">
+        <div class="pr-store-name" id="pr_store_name">Your Store</div>
+        <div class="pr-store-meta" id="pr_store_meta">Report generated by SMRITI Retail OS</div>
+      </div>
+
+      <!-- Input Summary -->
+      <div class="pr-section">
+        <div class="pr-section-title">Your Business Profile</div>
+        <div class="pr-grid">
+          <div class="pr-metric">
+            <div class="pr-metric-label">Monthly Sales</div>
+            <div class="pr-metric-value" id="pr_sales" style="color:var(--pr-ink)">—</div>
+          </div>
+          <div class="pr-metric">
+            <div class="pr-metric-label">Inventory Value</div>
+            <div class="pr-metric-value" style="color:var(--pr-ink)" id="pr_inv">—</div>
+          </div>
+          <div class="pr-metric">
+            <div class="pr-metric-label">Dead Stock %</div>
+            <div class="pr-metric-value amber" id="pr_dead_pct">—</div>
+          </div>
+          <div class="pr-metric">
+            <div class="pr-metric-label">Monthly Customers</div>
+            <div class="pr-metric-value" style="color:var(--pr-ink)" id="pr_custs">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recovery Potential -->
+      <div class="pr-section">
+        <div class="pr-section-title">SMRITI Recovery Potential</div>
+        <div class="pr-grid">
+          <div class="pr-metric">
+            <div class="pr-metric-label">Dead Stock Recovery</div>
+            <div class="pr-metric-value" id="pr_dead">—</div>
+            <div class="pr-metric-sub">One-time, Year 1</div>
+          </div>
+          <div class="pr-metric">
+            <div class="pr-metric-label">Customer Recovery</div>
+            <div class="pr-metric-value" id="pr_lapsed">—</div>
+            <div class="pr-metric-sub">Annual (12 months)</div>
+          </div>
+          <div class="pr-metric">
+            <div class="pr-metric-label">Reorder Savings</div>
+            <div class="pr-metric-value amber" id="pr_reorder">—</div>
+            <div class="pr-metric-sub">Annual (12 months)</div>
+          </div>
+          <div class="pr-metric">
+            <div class="pr-metric-label">Payback Period</div>
+            <div class="pr-metric-value" style="color:var(--pr-blue)" id="pr_payback">—</div>
+            <div class="pr-metric-sub">vs subscription cost</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROI Summary -->
+      <div class="pr-section">
+        <div class="pr-section-title">Annual ROI Summary</div>
+        <div class="pr-roi-box">
+          <div class="pr-roi-row">
+            <span>Dead Stock Recovery</span>
+            <span class="pr-roi-val green" id="pr2_dead">—</span>
+          </div>
+          <div class="pr-roi-row">
+            <span>Customer Recovery (12 mo)</span>
+            <span class="pr-roi-val green" id="pr2_lapsed">—</span>
+          </div>
+          <div class="pr-roi-row">
+            <span>Reorder Savings (12 mo)</span>
+            <span class="pr-roi-val green" id="pr2_reorder">—</span>
+          </div>
+          <div class="pr-roi-row">
+            <span>Gross Annual Benefit</span>
+            <span class="pr-roi-val green" id="pr2_total">—</span>
+          </div>
+          <div class="pr-roi-row">
+            <span>Annual Subscription</span>
+            <span class="pr-roi-val" id="pr2_cost">—</span>
+          </div>
+          <div class="pr-roi-row">
+            <span>Projected ROI</span>
+            <span class="pr-roi-val green" id="pr2_roi">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Package Recommendation -->
+      <div class="pr-pkg-box">
+        <div>
+          <div class="pr-pkg-label">Recommended Plan</div>
+          <div class="pr-pkg-name" id="pr_pkg_name">SMRITI GROWTH</div>
+        </div>
+        <div class="pr-pkg-price">
+          <div class="pr-pkg-amount" id="pr_pkg_price">₹3,999/mo</div>
+          <div class="pr-pkg-period" id="pr_pkg_annual">₹39,999/year</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="pr-footer">
+      <span><em>"Always decision-ready."</em> — Jawahar R. Mallah, Founder &amp; Chief Architect, AITDL</span>
+      <span id="pr_date">SMRITI Retail OS · smriti-retail-os.com</span>
     </div>
 
   </div>
@@ -630,15 +844,74 @@
     }
 
     function resetCalc() {
+      document.getElementById('store_name').value      = '';
       document.getElementById('monthly_sales').value  = 1000000;
       document.getElementById('inventory_val').value  = 2000000;
       document.getElementById('dead_pct').value       = 15;
       document.getElementById('monthly_custs').value  = 500;
       document.getElementById('lapsed_pct').value     = 20;
       document.getElementById('avg_bill').value       = 1500;
+      document.getElementById('wh_count').value       = 1;
       syncSlider('dead_pct',   'dead_pct_val');
       syncSlider('lapsed_pct', 'lapsed_pct_val');
+      syncSlider('wh_count',   'wh_count_val');
       calc();
+    }
+
+    function printReport() {
+      // Pull current values into print report
+      const storeName = document.getElementById('store_name').value.trim() || 'Your Store';
+      const sales     = +document.getElementById('monthly_sales').value;
+      const inv       = +document.getElementById('inventory_val').value;
+      const deadPct   = +document.getElementById('dead_pct').value;
+      const custs     = +document.getElementById('monthly_custs').value;
+
+      const pkg     = document.querySelector('.pkg-card.active .pkg-name').textContent.trim();
+      const pkgData = {
+        'SMRITI STARTER': { monthly:'₹1,999/mo', annual:'₹19,999/year' },
+        'SMRITI GROWTH':  { monthly:'₹3,999/mo', annual:'₹39,999/year' },
+        'SMRITI PRO':     { monthly:'₹6,999/mo', annual:'₹69,999/year' },
+      };
+      const pkgInfo = pkgData[pkg] || pkgData['SMRITI GROWTH'];
+
+      const today = new Date();
+      const dateStr = today.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+
+      // Populate report
+      document.getElementById('pr_store_name').textContent = storeName;
+      document.getElementById('pr_store_meta').textContent =
+        'Report generated by SMRITI Retail OS · ' + dateStr;
+      document.getElementById('pr_date').textContent = 'SMRITI Retail OS · ' + dateStr;
+
+      document.getElementById('pr_sales').textContent    = fmt(sales);
+      document.getElementById('pr_inv').textContent      = fmt(inv);
+      document.getElementById('pr_dead_pct').textContent = deadPct + '%';
+      document.getElementById('pr_custs').textContent    = custs.toLocaleString('en-IN');
+
+      document.getElementById('pr_dead').textContent     = document.getElementById('out_dead').textContent;
+      document.getElementById('pr_lapsed').textContent   = document.getElementById('sum_lapsed').textContent;
+      document.getElementById('pr_reorder').textContent  = document.getElementById('sum_reorder').textContent;
+      document.getElementById('pr_payback').textContent  = document.getElementById('out_payback').textContent;
+
+      document.getElementById('pr2_dead').textContent    = document.getElementById('sum_dead').textContent;
+      document.getElementById('pr2_lapsed').textContent  = document.getElementById('sum_lapsed').textContent;
+      document.getElementById('pr2_reorder').textContent = document.getElementById('sum_reorder').textContent;
+      document.getElementById('pr2_total').textContent   = document.getElementById('sum_total').textContent;
+      document.getElementById('pr2_cost').textContent    = document.getElementById('sum_cost').textContent;
+      document.getElementById('pr2_roi').textContent     = document.getElementById('sum_roi').textContent;
+
+      document.getElementById('pr_pkg_name').textContent  = pkg;
+      document.getElementById('pr_pkg_price').textContent = pkgInfo.monthly;
+      document.getElementById('pr_pkg_annual').textContent = pkgInfo.annual;
+
+      window.print();
+    }
+
+    // Sync wh_count slider display
+    function syncSlider(sliderId, valId) {
+      const val = document.getElementById(sliderId).value;
+      const suffix = (sliderId === 'wh_count') ? '' : '%';
+      document.getElementById(valId).textContent = val + suffix;
     }
 
     // Init
