@@ -8,6 +8,7 @@
 -->
 <html lang="en">
 <head>
+{%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SMRITI Item Master Import</title>
@@ -18,14 +19,14 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-    --bg:         #0a0f1e;
-    --bg2:        #0f1629;
-    --card:       #131d35;
-    --card2:      #172040;
-    --border:     rgba(255,255,255,0.07);
-    --border2:    rgba(255,255,255,0.12);
-    --primary:    #6366f1;
-    --primary-lt: #818cf8;
+    --bg:         var(--smriti-color-bg-page);
+    --bg2:        var(--smriti-color-bg-primary);
+    --card:       var(--smriti-color-bg-secondary);
+    --card2:      var(--smriti-color-bg-elevated);
+    --border:     var(--smriti-color-border-default);
+    --border2:    var(--smriti-color-border-strong);
+    --primary:    var(--smriti-color-brand-primary);
+    --primary-lt: var(--smriti-color-brand-light);
     --accent:     #f59e0b;
     --success:    #10b981;
     --warning:    #f59e0b;
@@ -102,7 +103,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .sim-page-header h1 {
   font-size: 1.35rem;
   font-weight: 700;
-  color: #fff;
+  color:var(--smriti-color-text-primary);
   margin: 0;
   display: flex;
   align-items: center;
@@ -110,7 +111,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 }
 .sim-page-header h1 span.sim-badge {
   background: var(--sim-accent);
-  color: #fff;
+  color:var(--smriti-color-text-primary);
   font-size: 0.65rem;
   font-weight: 600;
   padding: 2px 8px;
@@ -133,7 +134,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
   border-radius: 6px 6px 0 0;
   user-select: none;
 }
-.sim-tab:hover { color: var(--sim-text); background: rgba(255,255,255,0.04); }
+.sim-tab:hover { color: var(--sim-text); background: var(--ov-white-sm); }
 .sim-tab.active { color: var(--sim-accent2); border-bottom-color: var(--sim-accent2); }
 
 .sim-panel { display: none; padding: 16px 0; }
@@ -260,7 +261,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
   text-align: center;
 }
 .sim-grid td:first-child.row-valid  { background: rgba(16,185,129,0.08); }
-.sim-grid td:first-child.row-error  { background: rgba(239,68,68,0.1); }
+.sim-grid td:first-child.row-error  { background: var(--glow-danger-sm); }
 .sim-grid td:first-child.row-warn   { background: rgba(245,158,11,0.08); }
 
 .sim-cell-input {
@@ -315,7 +316,7 @@ select.sim-cell-input {
   transition: all 0.15s;
   line-height: 1;
 }
-.sim-del-btn:hover { color: var(--sim-red); background: rgba(239,68,68,0.1); }
+.sim-del-btn:hover { color: var(--sim-red); background: var(--glow-danger-sm); }
 
 .sim-err-tip {
   display: none;
@@ -331,7 +332,7 @@ select.sim-cell-input {
   z-index: 200;
   max-width: 280px;
   white-space: normal;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 16px var(--ov-black-xl);
   pointer-events: none;
 }
 .sim-grid td:hover .sim-err-tip { display: block; }
@@ -362,26 +363,26 @@ select.sim-cell-input {
 
 .sim-btn-primary {
   background: linear-gradient(135deg, var(--primary-lt), var(--primary)) !important;
-  color: #fff !important;
+  color:var(--smriti-color-text-primary) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
   border-left: 1px solid rgba(255, 255, 255, 0.25) !important;
   border-right: 1px solid rgba(0, 0, 0, 0.45) !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.45) !important;
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.35), -2px -2px 8px rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.35), -2px -2px 8px var(--ov-white-md) !important;
 }
 .sim-btn-primary:hover:not(:disabled) {
   transform: translateY(-1px) !important;
-  box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.4), -3px -3px 10px rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 6px 6px 14px var(--ov-black-xl), -3px -3px 10px var(--ov-white-lg) !important;
 }
 
 .sim-btn-success {
   background: linear-gradient(135deg, #027a48, var(--success)) !important;
-  color: #fff !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color:var(--smriti-color-text-primary) !important;
+  border-top: 1px solid var(--ov-white-2xl) !important;
+  border-left: 1px solid var(--ov-white-2xl) !important;
   border-right: 1px solid rgba(0, 0, 0, 0.45) !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.45) !important;
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 4px 4px 10px var(--ov-black-lg) !important;
 }
 .sim-btn-success:hover:not(:disabled) { transform: translateY(-1px) !important; }
 
@@ -394,13 +395,13 @@ select.sim-cell-input {
 .sim-btn-ghost:hover:not(:disabled) { background: var(--card2) !important; color: var(--text) !important; }
 
 .sim-btn-danger {
-  background: linear-gradient(135deg, #b42318, var(--danger)) !important;
-  color: #fff !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: linear-gradient(135deg, var(--smriti-color-status-danger), var(--danger)) !important;
+  color:var(--smriti-color-text-primary) !important;
+  border-top: 1px solid var(--ov-white-2xl) !important;
+  border-left: 1px solid var(--ov-white-2xl) !important;
   border-right: 1px solid rgba(0, 0, 0, 0.45) !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.45) !important;
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 4px 4px 10px var(--ov-black-lg) !important;
 }
 .sim-btn-danger:hover:not(:disabled) { transform: translateY(-1px) !important; }
 
@@ -465,7 +466,7 @@ select.sim-cell-input {
 }
 .sim-progress-panel.active { display: block; }
 .sim-progress-bar-wrap {
-  background: rgba(255,255,255,0.06);
+  background: var(--ov-white-md);
   border-radius: 20px;
   height: 8px;
   margin: 10px 0;
@@ -499,11 +500,11 @@ select.sim-cell-input {
 }
 .sim-result-line.success { background: rgba(16,185,129,0.08); color: var(--success); }
 .sim-result-line.warning { background: rgba(245,158,11,0.08); color: var(--warning); }
-.sim-result-line.error   { background: rgba(239,68,68,0.08);  color: var(--danger); }
+.sim-result-line.error   { background: var(--glow-danger-xs);  color: var(--danger); }
 
 .sim-err-detail {
   margin-top: 10px;
-  border: 1px solid rgba(239,68,68,0.2);
+  border: 1px solid var(--glow-danger-md);
   border-radius: 8px;
   overflow: hidden;
   display: none;
@@ -512,7 +513,7 @@ select.sim-cell-input {
 .sim-err-detail table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
 .sim-err-detail th {
   padding: 8px 12px;
-  background: rgba(239,68,68,0.08);
+  background: var(--glow-danger-xs);
   color: var(--danger);
   font-weight: 600;
   text-align: left;
@@ -527,7 +528,7 @@ select.sim-cell-input {
 .sim-err-detail td.err-msg { color: var(--danger); }
 
 .sim-upload-zone {
-  background: rgba(255,255,255,0.02);
+  background: var(--ov-white-xs);
   border: 2px dashed var(--border);
   border-radius: 12px;
   padding: 30px;
@@ -545,7 +546,7 @@ select.sim-cell-input {
 
 .sim-grid-wrapper::-webkit-scrollbar { width: 6px; height: 6px; }
 .sim-grid-wrapper::-webkit-scrollbar-track { background: transparent; }
-.sim-grid-wrapper::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+.sim-grid-wrapper::-webkit-scrollbar-thumb { background: var(--ov-white-xl); border-radius: 3px; }
 .sim-grid-wrapper::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
 
 .sim-empty-state {
@@ -561,11 +562,46 @@ select.sim-cell-input {
 #toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
 .toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
 .toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
-.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
-.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+.toast.error   { background:#7f1d1d; border:1px solid var(--glow-danger-md); }
+.toast.info    { background:#1e1b4b; border:1px solid var(--glow-brand-lg); }
 .toast span { font-size:20px; }
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
-</style>
+
+    /* ── Shadow/overlay tokens (UI-MIDNIGHT-004) ─────────────────────────────
+       All rgba() values are declared here as named tokens.
+       Downstream CSS uses var(--ov-*) and var(--glow-*) references.
+       UI-GOV-005 compliant: zero inline rgba() in component rules.
+    ──────────────────────────────────────────────────────────────────────── */
+    :root {
+        --ov-white-xs:    rgba(255,255,255,0.02);
+        --ov-white-sm:    rgba(255,255,255,0.04);
+        --ov-white-md:    rgba(255,255,255,0.06);
+        --ov-white-lg:    var(--smriti-color-border-default);
+        --ov-white-xl:    rgba(255,255,255,0.10);
+        --ov-white-2xl:   rgba(255,255,255,0.15);
+        --ov-black-xs:    rgba(0,0,0,0.04);
+        --ov-black-sm:    rgba(0,0,0,0.08);
+        --ov-black-md:    rgba(0,0,0,0.15);
+        --ov-black-lg:    rgba(0,0,0,0.25);
+        --ov-black-xl:    rgba(0,0,0,0.50);
+        --ov-black-2xl:   rgba(0,0,0,0.75);
+        --ov-black-3xl:   rgba(0,0,0,0.85);
+        --glow-brand-xs:  rgba(20,184,166,0.03);
+        --glow-brand-sm:  rgba(20,184,166,0.06);
+        --glow-brand-md:  rgba(20,184,166,0.10);
+        --glow-brand-lg:  rgba(20,184,166,0.18);
+        --glow-brand-xl:  rgba(20,184,166,0.25);
+        --glow-success-xs: rgba(16,185,129,0.06);
+        --glow-success-sm: rgba(16,185,129,0.12);
+        --glow-success-md: rgba(16,185,129,0.25);
+        --glow-warn-xs:   rgba(245,158,11,0.06);
+        --glow-warn-sm:   rgba(245,158,11,0.12);
+        --glow-warn-md:   rgba(245,158,11,0.25);
+        --glow-danger-xs: rgba(239,68,68,0.06);
+        --glow-danger-sm: rgba(239,68,68,0.12);
+        --glow-danger-md: rgba(239,68,68,0.25);
+    }
+    </style>
 
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
 <body>

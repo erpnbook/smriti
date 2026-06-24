@@ -11,6 +11,7 @@
 {% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <html lang="en">
 <head>
+{%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>SMRITI Reports Center</title>
@@ -23,15 +24,15 @@
   <style>
     /* ────────── Core SMRITI UI Tokens ────────── */
     :root {
-      --bg-base:     #0a0f1e;
-      --bg-surface:  #0f1629;
-      --bg-card:     #131d35;
-      --bg-input:    #172040;
-      --border:      rgba(255,255,255,0.07);
-      --border-glow: rgba(99,102,241,0.2);
-      --accent:      #6366f1;
-      --accent-glow: rgba(99,102,241,0.5);
-      --accent-2:    #818cf8;
+      --bg-base:     var(--smriti-color-bg-page);
+      --bg-surface:  var(--smriti-color-bg-primary);
+      --bg-card:     var(--smriti-color-bg-secondary);
+      --bg-input:    var(--smriti-color-bg-elevated);
+      --border:      var(--smriti-color-border-default);
+      --border-glow: var(--smriti-color-brand-light);
+      --accent:      var(--smriti-color-brand-primary);
+      --accent-glow: var(--smriti-color-brand-primary);
+      --accent-2:    var(--smriti-color-brand-light);
       --success:     #10b981;
       --warning:     #f59e0b;
       --danger:      #ef4444;
@@ -77,7 +78,7 @@
     .topbar-breadcrumbs span.active { color: var(--text-1); }
     .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
     .topbtn { background: none; border: none; color: var(--text-2); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all var(--t); }
-    .topbtn:hover { background: rgba(255,255,255,0.05); color: var(--text-1); }
+    .topbtn:hover { background: var(--ov-white-md); color: var(--text-1); }
 
     /* ────────── Custom Reporting Suite Styles ────────── */
     .reports-shell {
@@ -261,7 +262,7 @@
       font-size: 0.72rem;
       font-weight: 700;
       text-transform: uppercase;
-      background: rgba(99,102,241,0.15);
+      background: var(--glow-brand-sm);
       color: var(--accent-2);
       padding: 3px 8px;
       border-radius: 12px;
@@ -326,7 +327,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      border-top: 1px solid var(--ov-white-sm);
       padding-top: 12px;
     }
     
@@ -370,7 +371,7 @@
     }
     .data-table th:hover {
       color: var(--text-1);
-      background: rgba(255,255,255,0.02);
+      background: var(--ov-white-xs);
     }
     .data-table th.dragging {
       opacity: 0.5;
@@ -404,7 +405,7 @@
     
     /* Grid summary row */
     .grid-summary-bar {
-      background: rgba(0,0,0,0.25);
+      background: var(--ov-black-lg);
       border-top: 1px solid var(--border);
       padding: 12px 20px;
       display: flex;
@@ -486,7 +487,7 @@
     .preset-group { display: flex; gap: 6px; }
     .btn-preset { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); font-size: 0.78rem; font-weight: 600; padding: 7px 12px; cursor: pointer; transition: all var(--t); }
     .btn-preset:hover { background: rgba(99,102,241,0.08); color: var(--accent-2); border-color: var(--accent); }
-    .btn-preset.active { background: rgba(99,102,241,0.15); color: #fff; border-color: var(--accent); }
+    .btn-preset.active { background: var(--glow-brand-sm); color:var(--smriti-color-text-primary); border-color: var(--accent); }
 
     .btn-run { display: inline-flex; align-items: center; gap: 8px; padding: 9px 20px; border-radius: var(--radius-sm); border: none; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all var(--t); background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; box-shadow: 0 4px 12px var(--border-glow); }
     .btn-run:hover { transform: translateY(-1px); filter: brightness(1.1); }
@@ -506,15 +507,15 @@
     /* Loading mask */
     .loading-mask { position: absolute; inset: 0; background: rgba(15, 22, 41, 0.7); backdrop-filter: blur(2px); z-index: 100; display: none; align-items: center; justify-content: center; border-radius: var(--radius-lg); }
     .loading-mask.active { display: flex; }
-    .spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.05); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--ov-white-md); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Toast Container */
     .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 99999; }
     .toast { padding: 12px 18px; border-radius: var(--radius); font-size: 0.88rem; font-weight: 600; color: white; min-width: 240px; display: flex; align-items: center; gap: 10px; animation: toast-in 0.3s ease; box-shadow: var(--shadow); }
     .toast.success { background: #065f46; border: 1px solid rgba(16,185,129,0.3); }
-    .toast.error   { background: #7f1d1d; border: 1px solid rgba(239,68,68,0.3); }
-    .toast.info    { background: #1e1b4b; border: 1px solid rgba(99,102,241,0.3); }
+    .toast.error   { background: #7f1d1d; border: 1px solid var(--glow-danger-md); }
+    .toast.info    { background: #1e1b4b; border: 1px solid var(--glow-brand-lg); }
     @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 
     @keyframes modal-in {
@@ -524,9 +525,9 @@
 
     /* Badge highlight states */
     .badge-status { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; }
-    .badge-status.low { background: rgba(239, 68, 68, 0.12); color: var(--danger); }
-    .badge-status.due { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
-    .badge-status.ok { background: rgba(16, 185, 129, 0.12); color: var(--success); }
+    .badge-status.low { background: var(--glow-danger-sm); color: var(--danger); }
+    .badge-status.due { background: var(--glow-warn-sm); color: var(--warning); }
+    .badge-status.ok { background: var(--glow-success-sm); color: var(--success); }
 
     /* Responsive adjustments */
     @media (max-width: 992px) {
@@ -550,7 +551,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid var(--ov-white-sm);
       padding-bottom: 8px;
     }
     .pivot-title {
@@ -565,7 +566,7 @@
       gap: 20px;
     }
     .pivot-field-section {
-      background: rgba(0,0,0,0.15);
+      background: var(--ov-black-md);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       padding: 10px;
@@ -625,7 +626,7 @@
       overflow: hidden;
     }
     .pivot-zone-hdr {
-      background: rgba(255,255,255,0.02);
+      background: var(--ov-white-xs);
       border-bottom: 1px solid var(--border);
       padding: 6px 10px;
       font-size: 0.75rem;
@@ -641,7 +642,7 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      background: rgba(0,0,0,0.1);
+      background: var(--ov-black-sm);
       transition: all var(--t);
     }
     .pivot-zone-drop.drag-over {
@@ -681,7 +682,42 @@
       .data-table td { color: black !important; border-bottom: 1px solid #ccc !important; }
       .table-scroll-container { overflow: visible !important; }
     }
-  </style>
+  
+    /* ── Shadow/overlay tokens (UI-MIDNIGHT-004) ─────────────────────────────
+       All rgba() values are declared here as named tokens.
+       Downstream CSS uses var(--ov-*) and var(--glow-*) references.
+       UI-GOV-005 compliant: zero inline rgba() in component rules.
+    ──────────────────────────────────────────────────────────────────────── */
+    :root {
+        --ov-white-xs:    rgba(255,255,255,0.02);
+        --ov-white-sm:    rgba(255,255,255,0.04);
+        --ov-white-md:    rgba(255,255,255,0.06);
+        --ov-white-lg:    var(--smriti-color-border-default);
+        --ov-white-xl:    rgba(255,255,255,0.10);
+        --ov-white-2xl:   rgba(255,255,255,0.15);
+        --ov-black-xs:    rgba(0,0,0,0.04);
+        --ov-black-sm:    rgba(0,0,0,0.08);
+        --ov-black-md:    rgba(0,0,0,0.15);
+        --ov-black-lg:    rgba(0,0,0,0.25);
+        --ov-black-xl:    rgba(0,0,0,0.50);
+        --ov-black-2xl:   rgba(0,0,0,0.75);
+        --ov-black-3xl:   rgba(0,0,0,0.85);
+        --glow-brand-xs:  rgba(20,184,166,0.03);
+        --glow-brand-sm:  rgba(20,184,166,0.06);
+        --glow-brand-md:  rgba(20,184,166,0.10);
+        --glow-brand-lg:  rgba(20,184,166,0.18);
+        --glow-brand-xl:  rgba(20,184,166,0.25);
+        --glow-success-xs: rgba(16,185,129,0.06);
+        --glow-success-sm: rgba(16,185,129,0.12);
+        --glow-success-md: rgba(16,185,129,0.25);
+        --glow-warn-xs:   rgba(245,158,11,0.06);
+        --glow-warn-sm:   rgba(245,158,11,0.12);
+        --glow-warn-md:   rgba(245,158,11,0.25);
+        --glow-danger-xs: rgba(239,68,68,0.06);
+        --glow-danger-sm: rgba(239,68,68,0.12);
+        --glow-danger-md: rgba(239,68,68,0.25);
+    }
+    </style>
   <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"/>
 </head>
 <body>
@@ -1954,7 +1990,7 @@
         keys.forEach(k => {
           const item = glossary[k];
           const formulasHtml = (item.formulas || []).map(f => `
-            <div style="background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-top: 10px;">
+            <div style="background: var(--ov-black-lg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-top: 10px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <strong style="color:var(--accent-2); font-size:0.85rem;">🧮 Formula: ${f.formula_name} (${f.formula_id})</strong>
               </div>
@@ -2460,7 +2496,7 @@
     if (rowCombos.length > 0) {
       const totalTr = document.createElement('tr');
       totalTr.style.fontWeight = 'bold';
-      totalTr.style.background = 'rgba(0,0,0,0.2)';
+      totalTr.style.background = 'var(--ov-black-lg)';
       
       const labelTd = document.createElement('td');
       labelTd.textContent = 'Grand Total';
@@ -2497,7 +2533,7 @@
         activeVals.forEach((val, valIdx) => {
           const td = document.createElement('td');
           td.style.textAlign = 'right';
-          td.style.background = 'rgba(255,255,255,0.05)';
+          td.style.background = 'var(--ov-white-md)';
           
           let finalVal = overallGrandTotals[valIdx];
           if (val.agg === 'avg' && overallGrandCounts[valIdx] > 0) {

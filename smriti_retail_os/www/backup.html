@@ -8,6 +8,7 @@
 -->
 <html lang="en">
 <head>
+{%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SMRITI Backup & Restore Center</title>
@@ -18,14 +19,14 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-    --bg:         #0a0f1e;
-    --bg2:        #0f1629;
-    --card:       #131d35;
-    --card2:      #172040;
-    --border:     rgba(255,255,255,0.07);
-    --border2:    rgba(255,255,255,0.12);
-    --primary:    #6366f1;
-    --primary-lt: #818cf8;
+    --bg:         var(--smriti-color-bg-page);
+    --bg2:        var(--smriti-color-bg-primary);
+    --card:       var(--smriti-color-bg-secondary);
+    --card2:      var(--smriti-color-bg-elevated);
+    --border:     var(--smriti-color-border-default);
+    --border2:    var(--smriti-color-border-strong);
+    --primary:    var(--smriti-color-brand-primary);
+    --primary-lt: var(--smriti-color-brand-light);
     --accent:     #f59e0b;
     --success:    #10b981;
     --warning:    #f59e0b;
@@ -92,12 +93,12 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .btn-action.primary:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(99,102,241,0.4); }
 .btn-action.secondary { background:var(--card2); border:1px solid var(--border2); color:var(--text); }
 .btn-action.secondary:hover { border-color:var(--primary); color:var(--primary-lt); }
-.btn-action.danger { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:var(--danger); }
-.btn-action.danger:hover { background:rgba(239,68,68,0.2); }
+.btn-action.danger { background:var(--glow-danger-sm); border:1px solid var(--glow-danger-md); color:var(--danger); }
+.btn-action.danger:hover { background:var(--glow-danger-md); }
 
-.console-wrapper { background:#030712; border:1px solid var(--border2); border-radius:var(--radius-sm); font-family:monospace; font-size:0.82rem; padding:12px; display:flex; flex-direction:column; gap:8px; min-height:160px; }
-.console-header { display:flex; justify-content:space-between; align-items:center; color:var(--text-muted); border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:6px; }
-.console-log { overflow-y:auto; max-height:140px; white-space:pre-wrap; color:#38bdf8; line-height:1.4; }
+.console-wrapper { background:var(--smriti-color-bg-page); border:1px solid var(--border2); border-radius:var(--radius-sm); font-family:monospace; font-size:0.82rem; padding:12px; display:flex; flex-direction:column; gap:8px; min-height:160px; }
+.console-header { display:flex; justify-content:space-between; align-items:center; color:var(--text-muted); border-bottom:1px solid var(--ov-white-md); padding-bottom:6px; }
+.console-log { overflow-y:auto; max-height:140px; white-space:pre-wrap; color:var(--smriti-color-brand-primary); line-height:1.4; }
 
 .history-panel { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; display:flex; flex-direction:column; gap:16px; margin-bottom:24px; }
 .smriti-table { width:100%; border-collapse:collapse; text-align:left; }
@@ -107,9 +108,9 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .smriti-table tbody tr:last-child td { border-bottom:none; }
 
 .badge-archive { display:inline-block; padding:2px 8px; border-radius:99px; font-weight:700; font-size:0.72rem; }
-.badge-archive.database { background:rgba(99,102,241,0.15); color:var(--primary-lt); }
+.badge-archive.database { background:var(--glow-brand-sm); color:var(--primary-lt); }
 .badge-archive.files { background:rgba(245,158,11,0.15); color:var(--accent); }
-.badge-archive.other { background:rgba(255,255,255,0.04); color:var(--text-muted); }
+.badge-archive.other { background:var(--ov-white-sm); color:var(--text-muted); }
 
 /* Modal Verification Dialog */
 .modal-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(3,7,18,0.85); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
@@ -125,14 +126,49 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 #toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
 .toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
 .toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
-.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
-.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+.toast.error   { background:#7f1d1d; border:1px solid var(--glow-danger-md); }
+.toast.info    { background:#1e1b4b; border:1px solid var(--glow-brand-lg); }
 .toast span { font-size:20px; }
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 
 .spinner { width:40px; height:40px; border:4px solid rgba(99,102,241,0.1); border-left-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin:0 auto; }
 @keyframes spin { to { transform:rotate(360deg); } }
-</style>
+
+    /* ── Shadow/overlay tokens (UI-MIDNIGHT-004) ─────────────────────────────
+       All rgba() values are declared here as named tokens.
+       Downstream CSS uses var(--ov-*) and var(--glow-*) references.
+       UI-GOV-005 compliant: zero inline rgba() in component rules.
+    ──────────────────────────────────────────────────────────────────────── */
+    :root {
+        --ov-white-xs:    rgba(255,255,255,0.02);
+        --ov-white-sm:    rgba(255,255,255,0.04);
+        --ov-white-md:    rgba(255,255,255,0.06);
+        --ov-white-lg:    var(--smriti-color-border-default);
+        --ov-white-xl:    rgba(255,255,255,0.10);
+        --ov-white-2xl:   rgba(255,255,255,0.15);
+        --ov-black-xs:    rgba(0,0,0,0.04);
+        --ov-black-sm:    rgba(0,0,0,0.08);
+        --ov-black-md:    rgba(0,0,0,0.15);
+        --ov-black-lg:    rgba(0,0,0,0.25);
+        --ov-black-xl:    rgba(0,0,0,0.50);
+        --ov-black-2xl:   rgba(0,0,0,0.75);
+        --ov-black-3xl:   rgba(0,0,0,0.85);
+        --glow-brand-xs:  rgba(20,184,166,0.03);
+        --glow-brand-sm:  rgba(20,184,166,0.06);
+        --glow-brand-md:  rgba(20,184,166,0.10);
+        --glow-brand-lg:  rgba(20,184,166,0.18);
+        --glow-brand-xl:  rgba(20,184,166,0.25);
+        --glow-success-xs: rgba(16,185,129,0.06);
+        --glow-success-sm: rgba(16,185,129,0.12);
+        --glow-success-md: rgba(16,185,129,0.25);
+        --glow-warn-xs:   rgba(245,158,11,0.06);
+        --glow-warn-sm:   rgba(245,158,11,0.12);
+        --glow-warn-md:   rgba(245,158,11,0.25);
+        --glow-danger-xs: rgba(239,68,68,0.06);
+        --glow-danger-sm: rgba(239,68,68,0.12);
+        --glow-danger-md: rgba(239,68,68,0.25);
+    }
+    </style>
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
 </head>
 <body>
@@ -773,23 +809,23 @@ async function loadEncryptionStatus() {
             
             if (!data.encryption_enabled) {
                 // State 1: UNENCRYPTED (RED)
-                banner.style.background = 'rgba(239, 68, 68, 0.1)';
-                banner.style.border = '1px solid rgba(239, 68, 68, 0.25)';
-                banner.style.color = '#ef4444';
+                banner.style.background = 'var(--glow-danger-sm)';
+                banner.style.border = '1px solid var(--glow-danger-md)';
+                banner.style.color = 'var(--smriti-color-status-danger)';
                 bannerIcon.textContent = 'gpp_bad';
                 bannerText.textContent = 'UNENCRYPTED (Vulnerable to data breach)';
             } else if (verifiedCount < 2) {
                 // State 2: ENCRYPTED (AMBER)
                 banner.style.background = 'rgba(245, 158, 11, 0.1)';
-                banner.style.border = '1px solid rgba(245, 158, 11, 0.25)';
-                banner.style.color = '#f59e0b';
+                banner.style.border = '1px solid var(--glow-warn-md)';
+                banner.style.color = 'var(--smriti-color-status-warning)';
                 bannerIcon.textContent = 'warning';
                 bannerText.textContent = 'ENCRYPTED (No recovery keys split. Onboard 2 custodians!)';
             } else {
                 // State 3: ENCRYPTED+SECURED (GREEN)
                 banner.style.background = 'rgba(16, 185, 129, 0.1)';
-                banner.style.border = '1px solid rgba(16, 185, 129, 0.25)';
-                banner.style.color = '#10b981';
+                banner.style.border = '1px solid var(--glow-success-md)';
+                banner.style.color = 'var(--smriti-color-status-success)';
                 bannerIcon.textContent = 'verified';
                 bannerText.textContent = 'ENCRYPTED & SECURED (Dual Custodian active)';
             }

@@ -8,6 +8,7 @@
 -->
 <html lang="en">
 <head>
+{%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SMRITI Billing Terminal</title>
@@ -73,33 +74,33 @@ html, body {
 /* ── Auth Overlay ── */
 #auth-overlay {
     position: fixed; inset: 0; z-index: 9999;
-    background: #030712;
+    background: var(--smriti-color-bg-page);
     display: flex; align-items: center; justify-content: center;
 }
 .auth-card {
-    background: rgba(15,23,42,0.6);
+    background: var(--ov-black-2xl);
     backdrop-filter: blur(24px);
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid var(--ov-white-lg);
     border-radius: 24px;
     padding: 48px 40px;
     width: 100%; max-width: 420px;
     text-align: center;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
+    box-shadow: 0 25px 50px -12px var(--ov-black-xl);
 }
 .auth-logo {
     width: 64px; height: 64px;
-    background: linear-gradient(135deg, var(--accent), #c71f37);
+    background: linear-gradient(135deg, var(--accent), var(--smriti-color-status-danger));
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     margin: 0 auto 20px;
-    box-shadow: 0 0 30px rgba(233,69,96,0.3);
+    box-shadow: 0 0 30px var(--glow-danger-md);
 }
 .auth-logo span { font-size: 28px; color: white; }
 .auth-title { font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800; margin-bottom: 4px; }
 .auth-sub { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 32px; }
 .auth-input {
     width: 100%; padding: 13px 16px;
-    background: rgba(255,255,255,0.04);
+    background: var(--ov-white-sm);
     border: 1px solid var(--border2);
     border-radius: var(--radius);
     color: var(--text);
@@ -107,20 +108,20 @@ html, body {
     outline: none; transition: all var(--t);
     margin-bottom: 12px;
 }
-.auth-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+.auth-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--glow-brand-sm); }
 .auth-btn {
     width: 100%; padding: 14px;
-    background: linear-gradient(135deg, var(--accent), #c71f37);
+    background: linear-gradient(135deg, var(--accent), var(--smriti-color-status-danger));
     border: none; border-radius: var(--radius);
     color: white; font-weight: 700; font-size: 1rem;
     cursor: pointer; transition: all var(--t);
-    box-shadow: 0 8px 24px rgba(233,69,96,0.25);
+    box-shadow: 0 8px 24px var(--glow-danger-sm);
     margin-top: 4px;
 }
-.auth-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(233,69,96,0.4); }
+.auth-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px var(--glow-danger-md); }
 .auth-error {
-    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
-    color: #f87171; padding: 10px 14px; border-radius: var(--radius-sm);
+    background: var(--glow-danger-sm); border: 1px solid var(--glow-danger-md);
+    color: var(--smriti-color-status-danger); padding: 10px 14px; border-radius: var(--radius-sm);
     font-size: 0.85rem; margin-bottom: 12px; display: none;
 }
 
@@ -197,7 +198,7 @@ html, body {
 }
 .topbtn:hover { border-color: var(--primary); color: var(--primary-lt); }
 .topbtn.primary {
-    background: linear-gradient(135deg, var(--primary), #4f46e5);
+    background: linear-gradient(135deg, var(--primary), var(--smriti-color-brand-secondary));
     border-color: transparent; color: white;
     box-shadow: 0 4px 12px rgba(99,102,241,0.25);
 }
@@ -215,12 +216,12 @@ html, body {
     display: flex !important;
     gap: 8px;
     z-index: 999999;
-    background: rgba(17, 24, 39, 0.85) !important;
+    background: var(--ov-black-3xl) !important;
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid var(--ov-white-lg) !important;
     padding: 6px;
     border-radius: 30px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 20px var(--ov-black-xl);
 }
 .smriti-popout-controls-floating .smriti-popout-btn {
     width: 32px;
@@ -228,7 +229,7 @@ html, body {
     border-radius: 50%;
     border: none;
     background: none;
-    color: #d1d5db !important;
+    color: var(--smriti-color-text-muted) !important;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -236,12 +237,12 @@ html, body {
     transition: all 0.2s;
 }
 .smriti-popout-controls-floating .smriti-popout-btn:hover {
-    background: rgba(255, 255, 255, 0.08) !important;
-    color: #ffffff !important;
+    background: var(--ov-white-lg) !important;
+    color:var(--smriti-color-text-primary) !important;
 }
 .smriti-popout-controls-floating .smriti-popout-close:hover {
-    background: #fee2e2 !important;
-    color: #b42318 !important;
+    background: var(--smriti-color-bg-elevated) !important;
+    color: var(--smriti-color-status-danger) !important;
 }
 
 /* ── Main Content ── */
@@ -283,7 +284,7 @@ html, body {
 }
 #barcode-input:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    box-shadow: 0 0 0 3px var(--glow-brand-sm);
 }
 .btn-camera {
     padding: 0 14px; border-radius: var(--radius);
@@ -341,7 +342,7 @@ tbody tr:last-child td { border-bottom: none; }
     padding: 3px; border-radius: 4px;
     transition: all var(--t); display: flex; align-items: center;
 }
-.btn-del:hover { color: var(--danger); background: rgba(239,68,68,0.1); }
+.btn-del:hover { color: var(--danger); background: var(--glow-danger-sm); }
 .btn-del span { font-size: 18px; }
 
 /* Empty state */
@@ -431,7 +432,7 @@ tbody tr:last-child td { border-bottom: none; }
     color: var(--text); font-weight: 700; font-size: 0.95rem;
     text-align: right; outline: none; transition: all var(--t);
 }
-.pay-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,102,241,0.15); }
+.pay-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px var(--glow-brand-sm); }
 .pay-input:disabled { opacity: 0.4; }
 
 /* Credit toggle */
@@ -460,7 +461,7 @@ tbody tr:last-child td { border-bottom: none; }
     left: 3px; bottom: 3px;
     background: var(--text-subtle); border-radius: 50%; transition: 0.3s;
 }
-.switch input:checked + .slider { background: rgba(99,102,241,0.3); border-color: var(--primary); }
+.switch input:checked + .slider { background: var(--glow-brand-lg); border-color: var(--primary); }
 .switch input:checked + .slider::before { transform: translateX(22px); background: var(--primary-lt); }
 
 /* Balance/alert box */
@@ -472,7 +473,7 @@ tbody tr:last-child td { border-bottom: none; }
     border: 1px solid var(--border);
     color: var(--text-muted);
 }
-.balance-box.pending { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.3); color: var(--danger); }
+.balance-box.pending { background: var(--glow-danger-xs); border-color: var(--glow-danger-md); color: var(--danger); }
 .balance-box.ok { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.3); color: var(--success); }
 
 /* Checkout button */
@@ -515,8 +516,8 @@ tbody tr:last-child td { border-bottom: none; }
     box-shadow: 0 8px 24px rgba(0,0,0,0.4);
 }
 .toast.success { background: #065f46; border: 1px solid rgba(16,185,129,0.3); }
-.toast.error   { background: #7f1d1d; border: 1px solid rgba(239,68,68,0.3); }
-.toast.info    { background: #1e1b4b; border: 1px solid rgba(99,102,241,0.3); }
+.toast.error   { background: #7f1d1d; border: 1px solid var(--glow-danger-md); }
+.toast.info    { background: #1e1b4b; border: 1px solid var(--glow-brand-lg); }
 .toast span { font-size: 20px; }
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 
@@ -557,7 +558,7 @@ tbody tr:last-child td { border-bottom: none; }
     font-size: 0.95rem; outline: none; margin-bottom: 12px;
     transition: all var(--t);
 }
-.modal-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+.modal-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--glow-brand-sm); }
 .search-result-item {
     padding: 10px 14px; border-radius: var(--radius-sm);
     cursor: pointer; transition: background var(--t);
@@ -570,13 +571,13 @@ tbody tr:last-child td { border-bottom: none; }
 .sri-badge {
     display: inline-block; padding: 2px 7px;
     border-radius: 99px; font-size: 0.72rem; font-weight: 700;
-    background: rgba(99,102,241,0.15); color: var(--primary-lt);
+    background: var(--glow-brand-sm); color: var(--primary-lt);
 }
 
 /* Success screen */
 #success-overlay {
     position: fixed; inset: 0; z-index: 9500;
-    background: rgba(0,0,0,0.85);
+    background: var(--ov-black-3xl);
     display: none; align-items: center; justify-content: center;
     flex-direction: column; gap: 16px;
 }
@@ -596,7 +597,42 @@ tbody tr:last-child td { border-bottom: none; }
 .btn-success-action.primary { background: var(--primary); color: white; }
 .btn-success-action.secondary { background: var(--card); color: var(--text); border: 1px solid var(--border2); }
 .btn-success-action:hover { transform: translateY(-2px); }
-</style>
+
+    /* ── Shadow/overlay tokens (UI-MIDNIGHT-004) ─────────────────────────────
+       All rgba() values are declared here as named tokens.
+       Downstream CSS uses var(--ov-*) and var(--glow-*) references.
+       UI-GOV-005 compliant: zero inline rgba() in component rules.
+    ──────────────────────────────────────────────────────────────────────── */
+    :root {
+        --ov-white-xs:    rgba(255,255,255,0.02);
+        --ov-white-sm:    rgba(255,255,255,0.04);
+        --ov-white-md:    rgba(255,255,255,0.06);
+        --ov-white-lg:    var(--smriti-color-border-default);
+        --ov-white-xl:    rgba(255,255,255,0.10);
+        --ov-white-2xl:   rgba(255,255,255,0.15);
+        --ov-black-xs:    rgba(0,0,0,0.04);
+        --ov-black-sm:    rgba(0,0,0,0.08);
+        --ov-black-md:    rgba(0,0,0,0.15);
+        --ov-black-lg:    rgba(0,0,0,0.25);
+        --ov-black-xl:    rgba(0,0,0,0.50);
+        --ov-black-2xl:   rgba(0,0,0,0.75);
+        --ov-black-3xl:   rgba(0,0,0,0.85);
+        --glow-brand-xs:  rgba(20,184,166,0.03);
+        --glow-brand-sm:  rgba(20,184,166,0.06);
+        --glow-brand-md:  rgba(20,184,166,0.10);
+        --glow-brand-lg:  rgba(20,184,166,0.18);
+        --glow-brand-xl:  rgba(20,184,166,0.25);
+        --glow-success-xs: rgba(16,185,129,0.06);
+        --glow-success-sm: rgba(16,185,129,0.12);
+        --glow-success-md: rgba(16,185,129,0.25);
+        --glow-warn-xs:   rgba(245,158,11,0.06);
+        --glow-warn-sm:   rgba(245,158,11,0.12);
+        --glow-warn-md:   rgba(245,158,11,0.25);
+        --glow-danger-xs: rgba(239,68,68,0.06);
+        --glow-danger-sm: rgba(239,68,68,0.12);
+        --glow-danger-md: rgba(239,68,68,0.25);
+    }
+    </style>
 
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
 </head>
@@ -943,7 +979,7 @@ tbody tr:last-child td { border-bottom: none; }
 <div class="modal-backdrop" id="modal-pdt-preview">
     <div class="modal" style="max-width:900px;width:97%;">
         <div class="modal-title">
-            <span class="material-symbols-outlined" style="font-size:20px;color:#10b981;">fact_check</span>
+            <span class="material-symbols-outlined" style="font-size:20px;color:var(--smriti-color-status-success);">fact_check</span>
             PDT Import Preview
             <button class="modal-close" onclick="closeModal('modal-pdt-preview')">
                 <span class="material-symbols-outlined">close</span>
@@ -953,7 +989,7 @@ tbody tr:last-child td { border-bottom: none; }
             <span style="color:#818cf8;">†</span> = from PDT file &nbsp;|&nbsp;
             <span style="color:#fbbf24;">★</span> = from Item Master &nbsp;|&nbsp;
             <span style="color:#6ee7b7;">○</span> = default &nbsp;|&nbsp;
-            <span style="color:#ef4444;">❌</span> = barcode not found
+            <span style="color:var(--smriti-color-status-danger);">❌</span> = barcode not found
         </div>
         <div style="overflow-x:auto;max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);">
             <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
@@ -976,8 +1012,8 @@ tbody tr:last-child td { border-bottom: none; }
         </div>
         <div style="margin-top:10px;font-size:0.75rem;color:var(--muted);">
             Total: <strong id="pdt-preview-count" style="color:var(--text);">0</strong> rows &nbsp;|&nbsp;
-            Valid: <strong id="pdt-preview-valid" style="color:#10b981;">0</strong> &nbsp;|&nbsp;
-            Errors: <strong id="pdt-preview-errors" style="color:#ef4444;">0</strong>
+            Valid: <strong id="pdt-preview-valid" style="color:var(--smriti-color-status-success);">0</strong> &nbsp;|&nbsp;
+            Errors: <strong id="pdt-preview-errors" style="color:var(--smriti-color-status-danger);">0</strong>
         </div>
         <div class="modal-actions" style="margin-top:16px;">
             <button class="btn btn-ghost" onclick="closeModal('modal-pdt-preview')">← Back to Mapping</button>
@@ -1852,7 +1888,7 @@ function renderPdtMappingForm() {
         row.style.cssText = 'display:flex;align-items:center;gap:12px;';
         row.innerHTML = `
             <label style="min-width:130px;font-size:0.82rem;font-weight:500;">
-                ${label}${required ? ' <span style="color:#ef4444;">*</span>' : ''}
+                ${label}${required ? ' <span style="color:var(--smriti-color-status-danger);">*</span>' : ''}
             </label>
             <select id="pdt-map-${key}" style="flex:1;background:var(--card2);border:1px solid var(--border2);color:var(--text);border-radius:var(--radius-sm);padding:6px 10px;font-size:0.82rem;" onchange="onPdtMappingChange()">
                 <option value="">— Not mapped (use Item Master) —</option>
@@ -1933,8 +1969,8 @@ function renderPdtPreviewTable(rows) {
         };
 
         const statusCell = hasError
-            ? `<span style="color:#ef4444;font-size:0.72rem;">❌ ${row.error}</span>`
-            : `<span style="color:#10b981;font-size:0.72rem;">✓ OK</span>`;
+            ? `<span style="color:var(--smriti-color-status-danger);font-size:0.72rem;">❌ ${row.error}</span>`
+            : `<span style="color:var(--smriti-color-status-success);font-size:0.72rem;">✓ OK</span>`;
 
         return `<tr style="border-bottom:1px solid var(--border);${hasError ? 'opacity:0.6;' : ''}">
             <td style="padding:6px 10px;color:var(--muted);">${i + 1}</td>

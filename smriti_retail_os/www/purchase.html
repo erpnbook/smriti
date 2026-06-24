@@ -8,6 +8,7 @@
 -->
 <html lang="en">
 <head>
+{%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SMRITI Purchase Manager</title>
@@ -43,17 +44,17 @@
 html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
 
 /* ── Auth ── */
-#auth-overlay { position:fixed; inset:0; z-index:9999; background:#030712; display:flex; align-items:center; justify-content:center; }
-.auth-card { background:rgba(15,23,42,0.6); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,0.08); border-radius:24px; padding:48px 40px; width:100%; max-width:420px; text-align:center; box-shadow:0 25px 50px -12px rgba(0,0,0,0.6); }
-.auth-logo { width:64px; height:64px; background:linear-gradient(135deg,var(--accent),#d97706); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; box-shadow:0 0 30px rgba(245,158,11,0.3); }
+#auth-overlay { position:fixed; inset:0; z-index:9999; background:var(--smriti-color-bg-page); display:flex; align-items:center; justify-content:center; }
+.auth-card { background:var(--ov-black-2xl); backdrop-filter:blur(24px); border:1px solid var(--ov-white-lg); border-radius:24px; padding:48px 40px; width:100%; max-width:420px; text-align:center; box-shadow:0 25px 50px -12px var(--ov-black-xl); }
+.auth-logo { width:64px; height:64px; background:linear-gradient(135deg,var(--accent),var(--smriti-color-status-warning)); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; box-shadow:0 0 30px var(--glow-warn-md); }
 .auth-logo span { font-size:28px; color:white; }
 .auth-title { font-family:'Outfit',sans-serif; font-size:1.8rem; font-weight:800; margin-bottom:4px; }
 .auth-sub { color:var(--text-muted); font-size:0.88rem; margin-bottom:32px; }
-.auth-input { width:100%; padding:13px 16px; background:rgba(255,255,255,0.04); border:1px solid var(--border2); border-radius:var(--radius); color:var(--text); font-size:0.95rem; font-family:'Inter',sans-serif; outline:none; transition:all var(--t); margin-bottom:12px; }
+.auth-input { width:100%; padding:13px 16px; background:var(--ov-white-sm); border:1px solid var(--border2); border-radius:var(--radius); color:var(--text); font-size:0.95rem; font-family:'Inter',sans-serif; outline:none; transition:all var(--t); margin-bottom:12px; }
 .auth-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(245,158,11,0.15); }
-.auth-btn { width:100%; padding:14px; background:linear-gradient(135deg,var(--accent),#d97706); border:none; border-radius:var(--radius); color:white; font-weight:700; font-size:1rem; cursor:pointer; transition:all var(--t); box-shadow:0 8px 24px rgba(245,158,11,0.25); }
-.auth-btn:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(245,158,11,0.4); }
-.auth-error { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#f87171; padding:10px 14px; border-radius:var(--radius-sm); font-size:0.85rem; margin-bottom:12px; display:none; }
+.auth-btn { width:100%; padding:14px; background:linear-gradient(135deg,var(--accent),var(--smriti-color-status-warning)); border:none; border-radius:var(--radius); color:white; font-weight:700; font-size:1rem; cursor:pointer; transition:all var(--t); box-shadow:0 8px 24px var(--glow-warn-md); }
+.auth-btn:hover { transform:translateY(-2px); box-shadow:0 12px 30px var(--glow-warn-md); }
+.auth-error { background:var(--glow-danger-sm); border:1px solid var(--glow-danger-md); color:var(--smriti-color-status-danger); padding:10px 14px; border-radius:var(--radius-sm); font-size:0.85rem; margin-bottom:12px; display:none; }
 
 
 /* ── Standalone Popout controls styling override ── */
@@ -66,12 +67,12 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
     display: flex !important;
     gap: 8px;
     z-index: 999999;
-    background: rgba(17, 24, 39, 0.85) !important;
+    background: var(--ov-black-3xl) !important;
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid var(--ov-white-lg) !important;
     padding: 6px;
     border-radius: 30px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 20px var(--ov-black-xl);
 }
 .smriti-popout-controls-floating .smriti-popout-btn {
     width: 32px;
@@ -79,7 +80,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
     border-radius: 50%;
     border: none;
     background: none;
-    color: #d1d5db !important;
+    color: var(--smriti-color-text-muted) !important;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -87,12 +88,12 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
     transition: all 0.2s;
 }
 .smriti-popout-controls-floating .smriti-popout-btn:hover {
-    background: rgba(255, 255, 255, 0.08) !important;
-    color: #ffffff !important;
+    background: var(--ov-white-lg) !important;
+    color:var(--smriti-color-text-primary) !important;
 }
 .smriti-popout-controls-floating .smriti-popout-close:hover {
-    background: #fee2e2 !important;
-    color: #b42318 !important;
+    background: var(--smriti-color-bg-elevated) !important;
+    color: var(--smriti-color-status-danger) !important;
 }
 
 /* ── App Shell ── */
@@ -114,7 +115,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .topbar-tabs { display:flex; gap:4px; }
 .tab-btn { padding:6px 14px; border-radius:var(--radius-sm); font-size:12px; font-weight:700; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); display:flex; align-items:center; gap:5px; }
 .tab-btn span { font-size:16px; }
-.tab-btn.active { background:var(--primary); border-color:var(--primary); color:white; box-shadow:0 4px 12px rgba(99,102,241,0.3); }
+.tab-btn.active { background:var(--primary); border-color:var(--primary); color:white; box-shadow:0 4px 12px var(--glow-brand-lg); }
 .tab-btn:hover:not(.active) { border-color:var(--primary-lt); color:var(--primary-lt); }
 .topbar-right { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
 .topbtn { display:inline-flex; align-items:center; gap:4px; padding:5px 11px; border-radius:var(--radius-sm); font-size:11px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); white-space:nowrap; }
@@ -158,11 +159,11 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .detail-po-actions { margin-left:auto; display:flex; gap:8px; }
 .btn-action { padding:7px 14px; border-radius:var(--radius-sm); font-size:12px; font-weight:700; cursor:pointer; transition:all var(--t); border:none; display:flex; align-items:center; gap:5px; }
 .btn-action span { font-size:16px; }
-.btn-action.primary { background:linear-gradient(135deg,var(--success),#059669); color:white; box-shadow:0 4px 12px rgba(16,185,129,0.25); }
+.btn-action.primary { background:linear-gradient(135deg,var(--success),#059669); color:white; box-shadow:0 4px 12px var(--glow-success-md); }
 .btn-action.primary:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(16,185,129,0.4); }
 .btn-action.secondary { background:var(--card2); color:var(--text-muted); border:1px solid var(--border2); }
 .btn-action.secondary:hover { border-color:var(--primary); color:var(--primary-lt); }
-.btn-action.danger { background:rgba(239,68,68,0.1); color:var(--danger); border:1px solid rgba(239,68,68,0.3); }
+.btn-action.danger { background:var(--glow-danger-sm); color:var(--danger); border:1px solid var(--glow-danger-md); }
 .btn-action:disabled { opacity:0.4; cursor:not-allowed; transform:none !important; }
 
 .grn-items-wrap { flex:1; overflow:auto; padding:16px 18px; }
@@ -180,7 +181,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .grn-qty-input { width:80px; }
 .grn-rate-input { width:90px; }
 .grn-date-input { width:130px; font-size:0.82rem; }
-.batch-badge { display:inline-block; padding:2px 7px; border-radius:99px; font-size:0.72rem; font-weight:700; background:rgba(99,102,241,0.15); color:var(--primary-lt); }
+.batch-badge { display:inline-block; padding:2px 7px; border-radius:99px; font-size:0.72rem; font-weight:700; background:var(--glow-brand-sm); color:var(--primary-lt); }
 
 /* Placeholder panels */
 .placeholder-panel { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-sub); gap:12px; }
@@ -203,25 +204,25 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 /* New PO Item rows */
 .po-new-items { margin-top:10px; }
 .po-new-item-row { display:grid; grid-template-columns:2fr 1fr 1fr 1fr auto; gap:8px; margin-bottom:8px; align-items:start; }
-.btn-del-row { padding:10px 10px; border-radius:var(--radius-sm); background:none; border:1px solid rgba(239,68,68,0.25); color:var(--danger); cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; }
-.btn-del-row:hover { background:rgba(239,68,68,0.1); }
+.btn-del-row { padding:10px 10px; border-radius:var(--radius-sm); background:none; border:1px solid var(--glow-danger-md); color:var(--danger); cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; }
+.btn-del-row:hover { background:var(--glow-danger-sm); }
 .btn-del-row span { font-size:18px; }
-.btn-add-row { display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:var(--radius-sm); background:rgba(99,102,241,0.1); border:1px dashed rgba(99,102,241,0.3); color:var(--primary-lt); cursor:pointer; font-size:0.85rem; font-weight:600; transition:all var(--t); margin-top:8px; }
-.btn-add-row:hover { background:rgba(99,102,241,0.15); border-color:var(--primary); }
+.btn-add-row { display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:var(--radius-sm); background:rgba(99,102,241,0.1); border:1px dashed var(--glow-brand-lg); color:var(--primary-lt); cursor:pointer; font-size:0.85rem; font-weight:600; transition:all var(--t); margin-top:8px; }
+.btn-add-row:hover { background:var(--glow-brand-sm); border-color:var(--primary); }
 .btn-add-row span { font-size:18px; }
 
 .po-new-actions { display:flex; gap:12px; justify-content:flex-end; padding:16px 0; }
-.btn-submit-po { padding:12px 28px; background:linear-gradient(135deg,var(--accent),#d97706); border:none; border-radius:var(--radius); color:white; font-size:0.95rem; font-weight:700; cursor:pointer; transition:all var(--t); display:flex; align-items:center; gap:6px; box-shadow:0 4px 16px rgba(245,158,11,0.25); }
+.btn-submit-po { padding:12px 28px; background:linear-gradient(135deg,var(--accent),var(--smriti-color-status-warning)); border:none; border-radius:var(--radius); color:white; font-size:0.95rem; font-weight:700; cursor:pointer; transition:all var(--t); display:flex; align-items:center; gap:6px; box-shadow:0 4px 16px var(--glow-warn-md); }
 .btn-submit-po span { font-size:20px; }
-.btn-submit-po:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(245,158,11,0.4); }
+.btn-submit-po:hover { transform:translateY(-2px); box-shadow:0 8px 24px var(--glow-warn-md); }
 .btn-submit-po:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
 
 /* ── Toast ── */
 #toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
 .toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
 .toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
-.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
-.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+.toast.error   { background:#7f1d1d; border:1px solid var(--glow-danger-md); }
+.toast.info    { background:#1e1b4b; border:1px solid var(--glow-brand-lg); }
 .toast span { font-size:20px; }
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 
@@ -258,7 +259,42 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .matrix-color-input:focus { border-color: var(--primary); }
 
 @keyframes spin { to { transform:rotate(360deg); } }
-</style>
+
+    /* ── Shadow/overlay tokens (UI-MIDNIGHT-004) ─────────────────────────────
+       All rgba() values are declared here as named tokens.
+       Downstream CSS uses var(--ov-*) and var(--glow-*) references.
+       UI-GOV-005 compliant: zero inline rgba() in component rules.
+    ──────────────────────────────────────────────────────────────────────── */
+    :root {
+        --ov-white-xs:    rgba(255,255,255,0.02);
+        --ov-white-sm:    rgba(255,255,255,0.04);
+        --ov-white-md:    rgba(255,255,255,0.06);
+        --ov-white-lg:    var(--smriti-color-border-default);
+        --ov-white-xl:    rgba(255,255,255,0.10);
+        --ov-white-2xl:   rgba(255,255,255,0.15);
+        --ov-black-xs:    rgba(0,0,0,0.04);
+        --ov-black-sm:    rgba(0,0,0,0.08);
+        --ov-black-md:    rgba(0,0,0,0.15);
+        --ov-black-lg:    rgba(0,0,0,0.25);
+        --ov-black-xl:    rgba(0,0,0,0.50);
+        --ov-black-2xl:   rgba(0,0,0,0.75);
+        --ov-black-3xl:   rgba(0,0,0,0.85);
+        --glow-brand-xs:  rgba(20,184,166,0.03);
+        --glow-brand-sm:  rgba(20,184,166,0.06);
+        --glow-brand-md:  rgba(20,184,166,0.10);
+        --glow-brand-lg:  rgba(20,184,166,0.18);
+        --glow-brand-xl:  rgba(20,184,166,0.25);
+        --glow-success-xs: rgba(16,185,129,0.06);
+        --glow-success-sm: rgba(16,185,129,0.12);
+        --glow-success-md: rgba(16,185,129,0.25);
+        --glow-warn-xs:   rgba(245,158,11,0.06);
+        --glow-warn-sm:   rgba(245,158,11,0.12);
+        --glow-warn-md:   rgba(245,158,11,0.25);
+        --glow-danger-xs: rgba(239,68,68,0.06);
+        --glow-danger-sm: rgba(239,68,68,0.12);
+        --glow-danger-md: rgba(239,68,68,0.25);
+    }
+    </style>
 
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
 <body>
@@ -475,7 +511,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                             </div>
                             <div style="flex: 1; min-width: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg2); border: 1px dashed var(--border2); border-radius: var(--radius); padding: 16px; position: relative;">
                                 <label class="form-label" style="align-self: flex-start; margin-bottom: 8px;">Style Image</label>
-                                <div id="matrix-image-preview-container" style="width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); overflow: hidden; background: rgba(0,0,0,0.2); border: 1px solid var(--border);">
+                                <div id="matrix-image-preview-container" style="width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); overflow: hidden; background: var(--ov-black-lg); border: 1px solid var(--border);">
                                     <span class="material-symbols-outlined" style="font-size: 48px; color: var(--text-sub);" id="matrix-image-placeholder">image</span>
                                     <img id="matrix-image-preview" style="display: none; width: 100%; height: 100%; object-fit: cover;">
                                 </div>
@@ -656,7 +692,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 <div class="modal-backdrop" id="modal-pdt-preview">
     <div class="modal" style="max-width:900px;width:97%;">
         <div class="modal-title">
-            <span class="material-symbols-outlined" style="font-size:20px;color:#10b981;">fact_check</span>
+            <span class="material-symbols-outlined" style="font-size:20px;color:var(--smriti-color-status-success);">fact_check</span>
             PDT Import Preview
             <button class="modal-close" onclick="closeModal('modal-pdt-preview')">
                 <span class="material-symbols-outlined">close</span>
@@ -666,7 +702,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
             <span style="color:#818cf8;">†</span> = from PDT file &nbsp;|&nbsp;
             <span style="color:#fbbf24;">★</span> = from Item Master &nbsp;|&nbsp;
             <span style="color:#6ee7b7;">○</span> = default &nbsp;|&nbsp;
-            <span style="color:#ef4444;">❌</span> = barcode not found
+            <span style="color:var(--smriti-color-status-danger);">❌</span> = barcode not found
         </div>
         <div style="overflow-x:auto;max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);">
             <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
@@ -689,8 +725,8 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
         </div>
         <div style="margin-top:10px;font-size:0.75rem;color:var(--muted);">
             Total: <strong id="pdt-preview-count" style="color:var(--text);">0</strong> rows &nbsp;|&nbsp;
-            Valid: <strong id="pdt-preview-valid" style="color:#10b981;">0</strong> &nbsp;|&nbsp;
-            Errors: <strong id="pdt-preview-errors" style="color:#ef4444;">0</strong>
+            Valid: <strong id="pdt-preview-valid" style="color:var(--smriti-color-status-success);">0</strong> &nbsp;|&nbsp;
+            Errors: <strong id="pdt-preview-errors" style="color:var(--smriti-color-status-danger);">0</strong>
         </div>
         <div class="modal-actions" style="margin-top:16px;">
             <button class="btn btn-ghost" onclick="closeModal('modal-pdt-preview')">← Back to Mapping</button>
@@ -1619,7 +1655,7 @@ function renderPdtMappingForm() {
         row.style.cssText = 'display:flex;align-items:center;gap:12px;';
         row.innerHTML = `
             <label style="min-width:130px;font-size:0.82rem;font-weight:500;">
-                ${label}${required ? ' <span style="color:#ef4444;">*</span>' : ''}
+                ${label}${required ? ' <span style="color:var(--smriti-color-status-danger);">*</span>' : ''}
             </label>
             <select id="pdt-map-${key}" style="flex:1;background:var(--card2);border:1px solid var(--border2);color:var(--text);border-radius:var(--radius-sm);padding:6px 10px;font-size:0.82rem;" onchange="onPdtMappingChange()">
                 <option value="">— Not mapped (use Item Master) —</option>
@@ -1716,8 +1752,8 @@ function renderPdtPreviewTable(rows) {
         };
 
         const statusCell = hasError
-            ? `<span style="color:#ef4444;font-size:0.72rem;">❌ ${row.error}</span>`
-            : `<span style="color:#10b981;font-size:0.72rem;">✓ OK</span>`;
+            ? `<span style="color:var(--smriti-color-status-danger);font-size:0.72rem;">❌ ${row.error}</span>`
+            : `<span style="color:var(--smriti-color-status-success);font-size:0.72rem;">✓ OK</span>`;
 
         return `<tr style="border-bottom:1px solid var(--border);${hasError ? 'opacity:0.6;' : ''}">
             <td style="padding:6px 10px;color:var(--muted);">${i + 1}</td>

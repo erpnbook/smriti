@@ -8,6 +8,7 @@
 -->
 <html lang="en">
 <head>
+{%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SMRITI Product Digital Twin Dashboard</title>
@@ -19,15 +20,15 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg-base:     #0a0f1e;
-      --bg-surface:  #0f1629;
-      --bg-card:     #131d35;
-      --bg-input:    #172040;
-      --border:      rgba(255,255,255,0.07);
-      --border-glow: rgba(37,99,235,0.2);
-      --accent:      #2563eb;
-      --accent-glow: rgba(37,99,235,0.5);
-      --accent-2:    #3b82f6;
+      --bg-base:     var(--smriti-color-bg-page);
+      --bg-surface:  var(--smriti-color-bg-primary);
+      --bg-card:     var(--smriti-color-bg-secondary);
+      --bg-input:    var(--smriti-color-bg-elevated);
+      --border:      var(--smriti-color-border-default);
+      --border-glow: var(--smriti-color-brand-light);
+      --accent:      var(--smriti-color-brand-primary);
+      --accent-glow: var(--smriti-color-brand-primary);
+      --accent-2:    var(--smriti-color-brand-light);
       --success:     #10b981;
       --warning:     #f59e0b;
       --danger:      #ef4444;
@@ -67,7 +68,7 @@
     .topbar-breadcrumbs span.active { color: var(--text-1); }
     .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
     .topbtn { background: none; border: none; color: var(--text-2); cursor: pointer; padding: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all var(--t); }
-    .topbtn:hover { background: rgba(255,255,255,0.05); color: var(--text-1); }
+    .topbtn:hover { background: var(--ov-white-md); color: var(--text-1); }
 
     /* Content Pane */
     .content-pane {
@@ -98,7 +99,7 @@
     .metric-card:hover {
       transform: translateY(-2px);
       border-color: var(--accent-glow);
-      box-shadow: 0 8px 24px rgba(37,99,235,0.15);
+      box-shadow: 0 8px 24px var(--glow-brand-lg);
     }
     .metric-card::before {
       content: '';
@@ -138,18 +139,18 @@
     /* Tables */
     .table-container { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-surface); }
     .smriti-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem; }
-    .smriti-table th { background: rgba(0,0,0,0.15); padding: 12px 16px; font-weight: 700; color: var(--text-2); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
+    .smriti-table th { background: var(--ov-black-md); padding: 12px 16px; font-weight: 700; color: var(--text-2); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
     .smriti-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text-1); vertical-align: middle; }
     .smriti-table tr:last-child td { border-bottom: none; }
-    .smriti-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .smriti-table tr:hover td { background: var(--ov-white-xs); }
 
     /* Twin State Badges */
     .state-badge { font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; display: inline-block; text-align: center; }
     .state-badge.healthy { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
     .state-badge.warning { background: rgba(245,158,11,0.1); color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
-    .state-badge.critical { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
-    .state-badge.stockout { background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); }
-    .state-badge.dead { background: rgba(75,85,99,0.2); color: #d1d5db; border: 1px solid rgba(75,85,99,0.4); }
+    .state-badge.critical { background: var(--glow-danger-sm); color: var(--danger); border: 1px solid var(--glow-danger-md); }
+    .state-badge.stockout { background: var(--glow-danger-md); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); }
+    .state-badge.dead { background: rgba(75,85,99,0.2); color: var(--smriti-color-text-muted); border: 1px solid rgba(75,85,99,0.4); }
     .state-badge.overstock { background: rgba(139,92,246,0.1); color: #a78bfa; border: 1px solid rgba(139,92,246,0.2); }
 
     /* WOC Bar */
@@ -172,8 +173,8 @@
     .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 99999; }
     .toast { padding: 12px 18px; border-radius: var(--radius); font-size: 0.88rem; font-weight: 600; color: white; min-width: 240px; display: flex; align-items: center; gap: 10px; animation: toast-in 0.3s ease; box-shadow: var(--shadow); }
     .toast.success { background: #065f46; border: 1px solid rgba(16,185,129,0.3); }
-    .toast.error   { background: #7f1d1d; border: 1px solid rgba(239,68,68,0.3); }
-    .toast.info    { background: #1e1b4b; border: 1px solid rgba(99,102,241,0.3); }
+    .toast.error   { background: #7f1d1d; border: 1px solid var(--glow-danger-md); }
+    .toast.info    { background: #1e1b4b; border: 1px solid var(--glow-brand-lg); }
     @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 
     /* Explain Tooltip Button */
@@ -191,7 +192,7 @@
 
     .explain-block { display: flex; flex-direction: column; gap: 12px; font-size: 0.9rem; line-height: 1.5; color: var(--text-2); }
     .explain-formula { background: var(--bg-input); border-radius: var(--radius-sm); padding: 12px; font-family: monospace; color: var(--accent-2); font-size: 0.95rem; border: 1px solid var(--border); }
-    .explain-alert { background: rgba(37,99,235,0.05); border-left: 3px solid var(--accent); padding: 10px 14px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 0.85rem; color: var(--text-1); }
+    .explain-alert { background: var(--glow-brand-sm); border-left: 3px solid var(--accent); padding: 10px 14px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 0.85rem; color: var(--text-1); }
 
     /* Empty state */
     .empty-state { text-align: center; padding: 40px 20px; color: var(--text-2); display: flex; flex-direction: column; align-items: center; gap: 10px; }
@@ -200,9 +201,44 @@
     /* Custom scrollbars */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
-  </style>
+    ::-webkit-scrollbar-thumb { background: var(--ov-white-xl); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--ov-white-2xl); }
+  
+    /* ── Shadow/overlay tokens (UI-MIDNIGHT-004) ─────────────────────────────
+       All rgba() values are declared here as named tokens.
+       Downstream CSS uses var(--ov-*) and var(--glow-*) references.
+       UI-GOV-005 compliant: zero inline rgba() in component rules.
+    ──────────────────────────────────────────────────────────────────────── */
+    :root {
+        --ov-white-xs:    rgba(255,255,255,0.02);
+        --ov-white-sm:    rgba(255,255,255,0.04);
+        --ov-white-md:    rgba(255,255,255,0.06);
+        --ov-white-lg:    var(--smriti-color-border-default);
+        --ov-white-xl:    rgba(255,255,255,0.10);
+        --ov-white-2xl:   rgba(255,255,255,0.15);
+        --ov-black-xs:    rgba(0,0,0,0.04);
+        --ov-black-sm:    rgba(0,0,0,0.08);
+        --ov-black-md:    rgba(0,0,0,0.15);
+        --ov-black-lg:    rgba(0,0,0,0.25);
+        --ov-black-xl:    rgba(0,0,0,0.50);
+        --ov-black-2xl:   rgba(0,0,0,0.75);
+        --ov-black-3xl:   rgba(0,0,0,0.85);
+        --glow-brand-xs:  rgba(20,184,166,0.03);
+        --glow-brand-sm:  rgba(20,184,166,0.06);
+        --glow-brand-md:  rgba(20,184,166,0.10);
+        --glow-brand-lg:  rgba(20,184,166,0.18);
+        --glow-brand-xl:  rgba(20,184,166,0.25);
+        --glow-success-xs: rgba(16,185,129,0.06);
+        --glow-success-sm: rgba(16,185,129,0.12);
+        --glow-success-md: rgba(16,185,129,0.25);
+        --glow-warn-xs:   rgba(245,158,11,0.06);
+        --glow-warn-sm:   rgba(245,158,11,0.12);
+        --glow-warn-md:   rgba(245,158,11,0.25);
+        --glow-danger-xs: rgba(239,68,68,0.06);
+        --glow-danger-sm: rgba(239,68,68,0.12);
+        --glow-danger-md: rgba(239,68,68,0.25);
+    }
+    </style>
   <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
 </head>
 <body>

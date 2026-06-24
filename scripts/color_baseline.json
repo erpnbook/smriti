@@ -2,13 +2,13 @@
   "_meta": {
     "sprint": "UI-MIDNIGHT-001",
     "date": "2026-06-24",
-    "hex_total": 617,
-    "rgba_total": 1073,
+    "hex_total": 562,
+    "rgba_total": 943,
     "note": "First measured baseline. Reduce each sprint.",
-    "hex_prev": 1365,
-    "rgba_prev": 1310,
-    "hex_delta": -748,
-    "rgba_delta": -237
+    "hex_prev": 617,
+    "rgba_prev": 1073,
+    "hex_delta": -55,
+    "rgba_delta": -130
   },
   "files": {
     "403.html": {
@@ -20,20 +20,20 @@
       "rgba": 10
     },
     "analytics.html": {
-      "hex": 14,
-      "rgba": 10
+      "hex": 10,
+      "rgba": 6
     },
     "backup.html": {
-      "hex": 8,
-      "rgba": 27
+      "hex": 3,
+      "rgba": 17
     },
     "barcode.html": {
       "hex": 56,
       "rgba": 23
     },
     "billing.html": {
-      "hex": 29,
-      "rgba": 38
+      "hex": 13,
+      "rgba": 15
     },
     "brand_master.html": {
       "hex": 3,
@@ -72,8 +72,8 @@
       "rgba": 12
     },
     "item_master.html": {
-      "hex": 20,
-      "rgba": 50
+      "hex": 14,
+      "rgba": 31
     },
     "login.html": {
       "hex": 1,
@@ -120,8 +120,8 @@
       "rgba": 12
     },
     "purchase.html": {
-      "hex": 31,
-      "rgba": 48
+      "hex": 15,
+      "rgba": 23
     },
     "purchase_invoice.html": {
       "hex": 3,
@@ -136,8 +136,8 @@
       "rgba": 8
     },
     "reports.html": {
-      "hex": 22,
-      "rgba": 42
+      "hex": 21,
+      "rgba": 25
     },
     "sales-upload.html": {
       "hex": 4,
@@ -164,8 +164,8 @@
       "rgba": 35
     },
     "setup_wizard.html": {
-      "hex": 12,
-      "rgba": 26
+      "hex": 6,
+      "rgba": 16
     },
     "shift.html": {
       "hex": 5,
@@ -189,7 +189,7 @@
     },
     "smriti-cge.html": {
       "hex": 3,
-      "rgba": 26
+      "rgba": 14
     },
     "smriti-clienteling.html": {
       "hex": 9,
@@ -228,8 +228,8 @@
       "rgba": 28
     },
     "smriti-pdt.html": {
-      "hex": 9,
-      "rgba": 26
+      "hex": 8,
+      "rgba": 16
     },
     "smriti-presentation.html": {
       "hex": 88,
