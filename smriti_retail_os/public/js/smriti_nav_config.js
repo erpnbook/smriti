@@ -3,7 +3,7 @@
  * @description: SMRITI Navigation Configuration — Single source of truth for all sidebar items.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-06-12
- * @version: 2.0.2
+ * @version: 2.1.0
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
@@ -13,8 +13,8 @@
 // ─────────────────────────────────────────
 
 const SMRITI_NAV_META = {
-  version: "2.0.1",
-  updated_at: "2026-06-17",
+  version: "2.1.0",
+  updated_at: "2026-06-24",
   source: "SMRITI Sidebar — www-first routing (no Frappe Desk)"
 };
 
@@ -62,11 +62,16 @@ const SMRITI_ROUTE_MAP = {
   "simulation_sandbox":               "/coming-soon",
   "knowledge_center":                 "/smriti-help",
   "sizewise_item":                    "/sizewise_item",
+  "sizewise_invoice":                 "/sizewise_invoice",
   "psv_opening_balance":              "/psv-opening-balance",
   "eway_bill":                        "/eway_bill",
   "analytics_dashboard":              "/analytics",
   "platform_center":                  "/platform_center",
   "clienteling":                      "/smriti-clienteling",
+  // ── Commercial Sprint (OWNER-ROI-001) ────────────────────────────────
+  "smriti_pricing":                   "/smriti-pricing",
+  "roi_calculator":                   "/smriti-roi-calculator",
+  "trial_signup":                     "/smriti-trial",
 };
 
 function resolveSmritiRoute(key) {
@@ -287,6 +292,11 @@ const SMRITI_NAV = {
           label: "Tax Invoice",
           route: "/sales-invoices",
           standalone_route: "/sales-invoices",
+          status: "active" },
+        { id: "sizewise_invoice",
+          label: "Sizewise Invoice",
+          route: resolveSmritiRoute("sizewise_invoice"),
+          standalone_route: "/sizewise_invoice",
           status: "active" },
         { id: "sales_return",
           label: "Sales Return",
@@ -575,6 +585,35 @@ const SMRITI_NAV = {
         { id: "cashier_performance",
           label: "Cashier Performance",
           status: "hidden" }
+      ]
+    },
+    {
+      id: "commercial",
+      label: "Commercial",
+      status: "active",
+      items: [
+        { id: "smriti_pricing",
+          label: "Pricing Plans",
+          route: resolveSmritiRoute("smriti_pricing"),
+          standalone_route: "/smriti-pricing",
+          status: "active" },
+        { id: "roi_calculator",
+          label: "ROI Calculator",
+          route: resolveSmritiRoute("roi_calculator"),
+          standalone_route: "/smriti-roi-calculator",
+          status: "active" },
+        { id: "trial_signup",
+          label: "Start Free Trial",
+          route: resolveSmritiRoute("trial_signup"),
+          standalone_route: "/smriti-trial",
+          status: "active" },
+        { id: "trial_leads",
+          label: "Trial Leads",
+          route: "/smriti-coming-soon?feature=Trial+Leads+CRM&progress=70&eta=Q3+2026",
+          standalone_route: "/smriti-coming-soon?feature=Trial+Leads+CRM&progress=70",
+          status: "coming_soon",
+          progress: 70,
+          eta: "Q3 2026" }
       ]
     }
   ]
