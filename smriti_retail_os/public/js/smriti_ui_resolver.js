@@ -1,12 +1,33 @@
 /**
  * @file: smriti_retail_os/public/js/smriti_ui_resolver.js
- * @description: Handles user login, registration, and JWT token generation.
+ * @description: SMRITI UI Configuration Engine — Deterministic 7-Level Token Resolver
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
  * @version: 1.4.0
  * @license: MIT
- * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ *
+ * SMRITI_THEME_ARCHITECTURE_VERSION  = 1.4
+ * SMRITI_THEME_GOVERNANCE_ACTIVE     = TRUE
+ * SMRITI_THEME_CHANGE_FREEZE         = TRUE   (Founder Approved: Jawahar R. Mallah — 2026-06-24)
+ *
+ * THEME ROADMAP STATUS:
+ *   THEME-001 Governance Foundation      CLOSED ✅
+ *   THEME-002 Theme Switching API        CLOSED ✅
+ *   THEME-003 Density Token Adoption     CLOSED ✅
+ *   THEME-004 4-Profile System           CLOSED ✅
+ *   THEME-005 Default → sleek-compact    CLOSED ✅  (2026-06-24)
+ *   THEME-006 Theme Analytics            PLANNED
+ *   THEME-007 Accessibility Audit        PLANNED
+ *   THEME-008 Minimalist Completion      PLANNED
+ *   THEME-009 Store-Level Defaults       PLANNED
+ *
+ * FREEZE RULE: Future changes to this file require:
+ *   1. Architecture impact review
+ *   2. Theme compliance scan
+ *   3. Founder approval (Jawahar R. Mallah, AITDL)
  */
+
 /**
  * @file smriti_ui_resolver.js
  * @description SMRITI UI Configuration Engine — Deterministic 7-Level Resolver
