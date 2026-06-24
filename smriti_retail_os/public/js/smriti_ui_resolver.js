@@ -3,7 +3,7 @@
  * @description: Handles user login, registration, and JWT token generation.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
- * @version: 1.3.0
+ * @version: 1.4.0
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
@@ -30,6 +30,18 @@
     "use strict";
 
     global.SMRITI = global.SMRITI || {};
+
+    /**
+     * DEFAULT_THEME_PROFILE — SMRITI-THEME-005
+     * Founder Approved: Jawahar R. Mallah, AITDL — 2026-06-24
+     *
+     * Controls the out-of-box theme for new users (no stored preference).
+     * Does NOT affect SYSTEM_DEFAULT_TOKENS or any existing user preference.
+     * Rollback: change value to "hybrid-light" and redeploy assets only.
+     *
+     * Valid values: "hybrid-light" | "hybrid-dark" | "sleek-compact" | "minimalist"
+     */
+    var DEFAULT_THEME_PROFILE = "sleek-compact";   /* THEME-005 — Founder Approved 2026-06-24 */
 
     /* ═══════════════════════════════════════════════════════════════════
        SECTION 1 — SYSTEM DEFAULT TOKENS (Level 7 — lowest priority)
@@ -410,13 +422,19 @@
      */
     function _readUserThemePreference() {
         try {
-            var raw = localStorage.getItem("smriti-theme-style") || "hybrid-light";
+            /* Level 4 — User Stored Theme Preference
+             * Reads localStorage["smriti-theme-style"] set by sidebar pill / SMRITI.switchTheme().
+             * Falls back to DEFAULT_THEME_PROFILE for new users with no stored preference.
+             * DEFAULT_THEME_PROFILE is set to "sleek-compact" per THEME-005 (Founder Approved 2026-06-24).
+             * SYSTEM_DEFAULT_TOKENS is NOT modified by this change.
+             */
+            var raw = localStorage.getItem("smriti-theme-style") || DEFAULT_THEME_PROFILE;
             /* Normalise legacy alias */
             var key = raw === "hybrid" ? "hybrid-light" : raw;
             var profile = _THEME_PROFILES[key];
             if (!profile || key === "smriti-default") {
-                /* smriti-default is null — fall through to hybrid-light */
-                profile = _THEME_PROFILES["hybrid-light"];
+                /* smriti-default is null — fall through to DEFAULT_THEME_PROFILE */
+                profile = _THEME_PROFILES[DEFAULT_THEME_PROFILE] || _THEME_PROFILES["hybrid-light"];
             }
             return Object.assign({}, profile || {});
         } catch (e) {
@@ -591,6 +609,17 @@
         applyAccessibilityLayer:   _applyAccessibilityOverrides,
         detectMode:                _detectMode,
         SYSTEM_DEFAULT_TOKENS:     SYSTEM_DEFAULT_TOKENS   /* read-only reference */
+    };
+
+    /**
+     * SMRITI.getDefaultTheme() — Public API
+     * Returns the platform default theme profile key.
+     * Single source of truth: DEFAULT_THEME_PROFILE constant above.
+     * Used by smriti_theme_manager.getCurrentTheme() as its fallback.
+     * Change the default via DEFAULT_THEME_PROFILE, not here.
+     */
+    global.SMRITI.getDefaultTheme = function() {
+        return DEFAULT_THEME_PROFILE;
     };
 
 }(window));

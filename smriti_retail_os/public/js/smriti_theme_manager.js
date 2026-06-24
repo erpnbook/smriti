@@ -309,10 +309,17 @@
     ═══════════════════════════════════════════════════════════════════ */
     SMRITI.getCurrentTheme = function () {
         try {
-            var raw = localStorage.getItem("smriti-theme-style") || "hybrid-light";
-            return raw === "hybrid" ? "hybrid-light" : raw;
+            /* Fallback reads from resolver's DEFAULT_THEME_PROFILE — single source of truth.
+             * SMRITI.getDefaultTheme() is set to "sleek-compact" per THEME-005 (Founder Approved 2026-06-24).
+             * If resolver hasn't loaded yet, fall back to "hybrid-light" as a safe guard. */
+            var _default = (SMRITI.getDefaultTheme && SMRITI.getDefaultTheme()) || "hybrid-light";
+            var raw = localStorage.getItem("smriti-theme-style") || _default;
+            /* Normalise legacy aliases */
+            if (raw === "hybrid")         raw = "hybrid-light";
+            if (raw === "smriti-default") raw = _default;
+            return raw;
         } catch (e) {
-            return "hybrid-light";
+            return (SMRITI.getDefaultTheme && SMRITI.getDefaultTheme()) || "hybrid-light";
         }
     };
 
