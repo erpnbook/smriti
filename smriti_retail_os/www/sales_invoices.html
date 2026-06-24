@@ -1,4 +1,4 @@
-{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/sales_invoices.html
   @description: SMRITI Billing Transactions — Standalone UI (Zero system chrome)
@@ -581,7 +581,7 @@ function openPopout(e, url) {
 window.onload = init;
 </script>
 
-<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.4"></script>
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.6"></script>
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const isReturn = urlParams.get('is_return') === '1';
@@ -593,3 +593,5 @@ window.onload = init;
 </script></body>
 </html>
 {% endblock %}
+
+

@@ -1,4 +1,4 @@
-{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/billing.html
   @description: SMRITI Retail Billing Terminal — Standalone UI (system as pure API backend)
@@ -2015,7 +2015,7 @@ document.getElementById('auth-pass').addEventListener('keypress', e => { if (e.k
 checkAuth();
 </script>
 
-<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.4"></script>
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.6"></script>
 <script>SMRITI.renderFlexibleSidebar("billing");</script>
 
 <!-- Session Lock: auto-lock terminal after 5 min idle -->
@@ -2040,8 +2040,8 @@ checkAuth();
 </script>
 
 <!-- SMRITI UI Configuration Engine — loaded last to merge safely into SMRITI global -->
-<script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js?v=2.0.4"></script>
-<script src="/assets/smriti_retail_os/js/smriti_theme_manager.js?v=2.0.4"></script>
+<script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js?v=2.0.6"></script>
+<script src="/assets/smriti_retail_os/js/smriti_theme_manager.js?v=2.0.6"></script>
 <script>
     /* Activate pos-dark profile for Billing Terminal.
        Called after all sidebar scripts run so SMRITI global is stable. */
@@ -2054,4 +2054,6 @@ checkAuth();
 </body>
 
 {% endblock %}
+
+
 

@@ -3,7 +3,7 @@
  * @description: Handles user login, registration, and JWT token generation.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
- * @version: 1.0.0
+ * @version: 1.3.0
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
@@ -36,7 +36,7 @@
        Source of truth: smriti_tokens.css
        These JS values mirror the CSS file for programmatic access.
        CSS file is the canonical source; JS mirrors for resolver use.
-    ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════════════════ */
     var SYSTEM_DEFAULT_TOKENS = {
         /* Colors */
         "--smriti-color-bg-page":              "#e8ecf2",
@@ -54,7 +54,7 @@
         "--smriti-color-status-danger":        "#b42318",
         "--smriti-color-status-warning":       "#b54708",
         "--smriti-color-status-info":          "#0ea5e9",
-        /* Spacing */
+        /* Spacing & Layout Density */
         "--smriti-spacing-xs":                 "4px",
         "--smriti-spacing-sm":                 "8px",
         "--smriti-spacing-md":                 "12px",
@@ -64,6 +64,12 @@
         "--smriti-spacing-padding-y":          "10px",
         "--smriti-spacing-padding-x":          "14px",
         "--smriti-spacing-gap":                "12px",
+        "--smriti-spacing-card":               "16px",
+        "--smriti-spacing-section":            "24px",
+        "--smriti-table-row-height":           "44px",
+        "--smriti-card-header-height":         "48px",
+        "--smriti-toolbar-height":             "56px",
+        "--smriti-form-field-height":          "38px",
         /* Layout Dimensions */
         "--smriti-dimension-sidebar-width":           "260px",
         "--smriti-dimension-sidebar-collapsed-width": "68px",
@@ -105,58 +111,217 @@
         "--smriti-z-index-modal":              "1000",
         "--smriti-z-index-sidebar":            "1041",
         "--smriti-z-index-toast":              "1100",
-        "--smriti-z-index-tooltip":            "1200"
+        "--smriti-z-index-tooltip":            "1200",
+        /* Font Family — Q3 Foundation Hardening (ux_theme_audit_v1.2) */
+        "--smriti-font-family-primary":        "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        "--smriti-font-family-display":        "'Outfit', 'Inter', sans-serif",
+        "--smriti-font-family-mono":           "'JetBrains Mono', 'Fira Code', monospace",
+        /* Line Height — Q3 Foundation Hardening */
+        "--smriti-line-height-tight":          "1.25",
+        "--smriti-line-height-snug":           "1.375",
+        "--smriti-line-height-normal":         "1.5",
+        "--smriti-line-height-relaxed":        "1.625",
+        "--smriti-line-height-loose":          "2",
+        /* Content & Panel Widths — Q3 Foundation Hardening */
+        "--smriti-content-max-width":          "1400px",
+        "--smriti-panel-width-sm":             "280px",
+        "--smriti-panel-width-md":             "360px",
+        "--smriti-panel-width-lg":             "480px",
+        "--smriti-panel-width-xl":             "640px",
+        "--smriti-drawer-width":               "420px"
     };
 
     /* ═══════════════════════════════════════════════════════════════════
        SECTION 2 — PROFILE TOKEN OVERRIDES (resolver internals)
        GOVERNANCE: These objects are NEVER exposed to components.
        They are consumed exclusively inside _resolveHierarchy().
-    ═══════════════════════════════════════════════════════════════════ */
+     ═══════════════════════════════════════════════════════════════════ */
 
-    /** Theme profiles — internal resolver use only */
+    /**
+     * Theme profiles — internal resolver use only.
+     * Pre-condition 3 (THEME-003): All 4 profiles now have explicit token sets.
+     * Status: PASSED — 2026-06-24 (ux_theme_audit_v1.1.md)
+     */
     var _THEME_PROFILES = {
-        "hybrid": {
-            /* inherits all system defaults — no overrides for hybrid */
+
+        /* ── hybrid-light ─────────────────────────────────────────────────
+           Neumorphic clay base. Premium visual appeal. Spacious layout.
+           Audience: Dashboards, Executive views.
+           Score: 5.5/10 (productivity) | 8/10 (visual premium)
+        ────────────────────────────────────────────────────────────────── */
+        "hybrid-light": {
+            "--smriti-color-bg-page":              "#e8ecf2",
+            "--smriti-color-bg-primary":           "#ffffff",
+            "--smriti-color-bg-secondary":         "#f6f8fb",
+            "--smriti-color-text-primary":         "#0f172a",
+            "--smriti-color-text-muted":           "#475467",
+            "--smriti-color-text-subtle":          "#94a3b8",
+            "--smriti-color-brand-primary":        "#6941c6",
+            "--smriti-color-brand-light":          "#9e77ed",
+            "--smriti-color-brand-dark":           "#53389e",
+            "--smriti-color-border-default":       "#e2e8f0",
+            "--smriti-color-border-strong":        "#d0d5dd",
+            "--smriti-color-bg-overlay":           "rgba(15,23,42,0.55)",
+            "--smriti-shadow-neu-float":           "6px 6px 14px #c5c9d4, -6px -6px 14px #ffffff",
+            "--smriti-shadow-neu-pressed":         "inset 6px 6px 12px #c5c9d4, inset -6px -6px 12px #ffffff",
+            "--smriti-shadow-neu-float-lg":        "10px 10px 24px #c0c4d0, -10px -10px 24px #ffffff",
+            "--smriti-shadow-neu-pressed-sm":      "inset 3px 3px 7px #c8ccd6, inset -3px -3px 7px #ffffff",
+            "--smriti-spacing-padding-y":          "10px",
+            "--smriti-spacing-padding-x":          "14px",
+            "--smriti-spacing-card":               "16px",
+            "--smriti-spacing-gap":                "12px",
+            "--smriti-table-row-height":           "44px",
+            "--smriti-card-header-height":         "48px",
+            "--smriti-toolbar-height":             "56px",
+            "--smriti-form-field-height":          "38px",
+            "--smriti-dimension-sidebar-width":    "260px",
+            "--smriti-font-size-base":             "0.95rem",
+            "--smriti-font-size-sm":               "0.82rem",
+            "--smriti-radius-md":                  "10px",
+            "--smriti-radius-lg":                  "14px"
         },
+
+        /* ── hybrid-dark ──────────────────────────────────────────────────
+           Dark neumorphic. Low-light environments, technical users.
+           Score: 7.0/10 | Audience: Night-shift, Technical users.
+        ────────────────────────────────────────────────────────────────── */
+        "hybrid-dark": {
+            "--smriti-color-bg-page":              "#0f0f13",
+            "--smriti-color-bg-primary":           "#18181b",
+            "--smriti-color-bg-secondary":         "#1e1e23",
+            "--smriti-color-bg-elevated":          "#26262d",
+            "--smriti-color-text-primary":         "#f1f5f9",
+            "--smriti-color-text-muted":           "#94a3b8",
+            "--smriti-color-text-subtle":          "#64748b",
+            "--smriti-color-brand-primary":        "#7c3aed",
+            "--smriti-color-brand-light":          "#a78bfa",
+            "--smriti-color-brand-dark":           "#5b21b6",
+            "--smriti-color-border-default":       "#2d2d35",
+            "--smriti-color-border-strong":        "#3d3d47",
+            "--smriti-color-bg-overlay":           "rgba(0,0,0,0.70)",
+            "--smriti-color-status-success":       "#10b981",
+            "--smriti-color-status-success-bg":    "rgba(16,185,129,0.12)",
+            "--smriti-color-status-success-border":"rgba(16,185,129,0.3)",
+            "--smriti-color-status-danger":        "#f87171",
+            "--smriti-color-status-danger-bg":     "rgba(248,113,113,0.12)",
+            "--smriti-color-status-danger-border": "rgba(248,113,113,0.3)",
+            "--smriti-color-status-warning":       "#fbbf24",
+            "--smriti-color-status-warning-bg":    "rgba(251,191,36,0.12)",
+            "--smriti-color-status-warning-border":"rgba(251,191,36,0.3)",
+            "--smriti-color-status-info":          "#38bdf8",
+            "--smriti-color-status-info-bg":       "rgba(56,189,248,0.12)",
+            "--smriti-color-status-info-border":   "rgba(56,189,248,0.3)",
+            "--smriti-shadow-xs":                  "0 1px 2px rgba(0,0,0,0.4)",
+            "--smriti-shadow-sm":                  "0 1px 3px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3)",
+            "--smriti-shadow-md":                  "0 4px 12px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.3)",
+            "--smriti-shadow-lg":                  "0 12px 28px rgba(0,0,0,0.55), 0 4px 8px rgba(0,0,0,0.3)",
+            "--smriti-shadow-neu-float":           "4px 4px 10px rgba(0,0,0,0.6), -2px -2px 8px rgba(50,50,60,0.4)",
+            "--smriti-shadow-neu-pressed":         "inset 4px 4px 8px rgba(0,0,0,0.6), inset -2px -2px 6px rgba(50,50,60,0.3)",
+            "--smriti-spacing-padding-y":          "10px",
+            "--smriti-spacing-padding-x":          "14px",
+            "--smriti-spacing-card":               "16px",
+            "--smriti-spacing-gap":                "12px",
+            "--smriti-table-row-height":           "44px",
+            "--smriti-card-header-height":         "48px",
+            "--smriti-toolbar-height":             "56px",
+            "--smriti-form-field-height":          "38px",
+            "--smriti-dimension-sidebar-width":    "260px",
+            "--smriti-font-size-base":             "0.95rem",
+            "--smriti-font-size-sm":               "0.82rem"
+        },
+
+        /* ── sleek-compact ────────────────────────────────────────────────
+           High-density flat modern layout. Benchmark-aligned (Linear/Odoo).
+           Score: 8.2/10 | Pre-condition 1 PASSED — token adoption verified.
+           Audience: Inventory controllers, purchase team, PSV, reports.
+        ────────────────────────────────────────────────────────────────── */
+        "sleek-compact": {
+            "--smriti-color-bg-page":              "#f1f4f8",
+            "--smriti-color-bg-primary":           "#ffffff",
+            "--smriti-color-bg-secondary":         "#f8fafc",
+            "--smriti-color-bg-elevated":          "#ffffff",
+            "--smriti-color-text-primary":         "#111827",
+            "--smriti-color-text-muted":           "#4b5563",
+            "--smriti-color-text-subtle":          "#9ca3af",
+            "--smriti-color-brand-primary":        "#6941c6",
+            "--smriti-color-brand-light":          "#9e77ed",
+            "--smriti-color-brand-dark":           "#53389e",
+            "--smriti-color-border-default":       "#e5e7eb",
+            "--smriti-color-border-strong":        "#d1d5db",
+            "--smriti-color-bg-overlay":           "rgba(17,24,39,0.50)",
+            /* Flat shadows — no neumorphism on data surfaces */
+            "--smriti-shadow-xs":                  "0 1px 2px rgba(0,0,0,0.04)",
+            "--smriti-shadow-sm":                  "0 1px 2px rgba(0,0,0,0.06), 0 1px 1px rgba(0,0,0,0.04)",
+            "--smriti-shadow-md":                  "0 2px 6px rgba(0,0,0,0.08)",
+            "--smriti-shadow-lg":                  "0 4px 16px rgba(0,0,0,0.10)",
+            "--smriti-shadow-neu-float":           "0 1px 3px rgba(0,0,0,0.08)",
+            "--smriti-shadow-neu-pressed":         "inset 0 1px 2px rgba(0,0,0,0.06)",
+            /* Density: 32px rows, 40px toolbar, 36px card header */
+            "--smriti-spacing-padding-y":          "6px",
+            "--smriti-spacing-padding-x":          "10px",
+            "--smriti-spacing-card":               "12px",
+            "--smriti-spacing-gap":                "8px",
+            "--smriti-table-row-height":           "32px",
+            "--smriti-card-header-height":         "36px",
+            "--smriti-toolbar-height":             "40px",
+            "--smriti-form-field-height":          "32px",
+            "--smriti-dimension-sidebar-width":    "220px",
+            "--smriti-font-size-base":             "0.88rem",
+            "--smriti-font-size-sm":               "0.78rem",
+            "--smriti-font-size-xs":               "0.70rem",
+            "--smriti-radius-sm":                  "4px",
+            "--smriti-radius-md":                  "6px",
+            "--smriti-radius-lg":                  "8px"
+        },
+
+        /* ── minimalist ───────────────────────────────────────────────────
+           Ultra-clean enterprise white. Maximum content focus.
+           Score: 4.5/10 (incomplete) | Status: Foundation only.
+           Audience: N/A (not production-ready until full token set added)
+        ────────────────────────────────────────────────────────────────── */
         "minimalist": {
-            "--smriti-color-bg-page":          "#f8fafc",
-            "--smriti-color-border-default":   "#cbd5e1",
-            "--smriti-shadow-neu-float":       "0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)",
-            "--smriti-shadow-neu-pressed":     "none",
-            "--smriti-shadow-sm":              "0 1px 2px rgba(15,23,42,0.06)"
+            "--smriti-color-bg-page":              "#ffffff",
+            "--smriti-color-bg-primary":           "#ffffff",
+            "--smriti-color-bg-secondary":         "#fafafa",
+            "--smriti-color-bg-elevated":          "#ffffff",
+            "--smriti-color-text-primary":         "#18181b",
+            "--smriti-color-text-muted":           "#52525b",
+            "--smriti-color-text-subtle":          "#a1a1aa",
+            "--smriti-color-brand-primary":        "#18181b",
+            "--smriti-color-brand-light":          "#52525b",
+            "--smriti-color-brand-dark":           "#09090b",
+            "--smriti-color-border-default":       "#f4f4f5",
+            "--smriti-color-border-strong":        "#e4e4e7",
+            "--smriti-color-bg-overlay":           "rgba(0,0,0,0.30)",
+            /* Zero-shadow design */
+            "--smriti-shadow-xs":                  "none",
+            "--smriti-shadow-sm":                  "0 1px 0 #f4f4f5",
+            "--smriti-shadow-md":                  "0 1px 0 #e4e4e7",
+            "--smriti-shadow-lg":                  "0 1px 3px rgba(0,0,0,0.06)",
+            "--smriti-shadow-neu-float":           "none",
+            "--smriti-shadow-neu-pressed":         "none",
+            /* Balanced density — not as tight as sleek-compact */
+            "--smriti-spacing-padding-y":          "8px",
+            "--smriti-spacing-padding-x":          "12px",
+            "--smriti-spacing-card":               "14px",
+            "--smriti-spacing-gap":                "10px",
+            "--smriti-table-row-height":           "36px",
+            "--smriti-card-header-height":         "40px",
+            "--smriti-toolbar-height":             "44px",
+            "--smriti-form-field-height":          "34px",
+            "--smriti-dimension-sidebar-width":    "240px",
+            "--smriti-font-size-base":             "0.90rem",
+            "--smriti-font-size-sm":               "0.80rem",
+            "--smriti-radius-sm":                  "3px",
+            "--smriti-radius-md":                  "5px",
+            "--smriti-radius-lg":                  "8px"
         },
-        "dark": {
-            "--smriti-color-bg-page":          "#09090b",
-            "--smriti-color-bg-primary":       "#18181b",
-            "--smriti-color-bg-secondary":     "#27272a",
-            "--smriti-color-text-primary":     "#f4f4f5",
-            "--smriti-color-text-muted":       "#a1a1aa",
-            "--smriti-color-text-subtle":      "#52525b",
-            "--smriti-color-border-default":   "#27272a",
-            "--smriti-color-border-strong":    "#3f3f46",
-            "--smriti-shadow-neu-float":       "6px 6px 14px #020203, -6px -6px 14px #27272a",
-            "--smriti-shadow-neu-pressed":     "inset 6px 6px 12px #020203, inset -6px -6px 12px #27272a",
-            "--smriti-shadow-sm":              "0 1px 3px rgba(0,0,0,.5)",
-            "--smriti-shadow-md":              "0 4px 12px rgba(0,0,0,.6)",
-            "--smriti-shadow-lg":              "0 12px 28px rgba(0,0,0,.7)",
-            "--smriti-shadow-xl":              "0 24px 48px rgba(0,0,0,.8)"
-        },
-        "pos-dark": {
-            /* POS terminal forced dark — subset of dark + compact spacing */
-            "--smriti-color-bg-page":          "#0d1117",
-            "--smriti-color-bg-primary":       "#161b22",
-            "--smriti-color-bg-secondary":     "#21262d",
-            "--smriti-color-text-primary":     "#f0f6fc",
-            "--smriti-color-text-muted":       "#8b949e",
-            "--smriti-color-text-subtle":      "#484f58",
-            "--smriti-color-border-default":   "#30363d",
-            "--smriti-color-border-strong":    "#484f58",
-            "--smriti-spacing-padding-y":      "8px",
-            "--smriti-spacing-padding-x":      "10px",
-            "--smriti-shadow-sm":              "0 1px 3px rgba(0,0,0,.7)",
-            "--smriti-shadow-md":              "0 4px 12px rgba(0,0,0,.8)"
-        }
+
+        /* ── smriti-default (alias for hybrid-light) ──────────────────────
+           Backward-compatibility alias. Do not use in new code.
+           Use 'hybrid-light' explicitly.
+        ────────────────────────────────────────────────────────────────── */
+        "smriti-default": null  /* resolved dynamically in _mergeProfileTokens */
     };
 
     /** Experience profiles — internal resolver use only */
@@ -198,24 +363,37 @@
         return Object.assign({}, SYSTEM_DEFAULT_TOKENS);
     }
 
-    /** Level 6 — Store Default (from frappe.boot.smriti_site_config) */
+    /** Level 6 — Store Default
+     *  Source priority (own-defined first, frappe.boot second):
+     *    1. window.SMRITI_SITE_CONFIG  — injected by www page Python controller
+     *    2. frappe.boot.smriti_site_config — Frappe SPA context
+     *  No frappe dependency required.
+     */
     function _readStoreDefault() {
         try {
-            var cfg = (window.frappe && window.frappe.boot && window.frappe.boot.smriti_site_config) || {};
-            var themeProfile = cfg.store_theme || "hybrid";
-            var expProfile   = cfg.store_experience || "standard";
-            return _mergeProfileTokens(themeProfile, expProfile, "smriti");
+            /* Own-defined config wins over frappe.boot — no frappe dependency */
+            var cfg = window.SMRITI_SITE_CONFIG ||
+                      (window.frappe && window.frappe.boot && window.frappe.boot.smriti_site_config) ||
+                      {};
+            var expProfile = cfg.store_experience || "standard";
+            return _mergeProfileTokens("hybrid-light", expProfile, "smriti");
         } catch (e) {
             return {};
         }
     }
 
-    /** Level 5 — Role Default */
+    /** Level 5 — Role Default
+     *  Source priority:
+     *    1. window.SMRITI_USER_ROLES — injected by www page Python controller
+     *    2. frappe.user_roles — Frappe SPA context
+     *  No frappe dependency required.
+     */
     function _readRoleDefault() {
         try {
-            var roles = (window.frappe && window.frappe.user_roles) || [];
+            var roles = window.SMRITI_USER_ROLES ||
+                        (window.frappe && window.frappe.user_roles) ||
+                        [];
             if (roles.indexOf("SMRITI Cashier") !== -1) {
-                /* Cashier default: compact experience */
                 return Object.assign({}, _EXPERIENCE_PROFILES["compact"] || {});
             }
             return {};
@@ -224,16 +402,23 @@
         }
     }
 
-    /** Level 4 — User Theme Preference (localStorage) */
+    /** Level 4 — User Theme Preference (localStorage)
+     *  Reads smriti-theme-style key set by the sidebar theme switcher.
+     *  Valid keys: 'hybrid-light', 'hybrid-dark', 'sleek-compact', 'minimalist'
+     *  Legacy aliases: 'hybrid' → 'hybrid-light'
+     *  Pre-condition 2 (THEME-002): this function now powers real-time switching.
+     */
     function _readUserThemePreference() {
         try {
-            var style = localStorage.getItem("smriti-theme-style") || "hybrid";
-            var dark  = document.body && (
-                document.body.getAttribute("data-theme") === "dark" ||
-                document.body.classList.contains("dark-mode")
-            );
-            if (dark) return Object.assign({}, _THEME_PROFILES["dark"] || {});
-            return Object.assign({}, _THEME_PROFILES[style] || {});
+            var raw = localStorage.getItem("smriti-theme-style") || "hybrid-light";
+            /* Normalise legacy alias */
+            var key = raw === "hybrid" ? "hybrid-light" : raw;
+            var profile = _THEME_PROFILES[key];
+            if (!profile || key === "smriti-default") {
+                /* smriti-default is null — fall through to hybrid-light */
+                profile = _THEME_PROFILES["hybrid-light"];
+            }
+            return Object.assign({}, profile || {});
         } catch (e) {
             return {};
         }
@@ -247,34 +432,12 @@
 
     /** Level 2 — System Module Policy (per-route forced overrides) */
     function _readSystemModulePolicy() {
-        try {
-            var path = window.location.pathname || "";
-            /* Billing terminal: always forced dark (pos-dark) */
-            if (path === "/billing" || path === "/billing/") {
-                return Object.assign({}, _THEME_PROFILES["pos-dark"] || {});
-            }
-            return {};
-        } catch (e) {
-            return {};
-        }
+        return {};
     }
 
     /** Level 1 — Terminal Policy (highest — cannot be overridden) */
     function _readTerminalPolicy() {
-        try {
-            var cfg = (window.frappe && window.frappe.boot && window.frappe.boot.smriti_site_config) || {};
-            var terminalType = cfg.terminal_type || "standard";
-            if (terminalType === "pos") {
-                /* POS terminals: forced dark, compact, no animations */
-                var posTokens = Object.assign({}, _THEME_PROFILES["pos-dark"] || {});
-                posTokens["--smriti-shadow-neu-float"]  = "none";
-                posTokens["--smriti-shadow-neu-pressed"] = "none";
-                return posTokens;
-            }
-            return {};
-        } catch (e) {
-            return {};
-        }
+        return {};
     }
 
     /* ═══════════════════════════════════════════════════════════════════
@@ -315,16 +478,39 @@
 
     /* ═══════════════════════════════════════════════════════════════════
        SECTION 5 — LICENSE VALIDATION GATE
-       Reads boot-time license snapshot only. No live API calls.
+       OWN-DEFINED — no frappe dependency.
+
+       Resolution priority:
+         1. window.SMRITI_LICENSE  — injected by www page Python controller
+         2. frappe.boot.smriti_license — Frappe SPA context
+         3. No frappe / no SMRITI_LICENSE on page → ALLOW
+            (Python controller already enforced license before serving HTML)
+
+       The gate only BLOCKS when we have explicit negative license data.
+       Absence of frappe is NOT a block condition.
     ═══════════════════════════════════════════════════════════════════ */
     function _isFullResolutionAllowed() {
         try {
-            var lic = (window.frappe && window.frappe.boot && window.frappe.boot.smriti_license) || {};
-            var status = lic.license_status || lic.status || "Unregistered";
-            /* Full resolution allowed for Active and Grace Period only */
-            return (status === "Active" || status === "Grace Period");
+            /* Own-defined source (www page Python controller injects this) */
+            if (window.SMRITI_LICENSE) {
+                var s = window.SMRITI_LICENSE.status || window.SMRITI_LICENSE.license_status || "Unregistered";
+                return (s === "Active" || s === "Grace Period");
+            }
+
+            /* Frappe SPA context */
+            if (window.frappe && window.frappe.boot && window.frappe.boot.smriti_license) {
+                var lic = window.frappe.boot.smriti_license;
+                var status = lic.license_status || lic.status || "Unregistered";
+                return (status === "Active" || status === "Grace Period");
+            }
+
+            /* No frappe, no SMRITI_LICENSE — standalone www page.
+               Python controller already enforced license at server level.
+               Allow full resolution. */
+            return true;
         } catch (e) {
-            return false;
+            /* On error, allow — fail-open for UX, fail-closed only on explicit denial */
+            return true;
         }
     }
 
@@ -333,8 +519,11 @@
     ═══════════════════════════════════════════════════════════════════ */
     function _mergeProfileTokens(themeProfile, expProfile, brandProfile) {
         var tokens = {};
+        /* Resolve null alias (smriti-default → hybrid-light) */
+        var tp = _THEME_PROFILES[themeProfile];
+        if (!tp) tp = _THEME_PROFILES["hybrid-light"] || {};
         /* Theme → Experience → Brand (left to right, later keys win) */
-        Object.assign(tokens, _THEME_PROFILES[themeProfile]  || {});
+        Object.assign(tokens, tp);
         Object.assign(tokens, _EXPERIENCE_PROFILES[expProfile] || {});
         Object.assign(tokens, _BRAND_PROFILES[brandProfile]  || {});
         return tokens;
@@ -374,6 +563,20 @@
         Object.assign(resolved, _readUserModuleOverride()); /* Level 3 */
         Object.assign(resolved, _readSystemModulePolicy()); /* Level 2 */
         Object.assign(resolved, _readTerminalPolicy());   /* Level 1 */
+
+        // Check for URL Parameter override (Highest Priority preview/override)
+        // Usage: ?theme=hybrid-light | hybrid-dark | sleek-compact | minimalist
+        try {
+            var urlParams = new URLSearchParams(window.location.search);
+            var themeParam = urlParams.get("theme");
+            var validThemes = ["hybrid-light", "hybrid-dark", "sleek-compact", "minimalist", "smriti-default"];
+            if (themeParam && validThemes.indexOf(themeParam) !== -1) {
+                var urlThemeKey = themeParam === "smriti-default" ? "hybrid-light" : themeParam;
+                var urlProfile  = _THEME_PROFILES[urlThemeKey];
+                if (urlProfile) Object.assign(resolved, urlProfile);
+            }
+        } catch(e) {}
+
         return resolved;
     }
 

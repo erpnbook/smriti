@@ -374,9 +374,12 @@ SMRITI._buildSidebarDOM = function(active_page, shift) {
         role_label = "Store Manager";
     }
 
-    var is_minimalist = document.body.classList.contains("theme-minimalist");
-    var style_hybrid_active = is_minimalist ? "" : "active";
-    var style_minimalist_active = is_minimalist ? "active" : "";
+    /* Use canonical theme key — normalize legacy 'hybrid' alias */
+    var active_style = (SMRITI.getCurrentTheme && SMRITI.getCurrentTheme()) ||
+                       localStorage.getItem("smriti-theme-style") || "hybrid-light";
+    if (active_style === "hybrid") active_style = "hybrid-light";
+
+    function pillActive(key) { return active_style === key ? "active" : ""; }
 
     var footer_html = `
         <div class="smriti-side-footer">
@@ -386,11 +389,17 @@ SMRITI._buildSidebarDOM = function(active_page, shift) {
             </div>
             
             <div class="smriti-side-theme-toggle-bar">
-                <button class="smriti-side-theme-pill ${style_hybrid_active}" data-style="hybrid" title="Tactile Neumorphic Hybrid Theme">
+                <button class="smriti-side-theme-pill ${pillActive('hybrid-light')}" data-style="hybrid-light" title="Tactile Neumorphic Hybrid — spacious classic look">
                     <span>🎛️ Hybrid</span>
                 </button>
-                <button class="smriti-side-theme-pill ${style_minimalist_active}" data-style="minimalist" title="Clean Minimalist Enterprise Theme">
+                <button class="smriti-side-theme-pill ${pillActive('minimalist')}" data-style="minimalist" title="Clean Minimalist — maximum content focus">
                     <span>🖥️ Minimal</span>
+                </button>
+                <button class="smriti-side-theme-pill ${pillActive('sleek-compact')}" data-style="sleek-compact" title="Sleek Compact — high-density, benchmark-aligned">
+                    <span>⚡ Sleek</span>
+                </button>
+                <button class="smriti-side-theme-pill ${pillActive('hybrid-dark')}" data-style="hybrid-dark" title="Dark Mode — night-shift & low-light">
+                    <span>🌙 Dark</span>
                 </button>
             </div>
  
@@ -455,29 +464,45 @@ SMRITI._buildSidebarDOM = function(active_page, shift) {
         SMRITI.openPopout(url);
     });
 
-    // Bind Theme Toggle click listeners
+    // Bind Theme Toggle click listeners — routes through SMRITI.switchTheme() (resolver-backed)
     $(sidebar).on("click", ".smriti-side-theme-pill", function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         var style = $(this).attr("data-style");
+        if (!style) return;
+
+        /* Route through the resolver engine for real-time token cascade update */
+        if (SMRITI.switchTheme) {
+            SMRITI.switchTheme(style);
+        } else {
+            /* Fallback for pages that haven't loaded theme_manager yet */
+            localStorage.setItem("smriti-theme-style", style);
+        }
+
+        /* Sync pill active states immediately */
         sidebar.querySelectorAll(".smriti-side-theme-pill").forEach(function(pill) {
-            if (pill.getAttribute("data-style") === style) {
+            var pillStyle = pill.getAttribute("data-style");
+            if (pillStyle === style) {
                 pill.classList.add("active");
             } else {
                 pill.classList.remove("active");
             }
         });
+    });
 
-        if (style === "minimalist") {
-            document.body.classList.add("theme-minimalist");
-            localStorage.setItem("smriti-theme-style", "minimalist");
-        } else {
-            document.body.classList.remove("theme-minimalist");
-            localStorage.setItem("smriti-theme-style", "hybrid");
-        }
-        
-        $(document).trigger("smriti-theme-style-changed", [style]);
+    /* Keep pill active states in sync if theme is changed from any source */
+    document.addEventListener("smriti-theme-changed", function(e) {
+        var newTheme = e.detail && e.detail.theme;
+        if (!newTheme) return;
+        var pills = sidebar.querySelectorAll(".smriti-side-theme-pill");
+        pills.forEach(function(pill) {
+            if (pill.getAttribute("data-style") === newTheme) {
+                pill.classList.add("active");
+            } else {
+                pill.classList.remove("active");
+            }
+        });
     });
 };
 

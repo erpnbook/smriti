@@ -1,4 +1,4 @@
-{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/inventory.html
   @description: SMRITI Inventory Operations — Standalone UI (Zero system chrome)
@@ -13,64 +13,65 @@
 <title>SMRITI Inventory Operations</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_tokens.css">
 <style>
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-    --bg:         #0a0f1e;
-    --bg2:        #0f1629;
-    --card:       #131d35;
-    --card2:      #172040;
-    --border:     rgba(255,255,255,0.07);
-    --border2:    rgba(255,255,255,0.12);
-    --primary:    #6366f1;
-    --primary-lt: #818cf8;
-    --accent:     #f59e0b;
-    --success:    #10b981;
-    --warning:    #f59e0b;
-    --danger:     #ef4444;
-    --text:       #e2e8f0;
-    --text-muted: #94a3b8;
-    --text-sub:   #475569;
-    --radius:     12px;
-    --radius-sm:  8px;
-    --radius-lg:  16px;
-    --t:          0.2s ease;
+    --bg:         var(--smriti-color-bg-page);
+    --bg2:        var(--smriti-color-bg-secondary);
+    --card:       var(--smriti-color-bg-primary);
+    --card2:      var(--smriti-color-bg-elevated, var(--smriti-color-bg-secondary));
+    --border:     var(--smriti-color-border-default);
+    --border2:    var(--smriti-color-border-strong);
+    --primary:    var(--smriti-color-brand-primary);
+    --primary-lt: var(--smriti-color-brand-light);
+    --accent:     var(--smriti-color-brand-accent, var(--smriti-color-status-warning));
+    --success:    var(--smriti-color-status-success);
+    --warning:    var(--smriti-color-status-warning);
+    --danger:     var(--smriti-color-status-danger);
+    --text:       var(--smriti-color-text-primary);
+    --text-muted: var(--smriti-color-text-muted);
+    --text-sub:   var(--smriti-color-text-subtle);
+    --radius:     var(--smriti-radius-md);
+    --radius-sm:  var(--smriti-radius-sm);
+    --radius-lg:  var(--smriti-radius-lg);
+    --t:          var(--smriti-t-base, 0.2s ease);
 }
 
-html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+html, body { width:100%; height:100%; overflow:hidden; background:var(--smriti-color-bg-page); color:var(--smriti-color-text-primary); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
 
 /* Ambient background */
 .bg-grid {
     position: fixed;
     inset: 0;
     background-image:
-        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+        linear-gradient(rgba(var(--smriti-color-brand-primary-rgb, 105, 65, 198), 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--smriti-color-brand-primary-rgb, 105, 65, 198), 0.015) 1px, transparent 1px);
     background-size: 50px 50px;
     z-index: 0;
 }
 
 /* App Shell */
-#app { position:relative; z-index:1; width:100vw; height:100vh; display:flex; overflow:hidden; }
+#app { position:relative; z-index: var(--smriti-z-index-content); width:100vw; height:100vh; display:flex; overflow:hidden; }
 
 /* Main Wrapper */
 .main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
 
 /* Topbar */
-.topbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
-.topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--text-muted); }
-.topbar-breadcrumbs span.sep { color:var(--text-sub); }
-.topbar-breadcrumbs span.active { color:var(--text); }
+.topbar { height:52px; background:var(--smriti-color-bg-primary); border-bottom:1px solid var(--smriti-color-border-default); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
+.topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--smriti-color-text-muted); }
+.topbar-breadcrumbs span.sep { color:var(--smriti-color-text-subtle); }
+.topbar-breadcrumbs span.active { color:var(--smriti-color-text-primary); }
 .topbar-tabs { display:flex; gap:4px; margin-left:24px; }
-.tab-btn { padding:6px 14px; border-radius:var(--radius-sm); font-size:12px; font-weight:700; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); display:flex; align-items:center; gap:5px; }
+.tab-btn { padding:6px 14px; border-radius:var(--smriti-radius-sm); font-size:12px; font-weight:700; border:1px solid var(--smriti-color-border-strong); background:transparent; color:var(--smriti-color-text-muted); cursor:pointer; transition:all var(--smriti-t-base); display:flex; align-items:center; gap:5px; }
 .tab-btn span { font-size:16px; }
-.tab-btn.active { background:var(--primary); border-color:var(--primary); color:white; box-shadow:0 4px 12px rgba(99,102,241,0.3); }
-.tab-btn:hover:not(.active) { border-color:var(--primary-lt); color:var(--primary-lt); }
+.tab-btn.active { background:var(--smriti-color-brand-primary); border-color:var(--smriti-color-brand-primary); color: var(--smriti-color-bg-primary); box-shadow:0 4px 12px rgba(var(--smriti-color-brand-primary-rgb, 105, 65, 198), 0.3); }
+.tab-btn:hover:not(.active) { border-color:var(--smriti-color-brand-light); color:var(--smriti-color-brand-light); }
 .topbar-right { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
-.topbtn { display:inline-flex; align-items:center; gap:4px; padding:5px 11px; border-radius:var(--radius-sm); font-size:11px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); white-space:nowrap; }
+.topbtn { display:inline-flex; align-items:center; gap:4px; padding:5px 11px; border-radius:var(--smriti-radius-sm); font-size:11px; font-weight:600; border:1px solid var(--smriti-color-border-strong); background:transparent; color:var(--smriti-color-text-muted); cursor:pointer; transition:all var(--smriti-t-base); white-space:nowrap; }
 .topbtn span { font-size:15px; }
-.topbtn:hover { border-color:var(--primary); color:var(--primary-lt); }
+.topbtn:hover { border-color:var(--smriti-color-brand-primary); color:var(--smriti-color-brand-light); }
 
 /* Main Content Panel */
 .content-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; min-height:0; }
@@ -80,70 +81,70 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .tab-view.active { display:flex; }
 
 /* Stock Ledger Tab styling */
-.filter-bar { padding:14px 24px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; gap:16px; align-items:center; flex-shrink:0; }
-.form-input { padding:8px 12px; background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.88rem; outline:none; transition:all var(--t); font-family:inherit; }
-.form-input:focus { border-color:var(--primary); }
+.filter-bar { padding:14px 24px; background:var(--smriti-color-bg-secondary); border-bottom:1px solid var(--smriti-color-border-default); display:flex; gap:16px; align-items:center; flex-shrink:0; }
+.form-input { padding:8px 12px; background:var(--smriti-color-bg-primary); border:1px solid var(--smriti-color-border-strong); border-radius:var(--smriti-radius-sm); color:var(--smriti-color-text-primary); font-size:0.88rem; outline:none; transition:all var(--smriti-t-base); font-family:inherit; }
+.form-input:focus { border-color:var(--smriti-color-brand-primary); }
 .search-input { width:280px; }
 .wh-select { width:220px; }
 .ledger-wrap { flex:1; overflow:auto; padding:16px 24px; }
 .smriti-table { width:100%; border-collapse:collapse; text-align:left; }
-.smriti-table th { padding:10px 14px; background:var(--card2); color:var(--text-muted); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1; }
-.smriti-table td { padding:12px 14px; border-bottom:1px solid var(--border); font-size:0.88rem; vertical-align:middle; }
-.smriti-table tbody tr:hover td { background:rgba(99,102,241,0.04); }
+.smriti-table th { padding:10px 14px; background:var(--smriti-color-bg-elevated, var(--smriti-color-bg-secondary)); color:var(--smriti-color-text-muted); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--smriti-color-border-default); position:sticky; top:0; z-index: var(--smriti-z-index-content); }
+.smriti-table td { padding:12px 14px; border-bottom:1px solid var(--smriti-color-border-default); font-size:0.88rem; vertical-align:middle; }
+.smriti-table tbody tr:hover td { background:rgba(var(--smriti-color-brand-primary-rgb, 105, 65, 198), 0.04); }
 .smriti-table tbody tr:last-child td { border-bottom:none; }
-.qty-badge { display:inline-block; padding:3px 8px; border-radius:99px; font-weight:700; font-size:0.82rem; }
-.qty-badge.positive { background:rgba(16,185,129,0.12); color:var(--success); }
-.qty-badge.zero { background:rgba(255,255,255,0.04); color:var(--text-sub); }
-.qty-badge.negative { background:rgba(239,68,68,0.12); color:var(--danger); }
-.item-code { font-size:0.75rem; color:var(--text-sub); margin-top:2px; }
+.qty-badge { display:inline-block; padding:3px 8px; border-radius: var(--smriti-radius-full); font-weight:700; font-size:0.82rem; }
+.qty-badge.positive { background:rgba(var(--smriti-color-status-success-rgb, 2, 122, 72), 0.12); color:var(--smriti-color-status-success); }
+.qty-badge.zero { background:rgba(var(--smriti-color-bg-primary-rgb, 255, 255, 255), 0.04); color:var(--smriti-color-text-subtle); }
+.qty-badge.negative { background:rgba(var(--smriti-color-status-danger-rgb, 180, 35, 24), 0.12); color:var(--smriti-color-status-danger); }
+.item-code { font-size:0.75rem; color:var(--smriti-color-text-subtle); margin-top:2px; }
 
 /* Dynamic Operation Panel (Transfers / Adjustments / Reconciliation) */
 .split-layout { flex:1; display:flex; overflow:hidden; min-height:0; }
-.left-form { width:320px; flex-shrink:0; border-right:1px solid var(--border); background:var(--bg2); display:flex; flex-direction:column; overflow:hidden; }
+.left-form { width:320px; flex-shrink:0; border-right:1px solid var(--smriti-color-border-default); background:var(--smriti-color-bg-secondary); display:flex; flex-direction:column; overflow:hidden; }
 .right-table { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-.panel-section { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:12px; }
-.panel-section-title { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--primary-lt); display:flex; align-items:center; gap:6px; }
+.panel-section { padding:16px 20px; border-bottom:1px solid var(--smriti-color-border-default); display:flex; flex-direction:column; gap:12px; }
+.panel-section-title { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--smriti-color-brand-light); display:flex; align-items:center; gap:6px; }
 .panel-section-title span { font-size:18px; }
 .form-group { display:flex; flex-direction:column; gap:5px; }
-.form-label { font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
-.btn-submit { width:100%; padding:11px; background:linear-gradient(135deg,var(--accent),#d97706); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.92rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 12px rgba(245,158,11,0.2); }
-.btn-submit:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(245,158,11,0.35); }
+.form-label { font-size:0.75rem; font-weight:600; color:var(--smriti-color-text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+.btn-submit { width:100%; padding:11px; background:linear-gradient(135deg,var(--smriti-color-brand-accent, var(--smriti-color-status-warning)),var(--smriti-color-status-warning)); border:none; border-radius:var(--smriti-radius-sm); color: var(--smriti-color-bg-primary); font-weight:700; font-size:0.92rem; cursor:pointer; transition:all var(--smriti-t-base); display:flex; align-items:center; justify-content:center; gap:6px; box-shadow: var(--smriti-shadow-sm); }
+.btn-submit:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(var(--smriti-color-brand-accent-rgb, 233, 69, 96), 0.35); }
 .btn-submit:disabled { opacity:0.4; cursor:not-allowed; transform:none !important; }
 
 /* Transfer Table cells */
-.grn-input { padding:5px 8px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-weight:600; font-size:0.88rem; text-align:right; outline:none; transition:all var(--t); width:90px; }
-.grn-input:focus { border-color:var(--primary); }
-.btn-del-row { padding:8px; border-radius:var(--radius-sm); background:none; border:1px solid rgba(239,68,68,0.2); color:var(--danger); cursor:pointer; transition:all var(--t); display:inline-flex; align-items:center; justify-content:center; }
-.btn-del-row:hover { background:rgba(239,68,68,0.1); }
+.grn-input { padding:5px 8px; background:var(--smriti-color-bg-page); border:1px solid var(--smriti-color-border-default); border-radius:var(--smriti-radius-sm); color:var(--smriti-color-text-primary); font-weight:600; font-size:0.88rem; text-align:right; outline:none; transition:all var(--smriti-t-base); width:90px; }
+.grn-input:focus { border-color:var(--smriti-color-brand-primary); }
+.btn-del-row { padding:8px; border-radius:var(--smriti-radius-sm); background:none; border:1px solid rgba(var(--smriti-color-status-danger-rgb, 180, 35, 24), 0.2); color:var(--smriti-color-status-danger); cursor:pointer; transition:all var(--smriti-t-base); display:inline-flex; align-items:center; justify-content:center; }
+.btn-del-row:hover { background:rgba(var(--smriti-color-status-danger-rgb, 180, 35, 24), 0.1); }
 .btn-del-row span { font-size:18px; }
-.batch-badge { display:inline-block; padding:2px 7px; border-radius:99px; font-size:0.72rem; font-weight:700; background:rgba(99,102,241,0.15); color:var(--primary-lt); }
+.batch-badge { display:inline-block; padding:2px 7px; border-radius: var(--smriti-radius-full); font-size:0.72rem; font-weight:700; background:rgba(var(--smriti-color-brand-primary-rgb, 105, 65, 198), 0.15); color:var(--smriti-color-brand-light); }
 
 /* Placeholder */
-.placeholder-panel { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-sub); gap:12px; }
+.placeholder-panel { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--smriti-color-text-subtle); gap:12px; }
 .placeholder-panel span.icon { font-size:56px; opacity:0.25; }
-.placeholder-panel h3 { font-size:1rem; font-weight:600; color:var(--text-muted); }
+.placeholder-panel h3 { font-size:1rem; font-weight:600; color:var(--smriti-color-text-muted); }
 .placeholder-panel p { font-size:0.85rem; text-align:center; max-width:320px; line-height:1.6; }
 
 /* Modal Search */
-.modal-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(3,7,18,0.85); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+.modal-backdrop { position:fixed; inset:0; z-index: var(--smriti-z-index-modal); background: var(--smriti-color-bg-overlay); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
 .modal-backdrop.open { opacity:1; pointer-events:all; }
-.modal { background:var(--card2); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px; width:100%; max-width:480px; transform:translateY(20px); transition:transform 0.2s; }
+.modal { background:var(--smriti-color-bg-elevated, var(--smriti-color-bg-secondary)); border:1px solid var(--smriti-color-border-strong); border-radius:var(--smriti-radius-lg); padding:24px; width:100%; max-width:480px; transform:translateY(20px); transition:transform 0.2s; }
 .modal-backdrop.open .modal { transform:translateY(0); }
 .modal-title { font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:800; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
-.modal-title span { color:var(--primary-lt); font-size:22px; }
-.modal-close { margin-left:auto; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:22px; display:flex; align-items:center; }
-.modal-input { width:100%; padding:10px 12px; background:var(--bg); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.9rem; outline:none; margin-bottom:10px; }
-.result-item { padding:10px 14px; border-radius:var(--radius-sm); cursor:pointer; transition:background var(--t); border-bottom:1px solid var(--border); }
-.result-item:hover { background:rgba(99,102,241,0.08); }
+.modal-title span { color:var(--smriti-color-brand-light); font-size:22px; }
+.modal-close { margin-left:auto; background:none; border:none; color:var(--smriti-color-text-muted); cursor:pointer; font-size:22px; display:flex; align-items:center; }
+.modal-input { width:100%; padding:10px 12px; background:var(--smriti-color-bg-page); border:1px solid var(--smriti-color-border-strong); border-radius:var(--smriti-radius-sm); color:var(--smriti-color-text-primary); font-size:0.9rem; outline:none; margin-bottom:10px; }
+.result-item { padding:10px 14px; border-radius:var(--smriti-radius-sm); cursor:pointer; transition:background var(--smriti-t-base); border-bottom:1px solid var(--smriti-color-border-default); }
+.result-item:hover { background:rgba(var(--smriti-color-brand-primary-rgb, 105, 65, 198), 0.08); }
 .ri-name { font-weight:600; font-size:0.88rem; }
-.ri-sub { font-size:0.75rem; color:var(--text-muted); margin-top:2px; }
+.ri-sub { font-size:0.75rem; color:var(--smriti-color-text-muted); margin-top:2px; }
 
 /* Toast Container */
-#toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
-.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
-.toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
-.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
-.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+#toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index: var(--smriti-z-index-devtools); }
+.toast { padding:12px 18px; border-radius:var(--smriti-radius-md); font-size:0.88rem; font-weight:600; color: var(--smriti-color-bg-primary); min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow: var(--smriti-shadow-md); }
+.toast.success { background: var(--smriti-color-status-success-bg); border: 1px solid var(--smriti-color-status-success-border); }
+.toast.error   { background: var(--smriti-color-status-danger-bg); border: 1px solid var(--smriti-color-status-danger-border); }
+.toast.info    { background: var(--smriti-color-status-info-bg); border: 1px solid var(--smriti-color-status-info-border); }
 .toast span { font-size:20px; }
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 </style>
@@ -221,7 +222,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                             </tr>
                         </thead>
                         <tbody id="ledger-tbody">
-                            <tr><td colspan="4" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading stock data...</td></tr>
+                            <tr><td colspan="4" style="text-align:center;color:var(--smriti-color-text-subtle);padding:40px 0;">Loading stock data...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -493,7 +494,7 @@ async function loadLedger(wh = '') {
 function renderLedger(list) {
     const tbody = document.getElementById('ledger-tbody');
     if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-sub);padding:40px 0;">No stock items found in this warehouse.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--smriti-color-text-subtle);padding:40px 0;">No stock items found in this warehouse.</td></tr>';
         return;
     }
     tbody.innerHTML = list.map(b => {
@@ -505,8 +506,8 @@ function renderLedger(list) {
                     <div style="font-weight:600;">${b.item_name}</div>
                     <div class="item-code">${b.item_code}</div>
                 </td>
-                <td style="color:var(--text-muted);">${b.brand || 'N/A'}</td>
-                <td style="font-size:0.8rem;color:var(--text-muted);">${b.warehouse.split(' - ')[0]}</td>
+                <td style="color:var(--smriti-color-text-muted);">${b.brand || 'N/A'}</td>
+                <td style="font-size:0.8rem;color:var(--smriti-color-text-muted);">${b.warehouse.split(' - ')[0]}</td>
                 <td style="text-align:right;">
                     <span class="qty-badge ${qcls}">${qty.toFixed(2)} ${b.stock_uom}</span>
                 </td>
@@ -588,7 +589,7 @@ function renderTrfRows() {
                     <div class="item-code">${r.item_code}</div>
                     ${r.has_batch_no ? '<span class="batch-badge">Batch Tracked</span>' : ''}
                 </td>
-                <td style="text-align:right;font-weight:600;color:var(--text-muted);">${r.available_qty.toFixed(2)}</td>
+                <td style="text-align:right;font-weight:600;color:var(--smriti-color-text-muted);">${r.available_qty.toFixed(2)}</td>
                 <td style="text-align:center;">
                     <input type="number" class="grn-input" id="trf-qty-${i}" value="1" min="0.001" step="0.001" style="width:100px;">
                 </td>
@@ -695,7 +696,7 @@ function renderAdjRows() {
                     <div style="font-weight:600;">${r.item_name}</div>
                     <div class="item-code">${r.item_code}</div>
                 </td>
-                <td style="text-align:right;font-weight:600;color:var(--text-muted);">${r.available_qty.toFixed(2)}</td>
+                <td style="text-align:right;font-weight:600;color:var(--smriti-color-text-muted);">${r.available_qty.toFixed(2)}</td>
                 <td style="text-align:center;">
                     <input type="number" class="grn-input" id="adj-qty-${i}" value="1" min="0.001" step="0.001" style="width:100px;">
                 </td>
@@ -797,7 +798,7 @@ function renderAudRows() {
                     <div style="font-weight:600;">${r.item_name}</div>
                     <div class="item-code">${r.item_code}</div>
                 </td>
-                <td style="text-align:right;font-weight:600;color:var(--text-muted);">${r.available_qty.toFixed(2)}</td>
+                <td style="text-align:right;font-weight:600;color:var(--smriti-color-text-muted);">${r.available_qty.toFixed(2)}</td>
                 <td style="text-align:center;">
                     <input type="number" class="grn-input" id="aud-qty-${i}" value="${r.available_qty}" min="0" step="0.001" style="width:100px;">
                 </td>
@@ -872,7 +873,7 @@ function openPopout(e, url) {
 window.onload = init;
 </script>
 
-<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.4"></script>
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.6"></script>
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const activeTab = urlParams.get('tab');
@@ -881,6 +882,18 @@ window.onload = init;
         activeSidebarId = 'stock_adjust';
     }
     SMRITI.renderFlexibleSidebar(activeSidebarId);
-</script></body>
+</script>
+<script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js?v=2.0.6"></script>
+<script src="/assets/smriti_retail_os/js/smriti_theme_manager.js?v=2.0.6"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.SMRITI && typeof SMRITI.initUIEngine === 'function') {
+            SMRITI.initUIEngine();
+        }
+    });
+</script>
+</body>
 </html>
 {% endblock %}
+
+

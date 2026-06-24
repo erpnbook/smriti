@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file: smriti_retail_os/public/css/smriti_tokens.css
  * @description: Handles user login, registration, and JWT token generation.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
@@ -87,6 +87,12 @@
   --smriti-spacing-padding-y:          10px;
   --smriti-spacing-padding-x:          14px;
   --smriti-spacing-gap:                12px;
+  --smriti-spacing-card:               16px;
+  --smriti-spacing-section:            24px;
+  --smriti-table-row-height:           44px;
+  --smriti-card-header-height:         48px;
+  --smriti-toolbar-height:             56px;
+  --smriti-form-field-height:          38px;
 
   /* ── Layout Dimensions ──────────────────────────────────────────── */
   --smriti-dimension-sidebar-width:           260px;
@@ -127,31 +133,79 @@
   --smriti-font-weight-semibold:       600;
   --smriti-font-weight-bold:           700;
   --smriti-font-weight-extrabold:      800;
+  /* Font Family — Q3 Foundation Hardening (ux_theme_audit_v1.2) */
+  --smriti-font-family-primary:        'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --smriti-font-family-display:        'Outfit', 'Inter', sans-serif;
+  --smriti-font-family-mono:           'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 
-  /* ── Z-Index ────────────────────────────────────────────────────── */
-  --smriti-z-index-base:               0;
-  --smriti-z-index-dropdown:           100;
-  --smriti-z-index-sticky:             200;
-  --smriti-z-index-overlay:            500;
-  --smriti-z-index-modal:              1000;
-  --smriti-z-index-sidebar:            1041;
-  --smriti-z-index-toast:              1100;
-  --smriti-z-index-tooltip:            1200;
+  /* Line Height — Q3 Foundation Hardening */
+  --smriti-line-height-tight:          1.25;
+  --smriti-line-height-snug:           1.375;
+  --smriti-line-height-normal:         1.5;
+  --smriti-line-height-relaxed:        1.625;
+  --smriti-line-height-loose:          2;
 
-  /* ── Transition Easing (non-color, not blocked by Stylelint) ────── */
-  --smriti-ease:                       cubic-bezier(0.16, 1, 0.3, 1);
-  --smriti-t-fast:                     0.12s;
-  --smriti-t-base:                     0.20s;
-  --smriti-t-slow:                     0.35s;
+  /* Content & Panel Widths — Q3 Foundation Hardening */
+  --smriti-content-max-width:          1400px;
+  --smriti-panel-width-sm:             280px;
+  --smriti-panel-width-md:             360px;
+  --smriti-panel-width-lg:             480px;
+  --smriti-panel-width-xl:             640px;
+  --smriti-drawer-width:               420px;
 
-  /* ── POS Terminal Tokens (Phase 1B — pos-dark profile) ─────────── */
-  /* These tokens serve the Billing module pos-dark theme.            */
-  /* Runtime resolver (pos-dark profile) overrides color tokens.      */
-  /* These define POS-specific UI elements with no light-mode equiv.  */
-  --smriti-color-brand-accent:         #e94560;   /* POS accent — warm red-pink */
-  --smriti-color-bg-elevated:          #172040;   /* 4th surface layer (pos-dark only) */
-  --smriti-color-bg-overlay:           rgba(0,0,0,0.70); /* Modal backdrop overlay */
-  --smriti-shadow-pos-card:            0 8px 24px rgba(233,69,96,0.25);   /* Accent-glow card */
-  --smriti-shadow-pos-floating:        0 0 30px rgba(233,69,96,0.30);     /* Floating accent glow */
-  --smriti-shadow-pos-checkout:        0 6px 20px rgba(16,185,129,0.20);  /* Checkout button glow */
+  /* Grid Layout Columns */
+  --smriti-grid-cols-dashboard:        repeat(auto-fill, minmax(280px, 1fr));
+  --smriti-grid-cols-form:             repeat(auto-fill, minmax(240px, 1fr));
+  --smriti-grid-cols-report:           1fr;
+
+  /* ── Z-Index ────────────────────────────────────────�
+s */
+  --smriti-color-bg-page:              #f8fafc;
+  --smriti-color-bg-primary:           #ffffff;
+  --smriti-color-bg-secondary:         #f1f5f9;
+  --smriti-color-border-default:       #e2e8f0;
+  --smriti-color-border-strong:        #cbd5e1;
+
+  /* Spacing & Layout Densities */
+  --smriti-spacing-card:               8px;
+  --smriti-spacing-section:            12px;
+  --smriti-table-row-height:           32px;
+  --smriti-card-header-height:         36px;
+  --smriti-toolbar-height:             40px;
+  --smriti-form-field-height:          30px;
+  --smriti-spacing-xs:                 2px;
+  --smriti-spacing-sm:                 4px;
+  --smriti-spacing-md:                 8px;
+  --smriti-spacing-lg:                 12px;
+  --smriti-spacing-xl:                 16px;
+  --smriti-spacing-2xl:                20px;
+  --smriti-spacing-padding-y:          6px;
+  --smriti-spacing-padding-x:          10px;
+  --smriti-spacing-gap:                8px;
+
+  /* Layout Dimensions */
+  --smriti-dimension-sidebar-width:    220px;
+
+  /* Typography */
+  --smriti-font-size-base:             0.88rem;
+  --smriti-font-size-sm:               0.78rem;
+  --smriti-font-size-xs:               0.70rem;
+
+  /* Border Radius */
+  --smriti-radius-xs:                  2px;
+  --smriti-radius-sm:                  4px;
+  --smriti-radius-md:                  6px;
+  --smriti-radius-lg:                  8px;
+  --smriti-radius-xl:                  12px;
+  --smriti-radius-2xl:                 16px;
+
+  /* Shadows */
+  --smriti-shadow-neu-float:           none;
+  --smriti-shadow-neu-pressed:         none;
+  --smriti-shadow-sm:                  0 1px 2px rgba(15,23,42,0.05);
+  --smriti-shadow-md:                  0 2px 4px rgba(15,23,42,0.05);
+  --smriti-shadow-lg:                  0 4px 8px rgba(15,23,42,0.05);
+  --smriti-shadow-xl:                  0 8px 16px rgba(15,23,42,0.05);
 }
+
+

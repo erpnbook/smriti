@@ -326,6 +326,8 @@
         .badge-faq { background: #FEF3C7; color: #B45309; }
         .badge-manual { background: #F1F5F9; color: #475569; }
         .badge-kb { background: #FFE4E6; color: #BE123C; }
+        .badge-psv { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+        .badge-cert { background: #FAF5FF; color: #7C3AED; border: 1px solid #E9D5FF; }
 
         .result-snippet {
             font-size: 14px;
@@ -891,6 +893,14 @@
             
             <div class="sidebar-divider"></div>
             
+            <button class="tab-btn" onclick="switchTab('enablement')" id="btn-tab-enablement">
+                <span class="material-symbols-outlined">rocket_launch</span> PSV Enablement Center
+            </button>
+            <button class="tab-btn" onclick="switchTab('certification')" id="btn-tab-certification">
+                <span class="material-symbols-outlined">workspace_premium</span> PSV Certification
+            </button>
+            <div class="sidebar-divider"></div>
+            
             <button class="tab-btn" onclick="switchTab('formulas')" id="btn-tab-formulas">
                 <span class="material-symbols-outlined">calculate</span> Formula Registry
             </button>
@@ -921,6 +931,355 @@
                 <h1 class="panel-title"><span class="material-symbols-outlined">menu_book</span> User Manual View</h1>
                 <div class="manual-viewport" id="manual-content-container">
                     <div style="color:var(--text-muted);text-align:center;padding:40px;">Select a manual volume from the sidebar to read.</div>
+                </div>
+            </div>
+
+            <!-- Tab 7: PSV Enablement Center -->
+            <div class="content-panel" id="panel-enablement">
+                <h1 class="panel-title"><span class="material-symbols-outlined">rocket_launch</span> PSV Enablement Center</h1>
+                
+                <!-- Search bar for Enablement Center -->
+                <div class="enablement-search-bar" style="margin-bottom: 24px; position: relative;">
+                    <span class="material-symbols-outlined" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;">search</span>
+                    <input type="text" id="enablement-search-input" placeholder="Search PSV resources..." onkeyup="filterEnablementCards(this.value)" style="width: 100%; padding: 10px 16px 10px 44px; border: 1px solid var(--border-glass); border-radius: 20px; outline: none; font-size: 14px; background: #FFFFFF; transition: all 0.3s;" onfocus="this.style.borderColor='var(--primary-blue)'; this.style.boxShadow='0 0 10px rgba(37,99,235,0.1)';" onblur="this.style.borderColor='var(--border-glass)'; this.style.boxShadow='none';">
+                </div>
+
+                <!-- Interactive ROI Calculator -->
+                <div class="calculator-container" style="background:#FFFFFF; border:1px solid var(--border-glass); border-radius:12px; padding:24px; box-shadow:0 4px 12px rgba(26,43,92,0.02); margin-bottom:32px; border-top: 4px solid var(--primary-blue);">
+                    <h3 style="color:var(--primary-navy); font-size:16px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                        <span class="material-symbols-outlined" style="color:var(--primary-blue);">calculate</span> SMRITI PSV ROI Calculator
+                    </h3>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:20px;">
+                        <div>
+                            <label style="font-size:12px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:6px;">A. Annual Network Sales (₹)</label>
+                            <input type="number" id="roi-sales" value="50000000" style="width:100%; padding:8px 12px; border:1px solid var(--border-glass); border-radius:6px; outline:none; font-family:inherit;" oninput="calculateROI()">
+                        </div>
+                        <div>
+                            <label style="font-size:12px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:6px;">B. Net Profit Margin (%)</label>
+                            <input type="number" id="roi-margin" value="10" style="width:100%; padding:8px 12px; border:1px solid var(--border-glass); border-radius:6px; outline:none; font-family:inherit;" oninput="calculateROI()">
+                        </div>
+                        <div>
+                            <label style="font-size:12px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:6px;">C. Stockout Rate (%)</label>
+                            <input type="number" id="roi-stockout" value="8" style="width:100%; padding:8px 12px; border:1px solid var(--border-glass); border-radius:6px; outline:none; font-family:inherit;" oninput="calculateROI()">
+                        </div>
+                        <div>
+                            <label style="font-size:12px; font-weight:700; color:var(--text-muted); display:block; margin-bottom:6px;">D. Active Inventory Value (₹)</label>
+                            <input type="number" id="roi-inventory" value="10000000" style="width:100%; padding:8px 12px; border:1px solid var(--border-glass); border-radius:6px; outline:none; font-family:inherit;" oninput="calculateROI()">
+                        </div>
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:20px; background:#F8FAFC; padding:20px; border-radius:8px; border:1px solid var(--border-glass);">
+                        <div style="position: relative;">
+                            <div style="display:flex; justify-content:between; align-items:center; width:100%;">
+                                <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; flex:1;">Revenue Recovered</div>
+                                <span class="material-symbols-outlined" style="font-size:16px; color:var(--primary-blue); cursor:pointer; margin-left:4px;" onclick="showRoiExplain('recovered')" title="Explain Formula">info</span>
+                            </div>
+                            <div id="out-recovered" style="font-size:22px; font-weight:800; color:var(--primary-navy); margin:6px 0;">₹24,00,000</div>
+                            <div style="font-size:11px; color:var(--text-muted);">Annual Sales &times; Stockout % &times; 60%</div>
+                        </div>
+                        <div style="position: relative;">
+                            <div style="display:flex; justify-content:between; align-items:center; width:100%;">
+                                <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; flex:1;">Capital Released</div>
+                                <span class="material-symbols-outlined" style="font-size:16px; color:var(--primary-blue); cursor:pointer; margin-left:4px;" onclick="showRoiExplain('released')" title="Explain Formula">info</span>
+                            </div>
+                            <div id="out-released" style="font-size:22px; font-weight:800; color:var(--accent-green); margin:6px 0;">₹12,00,000</div>
+                            <div style="font-size:11px; color:var(--text-muted);">Inventory &times; 30% stagnant &times; 40%</div>
+                        </div>
+                        <div style="position: relative;">
+                            <div style="display:flex; justify-content:between; align-items:center; width:100%;">
+                                <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; flex:1;">Margin Improvement</div>
+                                <span class="material-symbols-outlined" style="font-size:16px; color:var(--primary-blue); cursor:pointer; margin-left:4px;" onclick="showRoiExplain('improvement')" title="Explain Formula">info</span>
+                            </div>
+                            <div id="out-improvement" style="font-size:22px; font-weight:800; color:var(--primary-blue); margin:6px 0;">₹2,40,000</div>
+                            <div style="font-size:11px; color:var(--text-muted);">Revenue Recovered &times; Net Margin %</div>
+                        </div>
+                        <div style="position: relative;">
+                            <div style="display:flex; justify-content:between; align-items:center; width:100%;">
+                                <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; flex:1;">Distributor ROI Shift</div>
+                                <span class="material-symbols-outlined" style="font-size:16px; color:var(--primary-blue); cursor:pointer; margin-left:4px;" onclick="showRoiExplain('roishift')" title="Explain Formula">info</span>
+                            </div>
+                            <div id="out-roi-shift" style="font-size:22px; font-weight:800; color:var(--accent-yellow); margin:6px 0;">20.0% &rarr; 22.4%</div>
+                            <div style="font-size:11px; color:var(--text-muted);">(Baseline Profit + Margin Gain) / Inventory</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scenario Explorer -->
+                <div class="scenario-explorer-container" style="margin-bottom:32px;">
+                    <h3 style="color:var(--primary-navy); font-size:16px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                        <span class="material-symbols-outlined" style="color:var(--primary-blue);">explore</span> Scenario Explorer
+                    </h3>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+                        <!-- Card 1: Mumbai Surplus -->
+                        <div class="dict-card enablement-card" data-title="Mumbai Surplus (Capital Lockup) Mumbai" onclick="openScenarioInDrawer('mumbai')" style="border-top: 4px solid var(--primary-blue); display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+                            <div>
+                                <div style="font-size:12px; font-weight:700; color:var(--primary-blue); margin-bottom:4px; text-transform:uppercase;">Scenario A</div>
+                                <div class="dict-card-name" style="font-size:15px; margin-bottom:6px;">Mumbai Surplus (Capital Lockup)</div>
+                                <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px; line-height:1.4;">
+                                    <strong>WOC</strong>: 35.4 Weeks<br>
+                                    <strong>Capital Locked</strong>: ₹6,06,000 on Denim
+                                </div>
+                                <div class="dict-card-desc" style="font-size:12px; -webkit-line-clamp: 2;">Mumbai suffers from bloated size curves and poor reorder governance, locking up working capital.</div>
+                            </div>
+                            <div style="margin-top:12px; font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:4px; font-weight:700;">
+                                <span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span> View Analysis
+                            </div>
+                        </div>
+                        <!-- Card 2: Pune Stockout -->
+                        <div class="dict-card enablement-card" data-title="Pune Stockout (Critical Replenishment) Pune" onclick="openScenarioInDrawer('pune')" style="border-top: 4px solid var(--accent-red); display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+                            <div>
+                                <div style="font-size:12px; font-weight:700; color:var(--accent-red); margin-bottom:4px; text-transform:uppercase;">Scenario B</div>
+                                <div class="dict-card-name" style="font-size:15px; margin-bottom:6px;">Pune Stockout (Critical Replenishment)</div>
+                                <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px; line-height:1.4;">
+                                    <strong>WOC</strong>: 0 Weeks<br>
+                                    <strong>Lost Sales Risk</strong>: High Opportunity Loss
+                                </div>
+                                <div class="dict-card-desc" style="font-size:12px; -webkit-line-clamp: 2;">Pune reports 0 Sneakers in stock with WOC at 0 weeks, causing daily lost sales opportunity.</div>
+                            </div>
+                            <div style="margin-top:12px; font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:4px; font-weight:700;">
+                                <span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span> View Analysis
+                            </div>
+                        </div>
+                        <!-- Card 3: Nashik Dead Stock -->
+                        <div class="dict-card enablement-card" data-title="Nashik Dead Stock (Markdown Exposure) Nashik" onclick="openScenarioInDrawer('nashik')" style="border-top: 4px solid var(--accent-yellow); display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+                            <div>
+                                <div style="font-size:12px; font-weight:700; color:var(--accent-yellow); margin-bottom:4px; text-transform:uppercase;">Scenario C</div>
+                                <div class="dict-card-name" style="font-size:15px; margin-bottom:6px;">Nashik Dead Stock (Markdown Exposure)</div>
+                                <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px; line-height:1.4;">
+                                    <strong>Age</strong>: 95 Days<br>
+                                    <strong>Dead Stock Exposure</strong>: 100% in 90+ Days
+                                </div>
+                                <div class="dict-card-desc" style="font-size:12px; -webkit-line-clamp: 2;">Nashik holds seasonal Graphic Tees stagnant for 95 days, causing severe markdown exposure.</div>
+                            </div>
+                            <div style="margin-top:12px; font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:4px; font-weight:700;">
+                                <span class="material-symbols-outlined" style="font-size:14px;">open_in_new</span> View Analysis
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Executive Resources Section -->
+                <div style="margin-bottom:32px;">
+                    <h3 style="color:var(--primary-navy); font-size:16px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                        <span class="material-symbols-outlined" style="color:var(--primary-blue);">pie_chart</span> Executive Resources
+                    </h3>
+                    <div class="dict-list" id="enablement-executive-cards" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Sales Resources Section -->
+                <div style="margin-bottom:32px;">
+                    <h3 style="color:var(--primary-navy); font-size:16px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                        <span class="material-symbols-outlined" style="color:var(--primary-blue);">trending_up</span> Sales Resources
+                    </h3>
+                    <div class="dict-list" id="enablement-sales-cards" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Certification Section -->
+                <div style="margin-bottom:32px;">
+                    <h3 style="color:var(--primary-navy); font-size:16px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                        <span class="material-symbols-outlined" style="color:var(--primary-blue);">badge</span> Certified Planner Program
+                    </h3>
+                    <div class="dict-list" id="enablement-cert-cards" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Downloads Section -->
+                <div class="downloads-container" style="margin-top:32px; border-top:1px solid var(--border-glass); padding-top:24px;">
+                    <h3 style="color:var(--primary-navy); font-size:16px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                        <span class="material-symbols-outlined" style="color:var(--primary-blue);">download</span> Resource Download Center
+                    </h3>
+                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                        <button class="tab-btn" onclick="downloadEnablementFile('psv_demo_dataset')" style="display:inline-flex; width:auto; background:var(--primary-navy); color:#FFFFFF; border-radius:8px; padding: 10px 16px;">
+                            <span class="material-symbols-outlined" style="font-size:18px;">table_chart</span> Download CSV Dataset
+                        </button>
+                        <button class="tab-btn" onclick="downloadEnablementFile('zip_bundle')" style="display:inline-flex; width:auto; background:var(--primary-blue); color:#FFFFFF; border-radius:8px; padding: 10px 16px;">
+                            <span class="material-symbols-outlined" style="font-size:18px;">archive</span> Download Complete ZIP Bundle
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 8: PSV Certification -->
+            <div class="content-panel" id="panel-certification">
+                <h1 class="panel-title"><span class="material-symbols-outlined">workspace_premium</span> SMRITI PSV Certification</h1>
+                
+                <!-- If there is an active exam, we show the quiz panel, else we show the Exam Info / Attempts registry / Certified Planners list -->
+                <div id="cert-home-view">
+                    <!-- Exam Details Card -->
+                    <div class="calculator-container" style="background:#FFFFFF; border:1px solid var(--border-glass); border-radius:12px; padding:24px; box-shadow:0 4px 12px rgba(26,43,92,0.02); margin-bottom:32px; border-top: 4px solid #7C3AED;">
+                        <h3 style="color:var(--primary-navy); font-size:18px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                            <span class="material-symbols-outlined" style="color:#7C3AED;">school</span> PSV Certified Planner Exam (Level 1)
+                        </h3>
+                        <p style="font-size:14px; color:var(--text-main); margin-bottom:20px; line-height:1.6;">
+                            This certification validates your understanding of SMRITI Retail OS Party Stock Visibility (PSV) architectures, Weeks of Cover (WOC) mathematical derivations, stock transfer decisions, and governance principles.
+                        </p>
+                        
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:24px; background:#F8FAFC; padding:20px; border-radius:8px; border:1px solid var(--border-glass);">
+                            <div>
+                                <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Duration</div>
+                                <div style="font-size:18px; font-weight:800; color:var(--primary-navy); margin-top:4px;">60 Minutes</div>
+                            </div>
+                            <div>
+                                <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Questions</div>
+                                <div style="font-size:18px; font-weight:800; color:var(--primary-navy); margin-top:4px;">20 MCQs</div>
+                            </div>
+                            <div>
+                                <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Passing Score</div>
+                                <div style="font-size:18px; font-weight:800; color:var(--primary-navy); margin-top:4px;">80% (16/20)</div>
+                            </div>
+                            <div>
+                                <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Best Score</div>
+                                <div id="cert-best-score" style="font-size:18px; font-weight:800; color:#7C3AED; margin-top:4px;">N/A</div>
+                            </div>
+                        </div>
+                        
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+                            <button id="btn-start-exam" onclick="startExam()" style="display:inline-flex; align-items:center; gap:8px; background:#7C3AED; color:#FFFFFF; border:none; border-radius:8px; padding:12px 24px; font-weight:700; font-size:14px; cursor:pointer; transition:all 0.2s;">
+                                <span class="material-symbols-outlined">play_arrow</span> Start Certification Exam
+                            </button>
+                            <span id="cert-status-badge" style="font-size:12px; font-weight:700; color:#6D28D9; background:#FAF5FF; border:1px solid #C084FC; padding:6px 14px; border-radius:20px;">Study Mode</span>
+                        </div>
+                    </div>
+
+                    <!-- My Attempts Table -->
+                    <div style="margin-bottom:32px;">
+                        <h3 style="color:var(--primary-navy); font-size:16px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                            <span class="material-symbols-outlined" style="color:var(--primary-blue);">history</span> My Exam Attempts
+                        </h3>
+                        <table class="gov-table" style="background:#FFFFFF; border:1px solid var(--border-glass); border-radius:8px;">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Attempt ID</th>
+                                    <th>Score</th>
+                                    <th>Result</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attempts-tbody">
+                                <tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">No attempts recorded yet.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Public Certified Planners Registry -->
+                    <div style="margin-bottom:32px;">
+                        <h3 style="color:var(--primary-navy); font-size:16px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+                            <span class="material-symbols-outlined" style="color:var(--primary-blue);">badge</span> Certified Planners Registry
+                        </h3>
+                        <table class="gov-table" style="background:#FFFFFF; border:1px solid var(--border-glass); border-radius:8px;">
+                            <thead>
+                                <tr>
+                                    <th>Candidate Name</th>
+                                    <th>Exam</th>
+                                    <th>Date Certified</th>
+                                    <th>Verification Link</th>
+                                </tr>
+                            </thead>
+                            <tbody id="registry-tbody">
+                                <tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:20px;">Loading registry...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Interactive Quiz Panel -->
+                <div id="cert-exam-panel" style="display:none; background:#FFFFFF; border:1px solid var(--border-glass); border-radius:12px; padding:30px; box-shadow:0 4px 12px rgba(26,43,92,0.02); margin-bottom:32px; border-top: 4px solid var(--primary-blue);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-glass); padding-bottom:16px; margin-bottom:24px;">
+                        <div>
+                            <h2 style="color:var(--primary-navy); font-size:18px; font-weight:800;">Exam in Progress</h2>
+                            <div style="font-size:13px; color:var(--text-muted); margin-top:2px;">Do not close or refresh this page.</div>
+                        </div>
+                        <div id="exam-timer" style="font-size:20px; font-weight:800; color:var(--accent-red); display:flex; align-items:center; gap:6px; background:#FEF2F2; padding:6px 14px; border-radius:8px; border:1px solid #FCA5A5;">
+                            <span class="material-symbols-outlined" style="animation: pulse 1s infinite;">alarm</span> 60:00
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress-wrap" style="height:10px; margin-bottom:24px;">
+                        <div class="progress-bar" id="exam-progress-bar" style="width:0%; background:linear-gradient(90deg, var(--primary-blue), #60A5FA);"></div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 240px; gap:30px;">
+                        <!-- Question Display -->
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                                <span id="question-index-label" style="font-size:13px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Question 1 of 20</span>
+                                <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--text-muted); cursor:pointer;">
+                                    <input type="checkbox" id="chk-review" onchange="toggleMarkedForReview()" style="cursor:pointer; width:15px; height:15px;"> Mark for Review
+                                </label>
+                            </div>
+                            
+                            <h3 id="question-text" style="color:var(--primary-navy); font-size:16px; margin-bottom:20px; font-weight:700; line-height:1.5;">Question body here...</h3>
+                            
+                            <div id="choices-container" style="display:flex; flex-direction:column; gap:12px; margin-bottom:30px;">
+                                <!-- Choices populated dynamically -->
+                            </div>
+
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <button class="tab-btn" id="btn-prev-q" onclick="prevQuestion()" style="display:inline-flex; width:auto; border:1px solid var(--border-glass); border-radius:8px; padding: 10px 20px;">
+                                    <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span> Previous
+                                </button>
+                                <button class="tab-btn" id="btn-next-q" onclick="nextQuestion()" style="display:inline-flex; width:auto; border:1px solid var(--border-glass); border-radius:8px; padding: 10px 20px;">
+                                    Next <span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Grid -->
+                        <div style="border-left:1px solid var(--border-glass); padding-left:24px;">
+                            <h4 style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:12px; letter-spacing:0.5px;">Questions Map</h4>
+                            <div id="questions-grid" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; margin-bottom:24px;">
+                                <!-- Grid items loaded dynamically -->
+                            </div>
+                            
+                            <button onclick="confirmSubmitExam()" style="width:100%; display:inline-flex; justify-content:center; align-items:center; gap:8px; background:var(--accent-green); color:#FFFFFF; border:none; border-radius:8px; padding:12px 16px; font-weight:700; font-size:14px; cursor:pointer; transition:background-color 0.2s;">
+                                <span class="material-symbols-outlined">check_circle</span> Submit Exam
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Result Card -->
+                <div id="cert-result-card" style="display:none; background:#FFFFFF; border:1px solid var(--border-glass); border-radius:12px; padding:30px; box-shadow:0 4px 12px rgba(26,43,92,0.02); margin-bottom:32px; border-top: 5px solid var(--accent-red);">
+                    <div style="text-align:center; margin-bottom:24px;">
+                        <span id="result-icon" class="material-symbols-outlined" style="font-size:64px; color:var(--accent-red); margin-bottom:12px;">cancel</span>
+                        <h2 id="result-title" style="color:var(--primary-navy); font-size:24px; font-weight:800;">Exam Attempt Graded</h2>
+                        <div id="result-score" style="font-size:36px; font-weight:800; color:var(--accent-red); margin-top:8px;">75.0%</div>
+                        <div id="result-stats-text" style="font-size:14px; color:var(--text-muted); margin-top:4px;">You answered 15 out of 20 questions correctly (Required: 80%).</div>
+                    </div>
+
+                    <!-- Certification Success Block -->
+                    <div id="result-success-actions" style="display:none; text-align:center; background:#F0FDF4; border:1px solid #BBF7D0; padding:20px; border-radius:8px; margin-bottom:24px;">
+                        <p style="color:#166534; font-size:14px; font-weight:600; margin-bottom:12px;">Congratulations! You are now a Certified SMRITI PSV Planner.</p>
+                        <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+                            <button onclick="downloadCertificate()" style="display:inline-flex; align-items:center; gap:8px; background:var(--primary-navy); color:#FFFFFF; border:none; border-radius:8px; padding:10px 20px; font-weight:700; font-size:13px; cursor:pointer;">
+                                <span class="material-symbols-outlined">download</span> Download Certificate
+                            </button>
+                            <button onclick="printCertificateDirect()" style="display:inline-flex; align-items:center; gap:8px; background:var(--primary-blue); color:#FFFFFF; border:none; border-radius:8px; padding:10px 20px; font-weight:700; font-size:13px; cursor:pointer;">
+                                <span class="material-symbols-outlined">print</span> Print Certificate
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Incorrect Answers Explainability Feedback -->
+                    <div id="result-feedback-section" style="margin-bottom:24px;">
+                        <h3 style="color:var(--primary-navy); font-size:16px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                            <span class="material-symbols-outlined" style="color:var(--accent-red);">feedback</span> Incorrect Answers Review & Explainability
+                        </h3>
+                        <div id="incorrect-feedback-container" style="display:flex; flex-direction:column; gap:16px;">
+                            <!-- Feedback rows populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div style="text-align:center; border-top:1px solid var(--border-glass); padding-top:20px;">
+                        <button onclick="resetCertView()" class="btn" style="background-color:var(--primary-navy); color:#FFFFFF; padding:10px 24px; border-radius:8px; border:none; font-weight:700; cursor:pointer;">Back to Certification</button>
+                    </div>
                 </div>
             </div>
 
@@ -1033,8 +1392,24 @@
 
     <!-- Wikipedia Relational detail Drawer -->
     <div class="drawer-overlay" id="detail-drawer">
-        <header class="drawer-header">
-            <h2 id="drawer-title">Details</h2>
+        <header class="drawer-header" style="position: relative;">
+            <div style="display:flex; align-items:center; gap:12px; flex:1;">
+                <h2 id="drawer-title" style="font-size:18px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px;">Details</h2>
+                <div id="drawer-header-actions" style="display:none; align-items:center; gap:8px;">
+                    <button class="btn-header" onclick="drawerActionOpenNewTab()" title="Open in New Tab" style="padding:4px 8px; font-size:12px; background:rgba(255,255,255,0.15); border:none; border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                        <span class="material-symbols-outlined" style="font-size:16px;">open_in_new</span>
+                    </button>
+                    <button class="btn-header" onclick="drawerActionCopyLink()" title="Copy Link" style="padding:4px 8px; font-size:12px; background:rgba(255,255,255,0.15); border:none; border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                        <span class="material-symbols-outlined" style="font-size:16px;">link</span>
+                    </button>
+                    <button class="btn-header" onclick="drawerActionDownload()" title="Download" style="padding:4px 8px; font-size:12px; background:rgba(255,255,255,0.15); border:none; border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                        <span class="material-symbols-outlined" style="font-size:16px;">download</span>
+                    </button>
+                    <button class="btn-header" onclick="drawerActionPrint()" title="Print" style="padding:4px 8px; font-size:12px; background:rgba(255,255,255,0.15); border:none; border-radius:4px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                        <span class="material-symbols-outlined" style="font-size:16px;">print</span>
+                    </button>
+                </div>
+            </div>
             <button class="drawer-close" onclick="closeDrawer()">
                 <span class="material-symbols-outlined">close</span>
             </button>
@@ -1080,8 +1455,11 @@
             const term = urlParams.get('term');
             const formula = urlParams.get('formula');
             const manual = urlParams.get('manual');
+            const tab = urlParams.get('tab');
             
-            if (query) {
+            if (tab) {
+                switchTab(tab);
+            } else if (query) {
                 document.getElementById('search-input').value = query;
                 executeSearch(query);
             } else if (term) {
@@ -1089,7 +1467,14 @@
             } else if (formula) {
                 window.dispatchEvent(new CustomEvent('smriti:formula-open', { detail: { formulaId: formula } }));
             } else if (manual) {
-                loadManualVolume(manual);
+                // If it is dynamic enablement/certification guide, open in drawer, else load manuals tab
+                setTimeout(async () => {
+                    if (documentRegistry[manual] && (documentRegistry[manual].document_type === 'enablement' || documentRegistry[manual].document_type === 'certification')) {
+                        openEnablementDocInDrawer(manual);
+                    } else {
+                        loadManualVolume(manual);
+                    }
+                }, 500);
             } else {
                 // Default load vol 1
                 loadManualVolume('volume_1_daily_operations');
@@ -1232,6 +1617,15 @@
             if (tabId !== 'manuals') {
                 document.querySelectorAll('.sidebar-sub-item').forEach(s => s.classList.remove('active'));
             }
+
+            if (tabId === 'enablement') {
+                loadEnablementCenter();
+                calculateROI();
+            }
+            
+            if (tabId === 'certification') {
+                loadCertificationData();
+            }
         }
 
         async function loadManualVolume(volumeName) {
@@ -1302,6 +1696,8 @@
                 else if (res.type === 'Training Exercise') badgeClass = 'badge-exercise';
                 else if (res.type === 'FAQ') badgeClass = 'badge-faq';
                 else if (res.type === 'KB Article') badgeClass = 'badge-kb';
+                else if (res.type === 'PSV Resource') badgeClass = 'badge-psv';
+                else if (res.type === 'Certification') badgeClass = 'badge-cert';
 
                 // Snippet generation
                 let snippet = res.metadata.description || '';
@@ -1337,7 +1733,7 @@
                 const formulaId = id.split(':')[1];
                 window.dispatchEvent(new CustomEvent('smriti:formula-open', { detail: { formulaId } }));
             } else {
-                // Manual or KB
+                // Manual or KB or PSV Resource or Certification
                 const url = new URL(reference, window.location.origin);
                 const manual = url.searchParams.get('manual');
                 const kb = url.searchParams.get('kb');
@@ -1345,7 +1741,11 @@
                 
                 window.history.pushState(null, '', reference);
                 if (manual) {
-                    loadManualVolume(manual);
+                    if (documentRegistry[manual] && (documentRegistry[manual].document_type === 'enablement' || documentRegistry[manual].document_type === 'certification')) {
+                        openEnablementDocInDrawer(manual);
+                    } else {
+                        loadManualVolume(manual);
+                    }
                 } else if (kb) {
                     loadManualVolume(kb);
                 }
@@ -1699,6 +2099,10 @@
 
         function closeDrawer() {
             document.getElementById('detail-drawer').classList.remove('active');
+            document.getElementById('drawer-header-actions').style.display = 'none';
+            activeDrawerDocKey = null;
+            activeDrawerDocHtml = '';
+            activeDrawerDocTitle = '';
             // Restore URL query
             window.history.pushState(null, '', `?tab=${activeTab}`);
         }
@@ -1843,6 +2247,858 @@
             btn.disabled = false;
             btn.innerHTML = `<span class="material-symbols-outlined">sync</span> Force Rebuild Search Index`;
             loadGovernanceDashboard();
+        }
+
+        let activeDrawerDocKey = null;
+        let activeDrawerDocHtml = '';
+        let activeDrawerDocTitle = '';
+
+        async function openEnablementDocInDrawer(docKey) {
+            const viewport = document.getElementById('drawer-body');
+            document.getElementById('drawer-title').textContent = "Loading Document...";
+            document.getElementById('detail-drawer').classList.add('active');
+            
+            viewport.innerHTML = `
+                <div style="display:flex; justify-content:center; align-items:center; height:300px; color:var(--text-muted);">
+                    <span class="material-symbols-outlined" style="animation: spin 1s linear infinite; margin-right:8px;">sync</span> Loading content...
+                </div>
+            `;
+            
+            const html = await api('smriti_retail_os.api.help_api.get_manual_html', { volume_name: docKey });
+            if (html) {
+                activeDrawerDocKey = docKey;
+                activeDrawerDocHtml = html;
+                activeDrawerDocTitle = documentRegistry[docKey] ? documentRegistry[docKey].title : docKey.replace(/_/g, ' ').toUpperCase();
+                
+                document.getElementById('drawer-title').textContent = activeDrawerDocTitle;
+                viewport.innerHTML = `<div class="manual-viewport">${html}</div>`;
+                
+                // Show header actions
+                document.getElementById('drawer-header-actions').style.display = 'flex';
+            } else {
+                viewport.innerHTML = `<div style="color:red;padding:20px;">Failed to load document.</div>`;
+            }
+        }
+
+        async function loadEnablementCenter() {
+            // We group documentRegistry entries where document_type is 'enablement' or 'certification'
+            const executiveList = [];
+            const salesList = [];
+            const certList = [];
+            
+            for (const [key, doc] of Object.entries(documentRegistry)) {
+                if (doc.document_type === 'enablement') {
+                    if (doc.category === 'Executive Resources') {
+                        executiveList.push({ key, ...doc });
+                    } else if (doc.category === 'Sales Resources') {
+                        salesList.push({ key, ...doc });
+                    }
+                } else if (doc.document_type === 'certification') {
+                    certList.push({ key, ...doc });
+                }
+            }
+            
+            const getCardHtml = (doc) => `
+                <div class="dict-card enablement-card" data-title="${doc.title.toLowerCase()} ${doc.category.toLowerCase()}" onclick="openEnablementDocInDrawer('${doc.key}')" style="display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+                    <div>
+                        <div style="font-size:12px; font-weight:700; color:var(--primary-blue); margin-bottom:4px; text-transform:uppercase;">${doc.category}</div>
+                        <div class="dict-card-name" style="font-size:15px; margin-bottom:6px;">${doc.title}</div>
+                        <div class="dict-card-desc" style="font-size:12px; -webkit-line-clamp: 3;">Learn about SMRITI PSV ${doc.title.toLowerCase()} and implementation guidelines.</div>
+                    </div>
+                    <div style="margin-top:12px; font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:4px; font-weight:700;">
+                        <span class="material-symbols-outlined" style="font-size:14px;">visibility</span> Read Resource
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('enablement-executive-cards').innerHTML = executiveList.map(getCardHtml).join('');
+            document.getElementById('enablement-sales-cards').innerHTML = salesList.map(getCardHtml).join('');
+            
+            const certContainer = document.getElementById('enablement-cert-cards');
+            let certHtml = certList.map(doc => `
+                <div class="dict-card enablement-card" data-title="${doc.title.toLowerCase()} certification" onclick="openEnablementDocInDrawer('${doc.key}')" style="border-left: 4px solid #7C3AED; background: #FAF5FF; display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+                    <div>
+                        <div style="font-size:12px; font-weight:700; color:#7C3AED; margin-bottom:4px; text-transform:uppercase;">Level 1 Planner Certification</div>
+                        <div class="dict-card-name" style="font-size:15px; margin-bottom:6px;">${doc.title}</div>
+                        <div style="font-size:12px; color:#5B21B6; margin-bottom:12px;">
+                            <strong>Estimated Duration</strong>: 60 Minutes<br>
+                            <strong>Exam Questions</strong>: 20 Questions<br>
+                            <strong>Passing Score</strong>: 80% (16/20)<br>
+                            <strong>Certification Status</strong>: <span style="background:#EDE9FE; padding:2px 6px; border-radius:4px; font-weight:700;">Study Mode</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+                        <div style="font-size:12px; color:#6D28D9; font-weight:700; display:flex; align-items:center; gap:4px;">
+                            <span class="material-symbols-outlined" style="font-size:14px;">school</span> Study Guide
+                        </div>
+                        <button onclick="event.stopPropagation(); switchTab('certification')" style="font-size:11px; font-weight:700; color:#FFFFFF; background:#7C3AED; border:none; padding:6px 12px; border-radius:12px; cursor:pointer; transition:background-color 0.2s;" onmouseover="this.style.backgroundColor='#6D28D9'" onmouseout="this.style.backgroundColor='#7C3AED'">Take Exam</button>
+                    </div>
+                </div>
+            `).join('');
+            certContainer.innerHTML = certHtml;
+        }
+
+        function calculateROI() {
+            const sales = parseFloat(document.getElementById('roi-sales').value) || 0;
+            const margin = parseFloat(document.getElementById('roi-margin').value) || 0;
+            const stockout = parseFloat(document.getElementById('roi-stockout').value) || 0;
+            const inventory = parseFloat(document.getElementById('roi-inventory').value) || 0;
+            
+            // Step 1: Revenue Recovered
+            const recovered = sales * (stockout / 100) * 0.60;
+            
+            // Step 2: Capital Released
+            const released = inventory * 0.30 * 0.40;
+            
+            // Step 3: Margin Improvement
+            const improvement = recovered * (margin / 100);
+            
+            // Step 4: ROI Shift (dynamic boost on top of standard 20% baseline)
+            const baselineProfit = inventory * 0.20;
+            const beforeROI = 20.0;
+            const afterROI = inventory > 0 ? ((baselineProfit + improvement) / inventory) * 100 : 0;
+            
+            const fmt = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
+            
+            document.getElementById('out-recovered').textContent = fmt(recovered);
+            document.getElementById('out-released').textContent = fmt(released);
+            document.getElementById('out-improvement').textContent = fmt(improvement);
+            document.getElementById('out-roi-shift').textContent = `${beforeROI.toFixed(1)}% → ${afterROI.toFixed(1)}%`;
+        }
+
+        function showRoiExplain(metric) {
+            const viewport = document.getElementById('drawer-body');
+            document.getElementById('drawer-header-actions').style.display = 'none';
+            document.getElementById('detail-drawer').classList.add('active');
+            
+            let title = '';
+            let bodyHtml = '';
+            
+            const sales = parseFloat(document.getElementById('roi-sales').value) || 0;
+            const margin = parseFloat(document.getElementById('roi-margin').value) || 0;
+            const stockout = parseFloat(document.getElementById('roi-stockout').value) || 0;
+            const inventory = parseFloat(document.getElementById('roi-inventory').value) || 0;
+            const fmt = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
+            
+            if (metric === 'recovered') {
+                title = 'Explain: Revenue Recovered';
+                const calculated = sales * (stockout / 100) * 0.60;
+                bodyHtml = `
+                    <div class="detail-section">
+                        <div class="detail-section-title">Business Meaning</div>
+                        <div class="detail-text-clean">Revenue recaptured by resolving distributor size out-of-stocks using WOC Alerts and stock transfers. SMRITI assumes a conservative 60% recovery efficiency for lost demand.</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Formula</div>
+                        <div class="formula-math-expr">Revenue Recovered = Annual Sales &times; Stockout Rate % &times; 60% Recovery Efficiency</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Live Worked Calculation</div>
+                        <div style="font-family:monospace; font-size:13px; background:#FFFBEB; padding:12px; border-left:3px solid var(--accent-yellow); color:#B45309; border-radius:6px; white-space:pre-line;">
+                            Annual Sales = ${fmt(sales)}
+                            Stockout Rate = ${stockout}%
+                            Recovery Efficiency = 60.0%
+                            
+                            Calculation:
+                            ${fmt(sales)} &times; ${(stockout/100).toFixed(4)} &times; 0.60
+                            = <strong>${fmt(calculated)}</strong>
+                        </div>
+                    </div>
+                `;
+            } else if (metric === 'released') {
+                title = 'Explain: Capital Released';
+                const calculated = inventory * 0.30 * 0.40;
+                bodyHtml = `
+                    <div class="detail-section">
+                        <div class="detail-section-title">Business Meaning</div>
+                        <div class="detail-text-clean">Working capital freed from slow-moving or dead stock. Based on network-wide averages, stagnant stock represents 30% of total inventory. Decoupled rebalancing and clearance campaigns reduce this by 40%.</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Formula</div>
+                        <div class="formula-math-expr">Capital Released = Active Inventory Value &times; Stagnant Ratio (30%) &times; Dead Stock Reduction (40%)</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Live Worked Calculation</div>
+                        <div style="font-family:monospace; font-size:13px; background:#FFFBEB; padding:12px; border-left:3px solid var(--accent-yellow); color:#B45309; border-radius:6px; white-space:pre-line;">
+                            Active Inventory = ${fmt(inventory)}
+                            Stagnant Ratio = 30.0%
+                            Dead Stock Reduction = 40.0%
+                            
+                            Calculation:
+                            ${fmt(inventory)} &times; 0.30 &times; 0.40
+                            = <strong>${fmt(calculated)}</strong>
+                        </div>
+                    </div>
+                `;
+            } else if (metric === 'improvement') {
+                title = 'Explain: Margin Improvement';
+                const recovered = sales * (stockout / 100) * 0.60;
+                const calculated = recovered * (margin / 100);
+                bodyHtml = `
+                    <div class="detail-section">
+                        <div class="detail-section-title">Business Meaning</div>
+                        <div class="detail-text-clean">The incremental cash profit added to the bottom line as a direct result of recovering lost sales.</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Formula</div>
+                        <div class="formula-math-expr">Margin Improvement = Revenue Recovered &times; Net Profit Margin %</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Live Worked Calculation</div>
+                        <div style="font-family:monospace; font-size:13px; background:#FFFBEB; padding:12px; border-left:3px solid var(--accent-yellow); color:#B45309; border-radius:6px; white-space:pre-line;">
+                            Revenue Recovered = ${fmt(recovered)}
+                            Net Profit Margin = ${margin}%
+                            
+                            Calculation:
+                            ${fmt(recovered)} &times; ${(margin/100).toFixed(2)}
+                            = <strong>${fmt(calculated)}</strong>
+                        </div>
+                    </div>
+                `;
+            } else if (metric === 'roishift') {
+                title = 'Explain: Distributor ROI Shift';
+                const recovered = sales * (stockout / 100) * 0.60;
+                const improvement = recovered * (margin / 100);
+                const baselineProfit = inventory * 0.20;
+                const beforeROI = 20.0;
+                const afterROI = inventory > 0 ? ((baselineProfit + improvement) / inventory) * 100 : 0;
+                bodyHtml = `
+                    <div class="detail-section">
+                        <div class="detail-section-title">Business Meaning</div>
+                        <div class="detail-text-clean">The shift in average distributor Return on Investment (ROI). Faster inventory turns and lower dead stock holdings boost annual profit on the same invested capital base. We assume a conservative 20% baseline distributor ROI before SMRITI implementation.</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Formula</div>
+                        <div class="formula-math-expr">Distributor ROI = ((Baseline Profit (20%) + Margin Gain) / Invested Capital) &times; 100</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Live Worked Calculation</div>
+                        <div style="font-family:monospace; font-size:13px; background:#FFFBEB; padding:12px; border-left:3px solid var(--accent-yellow); color:#B45309; border-radius:6px; white-space:pre-line;">
+                            Invested Capital (Inventory) = ${fmt(inventory)}
+                            Baseline Profit (20%) = ${fmt(baselineProfit)}
+                            SMRITI Margin Gain = ${fmt(improvement)}
+                            
+                            Before SMRITI ROI:
+                            (${fmt(baselineProfit)} / ${fmt(inventory)}) &times; 100 = <strong>${beforeROI.toFixed(1)}%</strong>
+                            
+                            After SMRITI ROI:
+                            ((${fmt(baselineProfit)} + ${fmt(improvement)}) / ${fmt(inventory)}) &times; 100
+                            = <strong>${afterROI.toFixed(1)}%</strong>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('drawer-title').textContent = title;
+            document.getElementById('drawer-body').innerHTML = bodyHtml;
+        }
+
+        function openScenarioInDrawer(scenario) {
+            const viewport = document.getElementById('drawer-body');
+            document.getElementById('drawer-header-actions').style.display = 'none';
+            document.getElementById('detail-drawer').classList.add('active');
+            
+            let title = '';
+            let bodyHtml = '';
+            
+            if (scenario === 'mumbai') {
+                title = 'Mumbai Surplus (Capital Lockup)';
+                bodyHtml = `
+                    <div class="detail-section">
+                        <div class="detail-section-title">Problem</div>
+                        <div class="detail-text-clean">Mumbai is the largest regional distributor, but suffers from poor reorder governance, causing size curve imbalances.</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Data</div>
+                        <div style="font-size:13px; color:var(--text-main); background:#F8FAFC; padding:12px; border-radius:6px; border:1px solid var(--border-glass);">
+                            &bull; <strong>Surplus Denim Size 32</strong>: 375 units<br>
+                            &bull; <strong>Weeks of Cover (WOC)</strong>: 35.4 Weeks (Bloated; target is 7-14 WOC)<br>
+                            &bull; <strong>Working Capital Locked</strong>: ₹6,06,000 on Denim variants alone (620 Denim-Blue × ₹600 + 390 Denim-Black × ₹600)
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Formula</div>
+                        <div class="formula-math-expr">Surplus Qty = Closing Qty - (14 weeks &times; Weekly Velocity)</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Recommended Action</div>
+                        <div style="font-size:13px; color:var(--text-dark); background:#EFF6FF; border-left:3px solid var(--primary-blue); padding:10px; border-radius:6px;">
+                            Freeze new dispatches from the central factory. Run a stock rebalancing check and transfer surplus to Pune.
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">ROI Impact</div>
+                        <div style="font-weight:700; color:var(--accent-green);">Releases ₹6,06,000 in locked working capital for reinvestment.</div>
+                    </div>
+                `;
+            } else if (scenario === 'pune') {
+                title = 'Pune Stockout (Critical Replenishment)';
+                bodyHtml = `
+                    <div class="detail-section">
+                        <div class="detail-section-title">Problem</div>
+                        <div class="detail-text-clean">Pune is experiencing rapid sales velocity, but has received no recent dispatches. Standard sizes are completely stockout.</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Data</div>
+                        <div style="font-size:13px; color:var(--text-main); background:#F8FAFC; padding:12px; border-radius:6px; border:1px solid var(--border-glass);">
+                            &bull; <strong>Standard Size Sneakers</strong>: 0 units in stock<br>
+                            &bull; <strong>Weeks of Cover (WOC)</strong>: 0 Weeks (Action Zone)<br>
+                            &bull; <strong>Lost Sales Risk</strong>: High Opportunity Loss
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Formula</div>
+                        <div class="formula-math-expr">WOC = Current Stock / Weekly Sales Velocity</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Recommended Action</div>
+                        <div style="font-size:13px; color:var(--text-dark); background:#EFF6FF; border-left:3px solid var(--primary-blue); padding:10px; border-radius:6px;">
+                            Run the Network Stock Transfer Simulator to transfer 100 units of Denim Size 32 from Mumbai's surplus to Pune.
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">ROI Impact</div>
+                        <div style="font-weight:700; color:var(--accent-green);">Recovers ₹60,000 in protected margins for Pune, and frees ₹60,000 in locked capital for Mumbai.</div>
+                    </div>
+                `;
+            } else if (scenario === 'nashik') {
+                title = 'Nashik Dead Stock (Markdown Exposure)';
+                bodyHtml = `
+                    <div class="detail-section">
+                        <div class="detail-section-title">Problem</div>
+                        <div class="detail-text-clean">Nashik received a large shipment of seasonal Graphic Tees 95 days ago that has failed to rotate due to style mismatching.</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Data</div>
+                        <div style="font-size:13px; color:var(--text-main); background:#F8FAFC; padding:12px; border-radius:6px; border:1px solid var(--border-glass);">
+                            &bull; <strong>Stock Quantity</strong>: 380 units<br>
+                            &bull; <strong>Sales Velocity</strong>: 1 unit/week<br>
+                            &bull; <strong>Aging Profile</strong>: 100% in the 90+ Days (Dead) band
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Formula</div>
+                        <div class="formula-math-expr">Capital Locked = Stagnant Qty (90+ Days) &times; Landed Cost</div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">Recommended Action</div>
+                        <div style="font-size:13px; color:var(--text-dark); background:#EFF6FF; border-left:3px solid var(--primary-blue); padding:10px; border-radius:6px;">
+                            Run a targeted clearance markdown campaign (e.g. 30% discount) or schedule returns to reclaim shelf space.
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-section-title">ROI Impact</div>
+                        <div style="font-weight:700; color:var(--accent-green);">Reduces markdown loss exposure and reclaims warehouse capacity.</div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('drawer-title').textContent = title;
+            document.getElementById('drawer-body').innerHTML = bodyHtml;
+        }
+
+        function filterEnablementCards(query) {
+            const q = query.trim().toLowerCase();
+            document.querySelectorAll('.enablement-card').forEach(card => {
+                const text = card.getAttribute('data-title').toLowerCase();
+                if (text.includes(q)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function downloadEnablementFile(fileKey) {
+            window.location.href = `/api/method/smriti_retail_os.api.help_api.download_enablement_file?file_key=${fileKey}`;
+        }
+
+        function drawerActionOpenNewTab() {
+            if (activeDrawerDocKey) {
+                window.open(window.location.origin + `/smriti-help?manual=${activeDrawerDocKey}`, '_blank');
+            }
+        }
+
+        function drawerActionCopyLink() {
+            if (activeDrawerDocKey) {
+                const link = window.location.origin + `/smriti-help?manual=${activeDrawerDocKey}`;
+                navigator.clipboard.writeText(link).then(() => {
+                    alert("Document link copied to clipboard!");
+                }).catch(err => {
+                    console.error("Failed to copy link:", err);
+                });
+            }
+        }
+
+        function drawerActionDownload() {
+            if (activeDrawerDocKey) {
+                window.location.href = `/api/method/smriti_retail_os.api.help_api.download_enablement_file?file_key=${activeDrawerDocKey}`;
+            }
+        }
+
+        function drawerActionPrint() {
+            if (activeDrawerDocHtml) {
+                printDrawerContent(activeDrawerDocHtml, activeDrawerDocTitle);
+            }
+        }
+
+        function printDrawerContent(htmlContent, title) {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>${title}</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+                            h1, h2, h3 { color: #1A2B5C; }
+                            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                            th { background-color: #f2f2f2; }
+                            pre, code { background-color: #f4f4f4; padding: 4px 8px; font-family: monospace; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>${title}</h1>
+                        <div>${htmlContent}</div>
+                        <script>
+                            window.onload = function() {
+                                window.print();
+                                window.close();
+                            }
+                        <\/script>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+        let activeAttempt = null;
+        let examQuestions = [];
+        let currentQuestionIndex = 0;
+        let userAnswers = {};
+        let markedForReview = [];
+        let examTimerInterval = null;
+        let examTimeRemaining = 0;
+
+        async function loadCertificationData() {
+            const status = await api('smriti_retail_os.api.help_api.get_psv_exam_status', { exam_id: 'level_1' });
+            const registry = await api('smriti_retail_os.api.help_api.get_certified_registry');
+            
+            if (status) {
+                const bestScoreEl = document.getElementById('cert-best-score');
+                if (status.best_attempt) {
+                    bestScoreEl.textContent = `${status.best_attempt.score}%`;
+                    document.getElementById('cert-status-badge').textContent = 'Certified Planner';
+                    document.getElementById('cert-status-badge').style.backgroundColor = '#DCFCE7';
+                    document.getElementById('cert-status-badge').style.color = '#15803D';
+                    document.getElementById('cert-status-badge').style.borderColor = '#BBF7D0';
+                } else {
+                    bestScoreEl.textContent = 'N/A';
+                    document.getElementById('cert-status-badge').textContent = 'Study Mode';
+                    document.getElementById('cert-status-badge').style.backgroundColor = '#FAF5FF';
+                    document.getElementById('cert-status-badge').style.color = '#6D28D9';
+                    document.getElementById('cert-status-badge').style.borderColor = '#C084FC';
+                }
+
+                if (status.active_attempt) {
+                    resumeActiveExam(status.active_attempt);
+                } else {
+                    renderAttempts(status.attempts);
+                }
+            }
+
+            if (registry) {
+                renderRegistry(registry);
+            }
+        }
+
+        function renderAttempts(attempts) {
+            const tbody = document.getElementById('attempts-tbody');
+            if (!attempts || attempts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">No attempts recorded yet.</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            attempts.forEach(att => {
+                const dateStr = att.start_time ? new Date(att.start_time).toLocaleDateString() : '';
+                const scoreStr = att.score !== null ? `${att.score}%` : 'N/A';
+                
+                let resultBadge = '';
+                if (att.status === 'Passed') {
+                    resultBadge = '<span style="color:#15803D; background:#DCFCE7; padding:2px 8px; border-radius:12px; font-weight:700; font-size:12px;">Passed</span>';
+                } else if (att.status === 'Failed') {
+                    resultBadge = '<span style="color:#B91C1C; background:#FEE2E2; padding:2px 8px; border-radius:12px; font-weight:700; font-size:12px;">Failed</span>';
+                } else {
+                    resultBadge = '<span style="color:#1D4ED8; background:#DBEAFE; padding:2px 8px; border-radius:12px; font-weight:700; font-size:12px;">In Progress</span>';
+                }
+                
+                let actions = '';
+                if (att.status === 'Passed') {
+                    actions = `
+                        <button onclick="downloadCertificate('${att.attempt_id}')" style="background:none; border:none; color:var(--primary-blue); font-weight:700; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:4px; padding:0;">
+                            <span class="material-symbols-outlined" style="font-size:16px;">download</span> Download
+                        </button>
+                    `;
+                } else if (att.status === 'In Progress') {
+                    actions = `
+                        <button onclick="startExam()" style="background:none; border:none; color:var(--accent-yellow); font-weight:700; cursor:pointer; font-size:13px; display:inline-flex; align-items:center; gap:4px; padding:0;">
+                            <span class="material-symbols-outlined" style="font-size:16px;">play_arrow</span> Resume
+                        </button>
+                    `;
+                } else {
+                    actions = '<span style="color:var(--text-muted);">-</span>';
+                }
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${dateStr}</td>
+                        <td style="font-family:monospace;">${att.attempt_id}</td>
+                        <td>${scoreStr}</td>
+                        <td>${resultBadge}</td>
+                        <td>${actions}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderRegistry(registry) {
+            const tbody = document.getElementById('registry-tbody');
+            if (!registry || registry.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:20px;">No certified planners registered yet.</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            registry.forEach(r => {
+                const link = `/verify-certificate?hash=${r.certificate_hash}`;
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight:700; color:var(--primary-navy);">${r.candidate_name}</td>
+                        <td>${r.exam_title}</td>
+                        <td>${r.completion_date}</td>
+                        <td>
+                            <a href="${link}" target="_blank" style="color:var(--primary-blue); font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+                                <span class="material-symbols-outlined" style="font-size:16px;">verified</span> Verify Link
+                            </a>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function startExam() {
+            const res = await api('smriti_retail_os.api.help_api.start_psv_exam', { exam_id: 'level_1' });
+            if (res) {
+                if (res.status === 'In Progress') {
+                    activeAttempt = res;
+                    examQuestions = res.questions;
+                    currentQuestionIndex = 0;
+                    userAnswers = {};
+                    markedForReview = Array(examQuestions.length).fill(false);
+                    
+                    const startTime = new Date(res.start_time);
+                    const now = new Date();
+                    const elapsedSeconds = Math.max(0, Math.floor((now - startTime) / 1000));
+                    examTimeRemaining = Math.max(0, (res.duration_minutes * 60) - elapsedSeconds);
+                    
+                    document.getElementById('cert-home-view').style.display = 'none';
+                    document.getElementById('cert-exam-panel').style.display = 'block';
+                    document.getElementById('cert-result-card').style.display = 'none';
+                    
+                    renderQuestion();
+                    startTimer();
+                }
+            } else {
+                frappe.show_alert({ message: "Could not start exam. Make sure you do not have another active attempt.", indicator: 'red' });
+            }
+        }
+
+        function resumeActiveExam(active_attempt) {
+            startExam();
+        }
+
+        function renderQuestion() {
+            if (!examQuestions || examQuestions.length === 0) return;
+            const q = examQuestions[currentQuestionIndex];
+            
+            document.getElementById('question-index-label').textContent = `Question ${currentQuestionIndex + 1} of ${examQuestions.length}`;
+            document.getElementById('question-text').textContent = q.question_text;
+            
+            document.getElementById('chk-review').checked = markedForReview[currentQuestionIndex];
+            
+            const container = document.getElementById('choices-container');
+            container.innerHTML = '';
+            
+            const selectedAns = userAnswers[q.question_number] || '';
+            
+            q.choices.forEach(choice => {
+                const choiceId = `choice-${q.question_number}-${choice.key}`;
+                const checked = selectedAns === choice.key ? 'checked' : '';
+                container.innerHTML += `
+                    <label for="${choiceId}" style="display:flex; align-items:center; gap:12px; background:#F8FAFC; border:1px solid ${selectedAns === choice.key ? 'var(--primary-blue)' : 'var(--border-glass)'}; border-radius:8px; padding:14px; cursor:pointer; transition:all 0.2s;">
+                        <input type="radio" name="question-${q.question_number}" id="${choiceId}" value="${choice.key}" ${checked} onchange="selectAnswer(${q.question_number}, '${choice.key}')" style="width:18px; height:18px; cursor:pointer;">
+                        <span style="font-weight:700; color:var(--primary-navy);">${choice.key}.</span>
+                        <span style="font-size:14px; color:var(--text-dark);">${choice.text}</span>
+                    </label>
+                `;
+            });
+            
+            renderQuestionsGrid();
+            updateExamProgressBar();
+            
+            document.getElementById('btn-prev-q').disabled = currentQuestionIndex === 0;
+            document.getElementById('btn-next-q').disabled = currentQuestionIndex === examQuestions.length - 1;
+        }
+
+        function selectAnswer(qNum, key) {
+            userAnswers[qNum] = key;
+            renderQuestion();
+        }
+
+        function toggleMarkedForReview() {
+            markedForReview[currentQuestionIndex] = document.getElementById('chk-review').checked;
+            renderQuestionsGrid();
+        }
+
+        function renderQuestionsGrid() {
+            const container = document.getElementById('questions-grid');
+            container.innerHTML = '';
+            
+            examQuestions.forEach((q, idx) => {
+                const isSelected = idx === currentQuestionIndex;
+                const isAnswered = !!userAnswers[q.question_number];
+                const isMarked = markedForReview[idx];
+                
+                let bg = '#F8FAFC';
+                let border = '1px solid var(--border-glass)';
+                let color = 'var(--text-main)';
+                
+                if (isMarked) {
+                    bg = '#FAF5FF';
+                    border = '2px solid #7C3AED';
+                    color = '#7C3AED';
+                } else if (isAnswered) {
+                    bg = '#EFF6FF';
+                    border = '1px solid var(--primary-blue)';
+                    color = 'var(--primary-blue)';
+                }
+                
+                if (isSelected) {
+                    border = isMarked ? '2px solid #7C3AED' : '2px solid var(--primary-blue)';
+                    if (!isMarked && !isAnswered) {
+                        bg = '#E2E8F0';
+                        color = 'var(--text-dark)';
+                    }
+                }
+                
+                container.innerHTML += `
+                    <button onclick="goToQuestion(${idx})" style="background:${bg}; border:${border}; color:${color}; font-weight:700; border-radius:6px; padding:10px; cursor:pointer; text-align:center; font-size:13px; transition:all 0.2s;">
+                        ${idx + 1}
+                    </button>
+                `;
+            });
+        }
+
+        function updateExamProgressBar() {
+            const answeredCount = Object.keys(userAnswers).length;
+            const pct = (answeredCount / examQuestions.length) * 100;
+            document.getElementById('exam-progress-bar').style.width = `${pct}%`;
+        }
+
+        function goToQuestion(idx) {
+            currentQuestionIndex = idx;
+            renderQuestion();
+        }
+        
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderQuestion();
+            }
+        }
+        
+        function nextQuestion() {
+            if (currentQuestionIndex < examQuestions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            }
+        }
+
+        function startTimer() {
+            clearInterval(examTimerInterval);
+            const timerEl = document.getElementById('exam-timer');
+            
+            examTimerInterval = setInterval(() => {
+                if (examTimeRemaining <= 0) {
+                    clearInterval(examTimerInterval);
+                    timerEl.innerHTML = `<span class="material-symbols-outlined">alarm</span> 00:00`;
+                    autoSubmitExam();
+                } else {
+                    examTimeRemaining--;
+                    const minutes = Math.floor(examTimeRemaining / 60);
+                    const seconds = examTimeRemaining % 60;
+                    
+                    const minStr = String(minutes).padStart(2, '0');
+                    const secStr = String(seconds).padStart(2, '0');
+                    
+                    timerEl.innerHTML = `<span class="material-symbols-outlined" style="${examTimeRemaining < 300 ? 'color:var(--accent-red); animation: pulse 0.5s infinite;' : ''}">alarm</span> ${minStr}:${secStr}`;
+                    
+                    if (examTimeRemaining < 300) {
+                        timerEl.style.backgroundColor = '#FEE2E2';
+                        timerEl.style.color = '#B91C1C';
+                        timerEl.style.borderColor = '#FCA5A5';
+                    } else {
+                        timerEl.style.backgroundColor = '#FEF2F2';
+                        timerEl.style.color = 'var(--accent-red)';
+                        timerEl.style.borderColor = '#FCA5A5';
+                    }
+                }
+            }, 1000);
+        }
+
+        function confirmSubmitExam() {
+            const unanswered = examQuestions.length - Object.keys(userAnswers).length;
+            let msg = "Are you sure you want to submit your exam attempt?";
+            if (unanswered > 0) {
+                msg = `You have ${unanswered} unanswered questions. Are you sure you want to submit?`;
+            }
+            
+            if (confirm(msg)) {
+                submitExam();
+            }
+        }
+        
+        async function autoSubmitExam() {
+            alert("Time limit expired! Your exam attempt is being automatically submitted.");
+            submitExam();
+        }
+        
+        async function submitExam() {
+            clearInterval(examTimerInterval);
+            
+            document.getElementById('cert-exam-panel').style.display = 'none';
+            document.getElementById('cert-home-view').style.display = 'none';
+            
+            const viewport = document.getElementById('help-content-pane');
+            
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'exam-loading-overlay';
+            loadingDiv.style.textAlign = 'center';
+            loadingDiv.style.padding = '100px 0';
+            loadingDiv.innerHTML = `
+                <span class="material-symbols-outlined" style="font-size:64px; animation: spin 1s linear infinite; color:var(--primary-blue); margin-bottom:16px;">sync</span>
+                <h2 style="color:var(--primary-navy); font-size:20px;">Grading Exam Attempt...</h2>
+                <p style="color:var(--text-muted); margin-top:8px;">Please wait while the system verifies your answers.</p>
+            `;
+            viewport.appendChild(loadingDiv);
+            
+            const res = await api('smriti_retail_os.api.help_api.submit_psv_exam', {
+                attempt_id: activeAttempt.attempt_id,
+                answers_json: JSON.stringify(userAnswers)
+            });
+            
+            loadingDiv.remove();
+            
+            if (res) {
+                showResultCard(res);
+            } else {
+                frappe.show_alert({ message: "An error occurred during submission. Please check system logs.", indicator: 'red' });
+                resetCertView();
+            }
+        }
+
+        function showResultCard(res) {
+            document.getElementById('cert-home-view').style.display = 'none';
+            document.getElementById('cert-exam-panel').style.display = 'none';
+            
+            const card = document.getElementById('cert-result-card');
+            card.style.display = 'block';
+            
+            const scoreVal = res.score;
+            const passed = res.status === 'Passed';
+            
+            const titleEl = document.getElementById('result-title');
+            const scoreEl = document.getElementById('result-score');
+            const statsEl = document.getElementById('result-stats-text');
+            const iconEl = document.getElementById('result-icon');
+            
+            scoreEl.textContent = `${scoreVal}%`;
+            statsEl.textContent = `You answered ${res.correct_answers} out of ${res.total_questions} questions correctly (Required: 80%).`;
+            
+            if (passed) {
+                titleEl.textContent = 'Exam Passed Successfully!';
+                iconEl.textContent = 'check_circle';
+                iconEl.style.color = 'var(--accent-green)';
+                scoreEl.style.color = 'var(--accent-green)';
+                card.style.borderTopColor = 'var(--accent-green)';
+                
+                document.getElementById('result-success-actions').style.display = 'block';
+                card.setAttribute('data-hash', res.certificate_hash);
+                card.setAttribute('data-attempt-id', activeAttempt.attempt_id);
+            } else {
+                titleEl.textContent = 'Exam Attempt Failed';
+                iconEl.textContent = 'cancel';
+                iconEl.style.color = 'var(--accent-red)';
+                scoreEl.style.color = 'var(--accent-red)';
+                card.style.borderTopColor = 'var(--accent-red)';
+                
+                document.getElementById('result-success-actions').style.display = 'none';
+            }
+            
+            const feedbackContainer = document.getElementById('incorrect-feedback-container');
+            feedbackContainer.innerHTML = '';
+            
+            if (res.incorrect_feedback && res.incorrect_feedback.length > 0) {
+                res.incorrect_feedback.forEach(item => {
+                    feedbackContainer.innerHTML += `
+                        <div style="background:#FFF8F8; border:1px solid #FEE2E2; border-left:4px solid var(--accent-red); padding:16px; border-radius:8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:8px;">
+                                <span style="font-weight:700; color:var(--primary-navy); font-size:14px;">Question ${item.question_number}</span>
+                                <span style="font-size:11px; font-weight:700; color:#B91C1C; background:#FEE2E2; padding:2px 8px; border-radius:12px;">Wrong Answer</span>
+                            </div>
+                            <div style="font-size:13px; color:var(--text-main); margin-bottom:8px;">
+                                Your Answer: <strong style="color:#B91C1C;">${item.user_answer}</strong> | Correct Answer: <strong style="color:#15803D;">${item.correct_answer}</strong>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                                <span style="font-size:12px; color:var(--text-muted); display:inline-flex; align-items:center; gap:4px;">
+                                    <span class="material-symbols-outlined" style="font-size:14px;">menu_book</span> ${item.chapter_title} (Chapter ${item.chapter_number})
+                                </span>
+                                <button onclick="goToExplainChapter('${item.section_slug}')" style="background:#FEE2E2; color:#B91C1C; border:none; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                                    <span class="material-symbols-outlined" style="font-size:14px;">school</span> Learn Again
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                feedbackContainer.innerHTML = `<div style="color:var(--accent-green); font-size:14px; font-weight:700; text-align:center;">Perfect Score! No incorrect answers to review.</div>`;
+            }
+        }
+
+        function downloadCertificate(attemptId) {
+            const id = attemptId || document.getElementById('cert-result-card').getAttribute('data-attempt-id');
+            if (id) {
+                window.location.href = `/api/method/smriti_retail_os.api.help_api.download_psv_certificate?attempt_id=${id}`;
+            }
+        }
+        
+        function printCertificateDirect() {
+            const id = document.getElementById('cert-result-card').getAttribute('data-attempt-id');
+            if (id) {
+                window.open(`/api/method/smriti_retail_os.api.help_api.download_psv_certificate?attempt_id=${id}`, '_blank');
+            }
+        }
+
+        function resetCertView() {
+            document.getElementById('cert-home-view').style.display = 'block';
+            document.getElementById('cert-exam-panel').style.display = 'none';
+            document.getElementById('cert-result-card').style.display = 'none';
+            loadCertificationData();
+        }
+
+        function goToExplainChapter(sectionSlug) {
+            window.history.pushState(null, '', `?tab=manuals&manual=psv_certified_planner_guide&section=${sectionSlug}`);
+            loadManualVolume('psv_certified_planner_guide');
         }
     </script>
     <style>

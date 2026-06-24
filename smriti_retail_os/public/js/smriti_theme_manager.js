@@ -145,6 +145,30 @@
         }
 
         _applyStyleTag.textContent = cssText;
+
+        /* Apply profile_token_set class to body safely */
+        if (typeof document !== "undefined" && document.body) {
+            var body = document.body;
+            var classesToRemove = [];
+            for (var i = 0; i < body.classList.length; i++) {
+                var cls = body.classList.item(i);
+                if (cls && cls.indexOf("smriti-theme-") === 0) {
+                    classesToRemove.push(cls);
+                }
+            }
+            classesToRemove.forEach(function (cls) {
+                body.classList.remove(cls);
+            });
+
+            var profileTokenSet = tokens["profile_token_set"];
+            if (profileTokenSet) {
+                body.classList.add("smriti-theme-" + profileTokenSet);
+                body.setAttribute("data-theme-profile", profileTokenSet);
+            } else {
+                body.removeAttribute("data-theme-profile");
+            }
+        }
+
         _lastAppliedConfig = config;
 
         /* Dispatch event for listeners (e.g., charts that need to redraw) */
@@ -208,6 +232,88 @@
         }
         console.warn("[SMRITI Theme Manager] debugUIConfig is only available on localhost.");
         return null;
+    };
+
+    /* ═══════════════════════════════════════════════════════════════════
+       SMRITI.switchTheme(themeKey)
+       Pre-condition 2 (THEME-002): Real-time theme switching without reload.
+       Status: IMPLEMENTED — 2026-06-24 (ux_theme_audit_v1.1.md)
+
+       Valid themeKey values:
+         'hybrid-light'    — Neumorphic clay. Default. Premium visual.
+         'hybrid-dark'     — Dark mode. Night-shift / technical users.
+         'sleek-compact'   — High-density flat. Inventory / purchase ops.
+         'minimalist'      — Ultra-clean enterprise white.
+
+       Fires 'smriti-theme-changed' CustomEvent on document.
+       Components that render theme-sensitive content should listen for it.
+
+       Usage:
+         SMRITI.switchTheme('sleek-compact');
+    ═══════════════════════════════════════════════════════════════════ */
+    SMRITI.switchTheme = function (themeKey) {
+        var validKeys = ["hybrid-light", "hybrid-dark", "sleek-compact", "minimalist"];
+
+        /* Normalize legacy keys */
+        if (themeKey === "hybrid")    themeKey = "hybrid-light";
+        if (themeKey === "smriti-default") themeKey = "hybrid-light";
+
+        if (validKeys.indexOf(themeKey) === -1) {
+            console.warn("[SMRITI Theme Manager] Invalid theme key:", themeKey,
+                         "— must be one of:", validKeys.join(", "));
+            return;
+        }
+
+        try {
+            /* Persist preference — resolver reads this at Level 4 */
+            localStorage.setItem("smriti-theme-style", themeKey);
+
+            /* Re-resolve with new preference and apply immediately */
+            var config = SMRITI.getResolvedUIConfig();
+            SMRITI.applyUIConfig(config);
+
+            /* Apply body class for CSS-only selectors (backward compat) */
+            document.body.classList.remove(
+                "theme-minimalist", "theme-sleek-compact",
+                "theme-hybrid-light", "theme-hybrid-dark"
+            );
+            document.body.classList.add("theme-" + themeKey);
+            document.body.setAttribute("data-smriti-theme", themeKey);
+
+            /* Dispatch event for subscribers (charts, components, sidebar pills) */
+            document.dispatchEvent(new CustomEvent("smriti-theme-changed", {
+                bubbles: true,
+                detail: {
+                    theme:  themeKey,
+                    mode:   config.mode,
+                    tokens: config.tokens
+                }
+            }));
+
+            /* Also fire legacy event for sidebar style-changed listeners */
+            document.dispatchEvent(new CustomEvent("smriti-theme-style-changed", {
+                bubbles: true,
+                detail: { style: themeKey }
+            }));
+
+        } catch (e) {
+            console.error("[SMRITI Theme Manager] switchTheme failed:", e);
+        }
+    };
+
+    /* ═══════════════════════════════════════════════════════════════════
+       SMRITI.getCurrentTheme()
+       Returns the currently active theme key from localStorage.
+       Defaults to 'hybrid-light' if not set.
+       Used by sidebar theme pills to sync active state.
+    ═══════════════════════════════════════════════════════════════════ */
+    SMRITI.getCurrentTheme = function () {
+        try {
+            var raw = localStorage.getItem("smriti-theme-style") || "hybrid-light";
+            return raw === "hybrid" ? "hybrid-light" : raw;
+        } catch (e) {
+            return "hybrid-light";
+        }
     };
 
     /* ═══════════════════════════════════════════════════════════════════
