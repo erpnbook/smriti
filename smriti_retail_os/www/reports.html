@@ -12,6 +12,21 @@
 <html lang="en">
 <head>
 {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+<!-- SMRITI TOKEN LOADER EXTENSION: page-level overrides -->
+<style>
+:root {
+    --smriti-c1-dark-green: var(--smriti-c1-dark-green);
+    --smriti-c1-dark-red: var(--smriti-c1-dark-red);
+    --smriti-c1-dark-indigo: var(--smriti-c1-dark-indigo);
+    --smriti-c1-bg-deep: var(--smriti-c1-bg-deep);
+    --smriti-c1-gray-100: var(--smriti-c1-gray-100);
+    --smriti-c1-black: var(--smriti-c1-black);
+    --smriti-c1-gray-mid: var(--smriti-c1-gray-mid);
+    --smriti-c1-gray-light: var(--smriti-c1-gray-light);
+    --smriti-c1-gray-dark: var(--smriti-c1-gray-dark);
+    --smriti-c1-gray-mid2: var(--smriti-c1-gray-mid2);
+}
+</style>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>SMRITI Reports Center</title>
@@ -42,7 +57,7 @@
       --radius:      12px;
       --radius-sm:   8px;
       --radius-lg:   16px;
-      --shadow:      0 8px 32px rgba(0,0,0,0.5);
+      --shadow:      0 8px 32px var(--smriti-color-overlay-md);
       --font-mono:   'JetBrains Mono', monospace;
       --t:           0.2s ease;
     }
@@ -54,14 +69,14 @@
     .bg-grid {
       position: fixed; inset: 0;
       background-image:
-        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+        linear-gradient(var(--smriti-color-brand-overlay-xxs) 1px, transparent 1px),
+        linear-gradient(90deg, var(--smriti-color-brand-overlay-xxs) 1px, transparent 1px);
       background-size: 50px 50px;
       z-index: 0;
     }
     .bg-glow {
       position: fixed; width: 600px; height: 600px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(99,102,241,0.04) 0%, transparent 70%);
+      background: radial-gradient(circle, var(--smriti-color-brand-overlay-xxs) 0%, transparent 70%);
       top: -100px; left: -100px; z-index: 0; filter: blur(40px);
     }
 
@@ -174,11 +189,11 @@
       text-decoration: none;
     }
     .report-item-link:hover {
-      background: rgba(255,255,255,0.03);
+      background: var(--smriti-color-surface-glass-xs);
       color: var(--text-1);
     }
     .report-item-link.active {
-      background: rgba(99,102,241,0.12);
+      background: var(--smriti-color-brand-glow-sm);
       color: var(--accent-2);
       font-weight: 600;
       border-left: 3px solid var(--accent);
@@ -266,7 +281,7 @@
       color: var(--accent-2);
       padding: 3px 8px;
       border-radius: 12px;
-      border: 1px solid rgba(99,102,241,0.25);
+      border: 1px solid var(--smriti-color-brand-glow-md);
     }
     .report-sub {
       font-size: 0.85rem;
@@ -354,7 +369,7 @@
       font-size: 0.88rem;
     }
     .data-table th {
-      background: #0f1629;
+      background: var(--smriti-c1-bg-deep);
       position: sticky;
       top: 0;
       z-index: 10;
@@ -375,12 +390,12 @@
     }
     .data-table th.dragging {
       opacity: 0.5;
-      background: rgba(99, 102, 241, 0.15) !important;
+      background: var(--smriti-color-brand-glow-sm) !important;
       border: 1px dashed var(--accent);
     }
     .data-table th.drag-over {
       border-left: 2px solid var(--accent) !important;
-      background: rgba(99, 102, 241, 0.08);
+      background: var(--smriti-color-brand-overlay-xs);
     }
     .data-table th.sort-asc::after {
       content: '  ▲';
@@ -400,7 +415,7 @@
       white-space: nowrap;
     }
     .data-table tr:hover td {
-      background: rgba(255,255,255,0.015);
+      background: var(--smriti-color-surface-glass-xs);
     }
     
     /* Grid summary row */
@@ -476,7 +491,7 @@
       user-select: none;
     }
     .dropdown-item:hover {
-      background: rgba(255,255,255,0.03);
+      background: var(--smriti-color-surface-glass-xs);
       color: var(--text-1);
     }
     .dropdown-item input {
@@ -485,8 +500,8 @@
     
     /* Preset groups styles */
     .preset-group { display: flex; gap: 6px; }
-    .btn-preset { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); font-size: 0.78rem; font-weight: 600; padding: 7px 12px; cursor: pointer; transition: all var(--t); }
-    .btn-preset:hover { background: rgba(99,102,241,0.08); color: var(--accent-2); border-color: var(--accent); }
+    .btn-preset { background: var(--smriti-color-surface-glass-xs); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); font-size: 0.78rem; font-weight: 600; padding: 7px 12px; cursor: pointer; transition: all var(--t); }
+    .btn-preset:hover { background: var(--smriti-color-brand-overlay-xs); color: var(--accent-2); border-color: var(--accent); }
     .btn-preset.active { background: var(--glow-brand-sm); color:var(--smriti-color-text-primary); border-color: var(--accent); }
 
     .btn-run { display: inline-flex; align-items: center; gap: 8px; padding: 9px 20px; border-radius: var(--radius-sm); border: none; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all var(--t); background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; box-shadow: 0 4px 12px var(--border-glow); }
@@ -502,10 +517,10 @@
 
     /* Buttons secondary */
     .btn-export { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: transparent; color: var(--text-2); font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all var(--t); }
-    .btn-export:hover { border-color: var(--accent); color: var(--accent-2); background: rgba(99,102,241,0.04); }
+    .btn-export:hover { border-color: var(--accent); color: var(--accent-2); background: var(--smriti-color-brand-overlay-xxs); }
 
     /* Loading mask */
-    .loading-mask { position: absolute; inset: 0; background: rgba(15, 22, 41, 0.7); backdrop-filter: blur(2px); z-index: 100; display: none; align-items: center; justify-content: center; border-radius: var(--radius-lg); }
+    .loading-mask { position: absolute; inset: 0; background: var(--smriti-color-overlay-md); backdrop-filter: blur(2px); z-index: 100; display: none; align-items: center; justify-content: center; border-radius: var(--radius-lg); }
     .loading-mask.active { display: flex; }
     .spinner { width: 36px; height: 36px; border: 3px solid var(--ov-white-md); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -513,9 +528,9 @@
     /* Toast Container */
     .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 99999; }
     .toast { padding: 12px 18px; border-radius: var(--radius); font-size: 0.88rem; font-weight: 600; color: white; min-width: 240px; display: flex; align-items: center; gap: 10px; animation: toast-in 0.3s ease; box-shadow: var(--shadow); }
-    .toast.success { background: #065f46; border: 1px solid rgba(16,185,129,0.3); }
-    .toast.error   { background: #7f1d1d; border: 1px solid var(--glow-danger-md); }
-    .toast.info    { background: #1e1b4b; border: 1px solid var(--glow-brand-lg); }
+    .toast.success { background: var(--smriti-c1-dark-green); border: 1px solid var(--smriti-color-status-success-glow); }
+    .toast.error   { background: var(--smriti-c1-dark-red); border: 1px solid var(--glow-danger-md); }
+    .toast.info    { background: var(--smriti-c1-dark-indigo); border: 1px solid var(--glow-brand-lg); }
     @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 
     @keyframes modal-in {
@@ -588,7 +603,7 @@
       align-content: flex-start;
       min-height: 120px;
       padding: 6px;
-      border: 1px dashed rgba(255,255,255,0.03);
+      border: 1px dashed var(--smriti-color-surface-glass-xs);
       border-radius: var(--radius-sm);
     }
     .pivot-tag {
@@ -607,7 +622,7 @@
     }
     .pivot-tag:hover {
       border-color: var(--accent);
-      background: rgba(99, 102, 241, 0.1);
+      background: var(--smriti-color-brand-overlay-xs);
     }
     .pivot-tag.dragging {
       opacity: 0.4;
@@ -618,7 +633,7 @@
       gap: 14px;
     }
     .pivot-zone-card {
-      background: rgba(255,255,255,0.01);
+      background: var(--smriti-color-surface-glass-xs);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       display: flex;
@@ -646,7 +661,7 @@
       transition: all var(--t);
     }
     .pivot-zone-drop.drag-over {
-      background: rgba(99, 102, 241, 0.05);
+      background: var(--smriti-color-brand-overlay-xxs);
       border: 1px dashed var(--accent);
     }
     .pivot-zone-placeholder {
@@ -674,12 +689,12 @@
       .reports-shell { height: auto !important; overflow: visible !important; }
       .reports-workspace { overflow: visible !important; background: white !important; padding: 0 !important; }
       .report-content { display: block !important; overflow: visible !important; padding: 0 !important; }
-      .report-hdr { margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+      .report-hdr { margin-bottom: 20px; border-bottom: 2px solid var(--smriti-c1-black); padding-bottom: 10px; }
       .report-title { color: black !important; font-size: 2rem !important; }
-      .category-badge { border: 1px solid #000 !important; color: black !important; background: none !important; }
-      .data-table { border: 1px solid #000 !important; }
-      .data-table th { background: #f0f0f0 !important; color: black !important; border-bottom: 2px solid #000 !important; }
-      .data-table td { color: black !important; border-bottom: 1px solid #ccc !important; }
+      .category-badge { border: 1px solid var(--smriti-c1-black) !important; color: black !important; background: none !important; }
+      .data-table { border: 1px solid var(--smriti-c1-black) !important; }
+      .data-table th { background: var(--smriti-c1-gray-100) !important; color: black !important; border-bottom: 2px solid var(--smriti-c1-black) !important; }
+      .data-table td { color: black !important; border-bottom: 1px solid var(--smriti-c1-gray-light) !important; }
       .table-scroll-container { overflow: visible !important; }
     }
   
@@ -690,7 +705,7 @@
     ──────────────────────────────────────────────────────────────────────── */
     :root {
         --ov-white-xs:    rgba(255,255,255,0.02);
-        --ov-white-sm:    rgba(255,255,255,0.04);
+        --ov-white-sm:    var(--smriti-color-surface-glass-xs);
         --ov-white-md:    rgba(255,255,255,0.06);
         --ov-white-lg:    var(--smriti-color-border-default);
         --ov-white-xl:    rgba(255,255,255,0.10);
@@ -707,13 +722,13 @@
         --glow-brand-md:  rgba(20,184,166,0.10);
         --glow-brand-lg:  rgba(20,184,166,0.18);
         --glow-brand-xl:  rgba(20,184,166,0.25);
-        --glow-success-xs: rgba(16,185,129,0.06);
-        --glow-success-sm: rgba(16,185,129,0.12);
+        --glow-success-xs: var(--smriti-color-status-success-bg);
+        --glow-success-sm: var(--smriti-color-status-success-bg);
         --glow-success-md: rgba(16,185,129,0.25);
-        --glow-warn-xs:   rgba(245,158,11,0.06);
-        --glow-warn-sm:   rgba(245,158,11,0.12);
+        --glow-warn-xs:   var(--smriti-color-status-warning-bg);
+        --glow-warn-sm:   var(--smriti-color-status-warning-bg);
         --glow-warn-md:   rgba(245,158,11,0.25);
-        --glow-danger-xs: rgba(239,68,68,0.06);
+        --glow-danger-xs: var(--smriti-color-status-danger-bg);
         --glow-danger-sm: rgba(239,68,68,0.12);
         --glow-danger-md: rgba(239,68,68,0.25);
     }
@@ -947,7 +962,7 @@
 <div class="toast-container" id="toast-wrap"></div>
 
 <!-- Explain Modal -->
-<div id="smriti-explain-modal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(10, 15, 30, 0.8); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
+<div id="smriti-explain-modal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: var(--smriti-color-overlay-dark); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center; padding: 20px;">
   <div class="modal-content" style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); width: 100%; max-width: 700px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: var(--shadow); overflow: hidden; animation: modal-in 0.3s ease;">
     <!-- Modal Header -->
     <div style="padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg-card);">
@@ -1994,7 +2009,7 @@
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                 <strong style="color:var(--accent-2); font-size:0.85rem;">🧮 Formula: ${f.formula_name} (${f.formula_id})</strong>
               </div>
-              <div style="font-family:var(--font-mono); background:var(--bg-input); padding:6px 10px; border-radius:4px; font-size:0.85rem; color:var(--text-1); margin-bottom:6px; border:1px solid rgba(255,255,255,0.03); white-space:pre-wrap; word-break:break-all;">
+              <div style="font-family:var(--font-mono); background:var(--bg-input); padding:6px 10px; border-radius:4px; font-size:0.85rem; color:var(--text-1); margin-bottom:6px; border:1px solid var(--smriti-color-surface-glass-xs); white-space:pre-wrap; word-break:break-all;">
                 ${f.formula_expression}
               </div>
               <div style="font-size:0.82rem; color:var(--text-2); margin-bottom: 6px;">
@@ -2060,7 +2075,7 @@
       btn.classList.add('active');
       btn.style.borderColor = 'var(--accent)';
       btn.style.color = 'var(--accent-2)';
-      btn.style.background = 'rgba(99, 102, 241, 0.08)';
+      btn.style.background = 'var(--smriti-color-brand-overlay-xs)';
       renderPivotZones();
     } else {
       panel.style.display = 'none';
@@ -2474,7 +2489,7 @@
           const td = document.createElement('td');
           td.style.fontWeight = 'bold';
           td.style.textAlign = 'right';
-          td.style.background = 'rgba(255,255,255,0.03)';
+          td.style.background = 'var(--smriti-color-surface-glass-xs)';
           
           let rowResult = rowValAccumulators[valIdx];
           if (val.agg === 'avg' && rowValCounts[valIdx] > 0) {
@@ -2579,9 +2594,9 @@
           const printSection = document.createElement('div');
           printSection.id = 'print-methodology-appendix';
           printSection.style.marginTop = '40px';
-          printSection.style.borderTop = '2px solid #333';
+          printSection.style.borderTop = '2px solid var(--smriti-c1-gray-dark)';
           printSection.style.paddingTop = '20px';
-          printSection.style.color = '#000';
+          printSection.style.color = 'var(--smriti-c1-black)';
           printSection.style.fontFamily = 'Arial, sans-serif';
           
           let formulasHtml = '';
@@ -2589,7 +2604,7 @@
             formulasHtml += `
               <div style="margin-bottom:12px;">
                 <strong>${f.name}</strong>: <code>${f.formula}</code><br>
-                <span style="font-size:0.85rem;color:#555;">${f.explanation}</span>
+                <span style="font-size:0.85rem;color:var(--smriti-c1-gray-mid2);">${f.explanation}</span>
               </div>
             `;
           });
@@ -2597,7 +2612,7 @@
           let rulesHtml = `
             <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:0.85rem;">
               <thead>
-                <tr style="border-bottom:1px solid #333;">
+                <tr style="border-bottom:1px solid var(--smriti-c1-gray-dark);">
                   <th style="text-align:left; padding:4px;">Category</th>
                   <th style="text-align:left; padding:4px;">Velocity</th>
                   <th style="text-align:left; padding:4px;">GMROI</th>
@@ -2609,12 +2624,12 @@
           `;
           methodology.classification_rules.forEach(r => {
             rulesHtml += `
-              <tr style="border-bottom:1px dotted #ccc;">
+              <tr style="border-bottom:1px dotted var(--smriti-c1-gray-light);">
                 <td style="padding:4px; font-weight:bold;">${r.category}</td>
                 <td style="padding:4px;">${r.velocity}</td>
                 <td style="padding:4px;">${r.gmroi}</td>
                 <td style="padding:4px; font-weight:bold;">${r.action}</td>
-                <td style="padding:4px; color:#555;">${r.description}</td>
+                <td style="padding:4px; color:var(--smriti-c1-gray-mid2);">${r.description}</td>
               </tr>
             `;
           });
@@ -2623,19 +2638,19 @@
           printSection.innerHTML = `
             <div style="page-break-before: always; height: 1px;"></div>
             <h2 style="font-size:1.4rem; margin-bottom:10px;">${methodology.title}</h2>
-            <div style="font-size:0.82rem; margin-bottom:15px; font-style:italic; color:#666;">
+            <div style="font-size:0.82rem; margin-bottom:15px; font-style:italic; color:var(--smriti-c1-gray-mid);">
               Methodology Version: ${methodology.version} | Effective: ${methodology.effective_date} | OS Version: v${methodology.smriti_version}<br>
               Author: ${methodology.author.name} (${methodology.author.title} - ${methodology.author.org})
             </div>
             <p style="font-size:0.9rem; margin-bottom:20px; line-height:1.5;">${methodology.summary}</p>
             
-            <h3 style="font-size:1.1rem; margin-bottom:10px; border-bottom:1px solid #666; padding-bottom:4px;">Calculations & Formulas</h3>
+            <h3 style="font-size:1.1rem; margin-bottom:10px; border-bottom:1px solid var(--smriti-c1-gray-mid); padding-bottom:4px;">Calculations & Formulas</h3>
             ${formulasHtml}
             
-            <h3 style="font-size:1.1rem; margin-top:20px; margin-bottom:10px; border-bottom:1px solid #666; padding-bottom:4px;">Classification Matrix</h3>
+            <h3 style="font-size:1.1rem; margin-top:20px; margin-bottom:10px; border-bottom:1px solid var(--smriti-c1-gray-mid); padding-bottom:4px;">Classification Matrix</h3>
             ${rulesHtml}
             
-            <div style="margin-top:30px; font-size:0.82rem; border-top:1px solid #ccc; padding-top:10px; font-style:italic; color:#666;">
+            <div style="margin-top:30px; font-size:0.82rem; border-top:1px solid var(--smriti-c1-gray-light); padding-top:10px; font-style:italic; color:var(--smriti-c1-gray-mid);">
               ${methodology.about}
             </div>
           `;

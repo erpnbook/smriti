@@ -9,6 +9,15 @@
 <html lang="en">
 <head>
 {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+<!-- SMRITI TOKEN LOADER EXTENSION: page-level overrides -->
+<style>
+:root {
+    --smriti-c1-dark-green: var(--smriti-c1-dark-green);
+    --smriti-c1-dark-red: var(--smriti-c1-dark-red);
+    --smriti-c1-dark-indigo: var(--smriti-c1-dark-indigo);
+    --smriti-c1-gray-400: var(--smriti-c1-gray-400);
+}
+</style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SMRITI Billing Terminal</title>
@@ -200,9 +209,9 @@ html, body {
 .topbtn.primary {
     background: linear-gradient(135deg, var(--primary), var(--smriti-color-brand-secondary));
     border-color: transparent; color: white;
-    box-shadow: 0 4px 12px rgba(99,102,241,0.25);
+    box-shadow: 0 4px 12px var(--smriti-color-brand-glow-md);
 }
-.topbtn.primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(99,102,241,0.4); }
+.topbtn.primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px var(--smriti-color-brand-glow-strong); }
 .topbtn span { font-size: 15px; }
 
 
@@ -323,7 +332,7 @@ tbody td {
     color: var(--text); font-size: 0.88rem;
     vertical-align: middle;
 }
-tbody tr:hover td { background: rgba(99,102,241,0.04); }
+tbody tr:hover td { background: var(--smriti-color-brand-overlay-xxs); }
 tbody tr:last-child td { border-bottom: none; }
 
 .qty-input, .rate-input {
@@ -474,20 +483,20 @@ tbody tr:last-child td { border-bottom: none; }
     color: var(--text-muted);
 }
 .balance-box.pending { background: var(--glow-danger-xs); border-color: var(--glow-danger-md); color: var(--danger); }
-.balance-box.ok { background: rgba(16,185,129,0.08); border-color: rgba(16,185,129,0.3); color: var(--success); }
+.balance-box.ok { background: var(--smriti-color-status-success-bg); border-color: var(--smriti-color-status-success-glow); color: var(--success); }
 
 /* Checkout button */
 .btn-checkout {
     width: 100%; padding: 14px;
-    background: linear-gradient(135deg, var(--success), #059669);
+    background: linear-gradient(135deg, var(--success), var(--smriti-color-status-success));
     border: none; border-radius: var(--radius);
     color: white; font-size: 1rem; font-weight: 700;
     cursor: pointer; transition: all var(--t);
     display: flex; align-items: center; justify-content: center; gap: 6px;
-    box-shadow: 0 6px 20px rgba(16,185,129,0.2);
+    box-shadow: 0 6px 20px var(--smriti-color-status-success-bg);
 }
 .btn-checkout span { font-size: 20px; }
-.btn-checkout:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(16,185,129,0.35); }
+.btn-checkout:hover { transform: translateY(-2px); box-shadow: 0 10px 28px var(--smriti-color-status-success-glow); }
 .btn-checkout:active { transform: translateY(0); }
 .btn-checkout:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
@@ -513,18 +522,18 @@ tbody tr:last-child td { border-bottom: none; }
     color: white; min-width: 220px;
     display: flex; align-items: center; gap: 10px;
     animation: toast-in 0.3s ease;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 24px var(--smriti-color-overlay-sm);
 }
-.toast.success { background: #065f46; border: 1px solid rgba(16,185,129,0.3); }
-.toast.error   { background: #7f1d1d; border: 1px solid var(--glow-danger-md); }
-.toast.info    { background: #1e1b4b; border: 1px solid var(--glow-brand-lg); }
+.toast.success { background: var(--smriti-c1-dark-green); border: 1px solid var(--smriti-color-status-success-glow); }
+.toast.error   { background: var(--smriti-c1-dark-red); border: 1px solid var(--glow-danger-md); }
+.toast.info    { background: var(--smriti-c1-dark-indigo); border: 1px solid var(--glow-brand-lg); }
 .toast span { font-size: 20px; }
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 
 /* ── Modal ── */
 .modal-backdrop {
     position: fixed; inset: 0; z-index: 9000;
-    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    background: var(--smriti-color-overlay-dark); backdrop-filter: blur(4px);
     display: flex; align-items: center; justify-content: center;
     opacity: 0; pointer-events: none; transition: opacity 0.2s;
 }
@@ -564,7 +573,7 @@ tbody tr:last-child td { border-bottom: none; }
     cursor: pointer; transition: background var(--t);
     border-bottom: 1px solid var(--border);
 }
-.search-result-item:hover { background: rgba(99,102,241,0.08); }
+.search-result-item:hover { background: var(--smriti-color-brand-overlay-xs); }
 .search-result-item:last-child { border-bottom: none; }
 .sri-name { font-weight: 600; font-size: 0.92rem; }
 .sri-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
@@ -605,7 +614,7 @@ tbody tr:last-child td { border-bottom: none; }
     ──────────────────────────────────────────────────────────────────────── */
     :root {
         --ov-white-xs:    rgba(255,255,255,0.02);
-        --ov-white-sm:    rgba(255,255,255,0.04);
+        --ov-white-sm:    var(--smriti-color-surface-glass-xs);
         --ov-white-md:    rgba(255,255,255,0.06);
         --ov-white-lg:    var(--smriti-color-border-default);
         --ov-white-xl:    rgba(255,255,255,0.10);
@@ -622,13 +631,13 @@ tbody tr:last-child td { border-bottom: none; }
         --glow-brand-md:  rgba(20,184,166,0.10);
         --glow-brand-lg:  rgba(20,184,166,0.18);
         --glow-brand-xl:  rgba(20,184,166,0.25);
-        --glow-success-xs: rgba(16,185,129,0.06);
-        --glow-success-sm: rgba(16,185,129,0.12);
+        --glow-success-xs: var(--smriti-color-status-success-bg);
+        --glow-success-sm: var(--smriti-color-status-success-bg);
         --glow-success-md: rgba(16,185,129,0.25);
-        --glow-warn-xs:   rgba(245,158,11,0.06);
-        --glow-warn-sm:   rgba(245,158,11,0.12);
+        --glow-warn-xs:   var(--smriti-color-status-warning-bg);
+        --glow-warn-sm:   var(--smriti-color-status-warning-bg);
         --glow-warn-md:   rgba(245,158,11,0.25);
-        --glow-danger-xs: rgba(239,68,68,0.06);
+        --glow-danger-xs: var(--smriti-color-status-danger-bg);
         --glow-danger-sm: rgba(239,68,68,0.12);
         --glow-danger-md: rgba(239,68,68,0.25);
     }
@@ -719,7 +728,7 @@ tbody tr:last-child td { border-bottom: none; }
                 <button class="btn-camera" onclick="openItemSearch()" title="F2: Search Items">
                     <span class="material-symbols-outlined">search</span> F2 Search
                 </button>
-                <button class="btn-camera" style="background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.25);color:#fbbf24;" onclick="triggerPdtUpload()" title="Import from PDT / CSV / Excel barcode file">
+                <button class="btn-camera" style="background:var(--smriti-color-status-warning-bg);border-color:var(--smriti-color-status-warning-glow);color:var(--smriti-color-status-warning);" onclick="triggerPdtUpload()" title="Import from PDT / CSV / Excel barcode file">
                     <span class="material-symbols-outlined" style="font-size:18px;">upload_file</span> Import PDT
                 </button>
                 <input type="file" id="pdt-file-input" accept=".csv,.tsv,.xlsx,.txt" style="display:none;" onchange="handlePdtUpload(this)">
@@ -953,7 +962,7 @@ tbody tr:last-child td { border-bottom: none; }
 <div class="modal-backdrop" id="modal-pdt-mapping">
     <div class="modal" style="max-width:560px;">
         <div class="modal-title">
-            <span class="material-symbols-outlined" style="font-size:20px;color:#fbbf24;">table_view</span>
+            <span class="material-symbols-outlined" style="font-size:20px;color:var(--smriti-color-status-warning);">table_view</span>
             PDT Column Mapping
             <button class="modal-close" onclick="closeModal('modal-pdt-mapping')">
                 <span class="material-symbols-outlined">close</span>
@@ -986,9 +995,9 @@ tbody tr:last-child td { border-bottom: none; }
             </button>
         </div>
         <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;">
-            <span style="color:#818cf8;">†</span> = from PDT file &nbsp;|&nbsp;
-            <span style="color:#fbbf24;">★</span> = from Item Master &nbsp;|&nbsp;
-            <span style="color:#6ee7b7;">○</span> = default &nbsp;|&nbsp;
+            <span style="color:var(--smriti-color-brand-light);">†</span> = from PDT file &nbsp;|&nbsp;
+            <span style="color:var(--smriti-color-status-warning);">★</span> = from Item Master &nbsp;|&nbsp;
+            <span style="color:var(--smriti-color-status-success-light);">○</span> = default &nbsp;|&nbsp;
             <span style="color:var(--smriti-color-status-danger);">❌</span> = barcode not found
         </div>
         <div style="overflow-x:auto;max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);">
@@ -1953,7 +1962,7 @@ async function previewPdtImport() {
 function renderPdtPreviewTable(rows) {
     const tbody = document.getElementById('pdt-preview-tbody');
     const srcIcon = { pdt: '†', item_master: '★', default: '○', not_found: '?' };
-    const srcColor = { pdt: '#818cf8', item_master: '#fbbf24', default: '#6ee7b7', not_found: '#9ca3af' };
+    const srcColor = { pdt: 'var(--smriti-color-brand-light)', item_master: 'var(--smriti-color-status-warning)', default: 'var(--smriti-color-status-success-light)', not_found: 'var(--smriti-c1-gray-400)' };
 
     let validCount = 0, errorCount = 0;
 

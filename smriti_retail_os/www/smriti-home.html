@@ -14,6 +14,16 @@
 <meta name="description" content="SMRITI Retail OS Control Center — Live dashboard, quick actions, inventory and billing">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
 {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+<!-- SMRITI TOKEN LOADER EXTENSION: page-level overrides -->
+<style>
+:root {
+    --smriti-c1-dark-green: var(--smriti-c1-dark-green);
+    --smriti-c1-dark-red: var(--smriti-c1-dark-red);
+    --smriti-c1-dark-indigo: var(--smriti-c1-dark-indigo);
+    --smriti-c1-gray-300: var(--smriti-c1-gray-300);
+    --smriti-c1-white: var(--smriti-c1-white);
+}
+</style>
 <style>
 /* ── Bridge local aliases to SMRITI Midnight tokens ──────────────────────
    These aliases preserve all existing component CSS below without changes.
@@ -49,8 +59,8 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
     position: fixed;
     inset: 0;
     background-image:
-        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
+        linear-gradient(var(--smriti-color-brand-overlay-xxs) 1px, transparent 1px),
+        linear-gradient(90deg, var(--smriti-color-brand-overlay-xxs) 1px, transparent 1px);
     background-size: 50px 50px;
     z-index: 0;
 }
@@ -59,7 +69,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
     width: 600px;
     height: 600px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
+    background: radial-gradient(circle, var(--smriti-color-brand-overlay-xxs) 0%, transparent 70%);
     top: -150px;
     left: -150px;
     z-index: 0;
@@ -79,8 +89,8 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .topbar-breadcrumbs span.active { color:var(--text); }
 .topbar-right { margin-left:auto; display:flex; align-items:center; gap:12px; }
 .topbar-badge { display:flex; align-items:center; gap:6px; padding:5px 12px; border-radius:99px; font-size:0.78rem; font-weight:700; background:var(--bg2); border:1px solid var(--border); }
-.topbar-badge.open { border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.06); color:var(--success); }
-.topbar-badge.closed { border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.06); color:var(--danger); }
+.topbar-badge.open { border-color:var(--smriti-color-status-success-glow); background:var(--smriti-color-status-success-bg); color:var(--success); }
+.topbar-badge.closed { border-color:var(--smriti-color-status-danger-glow); background:var(--smriti-color-status-danger-bg); color:var(--danger); }
 .topbar-badge .dot { width:6px; height:6px; border-radius:50%; background-color:currentColor; }
 
 /* Dashboard Container */
@@ -116,7 +126,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .action-btn { flex:1; padding:7px 10px; border-radius:var(--radius-sm); border:none; font-size:0.75rem; font-weight:700; cursor:pointer; transition:all var(--t); }
 .action-btn.std { background:var(--primary); color:white; }
 .action-btn.std:hover { background:var(--primary-lt); }
-.action-btn.pop { background:rgba(255,255,255,0.04); border:1px solid var(--border2); color:var(--text-muted); }
+.action-btn.pop { background:var(--smriti-color-surface-glass-xs); border:1px solid var(--border2); color:var(--text-muted); }
 .action-btn.pop:hover { border-color:var(--primary); color:var(--text); }
 
 /* Quick Masters */
@@ -124,7 +134,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .master-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px; display:flex; align-items:center; gap:16px; cursor:pointer; transition:all var(--t); }
 .master-card:hover { transform:translateY(-2px); border-color:var(--primary); }
 .master-icon { font-size:24px; width:46px; height:46px; background:var(--bg2); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--primary-lt); }
-.master-card:hover .master-icon { background:rgba(99,102,241,0.15); }
+.master-card:hover .master-icon { background:var(--smriti-color-brand-glow-sm); }
 .master-info { display:flex; flex-direction:column; gap:2px; }
 .master-name { font-size:0.92rem; font-weight:700; color:var(--text); }
 .master-desc { font-size:0.78rem; color:var(--text-muted); }
@@ -134,9 +144,9 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .bottom-panel { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:22px; display:flex; flex-direction:column; gap:16px; min-height:220px; }
 .alert-feed { display:flex; flex-direction:column; gap:10px; max-height:240px; overflow-y:auto; }
 .alert-item { display:flex; gap:12px; padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border); font-size:0.84rem; line-height:1.45; }
-.alert-item.info { background:rgba(99,102,241,0.06); border-color:rgba(99,102,241,0.15); }
-.alert-item.warning { background:rgba(245,158,11,0.06); border-color:rgba(245,158,11,0.15); }
-.alert-item.danger { background:rgba(239,68,68,0.06); border-color:rgba(239,68,68,0.15); }
+.alert-item.info { background:var(--smriti-color-brand-overlay-xxs); border-color:var(--smriti-color-brand-glow-sm); }
+.alert-item.warning { background:var(--smriti-color-status-warning-bg); border-color:var(--smriti-color-status-warning-glow); }
+.alert-item.danger { background:var(--smriti-color-status-danger-bg); border-color:var(--smriti-color-status-danger-bg); }
 .alert-icon { font-size:16px; margin-top:2px; }
 .alert-content { display:flex; flex-direction:column; gap:2px; }
 .alert-time { font-size:0.72rem; color:var(--text-sub); }
@@ -152,9 +162,9 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .footer { text-align:center; color:var(--text-sub); font-size:0.78rem; padding:10px 0; margin-top:auto; }
 
 /* Custom Modal */
-.modal-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(3,7,18,0.85); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.22s; }
+.modal-backdrop { position:fixed; inset:0; z-index:9000; background:var(--smriti-color-overlay-dark); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.22s; }
 .modal-backdrop.open { opacity:1; pointer-events:all; }
-.modal { background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:28px; width:100%; max-width:440px; transform:translateY(20px); transition:transform 0.22s; box-shadow:0 20px 40px rgba(0,0,0,0.5); }
+.modal { background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:28px; width:100%; max-width:440px; transform:translateY(20px); transition:transform 0.22s; box-shadow:0 20px 40px var(--smriti-color-overlay-md); }
 .modal-backdrop.open .modal { transform:translateY(0); }
 .modal-title { font-family:'Outfit',sans-serif; font-size:1.15rem; font-weight:800; margin-bottom:18px; display:flex; align-items:center; gap:8px; }
 .modal-title span.icon { color:var(--primary-lt); font-size:22px; }
@@ -163,7 +173,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
 .form-label { font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
 .form-input { padding:10px 12px; background:var(--bg); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.88rem; outline:none; transition:all var(--t); font-family:inherit; }
-.form-input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(99,102,241,0.15); }
+.form-input:focus { border-color:var(--primary); box-shadow:0 0 0 3px var(--smriti-color-brand-glow-sm); }
 .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
 .btn-action { padding:8px 18px; border-radius:var(--radius-sm); border:none; font-size:0.82rem; font-weight:700; cursor:pointer; transition:all var(--t); }
 .btn-action.primary { background:linear-gradient(135deg,var(--primary),var(--primary-lt)); color:white; }
@@ -179,12 +189,12 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
     display: flex !important;
     gap: 8px;
     z-index: 999999;
-    background: rgba(17, 24, 39, 0.85) !important;
+    background: var(--smriti-color-overlay-dark) !important;
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid var(--smriti-color-surface-glass) !important;
     padding: 6px;
     border-radius: 30px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 20px var(--smriti-color-overlay-sm);
 }
 .smriti-popout-controls-floating .smriti-popout-btn {
     width: 32px;
@@ -192,7 +202,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
     border-radius: 50%;
     border: none;
     background: none;
-    color: #d1d5db !important;
+    color: var(--smriti-c1-gray-300) !important;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -200,16 +210,16 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
     transition: all 0.2s;
 }
 .smriti-popout-controls-floating .smriti-popout-btn:hover {
-    background: rgba(255, 255, 255, 0.08) !important;
-    color: #ffffff !important;
+    background: var(--smriti-color-surface-glass) !important;
+    color: var(--smriti-c1-white) !important;
 }
 
 /* Toast Container */
 #toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
-.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
-.toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
-.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
-.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px var(--smriti-color-overlay-sm); }
+.toast.success { background:var(--smriti-c1-dark-green); border:1px solid var(--smriti-color-status-success-glow); }
+.toast.error   { background:var(--smriti-c1-dark-red); border:1px solid var(--smriti-color-status-danger-glow); }
+.toast.info    { background:var(--smriti-c1-dark-indigo); border:1px solid var(--smriti-color-brand-glow-md); }
 .toast span { font-size:20px; }
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 
@@ -221,11 +231,11 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
     margin: -8px 0;
     position: relative;
     cursor: move;
-    background: rgba(99,102,241,0.03);
+    background: var(--smriti-color-brand-overlay-xxs);
     transition: background var(--t);
 }
 .dashboard-container.edit-mode .dashboard-section:hover {
-    background: rgba(99,102,241,0.07);
+    background: var(--smriti-color-brand-overlay-xs);
 }
 .dashboard-container.edit-mode .dashboard-section.dragging {
     opacity: 0.4;
@@ -233,7 +243,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 }
 .dashboard-container.edit-mode .dashboard-section.drag-over {
     border-top: 4px solid var(--accent) !important;
-    background: rgba(245,158,11,0.05);
+    background: var(--smriti-color-status-warning-bg);
 }
 .dashboard-section-handle {
     display: none;

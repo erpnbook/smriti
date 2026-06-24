@@ -9,6 +9,14 @@
 <html lang="en">
 <head>
 {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+<!-- SMRITI TOKEN LOADER EXTENSION: page-level overrides -->
+<style>
+:root {
+    --smriti-c1-dark-green: var(--smriti-c1-dark-green);
+    --smriti-c1-dark-red: var(--smriti-c1-dark-red);
+    --smriti-c1-dark-indigo: var(--smriti-c1-dark-indigo);
+}
+</style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SMRITI Product Digital Twin Dashboard</title>
@@ -38,7 +46,7 @@
       --radius:      12px;
       --radius-sm:   8px;
       --radius-lg:   16px;
-      --shadow:      0 8px 32px rgba(0,0,0,0.5);
+      --shadow:      0 8px 32px var(--smriti-color-overlay-md);
       --t:           0.2s ease;
     }
 
@@ -47,14 +55,14 @@
     .bg-grid {
       position: fixed; inset: 0;
       background-image:
-        linear-gradient(rgba(37,99,235,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(37,99,235,0.015) 1px, transparent 1px);
+        linear-gradient(var(--smriti-color-brand-overlay-xxs) 1px, transparent 1px),
+        linear-gradient(90deg, var(--smriti-color-brand-overlay-xxs) 1px, transparent 1px);
       background-size: 50px 50px;
       z-index: 0;
     }
     .bg-glow {
       position: fixed; width: 600px; height: 600px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(37,99,235,0.04) 0%, transparent 70%);
+      background: radial-gradient(circle, var(--smriti-color-brand-overlay-xxs) 0%, transparent 70%);
       top: -100px; left: -100px; z-index: 0; filter: blur(40px);
     }
 
@@ -110,7 +118,7 @@
     .metric-card.risk-green::before { background: var(--success); }
     .metric-card.risk-amber::before { background: var(--warning); }
     .metric-card.risk-red::before { background: var(--danger); }
-    .metric-card.risk-purple::before { background: #8b5cf6; }
+    .metric-card.risk-purple::before { background: var(--smriti-color-brand-accent); }
     .metric-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .metric-title { font-size: 0.8rem; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
     .metric-icon { color: var(--text-3); }
@@ -146,12 +154,12 @@
 
     /* Twin State Badges */
     .state-badge { font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; display: inline-block; text-align: center; }
-    .state-badge.healthy { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.2); }
-    .state-badge.warning { background: rgba(245,158,11,0.1); color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
+    .state-badge.healthy { background: var(--smriti-color-status-success-bg); color: var(--success); border: 1px solid var(--smriti-color-status-success-bg); }
+    .state-badge.warning { background: var(--smriti-color-status-warning-bg); color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
     .state-badge.critical { background: var(--glow-danger-sm); color: var(--danger); border: 1px solid var(--glow-danger-md); }
-    .state-badge.stockout { background: var(--glow-danger-md); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); }
-    .state-badge.dead { background: rgba(75,85,99,0.2); color: var(--smriti-color-text-muted); border: 1px solid rgba(75,85,99,0.4); }
-    .state-badge.overstock { background: rgba(139,92,246,0.1); color: #a78bfa; border: 1px solid rgba(139,92,246,0.2); }
+    .state-badge.stockout { background: var(--glow-danger-md); color: var(--smriti-color-status-danger-light); border: 1px solid var(--smriti-color-status-danger-glow); }
+    .state-badge.dead { background: var(--smriti-color-border-default); color: var(--smriti-color-text-muted); border: 1px solid var(--smriti-color-border-strong); }
+    .state-badge.overstock { background: var(--smriti-color-brand-overlay-xxs); color: var(--smriti-color-brand-light); border: 1px solid var(--smriti-color-brand-overlay-xs); }
 
     /* WOC Bar */
     .woc-bar-container { display: flex; align-items: center; gap: 8px; }
@@ -172,9 +180,9 @@
     /* Toast Container */
     .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 99999; }
     .toast { padding: 12px 18px; border-radius: var(--radius); font-size: 0.88rem; font-weight: 600; color: white; min-width: 240px; display: flex; align-items: center; gap: 10px; animation: toast-in 0.3s ease; box-shadow: var(--shadow); }
-    .toast.success { background: #065f46; border: 1px solid rgba(16,185,129,0.3); }
-    .toast.error   { background: #7f1d1d; border: 1px solid var(--glow-danger-md); }
-    .toast.info    { background: #1e1b4b; border: 1px solid var(--glow-brand-lg); }
+    .toast.success { background: var(--smriti-c1-dark-green); border: 1px solid var(--smriti-color-status-success-glow); }
+    .toast.error   { background: var(--smriti-c1-dark-red); border: 1px solid var(--glow-danger-md); }
+    .toast.info    { background: var(--smriti-c1-dark-indigo); border: 1px solid var(--glow-brand-lg); }
     @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 
     /* Explain Tooltip Button */
@@ -182,7 +190,7 @@
     .explain-btn:hover { color: var(--accent-2); }
 
     /* Modal Backdrop */
-    .modal-backdrop { position: fixed; inset: 0; z-index: 9000; background: rgba(3,7,18,0.85); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.22s; }
+    .modal-backdrop { position: fixed; inset: 0; z-index: 9000; background: var(--smriti-color-overlay-dark); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.22s; }
     .modal-backdrop.open { opacity: 1; display: flex; }
     .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px; width: min(540px, 95vw); transform: translateY(20px); transition: transform 0.22s; box-shadow: var(--shadow); }
     .modal-backdrop.open .modal { transform: translateY(0); }
@@ -211,7 +219,7 @@
     ──────────────────────────────────────────────────────────────────────── */
     :root {
         --ov-white-xs:    rgba(255,255,255,0.02);
-        --ov-white-sm:    rgba(255,255,255,0.04);
+        --ov-white-sm:    var(--smriti-color-surface-glass-xs);
         --ov-white-md:    rgba(255,255,255,0.06);
         --ov-white-lg:    var(--smriti-color-border-default);
         --ov-white-xl:    rgba(255,255,255,0.10);
@@ -228,13 +236,13 @@
         --glow-brand-md:  rgba(20,184,166,0.10);
         --glow-brand-lg:  rgba(20,184,166,0.18);
         --glow-brand-xl:  rgba(20,184,166,0.25);
-        --glow-success-xs: rgba(16,185,129,0.06);
-        --glow-success-sm: rgba(16,185,129,0.12);
+        --glow-success-xs: var(--smriti-color-status-success-bg);
+        --glow-success-sm: var(--smriti-color-status-success-bg);
         --glow-success-md: rgba(16,185,129,0.25);
-        --glow-warn-xs:   rgba(245,158,11,0.06);
-        --glow-warn-sm:   rgba(245,158,11,0.12);
+        --glow-warn-xs:   var(--smriti-color-status-warning-bg);
+        --glow-warn-sm:   var(--smriti-color-status-warning-bg);
         --glow-warn-md:   rgba(245,158,11,0.25);
-        --glow-danger-xs: rgba(239,68,68,0.06);
+        --glow-danger-xs: var(--smriti-color-status-danger-bg);
         --glow-danger-sm: rgba(239,68,68,0.12);
         --glow-danger-md: rgba(239,68,68,0.25);
     }
@@ -313,7 +321,7 @@
         <div class="metric-card risk-red" onclick="filterByState('Stockout')">
           <div class="metric-header">
             <span class="metric-title">Stocked Out</span>
-            <span class="material-symbols-outlined metric-icon" style="color:#fca5a5;">cancel</span>
+            <span class="material-symbols-outlined metric-icon" style="color:var(--smriti-color-status-danger-light);">cancel</span>
           </div>
           <div class="metric-value" id="stat-stockout">0</div>
           <div class="metric-desc">SKUs out of stock in outlets</div>
@@ -322,7 +330,7 @@
         <div class="metric-card risk-purple" onclick="filterByState('Overstock')">
           <div class="metric-header">
             <span class="metric-title">Overstock</span>
-            <span class="material-symbols-outlined metric-icon" style="color:#a78bfa;">inventory</span>
+            <span class="material-symbols-outlined metric-icon" style="color:var(--smriti-color-brand-light);">inventory</span>
           </div>
           <div class="metric-value" id="stat-overstock">0</div>
           <div class="metric-desc">SKUs with cover > 12 weeks</div>
