@@ -3,7 +3,7 @@
  * @description: Frontend controller for standalone sidebar layout.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-06-12
- * @version: 1.9.1
+ * @version: 1.9.2
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
@@ -264,6 +264,11 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
         roleLabel = "Store Manager";
     }
 
+    /* Resolve active theme for pill rendering */
+    const _activeTheme = (SMRITI.getCurrentTheme && SMRITI.getCurrentTheme()) ||
+                          localStorage.getItem('smriti-theme-style') || 'hybrid-light';
+    function _pillActive(key) { return _activeTheme === key ? 'active' : ''; }
+
     const footerHtml = `
         <div class="sidebar-footer">
             <div class="sidebar-user">
@@ -273,6 +278,22 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
                     <span class="sidebar-role">${roleLabel}</span>
                 </div>
             </div>
+
+            <div class="smriti-standalone-theme-bar" id="smriti-standalone-theme-bar">
+                <button class="smriti-standalone-theme-pill ${_pillActive('hybrid-light')}" data-theme="hybrid-light" title="Tactile Hybrid — spacious classic look" onclick="SMRITI.switchThemeFromPill(event)">
+                    <span>🎛️ Hybrid</span>
+                </button>
+                <button class="smriti-standalone-theme-pill ${_pillActive('minimalist')}" data-theme="minimalist" title="Clean Minimalist — maximum content focus" onclick="SMRITI.switchThemeFromPill(event)">
+                    <span>🖥️ Minimal</span>
+                </button>
+                <button class="smriti-standalone-theme-pill ${_pillActive('sleek-compact')}" data-theme="sleek-compact" title="Sleek Compact — high-density operational" onclick="SMRITI.switchThemeFromPill(event)">
+                    <span>⚡ Sleek</span>
+                </button>
+                <button class="smriti-standalone-theme-pill ${_pillActive('hybrid-dark')}" data-theme="hybrid-dark" title="Dark Mode — night-shift & low-light" onclick="SMRITI.switchThemeFromPill(event)">
+                    <span>🌙 Dark</span>
+                </button>
+            </div>
+
             <button class="sidebar-logout" onclick="doLogout()">
                 <span class="material-symbols-outlined" style="font-size:16px;">logout</span>
                 <span>Sign Out</span>
@@ -282,6 +303,45 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
 
     target.innerHTML = brandHtml + controlsHtml + menuHtml + footerHtml;
 };
+
+
+/* ── Theme Pill Handler — routes through SMRITI.switchTheme() resolver engine ── */
+SMRITI.switchThemeFromPill = function(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const pill = event.currentTarget;
+    const themeKey = pill.getAttribute('data-theme');
+    if (!themeKey) return;
+
+    /* Route through resolver engine for real-time token cascade */
+    if (SMRITI.switchTheme) {
+        SMRITI.switchTheme(themeKey);
+    } else {
+        localStorage.setItem('smriti-theme-style', themeKey);
+    }
+
+    /* Immediately sync pill active states */
+    _syncThemePills(themeKey);
+};
+
+function _syncThemePills(activeKey) {
+    const bar = document.getElementById('smriti-standalone-theme-bar');
+    if (!bar) return;
+    bar.querySelectorAll('.smriti-standalone-theme-pill').forEach(function(p) {
+        if (p.getAttribute('data-theme') === activeKey) {
+            p.classList.add('active');
+        } else {
+            p.classList.remove('active');
+        }
+    });
+}
+
+/* Keep pills in sync when theme changed from any source */
+document.addEventListener('smriti-theme-changed', function(e) {
+    const newTheme = e.detail && e.detail.theme;
+    if (newTheme) _syncThemePills(newTheme);
+});
 
 
 // ── Accordion Folders Expand/Collapse ────────────────────────────────
