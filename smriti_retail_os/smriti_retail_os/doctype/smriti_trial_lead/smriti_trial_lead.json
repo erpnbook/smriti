@@ -83,7 +83,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Status",
-   "options": "New\nContacted\nDemo Scheduled\nConverted\nLost"
+   "options": "New\nContacted\nDemo Scheduled\nConverted\nTrial Started\nLost"
   },
   {
    "fieldname": "submitted_at",

@@ -1,0 +1,167 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:activation_reference",
+ "creation": "2026-06-25 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "activation_reference",
+  "activation_type",
+  "trial_lead",
+  "column_break_1",
+  "store_name",
+  "owner_name",
+  "mobile",
+  "section_break_provisioning",
+  "company_name",
+  "activation_status",
+  "column_break_2",
+  "trial_start_date",
+  "trial_end_date",
+  "activated_by",
+  "section_break_checklist",
+  "checklist",
+  "section_break_notes",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "activation_reference",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Activation Reference",
+   "read_only": 1,
+   "reqd": 0
+  },
+  {
+   "default": "Trial",
+   "fieldname": "activation_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Activation Type",
+   "options": "Trial\nPilot\nPaid\nInternal",
+   "reqd": 1
+  },
+  {
+   "fieldname": "trial_lead",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Trial Lead",
+   "options": "SMRITI Trial Lead",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "store_name",
+   "fieldtype": "Data",
+   "label": "Store Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "owner_name",
+   "fieldtype": "Data",
+   "label": "Owner Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "label": "Mobile",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_provisioning",
+   "fieldtype": "Section Break",
+   "label": "Provisioning Details"
+  },
+  {
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "label": "Company Name (ERPNext)"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "activation_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Activation Status",
+   "options": "Pending\nActive\nSuspended\nExpired\nConverted to Paid"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "trial_start_date",
+   "fieldtype": "Datetime",
+   "label": "Trial Start Date"
+  },
+  {
+   "fieldname": "trial_end_date",
+   "fieldtype": "Datetime",
+   "label": "Trial End Date"
+  },
+  {
+   "fieldname": "activated_by",
+   "fieldtype": "Link",
+   "label": "Activated By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_checklist",
+   "fieldtype": "Section Break",
+   "label": "Onboarding Checklist"
+  },
+  {
+   "fieldname": "checklist",
+   "fieldtype": "Table",
+   "label": "Checklist",
+   "options": "SMRITI Trial Checklist"
+  },
+  {
+   "fieldname": "section_break_notes",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-06-25 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Trial Activation",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 0,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

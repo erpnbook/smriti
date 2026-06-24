@@ -492,6 +492,24 @@
       background: rgba(16,185,129,0.04);
     }
 
+    /* Start Trial button */
+    .btn-start-trial {
+      background: var(--green);
+      color: var(--text);
+      border: none;
+      border-radius: 7px;
+      padding: 5px 11px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: 'Inter', Arial, sans-serif;
+      letter-spacing: .3px;
+      transition: opacity .2s, transform .15s;
+      white-space: nowrap;
+    }
+    .btn-start-trial:hover   { opacity: .88; transform: translateY(-1px); }
+    .btn-start-trial:disabled{ opacity: .5; cursor: not-allowed; transform: none; }
+
     /* Responsive hide */
     @media (max-width: 768px) {
       .table-header,
@@ -625,6 +643,7 @@
 
       <div class="modal-footer">
         <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button class="btn-start-trial" id="btn_modal_trial" style="display:none" onclick="startTrialFromModal()">🚀 Start Trial</button>
         <button class="btn-save" id="btn_save" onclick="saveStatus()">Save Status</button>
       </div>
     </div>
@@ -743,6 +762,7 @@
             <a href="${waLink}" target="_blank" class="btn-action wa" title="WhatsApp">💬</a>
             <button class="btn-action" title="Update status"
               onclick="openModal('${esc(l.name)}', '${esc(l.store_name)}', '${esc(l.owner_name)}', '${esc(l.status)}', '${esc(l.notes || '')}')">✏️</button>
+            ${isConverted ? `<button class="btn-start-trial" title="Start Trial" onclick="startTrial('${esc(l.name)}', '${esc(l.store_name)}')">🚀 Start Trial</button>` : ''}
           </div>
         </div>`;
       }).join('');
@@ -795,6 +815,10 @@
       document.getElementById('modal_title').textContent = 'Update Lead Status';
       document.getElementById('modal_store').textContent = `${store} — ${owner}`;
       document.getElementById('modal_notes').value = '';
+
+      // Show / hide the Start Trial button based on current status
+      const trialBtn = document.getElementById('btn_modal_trial');
+      trialBtn.style.display = (status === 'Converted') ? 'inline-flex' : 'none';
 
       // Highlight current status
       document.querySelectorAll('.status-option').forEach(el => el.classList.remove('selected'));
@@ -860,6 +884,62 @@
       }).finally(() => {
         btn.disabled    = false;
         btn.textContent = 'Save Status';
+      });
+    }
+
+    // ─── Start Trial ─────────────────────────────────────────────────────────
+    function startTrial(leadName, storeName) {
+      const btn = event.currentTarget;
+      btn.disabled = true;
+      btn.textContent = 'Starting...';
+
+      frappe.call({
+        method: 'smriti_retail_os.api.trial_activation_api.create_activation',
+        args: { lead_name: leadName, activation_type: 'Trial', trial_days: 30 }
+      }).then(r => {
+        const m = r.message || {};
+        if (m.status === 'success') {
+          showToast(`🚀 Trial activation created for ${storeName}!`, 'success');
+          loadData();
+        } else if (m.status === 'duplicate') {
+          showToast(`ℹ️ Activation already exists for ${storeName}.`, 'success');
+        } else {
+          showToast('Could not start trial. Please check Platform Admin.', 'error');
+        }
+      }).catch(() => {
+        showToast('Request failed. Please try again.', 'error');
+      }).finally(() => {
+        btn.disabled = false;
+        btn.textContent = '🚀 Start Trial';
+      });
+    }
+
+    function startTrialFromModal() {
+      if (!currentLead) return;
+      const btn = document.getElementById('btn_modal_trial');
+      btn.disabled = true;
+      btn.textContent = 'Starting...';
+
+      frappe.call({
+        method: 'smriti_retail_os.api.trial_activation_api.create_activation',
+        args: { lead_name: currentLead.name, activation_type: 'Trial', trial_days: 30 }
+      }).then(r => {
+        const m = r.message || {};
+        if (m.status === 'success') {
+          showToast(`🚀 Trial started for ${currentLead.store}!`, 'success');
+          closeModal();
+          loadData();
+        } else if (m.status === 'duplicate') {
+          showToast(`ℹ️ Activation already exists. Visit Platform Admin to activate.`, 'success');
+          closeModal();
+        } else {
+          showToast('Could not start trial.', 'error');
+        }
+      }).catch(() => {
+        showToast('Request failed.', 'error');
+      }).finally(() => {
+        btn.disabled = false;
+        btn.textContent = '🚀 Start Trial';
       });
     }
 
