@@ -306,12 +306,14 @@ def build_baseline(www_dir, force=False):
 
 def compute_metrics(www_dir):
     """
-    Compute Metric A-E for sprint reporting.
+    Compute Metric A-F for sprint reporting.
     Metric A: Total hardcoded hex count
     Metric B: Total hardcoded rgba count
     Metric C: Pages using smriti_sidebar include
     Metric D: Pages using smriti_token_loader include
     Metric E: Files at zero violations (hex + rgba = 0)
+    Metric F: Theme Compliance Coverage % (token_loader pages / total * 100)
+              Founder-defined KPI. Formula: Compliant Pages / Total Pages x 100.
     """
     import datetime
     metric_a = 0  # hex total
@@ -344,17 +346,23 @@ def compute_metrics(www_dir):
         except Exception:
             pass
 
+    # Metric F: Theme Compliance Coverage %
+    metric_f_pct = round(metric_d / total_files * 100, 1) if total_files > 0 else 0.0
+
     print("")
-    print("=" * 55)
+    print("=" * 60)
     print("SMRITI Midnight — UI Debt Metrics " + datetime.date.today().isoformat())
-    print("=" * 55)
+    print("=" * 60)
     print("Metric A  Hardcoded hex count         : " + str(metric_a))
     print("Metric B  Hardcoded rgba() count       : " + str(metric_b))
     print("Metric C  Pages using sidebar include  : " + str(metric_c) + " / " + str(total_files))
     print("Metric D  Pages using token loader     : " + str(metric_d) + " / " + str(total_files))
     print("Metric E  Files at zero violations     : " + str(metric_e) + " / " + str(total_files))
+    print("Metric F  Theme Compliance Coverage    : " + str(metric_f_pct) + "%"
+          + "  (" + str(metric_d) + "/" + str(total_files) + " pages)"
+          + "  [target: 60%+]")
     print("          Combined debt (A+B)          : " + str(metric_a + metric_b))
-    print("="* 55)
+    print("=" * 60)
     print("Run after each sprint to measure progress.")
     print("")
 
