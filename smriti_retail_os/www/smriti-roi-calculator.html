@@ -386,6 +386,30 @@
             <input type="number" id="avg_bill" value="1500" step="100" min="200" max="20000" oninput="calc()" />
           </div>
         </div>
+
+        <div class="field">
+          <label>Warehouses / Stores</label>
+          <div class="slider-row">
+            <input type="range" id="wh_count" min="1" max="10" value="1" oninput="syncSlider('wh_count','wh_count_val'); calc()" />
+            <div class="slider-val" id="wh_count_val">1</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Business Type</label>
+          <select id="biz_type" onchange="calc()"
+            style="width:100%;background:var(--card);border:1px solid var(--border);
+                   border-radius:8px;color:var(--text);font-size:14px;padding:10px 12px;
+                   outline:none;font-family:'Inter',Arial,sans-serif;transition:border-color .2s">
+            <option value="retail">Single-Store Retail</option>
+            <option value="multi">Multi-Store Chain</option>
+            <option value="distributor">Distributor / Wholesaler</option>
+            <option value="brand">Brand / Manufacturer</option>
+            <option value="super_stockist">Super Stockist</option>
+          </select>
+          <div class="field-hint">Multi-store, Distributor, Brand → auto-selects PRO</div>
+        </div>
+
       </div>
 
       <!-- RIGHT: Results -->
@@ -532,6 +556,8 @@
       const custs      = +document.getElementById('monthly_custs').value   || 500;
       const lapsed_pct = +document.getElementById('lapsed_pct').value      / 100;
       const avg_bill   = +document.getElementById('avg_bill').value        || 1500;
+      const wh_count   = +document.getElementById('wh_count').value        || 1;
+      const biz_type   =  document.getElementById('biz_type').value;
 
       // Dead stock
       const dead_val      = inv * dead_pct;
@@ -550,12 +576,21 @@
       // Annual totals
       const annual_benefit = dead_recovery + annual_lapsed + annual_reorder;
 
-      // Package recommendation
+      // ── Package recommendation (Founder directive 2026-06-24) ──
+      // PRO triggers: sales > ₹25L, customers > 1000,
+      //               warehouses > 3, distributor / brand / multi-store
+      const PRO_BIZ = ['distributor', 'brand', 'super_stockist', 'multi'];
       let pkg = 'growth', pkg_cost_annual = PACKAGES.growth.annual;
-      if (sales > 2500000 || custs > 1000) {
+
+      if (
+        sales > 2500000 ||
+        custs > 1000    ||
+        wh_count > 3    ||
+        PRO_BIZ.includes(biz_type)
+      ) {
         pkg = 'pro';
         pkg_cost_annual = PACKAGES.pro.annual;
-      } else if (sales < 400000 && custs < 150) {
+      } else if (sales < 400000 && custs < 150 && wh_count === 1) {
         pkg = 'starter';
         pkg_cost_annual = PACKAGES.starter.annual;
       }
@@ -567,6 +602,7 @@
       const monthly_benefit = (annual_lapsed + annual_reorder) / 12;
       const monthly_cost    = pkg_cost_annual / 12;
       const payback_days    = monthly_benefit > 0 ? (monthly_cost / monthly_benefit) * 30 : 999;
+
 
       // Update outputs
       document.getElementById('out_dead').textContent    = fmt(dead_recovery);

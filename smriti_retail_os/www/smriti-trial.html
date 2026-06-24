@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Start Free Trial | SMRITI Retail OS</title>
+  <meta name="description" content="Start your 30-day free trial of SMRITI Retail OS. No credit card required. Full GROWTH features included." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --navy:       #1A2B5C;
+      --navy-dark:  #0f1a38;
+      --blue:       #2563EB;
+      --blue-light: #3B82F6;
+      --blue-glow:  rgba(37,99,235,0.14);
+      --green:      #10B981;
+      --green-glow: rgba(16,185,129,.1);
+      --red:        #EF4444;
+      --text:       #F1F5F9;
+      --text-muted: #94A3B8;
+      --text-dim:   #64748B;
+      --border:     rgba(255,255,255,0.09);
+      --border-blue:rgba(37,99,235,0.35);
+      --card:       rgba(255,255,255,0.04);
+      --radius:     14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: var(--navy-dark);
+      color: var(--text); min-height: 100vh;
+    }
+    body::before {
+      content: '';
+      position: fixed; width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(37,99,235,.1) 0%, transparent 70%);
+      top: -60px; right: -60px; pointer-events: none; z-index: 0;
+    }
+
+    /* Topbar */
+    .topbar {
+      background: rgba(15,26,56,.92); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px; height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-brand { font-size: 15px; font-weight: 800; }
+    .topbar-brand span { color: var(--blue-light); }
+    .back-link { font-size: 13px; color: var(--text-muted); text-decoration: none; }
+    .back-link:hover { color: var(--text); }
+
+    /* Layout */
+    .page {
+      max-width: 1000px; margin: 0 auto;
+      padding: 48px 24px 80px;
+      display: grid; grid-template-columns: 1fr 420px; gap: 40px;
+      position: relative; z-index: 1;
+      align-items: start;
+    }
+    @media (max-width: 760px) { .page { grid-template-columns: 1fr; } }
+
+    /* Left — trust block */
+    .trust-block { padding-top: 8px; }
+    .trust-eyebrow {
+      font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--blue-light);
+      background: var(--blue-glow); border: 1px solid var(--border-blue);
+      border-radius: 20px; padding: 5px 14px;
+      display: inline-block; margin-bottom: 20px;
+    }
+    .trust-block h1 {
+      font-size: clamp(24px, 3.5vw, 36px);
+      font-weight: 900; letter-spacing: -1px; line-height: 1.2;
+      background: linear-gradient(135deg, #fff 30%, var(--blue-light));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+    }
+    .trust-block p { font-size: 15px; color: var(--text-muted); line-height: 1.7; margin-bottom: 28px; }
+
+    .trust-points { display: flex; flex-direction: column; gap: 14px; }
+    .trust-point {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 14px 16px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .tp-icon { font-size: 20px; flex-shrink: 0; }
+    .tp-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    .tp-text strong { color: var(--text); }
+
+    /* Plan selector inside form */
+    .plan-tabs { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 20px; }
+    .plan-tab {
+      padding: 10px 8px; border-radius: 8px; text-align: center;
+      border: 2px solid var(--border); cursor: pointer;
+      font-size: 12px; font-weight: 700; color: var(--text-muted);
+      transition: all .2s;
+    }
+    .plan-tab.active { border-color: var(--blue); background: var(--blue-glow); color: var(--blue-light); }
+    .plan-tab .plan-name { font-size: 11px; font-weight: 800; display: block; margin-bottom: 2px; }
+    .plan-tab .plan-price { font-size: 14px; font-weight: 900; color: var(--text); }
+
+    /* Form card */
+    .form-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 32px 28px;
+    }
+    .form-title { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
+    .form-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .8px;
+      color: var(--text-muted); margin-bottom: 6px;
+    }
+    .field input, .field select {
+      width: 100%; background: rgba(255,255,255,.05);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-size: 14px;
+      padding: 10px 13px; outline: none;
+      font-family: 'Inter', Arial, sans-serif;
+      transition: border-color .2s;
+    }
+    .field input:focus, .field select:focus { border-color: var(--blue); }
+    .field select option { background: var(--navy); }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .submit-btn {
+      display: block; width: 100%; padding: 14px;
+      background: var(--blue); color: #fff;
+      border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 800;
+      cursor: pointer; font-family: 'Inter', Arial, sans-serif;
+      transition: all .2s; margin-top: 20px;
+    }
+    .submit-btn:hover { background: var(--blue-light); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(37,99,235,.4); }
+    .submit-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    .form-disclaimer { font-size: 11px; color: var(--text-dim); text-align: center; margin-top: 12px; line-height: 1.5; }
+
+    /* Success state */
+    .success-state {
+      display: none; text-align: center; padding: 20px 0;
+    }
+    .success-icon { font-size: 48px; margin-bottom: 16px; }
+    .success-title { font-size: 22px; font-weight: 800; color: var(--green); margin-bottom: 8px; }
+    .success-msg { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+    /* Error */
+    .error-msg {
+      display: none; font-size: 12px; color: var(--red);
+      background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.2);
+      border-radius: 6px; padding: 10px 13px; margin-top: 10px;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center; padding: 28px;
+      color: var(--text-dim); font-size: 12px;
+      border-top: 1px solid var(--border);
+      position: relative; z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="topbar">
+    <div class="topbar-brand">SMRITI <span>Retail OS</span></div>
+    <a href="/smriti-pricing" class="back-link">← View Pricing</a>
+  </nav>
+
+  <div class="page">
+
+    <!-- Left: Trust -->
+    <div class="trust-block">
+      <div class="trust-eyebrow">30-Day Free Trial</div>
+      <h1>Apni dukaan ka data<br />khud dekho — 30 din free</h1>
+      <p>Koi credit card nahi. Koi lock-in nahi. Aapka data, aapki dukaan, aapka faisla.</p>
+
+      <div class="trust-points">
+        <div class="trust-point">
+          <div class="tp-icon">📦</div>
+          <div class="tp-text"><strong>Dead Stock detect karega</strong> — Aapka ₹4L+ atka hua paisa ek screen pe dikhega.</div>
+        </div>
+        <div class="trust-point">
+          <div class="tp-icon">👥</div>
+          <div class="tp-text"><strong>Lapsed customers alert karega</strong> — Jo 60+ din se nahi aaye, unki list automatically.</div>
+        </div>
+        <div class="trust-point">
+          <div class="tp-icon">🔄</div>
+          <div class="tp-text"><strong>Reorder miss nahi hoga</strong> — Stock khatam hone se pehle SMRITI bata deta hai.</div>
+        </div>
+        <div class="trust-point">
+          <div class="tp-icon">📈</div>
+          <div class="tp-text"><strong>ROI pehle mahine mein</strong> — Average 17x return. Subscription pehle week mein recover.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Form -->
+    <div class="form-card" id="form_card">
+
+      <div id="form_view">
+        <div class="form-title">Shuru karo — aaj hi</div>
+        <div class="form-sub">30 din ke baad decide karo. Subscription nahi chahiye toh kuch nahi dena.</div>
+
+        <!-- Plan selector -->
+        <div class="plan-tabs" id="plan_tabs">
+          <div class="plan-tab" id="tab_starter" onclick="selectPlan('starter')">
+            <span class="plan-name">STARTER</span>
+            <span class="plan-price">₹1,999</span>
+          </div>
+          <div class="plan-tab active" id="tab_growth" onclick="selectPlan('growth')">
+            <span class="plan-name">GROWTH ⭐</span>
+            <span class="plan-price">₹3,999</span>
+          </div>
+          <div class="plan-tab" id="tab_pro" onclick="selectPlan('pro')">
+            <span class="plan-name">PRO</span>
+            <span class="plan-price">₹6,999</span>
+          </div>
+        </div>
+        <input type="hidden" id="selected_plan" value="{{ selected_plan or 'growth' }}" />
+
+        <div class="field">
+          <label>Store / Business Name *</label>
+          <input type="text" id="store_name" placeholder="e.g. Sharma Footwear, Mumbai" autocomplete="organization" />
+        </div>
+
+        <div class="field">
+          <label>Owner / Contact Name *</label>
+          <input type="text" id="owner_name" placeholder="Your full name" autocomplete="name" />
+        </div>
+
+        <div class="field">
+          <label>WhatsApp / Mobile *</label>
+          <input type="tel" id="mobile" placeholder="+91 98765 43210" autocomplete="tel" />
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>City *</label>
+            <input type="text" id="city" placeholder="Mumbai, Delhi..." autocomplete="address-level2" />
+          </div>
+          <div class="field">
+            <label>Warehouses / Stores</label>
+            <select id="warehouses">
+              <option value="1">1 Store</option>
+              <option value="2">2 Stores</option>
+              <option value="3">3 Stores</option>
+              <option value="5">4–5 Stores</option>
+              <option value="10">6+ Stores</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Business Type *</label>
+          <select id="business_type">
+            <option value="">— Select —</option>
+            <option value="Footwear Retail">Footwear Retail</option>
+            <option value="Apparel / Garments">Apparel / Garments</option>
+            <option value="Electronics">Electronics</option>
+            <option value="FMCG / General Store">FMCG / General Store</option>
+            <option value="Pharmacy / Medical">Pharmacy / Medical</option>
+            <option value="Jewellery">Jewellery</option>
+            <option value="Distributor / Wholesaler">Distributor / Wholesaler</option>
+            <option value="Multi-Store Chain">Multi-Store Chain</option>
+            <option value="Brand / Manufacturer">Brand / Manufacturer</option>
+            <option value="Other Retail">Other Retail</option>
+          </select>
+        </div>
+
+        <button class="submit-btn" id="submit_btn" onclick="submitTrial()">
+          Start My 30-Day Free Trial →
+        </button>
+
+        <div class="error-msg" id="error_msg"></div>
+
+        <div class="form-disclaimer">
+          By submitting, you agree to be contacted by the SMRITI team.<br />
+          No credit card required. Cancel anytime.
+        </div>
+      </div>
+
+      <!-- Success -->
+      <div class="success-state" id="success_view">
+        <div class="success-icon">🎉</div>
+        <div class="success-title">Trial Request Received!</div>
+        <div class="success-msg" id="success_msg">
+          Thank you! Our team will call you within 24 hours to set up your SMRITI trial.
+        </div>
+        <div style="margin-top:24px">
+          <a href="/smriti-roi-calculator"
+             style="display:inline-block;padding:11px 22px;background:var(--blue);color:#fff;
+                    border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;margin-right:10px">
+            Calculate My ROI
+          </a>
+          <a href="/smriti-pricing"
+             style="display:inline-block;padding:11px 22px;border:1px solid var(--border);
+                    color:var(--text);border-radius:8px;font-size:13px;font-weight:700;text-decoration:none">
+            View Pricing
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer class="footer">
+    <em style="color:var(--text-muted);font-style:normal;font-weight:600">"Always decision-ready."</em>
+    — Jawahar R. Mallah, Founder &amp; Chief Architect, AITDL
+  </footer>
+
+  <script>
+    // Pre-select plan from URL param
+    const urlPlan = new URLSearchParams(window.location.search).get('plan') || '{{ selected_plan or "growth" }}';
+    selectPlan(urlPlan);
+
+    function selectPlan(plan) {
+      ['starter','growth','pro'].forEach(p => {
+        document.getElementById('tab_' + p).classList.toggle('active', p === plan);
+      });
+      document.getElementById('selected_plan').value = plan;
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error_msg');
+      el.textContent = msg; el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 5000);
+    }
+
+    function submitTrial() {
+      const btn     = document.getElementById('submit_btn');
+      const store   = document.getElementById('store_name').value.trim();
+      const owner   = document.getElementById('owner_name').value.trim();
+      const mobile  = document.getElementById('mobile').value.trim();
+      const city    = document.getElementById('city').value.trim();
+      const btype   = document.getElementById('business_type').value;
+      const plan    = document.getElementById('selected_plan').value;
+      const wh      = document.getElementById('warehouses').value;
+
+      if (!store)  { showError('Please enter your store name.'); return; }
+      if (!owner)  { showError('Please enter your name.'); return; }
+      if (!mobile) { showError('Please enter your mobile number.'); return; }
+      if (!city)   { showError('Please enter your city.'); return; }
+      if (!btype)  { showError('Please select your business type.'); return; }
+
+      btn.disabled = true; btn.textContent = 'Submitting...';
+
+      frappe.call({
+        method: 'smriti_retail_os.api.trial_api.submit_trial_lead',
+        args: {
+          store_name:    store,
+          owner_name:    owner,
+          mobile:        mobile,
+          city:          city,
+          business_type: btype,
+          plan:          plan,
+          warehouses:    wh,
+          source:        'smriti-trial',
+        },
+        callback: function(r) {
+          btn.disabled = false; btn.textContent = 'Start My 30-Day Free Trial →';
+          if (r.message && r.message.status === 'success') {
+            document.getElementById('form_view').style.display = 'none';
+            const sv = document.getElementById('success_view');
+            sv.style.display = 'block';
+            document.getElementById('success_msg').textContent = r.message.message;
+          } else if (r.message && r.message.status === 'duplicate') {
+            showError(r.message.message);
+          } else {
+            showError('Something went wrong. Please try again or call us directly.');
+          }
+        },
+        error: function() {
+          btn.disabled = false; btn.textContent = 'Start My 30-Day Free Trial →';
+          showError('Network error. Please check your connection and try again.');
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>

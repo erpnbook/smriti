@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pricing | SMRITI Retail OS</title>
+  <meta name="description" content="Simple, transparent pricing for SMRITI Retail OS. Starter ₹1,999/month. Growth ₹3,999/month. Pro ₹6,999/month. 30-day free trial." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --navy:       #1A2B5C;
+      --navy-dark:  #0f1a38;
+      --navy-mid:   #162247;
+      --blue:       #2563EB;
+      --blue-light: #3B82F6;
+      --blue-glow:  rgba(37,99,235,0.15);
+      --green:      #10B981;
+      --green-glow: rgba(16,185,129,0.12);
+      --amber:      #F59E0B;
+      --text:       #F1F5F9;
+      --text-muted: #94A3B8;
+      --text-dim:   #64748B;
+      --border:     rgba(255,255,255,0.08);
+      --border-blue:rgba(37,99,235,0.35);
+      --card:       rgba(255,255,255,0.04);
+      --radius:     16px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: var(--navy-dark);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background glow ── */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(37,99,235,.12) 0%, transparent 70%);
+      top: -100px; left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,26,56,.92);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar-brand { font-size: 16px; font-weight: 800; letter-spacing: .3px; }
+    .topbar-brand span { color: var(--blue-light); }
+    .topbar-nav { display: flex; align-items: center; gap: 20px; }
+    .nav-link {
+      font-size: 13px; font-weight: 500; color: var(--text-muted);
+      text-decoration: none; transition: color .2s;
+    }
+    .nav-link:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--blue); color: #fff;
+      border-radius: 8px; padding: 7px 16px;
+      font-size: 13px; font-weight: 700;
+      text-decoration: none; transition: background .2s, transform .2s;
+    }
+    .nav-cta:hover { background: var(--blue-light); transform: translateY(-1px); }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 72px 24px 48px;
+      position: relative; z-index: 1;
+    }
+    .hero-eyebrow {
+      display: inline-block;
+      font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--blue-light);
+      background: var(--blue-glow); border: 1px solid var(--border-blue);
+      border-radius: 20px; padding: 5px 14px; margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(30px, 5vw, 52px);
+      font-weight: 900; letter-spacing: -1.5px; line-height: 1.1;
+      background: linear-gradient(135deg, #fff 30%, var(--blue-light) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+    }
+    .hero p {
+      font-size: 17px; color: var(--text-muted); max-width: 500px;
+      margin: 0 auto 32px; line-height: 1.6;
+    }
+
+    /* ── Billing toggle ── */
+    .billing-toggle {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 5px;
+      gap: 4px;
+      margin-bottom: 52px;
+    }
+    .toggle-btn {
+      padding: 7px 20px;
+      border-radius: 24px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; border: none;
+      background: transparent; color: var(--text-muted);
+      font-family: 'Inter', Arial, sans-serif;
+      transition: all .2s;
+    }
+    .toggle-btn.active {
+      background: var(--blue); color: #fff;
+      box-shadow: 0 4px 14px rgba(37,99,235,.4);
+    }
+    .save-badge {
+      font-size: 11px; background: var(--green-glow);
+      border: 1px solid var(--green); color: var(--green);
+      border-radius: 20px; padding: 2px 8px; font-weight: 700;
+      margin-left: 4px;
+    }
+
+    /* ── Pricing cards ── */
+    .cards-wrap {
+      max-width: 1060px; margin: 0 auto;
+      padding: 0 24px 80px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+      position: relative; z-index: 1;
+      align-items: start;
+    }
+    @media (max-width: 860px) { .cards-wrap { grid-template-columns: 1fr; max-width: 440px; } }
+
+    .price-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 28px 28px;
+      position: relative;
+      transition: transform .25s, box-shadow .25s, border-color .25s;
+    }
+    .price-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 48px rgba(0,0,0,.35);
+    }
+    .price-card.featured {
+      border-color: var(--blue);
+      background: linear-gradient(160deg, rgba(37,99,235,.12) 0%, rgba(15,26,56,.95) 100%);
+      box-shadow: 0 0 0 1px rgba(37,99,235,.25), 0 24px 56px rgba(37,99,235,.15);
+    }
+    .price-card.featured:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 0 0 1px var(--blue), 0 32px 64px rgba(37,99,235,.25);
+    }
+
+    .popular-badge {
+      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      background: var(--blue); color: #fff;
+      font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+      padding: 5px 18px; border-radius: 20px;
+      box-shadow: 0 4px 16px rgba(37,99,235,.5);
+    }
+
+    .pkg-tier { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .pkg-name { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .pkg-tagline { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
+
+    .price-block { margin-bottom: 24px; }
+    .price-amount {
+      font-size: 44px; font-weight: 900; letter-spacing: -2px; color: var(--text);
+      display: inline-flex; align-items: flex-start; gap: 2px;
+    }
+    .price-currency { font-size: 22px; font-weight: 700; margin-top: 8px; }
+    .price-period { font-size: 14px; color: var(--text-muted); font-weight: 500; align-self: flex-end; margin-bottom: 6px; }
+    .price-annual { font-size: 12px; color: var(--green); font-weight: 600; margin-top: 4px; }
+    .price-saving { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    .feature-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .feature-list li {
+      font-size: 13px; color: var(--text-muted);
+      display: flex; align-items: flex-start; gap: 10px; line-height: 1.4;
+    }
+    .feature-list li .tick { color: var(--green); font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+    .feature-list li.dim { color: var(--text-dim); }
+    .feature-list li.dim .tick { color: var(--text-dim); }
+
+    .cta-btn {
+      display: block; width: 100%;
+      padding: 13px; border-radius: 10px;
+      font-size: 14px; font-weight: 700;
+      text-align: center; cursor: pointer;
+      border: none; text-decoration: none;
+      font-family: 'Inter', Arial, sans-serif;
+      transition: all .2s;
+    }
+    .cta-primary { background: var(--blue); color: #fff; }
+    .cta-primary:hover { background: var(--blue-light); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(37,99,235,.4); }
+    .cta-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .cta-outline:hover { border-color: var(--blue); color: var(--blue-light); }
+    .cta-sub { font-size: 11px; color: var(--text-dim); text-align: center; margin-top: 10px; }
+
+    .roi-tag {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      background: var(--green-glow); border: 1px solid rgba(16,185,129,.3);
+      color: var(--green); border-radius: 20px; padding: 3px 10px;
+      margin-top: 10px;
+    }
+
+    /* ── Comparison table ── */
+    .compare-section {
+      max-width: 900px; margin: 0 auto 80px;
+      padding: 0 24px;
+      position: relative; z-index: 1;
+    }
+    .section-label {
+      text-align: center; font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+    .compare-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 13px;
+    }
+    .compare-table th {
+      padding: 12px 16px; text-align: center;
+      font-size: 13px; font-weight: 700; color: var(--text);
+      background: rgba(255,255,255,.04);
+      border-bottom: 1px solid var(--border);
+    }
+    .compare-table th:first-child { text-align: left; width: 40%; }
+    .compare-table th.featured-col { color: var(--blue-light); }
+    .compare-table td {
+      padding: 11px 16px; text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,.03);
+      color: var(--text-muted);
+    }
+    .compare-table td:first-child { text-align: left; color: var(--text); }
+    .compare-table tr:hover td { background: rgba(255,255,255,.02); }
+    .check { color: var(--green); font-size: 16px; }
+    .cross { color: var(--text-dim); font-size: 14px; }
+    .compare-table .cat-row td, .compare-table .cat-row th {
+      background: rgba(37,99,235,.06);
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--blue-light);
+      padding: 8px 16px;
+    }
+
+    /* ── FAQ ── */
+    .faq-section {
+      max-width: 680px; margin: 0 auto 80px;
+      padding: 0 24px;
+      position: relative; z-index: 1;
+    }
+    .faq-title { text-align: center; font-size: 22px; font-weight: 800; margin-bottom: 32px; }
+    .faq-item {
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 18px 20px; margin-bottom: 10px;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+    .faq-item:hover { border-color: var(--blue-light); }
+    .faq-q { font-size: 14px; font-weight: 600; color: var(--text); display: flex; justify-content: space-between; gap: 12px; }
+    .faq-a { font-size: 13px; color: var(--text-muted); margin-top: 12px; line-height: 1.6; display: none; }
+    .faq-item.open .faq-a { display: block; }
+    .faq-item.open .faq-icon { transform: rotate(45deg); }
+    .faq-icon { color: var(--text-muted); transition: transform .2s; flex-shrink: 0; font-size: 18px; }
+
+    /* ── Bottom CTA ── */
+    .bottom-cta {
+      text-align: center; padding: 60px 24px 80px;
+      position: relative; z-index: 1;
+    }
+    .bottom-cta h2 { font-size: 28px; font-weight: 800; margin-bottom: 12px; }
+    .bottom-cta p { color: var(--text-muted); font-size: 15px; margin-bottom: 28px; }
+    .cta-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .cta-big {
+      padding: 14px 32px; border-radius: 10px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      border: none; text-decoration: none;
+      font-family: 'Inter', Arial, sans-serif;
+      transition: all .2s;
+    }
+    .cta-big-primary { background: var(--blue); color: #fff; }
+    .cta-big-primary:hover { background: var(--blue-light); transform: translateY(-2px); box-shadow: 0 12px 32px rgba(37,99,235,.4); }
+    .cta-big-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .cta-big-outline:hover { border-color: var(--blue); color: var(--blue-light); }
+
+    /* ── Footer ── */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 32px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 12px;
+      position: relative; z-index: 1;
+    }
+    .footer em { color: var(--text-muted); font-style: normal; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <nav class="topbar">
+    <div class="topbar-brand">SMRITI <span>Retail OS</span></div>
+    <div class="topbar-nav">
+      <a href="/smriti" class="nav-link">Dashboard</a>
+      <a href="/smriti-roi-calculator" class="nav-link">ROI Calculator</a>
+      <a href="/smriti-trial" class="nav-cta">Start Free Trial</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-eyebrow">Simple, Transparent Pricing</div>
+    <h1>Jo aapko chahiye,<br />utna hi kharidiye</h1>
+    <p>30-day free trial. Koi credit card nahi. Koi lock-in nahi. Sirf value — pehle din se.</p>
+
+    <!-- Billing Toggle -->
+    <div class="billing-toggle">
+      <button class="toggle-btn" id="btn_monthly" onclick="setBilling('monthly')">Monthly</button>
+      <button class="toggle-btn active" id="btn_annual" onclick="setBilling('annual')">
+        Annual <span class="save-badge">Save 2 months</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Pricing Cards -->
+  <div class="cards-wrap">
+
+    <!-- STARTER -->
+    <div class="price-card">
+      <div class="pkg-tier">Starter</div>
+      <div class="pkg-name">SMRITI STARTER</div>
+      <div class="pkg-tagline">Ek dukaan. Inventory visibility. Roz ke alerts.</div>
+      <div class="price-block">
+        <div class="price-amount">
+          <span class="price-currency">₹</span>
+          <span id="starter_price">1,999</span>
+          <span class="price-period">/mo</span>
+        </div>
+        <div class="price-annual" id="starter_annual">Billed ₹19,999/year</div>
+        <div class="price-saving" id="starter_saving">Save ₹3,989 vs monthly</div>
+      </div>
+      <div class="roi-tag">ROI: 17x in Month 1</div>
+      <div class="divider"></div>
+      <ul class="feature-list">
+        <li><span class="tick">✓</span> Dashboard — Sales overview</li>
+        <li><span class="tick">✓</span> Dead Stock Alerts (60-day)</li>
+        <li><span class="tick">✓</span> Low Stock & Reorder Zone</li>
+        <li><span class="tick">✓</span> Fast Mover Report (90-day)</li>
+        <li><span class="tick">✓</span> Sales History & Purchase Log</li>
+        <li><span class="tick">✓</span> 1 Warehouse · 1 User</li>
+        <li class="dim"><span class="tick">—</span> CGE — Customer Intelligence</li>
+        <li class="dim"><span class="tick">—</span> PDT — Smart Reorder Engine</li>
+        <li class="dim"><span class="tick">—</span> PSV — Distributor Stock</li>
+      </ul>
+      <a href="/smriti-trial?plan=starter" class="cta-btn cta-outline">Start Free Trial</a>
+      <div class="cta-sub">30 days free · No card required</div>
+    </div>
+
+    <!-- GROWTH (Featured) -->
+    <div class="price-card featured">
+      <div class="popular-badge">⭐ Most Popular</div>
+      <div class="pkg-tier">Growth</div>
+      <div class="pkg-name">SMRITI GROWTH</div>
+      <div class="pkg-tagline">CGE + PDT. Customer retention aur smart reorder — ek saath.</div>
+      <div class="price-block">
+        <div class="price-amount">
+          <span class="price-currency">₹</span>
+          <span id="growth_price">3,999</span>
+          <span class="price-period">/mo</span>
+        </div>
+        <div class="price-annual" id="growth_annual">Billed ₹39,999/year</div>
+        <div class="price-saving" id="growth_saving">Save ₹7,989 vs monthly</div>
+      </div>
+      <div class="roi-tag">ROI: 28x in Month 1</div>
+      <div class="divider"></div>
+      <ul class="feature-list">
+        <li><span class="tick">✓</span> <strong>Everything in STARTER</strong></li>
+        <li><span class="tick">✓</span> CGE — Loyal Customer Tracking</li>
+        <li><span class="tick">✓</span> CGE — Lapsed Customer Alerts</li>
+        <li><span class="tick">✓</span> CGE — Visit History & Segments</li>
+        <li><span class="tick">✓</span> PDT — Smart Reorder Recommendations</li>
+        <li><span class="tick">✓</span> PDT — Supplier Performance</li>
+        <li><span class="tick">✓</span> WhatsApp Campaign Alerts</li>
+        <li><span class="tick">✓</span> 3 Warehouses · 5 Users</li>
+        <li class="dim"><span class="tick">—</span> PSV — Distributor Stock</li>
+      </ul>
+      <a href="/smriti-trial?plan=growth" class="cta-btn cta-primary">Start Free Trial →</a>
+      <div class="cta-sub">30 days free · Full GROWTH features</div>
+    </div>
+
+    <!-- PRO -->
+    <div class="price-card">
+      <div class="pkg-tier">Pro</div>
+      <div class="pkg-name">SMRITI PRO</div>
+      <div class="pkg-tagline">Multi-store. Distributor. AI Forecasting. Chain retailers aur brands ke liye.</div>
+      <div class="price-block">
+        <div class="price-amount">
+          <span class="price-currency">₹</span>
+          <span id="pro_price">6,999</span>
+          <span class="price-period">/mo</span>
+        </div>
+        <div class="price-annual" id="pro_annual">Billed ₹69,999/year</div>
+        <div class="price-saving" id="pro_saving">Save ₹13,989 vs monthly</div>
+      </div>
+      <div class="roi-tag">ROI: 55x in Month 1</div>
+      <div class="divider"></div>
+      <ul class="feature-list">
+        <li><span class="tick">✓</span> <strong>Everything in GROWTH</strong></li>
+        <li><span class="tick">✓</span> Unlimited Stores & Warehouses</li>
+        <li><span class="tick">✓</span> Unlimited Users</li>
+        <li><span class="tick">✓</span> PSV — Distributor / Channel Stock</li>
+        <li><span class="tick">✓</span> AI Demand Forecasting</li>
+        <li><span class="tick">✓</span> AI Dead Stock Prediction</li>
+        <li><span class="tick">✓</span> Coverage Days Engine</li>
+        <li><span class="tick">✓</span> Custom Reports + API Access</li>
+        <li><span class="tick">✓</span> Dedicated Account Manager</li>
+      </ul>
+      <a href="/smriti-trial?plan=pro" class="cta-btn cta-outline">Start Free Trial</a>
+      <div class="cta-sub">30 days free · Dedicated onboarding</div>
+    </div>
+
+  </div>
+
+  <!-- Comparison Table -->
+  <div class="compare-section">
+    <div class="section-label">Full Feature Comparison</div>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>STARTER</th>
+          <th class="featured-col">GROWTH ⭐</th>
+          <th>PRO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="cat-row"><td colspan="4">Inventory Intelligence</td></tr>
+        <tr><td>Dashboard</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Dead Stock Alerts</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Low Stock Alerts</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Fast Mover Report</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Warehouses</td><td>1</td><td>3</td><td>Unlimited</td></tr>
+        <tr><td>Users</td><td>1</td><td>5</td><td>Unlimited</td></tr>
+        <tr class="cat-row"><td colspan="4">Customer Growth Engine (CGE)</td></tr>
+        <tr><td>Loyal Customer Tracking</td><td><span class="cross">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Lapsed Customer Alerts</td><td><span class="cross">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Visit History & Segments</td><td><span class="cross">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>WhatsApp Campaigns</td><td>Basic</td><td>Basic</td><td>Advanced</td></tr>
+        <tr class="cat-row"><td colspan="4">Purchase Decision Tool (PDT)</td></tr>
+        <tr><td>Smart Reorder Recommendations</td><td><span class="cross">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Supplier Performance</td><td><span class="cross">—</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+        <tr class="cat-row"><td colspan="4">Advanced / Enterprise</td></tr>
+        <tr><td>PSV — Distributor / Channel Stock</td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>AI Demand Forecasting</td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Multi-Store Chain View</td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>API Access</td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>Dedicated Account Manager</td><td><span class="cross">—</span></td><td><span class="cross">—</span></td><td><span class="check">✓</span></td></tr>
+        <tr class="cat-row"><td colspan="4">Support</td></tr>
+        <tr><td>Support Channel</td><td>Email</td><td>Email + Call</td><td>Dedicated</td></tr>
+        <tr><td>Onboarding</td><td>Self-serve</td><td>Guided call</td><td>Full onboarding</td></tr>
+        <tr class="cat-row"><td colspan="4">ROI</td></tr>
+        <tr><td>Typical Month-1 ROI</td><td>17x</td><td><strong>28x</strong></td><td>55x</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-section">
+    <div class="faq-title">Frequently Asked Questions</div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Free trial mein kya milta hai? <span class="faq-icon">+</span></div>
+      <div class="faq-a">30 din ke liye full GROWTH features milte hain — CGE, PDT, Alerts sab kuch. Koi credit card nahi chahiye. Trial ke baad aap apna plan choose karte ho.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Kya mera data trial ke baad safe rahega? <span class="faq-icon">+</span></div>
+      <div class="faq-a">Bilkul. Aapka data aapka hai. Trial ke baad bhi export kar sakte ho. Aur agar subscribe karte ho toh sab kuch carry forward hoga.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Kya SMRITI Tally ke saath kaam karta hai? <span class="faq-icon">+</span></div>
+      <div class="faq-a">Haan. Tally aapki accounting ke liye. SMRITI aapki operations, inventory, aur customers ke liye. Dono saath chal sakte hain — koi conflict nahi.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Staff ko training mein kitna waqt lagega? <span class="faq-icon">+</span></div>
+      <div class="faq-a">1 din se kam. Dashboard itna simple hai ki owner khud dekh sakta hai bina kisi ke help ke. Aur hum onboarding call bhi dete hain.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">STARTER se GROWTH ya PRO mein upgrade karna kitna easy hai? <span class="faq-icon">+</span></div>
+      <div class="faq-a">Ek click. Data migrate nahi hota — woh pehle se hi wahan hota hai. Sirf features unlock ho jaate hain. Downtime zero.</div>
+    </div>
+  </div>
+
+  <!-- Bottom CTA -->
+  <div class="bottom-cta">
+    <h2>Ab decision-ready bano</h2>
+    <p>30 din free trial. Aapka data. Aapki dukaan. Pehle din se value.</p>
+    <div class="cta-group">
+      <a href="/smriti-trial" class="cta-big cta-big-primary">Start Free Trial — 30 Days Free →</a>
+      <a href="/smriti-roi-calculator" class="cta-big cta-big-outline">Calculate My ROI</a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <em>"Always decision-ready."</em> — Jawahar R. Mallah, Founder & Chief Architect, AITDL<br />
+    <span style="margin-top:6px;display:block">SMRITI Retail OS — Inventory Intelligence. Customer Intelligence. Business ROI.</span>
+  </footer>
+
+  <script>
+    // Pricing data
+    const PRICING = {
+      starter: { monthly: 1999, annual_total: 19999, annual_mo: 1667, saving: 3989 },
+      growth:  { monthly: 3999, annual_total: 39999, annual_mo: 3333, saving: 7989 },
+      pro:     { monthly: 6999, annual_total: 69999, annual_mo: 5833, saving: 13989 },
+    };
+
+    let billingMode = 'annual';
+
+    function fmt(n) {
+      return n.toLocaleString('en-IN');
+    }
+
+    function setBilling(mode) {
+      billingMode = mode;
+      document.getElementById('btn_monthly').classList.toggle('active', mode === 'monthly');
+      document.getElementById('btn_annual').classList.toggle('active',  mode === 'annual');
+
+      ['starter','growth','pro'].forEach(p => {
+        const d = PRICING[p];
+        if (mode === 'annual') {
+          document.getElementById(p + '_price').textContent  = fmt(d.annual_mo);
+          document.getElementById(p + '_annual').textContent = `Billed ₹${fmt(d.annual_total)}/year`;
+          document.getElementById(p + '_saving').textContent = `Save ₹${fmt(d.saving)} vs monthly`;
+        } else {
+          document.getElementById(p + '_price').textContent  = fmt(d.monthly);
+          document.getElementById(p + '_annual').textContent = `Or ₹${fmt(d.annual_total)}/year (save ₹${fmt(d.saving)})`;
+          document.getElementById(p + '_saving').textContent = '';
+        }
+      });
+    }
+
+    function toggleFaq(el) {
+      el.classList.toggle('open');
+    }
+
+    // Init annual
+    setBilling('annual');
+  </script>
+
+</body>
+</html>

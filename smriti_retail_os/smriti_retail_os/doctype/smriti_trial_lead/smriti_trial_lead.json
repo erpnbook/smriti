@@ -1,0 +1,115 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-06-24 22:42:25.740414",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "store_name",
+  "owner_name",
+  "mobile",
+  "city",
+  "business_type",
+  "plan_selected",
+  "warehouses",
+  "monthly_sales",
+  "source",
+  "status",
+  "submitted_at",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "store_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Store Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "owner_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Owner Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "mobile",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Mobile",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "City"
+  },
+  {
+   "fieldname": "business_type",
+   "fieldtype": "Data",
+   "label": "Business Type"
+  },
+  {
+   "fieldname": "plan_selected",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Plan Selected",
+   "options": "starter\ngrowth\npro"
+  },
+  {
+   "default": "1",
+   "fieldname": "warehouses",
+   "fieldtype": "Int",
+   "label": "Warehouses"
+  },
+  {
+   "fieldname": "monthly_sales",
+   "fieldtype": "Currency",
+   "label": "Monthly Sales (\u20b9)"
+  },
+  {
+   "default": "smriti-trial",
+   "fieldname": "source",
+   "fieldtype": "Data",
+   "label": "Source"
+  },
+  {
+   "default": "New",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "New\nContacted\nDemo Scheduled\nConverted\nLost"
+  },
+  {
+   "fieldname": "submitted_at",
+   "fieldtype": "Datetime",
+   "label": "Submitted At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-24 22:42:25.740414",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Trial Lead",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
