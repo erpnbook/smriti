@@ -19,12 +19,12 @@ from smriti_retail_os.psv_analysis_service import get_broken_sizes, generate_reo
 
 class TestPSVAnalysis(TestPSV):
     def test_broken_size_detection_logic(self):
-        # Ensure Item Attribute "Test Attribute" exists with correct values
-        if frappe.db.exists("Item Attribute", "Test Attribute"):
-            frappe.delete_doc("Item Attribute", "Test Attribute", force=True)
+        # Ensure Item Attribute "Test Attribute Analysis" exists with correct values
+        if frappe.db.exists("Item Attribute", "Test Attribute Analysis"):
+            frappe.delete_doc("Item Attribute", "Test Attribute Analysis", force=True)
 
         attr = frappe.new_doc("Item Attribute")
-        attr.attribute_name = "Test Attribute"
+        attr.attribute_name = "Test Attribute Analysis"
         attr.append("item_attribute_values", {"attribute_value": "7", "abbr": "7"})
         attr.append("item_attribute_values", {"attribute_value": "8", "abbr": "8"})
         attr.insert(ignore_permissions=True)
@@ -39,7 +39,7 @@ class TestPSVAnalysis(TestPSV):
             itm.stock_uom = self.uom
             itm.gst_hsn_code = self.hsn_code
             itm.has_variants = 1
-            itm.append("attributes", {"attribute": "Test Attribute"})
+            itm.append("attributes", {"attribute": "Test Attribute Analysis"})
             itm.insert(ignore_permissions=True)
 
         # 2. Create variant items
@@ -52,7 +52,7 @@ class TestPSVAnalysis(TestPSV):
             itm.stock_uom = self.uom
             itm.gst_hsn_code = self.hsn_code
             itm.variant_of = template_item
-            itm.append("attributes", {"attribute": "Test Attribute", "attribute_value": "7"})
+            itm.append("attributes", {"attribute": "Test Attribute Analysis", "attribute_value": "7"})
             itm.insert(ignore_permissions=True)
 
         var_8 = "TEST-STYLE-8"
@@ -64,7 +64,7 @@ class TestPSVAnalysis(TestPSV):
             itm.stock_uom = self.uom
             itm.gst_hsn_code = self.hsn_code
             itm.variant_of = template_item
-            itm.append("attributes", {"attribute": "Test Attribute", "attribute_value": "8"})
+            itm.append("attributes", {"attribute": "Test Attribute Analysis", "attribute_value": "8"})
             itm.insert(ignore_permissions=True)
 
         # 3. Create a Reorder Rule for var_7

@@ -106,6 +106,11 @@ class TestSFC(FrappeTestCase):
             b.brand = cls.brand
             b.insert(ignore_permissions=True)
 
+        if not frappe.db.exists("GST HSN Code", "649211"):
+            hsn = frappe.new_doc("GST HSN Code")
+            hsn.hsn_code = "649211"
+            hsn.insert(ignore_permissions=True)
+
         cls.item = "TEST-SFC-ITEM-01"
         if not frappe.db.exists("Item", cls.item):
             itm = frappe.new_doc("Item")
