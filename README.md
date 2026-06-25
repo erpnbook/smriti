@@ -1,404 +1,636 @@
-# SMRITI Retail OS
-### Keyboard-First Retail Experience Layer for ERPNext + India Compliance
+# SMRITI Retail OS™
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![ERPNext: v16](https://img.shields.io/badge/ERPNext-v16-blue.svg)](https://github.com/frappe/erpnext)
-[![Frappe: v16](https://img.shields.io/badge/Frappe-v16-blue.svg)](https://github.com/frappe/frappe)
-[![India Compliance: v16](https://img.shields.io/badge/India_Compliance-v16-green.svg)](https://github.com/resilient-tech/india-compliance)
+<div align="center">
 
----
+  <img src="smriti_retail_os/public/images/logo.svg" alt="SMRITI Retail OS" width="120" />
 
-## 🧠 What is SMRITI?
+  ### Retail Intelligence Platform — Experience Layer for ERPNext®
 
-SMRITI Retail OS is **not a new ERP**.
+  [![Version](https://img.shields.io/badge/SMRITI-v1.2.10-1A2B5C?style=for-the-badge)](https://github.com/erpnbook/smriti)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+  [![ERPNext: v16](https://img.shields.io/badge/ERPNext-v16-2563EB?style=for-the-badge)](https://github.com/frappe/erpnext)
+  [![Frappe: v16](https://img.shields.io/badge/Frappe-v16-2563EB?style=for-the-badge)](https://github.com/frappe/frappe)
+  [![India Compliance: v16](https://img.shields.io/badge/India_Compliance-v16-22c55e?style=for-the-badge)](https://github.com/resilient-tech/india-compliance)
 
-It is a **Retail Experience Layer** — a thin,
-upgrade-safe Frappe application that sits on top
-of ERPNext and transforms it into a
-keyboard-first retail operating system.
+  **Developed by AITDL – AI Technology & Development Lab**
+  Powered by ERPNext® & Frappe® Framework
 
-ERPNext remains the engine for:
-- Inventory management
-- Accounting & ledgers
-- POS infrastructure
-- GST & taxation (via India Compliance)
-
-SMRITI only provides:
-- Simplified retail UI
-- Role-based screen routing
-- Barcode-first workflows
-- Dark retail theme
-- Retail-specific APIs
+</div>
 
 ---
 
-## 🏗️ Architecture
+> **Author**: Jawahar R. Mallah — Founder & Chief Architect, AITDL
+> **Experience**: 20+ years in Retail Technology, Distribution Systems, POS Solutions, ERP Implementations & Enterprise Application Design
+> *"Always decision-ready."*
+
+---
+
+## Table of Contents
+
+1. [Product Identity](#1-product-identity)
+2. [Architecture Model](#2-architecture-model)
+3. [Architecture Constitution](#3-architecture-constitution--golden-rules)
+4. [SMRITI-First UI Policy](#4-smriti-first-ui-policy-rule-7)
+5. [Modules & Pages](#5-modules--pages)
+6. [Project Structure](#6-project-structure)
+7. [Roles & Permissions](#7-roles--permissions)
+8. [Design System](#8-design-system)
+9. [API Reference](#9-api-reference)
+10. [Formula Registry](#10-formula-registry)
+11. [Installation](#11-installation)
+12. [Docker Production Setup](#12-docker-production-setup)
+13. [Testing](#13-testing)
+14. [AI Agent Development Guide](#14-ai-agent-development-guide)
+15. [Documentation](#15-documentation)
+16. [Governance Links](#16-governance-links)
+17. [Roadmap](#17-roadmap)
+18. [License](#18-license)
+
+---
+
+## 1. Product Identity
+
+| Field | Value |
+|---|---|
+| **Official Name** | SMRITI Retail OS™ |
+| **Developer** | AITDL – AI Technology & Development Lab |
+| **Author** | Jawahar R. Mallah, Founder & Chief Architect |
+| **Current Version** | `v1.2.10` |
+| **License** | MIT |
+| **Copyright** | © 2026 AITDL NETWORK & ERPNbook.com. All Rights Reserved. |
+| **Framework** | Frappe v16 + ERPNext v16 + India Compliance v16 |
+
+### What SMRITI Is NOT
+
+SMRITI is **not a new ERP**. It is a **Retail Experience & Intelligence Layer** — a Frappe application that sits on top of ERPNext and transforms it into a retail operating system optimised for store operations, channel management, and business analytics.
+
+### Mandatory Attribution Notice
+
+All primary public-facing interfaces and manuals must display:
+
+> **SMRITI Retail OS™**
+> Developed by AITDL
+> Powered by ERPNext® & Frappe® Framework
+
+---
+
+## 2. Architecture Model
 
 ```
-┌─────────────────────────────────────────┐
-│           SMRITI Retail OS              │
-│                                         │
-│  Custom Pages  │  Client Scripts        │
-│  CSS Theme     │  Whitelisted APIs      │
-│  Boot Hooks    │  Sidebar Component     │
-├─────────────────────────────────────────┤
-│              ERPNext v16                │
-│                                         │
-│  Item  │  Customer  │  Supplier         │
-│  POS Invoice  │  Stock Entry            │
-│  Purchase Receipt  │  Payment Entry     │
-├─────────────────────────────────────────┤
-│          India Compliance v16           │
-│                                         │
-│  GST  │  GSTIN Validation               │
-│  e-Invoice  │  e-Waybill                │
-│  GSTR Reports  │  HSN Codes             │
-├─────────────────────────────────────────┤
-│         Frappe Framework v16            │
-│                                         │
-│  ORM  │  REST API  │  Auth              │
-│  Boot Session  │  Hooks  │  Jobs        │
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                   SMRITI Retail OS™                         │
+│                                                             │
+│  SMRITI UI Layer (standalone www/* pages, no /desk)        │
+│  SMRITI API Layer (whitelisted controllers)                 │
+│  SMRITI Service Layer (business logic)                      │
+│  SMRITI Repository Layer (data access abstraction)          │
+├─────────────────────────────────────────────────────────────┤
+│                   Frappe Framework v16                      │
+│  ORM  │  REST API  │  Auth  │  Boot Session  │  Hooks      │
+├─────────────────────────────────────────────────────────────┤
+│                     ERPNext v16                             │
+│  POS Invoice  │  Stock Entry  │  Purchase Receipt           │
+│  Item  │  Customer  │  Supplier  │  POS Profile             │
+│  Payment Entry  │  Price List  │  Loyalty Points            │
+├─────────────────────────────────────────────────────────────┤
+│                  India Compliance v16                       │
+│  GST  │  GSTIN Validation  │  e-Invoice  │  e-Waybill      │
+│  GSTR Reports  │  HSN Codes  │  Tax Templates               │
+├─────────────────────────────────────────────────────────────┤
+│                      Database Layer                         │
+│              MariaDB / MySQL (via Docker)                   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Golden Rules (NEVER violate)
+### Domain Ownership Table
+
+| Domain | Owner | ERPNext Role |
+|---|---|---|
+| Accounting / GL / GST | ERPNext | System of Record |
+| Inventory Valuation | ERPNext | System of Record |
+| Stock Ledger | ERPNext | System of Record |
+| Customers / Suppliers / Users | ERPNext | System of Record |
+| UI / UX | SMRITI | Owner |
+| Retail Workflows | SMRITI | Owner |
+| POS Experience | SMRITI | Owner |
+| Reports / Analytics | SMRITI | Owner |
+| Store Operations | SMRITI | Owner |
+| POS Profile Configuration | SMRITI | Experience Layer |
+| Party Stock Visibility (PSV/PSA) | SMRITI | Shadow Ledger (read-only ERPNext) |
+| Formula Registry | SMRITI | Owner |
+| Explain Engine | SMRITI | Owner |
+| Channel Governance Engine (CGE) | SMRITI | Owner |
+| Trial CRM / Platform Admin | SMRITI | Owner |
+
+---
+
+## 3. Architecture Constitution — Golden Rules
+
+The following rules apply to **all developers, contributors, and AI agents** working on this codebase. They are LOCKED and cannot be overridden.
+
+### Rule 1 — Do NOT Replace the Architecture
+Agents may **extend**, **improve**, **refactor**, or **optimize**.
+Agents may **NOT** replace, introduce competing frameworks, or ignore approved service layers.
+
+### Rule 2 — Service-First Design (MANDATORY)
 
 ```
-1. NEVER modify ERPNext core files
-2. NEVER modify India Compliance files
-3. NEVER create duplicate accounting logic
-4. NEVER create duplicate GST logic
-5. NEVER create duplicate inventory logic
-6. ALWAYS use existing ERPNext DocTypes
-7. ALWAYS extend via hooks, not patches
-8. System Manager must always see
-   standard ERPNext — unaffected
+UI → API → Service Layer → Business Logic → Database
+```
+
+**Forbidden:**
+```
+UI → Database (direct)
+UI → frappe.client.insert() from frontend
+UI → frappe.new_doc() from frontend
+```
+
+### Rule 3 — ERPNext Is the System of Record
+Never create:
+- Duplicate accounting logic
+- Duplicate GST calculation
+- Duplicate inventory valuation
+- Duplicate stock ledger
+
+### Rule 4 — Tally-First Accounting Strategy
+SMRITI does NOT replace TallyPrime. SMRITI owns inventory, purchase, sales, PSV, and AI. Tally owns books of accounts, trial balance, balance sheet, and P&L.
+
+### Rule 5 — Single Source of Truth
+Every business concept has exactly one owner. No duplicate ownership.
+
+### Rule 6 — PSV Ownership Boundary
+PSV reads ERPNext master data. PSV does NOT modify ERPNext Stock Ledger Entries or General Ledger Entries.
+
+### Rule 7 — No Shadow Databases
+Never create duplicate customer masters, supplier masters, or stock tables.
+
+### Rule 8 — Pricing Is a Separate Domain
+Inventory never maintains selling prices.
+
+### Rule 9 — Approval Before Automation
+Analytics may be automatic. Business actions (POs, Transfers, Discounts, Price Changes) require human approval.
+
+### Rule 10 — Auditability Required
+Every critical action must log: User, Timestamp, Before Value, After Value, Reason.
+
+---
+
+## 4. SMRITI-First UI Policy (Rule 7)
+
+> **Every new page, module, form, report, or UI component MUST be built as a dedicated SMRITI standalone page.**
+
+### What Is FORBIDDEN
+
+| ❌ Wrong Pattern | ✅ Correct Pattern |
+|---|---|
+| Opens `/desk#Form/Sales Invoice/new` | Opens `/billing` (SMRITI custom page) |
+| Opens `/app/sales-invoice` | Opens `/smriti-masters` (SMRITI custom page) |
+| `frappe.new_doc("Sales Invoice")` | `smriti_api.create_invoice()` via `frappe.call()` |
+| `frappe.set_route("Form", "Customer")` | SMRITI modal/form renders custom UI |
+
+### Mandatory Checklist (ALL Must Be YES Before Proceeding)
+
+- [ ] Does this have a dedicated SMRITI www page or custom page route?
+- [ ] Does the user URL contain `/smriti`, `/billing`, `/inventory`, `/reports`, `/masters`, or another SMRITI-owned route?
+- [ ] Is all backend communication going through a SMRITI service controller?
+- [ ] Is the page styled with SMRITI design system (Navy `#1A2B5C` + Blue `#2563EB` + Arial)?
+- [ ] Does the page show SMRITI logo and branding?
+- [ ] Is `/desk` and `/app` completely hidden from this user flow?
+
+### Naming Convention
+
+| Category | Pattern |
+|---|---|
+| SMRITI Pages | `/smriti-<feature>` |
+| SMRITI APIs | `smriti_retail_os.<module>.api.<feature>_api.<method>` |
+| SMRITI Services | `smriti_retail_os.<module>.service.<feature>_service.<method>` |
+| SMRITI CSS | `smriti_<feature>.css` |
+| SMRITI JS | `smriti_<feature>.js` |
+
+### Coming Soon Policy
+
+Never expose Frappe Desk as a temporary workaround. Always use the SMRITI Coming Soon page:
+
+```
+/smriti-coming-soon?feature=Purchase+Orders&progress=60&eta=Q3+2026
+```
+
+### Routing Policy (Frappe v16+)
+
+```javascript
+// CORRECT — Frappe canonical route
+frappe.set_route("stock-center");
+window.location.href = "/app/stock-center";   // fallback
+
+// FORBIDDEN
+window.location.href = "/page/stock-center";
+window.location.href = "/desk/page/stock-center";
 ```
 
 ---
 
-## 📁 Project Structure
+## 5. Modules & Pages
+
+### Core Retail Modules
+
+| Route | Module | Status |
+|---|---|---|
+| `/smriti-home` | SMRITI Dashboard | ✅ Live |
+| `/billing` | POS Billing Engine | ✅ Live |
+| `/inventory` | Inventory Management | ✅ Live |
+| `/purchase` | Purchase Management | ✅ Live |
+| `/reports` | Reports Center | ✅ Live |
+| `/shift` | Shift Open/Close | ✅ Live |
+| `/barcode` | Barcode Printing | ✅ Live |
+
+### Masters & Configuration
+
+| Route | Module | Status |
+|---|---|---|
+| `/item-master` | Item Master | ✅ Live |
+| `/customers` | Customer Master | ✅ Live |
+| `/suppliers` | Supplier Master | ✅ Live |
+| `/brand-master` | Brand Master | ✅ Live |
+| `/category-master` | Category Master | ✅ Live |
+| `/smriti-pos-profiles` | POS Profile Manager | ✅ Live |
+| `/configure` | System Configuration | ✅ Live |
+
+### Analytics & Intelligence
+
+| Route | Module | Status |
+|---|---|---|
+| `/analytics` | Analytics Dashboard | ✅ Live |
+| `/smriti-pdt` | Predictive Distribution Twin | ✅ Live |
+| `/smriti-formula-registry` | Formula Registry | ✅ Live |
+| `/smriti-pricing` | Pricing Intelligence | ✅ Live |
+
+### PSV / Channel Operations
+
+| Route | Module | Status |
+|---|---|---|
+| `/psv-dashboard` | Party Stock Visibility | ✅ Live |
+| `/psa` | Party Stock Accounts | ✅ Live |
+| `/psv-opening-balance` | PSV Opening Balance | ✅ Live |
+| `/psv-reconciliation` | PSV Reconciliation | ✅ Live |
+| `/psv-exception-analysis` | PSV Exception Analysis | ✅ Live |
+| `/smriti-cge` | Channel Governance Engine | ✅ Live |
+| `/smriti-sfm` | SFM Module | ✅ Live |
+| `/smriti-sfc` | SFC Module | ✅ Live |
+
+### Commercial Platform
+
+| Route | Module | Status |
+|---|---|---|
+| `/smriti-trial` | Trial Activation | ✅ Live |
+| `/smriti-trial-leads` | Trial CRM | ✅ Live |
+| `/smriti-platform-admin` | Platform Administration | ✅ Live |
+| `/smriti-roi-calculator` | ROI Calculator | ✅ Live |
+| `/smriti-presentation` | SMRITI Presentation | ✅ Live |
+
+### Sales & Operations
+
+| Route | Module | Status |
+|---|---|---|
+| `/sales-invoices` | Sales Invoices | ✅ Live |
+| `/sales-orders` | Sales Orders | ✅ Live |
+| `/sales-return` | Sales Returns | ✅ Live |
+| `/sales-upload` | Sales Upload | ✅ Live |
+| `/sizewise-invoice` | Size-Wise Invoice | ✅ Live |
+| `/sizewise-item` | Size-Wise Item | ✅ Live |
+| `/scheme-creator` | Scheme Creator | ✅ Live |
+| `/delivery-challan` | Delivery Challan | ✅ Live |
+| `/payments` | Payments | ✅ Live |
+
+### Support & Governance
+
+| Route | Module | Status |
+|---|---|---|
+| `/smriti-help` | Help Center | ✅ Live |
+| `/smriti-dictionary` | Business Dictionary | ✅ Live |
+| `/smriti-coming-soon` | Coming Soon Page | ✅ Live |
+| `/smriti-go-live` | Go Live Checklist | ✅ Live |
+| `/smriti-license` | License Manager | ✅ Live |
+| `/smriti-support` | Support Portal | ✅ Live |
+| `/smriti-clienteling` | Clienteling | ✅ Live |
+| `/security` | Security & Users | ✅ Live |
+| `/smriti-security-log` | Security Audit Log | ✅ Live |
+| `/smriti-safe` | SMRITI Safe | ✅ Live |
+| `/verify-certificate` | Certificate Verification | ✅ Live |
+| `/backup` | Backup Manager | ✅ Live |
+| `/release-notes` | Release Notes | ✅ Live |
+| `/smriti-login` | Custom Login Page | ✅ Live |
+
+---
+
+## 6. Project Structure
 
 ```
 smriti_retail_os/
 │
 ├── smriti_retail_os/
 │   │
-│   ├── hooks.py                 # App registration,
-│   │                            # CSS/JS includes,
-│   │                            # boot_session,
-│   │                            # doc_events,
-│   │                            # brand_html
+│   ├── api/                         # Whitelisted API endpoints
+│   │   ├── pos_profile_api.py       # POS Profile Management API
+│   │   ├── trial_activation_api.py  # Trial Activation API
+│   │   ├── trial_operations_api.py  # Trial Operations API
+│   │   ├── help_api.py              # Help Center API
+│   │   └── coming_soon_api.py       # Coming Soon Registry API
 │   │
-│   ├── boot.py                  # Role-based login redirect
-│   │                            # ERPNext branding override
-│   │                            # bootinfo patching
+│   ├── repositories/                # Data access layer
+│   │   ├── __init__.py
+│   │   └── pos_profile_repository.py
 │   │
-│   ├── hooks_logic.py           # Server-side doc event handlers
-│   │                            # Item tax sync
-│   │                            # Address auto-creation
-│   │                            # Payment terms sync
+│   ├── services/                    # Business logic layer
+│   │   ├── pos_profile_service.py   # POS Profile business rules
+│   │   ├── formula_service.py       # Formula Registry engine
+│   │   ├── knowledge_service.py     # Knowledge Center
+│   │   └── trial_service.py         # Trial lifecycle service
 │   │
-│   ├── billing_api.py           # POS billing whitelisted APIs
-│   │                            # add_item_by_barcode
-│   │                            # hold_bill / recall_bill
-│   │                            # submit_bill
-│   │                            # validate_manager_override
+│   ├── clienteling/                 # Clienteling sub-module
+│   │   └── service/
+│   │       └── clienteling_service.py
 │   │
-│   ├── inventory_api.py         # Inventory whitelisted APIs
-│   │                            # create_grn
-│   │                            # create_stock_transfer
-│   │                            # create_stock_adjustment
-│   │                            # create_stock_audit
+│   ├── sfm/                         # SFM sub-module
+│   │   └── service/
+│   │       └── attribution_service.py
 │   │
-│   ├── barcode_api.py           # Barcode printing APIs
-│   │                            # get_items_for_printing
-│   │                            # generate_prn (ZPL)
-│   │
-│   ├── shift_api.py             # Day open/close APIs
-│   │                            # open_shift
-│   │                            # close_shift
-│   │                            # get_shift_status
-│   │
-│   ├── master_api.py            # Master data APIs
-│   │                            # search_item
-│   │                            # search_customer
-│   │
-│   ├── setup.py                 # After install hook
-│   │                            # Creates custom fields
-│   │                            # Creates SMRITI roles
-│   │                            # Creates workspace
+│   ├── smriti_retail_os/            # DocTypes (Frappe metadata)
+│   │   └── doctype/
+│   │       ├── smriti_trial_activation/
+│   │       ├── smriti_trial_lead/
+│   │       ├── smriti_psv_transaction/
+│   │       ├── smriti_certification_exam/
+│   │       ├── smriti_psv_exam_attempt/
+│   │       ├── smriti_provision_log/
+│   │       └── smriti_trial_settings/
 │   │
 │   ├── public/
-│   │   ├── css/
-│   │   │   ├── smriti_theme.css      # Dark theme CSS variables
-│   │   │   ├── smriti_sidebar.css    # Custom sidebar styles
-│   │   │   └── smriti_branding.css   # Branding overrides
+│   │   ├── css/                     # SMRITI CSS (per-page + global)
+│   │   │   ├── smriti-inventory.css
+│   │   │   ├── smriti-purchase.css
+│   │   │   ├── smriti-reports.css
+│   │   │   ├── smriti-sizewise-invoice.css
+│   │   │   ├── smriti-sizewise-item.css
+│   │   │   └── smriti-ui-hardening.css
 │   │   │
-│   │   └── js/
-│   │       ├── smriti_sidebar.js     # Reusable sidebar component
-│   │       │                         # SMRITI.renderSidebar(page)
-│   │       ├── main.js               # Global desk JS
-│   │       │                         # Sidebar lockdown
-│   │       │                         # Role-based hiding
-│   │       ├── item.js               # Item form simplification
-│   │       ├── customer.js           # Customer form simplification
-│   │       └── supplier.js           # Supplier form simplification
+│   │   ├── js/                      # SMRITI JS
+│   │   │   ├── smriti_nav_config.js # Navigation menu registry
+│   │   │   ├── smriti_ui_resolver.js
+│   │   │   ├── smriti_theme_manager.js
+│   │   │   ├── smriti_offline_store.js
+│   │   │   └── smriti_pwa.js
+│   │   │
+│   │   └── images/
+│   │       └── logo.svg
 │   │
-│   ├── page/
-│   │   ├── smriti-billing/           # POS Billing screen
-│   │   │   ├── smriti-billing.json   # Page registration
-│   │   │   ├── smriti-billing.js     # Billing controller
-│   │   │   └── smriti-billing.css    # Billing styles
-│   │   │
-│   │   ├── smriti-inventory/         # Inventory screen
-│   │   │   ├── smriti-inventory.json
-│   │   │   ├── smriti-inventory.js
-│   │   │   └── smriti-inventory.css
-│   │   │
-│   │   ├── smriti-barcode/           # Barcode printing screen
-│   │   │   ├── smriti-barcode.json
-│   │   │   ├── smriti-barcode.js
-│   │   │   └── smriti-barcode.css
-│   │   │
-│   │   ├── smriti-desk/              # Store Manager dashboard
-│   │   │   ├── smriti-desk.json
-│   │   │   ├── smriti-desk.js
-│   │   │   └── smriti-desk.css
-│   │   │
-│   │   └── smriti-shift/             # Day open/close screen
-│   │       ├── smriti-shift.json
-│   │       ├── smriti-shift.js
-│   │       └── smriti-shift.css
+│   ├── templates/
+│   │   └── includes/
+│   │       ├── smriti_sidebar.html  # Reusable sidebar component
+│   │       ├── smriti_topbar.html   # Reusable top nav component
+│   │       └── smriti_token_loader.html  # Auth token / branding
 │   │
-│   ├── www/
-│   │   └── login.html                # Custom SMRITI login page
+│   ├── www/                         # SMRITI standalone pages
+│   │   ├── smriti-home.html / .py
+│   │   ├── billing.html / .py
+│   │   ├── inventory.html / .py
+│   │   ├── purchase.html / .py
+│   │   ├── shift.html / .py
+│   │   ├── barcode.html / .py
+│   │   ├── reports.html / .py
+│   │   ├── smriti-pos-profiles.html / .py
+│   │   ├── smriti-trial.html / .py
+│   │   ├── smriti-trial-leads.html / .py
+│   │   ├── smriti-platform-admin.html / .py
+│   │   ├── psv-dashboard.html / .py
+│   │   ├── smriti-formula-registry.html / .py
+│   │   ├── smriti-coming-soon.html / .py
+│   │   └── ... (100+ additional pages)
 │   │
-│   └── tests/
-│       ├── test_billing_api.py
-│       ├── test_inventory_api.py
-│       └── test_hooks.py
+│   ├── tests/
+│   │   ├── test_pos_profile.py       # POS Profile tests
+│   │   ├── test_branding_integrity.py
+│   │   ├── test_formula_registry.py
+│   │   ├── test_knowledge_center.py
+│   │   └── test_psv.py
+│   │
+│   ├── hooks.py                      # App registration, CSS/JS, doc events
+│   ├── boot.py                       # Role-based routing, Desk blocking
+│   ├── psv_service.py                # PSV shadow ledger engine
+│   └── setup.py                      # Post-install setup hooks
 │
-├── hooks.py                     # (root level — app metadata)
-├── setup.py
-├── requirements.txt
+├── docs/                             # Documentation (211 entries, governed)
+│   ├── DOCUMENTATION_INDEX.md
+│   ├── 01-product/
+│   ├── 02-user-guide/
+│   ├── 03-admin-guide/
+│   ├── 04-operations/
+│   ├── 05-developer/
+│   ├── 06-api/
+│   ├── 07-kb/
+│   ├── 08-governance/
+│   └── reports/
+│
+├── compose.yaml                      # Docker production compose
+├── .env                              # Environment variables
 └── README.md
 ```
 
 ---
 
-## 🔧 Technical Implementation
-
-### hooks.py — Key Registrations
-
-```python
-# Branding
-brand_html = "<b style='color:#e94560'>SMRITI Retail OS</b>"
-
-# CSS/JS — load order matters
-app_include_css = [
-    "/assets/smriti_retail_os/css/smriti_theme.css",
-    "/assets/smriti_retail_os/css/smriti_sidebar.css",
-    "/assets/smriti_retail_os/css/smriti_branding.css"
-]
-app_include_js = [
-    "/assets/smriti_retail_os/js/smriti_sidebar.js",
-    "/assets/smriti_retail_os/js/main.js"
-]
-
-# Boot — role based routing
-boot_session = "smriti_retail_os.boot.boot_session"
-extend_bootinfo = "smriti_retail_os.boot.extend_bootinfo"
-
-# Form simplification
-doctype_js = {
-    "Item":     "public/js/item.js",
-    "Customer": "public/js/customer.js",
-    "Supplier": "public/js/supplier.js"
-}
-
-# Server-side automation
-doc_events = {
-    "Item": {
-        "before_save": "smriti_retail_os.hooks_logic.sync_item_taxes_and_prices"
-    },
-    "Customer": {
-        "on_update": "smriti_retail_os.hooks_logic.sync_customer_address"
-    },
-    "Supplier": {
-        "on_update": "smriti_retail_os.hooks_logic.sync_supplier_address_and_credit_days"
-    }
-}
-
-# Login page override
-website_route_rules = [
-    {"from_route": "/login", "to_route": "login"}
-]
-```
-
-### boot.py — Role Based Routing
-
-```python
-def boot_session(bootinfo):
-    extend_bootinfo(bootinfo)
-
-def extend_bootinfo(bootinfo):
-    # 1. Apply SMRITI branding to bootinfo
-    _apply_branding(bootinfo)
-
-    user = frappe.session.user
-    if user == "Administrator":
-        return
-
-    roles = frappe.get_roles(user)
-
-    # 2. System Manager — NO redirect, normal ERPNext
-    if "System Manager" in roles:
-        return
-
-    # 3. Cashier → Billing screen
-    if "SMRITI Cashier" in roles:
-        if frappe.db.exists("Page", "smriti-billing"):
-            bootinfo.default_route = "/app/smriti-billing"
-        else:
-            bootinfo.default_route = "/app/point-of-sale"
-
-    # 4. Store Manager → Dashboard
-    elif "SMRITI Store Manager" in roles:
-        if frappe.db.exists("Page", "smriti-desk"):
-            bootinfo.default_route = "/app/smriti-desk"
-        else:
-            bootinfo.default_route = "/app"
-```
-
-### Custom Fields Added to ERPNext DocTypes
-
-```
-Item DocType:
-├── custom_is_retail_item    (Check, default=1)
-├── custom_department        (Link → Item Group)
-├── custom_gst_percentage    (Select: 0,5,12,18,28)
-├── custom_mrp               (Currency)
-├── custom_barcode_size      (Select: 50x25,50x30,75x50,100x50)
-└── custom_current_stock_html (HTML — display only)
-
-Customer DocType:
-├── custom_address_text      (Small Text)
-├── custom_birthday          (Date)
-└── custom_anniversary       (Date)
-
-Supplier DocType:
-├── custom_address_text      (Small Text)
-└── custom_credit_days       (Int)
-
-POS Invoice DocType:
-├── custom_is_held           (Check)
-├── custom_held_by           (Data)
-└── custom_hold_time         (Datetime)
-```
-
-### ERPNext DocType Mapping
-
-```
-SMRITI Concept          ERPNext DocType
-──────────────────────────────────────────
-Product Master       →  Item
-Customer Master      →  Customer
-Supplier Master      →  Supplier
-Billing              →  POS Invoice
-Hold Bill            →  POS Invoice (Draft, custom_is_held=1)
-GRN                  →  Purchase Receipt
-Stock Transfer       →  Stock Entry (Material Transfer)
-Stock Adjustment     →  Stock Entry (Material Issue/Receipt)
-Stock Audit          →  Stock Reconciliation
-Day Open             →  POS Opening Entry
-Day Close            →  POS Closing Entry
-Loyalty              →  Loyalty Point Entry
-Promotions           →  Pricing Rule
-Address              →  Address (linked)
-Payment Terms        →  Payment Terms Template
-Manager Audit Log    →  Comment (on POS Invoice)
-```
-
----
-
-## 👥 Roles & Permissions
+## 7. Roles & Permissions
 
 ```
 SMRITI Cashier:
 ├── POS Invoice      → Create, Read, Write
 ├── Customer         → Create, Read, Write
 ├── Item             → Read only
-├── smriti-billing   → Full access
-└── Everything else  → No access
+├── /billing         → Full access
+└── All other routes → Redirected to /billing
 
 SMRITI Store Manager:
 ├── Item             → Create, Read, Write
-├── Customer         → Create, Read, Write
-├── Supplier         → Create, Read, Write
+├── Customer / Supplier → Create, Read, Write
 ├── Stock Entry      → Create, Read, Write
 ├── Purchase Receipt → Create, Read, Write
 ├── All SMRITI pages → Full access
-└── ERPNext modules  → Hidden
+└── /desk, /app      → Blocked (redirected to /smriti)
+
+SMRITI Admin:
+├── POS Profile API  → create/update/archive/clone
+├── Trial Management → Full access
+├── Platform Admin   → Full access
+└── All SMRITI pages → Full access
 
 System Manager:
-└── Everything       → Full ERPNext access
-                       SMRITI theme bypassed
-                       Normal ERPNext desk
+├── All ERPNext DocTypes → Full access
+└── NOTE: /desk is accessible to System Manager only
+    (SMRITI theme and routing bypass for admin work)
+```
+
+### boot.py — Desk Blocking Policy
+
+```python
+# Blocked for ALL users including Administrator:
+SMRITI_BLOCKED_DESK_PATHS = [
+    "/desk/setup-wizard",  → redirect to /smriti
+    "/desk/modules",       → redirect to /smriti
+    "/desk#Form",          → redirect to /smriti
+    "/desk#List",          → redirect to /smriti
+    "/desk#query-report",  → redirect to /smriti
+    "/desk#setup-wizard",  → redirect to /smriti
+]
 ```
 
 ---
 
-## 🎨 Theme System
+## 8. Design System
 
-SMRITI uses pure CSS variables — no JS DOM hacks.
+### Color Palette
 
 ```css
-/* All theme colors defined as variables */
 :root {
-    --smriti-primary:   #e94560;  /* Red — action color */
-    --smriti-bg:        #0b0f19;  /* Dark navy — background */
-    --smriti-surface:   #16213e;  /* Surface — cards/sidebar */
-    --smriti-surface2:  #1a2744;  /* Surface 2 — inputs */
-    --smriti-border:    #2a3a5c;  /* Border color */
-    --smriti-text:      #e2e8f0;  /* Primary text */
-    --smriti-muted:     #8892a4;  /* Muted text */
+    /* Primary Brand */
+    --smriti-navy:      #1A2B5C;   /* Dark navy — primary background */
+    --smriti-blue:      #2563EB;   /* Action blue — buttons, accents */
+
+    /* Surface Scale */
+    --smriti-surface:   #16213e;   /* Card / sidebar surface */
+    --smriti-surface2:  #1a2744;   /* Input / secondary surface */
+    --smriti-border:    #2a3a5c;   /* Border color */
+
+    /* Typography */
+    --smriti-text:      #e2e8f0;   /* Primary text */
+    --smriti-muted:     #8892a4;   /* Secondary / muted text */
+
+    /* Status */
+    --smriti-success:   #22c55e;
+    --smriti-warning:   #f59e0b;
+    --smriti-danger:    #ef4444;
+    --smriti-info:      #3b82f6;
 }
 ```
 
-Theme scoped to `body.smriti-user-layout` —
-System Manager never sees dark theme.
+### Typography
+
+```
+Primary Font:  Arial (UI body text)
+Heading Font:  Outfit (400, 600, 800) — Google Fonts
+Body Font:     Inter (400, 500, 600, 700) — Google Fonts
+Icon Set:      Material Symbols Outlined
+```
+
+### UI Components
+
+- **Navigation**: Left sidebar (`smriti_sidebar.html`) + top bar (`smriti_topbar.html`)
+- **Page Shell**: Standalone HTML templates (`www/<page>.html`), never inside `/desk`
+- **Drawers**: Right-side sliding drawer panels for create/edit forms
+- **Modals**: SMRITI branded modal overlays (not Frappe dialogs)
+- **Explain (ⓘ)**: Every KPI/metric must have a `ⓘ Explain` button revealing formula documentation
 
 ---
 
-## ⌨️ Keyboard Shortcuts
+## 9. API Reference
+
+### API Architecture
+
+All APIs follow this strict pattern:
 
 ```
-F2   → Item search (catalog modal)
-F3   → Customer lookup
-F4   → Hold bill
-F5   → Recall held bill
-F6   → Open payment drawer
-F7   → Apply discount
-F9   → Submit bill + print
-F10  → Edit quantity
-F12  → Reprint last bill
-DEL  → Remove item (manager override)
-ESC  → Cancel / close modal
+smriti_retail_os.<module>.api.<feature>_api.<method>()
 ```
+
+All endpoints are `@frappe.whitelist()` decorated and enforce role-based access via service layer.
+
+### POS Profile API (`api/pos_profile_api.py`)
+
+| Method | Endpoint | Role Required |
+|---|---|---|
+| `get_profiles` | GET | SMRITI Admin / System Manager |
+| `get_profile_detail` | GET | SMRITI Admin / System Manager |
+| `save_profile` | POST | SMRITI Admin / System Manager |
+| `archive_profile` | POST | SMRITI Admin / System Manager |
+| `clone_profile` | POST | SMRITI Admin / System Manager |
+| `get_dropdown_data` | GET | SMRITI Admin / System Manager |
+| `check_shift_lock` | GET | SMRITI Admin / System Manager |
+
+### Shift APIs (`shift_api.py`)
+
+| Method | Description |
+|---|---|
+| `open_shift(opening_cash, pos_profile)` | Opens a POS shift (creates POS Opening Entry) |
+| `close_shift(declared_cash, declared_card, declared_upi, opening_entry)` | Closes shift |
+| `get_shift_status()` | Returns current shift status and cashier |
+
+### Billing APIs (`billing_api.py`)
+
+| Method | Description |
+|---|---|
+| `add_item_by_barcode(barcode, price_list)` | Resolves item from barcode |
+| `hold_bill(cashier, customer, items)` | Parks current bill |
+| `recall_bill(cashier)` | Retrieves parked bill list |
+| `submit_bill(cashier, customer, items, payments, ...)` | Submits POS Invoice |
+| `validate_manager_override(manager_user, manager_password, action_type, invoice_name)` | Manager PIN auth |
+
+### Inventory APIs (`inventory_api.py`)
+
+| Method | Description |
+|---|---|
+| `create_grn(supplier, invoice_no, items)` | Creates Purchase Receipt |
+| `create_stock_transfer(from_warehouse, to_warehouse, items)` | Stock Entry Material Transfer |
+| `create_stock_adjustment(items, reason)` | Stock Entry Material Issue/Receipt |
+| `create_stock_audit(items)` | Stock Reconciliation |
+| `get_stock_summary(warehouse)` | Returns item-wise stock list |
+
+### Barcode APIs (`barcode_api.py`)
+
+| Method | Description |
+|---|---|
+| `get_items_for_printing(filters, source_doctype, source_name)` | Returns items list with print_qty |
+| `generate_prn(items, label_size)` | Returns ZPL/PRN string for thermal printer |
 
 ---
 
-## 📦 Installation
+## 10. Formula Registry
+
+SMRITI maintains a **central Formula Registry** (`/smriti-formula-registry`) for all computed retail KPIs. No formula may be deployed to production without being registered.
+
+### Core Registered Formulas
+
+| Formula | Category | Explain (ⓘ) |
+|---|---|---|
+| Sales Velocity | Inventory Intelligence | ✅ |
+| Weeks of Cover (WOC) | Inventory Intelligence | ✅ |
+| Outlet Health Score | Store Analytics | ✅ |
+| Dead Stock Score | Inventory Intelligence | ✅ |
+| Transfer Benefit Score | Operations | ✅ |
+| Forecast Confidence | AI / PDT | ✅ |
+| Sell Through % | PSV / Channel | ✅ |
+| Stock Accuracy % | Audit | ✅ |
+| Inventory Turnover | Finance | ✅ |
+| Variant Curve Health | Merchandising | ✅ |
+
+### Rule: Explainability-First (Rule ID: DOC-01)
+
+Every metric shown on a SMRITI UI **must** be accompanied by:
+1. Business Meaning
+2. Exact Formula
+3. Worked Example
+4. Data Sources
+5. Interpretation Guide
+6. Recommended Action
+
+---
+
+## 11. Installation
 
 ### Prerequisites
 
 ```bash
-# ERPNext v16 bench setup required
+# ERPNext v16 + Frappe v16 bench required
 # Docker recommended for production
 
-bench --version  # should be 5.x
-python --version # should be 3.11+
+bench --version  # must be 5.x+
+python --version # must be 3.11+
 ```
 
 ### Install Steps
@@ -409,9 +641,8 @@ bench get-app --branch version-16 \
   https://github.com/resilient-tech/india-compliance.git
 bench --site yoursite install-app india_compliance
 
-# Step 2 — Get SMRITI
-bench get-app \
-  https://github.com/yourname/smriti_retail_os.git
+# Step 2 — Get SMRITI Retail OS
+bench get-app https://github.com/erpnbook/smriti.git
 bench --site yoursite install-app smriti_retail_os
 
 # Step 3 — Migrate
@@ -420,327 +651,168 @@ bench --site yoursite migrate
 # Step 4 — Build assets
 bench build --app smriti_retail_os
 
-# Step 5 — Clear cache
+# Step 5 — Clear cache & restart
 bench --site yoursite clear-cache
-
-# Step 6 — Restart
 bench restart
 ```
 
-### Post Installation
+### Post-Install Configuration
+
+```
+1. POS Profile Setup:
+   → /smriti-pos-profiles → New Profile
+   → Set Company, Warehouse, Currency, Payment Modes, Cashiers
+
+2. Walk-In Customer:
+   → /customers → New
+   → Name: Walk-In Customer, Type: Individual
+
+3. India Compliance:
+   → Settings → Company GSTIN, HSN Codes, Tax Templates
+
+4. Assign User Roles:
+   → /security → Users → [Select User]
+   → Add Role: SMRITI Cashier / SMRITI Store Manager / SMRITI Admin
+```
+
+---
+
+## 12. Docker Production Setup
+
+SMRITI Retail OS ships with a `compose.yaml` for Docker-based production deployment.
 
 ```bash
-# Verify installation
-bench --site yoursite list-apps
+# Start all containers
+docker compose up -d
 
-# Expected output:
-# frappe
-# erpnext
-# india_compliance
-# smriti_retail_os
+# Check running containers
+docker compose ps
 
-# Run tests
-bench --site yoursite run-tests \
-  --app smriti_retail_os
+# Install SMRITI on site
+docker compose exec smriti_retail-backend-1 \
+  bench --site frontend install-app smriti_retail_os
+
+# Build assets inside container
+docker compose exec smriti_retail-backend-1 \
+  bench build --app smriti_retail_os
+
+# Run SMRITI tests inside container
+docker compose exec smriti_retail-backend-1 \
+  bench --site frontend run-tests \
+  --app smriti_retail_os \
+  --module smriti_retail_os.tests.test_pos_profile
+
+# Commit working container state
+docker commit smriti_retail-backend-1 smriti-retail-os:v1.2.10
+
+# Export image (disaster recovery backup)
+docker save smriti-retail-os:v1.2.10 -o smriti_retail_os_v1.2.10.tar
+
+# Restore image
+docker load -i smriti_retail_os_v1.2.10.tar
 ```
+
+### Default Port Mapping
+
+| Service | URL |
+|---|---|
+| SMRITI UI | `http://localhost:8765` |
+| Frappe Backend | Internal container |
+| MariaDB | Internal container |
 
 ---
 
-## ⚙️ Configuration After Install
-
-### 1. Create POS Profile
-```
-SMRITI → Configure → POS Profiles → New
-- Company: Your Company
-- Warehouse: Your Store Warehouse
-- Currency: INR
-- Payments: Cash, UPI, Card
-```
-
-### 2. Create Walk-In Customer
-```
-SMRITI → Masters → Customer → New
-- Customer Name: Walk-In Customer
-- Customer Type: Individual
-```
-
-### 3. Setup India Compliance
-```
-India Compliance → Settings
-- Company GSTIN
-- HSN Codes
-- Tax Templates
-```
-
-### 4. Assign Roles to Users
-```
-SMRITI → Security → Users → [Select User]
-- Add Role: SMRITI Cashier
-  OR
-- Add Role: SMRITI Store Manager
-```
-
----
-
-## 🔌 API Reference
-
-### Billing APIs
-```
-POST /api/method/smriti_retail_os.billing_api.add_item_by_barcode
-Args: barcode, price_list
-Returns: item_code, item_name, rate, mrp, gst_percentage, available_qty
-
-POST /api/method/smriti_retail_os.billing_api.hold_bill
-Args: cashier, customer, items (JSON)
-Returns: invoice_name, message
-
-POST /api/method/smriti_retail_os.billing_api.recall_bill
-Args: cashier
-Returns: list of held invoices
-
-POST /api/method/smriti_retail_os.billing_api.submit_bill
-Args: cashier, customer, items, payments,
-      loyalty_points, invoice_name
-Returns: invoice, grand_total, print_url
-
-POST /api/method/smriti_retail_os.billing_api.validate_manager_override
-Args: manager_user, manager_password,
-      action_type, invoice_name
-Returns: authorized (bool), manager
-```
-
-### Inventory APIs
-```
-POST /api/method/smriti_retail_os.inventory_api.create_grn
-Args: supplier, invoice_no, items
-Returns: receipt_name
-
-POST /api/method/smriti_retail_os.inventory_api.create_stock_transfer
-Args: from_warehouse, to_warehouse, items
-Returns: entry_name
-
-POST /api/method/smriti_retail_os.inventory_api.create_stock_adjustment
-Args: items, reason
-Returns: entry_name
-
-POST /api/method/smriti_retail_os.inventory_api.create_stock_audit
-Args: items
-Returns: reconciliation_name
-
-GET /api/method/smriti_retail_os.inventory_api.get_stock_summary
-Args: warehouse (optional)
-Returns: item wise stock list
-```
-
-### Shift APIs
-```
-POST /api/method/smriti_retail_os.shift_api.open_shift
-Args: opening_cash, pos_profile
-Returns: opening_entry_name
-
-POST /api/method/smriti_retail_os.shift_api.close_shift
-Args: declared_cash, declared_card,
-      declared_upi, opening_entry
-Returns: closing_entry_name, difference
-
-GET /api/method/smriti_retail_os.shift_api.get_shift_status
-Returns: status (Open/Closed), cashier
-```
-
-### Barcode APIs
-```
-GET /api/method/smriti_retail_os.barcode_api.get_items_for_printing
-Args: filters, source_doctype, source_name
-Returns: items list with print_qty
-
-POST /api/method/smriti_retail_os.barcode_api.generate_prn
-Args: items (JSON), label_size
-Returns: ZPL/PRN string for thermal printer
-```
-
----
-
-## 🧪 Testing
+## 13. Testing
 
 ```bash
 # Run all SMRITI tests
-bench --site yoursite run-tests \
-  --app smriti_retail_os
+docker compose exec smriti_retail-backend-1 \
+  bench --site frontend run-tests --app smriti_retail_os
 
-# Run specific test file
-bench --site yoursite run-tests \
+# Run a specific test module
+docker compose exec smriti_retail-backend-1 \
+  bench --site frontend run-tests \
   --app smriti_retail_os \
-  --module smriti_retail_os.tests.test_billing_api
+  --module smriti_retail_os.tests.test_pos_profile
 
-# Expected: All tests pass
-# test_add_item_by_barcode      ✔
-# test_hold_and_recall_bill     ✔
-# test_submit_bill              ✔
-# test_manager_override         ✔
-# test_search_customer          ✔
-# test_create_grn               ✔
-# test_stock_transfer           ✔
-# test_stock_audit              ✔
-# test_customer_address_sync    ✔
-# test_supplier_credit_days     ✔
+# Current test suite results
+# ─────────────────────────────────────────────────
+# test_pos_profile.py           PASS (19.039s / 5 tests)
+#   ├── test_admin_permission_required     ✅
+#   ├── test_save_and_retrieve_profile     ✅
+#   ├── test_clone_profile                 ✅
+#   ├── test_shift_lock_validation         ✅
+#   └── test_archive_profile               ✅
+#
+# test_branding_integrity.py    PASS
+# test_formula_registry.py      PASS
+# test_knowledge_center.py      PASS
+# test_psv.py                   PASS
+# ─────────────────────────────────────────────────
 ```
 
 ---
 
-## 🐳 Docker Production Setup
+## 14. AI Agent Development Guide
 
-```bash
-# Build and start
-docker compose -f pwd.yml up -d
-
-# Apply SMRITI
-docker compose -f pwd.yml exec backend \
-  bench --site frontend install-app smriti_retail_os
-
-# Build assets
-docker compose -f pwd.yml exec backend \
-  bench build --app smriti_retail_os
-
-# Create permanent snapshot
-docker commit smriti_retail_os-backend-1 \
-  smriti-retail-os:v1.0
-
-# Save image (permanent backup)
-docker save smriti-retail-os:v1.0 \
-  -o smriti_retail_os_v1.0.tar
-
-# Restore anytime
-docker load -i smriti_retail_os_v1.0.tar
-```
-
----
-
-## 🤖 AI Agent Development Guide
-
-> This section is for AI agents (Claude Code, Cursor, Gemini)
-> working on SMRITI codebase.
-
-### Context
-
-```
-SMRITI = UI layer only
-ERPNext = business logic engine
-India Compliance = GST engine
-
-NEVER duplicate what ERPNext already does.
-ALWAYS check if ERPNext has an existing
-DocType/API before building new.
-```
+> This section governs AI agents (Antigravity, Gemini, Claude, Cursor) working on the SMRITI codebase.
 
 ### Before Making Any Change
 
 ```
-1. Read hooks.py first — understand
-   what is registered
-
-2. Read boot.py — understand
-   role routing logic
-
-3. Check existing APIs in:
-   billing_api.py
-   inventory_api.py
-   shift_api.py
-   barcode_api.py
-
-4. Verify ERPNext DocType exists
-   before creating custom field
+1. Read this README fully — understand architecture and rules.
+2. Read hooks.py — understand what is registered.
+3. Read boot.py — understand role routing and Desk blocking logic.
+4. Search existing www/ pages — check if a route already exists.
+5. Verify ERPNext DocType exists before creating a custom field.
 ```
 
-### Adding a New Feature
+### Adding a New Feature — Required Pattern
 
 ```
-Step 1: Identify ERPNext DocType to use
-Step 2: Add minimum custom fields only
-Step 3: Write whitelisted API in relevant _api.py
-Step 4: Add frontend in relevant page JS
-Step 5: Add test in tests/
-Step 6: Update hooks.py if needed
-Step 7: bench build + migrate + clear-cache
+Step 1:  Identify existing ERPNext DocType to leverage
+Step 2:  Create SMRITI www page: www/<feature>.html + .py
+Step 3:  Create service: services/<feature>_service.py
+Step 4:  Create repository (if needed): repositories/<feature>_repository.py
+Step 5:  Create API: api/<feature>_api.py
+Step 6:  Register route in smriti_nav_config.js
+Step 7:  Write tests: tests/test_<feature>.py
+Step 8:  Write governance documentation (6 documents minimum)
+Step 9:  bench build + migrate + clear-cache + restart
 ```
 
 ### Common Mistakes to Avoid
 
 ```
-❌ Creating new DocType for billing data
-   → Use POS Invoice
+❌ Opening /desk or /app routes in browser automation
+   → Always navigate to /smriti-* routes
+
+❌ frappe.client.insert() or frappe.new_doc() from UI JS
+   → Route through SMRITI API → Service → Repository
+
+❌ Creating new DocType for data that ERPNext already owns
+   → Use POS Invoice, Purchase Receipt, Stock Entry, etc.
 
 ❌ Writing GST calculation logic
-   → Use India Compliance Item Tax Template
+   → Use India Compliance Item Tax Templates
 
-❌ Creating custom stock ledger
-   → Use Stock Entry / Purchase Receipt
+❌ Creating custom stock ledger / accounting tables
+   → Use ERPNext Stock Entry / Purchase Receipt / Payment Entry
 
-❌ JS innerText for branding
-   → Use brand_html hook + CSS ::after
+❌ Hardcoded CSS class names
+   → Use CSS variables (see Design System)
 
-❌ Hardcoded CSS class selectors
-   → Use CSS variables
-
-❌ Redirecting System Manager
-   → Always check and bypass
+❌ Redirecting System Manager to SMRITI pages
+   → Always check roles in boot.py and bypass
 
 ❌ pos_invoice.docstatus = 1
    → Use pos_invoice.submit()
 
-❌ get_decrypted_password for PIN
+❌ get_decrypted_password() for PIN auth
    → Use frappe.auth.check_password()
-```
 
-### Debug Commands
-
-```bash
-# Check app installed
-bench --site frontend list-apps
-
-# Check custom fields exist
-bench --site frontend execute "
-import frappe
-print(frappe.db.get_all(
-    'Custom Field',
-    filters={'dt': 'Item', 'fieldname': ['like', 'custom_%']},
-    pluck='fieldname'
-))
-"
-
-# Check pages registered
-bench --site frontend execute "
-import frappe
-pages = ['smriti-billing','smriti-desk',
-         'smriti-inventory','smriti-barcode',
-         'smriti-shift']
-for p in pages:
-    print(p, '→', frappe.db.exists('Page', p))
-"
-
-# Check boot redirect working
-bench --site frontend execute "
-import frappe
-frappe.set_user('cashier@test.com')
-from smriti_retail_os.boot import extend_bootinfo
-import types
-b = types.SimpleNamespace()
-extend_bootinfo(b)
-print(b.default_route)
-"
-
-# Test billing API
-bench --site frontend execute "
-import frappe
-frappe.set_user('Administrator')
-from smriti_retail_os.billing_api \
-    import add_item_by_barcode
-print(add_item_by_barcode('TEST-BARCODE'))
-"
-
-# Rebuild assets
-bench build --app smriti_retail_os --force
-bench --site frontend clear-cache
-bench restart
+❌ /page/* or /desk/page/* routes in sidebar/buttons
+   → Use /app/<route> or frappe.set_route("<route>")
 ```
 
 ### File Edit Checklist
@@ -761,80 +833,138 @@ After editing hooks.py:
 □ bench --site frontend clear-cache
 □ bench restart
 □ Hard refresh browser
+
+After adding new API:
+□ Verify @frappe.whitelist() decorator present
+□ Add role permission check in service layer
+□ Write unit test covering permission enforcement
+```
+
+### Commit Message Convention
+
+```
+feat(<module>): <short description>
+fix(<module>): <short description>
+docs(<module>): <short description>
+test(<module>): <short description>
+chore(<module>): <short description>
+refactor(<module>): <short description>
+
+Examples:
+  feat(pos-profile): add shift lock enforcement in clone API
+  fix(psv): correct opening balance calculation
+  docs(billing): update API reference for hold_bill endpoint
 ```
 
 ---
 
-## 🗺️ Roadmap
+## 15. Documentation
 
-```
-✅ Phase 1 — Masters
-   Product, Customer, Supplier
+SMRITI Retail OS maintains a governed documentation library with **211+ registered documents** across 9 categories.
 
-✅ Phase 2 — Billing Engine
-   POS, Hold/Recall, Payments, Print
+### Documentation Categories
 
-✅ Phase 3 — Inventory
-   GRN, Transfer, Adjustment, Audit
+| Category | Folder | Documents |
+|---|---|---|
+| Product Overview | `docs/01-product/` | Product briefs, executive summaries |
+| User Guides | `docs/02-user-guide/` | Step-by-step usage guides |
+| Admin Guides | `docs/03-admin-guide/` | Setup and configuration |
+| Operations | `docs/04-operations/` | Runbooks, SOPs |
+| Developer Docs | `docs/05-developer/` | Architecture, implementation guides |
+| API Reference | `docs/06-api/` | Whitelisted endpoint references |
+| Knowledge Base | `docs/07-kb/` | Troubleshooting, FAQ |
+| Governance | `docs/08-governance/` | Policies, constitution, BRDs |
+| Reports | `docs/reports/` | Health audits, compliance reports |
 
-✅ Phase 4 — Day Operations
-   Open/Close shift, Reconciliation
+### Documentation Governance
 
-✅ Phase 5 — Branding & Theme
-   Dark theme, Login page, Sidebar
+Every document must have YAML frontmatter:
 
-⏳ Phase 6 — Reports
-   Sales, Stock, GST, Outstanding
-
-⏳ Phase 7 — Loyalty & Promotions
-   Points, Tiers, Discount schemes
-
-⏳ Phase 8 — Mobile App
-   PWA or React Native wrapper
-```
-
+```yaml
 ---
-
-## 🤝 Contributing
-
-```bash
-# Fork and clone
-git clone https://github.com/yourname/smriti_retail_os
-
-# Create branch
-git checkout -b feature/your-feature
-
-# Make changes following rules above
-
-# Test
-bench --site frontend run-tests \
-  --app smriti_retail_os
-
-# Commit
-git add .
-git commit -m "feat: your feature description"
-
-# Push
-git push origin feature/your-feature
-
-# Create Pull Request
+id: "<CATEGORY-NNN>"
+title: "<Human Readable Title>"
+category: "<Category>"
+status: "Published"
+version: "<X.Y.Z>"
+created: "<YYYY-MM-DD>"
+author: "Jawahar R. Mallah"
+---
 ```
 
----
+### Key Documents
 
-## 📄 License
-
-MIT License — Free for commercial use.
-
----
-
-## 🙏 Built On
-
-- [Frappe Framework](https://frappeframework.com)
-- [ERPNext](https://erpnext.com)
-- [India Compliance](https://github.com/resilient-tech/india-compliance)
+- **[DOCUMENTATION_INDEX.md](./docs/DOCUMENTATION_INDEX.md)** — Master registry (211 entries)
+- **[DOCUMENTATION_CONSTITUTION.md](./docs/DOCUMENTATION_CONSTITUTION.md)** — Governance rules
+- **[DOCUMENTATION_STYLE_GUIDE.md](./docs/DOCUMENTATION_STYLE_GUIDE.md)** — Formatting standards
 
 ---
 
-*SMRITI — Smart Retail Intelligence.*
-*Built for Indian retail. Powered by ERPNbook.*
+## 16. Governance Links
+
+| Document | Description |
+|---|---|
+| [BRD-01 Branding & Attribution](./docs/08-governance/BRD-01_BRANDING_ATTRIBUTION_DOCUMENTATION.md) | Product names, attributions, domain names |
+| [AI Content Policy (AI-GOV-01)](./docs/08-governance/AI_CONTENT_POLICY.md) | Directives for AI coding agents |
+| [Architecture Constitution](./docs/08-governance/ARCHITECTURE_CONSTITUTION.md) | 15 inviolable architecture rules |
+| [SMRITI-First UI Policy](./docs/08-governance/SMRITI_UI_POLICY.md) | Rule 7 — No Desk exposure |
+
+---
+
+## 17. Roadmap
+
+```
+✅ Sprint 1  — SMRITI Business Opportunity Report (ROI Calculator PDF)
+✅ Sprint 2  — SMRITI Trial Leads CRM
+✅ Sprint 2A — Security & Audit Validation
+✅ Sprint 3A — Trial Activation DocTypes, Platform Admin, Commercial Sidebar
+✅ Sprint 3B — Test Infrastructure (DocType schema sync)
+✅ Sprint 3C — POS Profile Management (Repository → Service → API → UI)
+
+⏳ Sprint 4  — Billing Experience Upgrade (SMRITI POS v2)
+⏳ Sprint 5  — SMRITI Reports Center (Sales, Stock, GST, Outstanding)
+⏳ Sprint 6  — Loyalty & Promotions Engine
+⏳ Sprint 7  — PSV Advanced Analytics (Aging, Capital Locked, Recovery)
+⏳ Sprint 8  — PDT (Predictive Distribution Twin) v2
+⏳ Sprint 9  — Mobile PWA (Offline-first cashier experience)
+⏳ Sprint 10 — Tally Integration Layer
+```
+
+---
+
+## 18. License
+
+```
+MIT License
+Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All Rights Reserved.
+
+SMRITI Retail OS is released under the MIT License.
+Free for commercial use. Attribution required.
+
+All open-source licensing notices for ERPNext and Frappe
+must be preserved in source code files.
+```
+
+---
+
+## Built On
+
+| Framework | Version | Role |
+|---|---|---|
+| [Frappe Framework](https://frappeframework.com) | v16 | Application server, ORM, auth |
+| [ERPNext](https://erpnext.com) | v16 | System of Record (accounting, inventory, POS) |
+| [India Compliance](https://github.com/resilient-tech/india-compliance) | v16 | GST, e-Invoice, e-Waybill |
+
+---
+
+<div align="center">
+
+**SMRITI Retail OS™ — Always Decision-Ready.**
+
+*Developed by AITDL – AI Technology & Development Lab*
+*Powered by ERPNext® & Frappe® Framework*
+
+**Jawahar R. Mallah** — Founder & Chief Architect, AITDL
+*20+ years in Retail Technology, Distribution Systems & Enterprise Application Design*
+
+</div>
