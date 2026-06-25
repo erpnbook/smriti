@@ -111,9 +111,18 @@ class TestSmritiReports(unittest.TestCase):
         engine = SMRITIReportEngine("item_wise_sales", filters)
         cache_key = engine.get_cache_key()
         
-        # Calculate expected hash
+        # Calculate expected hash using correct cache_dict structure
+        company = filters.get("company") or frappe.defaults.get_user_default("Company") or ""
+        user = frappe.session.user or "Guest"
+        roles = sorted(frappe.get_roles(user))
+        cache_dict = {
+            "filters": filters,
+            "company": company,
+            "user": user,
+            "roles": roles
+        }
         filter_hash = hashlib.md5(
-            json.dumps(filters, sort_keys=True).encode("utf-8")
+            json.dumps(cache_dict, sort_keys=True).encode("utf-8")
         ).hexdigest()
         expected_key = f"smriti:item_wise_sales:{filter_hash}"
         self.assertEqual(cache_key, expected_key)
