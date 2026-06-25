@@ -216,7 +216,9 @@ class TestBusinessDictionary(unittest.TestCase):
         # Ensure we are NOT in frappe test flag bypass (simulate production)
         original_flag = frappe.local.flags.get("in_test", False)
         frappe.local.flags["in_test"] = False
-
+        original_dev = frappe.conf.get("developer_mode", 0)
+        frappe.conf.developer_mode = 0
+ 
         try:
             with self.assertRaises(Exception) as ctx:
                 get_term_detail("UNKNOWN-GATEWAY-TERM-XYZ")
@@ -225,6 +227,7 @@ class TestBusinessDictionary(unittest.TestCase):
             self.assertIn("TERM_INDEX", str(ctx.exception))
         finally:
             frappe.local.flags["in_test"] = original_flag
+            frappe.conf.developer_mode = original_dev
 
     def test_dynamic_term_fetch_payload(self):
         """
