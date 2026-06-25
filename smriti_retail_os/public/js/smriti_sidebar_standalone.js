@@ -302,6 +302,11 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
     `;
 
     target.innerHTML = brandHtml + controlsHtml + menuHtml + footerHtml;
+    
+    // Auto-inject screen explanation button if topbar is present
+    setTimeout(() => {
+        SMRITI.injectExplainScreenButton(activePageId);
+    }, 100);
 };
 
 
@@ -446,4 +451,33 @@ SMRITI.injectLabelStudioShortcut = function() {
     });
     
     topbarRight.insertBefore(btn, topbarRight.firstChild);
+};
+
+SMRITI.injectExplainScreenButton = function(activePageId) {
+    const topbarRight = document.querySelector(".topbar-right");
+    if (!topbarRight) return;
+    
+    if (document.getElementById("smriti-explain-button")) return;
+    
+    const activeScreens = ["item_master", "billing", "purchase", "inventory"];
+    if (!activeScreens.includes(activePageId)) return;
+    
+    const btn = document.createElement("button");
+    btn.id = "smriti-explain-button";
+    btn.className = "topbtn smriti-explain-button";
+    btn.title = "Explain this Screen";
+    btn.innerHTML = `<span class="material-symbols-outlined" style="color:var(--primary)">help</span><span>Explain Screen</span>`;
+    
+    btn.addEventListener("click", function() {
+        if (typeof window.smritiExplainCurrent === 'undefined') {
+            const script = document.createElement('script');
+            script.src = '/assets/smriti_retail_os/js/smriti_explain.js';
+            script.onload = () => window.smritiExplainCurrent();
+            document.head.appendChild(script);
+        } else {
+            window.smritiExplainCurrent();
+        }
+    });
+    
+    topbarRight.appendChild(btn);
 };

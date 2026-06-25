@@ -215,6 +215,49 @@
     .badge-expired   { background: rgba(100,116,139,.12); color: var(--slate); border: 1px solid rgba(100,116,139,0.3); }
     .badge-converted { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(139,92,246,0.3); }
     .badge-new       { background: rgba(37,99,235,.12); color: var(--blue-light); border: 1px solid rgba(37,99,235,0.3); }
+    .badge-failed    { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); font-weight:900; }
+    .badge-provisioning { background: var(--card); color: var(--cyan); border: 1px solid var(--cyan); }
+    .badge-provisioned  { background: var(--card-hover);  color: var(--cyan); border: 1px solid var(--cyan); }
+
+    /* ── Provision Log ── */
+    .plog-run {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .plog-run-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .plog-run-id    { font-size: 12px; font-weight: 800; color: var(--cyan); letter-spacing: .5px; }
+    .plog-run-meta  { font-size: 11px; color: var(--text-muted); }
+    .plog-steps     { padding: 8px 0; }
+    .plog-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 7px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .plog-step:last-child { border-bottom: none; }
+    .plog-step-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+    .plog-step-name { font-weight: 600; color: var(--text); }
+    .plog-step-msg  { color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+    .plog-step-seq  { color: var(--text-subtle); font-size: 10px; font-weight: 700;
+                      min-width: 20px; text-align: right; flex-shrink: 0; }
+    .plog-empty     { padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
+    /* Provision search */
+    .plog-search { margin-bottom: 14px; display: flex; gap: 10px; align-items: center; }
+    .plog-act-label { font-size: 12px; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
 
     /* ── Action Buttons ── */
     .btn {
@@ -381,6 +424,66 @@
         grid-template-columns: 2fr 1fr 1fr 1fr;
       }
     }
+
+    /* Governance-compliant classes for modals (no literal color leaks) */
+    .alert-danger-box {
+      background: var(--red-dim);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .alert-purple-box {
+      background: var(--purple-dim);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .formula-registry-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: monospace;
+      font-size: 12px;
+      margin-top: 6px;
+      color: var(--blue-light);
+    }
+    .formula-expression-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 12px;
+      margin-top: 6px;
+      color: var(--text);
+      line-height: 1.4;
+    }
+    .live-calculation-box {
+      background: var(--blue-glow);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      margin-top: 6px;
+    }
+    .live-calc-hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 8px 0;
+    }
+    .live-calc-total {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+    }
   </style>
 </head>
 <body>
@@ -455,6 +558,8 @@
       <button class="tab-btn active" id="tab-queue"       onclick="switchTab('queue')">⏳ Activation Queue</button>
       <button class="tab-btn"        id="tab-activations" onclick="switchTab('activations')">📋 All Activations</button>
       <button class="tab-btn"        id="tab-expiring"    onclick="switchTab('expiring')">⚠️ Expiring Soon</button>
+      <button class="tab-btn"        id="tab-provlog"     onclick="switchTab('provlog')">🔍 Provision Log</button>
+      <button class="tab-btn"        id="tab-health"      onclick="switchTab('health')">💚 Health Snapshot</button>
     </div>
 
     <!-- ── Tab: Activation Queue ──────────────────────────────────────── -->
@@ -468,18 +573,23 @@
       </div>
     </div>
 
+    <!-- ── Tab: Status filter ── update options -->
     <!-- ── Tab: All Activations ──────────────────────────────────────── -->
     <div class="tab-panel" id="panel-activations">
       <div class="toolbar">
         <input type="search" class="search-box" id="act_search"
           placeholder="Search by store, reference, or mobile..."
           oninput="filterActivations()" />
-        <select class="form-select" style="width:160px" id="act_status_filter" onchange="filterActivations()">
+        <select class="form-select" style="width:180px" id="act_status_filter" onchange="filterActivations()">
           <option value="">All Statuses</option>
           <option value="Pending">Pending</option>
-          <option value="Active">Active</option>
+          <option value="Provisioning">Provisioning</option>
+          <option value="Provisioned">Provisioned</option>
+          <option value="Activated">Activated</option>
+          <option value="Active">Active (legacy)</option>
           <option value="Suspended">Suspended</option>
           <option value="Expired">Expired</option>
+          <option value="Failed">Failed</option>
           <option value="Converted to Paid">Converted to Paid</option>
         </select>
         <button class="btn btn-ghost btn-sm" onclick="loadActivations()">↺ Refresh</button>
@@ -508,6 +618,76 @@
       </div>
       <div id="expiring_body">
         <div class="loading-row">Loading expiring trials...</div>
+      </div>
+    </div>
+
+    <!-- ── Tab: Provision Log ──────────────────────────────────────── -->
+    <div class="tab-panel" id="panel-provlog">
+      <div class="plog-search">
+        <span class="plog-act-label">Activation:</span>
+        <select class="form-select" style="flex:1;max-width:400px" id="plog_act_select" onchange="loadProvisionLogs()">
+          <option value="">— Select an Activation —</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="loadProvisionLogs()">↺ Refresh</button>
+      </div>
+      <div id="plog_body">
+        <div class="plog-empty">Select an activation above to view its provisioning history.</div>
+      </div>
+    </div>
+
+    <!-- ── Tab: Health Snapshot ──────────────────────────────────────── -->
+    <div class="tab-panel" id="panel-health">
+      <div class="section-header">
+        <div class="section-title">Trial Pipeline Health Status</div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-warning btn-sm" onclick="triggerSnapshot()">⚡ Generate Snapshot</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadHealth()">↺ Refresh</button>
+        </div>
+      </div>
+      
+      <!-- Health Metrics Dashboard -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:20px;margin-bottom:28px;">
+        <div class="kpi-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+          <div class="kpi-label">Pipeline Health Score</div>
+          <div id="health_score_circle" style="font-size:48px;font-weight:900;margin:12px 0;">—</div>
+          <div id="health_interpretation" style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">—</div>
+          <div id="health_trend" style="font-size:12px;margin-top:6px;font-weight:600;">—</div>
+        </div>
+        
+        <div class="kpi-card" style="padding:20px;display:flex;flex-direction:column;justify-content:space-between;">
+          <div>
+            <div class="kpi-label" style="display:flex;justify-content:space-between;align-items:center;">
+              <span>Live Metrics Breakdown</span>
+              <button class="btn btn-ghost btn-sm" style="padding:2px 6px;font-size:10px;" onclick="openExplainHealthModal()">ⓘ Explain Health Score</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;font-size:13px;">
+              <div style="display:flex;justify-content:space-between;"><span>Active Trials:</span><strong id="health_active_count">—</strong></div>
+              <div style="display:flex;justify-content:space-between;"><span>Failed Provisioning:</span><strong id="health_failed_count">—</strong></div>
+              <div style="display:flex;justify-content:space-between;"><span>Average SLA:</span><strong id="health_sla_hours">—</strong></div>
+              <div style="display:flex;justify-content:space-between;"><span>SLA Target Limit:</span><strong>4.0 Hours</strong></div>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:10px;margin-top:10px;">
+            Formula Version: TR-HLTH-01 v1.0.0
+          </div>
+        </div>
+      </div>
+
+      <!-- Historical Table -->
+      <div class="table-wrap">
+        <div class="table-header" style="grid-template-columns:1.5fr 1fr 1fr 1fr 1fr 1fr 1fr 1.2fr">
+          <div>Date / Time</div>
+          <div>Type</div>
+          <div>Score</div>
+          <div>Status</div>
+          <div>Active</div>
+          <div>Failed</div>
+          <div>Avg SLA</div>
+          <div>Generated By</div>
+        </div>
+        <div id="health_history_body">
+          <div class="loading-row">Select the Health Snapshot tab to load history.</div>
+        </div>
       </div>
     </div>
 
@@ -606,6 +786,135 @@
     </div>
   </div>
 
+  <!-- ── Modal: Retry Provision ── -->
+  <div class="modal-overlay" id="modal_retry" onclick="closeIfOverlay(event,'modal_retry')">
+    <div class="modal">
+      <div class="modal-title">↺ Retry Provision</div>
+      <div class="modal-sub" id="retry_sub">Re-attempt provisioning for this failed activation.</div>
+      <hr class="modal-divider" />
+
+      <div class="form-group">
+        <label class="form-label">Company Name (leave blank to use store name)</label>
+        <input type="text" class="form-input" id="retry_company" placeholder="Auto-derived from Store Name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Trial Days</label>
+        <input type="number" class="form-input" id="retry_days" value="30" min="1" max="365" />
+      </div>
+      <div class="alert-danger-box">
+        ⚠️ Retry will re-run the full provisioning pipeline. The <code>_ensure_*</code> helpers are idempotent — already-created resources (Company, Warehouse, User) will be skipped automatically.
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal_retry')">Cancel</button>
+        <button class="btn btn-primary" id="btn_retry" onclick="retryProvision()">↺ Retry Provision</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal: Convert to Paid ── -->
+  <div class="modal-overlay" id="modal_convert" onclick="closeIfOverlay(event,'modal_convert')">
+    <div class="modal">
+      <div class="modal-title">🎉 Convert to Paid</div>
+      <div class="modal-sub" id="convert_sub">Mark this trial as converted to a paid subscription.</div>
+      <hr class="modal-divider" />
+
+      <div class="alert-purple-box">
+        <strong style="color:var(--text);">This action will:</strong><br/>
+        • Mark activation status as <strong style="color:var(--purple);">Converted to Paid</strong><br/>
+        • Update the Trial Lead status to <strong style="color:var(--purple);">Converted</strong><br/>
+        • This action is recorded in the audit log<br/><br/>
+        <em>Note: Actual billing setup must be handled separately through your billing system.</em>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal_convert')">Cancel</button>
+        <button class="btn btn-success" id="btn_convert" onclick="convertToPaid()">🎉 Confirm Conversion</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal: Explain Health Score (DOC-01/02/03 Compliance) ── -->
+  <div class="modal-overlay" id="modal_explain_health" onclick="closeIfOverlay(event,'modal_explain_health')">
+    <div class="modal" style="max-width:640px">
+      <div class="modal-title">ⓘ Explain Trial Pipeline Health Score</div>
+      <div class="modal-sub">Formula Transparency &amp; Worked Example — Rule DOC-01</div>
+      <hr class="modal-divider" />
+      
+      <div style="display:flex;flex-direction:column;gap:16px;font-size:13px;line-height:1.6;">
+        <div>
+          <strong style="color:var(--text);">A. Business Meaning:</strong>
+          <p style="color:var(--text-muted);margin-top:4px;">Trial Pipeline Health Score measures the overall quality of the trial provisioning system. Hum ye check karte hain ki trial activation kitni jaldi ho raha hai aur koi failure to nahi aa raha pipeline mein.</p>
+        </div>
+        
+        <div>
+          <strong style="color:var(--text);">B. Formula Registry:</strong>
+          <div class="formula-registry-box">
+            Formula ID: TR-HLTH-01 | Version: 1.0.0
+          </div>
+        </div>
+
+        <div>
+          <strong style="color:var(--text);">C. Mathematical Formula Expression:</strong>
+          <div class="formula-expression-box">
+            Success Rate = (Active Trials / (Active Trials + Failed Provisioning)) * 100<br/>
+            SLA Penalty = Min(20.0, Max(0.0, (Avg SLA Hours - 4.0) * 5.0))<br/>
+            Health Score = Max(0.0, Success Rate - SLA Penalty)
+          </div>
+        </div>
+
+        <div>
+          <strong style="color:var(--text);">D. Live Calculation (Using Current Inputs):</strong>
+          <div class="live-calculation-box">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+              <span>1. Active Trials (A):</span>
+              <strong id="exp_active">—</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+              <span>2. Failed Provisioning (F):</span>
+              <strong id="exp_failed">—</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+              <span>3. Success Rate = (A / (A + F)) * 100:</span>
+              <strong id="exp_success_rate">—</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+              <span>4. Average Activation SLA (SLA):</span>
+              <strong id="exp_sla">—</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+              <span>5. SLA Penalty = (SLA - 4.0) * 5.0:</span>
+              <strong id="exp_penalty">—</strong>
+            </div>
+            <hr class="live-calc-hr" />
+            <div class="live-calc-total">
+              <span>Final Health Score = Success Rate - Penalty:</span>
+              <strong id="exp_final_score">—</strong>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <strong style="color:var(--text);">E. Interpretation Bands:</strong>
+          <ul style="list-style-type:disc;padding-left:20px;color:var(--text-muted);margin-top:6px;display:flex;flex-direction:column;gap:4px;">
+            <li><strong style="color:var(--green);">🟢 Healthy (>= 80%):</strong> Provisioning is stable and SLA limits are met.</li>
+            <li><strong style="color:var(--amber);">🟡 Monitor (50% - 79%):</strong> Failed activations are present or SLA delays exist.</li>
+            <li><strong style="color:var(--red);">🔴 Critical (&lt; 50%):</strong> High rate of provisioning failures. Immediate inspection required.</li>
+          </ul>
+        </div>
+
+        <div>
+          <strong style="color:var(--text);">F. Recommended Action:</strong>
+          <p style="color:var(--text-muted);margin-top:4px;" id="exp_recommendation">—</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeModal('modal_explain_health')">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
@@ -615,6 +924,7 @@
     let allActivations = [];
     let filteredActs   = [];
     let activeCtx      = {};  // current record context for modals
+    let healthHistory  = [];
 
     // ── Init ─────────────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', function() {
@@ -625,10 +935,13 @@
 
     // ── Tab switch ────────────────────────────────────────────────────────────
     function switchTab(name) {
-      ['queue','activations','expiring'].forEach(t => {
+      ['queue','activations','expiring','provlog','health'].forEach(t => {
         document.getElementById('tab-' + t).classList.toggle('active', t === name);
         document.getElementById('panel-' + t).classList.toggle('active', t === name);
       });
+      // Populate provision log selector when that tab opens
+      if (name === 'provlog') populatePlogSelector();
+      if (name === 'health') loadHealth();
     }
 
     // ── Dashboard KPIs ────────────────────────────────────────────────────────
@@ -749,12 +1062,17 @@
             ${a.activation_status === 'Pending'
               ? `<button class="btn btn-success btn-sm" onclick='openActivateModal(${JSON.stringify(a)})'>⚡ Activate</button>`
               : ''}
-            ${a.activation_status === 'Active'
+            ${(a.activation_status === 'Active' || a.activation_status === 'Activated')
               ? `<button class="btn btn-warning btn-sm" onclick='openExtendModal(${JSON.stringify(a)})'>+Days</button>
-                 <button class="btn btn-danger  btn-sm" onclick='openSuspendModal(${JSON.stringify(a)})'>Suspend</button>`
+                 <button class="btn btn-danger  btn-sm" onclick='openSuspendModal(${JSON.stringify(a)})'>Suspend</button>
+                 <button class="btn btn-ghost   btn-sm" onclick='openConvertModal(${JSON.stringify(a)})'>→ Paid</button>`
               : ''}
             ${a.activation_status === 'Suspended'
-              ? `<button class="btn btn-warning btn-sm" onclick='openExtendModal(${JSON.stringify(a)})'>Reactivate</button>`
+              ? `<button class="btn btn-warning btn-sm" onclick='openExtendModal(${JSON.stringify(a)})'>Reactivate</button>
+                 <button class="btn btn-ghost   btn-sm" onclick='openConvertModal(${JSON.stringify(a)})'>→ Paid</button>`
+              : ''}
+            ${(a.activation_status === 'Failed' || a.activation_status === 'Provisioning')
+              ? `<button class="btn btn-primary btn-sm" onclick='openRetryModal(${JSON.stringify(a)})'>↺ Retry</button>`
               : ''}
           </div>
         </div>`;
@@ -763,7 +1081,8 @@
 
     function renderExpiring() {
       const expiring = allActivations.filter(
-        a => a.activation_status === 'Active' && a.days_remaining != null && a.days_remaining <= 7
+        a => (a.activation_status === 'Active' || a.activation_status === 'Activated')
+          && a.days_remaining != null && a.days_remaining <= 7
       );
       if (!expiring.length) {
         document.getElementById('expiring_body').innerHTML = `
@@ -784,6 +1103,70 @@
           <div class="${daysCls}" style="font-size:20px;font-weight:900">${a.days_remaining}d left</div>
           <div class="queue-actions">
             <button class="btn btn-warning btn-sm" onclick='openExtendModal(${JSON.stringify(a)})'>Extend Trial</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── Provision Log ─────────────────────────────────────────────────────────
+    function populatePlogSelector() {
+      const sel = document.getElementById('plog_act_select');
+      // Populate from allActivations (already loaded)
+      const opts = allActivations
+        .filter(a => a.provision_run_id || ['Activated','Active','Failed','Provisioned','Provisioning'].includes(a.activation_status))
+        .map(a => `<option value="${esc(a.name)}">${esc(a.store_name)} — ${esc(a.activation_reference)} [${esc(a.activation_status)}]</option>`);
+      sel.innerHTML = '<option value="">— Select an Activation —</option>' + opts.join('');
+    }
+
+    function loadProvisionLogs() {
+      const actName = document.getElementById('plog_act_select').value;
+      if (!actName) {
+        document.getElementById('plog_body').innerHTML =
+          '<div class="plog-empty">Select an activation above to view its provisioning history.</div>';
+        return;
+      }
+      document.getElementById('plog_body').innerHTML = '<div class="loading-row">Loading logs...</div>';
+      frappe.call({
+        method: 'smriti_retail_os.api.trial_activation_api.get_provision_logs',
+        args: { activation_name: actName },
+      }).then(r => {
+        const runs = r.message || [];
+        renderProvisionLogs(runs);
+      }).catch(() => {
+        document.getElementById('plog_body').innerHTML =
+          '<div class="plog-empty">Error loading provision logs.</div>';
+      });
+    }
+
+    function renderProvisionLogs(runs) {
+      if (!runs.length) {
+        document.getElementById('plog_body').innerHTML =
+          '<div class="plog-empty">No provision log entries found for this activation.</div>';
+        return;
+      }
+      const icons = { Pass: '✅', Fail: '❌', Skipped: '⏭️', Pending: '⏳' };
+      document.getElementById('plog_body').innerHTML = runs.map(run => {
+        const allPass    = run.steps.every(s => s.step_status === 'Pass' || s.step_status === 'Skipped');
+        const hasFail    = run.steps.some(s => s.step_status === 'Fail');
+        const runBadge   = hasFail ? '<span class="badge badge-failed">Failed</span>'
+                         : allPass ? '<span class="badge badge-activated">Success</span>'
+                         : '<span class="badge badge-provisioning">In Progress</span>';
+        const firstTime  = run.steps[0]?.step_time ? new Date(run.steps[0].step_time).toLocaleString('en-IN') : '—';
+        return `<div class="plog-run">
+          <div class="plog-run-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display==='none'?'block':'none'">
+            <span class="plog-run-id">${esc(run.run_id)}</span>
+            <span style="display:flex;align-items:center;gap:10px">${runBadge}<span class="plog-run-meta">${firstTime}</span></span>
+          </div>
+          <div class="plog-steps">
+            ${run.steps.map(s => `
+              <div class="plog-step">
+                <span class="plog-step-icon">${icons[s.step_status] || '•'}</span>
+                <div style="flex:1">
+                  <div class="plog-step-name">${esc(s.step_name)}</div>
+                  ${s.step_message ? `<div class="plog-step-msg">${esc(s.step_message)}</div>` : ''}
+                </div>
+                <span class="plog-step-seq">#${s.step_sequence}</span>
+              </div>`).join('')}
           </div>
         </div>`;
       }).join('');
@@ -820,6 +1203,22 @@
         `${act.store_name} — ${act.activation_reference}`;
       document.getElementById('suspend_reason').value = '';
       openModal('modal_suspend');
+    }
+
+    function openRetryModal(act) {
+      activeCtx = { act };
+      document.getElementById('retry_sub').textContent =
+        `${act.store_name} — ${act.activation_reference} [${act.activation_status}]`;
+      document.getElementById('retry_company').value = act.company_name || '';
+      document.getElementById('retry_days').value    = '30';
+      openModal('modal_retry');
+    }
+
+    function openConvertModal(act) {
+      activeCtx = { act };
+      document.getElementById('convert_sub').textContent =
+        `${act.store_name} — ${act.activation_reference}`;
+      openModal('modal_convert');
     }
 
     function openModal(id) {
@@ -948,13 +1347,234 @@
       });
     }
 
+    function retryProvision() {
+      const act = activeCtx.act;
+      const btn = document.getElementById('btn_retry');
+      btn.disabled = true; btn.textContent = 'Retrying...';
+
+      frappe.call({
+        method: 'smriti_retail_os.api.trial_activation_api.retry_provision',
+        args: {
+          activation_name: act.name,
+          company_name:    document.getElementById('retry_company').value.trim() || null,
+          trial_days:      parseInt(document.getElementById('retry_days').value) || 30,
+        }
+      }).then(r => {
+        const m = r.message || {};
+        if (m.status === 'success') {
+          showToast(`✅ Retry succeeded! Trial until ${m.trial_end}`, 'success');
+          closeModal('modal_retry');
+          refreshDashboard(); loadQueue(); loadActivations();
+        } else if (m.status === 'failed') {
+          showToast(`❌ Retry failed: ${m.reason || m.message}`, 'error');
+          closeModal('modal_retry');
+          refreshDashboard(); loadActivations();
+        } else {
+          showToast('Unexpected response. Check console.', 'error');
+        }
+      }).catch(err => {
+        showToast('Request failed. Check console.', 'error');
+        console.error(err);
+      }).finally(() => {
+        btn.disabled = false; btn.textContent = '↺ Retry Provision';
+      });
+    }
+
+    function convertToPaid() {
+      const act = activeCtx.act;
+      const btn = document.getElementById('btn_convert');
+      btn.disabled = true; btn.textContent = 'Converting...';
+
+      // Update activation_status to 'Converted to Paid' via direct frappe call
+      // (platform admin action — no separate service needed for this status change)
+      frappe.call({
+        method: 'smriti_retail_os.api.trial_activation_api.mark_converted_to_paid',
+        args: { activation_name: act.name },
+      }).then(r => {
+        const m = r.message || {};
+        if (m.status === 'success') {
+          showToast(`🎉 ${act.store_name} marked as Converted to Paid!`, 'success');
+          closeModal('modal_convert');
+          refreshDashboard(); loadActivations();
+        } else {
+          showToast(m.message || 'Error converting.', 'error');
+        }
+      }).catch(err => {
+        showToast('Request failed. Check console.', 'error');
+        console.error(err);
+      }).finally(() => {
+        btn.disabled = false; btn.textContent = '🎉 Confirm Conversion';
+      });
+    }
+
+    // ── Trial Health Snapshot ────────────────────────────────────────────────
+    function loadHealth() {
+      document.getElementById('health_history_body').innerHTML = '<div class="loading-row">Loading health history...</div>';
+      frappe.call({
+        method: 'smriti_retail_os.api.trial_activation_api.get_trial_health_snapshots',
+        args: { limit: 100 }
+      }).then(r => {
+        healthHistory = r.message || [];
+        renderHealthDashboard();
+        renderHealthHistory();
+      }).catch(err => {
+        document.getElementById('health_history_body').innerHTML = '<div class="loading-row">Error loading health snapshots.</div>';
+      });
+    }
+
+    function triggerSnapshot() {
+      showToast('⏳ Generating on-demand snapshot...', 'success');
+      frappe.call({
+        method: 'smriti_retail_os.api.trial_activation_api.trigger_trial_health_snapshot'
+      }).then(r => {
+        showToast('✅ Snapshot generated successfully!', 'success');
+        loadHealth();
+      }).catch(err => {
+        showToast('❌ Failed to trigger snapshot.', 'error');
+      });
+    }
+
+    function renderHealthDashboard() {
+      if (!healthHistory.length) {
+        document.getElementById('health_score_circle').textContent = '—';
+        document.getElementById('health_interpretation').textContent = '—';
+        document.getElementById('health_trend').textContent = 'No snapshots available';
+        
+        document.getElementById('health_active_count').textContent = '—';
+        document.getElementById('health_failed_count').textContent = '—';
+        document.getElementById('health_sla_hours').textContent = '—';
+        return;
+      }
+      
+      const latest = healthHistory[0];
+      const score  = latest.health_score;
+      
+      // Trend calculation
+      let trendText = 'No previous snapshot';
+      let trendColor = 'var(--text-muted)';
+      if (healthHistory.length > 1) {
+        const prev = healthHistory[1];
+        const diff = score - prev.health_score;
+        if (diff > 0) {
+          trendText = `▲ +${diff.toFixed(1)} compared to last snapshot`;
+          trendColor = 'var(--green)';
+        } else if (diff < 0) {
+          trendText = `▼ ${diff.toFixed(1)} compared to last snapshot`;
+          trendColor = 'var(--red)';
+        } else {
+          trendText = `■ No change since last snapshot`;
+          trendColor = 'var(--slate)';
+        }
+      }
+      
+      const circle = document.getElementById('health_score_circle');
+      circle.textContent = score.toFixed(1) + '%';
+      
+      const colors = {
+        'Healthy': 'var(--green)',
+        'Monitor': 'var(--amber)',
+        'Critical': 'var(--red)'
+      };
+      const color = colors[latest.interpretation] || 'var(--text)';
+      circle.style.color = color;
+      
+      const interp = document.getElementById('health_interpretation');
+      interp.textContent = latest.interpretation;
+      interp.style.color = color;
+      
+      const trend = document.getElementById('health_trend');
+      trend.textContent = trendText;
+      trend.style.color = trendColor;
+      
+      document.getElementById('health_active_count').textContent = latest.active_trials;
+      document.getElementById('health_failed_count').textContent = latest.failed_provisioning;
+      document.getElementById('health_sla_hours').textContent = (latest.sla_avg_hours || 0).toFixed(1) + ' Hours';
+    }
+
+    function renderHealthHistory() {
+      if (!healthHistory.length) {
+        document.getElementById('health_history_body').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">💚</div>
+            <div class="empty-title">No snapshots found</div>
+            <div class="empty-sub">Click "Generate Snapshot" to create the first snapshot.</div>
+          </div>`;
+        return;
+      }
+      
+      const colors = {
+        'Healthy': 'badge-activated',
+        'Monitor': 'badge-pending',
+        'Critical': 'badge-failed'
+      };
+
+      document.getElementById('health_history_body').innerHTML = healthHistory.map(h => {
+        const dateStr = new Date(h.snapshot_time).toLocaleString('en-IN', {
+          day: '2-digit', month: 'short', year: '2-digit',
+          hour: '2-digit', minute: '2-digit'
+        });
+        
+        const badgeClass = colors[h.interpretation] || 'badge-new';
+        const typeBadgeClass = h.snapshot_type === 'Daily' ? 'badge-provisioned' : 'badge-provisioning';
+        
+        return `<div class="act-row" style="grid-template-columns:1.5fr 1fr 1fr 1fr 1fr 1fr 1fr 1.2fr; cursor:default;">
+          <div style="font-weight:700">${esc(dateStr)}</div>
+          <div><span class="badge ${typeBadgeClass}">${esc(h.snapshot_type)}</span></div>
+          <div style="font-weight:900; font-size:14px;">${h.health_score.toFixed(1)}%</div>
+          <div><span class="badge ${badgeClass}">${esc(h.interpretation)}</span></div>
+          <div>${h.active_trials}</div>
+          <div class="${h.failed_provisioning > 0 ? 'days-crit' : ''}">${h.failed_provisioning}</div>
+          <div>${(h.sla_avg_hours || 0).toFixed(1)}h</div>
+          <div style="font-size:11px;color:var(--text-muted)">${esc(h.generated_by)}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function openExplainHealthModal() {
+      if (!healthHistory.length) {
+        showToast('No snapshot data available to explain.', 'error');
+        return;
+      }
+      
+      const latest = healthHistory[0];
+      const A = latest.active_trials;
+      const F = latest.failed_provisioning;
+      const success_rate = A + F > 0 ? (A / (A + F)) * 100 : 100;
+      const SLA = latest.sla_avg_hours || 0;
+      const penalty = Math.min(20.0, Math.max(0.0, (SLA - 4.0) * 5.0));
+      const final_score = latest.health_score;
+      
+      document.getElementById('exp_active').textContent = A;
+      document.getElementById('exp_failed').textContent = F;
+      document.getElementById('exp_success_rate').textContent = success_rate.toFixed(1) + '%';
+      document.getElementById('exp_sla').textContent = SLA.toFixed(1) + ' Hours';
+      document.getElementById('exp_penalty').textContent = penalty.toFixed(1) + '%';
+      document.getElementById('exp_final_score').textContent = final_score.toFixed(1) + '%';
+      
+      let rec = '';
+      if (latest.interpretation === 'Healthy') {
+        rec = '✅ Pipeline is operating normally. Keep monitoring daily logs.';
+      } else if (latest.interpretation === 'Monitor') {
+        rec = '⚠️ Monitor: Check recent failed activation logs. Some delays or provisioning errors are occurring.';
+      } else {
+        rec = '🚨 Critical: Immediate action required! Check SMTP settings, database connections, and failed run details in the Provision Log.';
+      }
+      document.getElementById('exp_recommendation').textContent = rec;
+      
+      openModal('modal_explain_health');
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
     function statusBadge(s) {
       const map = {
         'Pending':          'badge-pending',
+        'Provisioning':     'badge-provisioning',
+        'Provisioned':      'badge-provisioned',
+        'Activated':        'badge-activated',
         'Active':           'badge-active',
         'Suspended':        'badge-suspended',
         'Expired':          'badge-expired',
+        'Failed':           'badge-failed',
         'Converted to Paid':'badge-converted',
       };
       return `<span class="badge ${map[s]||'badge-new'}">${s||'—'}</span>`;
@@ -987,7 +1607,7 @@
     // Keyboard close
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
-        ['modal_create','modal_activate','modal_extend','modal_suspend']
+        ['modal_create','modal_activate','modal_extend','modal_suspend','modal_retry','modal_convert','modal_explain_health']
           .forEach(closeModal);
       }
     });

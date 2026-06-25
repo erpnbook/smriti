@@ -236,4 +236,142 @@
             });
         }
     };
+
+    window.smritiExplainCurrent = function () {
+        const pathname = window.location.pathname;
+        frappe.call({
+            method: "smriti_retail_os.api.knowledge_studio_api.explain_screen_by_route",
+            args: { route_path: pathname },
+            callback: function (r) {
+                if (r.message && r.message.found) {
+                    renderScreenExplainModal(r.message);
+                } else {
+                    alert(r.message ? r.message.message : "No verified screen guide found for this page.");
+                }
+            }
+        });
+    };
+
+    function renderScreenExplainModal(data) {
+        let overlay = document.getElementById("smriti-explain-overlay");
+        let modal = document.getElementById("smriti-explain-modal");
+
+        if (!overlay) {
+            overlay = document.createElement("div");
+            overlay.id = "smriti-explain-overlay";
+            overlay.className = "smriti-explain-overlay";
+            overlay.onclick = closeExplainModal;
+            document.body.appendChild(overlay);
+        }
+
+        if (!modal) {
+            modal = document.createElement("div");
+            modal.id = "smriti-explain-modal";
+            modal.className = "smriti-explain-modal";
+            document.body.appendChild(modal);
+        }
+
+        const beg = data.beginner || {};
+        const power = data.power_user || {};
+        const dev = data.developer || {};
+        
+        const beginnerHtml = `
+            <div class="smriti-explain-section">
+                <span class="smriti-explain-section-title">Business Purpose</span>
+                <div class="smriti-explain-text-box">${beg.purpose || 'N/A'}</div>
+            </div>
+            <div class="smriti-explain-section">
+                <span class="smriti-explain-section-title">How to Use</span>
+                <div class="smriti-explain-text-box">${beg.how_to_use || 'N/A'}</div>
+            </div>
+            <div class="smriti-explain-section">
+                <span class="smriti-explain-section-title">Practical Example</span>
+                <div class="smriti-explain-example-box">${beg.example || 'N/A'}</div>
+            </div>
+        `;
+
+        const powerHtml = `
+            <div class="smriti-explain-section">
+                <span class="smriti-explain-section-title">Validation Checks</span>
+                <div class="smriti-explain-text-box" style="border-left-color: #8B5CF6; background: #FAF5FF;">${power.validation || 'N/A'}</div>
+            </div>
+            <div class="smriti-explain-section">
+                <span class="smriti-explain-section-title">Workflow Pipeline</span>
+                <div class="smriti-explain-text-box">${power.workflow || 'N/A'}</div>
+            </div>
+            <div class="smriti-explain-section">
+                <span class="smriti-explain-section-title">Core Schema Fields</span>
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
+                    ${data.fields.map(f => `<span class="smriti-explain-tag" style="cursor:default;">${f}</span>`).join('')}
+                </div>
+            </div>
+        `;
+
+        const devHtml = `
+            <div class="smriti-explain-section">
+                <span class="smriti-explain-section-title">DocType Schema</span>
+                <div class="smriti-explain-text-box" style="font-family:monospace; font-size:12px;">${data.doctype || 'N/A'}</div>
+            </div>
+            <div class="smriti-explain-section">
+                <span class="smriti-explain-section-title">Bound whitelisted APIs</span>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    ${data.apis.map(api => `<div class="smriti-explain-live-box" style="font-size:11px; padding:8px 12px; margin:0;">${api}</div>`).join('')}
+                </div>
+            </div>
+            <div class="smriti-explain-section">
+                <span class="smriti-explain-section-title">Consuming Reports</span>
+                <div class="smriti-explain-text-box">${data.reports.join(', ') || 'None'}</div>
+            </div>
+            <div class="smriti-explain-section">
+                <span class="smriti-explain-section-title">Reference Manual</span>
+                <div class="smriti-explain-text-box" style="border-left-color: #10b981; background: #F0FDF4;">${dev.manual_reference || 'N/A'}</div>
+            </div>
+        `;
+
+        modal.innerHTML = `
+            <div class="smriti-explain-header">
+                <div>
+                    <span class="smriti-explain-id">SCREEN GUIDE</span>
+                    <h3 class="smriti-explain-title">${data.title}</h3>
+                </div>
+                <button class="smriti-explain-close" onclick="closeExplainModal()">✕</button>
+            </div>
+            
+            <div style="display:flex; background:#F1F5F9; border-bottom:1px solid #E2E8F0; padding:4px 8px; gap:8px;">
+                <button class="smriti-screen-tab active" data-level="beginner" style="flex:1; border:none; background:transparent; padding:8px 12px; font-weight:700; color:#475569; border-radius:6px; cursor:pointer;">Beginner</button>
+                <button class="smriti-screen-tab" data-level="power" style="flex:1; border:none; background:transparent; padding:8px 12px; font-weight:700; color:#475569; border-radius:6px; cursor:pointer;">Power User</button>
+                <button class="smriti-screen-tab" data-level="developer" style="flex:1; border:none; background:transparent; padding:8px 12px; font-weight:700; color:#475569; border-radius:6px; cursor:pointer;">Developer</button>
+            </div>
+
+            <div class="smriti-explain-body" style="padding:20px 28px;">
+                <div class="smriti-screen-panel active" id="scr-panel-beginner">${beginnerHtml}</div>
+                <div class="smriti-screen-panel" id="scr-panel-power" style="display:none;">${powerHtml}</div>
+                <div class="smriti-screen-panel" id="scr-panel-developer" style="display:none;">${devHtml}</div>
+            </div>
+        `;
+
+        const styleSheet = document.createElement("style");
+        styleSheet.id = "smriti-screen-tabs-style";
+        styleSheet.innerText = `
+            .smriti-screen-tab.active {
+                background: #fff !important;
+                color: #2563EB !important;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            }
+        `;
+        if (!document.getElementById("smriti-screen-tabs-style")) {
+            document.head.appendChild(styleSheet);
+        }
+
+        $(modal).find(".smriti-screen-tab").on("click", function() {
+            $(modal).find(".smriti-screen-tab").removeClass("active");
+            $(this).addClass("active");
+            const level = $(this).attr("data-level");
+            $(modal).find(".smriti-screen-panel").hide();
+            $(modal).find("#scr-panel-" + level).show();
+        });
+
+        overlay.classList.add("open");
+        modal.classList.add("open");
+    }
 })();

@@ -1,0 +1,1175 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/smriti-knowledge-studio.html
+  @description: SMRITI Knowledge Studio - Unified Repository Search & Dashboard Layer (Sprint SDC-003)
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @version: 1.1.2-GA (Midnight Theme)
+-->
+<html lang="en">
+<head>
+    {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMRITI Knowledge Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-dark:         #0b0f19;
+            --bg-card:         #111827;
+            --bg-elevated:     #1f2937;
+            --border-color:    #374151;
+            --primary:         #2563eb;
+            --primary-hover:   #1d4ed8;
+            --accent-teal:     #14b8a6;
+            --accent-green:    #10b981;
+            --text-primary:    #f3f4f6;
+            --text-muted:      #9ca3af;
+            --text-subtle:     #6b7280;
+            --radius-lg:       16px;
+            --radius-md:       12px;
+            --radius-sm:       8px;
+            --shadow-lg:       0 10px 30px -10px rgba(0,0,0,0.5);
+            --transition:      all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 14px;
+        }
+
+        /* Ambient grid pattern background */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(37,99,235,0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(37,99,235,0.015) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 0;
+        }
+
+        #app {
+            position: relative;
+            z-index: 1;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Topbar Header */
+        .topbar {
+            height: 56px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            flex-shrink: 0;
+        }
+
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            letter-spacing: 0.5px;
+        }
+
+        .topbar-brand span.tag {
+            font-size: 0.75rem;
+            background: rgba(37,99,235,0.15);
+            color: var(--primary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .topbar-right {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+        }
+
+        .topbtn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .topbtn:hover {
+            border-color: var(--primary);
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.02);
+        }
+
+        /* Content Area */
+        .dashboard-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Search Section */
+        .search-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .search-box-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            color: var(--text-subtle);
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 16px 16px 48px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(37,99,235,0.25);
+        }
+
+        /* Quick suggestions chips */
+        .suggestion-chips {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            padding: 6px 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .chip:hover {
+            border-color: var(--primary);
+            color: var(--text-primary);
+            background: rgba(37,99,235,0.05);
+        }
+
+        /* Dashboard Count Grid */
+        .count-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+        }
+
+        .count-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .count-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .count-card .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .count-card .val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .count-card .delta {
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .count-card .delta.positive { color: var(--accent-teal); }
+        .count-card .delta.neutral { color: var(--text-subtle); }
+
+        /* Workspace & Results Area */
+        .results-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-height: 200px;
+        }
+
+        /* Result Overview Card */
+        .result-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            transition: var(--transition);
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .result-card:hover {
+            border-color: var(--primary);
+        }
+
+        .result-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .result-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .result-type-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: var(--bg-elevated);
+            color: var(--text-muted);
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .result-card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .result-section-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding-left: 10px;
+            border-left: 2px solid var(--border-color);
+        }
+
+        .result-section-row.business { border-color: var(--accent-teal); }
+        .result-section-row.technical { border-color: var(--primary); }
+
+        .result-section-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        .result-section-val {
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .result-badges {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.8rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 6px;
+            color: var(--text-muted);
+        }
+
+        /* Drawer Pane Overlay */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .drawer-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .drawer-pane {
+            position: fixed;
+            top: 0;
+            right: -600px;
+            width: 600px;
+            height: 100vh;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border-color);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: right 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .drawer-pane.open {
+            right: 0;
+        }
+
+        .drawer-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .drawer-title-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .drawer-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+
+        .drawer-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px;
+            transition: var(--transition);
+        }
+
+        .drawer-close:hover {
+            color: var(--text-primary);
+        }
+
+        /* Detail Tabs */
+        .drawer-tabs {
+            display: flex;
+            overflow-x: auto;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-dark);
+            flex-shrink: 0;
+        }
+
+        .drawer-tabs::-webkit-scrollbar { height: 4px; }
+        .drawer-tabs::-webkit-scrollbar-thumb { background: var(--border-color); }
+
+        .drawer-tab {
+            padding: 14px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+            transition: var(--transition);
+        }
+
+        .drawer-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: rgba(37,99,235,0.03);
+        }
+
+        .drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .tab-panel {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .tab-panel.active {
+            display: flex;
+        }
+
+        .section-card {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+        }
+
+        .section-card-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .section-card-body {
+            line-height: 1.5;
+            color: var(--text-primary);
+        }
+
+        .code-box {
+            font-family: monospace;
+            font-size: 0.9rem;
+            background: #000;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            color: #38bdf8;
+            overflow-x: auto;
+        }
+
+        /* Trust Badge Style */
+        .trust-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(16,185,129,0.08);
+            border: 1px solid rgba(16,185,129,0.3);
+            color: var(--accent-green);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        /* Bottom Section Grid */
+        .dashboard-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .dashboard-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .dashboard-panel-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .panel-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--bg-dark);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .panel-list-item:hover {
+            border-color: var(--primary);
+            background: rgba(255,255,255,0.02);
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px 24px;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            border: 1px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Footer Version Banner */
+        footer {
+            height: 40px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.78rem;
+            color: var(--text-subtle);
+            flex-shrink: 0;
+            gap: 16px;
+        }
+
+        footer span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Collapsible evidence details */
+        .collapsible-trigger {
+            width: 100%;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .collapsible-content {
+            display: none;
+            padding-top: 12px;
+        }
+
+        .collapsible-content.open {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+    </style>
+    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+</head>
+<body>
+<div class="bg-grid"></div>
+
+<div id="app">
+    <!-- Sidebar Container -->
+    <div id="smriti-sidebar-target" class="sidebar"></div>
+
+    <!-- Main Workspace -->
+    <div class="main-wrapper">
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-brand">
+                <span class="material-symbols-outlined">menu_book</span>
+                <span>SMRITI Knowledge Studio</span>
+                <span class="tag">Studio</span>
+            </div>
+            <div class="topbar-right">
+                <button class="topbtn" onclick="history.back()" title="Go Back">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Container -->
+        <div class="dashboard-container">
+            <!-- Search Workspace -->
+            <div class="search-section">
+                <div class="search-box-wrapper">
+                    <span class="material-symbols-outlined search-icon">search</span>
+                    <input type="text" id="studio-search" class="search-input" placeholder="Ask SMRITI... (Type keywords like Article, WOC, or DocType names)" autocomplete="off">
+                </div>
+                <div class="suggestion-chips">
+                    <span style="font-size: 0.85rem; color: var(--text-subtle); font-weight: 600;">Suggestions:</span>
+                    <button class="chip" onclick="triggerPreset('Article')">Article</button>
+                    <button class="chip" onclick="triggerPreset('Delete Item. What breaks?')">Delete Item. What breaks?</button>
+                    <button class="chip" onclick="triggerPreset('WOC')">WOC</button>
+                    <button class="chip" onclick="triggerPreset('PSV')">PSV</button>
+                    <button class="chip" onclick="triggerPreset('Item')">Item</button>
+                </div>
+            </div>
+
+            <!-- Home Dashboard (Counters and Recent Links) -->
+            <div id="home-dashboard" class="home-dashboard" style="display: flex; flex-direction: column; gap: 24px;">
+                <!-- Count cards -->
+                <div class="count-grid" id="dashboard-count-grid">
+                    <div class="count-card" onclick="triggerPreset('glossary')">
+                        <div class="card-header"><span>Glossary</span><span class="delta positive">+2</span></div>
+                        <div class="val" id="cnt-glossary">--</div>
+                    </div>
+                    <div class="count-card" onclick="triggerPreset('api')">
+                        <div class="card-header"><span>APIs</span><span class="delta positive">+14</span></div>
+                        <div class="val" id="cnt-apis">--</div>
+                    </div>
+                    <div class="count-card" onclick="triggerPreset('field')">
+                        <div class="card-header"><span>Fields</span><span class="delta neutral">0</span></div>
+                        <div class="val" id="cnt-fields">--</div>
+                    </div>
+                    <div class="count-card" onclick="triggerPreset('doctype')">
+                        <div class="card-header"><span>DocTypes</span><span class="delta neutral">0</span></div>
+                        <div class="val" id="cnt-doctypes">--</div>
+                    </div>
+                    <div class="count-card" onclick="triggerPreset('formula')">
+                        <div class="card-header"><span>Formulae</span><span class="delta neutral">0</span></div>
+                        <div class="val" id="cnt-formulas">--</div>
+                    </div>
+                    <div class="count-card" onclick="triggerPreset('screen')">
+                        <div class="card-header"><span>Screens</span><span class="delta positive">+1</span></div>
+                        <div class="val" id="cnt-screens">--</div>
+                    </div>
+                </div>
+
+                <!-- Split Sections -->
+                <div class="dashboard-sections">
+                    <div class="dashboard-panel">
+                        <div class="dashboard-panel-title">
+                            <span class="material-symbols-outlined" style="color:var(--primary)">history</span>
+                            <span>Recent Queries</span>
+                        </div>
+                        <div class="panel-list">
+                            <div class="panel-list-item" onclick="triggerPreset('What is Article?')">
+                                <span>What is Article?</span><span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span>
+                            </div>
+                            <div class="panel-list-item" onclick="triggerPreset('Delete Item. What breaks?')">
+                                <span>Delete Item. What breaks?</span><span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span>
+                            </div>
+                            <div class="panel-list-item" onclick="triggerPreset('Show Formula for WOC')">
+                                <span>Show Formula for WOC</span><span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-panel">
+                        <div class="dashboard-panel-title">
+                            <span class="material-symbols-outlined" style="color:var(--accent-teal)">push_pin</span>
+                            <span>Pinned Knowledge</span>
+                        </div>
+                        <div class="panel-list">
+                            <div class="panel-list-item" onclick="triggerPreset('WOC')">
+                                <span>Weeks of Cover (WOC)</span><span class="material-symbols-outlined" style="font-size: 16px;">push_pin</span>
+                            </div>
+                            <div class="panel-list-item" onclick="triggerPreset('Item')">
+                                <span>Item DocType Schema</span><span class="material-symbols-outlined" style="font-size: 16px;">push_pin</span>
+                            </div>
+                            <div class="panel-list-item" onclick="triggerPreset('PSV')">
+                                <span>Party Stock Visibility (PSV)</span><span class="material-symbols-outlined" style="font-size: 16px;">push_pin</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Knowledge Health and Coverage Dashboard Panel -->
+                <div class="dashboard-panel" style="margin-top: 16px;">
+                    <div class="dashboard-panel-title">
+                        <span class="material-symbols-outlined" style="color:var(--accent-green)">health_and_safety</span>
+                        <span>Knowledge Health & Coverage</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 10px;">
+                        <div style="padding: 12px; background: var(--bg-dark); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-teal);">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight:700;">Knowledge Coverage</div>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;">96%</div>
+                        </div>
+                        <div style="padding: 12px; background: var(--bg-dark); border-radius: var(--radius-sm); border-left: 3px solid var(--primary);">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight:700;">Verified Components</div>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;" id="cnt-verified-total">418</div>
+                        </div>
+                        <div style="padding: 12px; background: var(--bg-dark); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-green);">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight:700;">Manual Coverage</div>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;">91%</div>
+                        </div>
+                        <div style="padding: 12px; background: var(--bg-dark); border-radius: var(--radius-sm); border-left: 3px solid var(--text-muted);">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight:700;">Broken References</div>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent-green); margin-top: 4px;">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Query Results Container -->
+            <div id="results-workspace" class="results-container" style="display: none;">
+                <!-- Cards injected here -->
+            </div>
+        </div>
+
+        <!-- Footer Version Banner -->
+        <footer>
+            <span><span class="material-symbols-outlined" style="font-size:12px;">terminal</span>SKE Runtime: <strong id="ske-v">v1.1.2-GA</strong></span>
+            <span>|</span>
+            <span>IR Spec: <strong id="ir-v">v1.0</strong></span>
+            <span>|</span>
+            <span>Commit: <strong id="git-commit">--</strong></span>
+            <span>|</span>
+            <span>Last Scan: <strong id="last-scan">--</strong></span>
+        </footer>
+    </div>
+</div>
+
+<!-- Drawer Pane Detail Viewer -->
+<div class="drawer-overlay" id="detail-drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer-pane" id="detail-drawer">
+    <div class="drawer-header">
+        <div class="drawer-title-wrapper">
+            <span class="result-type-badge" id="drawer-type-badge">FIELD</span>
+            <h3 class="drawer-title" id="drawer-title">Article</h3>
+        </div>
+        <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+    <div class="drawer-tabs">
+        <button class="drawer-tab active" data-tab="business">📘 Business</button>
+        <button class="drawer-tab" data-tab="technical">⚙ Technical</button>
+        <button class="drawer-tab" data-tab="dependencies">🔗 Dependencies</button>
+        <button class="drawer-tab" data-tab="apis">📡 APIs</button>
+        <button class="drawer-tab" data-tab="labels">🖨 Labels</button>
+        <button class="drawer-tab" data-tab="manuals">📄 Manuals</button>
+        <button class="drawer-tab" data-tab="reports">📊 Reports</button>
+        <button class="drawer-tab" data-tab="evidence">📜 Evidence</button>
+    </div>
+    <div class="drawer-body">
+        <!-- Tab Panels -->
+        <div class="tab-panel active" id="panel-business">
+            <div class="section-card">
+                <div class="section-card-title">Business Definition</div>
+                <div class="section-card-body" id="det-business-def">--</div>
+            </div>
+            <div class="section-card" id="card-faq-wrapper">
+                <div class="section-card-title">FAQs / Examples</div>
+                <div class="section-card-body" id="det-examples">--</div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-technical">
+            <div class="section-card">
+                <div class="section-card-title">Technical Description</div>
+                <div class="section-card-body" id="det-tech-def">--</div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-dependencies">
+            <div class="section-card">
+                <div class="section-card-title">Dependency Edges</div>
+                <div class="section-card-body" id="det-dependencies">--</div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-apis">
+            <div class="section-card">
+                <div class="section-card-title">Associated APIs</div>
+                <div class="section-card-body" id="det-apis">--</div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-labels">
+            <div class="section-card">
+                <div class="section-card-title">Print Layouts</div>
+                <div class="section-card-body" id="det-labels">--</div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-manuals">
+            <div class="section-card">
+                <div class="section-card-title">Manual Chapters</div>
+                <div class="section-card-body" id="det-manuals">--</div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-reports">
+            <div class="section-card">
+                <div class="section-card-title">Consuming Reports</div>
+                <div class="section-card-body" id="det-reports">--</div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-evidence">
+            <div class="trust-badge">
+                <span class="material-symbols-outlined" style="font-size:16px;">verified</span>
+                <span id="det-trust-badge">✔ Verified | 1 Artifact | Scan: Today</span>
+            </div>
+            
+            <button class="collapsible-trigger" onclick="toggleEvidenceCollapse()">
+                <span>Show Detailed Evidence Pack</span>
+                <span class="material-symbols-outlined" id="evidence-coll-icon">expand_more</span>
+            </button>
+            <div class="collapsible-content" id="evidence-coll-content">
+                <div class="section-card">
+                    <div class="section-card-title">Evidence Manifest</div>
+                    <div class="section-card-body" id="det-evidence-pack">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Copy Prompt / Ask More Panel -->
+        <div class="section-card" style="margin-top:auto; background: rgba(37,99,235,0.05); border-color: rgba(37,99,235,0.25);">
+            <div class="section-card-title" style="color:var(--primary); display:flex; align-items:center; gap:6px;">
+                <span class="material-symbols-outlined" style="font-size:16px;">smart_toy</span>
+                <span>Ask More (Knowledge Explorer)</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <p style="font-size: 0.85rem; color: var(--text-muted);">
+                    Explore related aspects of this component. Click to run suggestion query:
+                </p>
+                <div style="display:flex; flex-wrap:wrap; gap:6px;" id="ask-more-chips">
+                    <!-- Chip prompts injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.7"></script>
+<script>
+    let ACTIVE_DRAWER_OBJECT = null;
+
+    $(document).ready(function() {
+        // Render SMRITI sidebar
+        SMRITI.renderFlexibleSidebar("knowledge_studio");
+
+        // Load dashboard stats and metadata
+        loadMetaAndCounts();
+
+        // Search key handler
+        $("#studio-search").on("keydown", function(e) {
+            if (e.key === "Enter") {
+                performSearch($(this).val());
+            }
+        });
+
+        // Tab click handler
+        $(".drawer-tab").on("click", function() {
+            $(".drawer-tab").removeClass("active");
+            $(this).addClass("active");
+            
+            const tabId = $(this).attr("data-tab");
+            $(".tab-panel").removeClass("active");
+            $("#panel-" + tabId).addClass("active");
+        });
+    });
+
+    function loadMetaAndCounts() {
+        // Fetch Version Info
+        frappe.call({
+            method: "smriti_retail_os.api.knowledge_studio_api.get_ske_meta",
+            callback: function(r) {
+                if (r.message) {
+                    $("#ske-v").text(r.message.ske_version);
+                    $("#ir-v").text(r.message.ir_version);
+                    $("#git-commit").text(r.message.repository_commit);
+                    $("#last-scan").text(r.message.last_scan);
+                }
+            }
+        });
+
+        // Fetch Count Statistics
+        frappe.call({
+            method: "smriti_retail_os.api.knowledge_studio_api.get_knowledge_studio_counts",
+            callback: function(r) {
+                if (r.message) {
+                    $("#cnt-glossary").text(r.message.glossary);
+                    $("#cnt-apis").text(r.message.apis);
+                    $("#cnt-fields").text(r.message.fields);
+                    $("#cnt-doctypes").text(r.message.doctypes);
+                    $("#cnt-formulas").text(r.message.formulas);
+                    $("#cnt-screens").text(r.message.screens);
+                }
+            }
+        });
+    }
+
+    function triggerPreset(val) {
+        $("#studio-search").val(val);
+        performSearch(val);
+    }
+
+    function performSearch(query) {
+        if (!query || !query.trim()) {
+            $("#results-workspace").hide();
+            $("#home-dashboard").show();
+            return;
+        }
+
+        frappe.call({
+            method: "smriti_retail_os.api.knowledge_studio_api.query_ske",
+            args: { query: query },
+            callback: function(r) {
+                renderResults(r.message || []);
+            }
+        });
+    }
+
+    function renderResults(objects) {
+        $("#home-dashboard").hide();
+        const $container = $("#results-workspace");
+        $container.empty().show();
+
+        if (objects.length === 0) {
+            $container.html(`
+                <div class="empty-state">
+                    <span class="material-symbols-outlined" style="font-size: 3rem; color: var(--text-subtle);">search_off</span>
+                    <h3>No verified knowledge found</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-subtle);">Try searching for alternative keywords.</p>
+                    <div class="suggestion-chips" style="justify-content:center; margin-top: 10px;">
+                        <button class="chip" onclick="triggerPreset('Item')">Search Item</button>
+                        <button class="chip" onclick="triggerPreset('Barcode')">Search Barcode</button>
+                        <button class="chip" onclick="triggerPreset('API')">Search API</button>
+                        <button class="chip" onclick="triggerPreset('WOC')">Search WOC</button>
+                    </div>
+                </div>
+            `);
+            return;
+        }
+
+        objects.forEach(obj => {
+            const relCount = obj.relations ? obj.relations.length : 0;
+            const apiCount = obj.type === 'screen' ? (obj.apis ? obj.apis.length : 0) : 0;
+            const labelCount = obj.type === 'screen' ? (obj.labels ? obj.labels.length : 0) : 0;
+
+            const $card = $(`
+                <div class="result-card">
+                    <div class="result-card-header">
+                        <span class="result-title">${obj.title} <span style="font-size: 0.85rem; color:var(--text-subtle)">(${obj.id})</span></span>
+                        <span class="result-type-badge">${obj.type}</span>
+                    </div>
+                    <div class="result-card-body">
+                        <div class="result-section-row business">
+                            <span class="result-section-title">📘 Business Meaning</span>
+                            <span class="result-section-val">${obj.summary || obj.business_definition || 'N/A'}</span>
+                        </div>
+                        <div class="result-section-row technical">
+                            <span class="result-section-title">⚙ Technical Key</span>
+                            <span class="result-section-val" style="font-family: monospace; font-size: 0.85rem; color: var(--accent-teal);">${obj.technical_definition.split('\n')[0]}</span>
+                        </div>
+                    </div>
+                    <div class="result-card-header" style="margin-top: 6px;">
+                        <div class="result-badges">
+                            <span class="badge-pill"><span class="material-symbols-outlined" style="font-size: 14px;">link</span>Relations: ${relCount}</span>
+                            ${obj.type === 'screen' ? `<span class="badge-pill"><span class="material-symbols-outlined" style="font-size: 14px;">api</span>APIs: ${apiCount}</span>` : ''}
+                            ${obj.type === 'screen' ? `<span class="badge-pill"><span class="material-symbols-outlined" style="font-size: 14px;">print</span>Templates: ${labelCount}</span>` : ''}
+                        </div>
+                        <button class="topbtn" style="border-color: var(--primary); color: var(--primary);" onclick="openDrawer(${JSON.stringify(obj).replace(/"/g, '&quot;')})">Open Detail →</button>
+                    </div>
+                </div>
+            `);
+            $container.append($card);
+        });
+    }
+
+    function openDrawer(obj) {
+        ACTIVE_DRAWER_OBJECT = obj;
+
+        $("#drawer-title").text(obj.title);
+        $("#drawer-type-badge").text(obj.type.replace('_', ' '));
+
+        // Set Tab Content
+        $("#det-business-def").text(obj.business_definition || 'No business definition registered.');
+        
+        // Render FAQs / Examples
+        const $faqWrap = $("#card-faq-wrapper");
+        if (obj.examples && obj.examples.length > 0) {
+            $faqWrap.show();
+            let faqHtml = '<ul style="list-style-type: none; display: flex; flex-direction: column; gap: 8px;">';
+            obj.examples.forEach(ex => {
+                faqHtml += `<li style="padding: 8px; background: var(--bg-dark); border-radius: 4px; border-left: 2px solid var(--accent-teal);">${ex}</li>`;
+            });
+            faqHtml += '</ul>';
+            $("#det-examples").html(faqHtml);
+        } else {
+            $faqWrap.hide();
+        }
+
+        $("#det-tech-def").html(`<pre style="white-space: pre-wrap; font-family: monospace; color:#38bdf8;">${obj.technical_definition || 'N/A'}</pre>`);
+        
+        // Render Dependencies
+        if (obj.dependencies && obj.dependencies.length > 0) {
+            $("#det-dependencies").html(obj.dependencies.map(d => `<span class="badge-pill" style="margin-right: 6px; margin-bottom: 6px;">${d}</span>`).join(''));
+        } else {
+            $("#det-dependencies").text('No dependencies declared.');
+        }
+
+        // Render APIs
+        if (obj.type === 'screen' && obj.apis && obj.apis.length > 0) {
+            $("#det-apis").html(obj.apis.map(api => `<div class="code-box" style="margin-bottom: 6px;">${api}</div>`).join(''));
+        } else {
+            $("#det-apis").text('No direct API bindings.');
+        }
+
+        // Render Labels
+        if (obj.type === 'screen' && obj.labels && obj.labels.length > 0) {
+            $("#det-labels").html(obj.labels.map(lbl => `<div style="padding: 10px; background: var(--bg-dark); border-radius: 6px; border-left: 2px solid var(--primary);">${lbl}</div>`).join(''));
+        } else {
+            $("#det-labels").text('No associated print labels.');
+        }
+
+        // Render Manuals
+        const references = (obj.references || []).filter(r => r);
+        if (references.length > 0) {
+            $("#det-manuals").html(references.map(ref => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                    <span>${ref}</span>
+                    <button class="topbtn" onclick="window.open('/coming-soon?feature=' + encodeURIComponent('Manual: ' + '${ref}'), '_blank')">Read</button>
+                </div>
+            `).join(''));
+        } else {
+            $("#det-manuals").text('No manuals associated with this component.');
+        }
+
+        // Render Reports
+        if (obj.type === 'screen' && obj.reports && obj.reports.length > 0) {
+            $("#det-reports").html(obj.reports.map(rep => `<div style="padding: 8px 12px; background: var(--bg-dark); border-radius: 6px; border: 1px solid var(--border-color);">${rep}</div>`).join(''));
+        } else {
+            $("#det-reports").text('No consuming reports linked.');
+        }
+
+        // Render Evidence Trust Badge & Details
+        const evCount = obj.evidence ? obj.evidence.length : 0;
+        $("#det-trust-badge").html(`<span style="color:var(--accent-green)">✔ Verified</span> | ${evCount} Artifacts | Scan: Today`);
+
+        let evHtml = "";
+        if (obj.evidence && obj.evidence.length > 0) {
+            obj.evidence.forEach(ev => {
+                evHtml += `
+                    <div style="font-size: 0.85rem; line-height: 1.5; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px; margin-bottom: 8px;">
+                        <div><strong>Source File:</strong> <code style="color: #38bdf8;">${ev.source_file || 'N/A'}</code></div>
+                        ${ev.line ? `<div><strong>Line:</strong> ${ev.line}</div>` : ''}
+                        ${ev.checksum ? `<div><strong>SHA256 Checksum:</strong> <code style="font-size: 0.78rem; word-break: break-all;">${ev.checksum}</code></div>` : ''}
+                        ${ev.edge_path ? `<div><strong>Relation Path:</strong> <code style="color: var(--accent-teal);">${ev.edge_path.join(' -> ')}</code></div>` : ''}
+                    </div>
+                `;
+            });
+        } else {
+            evHtml = "No direct evidence file registered.";
+        }
+        $("#det-evidence-pack").html(evHtml);
+
+        // Reset collapsible evidence state
+        $("#evidence-coll-content").removeClass("open");
+        $("#evidence-coll-icon").text("expand_more");
+
+        // Render "Ask More" Chips
+        const $askMore = $("#ask-more-chips");
+        $askMore.empty();
+        const promptSuggestions = [
+            `Explain ${obj.title} APIs`,
+            `Show ${obj.title} Dependencies`,
+            `Show ${obj.title} Reports`,
+            `Show ${obj.title} Labels`
+        ];
+        promptSuggestions.forEach(p => {
+            const $chip = $(`<button class="chip" style="font-size: 0.8rem; border-color: rgba(37,99,235,0.2);" onclick="closeDrawer(); triggerPreset('${p}')">${p}</button>`);
+            $askMore.append($chip);
+        });
+
+        // Open Pane
+        $("#detail-drawer-overlay").addClass("open");
+        $("#detail-drawer").addClass("open");
+        
+        // Reset active tab to Business
+        $(".drawer-tab").removeClass("active");
+        $(".drawer-tab[data-tab='business']").addClass("active");
+        $(".tab-panel").removeClass("active");
+        $("#panel-business").addClass("active");
+    }
+
+    function closeDrawer() {
+        $("#detail-drawer-overlay").removeClass("open");
+        $("#detail-drawer").removeClass("open");
+    }
+
+    function toggleEvidenceCollapse() {
+        const $content = $("#evidence-coll-content");
+        const $icon = $("#evidence-coll-icon");
+        $content.toggleClass("open");
+        if ($content.hasClass("open")) {
+            $icon.text("expand_less");
+        } else {
+            $icon.text("expand_more");
+        }
+    }
+</script>
+</body>
+</html>
+{% endblock %}

@@ -74,6 +74,7 @@ const SMRITI_ROUTE_MAP = {
   "trial_signup":                     "/smriti-trial",
   "trial_leads":                      "/smriti-trial-leads",   // Sprint 2
   "pos_profiles":                     "/smriti-pos-profiles",
+  "knowledge_studio":                 "/smriti-knowledge-studio",
 };
 
 function resolveSmritiRoute(key) {
@@ -537,6 +538,11 @@ const SMRITI_NAV = {
       label: "Help Desk",
       status: "active",
       items: [
+        { id: "knowledge_studio",
+          label: "Knowledge Studio",
+          route: "/smriti-knowledge-studio",
+          standalone_route: "/smriti-knowledge-studio",
+          status: "active" },
         { id: "knowledge_center",
           label: "Knowledge Center",
           route: "/smriti-help",
