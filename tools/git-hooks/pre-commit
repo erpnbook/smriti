@@ -1,0 +1,30 @@
+#!/bin/sh
+# SMRITI Retail OS — Version-Controlled Git Pre-Commit Hook
+# Enforces TEMPLATE-01: Presentation & Template Metadata Safety Rule
+
+# Get all staged .html files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.html$')
+
+if [ -n "$STAGED_FILES" ]; then
+    echo "======================================================================="
+    echo "Running SMRITI HTML Template Validator (TEMPLATE-01)..."
+    echo "======================================================================="
+    
+    # Run validator on the staged HTML files from the repository root
+    python scripts/validate_html_templates.py $STAGED_FILES
+    RESULT=$?
+    
+    if [ $RESULT -ne 0 ]; then
+        echo "======================================================================="
+        echo "❌ ERROR: HTML template validation failed. Commit aborted."
+        echo "Please fix the presentation/metadata leak violations shown above."
+        echo "======================================================================="
+        exit 1
+    fi
+    
+    echo "======================================================================="
+    echo "✅ SUCCESS: All staged HTML templates passed validation!"
+    echo "======================================================================="
+fi
+
+exit 0

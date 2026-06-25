@@ -274,6 +274,51 @@
     "verify-certificate.html": {
       "hex": 30,
       "rgba": 1
+    },
+    "smriti-roi-calculator.html": {
+      "hex": 10,
+      "rgba": 7,
+      "note": "Auto-recorded on first validation"
+    },
+    "smriti-pricing.html": {
+      "hex": 6,
+      "rgba": 18,
+      "note": "Auto-recorded on first validation"
+    },
+    "smriti-trial.html": {
+      "hex": 3,
+      "rgba": 6,
+      "note": "Auto-recorded on first validation"
+    },
+    "smriti-trial-leads.html": {
+      "hex": 6,
+      "rgba": 29,
+      "note": "Auto-recorded on first validation"
+    },
+    "smriti_sidebar.html": {
+      "hex": 0,
+      "rgba": 0,
+      "note": "Auto-recorded on first validation"
+    },
+    "smriti-platform-admin.html": {
+      "hex": 8,
+      "rgba": 19,
+      "note": "Auto-recorded on first validation"
+    },
+    "smriti-pos-profiles.html": {
+      "hex": 0,
+      "rgba": 6,
+      "note": "Auto-recorded on first validation"
+    },
+    "smriti_token_loader.html": {
+      "hex": 0,
+      "rgba": 0,
+      "note": "Auto-recorded on first validation"
+    },
+    "smriti_topbar.html": {
+      "hex": 0,
+      "rgba": 0,
+      "note": "Auto-recorded on first validation"
     }
   }
 }

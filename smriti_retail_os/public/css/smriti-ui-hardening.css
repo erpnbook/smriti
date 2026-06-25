@@ -47,14 +47,25 @@
    SECTION 1 — Z-INDEX CUSTOM PROPERTIES
    ═══════════════════════════════════════════════════════════════════ */
 :root {
-  --z-content:       1;
-  --z-card:          10;
-  --z-sticky:        100;
-  --z-topbar:        200;
-  --z-dropdown:      5000;
-  --z-modal:         10000;
-  --z-notification:  15000;
-  --z-devtools:      99999;
+  /* Namespaced variables */
+  --smriti-z-index-content:      1;
+  --smriti-z-index-card:         10;
+  --smriti-z-index-sticky:       100;
+  --smriti-z-index-topbar:       200;
+  --smriti-z-index-dropdown:     5000;
+  --smriti-z-index-modal:        10000;
+  --smriti-z-index-notification: 15000;
+  --smriti-z-index-devtools:     99999;
+
+  /* Legacy aliases for backward compatibility */
+  --z-content:       var(--smriti-z-index-content);
+  --z-card:          var(--smriti-z-index-card);
+  --z-sticky:        var(--smriti-z-index-sticky);
+  --z-topbar:        var(--smriti-z-index-topbar);
+  --z-dropdown:      var(--smriti-z-index-dropdown);
+  --z-modal:         var(--smriti-z-index-modal);
+  --z-notification:  var(--smriti-z-index-notification);
+  --z-devtools:      var(--smriti-z-index-devtools);
 }
 
 
@@ -70,7 +81,7 @@
   min-height: 400px;
   overflow-x: auto;
   overflow-y: auto;
-  border-radius: 8px;
+  border-radius: var(--smriti-radius-sm);
   position: relative;
   /* Do NOT add overflow:hidden — dropdowns must escape */
 }
@@ -81,7 +92,7 @@
   min-height: 600px;
   overflow-x: auto;
   overflow-y: auto;
-  border-radius: 8px;
+  border-radius: var(--smriti-radius-sm);
   position: relative;
 }
 
@@ -91,7 +102,7 @@
   min-height: 800px;
   overflow-x: auto;
   overflow-y: auto;
-  border-radius: 8px;
+  border-radius: var(--smriti-radius-sm);
   position: relative;
 }
 
@@ -113,7 +124,7 @@
 .sim-grid-wrapper thead {
   position: sticky;
   top: 0;
-  z-index: var(--z-sticky);
+  z-index: var(--smriti-z-index-sticky);
 }
 
 
@@ -125,19 +136,19 @@
    ═══════════════════════════════════════════════════════════════════ */
 #smriti-dropdown-portal {
   position: fixed;
-  z-index: var(--z-dropdown);
-  background: var(--card2, #172040);
-  border: 1px solid var(--border2, rgba(255,255,255,0.13));
-  border-radius: 8px;
+  z-index: var(--smriti-z-index-dropdown);
+  background: var(--card2, var(--smriti-color-bg-elevated, var(--smriti-color-bg-secondary)));
+  border: 1px solid var(--border2, rgba(var(--smriti-color-bg-primary-rgb, 255, 255, 255), 0.13));
+  border-radius: var(--smriti-radius-sm);
   max-height: 240px;
   overflow-y: auto;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.65);
+  box-shadow: var(--smriti-shadow-xl);
   display: none;
   min-width: 200px;
   pointer-events: auto;
   /* Thin scrollbar inside portal */
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.15) transparent;
+  scrollbar-color: rgba(var(--smriti-color-border-strong-rgb, 208, 213, 221), 0.15) transparent;
 }
 #smriti-dropdown-portal.open {
   display: block;
@@ -146,9 +157,9 @@
   padding: 9px 14px;
   cursor: pointer;
   font-size: 0.84rem;
-  border-bottom: 1px solid var(--border, rgba(255,255,255,0.07));
+  border-bottom: 1px solid var(--border, rgba(var(--smriti-color-bg-primary-rgb, 255, 255, 255), 0.07));
   transition: background 0.12s;
-  color: var(--text, #e2e8f0);
+  color: var(--text, var(--smriti-color-text-primary));
   line-height: 1.4;
 }
 #smriti-dropdown-portal .s-portal-item:last-child {
@@ -156,18 +167,18 @@
 }
 #smriti-dropdown-portal .s-portal-item:hover,
 #smriti-dropdown-portal .s-portal-item.highlighted {
-  background: rgba(99,102,241,0.18);
-  color: var(--primary-lt, #818cf8);
+  background: rgba(var(--smriti-color-brand-primary-rgb, 105, 65, 198), 0.18);
+  color: var(--primary-lt, var(--smriti-color-brand-light));
 }
 #smriti-dropdown-portal .s-portal-item small {
   display: block;
   font-size: 0.74rem;
-  color: var(--text-muted, #94a3b8);
+  color: var(--text-muted, var(--smriti-color-text-muted));
   margin-top: 1px;
 }
 #smriti-dropdown-portal .s-portal-empty {
   padding: 10px 14px;
-  color: var(--text-muted, #94a3b8);
+  color: var(--text-muted, var(--smriti-color-text-muted));
   font-size: 0.8rem;
   font-style: italic;
 }
@@ -175,19 +186,19 @@
 /* Light-mode portal variant (for pages using smriti_theme.css / light palette) */
 .smriti-light-mode #smriti-dropdown-portal,
 body:not([data-theme="dark"]):not(.dark-mode) #smriti-dropdown-portal {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 8px 32px rgba(15,23,42,0.16);
+  background: var(--smriti-color-bg-primary);
+  border: 1px solid var(--smriti-color-text-primary);
+  box-shadow: var(--smriti-shadow-lg);
 }
 .smriti-light-mode #smriti-dropdown-portal .s-portal-item,
 body:not([data-theme="dark"]):not(.dark-mode) #smriti-dropdown-portal .s-portal-item {
-  color: #0f172a;
-  border-color: #e2e8f0;
+  color: var(--smriti-color-text-primary);
+  border-color: var(--smriti-color-text-primary);
 }
 .smriti-light-mode #smriti-dropdown-portal .s-portal-item:hover,
 body:not([data-theme="dark"]):not(.dark-mode) #smriti-dropdown-portal .s-portal-item:hover {
-  background: #f1f5f9;
-  color: #6941c6;
+  background: var(--smriti-color-bg-secondary);
+  color: var(--smriti-color-brand-primary);
 }
 
 
@@ -197,7 +208,7 @@ body:not([data-theme="dark"]):not(.dark-mode) #smriti-dropdown-portal .s-portal-
    Must render with z-index:var(--z-dropdown) and not be clipped.
    ═══════════════════════════════════════════════════════════════════ */
 .search-dropdown {
-  z-index: var(--z-dropdown) !important;  /* Override per-module z-index:50 */
+  z-index: var(--smriti-z-index-dropdown) !important;  /* Override per-module z-index: calc(var(--smriti-z-index-card) + 40) */
 }
 
 /* The customer search wrap needs overflow:visible so dropdown escapes */
@@ -235,7 +246,7 @@ body:not([data-theme="dark"]):not(.dark-mode) #smriti-dropdown-portal .s-portal-
 .dropdown-list,
 .select2-dropdown,
 .select2-container--open .select2-dropdown {
-  z-index: var(--z-dropdown) !important;
+  z-index: var(--smriti-z-index-dropdown) !important;
 }
 
 /* Date pickers should also be above modals */
@@ -243,13 +254,13 @@ body:not([data-theme="dark"]):not(.dark-mode) #smriti-dropdown-portal .s-portal-
 .bootstrap-datetimepicker-widget,
 .ui-datepicker,
 .flatpickr-calendar {
-  z-index: var(--z-modal) !important;
+  z-index: var(--smriti-z-index-modal) !important;
 }
 
 /* Context menus */
 .context-menu-list,
 .smriti-ctx-menu {
-  z-index: var(--z-dropdown) !important;
+  z-index: var(--smriti-z-index-dropdown) !important;
 }
 
 
@@ -259,24 +270,24 @@ body:not([data-theme="dark"]):not(.dark-mode) #smriti-dropdown-portal .s-portal-
    ═══════════════════════════════════════════════════════════════════ */
 .modal-backdrop,
 .modal-overlay,
-.modal { z-index: var(--z-modal) !important; }
+.modal { z-index: var(--smriti-z-index-modal) !important; }
 
 .modal-dialog,
-.modal-content { z-index: calc(var(--z-modal) + 1) !important; }
+.modal-content { z-index: calc(var(--smriti-z-index-modal) + 1) !important; }
 
 /* In-modal dropdowns still need to render above modal backdrop */
 .modal .search-dropdown,
 .modal .awesomplete > ul,
 .modal .frappe-link-value-popover,
 .modal .select2-dropdown {
-  z-index: calc(var(--z-modal) + 100) !important;
+  z-index: calc(var(--smriti-z-index-modal) + 100) !important;
 }
 
 /* Toast / notification stack */
 #toast-container,
 .smriti-toast-stack,
 .frappe-toast-stack {
-  z-index: var(--z-notification) !important;
+  z-index: var(--smriti-z-index-notification) !important;
 }
 
 
@@ -287,13 +298,13 @@ body:not([data-theme="dark"]):not(.dark-mode) #smriti-dropdown-portal .s-portal-
 .navbar,
 .page-head,
 .sticky-topbar {
-  z-index: var(--z-topbar) !important;
+  z-index: var(--smriti-z-index-topbar) !important;
 }
 
 /* Sidebar must stay below topbar but above content */
 .sidebar,
 #smriti-sidebar {
-  z-index: calc(var(--z-topbar) - 10) !important;
+  z-index: calc(var(--smriti-z-index-topbar) - 10) !important;
 }
 
 
@@ -307,7 +318,7 @@ body:not([data-theme="dark"]):not(.dark-mode) #smriti-dropdown-portal .s-portal-
 .grid-wrap,
 #smriti-dropdown-portal {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.14) transparent;
+  scrollbar-color: rgba(var(--smriti-color-border-strong-rgb, 208, 213, 221), 0.14) transparent;
 }
 
 .smriti-grid-sm::-webkit-scrollbar,
@@ -332,8 +343,8 @@ body:not([data-theme="dark"]):not(.dark-mode) #smriti-dropdown-portal .s-portal-
 .smriti-grid-lg::-webkit-scrollbar-thumb,
 .sim-grid-wrapper::-webkit-scrollbar-thumb,
 .grid-wrap::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.14);
-  border-radius: 4px;
+  background: rgba(var(--smriti-color-border-strong-rgb, 208, 213, 221), 0.14);
+  border-radius: var(--smriti-radius-xs);
 }
 
 .smriti-grid-sm::-webkit-scrollbar-thumb:hover,
@@ -341,7 +352,7 @@ body:not([data-theme="dark"]):not(.dark-mode) #smriti-dropdown-portal .s-portal-
 .smriti-grid-lg::-webkit-scrollbar-thumb:hover,
 .sim-grid-wrapper::-webkit-scrollbar-thumb:hover,
 .grid-wrap::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.26);
+  background: rgba(var(--smriti-color-border-strong-rgb, 208, 213, 221), 0.26);
 }
 
 /* Corner square where x and y scrollbars meet */
@@ -371,7 +382,7 @@ body:not([data-theme="dark"]):not(.dark-mode) #smriti-dropdown-portal .s-portal-
 /* Make sure the billing item list doesn't clip autocomplete */
 .billing-item-list,
 .item-search-results {
-  z-index: var(--z-dropdown) !important;
+  z-index: var(--smriti-z-index-dropdown) !important;
   position: fixed !important;
 }
 

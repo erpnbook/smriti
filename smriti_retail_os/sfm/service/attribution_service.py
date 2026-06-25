@@ -31,11 +31,13 @@ def resolve_store(company, warehouse):
         if not store_name:
             # Create a default SMRITI Store dynamically
             store = frappe.new_doc("SMRITI Store")
-            store.store_name = f"Store - {warehouse.split(' - ')[0] if ' - ' in warehouse else warehouse}"
+            wh_part = warehouse.split(' - ')[0] if ' - ' in warehouse else warehouse
+            clean_company = company.replace(" ", "_")
+            store.store_name = f"Store - {wh_part} ({clean_company})"
             store.default_warehouse = warehouse
             store.company = company
-            store.insert(ignore_permissions=True)
-            store_name = store.name
+            store.insert(ignore_permissions=True, ignore_if_duplicate=True)
+            store_name = store.name or f"Store - {wh_part} ({clean_company})"
             
     return store_name
 

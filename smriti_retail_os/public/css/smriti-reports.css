@@ -32,7 +32,8 @@
     background: var(--smriti-color-bg-primary);
     border: 1px solid var(--smriti-color-border-default);
     border-radius: var(--smriti-radius-md);
-    padding: var(--smriti-spacing-md) var(--smriti-spacing-xl);
+    padding: var(--smriti-spacing-padding-y) var(--smriti-spacing-xl);
+    min-height: var(--smriti-toolbar-height); /* THEME-003: density token */
     display: flex;
     align-items: center;
     flex-wrap: wrap;
@@ -58,6 +59,7 @@
     color: var(--smriti-color-text-primary) !important;
     font-size: var(--smriti-font-size-sm) !important;
     padding: var(--smriti-spacing-sm) var(--smriti-spacing-md) !important;
+    min-height: var(--smriti-form-field-height) !important; /* THEME-003: density token */
     box-shadow: var(--smriti-shadow-neu-pressed-sm) !important;
     transition: box-shadow var(--smriti-t-base) var(--smriti-ease), border-color var(--smriti-t-base) var(--smriti-ease) !important;
     outline: none !important;
@@ -114,7 +116,7 @@
 .report-kpi-card {
     background: var(--smriti-color-bg-page);
     border-radius: var(--smriti-radius-xl);
-    padding: var(--smriti-spacing-xl);
+    padding: var(--smriti-spacing-card); /* THEME-003: density token (was spacing-xl) */
     box-shadow: var(--smriti-shadow-neu-float);
     cursor: default;
     transition: box-shadow var(--smriti-t-base) var(--smriti-ease), transform var(--smriti-t-base) var(--smriti-ease);
@@ -164,7 +166,7 @@
     background: var(--smriti-color-bg-primary);
     border: 1px solid var(--smriti-color-border-default);
     border-radius: var(--smriti-radius-lg);
-    padding: var(--smriti-spacing-xl);
+    padding: var(--smriti-spacing-card); /* THEME-003: density token (was spacing-xl) */
     box-shadow: none;
 }
 
@@ -175,6 +177,7 @@
     margin-bottom: var(--smriti-spacing-lg);
     padding-bottom: var(--smriti-spacing-md);
     border-bottom: 1px solid var(--smriti-color-border-default);
+    min-height: var(--smriti-card-header-height); /* THEME-003: density token */
 }
 
 .report-chart-title {
@@ -201,21 +204,23 @@
 .report-table th {
     background: var(--smriti-color-bg-secondary);
     text-align: left;
-    padding: var(--smriti-spacing-padding-y) var(--smriti-spacing-lg);
+    padding: var(--smriti-spacing-padding-y) var(--smriti-spacing-padding-x); /* THEME-003: density tokens (was spacing-lg) */
     font-size: var(--smriti-font-size-xs);
     font-weight: var(--smriti-font-weight-bold);
     letter-spacing: 0.6px;
     text-transform: uppercase;
     color: var(--smriti-color-text-muted);
     border-bottom: 1px solid var(--smriti-color-border-default);
+    min-height: var(--smriti-table-row-height); /* THEME-003: density token */
 }
 
 .report-table td {
-    padding: var(--smriti-spacing-padding-y) var(--smriti-spacing-lg);
+    padding: var(--smriti-spacing-padding-y) var(--smriti-spacing-padding-x); /* THEME-003: density tokens (was spacing-lg) */
     font-size: var(--smriti-font-size-sm);
     color: var(--smriti-color-text-primary);
     border-bottom: 1px solid var(--smriti-color-border-default);
     vertical-align: middle;
+    min-height: var(--smriti-table-row-height); /* THEME-003: density token */
 }
 
 .report-table tbody tr { transition: background var(--smriti-t-fast); }

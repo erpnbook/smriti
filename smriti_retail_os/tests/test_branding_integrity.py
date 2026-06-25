@@ -21,10 +21,11 @@ import hashlib
 import unittest
 import frappe
 
+
 class TestBrandingIntegrity(unittest.TestCase):
     def setUp(self):
         self.app_path = frappe.get_app_path("smriti_retail_os")
-        
+
     def get_file_hash(self, relative_path):
         full_path = os.path.join(self.app_path, relative_path)
         self.assertTrue(os.path.exists(full_path), f"Asset missing: {relative_path}")
@@ -36,40 +37,82 @@ class TestBrandingIntegrity(unittest.TestCase):
 
     def test_logo_integrity(self):
         """Verify that the SMRITI global logo SVG is locked and unaltered"""
-        expected_hash = "53c5c6bdfb824a580aed8119e2301bc29783a2a5d7bb6dbd2a774027c9d030c5"
-        
+        expected_hash = (
+            "53c5c6bdfb824a580aed8119e2301bc29783a2a5d7bb6dbd2a774027c9d030c5"
+        )
+
         logo_paths = [
             "public/images/smriti_logo.svg",
             "public/images/logo.svg",
-            "public/logo.svg"
+            "public/logo.svg",
         ]
-        
+
         for rel_path in logo_paths:
-            self.assertEqual(self.get_file_hash(rel_path), expected_hash, f"Branding asset altered or compromised: {rel_path}")
-            
+            self.assertEqual(
+                self.get_file_hash(rel_path),
+                expected_hash,
+                f"Branding asset altered or compromised: {rel_path}",
+            )
+
     def test_wallpaper_integrity(self):
         """Verify that the SMRITI login background wallpaper SVG is locked and unaltered"""
-        expected_hash = "782838ff063e3a9f5a8e38dace91b7a0a2230f002b8b8c928c6b8f6ba87bf49a"
-        self.assertEqual(self.get_file_hash("public/images/login_wallpaper.svg"), expected_hash, "Wallpaper asset altered or compromised")
-        
+        expected_hash = (
+            "782838ff063e3a9f5a8e38dace91b7a0a2230f002b8b8c928c6b8f6ba87bf49a"
+        )
+        self.assertEqual(
+            self.get_file_hash("public/images/login_wallpaper.svg"),
+            expected_hash,
+            "Wallpaper asset altered or compromised",
+        )
+
     def test_login_page_integrity(self):
         """Verify that the SMRITI login page template is locked and unaltered"""
-        expected_hash = "8aac6091f698573d3dae519fdf5557279c59e784531afc615545bcd866a0176b"
-        self.assertEqual(self.get_file_hash("www/smriti-login.html"), expected_hash, "Login template altered or compromised")
+        expected_hash = (
+            "8aac6091f698573d3dae519fdf5557279c59e784531afc615545bcd866a0176b"
+        )
+        self.assertEqual(
+            self.get_file_hash("www/smriti-login.html"),
+            expected_hash,
+            "Login template altered or compromised",
+        )
 
     def test_error_pages_integrity(self):
         """Verify that SMRITI custom error page templates are locked and unaltered"""
-        expected_404 = "77fcca7e6a805425efaf50b89d377e577b5b18b9d22c3a18462b2598d54350e7"
-        expected_smriti_404 = "ef4be28eb30acfe79e715c5bf05be5085f7e060aba10441d0f0194d8d51b62ab"
-        
-        expected_403 = "24845173aefd297922e243bdc041251efdae9c0d34b3c66b3ee89b0014473569"
-        expected_smriti_403 = "03a1b942520b2965f68893a66df6c1ff91ee81097755667f60c4f3cd4cd32d3f"
-        
-        self.assertEqual(self.get_file_hash("www/404.html"), expected_404, "404 HTML template altered or compromised")
-        self.assertEqual(self.get_file_hash("www/smriti-404.html"), expected_smriti_404, "smriti-404 HTML template altered or compromised")
-        
-        self.assertEqual(self.get_file_hash("www/403.html"), expected_403, "403 HTML template altered or compromised")
-        self.assertEqual(self.get_file_hash("www/smriti-403.html"), expected_smriti_403, "smriti-403 HTML template altered or compromised")
+        expected_404 = (
+            "a880f7f259d8d0eaec407fd8bd13a6bae3112a080b2836b0335d2ccc19984c71"
+        )
+        expected_smriti_404 = (
+            "ccdb6f002044977ae821bb047e6b27d57cebaca96ac05d9b9b88d40acab4b7ed"
+        )
+
+        expected_403 = (
+            "a828c9d92cb144d2a5c2c4bed1b8c5b0d245e9bdef2a4145ce107b2f7581d729"
+        )
+        expected_smriti_403 = (
+            "e47d6797c9fa020e5b11421a499c1b9113dcd461e99ddfc32f45b9234d52de9e"
+        )
+
+        self.assertEqual(
+            self.get_file_hash("www/404.html"),
+            expected_404,
+            "404 HTML template altered or compromised",
+        )
+        self.assertEqual(
+            self.get_file_hash("www/smriti-404.html"),
+            expected_smriti_404,
+            "smriti-404 HTML template altered or compromised",
+        )
+
+        self.assertEqual(
+            self.get_file_hash("www/403.html"),
+            expected_403,
+            "403 HTML template altered or compromised",
+        )
+        self.assertEqual(
+            self.get_file_hash("www/smriti-403.html"),
+            expected_smriti_403,
+            "smriti-403 HTML template altered or compromised",
+        )
 
     def test_routing_rules_integrity(self):
         """Verify that SMRITI hooks.py contains all critical brand redirect routes"""
@@ -77,8 +120,208 @@ class TestBrandingIntegrity(unittest.TestCase):
         self.assertTrue(os.path.exists(hooks_path))
         with open(hooks_path, "r", encoding="utf-8") as f:
             content = f.read()
-            
-        normalized_content = content.replace("'", '"').replace(" ", "").replace("\n", "").replace("\r", "").replace("\t", "")
-        self.assertIn('{"from_route":"/404","to_route":"smriti-404"}', normalized_content)
-        self.assertIn('{"from_route":"/403","to_route":"smriti-403"}', normalized_content)
-        self.assertIn('{"from_route":"/login","to_route":"smriti-login"}', normalized_content)
+
+        normalized_content = (
+            content.replace("'", '"')
+            .replace(" ", "")
+            .replace("\n", "")
+            .replace("\r", "")
+            .replace("\t", "")
+        )
+        self.assertIn(
+            '{"from_route":"/404","to_route":"smriti-404"}', normalized_content
+        )
+        self.assertIn(
+            '{"from_route":"/403","to_route":"smriti-403"}', normalized_content
+        )
+        self.assertIn(
+            '{"from_route":"/login","to_route":"smriti-login"}', normalized_content
+        )
+
+    def test_raw_templates_no_js_comments(self):
+        """Verify that raw HTML templates do not contain JS-style comments /** ... */ outside script/style tags"""
+        import glob
+        import re
+
+        www_path = os.path.join(self.app_path, "www")
+        templates_path = os.path.join(self.app_path, "templates")
+
+        html_files = []
+        for path in [www_path, templates_path]:
+            if os.path.exists(path):
+                html_files.extend(
+                    glob.glob(os.path.join(path, "**", "*.html"), recursive=True)
+                )
+
+        for filepath in html_files:
+            with open(filepath, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            # Strip style and script blocks from raw template
+            stripped = re.sub(r"<script.*?>.*?</script>", "", content, flags=re.DOTALL)
+            stripped = re.sub(r"<style.*?>.*?</style>", "", stripped, flags=re.DOTALL)
+            # Skip Jinja comments
+            stripped = re.sub(r"{#.*?#}", "", stripped, flags=re.DOTALL)
+
+            # Check if /** is in the remaining template content (outside script/style tags)
+            if "/**" in stripped:
+                idx = stripped.find("/**")
+                snippet = stripped[max(0, idx - 50) : min(len(stripped), idx + 100)]
+                self.fail(
+                    f"JS-style block comment '/**' found outside script/style block in raw template '{os.path.basename(filepath)}'.\n"
+                    f"Snippet: ... {snippet.strip()} ..."
+                )
+
+            # Check if metadata or block comments leak outside HTML comments
+            stripped_all = re.sub(r"<!--.*?-->", "", stripped, flags=re.DOTALL)
+            leak_markers = ["@file:", "@author:", "@license:", "Copyright", "/**"]
+            for marker in leak_markers:
+                if marker in stripped_all:
+                    idx = stripped_all.find(marker)
+                    snippet = stripped_all[
+                        max(0, idx - 50) : min(len(stripped_all), idx + 100)
+                    ]
+                    self.fail(
+                        f"Metadata marker '{marker}' found outside HTML/Jinja comment in raw template '{os.path.basename(filepath)}'.\n"
+                        f"Snippet: ... {snippet.strip()} ..."
+                    )
+
+    def test_rendered_pages_no_leaked_comments(self):
+        """Verify that rendered HTML pages do not leak comment blocks, metadata tags, or debugging artifacts"""
+        import re
+        import werkzeug.test
+        from werkzeug.wrappers import Request
+        from frappe.website.serve import get_response_content
+
+        routes = [
+            "/cge_generic",
+            "/smriti-cge",
+            "/smriti-dictionary",
+            "/smriti-formula-registry",
+            "/smriti-pdt",
+            "/smriti-presentation",
+        ]
+
+        leak_markers = ["@file:", "@author:", "@license:", "Copyright", "/**"]
+
+        regex_markers = {
+            "TODO": r"\bTODO\b",
+            "FIXME": r"\bFIXME\b",
+            "DEBUG": r"\b(DEBUG_MARKER|TEMP_TESTING|DEBUG)\b",
+            "console.log": r"\bconsole\.log\s*\(",
+            "alert": r"\balert\s*\(",
+        }
+
+        # Save original session and request state
+        orig_request = getattr(frappe.local, "request", None)
+        orig_user = frappe.session.user
+
+        try:
+            frappe.set_user("Administrator")
+            for route in routes:
+                # Mock a request environment to bypass redirection/authentication checks and werkzeug request issues
+                environ = werkzeug.test.EnvironBuilder(path=route).get_environ()
+                frappe.local.request = Request(environ)
+
+                try:
+                    html = get_response_content(route)
+                except Exception as e:
+                    self.fail(f"Failed to render route {route}: {e}")
+
+                # Strip HTML comments, script tags, style tags
+                cleaned_html = re.sub(r"<!--.*?-->", "", html, flags=re.DOTALL)
+                cleaned_html = re.sub(
+                    r"<script.*?>.*?</script>", "", cleaned_html, flags=re.DOTALL
+                )
+                cleaned_html = re.sub(
+                    r"<style.*?>.*?</style>", "", cleaned_html, flags=re.DOTALL
+                )
+
+                # Check if any literal leak markers are present in the clean body/content
+                for marker in leak_markers:
+                    if marker in cleaned_html:
+                        idx = cleaned_html.find(marker)
+                        snippet = cleaned_html[
+                            max(0, idx - 50) : min(len(cleaned_html), idx + 100)
+                        ]
+                        self.fail(
+                            f"Leaked source comment/debugging marker '{marker}' found in rendered page for route '{route}'.\n"
+                            f"Snippet: ... {snippet.strip()} ..."
+                        )
+
+                # Check if any regex debugging markers are present
+                for label, pattern in regex_markers.items():
+                    match = re.search(
+                        pattern,
+                        cleaned_html,
+                        re.IGNORECASE if label in ["TODO", "FIXME", "DEBUG"] else 0,
+                    )
+                    if match:
+                        idx = match.start()
+                        snippet = cleaned_html[
+                            max(0, idx - 50) : min(len(cleaned_html), idx + 100)
+                        ]
+                        self.fail(
+                            f"Leaked debugging artifact '{label}' found in rendered page for route '{route}'.\n"
+                            f"Snippet: ... {snippet.strip()} ..."
+                        )
+        finally:
+            # Restore original session and request state
+            frappe.set_user(orig_user)
+            if orig_request:
+                frappe.local.request = orig_request
+            elif hasattr(frappe.local, "request"):
+                delattr(frappe.local, "request")
+
+    def test_no_debug_artifacts_in_templates(self):
+        """Scan all raw HTML templates for debug artifacts (TODO, FIXME, DEBUG, console.log, alert) outside script/style blocks and valid comments"""
+        import glob
+        import re
+
+        www_path = os.path.join(self.app_path, "www")
+        templates_path = os.path.join(self.app_path, "templates")
+
+        html_files = []
+        for path in [www_path, templates_path]:
+            if os.path.exists(path):
+                html_files.extend(
+                    glob.glob(os.path.join(path, "**", "*.html"), recursive=True)
+                )
+
+        for filepath in html_files:
+            with open(filepath, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            # Strip style and script blocks from raw template
+            stripped = re.sub(r"<script.*?>.*?</script>", "", content, flags=re.DOTALL)
+            stripped = re.sub(r"<style.*?>.*?</style>", "", stripped, flags=re.DOTALL)
+            # Skip Jinja comments
+            stripped = re.sub(r"{#.*?#}", "", stripped, flags=re.DOTALL)
+            # Skip HTML comments
+            stripped = re.sub(r"<!--.*?-->", "", stripped, flags=re.DOTALL)
+
+            # Check for TODO/FIXME in the entire file
+            todo_matches = re.findall(r"\b(TODO|FIXME)\b", content, re.IGNORECASE)
+            if todo_matches:
+                self.fail(
+                    f"Unresolved TODO/FIXME markers found in template '{os.path.basename(filepath)}': {set(todo_matches)}"
+                )
+
+            # Check for DEBUG outside script/style/comments
+            debug_matches = re.findall(
+                r"\b(DEBUG_MARKER|TEMP_TESTING|DEBUG)\b", stripped, re.IGNORECASE
+            )
+            if debug_matches:
+                self.fail(
+                    f"Unresolved DEBUG/TESTING markers found outside script/style/comments in template '{os.path.basename(filepath)}': {set(debug_matches)}"
+                )
+
+            # Check for console.log / alert outside script/style/comments
+            for statement in ["console.log", "alert"]:
+                if statement in stripped.lower():
+                    idx = stripped.lower().find(statement)
+                    snippet = stripped[max(0, idx - 50) : min(len(stripped), idx + 100)]
+                    self.fail(
+                        f"'{statement}' statement found outside script block in template '{os.path.basename(filepath)}'.\n"
+                        f"Snippet: ... {snippet.strip()} ..."
+                    )

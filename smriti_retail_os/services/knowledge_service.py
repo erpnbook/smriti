@@ -22,6 +22,8 @@ TYPE_WEIGHTS = {
     "Formula Definition": 90,
     "Training Exercise": 80,
     "FAQ": 70,
+    "PSV Resource": 65,
+    "Certification": 65,
     "Manual Section": 60,
     "About Page": 55,
     "Governance": 50,
@@ -34,6 +36,9 @@ def rebuild_knowledge_index():
     Help Center registry, User Manuals, and KB articles), compiles them into
     a persistent search index, and caches it in Redis.
     """
+    # Invalidate enablement dynamic assets cache
+    frappe.cache().delete_value("smriti:enablement:assets:PSV:Enablement")
+    
     index = []
 
     # 1. Index Business Terms (Weight 100)
@@ -166,9 +171,9 @@ def _index_markdown_directory(docs_dir, index):
     Recursively scans docs/user_manual/ and docs/kb/ for markdown files and indexes sections.
     """
     for root, dirs, files in os.walk(docs_dir):
-        # Only index user_manual and kb directories to prevent indexing node_modules, etc.
+        # Only index allowed documentation directories
         relative_dir = os.path.relpath(root, docs_dir).replace("\\", "/")
-        if not (relative_dir.startswith("user_manual") or relative_dir.startswith("kb") or relative_dir.startswith("about") or relative_dir.startswith("governance")):
+        if not (relative_dir.startswith("user_manual") or relative_dir.startswith("kb") or relative_dir.startswith("about") or relative_dir.startswith("governance") or relative_dir.startswith("enablement") or relative_dir.startswith("certification")):
             continue
             
         for file in files:
@@ -202,6 +207,10 @@ def _parse_and_index_markdown_file(file_path, docs_dir, index):
         default_type = "About Page"
     elif "governance" in rel_path:
         default_type = "Governance"
+    elif "enablement" in rel_path:
+        default_type = "PSV Resource"
+    elif "certification" in rel_path:
+        default_type = "Certification"
     else:
         default_type = "KB Article"
         
@@ -404,9 +413,7 @@ def calculate_knowledge_coverage():
             if isinstance(faq_list, list) and len(faq_list) > 0:
                 has_faq = True
         except Exception:
-            import sys
-            _frappe = sys.modules.get('frappe')
-            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in services/knowledge_service.py:387: {sys.exc_info()[1]}")
+            frappe.log_error(frappe.get_traceback(), "SMRITI: Exception in services/knowledge_service.py")
             
         has_manual = bool(t.manual_reference and len(t.manual_reference.strip()) > 0)
         has_training = bool(t.training_reference and len(t.training_reference.strip()) > 0)
@@ -795,4 +802,116 @@ def cleanup_knowledge_asset_on_trash(doc, method=None):
         frappe.cache().delete_value(get_skos_cache_key("asset", asset_uri))
         
         frappe.db.commit()
+
+
+def get_assets(module="PSV", category="Enablement"):
+    """
+    Dynamically scans the markdown files inside docs/enablement/ and docs/certification/
+    and parses their metadata/frontmatter to build a dynamic registry of enablement assets.
+    """
+    import os
+    import re
+    import json
+    
+    # Check cache first
+    cache_key = f"smriti:enablement:assets:{module}:{category}"
+    cached = frappe.cache().get_value(cache_key)
+    if cached:
+        try:
+            return json.loads(cached)
+        except Exception:
+            pass
+
+    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "..", "..", "docs"))
+    assets = []
+    
+    # Define directories to search based on module and category
+    dirs_to_scan = []
+    if module == "PSV" and category == "Enablement":
+        dirs_to_scan = [
+            (os.path.join(docs_root, "enablement"), "enablement"),
+            (os.path.join(docs_root, "certification"), "certification")
+        ]
+        
+    for dir_path, doc_type in dirs_to_scan:
+        if not os.path.exists(dir_path):
+            continue
+            
+        for file in sorted(os.listdir(dir_path)):
+            if not (file.endswith(".md") or file.endswith(".csv")):
+                continue
+                
+            file_basename = os.path.splitext(file)[0]
+            file_path = os.path.join(dir_path, file)
+            
+            # Default metadata values
+            metadata = {
+                "name": file_basename,
+                "title": file_basename.replace("_", " ").replace("psv ", "").title(),
+                "category": "Executive Resources",
+                "module": module,
+                "version": "1.0.0",
+                "audience": "customer",
+                "status": "Approved",
+                "author": "Jawahar R. Mallah",
+                "file_name": file,
+                "document_type": doc_type,
+                "visibility": "all",
+                "searchable": True
+            }
+            
+            if file.endswith(".csv"):
+                metadata["category"] = "Demo Center"
+                metadata["title"] = "SMRITI PSV Demo Dataset (CSV)"
+                metadata["searchable"] = False
+            else:
+                # Read and parse YAML frontmatter / metadata section
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        lines = f.readlines()
+                        
+                    # Standard YAML frontmatter extraction
+                    has_frontmatter = False
+                    frontmatter_lines = []
+                    if len(lines) > 0 and lines[0].strip() == "---":
+                        has_frontmatter = True
+                        for i in range(1, len(lines)):
+                            if lines[i].strip() == "---":
+                                break
+                            frontmatter_lines.append(lines[i])
+                            
+                    # Parse frontmatter lines
+                    for line in frontmatter_lines:
+                        if ":" in line:
+                            k, v = line.split(":", 1)
+                            k = k.strip().lower()
+                            v = v.strip().strip('"').strip("'")
+                            if k in ["title", "category", "module", "version", "audience", "status", "author", "visibility"]:
+                                metadata[k] = v
+                                
+                    # Fallback if no frontmatter is found, extract title from first heading
+                    if not has_frontmatter or "title" not in [l.split(":", 1)[0].strip().lower() for l in frontmatter_lines if ":" in l]:
+                        for line in lines:
+                            if line.startswith("# "):
+                                metadata["title"] = line.lstrip("#").strip()
+                                break
+                except Exception as e:
+                    frappe.log_error(f"Error parsing metadata for {file}: {str(e)}", "SMRITI Enablement Dynamic Scan")
+                
+            # Override category if not specified in frontmatter
+            if "category" not in metadata or metadata["category"] == "Executive Resources":
+                if "battlecard" in file_basename or "objection" in file_basename or "discovery" in file_basename or "positioning" in file_basename or "demo_script" in file_basename:
+                    metadata["category"] = "Sales Resources"
+                elif "dataset" in file_basename:
+                    metadata["category"] = "Demo Center"
+                elif "certified" in file_basename:
+                    metadata["category"] = "Certification"
+                    metadata["audience"] = "internal"
+                    
+            assets.append(metadata)
+            
+    # Cache scan results in Redis
+    frappe.cache().set_value(cache_key, json.dumps(assets), expires_in_sec=86400)
+    
+    return assets
 

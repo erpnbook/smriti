@@ -412,7 +412,12 @@ scheduler_events = {
         "smriti_retail_os.cge.service.cge_service.generate_all_liability_snapshots",
         "smriti_retail_os.cge.service.cge_service.execute_snapshot_cleanup",
         "smriti_retail_os.cge.service.cge_service.cleanup_expired_budget_reservations",
-        "smriti_retail_os.reports_api.execute_audit_retention_archival"
+        "smriti_retail_os.reports_api.execute_audit_retention_archival",
+        # ── Sprint 3B: Trial Operations (isolated — each has own try/except) ──
+        "smriti_retail_os.api.trial_operations_api.expire_trials",
+        "smriti_retail_os.api.trial_operations_api.send_trial_reminders",
+        "smriti_retail_os.api.trial_operations_api.check_trial_health",
+        "smriti_retail_os.api.trial_operations_api.cleanup_failed_provisioning",
     ],
     "cron": {
         "*/30 * * * *": [
@@ -685,6 +690,11 @@ website_route_rules = [
         # Standalone Dedicated Sizewise Item Master CRUD — served from www/sizewise_item.html + www/sizewise_item.py
         "from_route": "/sizewise_item",
         "to_route": "sizewise_item"
+    },
+    {
+        # Standalone Sizewise B2B Tax Invoice — served from www/sizewise_invoice.html + www/sizewise_invoice.py
+        "from_route": "/sizewise_invoice",
+        "to_route": "sizewise_invoice"
     },
     {
         # Standalone Security & Workflow Center — served from www/security.html + www/security.py

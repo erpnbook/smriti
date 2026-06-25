@@ -48,17 +48,17 @@ def get_active_company():
     return company
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def get_business_type():
+    if frappe.session.user == "Guest":
+        frappe.throw(_("Not permitted"), frappe.PermissionError)
     try:
         company = frappe.defaults.get_user_default("company") or (frappe.get_all("Company", limit=1)[0].name if frappe.get_all("Company", limit=1) else None)
         if company and frappe.db.exists("SMRITI Company Settings", company):
             bt = frappe.db.get_value("SMRITI Company Settings", company, "custom_business_type")
             return bt or "Footwear"
     except Exception:
-        import sys
-        _frappe = sys.modules.get('frappe')
-        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in company_api.py:58: {sys.exc_info()[1]}")
+        frappe.log_error(frappe.get_traceback(), "SMRITI: get_business_type failed")
     return "Footwear"
 
 @frappe.whitelist()

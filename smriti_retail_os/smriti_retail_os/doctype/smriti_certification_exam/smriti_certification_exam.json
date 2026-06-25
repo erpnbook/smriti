@@ -1,0 +1,110 @@
+{
+ "actions": [],
+ "creation": "2026-06-23 08:35:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "exam_id",
+  "title",
+  "source_document",
+  "passing_score",
+  "duration_minutes",
+  "active"
+ ],
+ "fields": [
+  {
+   "fieldname": "exam_id",
+   "fieldtype": "Data",
+   "label": "Exam ID",
+   "reqd": 1,
+   "in_list_view": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "label": "Title",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "source_document",
+   "fieldtype": "Data",
+   "label": "Source Document",
+   "reqd": 1
+  },
+  {
+   "fieldname": "passing_score",
+   "fieldtype": "Percent",
+   "label": "Passing Score (%)",
+   "default": 80.0,
+   "reqd": 1
+  },
+  {
+   "fieldname": "duration_minutes",
+   "fieldtype": "Int",
+   "label": "Duration (Minutes)",
+   "default": 60,
+   "reqd": 1
+  },
+  {
+   "fieldname": "active",
+   "fieldtype": "Check",
+   "label": "Active",
+   "default": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-06-23 08:35:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Certification Exam",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1
+  },
+  {
+   "role": "SMRITI Store Manager",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0
+  },
+  {
+   "role": "Channel Manager",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0
+  },
+  {
+   "role": "Stock Manager",
+   "read": 1,
+   "write": 0,
+   "create": 0,
+   "delete": 0
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "exam_id",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 1,
+ "custom": 0
+}

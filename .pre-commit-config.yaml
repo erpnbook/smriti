@@ -63,7 +63,16 @@ repos:
                 smriti_retail_os/public/js/lib/.*
             )$
 
+  - repo: local
+    hooks:
+      - id: validate-html-templates
+        name: Validate HTML Templates (TEMPLATE-01 Compliance)
+        entry: python scripts/validate_html_templates.py
+        language: python
+        files: '\.html$'
+
 ci:
     autoupdate_schedule: weekly
     skip: []
     submodules: false
+

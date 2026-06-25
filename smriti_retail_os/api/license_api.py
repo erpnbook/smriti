@@ -67,9 +67,7 @@ def get_license_status():
         suffix = doc.license_key_suffix or ""
         summary["license_key_masked"] = (f"****-****-****-{suffix}") if suffix else ("****-****-****-****" if doc.license_key else "Not Set")
     except Exception:
-        import sys
-        _frappe = sys.modules.get('frappe')
-        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in api/license_api.py:69: {sys.exc_info()[1]}")
+        frappe.log_error(frappe.get_traceback(), "SMRITI: Exception in api/license_api.py")
 
     return summary
 

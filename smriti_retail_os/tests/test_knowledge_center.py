@@ -30,6 +30,7 @@ class TestKnowledgeCenter(unittest.TestCase):
         frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-F-001", "TST-F-002", "TST-FORM-RANK-MATCH"]]})
         frappe.db.delete("SMRITI Knowledge Asset", {"asset_code": ["in", ["TST-T-001", "TST-T-002", "TST-F-001", "TST-F-002", "TST-TERM-RANK-MATCH", "TST-FORM-RANK-MATCH"]]})
         frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": ["in", ["TST-T-001", "TST-F-001"]]})
+        frappe.db.delete("SMRITI PSV Exam Attempt", {"user": ["in", ["test@example.com", "Administrator"]]})
         frappe.db.commit()
         frappe.cache().delete_value(REDIS_INDEX_KEY)
 
@@ -38,6 +39,7 @@ class TestKnowledgeCenter(unittest.TestCase):
         frappe.db.delete("SMRITI Formula Definition", {"formula_id": ["in", ["TST-F-001", "TST-F-002", "TST-FORM-RANK-MATCH"]]})
         frappe.db.delete("SMRITI Knowledge Asset", {"asset_code": ["in", ["TST-T-001", "TST-T-002", "TST-F-001", "TST-F-002", "TST-TERM-RANK-MATCH", "TST-FORM-RANK-MATCH"]]})
         frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": ["in", ["TST-T-001", "TST-F-001"]]})
+        frappe.db.delete("SMRITI PSV Exam Attempt", {"user": ["in", ["test@example.com", "Administrator"]]})
         frappe.db.commit()
         frappe.cache().delete_value(REDIS_INDEX_KEY)
 
@@ -382,5 +384,229 @@ class TestKnowledgeCenter(unittest.TestCase):
         self.assertIn('href="formula:INV-001"', html_content)
         self.assertIn('href="formula:INV-004"', html_content)
         self.assertIn('href="formula:TRF-001"', html_content)
+
+    def test_dynamic_registry_scan(self):
+        from smriti_retail_os.services.knowledge_service import get_assets
+        from smriti_retail_os.api.help_api import get_document_registry
+
+        # Ensure dynamic assets are discovered
+        assets = get_assets(module="PSV", category="Enablement")
+        self.assertGreater(len(assets), 0)
+        
+        # Verify psv_demo_dataset metadata structure
+        demo_asset = next((a for a in assets if a["name"] == "psv_demo_dataset"), None)
+        self.assertIsNotNone(demo_asset)
+        self.assertEqual(demo_asset["category"], "Demo Center")
+        self.assertEqual(demo_asset["document_type"], "enablement")
+
+        # Verify certified guide metadata structure
+        cert_asset = next((a for a in assets if a["name"] == "psv_certified_planner_guide"), None)
+        self.assertIsNotNone(cert_asset)
+        self.assertEqual(cert_asset["category"], "Certification")
+        self.assertEqual(cert_asset["document_type"], "certification")
+
+        # Verify registry integrates them
+        registry = get_document_registry()
+        self.assertIn("psv_demo_dataset", registry)
+        self.assertIn("psv_certified_planner_guide", registry)
+
+    def test_download_enablement_file(self):
+        from smriti_retail_os.api.help_api import download_enablement_file
+
+        # Clean previous responses
+        if hasattr(frappe.local, "response"):
+            frappe.local.response = frappe._dict()
+
+        frappe.set_user('Administrator')
+        download_enablement_file(file_key="psv_demo_dataset")
+        
+        self.assertEqual(frappe.local.response.filename, "psv_demo_dataset.csv")
+        self.assertEqual(frappe.local.response.type, "download")
+        self.assertIsNotNone(frappe.local.response.filecontent)
+
+        # Test ZIP bundle generation
+        frappe.local.response = frappe._dict()
+        download_enablement_file(file_key="zip_bundle")
+        self.assertEqual(frappe.local.response.filename, "SMRITI_PSV_Enablement_Pack.zip")
+        self.assertEqual(frappe.local.response.type, "download")
+        self.assertIsNotNone(frappe.local.response.filecontent)
+
+    def test_download_enablement_file_security(self):
+        from smriti_retail_os.api.help_api import download_enablement_file
+
+        # 1. Non-permitted role (Guest)
+        frappe.set_user('Guest')
+        with self.assertRaises(frappe.PermissionError):
+            download_enablement_file(file_key="psv_demo_dataset")
+
+        # 2. Path Traversal checking using directory traversal sequences
+        frappe.set_user('Administrator')
+        
+        # Using bad key formats
+        with self.assertRaises(frappe.ValidationError):
+            download_enablement_file(file_key="../etc/passwd")
+
+        with self.assertRaises(frappe.ValidationError):
+            download_enablement_file(file_key="..\\..\\boot.py")
+
+        # Let's mock a registered asset containing path traversal to test realpath containment check
+        from smriti_retail_os.api.help_api import DOCUMENT_REGISTRY
+        original_registry = DOCUMENT_REGISTRY.copy()
+        try:
+            # Inject malicious asset
+            DOCUMENT_REGISTRY["malicious_asset"] = {
+                "name": "malicious_asset",
+                "title": "Malicious",
+                "document_type": "enablement",
+                "file_name": "../../boot.py" # Traversal filename but without path markers in file_key
+            }
+            # This should raise ValidationError due to filename checks
+            with self.assertRaises(frappe.ValidationError):
+                download_enablement_file(file_key="malicious_asset")
+        finally:
+            # Restore registry
+            import smriti_retail_os.api.help_api
+            smriti_retail_os.api.help_api.DOCUMENT_REGISTRY = original_registry
+
+    def test_routing_redirects(self):
+        from smriti_retail_os.boot import check_desk_access
+        import werkzeug.routing.exceptions
+
+        # Mock request path
+        original_request = getattr(frappe.local, "request", None)
+        
+        class MockRequest:
+            def __init__(self, path):
+                self.path = path
+                self.cookies = {}
+
+        try:
+            frappe.local.request = MockRequest(path="/app/knowledge-center/psv")
+            with self.assertRaises(werkzeug.routing.exceptions.RequestRedirect) as context:
+                check_desk_access()
+            self.assertEqual(context.exception.new_url, "/smriti-help?tab=enablement")
+
+            frappe.local.request = MockRequest(path="/enablement/psv/")
+            with self.assertRaises(werkzeug.routing.exceptions.RequestRedirect) as context:
+                check_desk_access()
+            self.assertEqual(context.exception.new_url, "/smriti-help?tab=enablement")
+        finally:
+            frappe.local.request = original_request
+
+    def test_exam_attempt_workflow(self):
+        from smriti_retail_os.api.help_api import start_psv_exam, submit_psv_exam
+        
+        # 1. Start exam
+        frappe.set_user('Administrator')
+        res = start_psv_exam(exam_id="level_1")
+        self.assertEqual(res["status"], "In Progress")
+        self.assertIsNotNone(res["attempt_id"])
+        self.assertGreater(len(res["questions"]), 0)
+        
+        # 2. Check that answers are omitted in start payload
+        for q in res["questions"]:
+            self.assertNotIn("answer", q)
+            self.assertNotIn("correct_answer", q)
+            
+        # 3. Submit exam with correct answers (from guide parsing to get 100% score)
+        from smriti_retail_os.api.help_api import _parse_answer_key
+        answer_key = _parse_answer_key("psv_certified_planner_guide")
+        
+        # Format submission
+        answers_json = json.dumps({str(k): v for k, v in answer_key.items()})
+        sub_res = submit_psv_exam(attempt_id=res["attempt_id"], answers_json=answers_json)
+        
+        self.assertEqual(sub_res["status"], "Passed")
+        self.assertEqual(sub_res["score"], 100.0)
+        self.assertIsNotNone(sub_res["certificate_hash"])
+        
+        # Reset user
+        frappe.set_user('Administrator')
+
+    def test_single_active_attempt_enforcement(self):
+        from smriti_retail_os.api.help_api import start_psv_exam
+        frappe.set_user('Administrator')
+        
+        # First attempt starts successfully
+        res1 = start_psv_exam(exam_id="level_1")
+        self.assertEqual(res1["status"], "In Progress")
+        
+        # Second attempt should return the active attempt
+        res2 = start_psv_exam(exam_id="level_1")
+        self.assertEqual(res2["attempt_id"], res1["attempt_id"])
+        self.assertEqual(res2["status"], "In Progress")
+
+        # Let's try creating a document directly to test block in validate() hook
+        from frappe.exceptions import ValidationError
+        attempt_doc = frappe.get_doc({
+            "doctype": "SMRITI PSV Exam Attempt",
+            "user": frappe.session.user,
+            "exam_id": "level_1",
+            "start_time": frappe.utils.now_datetime(),
+            "status": "In Progress"
+        })
+        with self.assertRaises(ValidationError):
+            attempt_doc.insert()
+
+        frappe.set_user('Administrator')
+
+    def test_cheat_prevention_answer_omission(self):
+        from smriti_retail_os.api.help_api import start_psv_exam
+        frappe.set_user('Administrator')
+        res = start_psv_exam(exam_id="level_1")
+        for q in res["questions"]:
+            self.assertNotIn("answer", q)
+            self.assertNotIn("correct_answer", q)
+            self.assertNotIn("correct", q)
+
+    def test_time_limit_expiration(self):
+        from smriti_retail_os.api.help_api import submit_psv_exam
+        frappe.set_user('Administrator')
+        
+        # Create an attempt that is already expired (e.g. 65 minutes ago)
+        from datetime import timedelta
+        start_time = frappe.utils.now_datetime() - timedelta(minutes=65)
+        
+        attempt = frappe.get_doc({
+            "doctype": "SMRITI PSV Exam Attempt",
+            "user": frappe.session.user,
+            "exam_id": "level_1",
+            "start_time": start_time,
+            "status": "In Progress"
+        })
+        attempt.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        # Submit this expired attempt
+        res = submit_psv_exam(attempt_id=attempt.name, answers_json=json.dumps({"1": "A"}))
+        self.assertEqual(res["status"], "Failed")
+        self.assertEqual(res["score"], 0.0)
+        self.assertIn("time limit", res["reason"].lower())
+
+    def test_certificate_verification_hash(self):
+        from smriti_retail_os.api.help_api import start_psv_exam, submit_psv_exam, verify_psv_certificate
+        frappe.set_user('Administrator')
+        
+        res = start_psv_exam(exam_id="level_1")
+        from smriti_retail_os.api.help_api import _parse_answer_key
+        answer_key = _parse_answer_key("psv_certified_planner_guide")
+        answers_json = json.dumps({str(k): v for k, v in answer_key.items()})
+        sub_res = submit_psv_exam(attempt_id=res["attempt_id"], answers_json=answers_json)
+        
+        cert_hash = sub_res["certificate_hash"]
+        self.assertIsNotNone(cert_hash)
+        
+        # Call verification endpoint
+        verify_res = verify_psv_certificate(certificate_hash=cert_hash)
+        self.assertTrue(verify_res["valid"])
+        self.assertEqual(verify_res["attempt_id"], res["attempt_id"])
+        self.assertEqual(verify_res["score"], 100.0)
+        
+        # Check invalid hash
+        verify_res_bad = verify_psv_certificate(certificate_hash="invalid_hash_code_here")
+        self.assertFalse(verify_res_bad["valid"])
+        self.assertIn("invalid", verify_res_bad["error"].lower())
+
+
 
 

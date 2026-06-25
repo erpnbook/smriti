@@ -1,0 +1,179 @@
+{
+ "actions": [],
+ "creation": "2026-06-23 08:40:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "attempt_id",
+  "user",
+  "exam_id",
+  "start_time",
+  "end_time",
+  "score",
+  "correct_answers",
+  "total_questions",
+  "status",
+  "submitted_answers_json",
+  "certificate_hash"
+ ],
+ "fields": [
+  {
+   "fieldname": "attempt_id",
+   "fieldtype": "Data",
+   "label": "Attempt ID",
+   "reqd": 1,
+   "in_list_view": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "exam_id",
+   "fieldtype": "Link",
+   "label": "Exam Reference",
+   "options": "SMRITI Certification Exam",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "start_time",
+   "fieldtype": "Datetime",
+   "label": "Start Time",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "end_time",
+   "fieldtype": "Datetime",
+   "label": "End Time"
+  },
+  {
+   "fieldname": "score",
+   "fieldtype": "Percent",
+   "label": "Score (%)"
+  },
+  {
+   "fieldname": "correct_answers",
+   "fieldtype": "Int",
+   "label": "Correct Answers"
+  },
+  {
+   "fieldname": "total_questions",
+   "fieldtype": "Int",
+   "label": "Total Questions"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "\nIn Progress\nPassed\nFailed",
+   "default": "In Progress",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "submitted_answers_json",
+   "fieldtype": "Long Text",
+   "label": "Submitted Answers (JSON)"
+  },
+  {
+   "fieldname": "certificate_hash",
+   "fieldtype": "Data",
+   "label": "Certificate Hash"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-06-23 08:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI PSV Exam Attempt",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1
+  },
+  {
+   "role": "SMRITI Store Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0
+  },
+  {
+   "role": "Sales Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0
+  },
+  {
+   "role": "Channel Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0
+  },
+  {
+   "role": "Stock Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0
+  },
+  {
+   "role": "Accounts Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0
+  },
+  {
+   "role": "SMRITI Cashier",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0
+  },
+  {
+   "role": "Sales User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0
+  },
+  {
+   "role": "SMRITI System Admin",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "SMRITI Auditor",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 0
+  }
+ ],
+ "quick_entry": 0,
+ "sort_field": "start_time",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "custom": 0
+}

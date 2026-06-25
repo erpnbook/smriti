@@ -1,21 +1,15 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/license/manager.py
-# @description: SMRITI Manager — retail operating system module.
-# @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @date: 2026-05-28
-# @version: 1.0.0
-# @license: MIT
-# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
-#
-# -*- coding: utf-8 -*-
-#
-# @file: smriti_retail_os/license/manager.py
 # @description: SMRITI LicenseManager — central authority for all feature gating.
 #               The ONLY place in the codebase allowed to read license_status directly.
 #               All other modules MUST call check_feature() from here.
 # @authority: docs/architecture/licensing/SMRITI_LICENSE_ARCHITECTURE_V1.md §7
-# @version: 1.0.0
+# @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+# @date: 2026-05-28
+# @version: 1.2.14
+# @license: MIT
+# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
 import frappe

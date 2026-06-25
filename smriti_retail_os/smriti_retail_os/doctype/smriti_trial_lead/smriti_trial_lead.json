@@ -83,7 +83,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Status",
-   "options": "New\nContacted\nDemo Scheduled\nConverted\nTrial Started\nLost"
+   "options": "New\nContacted\nDemo Scheduled\nConverted\nTrial Started\nExpired\nConverted to Paid\nLost"
   },
   {
    "fieldname": "submitted_at",
@@ -100,7 +100,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-24 22:42:25.740414",
+ "modified": "2026-06-25 05:30:00.000000",
  "modified_by": "Administrator",
  "module": "SMRITI Retail OS",
  "name": "SMRITI Trial Lead",

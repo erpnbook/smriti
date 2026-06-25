@@ -29,7 +29,8 @@ FORMULA_INDEX = {
     "VAR-001",
     "KGF-001",
     "SMRITI-SCAN-REL-01",
-    "SMRITI-PRN-SCORE-01"
+    "SMRITI-PRN-SCORE-01",
+    "TR-HLTH-01"
 }
 
 @frappe.whitelist()
@@ -150,7 +151,7 @@ def calculate_kgf_coverage():
     """
     Calculates KGF Coverage % based on total expected dashboard metrics (12).
     """
-    total_kpis = 13
+    total_kpis = 14
     registered_kpis = frappe.db.count(
         "SMRITI Formula Definition",
         {

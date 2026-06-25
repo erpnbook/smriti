@@ -114,11 +114,11 @@ class TestFormulaRegistry(unittest.TestCase):
         from smriti_retail_os.patches.seed_telemetry_meta import execute as seed_telemetry
         seed_telemetry()
 
-        # Check standard 13 formula IDs are present and active
+        # Check standard 14 formula IDs are present and active
         seeded_ids = [
             "INV-001", "INV-002", "INV-003", "FRC-001", "OHS-001",
             "TRF-001", "SAL-001", "AUD-001", "INV-004", "VAR-001", "KGF-001",
-            "SMRITI-PRN-SCORE-01", "SMRITI-SCAN-REL-01"
+            "SMRITI-PRN-SCORE-01", "SMRITI-SCAN-REL-01", "TR-HLTH-01"
         ]
 
         for fid in seeded_ids:

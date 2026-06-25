@@ -226,6 +226,10 @@ def check_desk_access():
             new_path = path.replace("/app/", "/", 1)
             raise werkzeug.routing.exceptions.RequestRedirect(new_path)
 
+        # ─── SMRITI Policy: Redirect PSV Enablement shortcut paths to SMRITI Help Tab
+        if path in ("/app/knowledge-center/psv", "/app/enablement/psv", "/knowledge-center/psv", "/enablement/psv") or path.startswith(("/app/knowledge-center/psv/", "/app/enablement/psv/", "/knowledge-center/psv/", "/enablement/psv/")):
+            raise werkzeug.routing.exceptions.RequestRedirect("/smriti-help?tab=enablement")
+
         # ─── SMRITI Policy: Redirect any remaining /desk or /desk/ paths to SMRITI
         if path == "/desk" or path.startswith("/desk/"):
             raise werkzeug.routing.exceptions.RequestRedirect("/smriti")
@@ -376,7 +380,9 @@ def health_check():
     GET /api/method/smriti_retail_os.boot.health_check
     Returns system status — useful during deployments.
     """
-    status = {"status": "ok", "app": "SMRITI Retail OS", "version": "1.0.0"}
+    from smriti_retail_os import __version__
+    status = {"status": "ok", "app": "SMRITI Retail OS", "version": __version__}
+
     try:
         # Check DB connection
         frappe.db.sql("SELECT 1")

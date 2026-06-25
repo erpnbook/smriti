@@ -535,3 +535,24 @@ def calculate_engagement_score(purchases, net_revenue, returns):
     return_ratio = returns / purchases if purchases > 0 else 0
     score -= min(return_ratio * 30, 20)
     return max(0.0, min(100.0, score))
+
+
+def on_invoice_submit(doc, method=None):
+    if doc.customer:
+        mark_dirty(doc.customer, source="Sales Invoice", source_document=doc.name)
+
+
+def on_invoice_cancel(doc, method=None):
+    if doc.customer:
+        mark_dirty(doc.customer, source="Sales Invoice", source_document=doc.name)
+
+
+def on_pos_invoice_submit(doc, method=None):
+    if doc.customer:
+        mark_dirty(doc.customer, source="POS Invoice", source_document=doc.name)
+
+
+def on_pos_invoice_cancel(doc, method=None):
+    if doc.customer:
+        mark_dirty(doc.customer, source="POS Invoice", source_document=doc.name)
+

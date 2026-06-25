@@ -59,18 +59,17 @@ def _psv_upload_lock(party_stock_account):
     try:
         yield
     finally:
-        # Always release the lock — even on exception
+        # Always release the lock — even on exception.
+        # Lock-release failures must NOT propagate: this is a cleanup path.
         try:
             cache.delete(lock_key)
         except Exception:
-            import sys
-            _frappe = sys.modules.get('frappe')
-            if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in psv_service.py:65: {sys.exc_info()[1]}")
+            pass  # Lock already expired or Redis unavailable — safe to ignore
 
 
 # --- UNIVERSAL TRANSACTION ENGINE ---
 
-def create_psv_transaction(psa, transaction_type, items, company=None, reference_doctype=None, reference_name=None, remarks=None, posting_date=None):
+def create_psv_transaction(psa, transaction_type, items, company=None, reference_doctype=None, reference_name=None, remarks=None, posting_date=None, opening_import_batch=None):
     if not company:
         company = frappe.db.get_value("SMRITI Party Stock Account", psa, "company")
         
@@ -96,6 +95,8 @@ def create_psv_transaction(psa, transaction_type, items, company=None, reference
     doc.reference_doctype = reference_doctype
     doc.reference_name = reference_name
     doc.remarks = remarks
+    if opening_import_batch:
+        doc.opening_import_batch = opening_import_batch
     if posting_date:
         doc.posting_date = posting_date
         
@@ -357,10 +358,15 @@ def process_physical_snapshot_cancel(doc):
         frappe.get_doc("SMRITI PSV Transaction", tx_name).cancel()
 
 def import_opening_balances(company, party_stock_account, items_data):
-    # INT-004 FIX: Use a date-scoped pseudo-reference as the fingerprint source so
-    # that calling this function twice for the same PSA on the same day is idempotent.
-    from frappe.utils import today
-    pseudo_ref_name = f"OPENING-{party_stock_account}-{today()}"
+    import uuid
+    from frappe.utils import now_datetime
+
+    timestamp = now_datetime().strftime("%Y%m%d%H%M%S")
+    suffix = uuid.uuid4().hex[:6]
+    batch_id = frappe.generate_hash(length=8)
+
+    pseudo_ref_name = f"OPENING-{party_stock_account}-{timestamp}-{suffix}"
+    remarks = f"Initial Opening Balance Import - Batch: {batch_id}"
 
     return create_psv_transaction(
         psa=party_stock_account,
@@ -369,7 +375,8 @@ def import_opening_balances(company, party_stock_account, items_data):
         company=company,
         reference_doctype="Opening Balance Import",
         reference_name=pseudo_ref_name,
-        remarks="Initial Opening Balance Import"
+        remarks=remarks,
+        opening_import_batch=batch_id
     )
 
 @frappe.whitelist()

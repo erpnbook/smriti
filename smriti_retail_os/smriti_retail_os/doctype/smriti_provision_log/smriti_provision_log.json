@@ -1,0 +1,124 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:PLOG-{YYYY}-{######}",
+ "creation": "2026-06-25 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "run_id",
+  "step_sequence",
+  "column_break_1",
+  "activation",
+  "operator",
+  "section_break_step",
+  "step_name",
+  "step_status",
+  "column_break_2",
+  "step_time",
+  "section_break_msg",
+  "step_message"
+ ],
+ "fields": [
+  {
+   "fieldname": "run_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Run ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "step_sequence",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Step #",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "activation",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Activation",
+   "options": "SMRITI Trial Activation",
+   "reqd": 1
+  },
+  {
+   "fieldname": "operator",
+   "fieldtype": "Link",
+   "label": "Operator",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_step",
+   "fieldtype": "Section Break",
+   "label": "Step Details"
+  },
+  {
+   "fieldname": "step_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Step Name",
+   "read_only": 1
+  },
+  {
+   "default": "Pass",
+   "fieldname": "step_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Step Status",
+   "options": "Pass\nFail\nSkipped\nPending"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "step_time",
+   "fieldtype": "Datetime",
+   "label": "Step Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_msg",
+   "fieldtype": "Section Break",
+   "label": "Message / Error"
+  },
+  {
+   "fieldname": "step_message",
+   "fieldtype": "Small Text",
+   "label": "Step Message"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-06-25 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Provision Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 1,
+   "print": 0,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 0,
+   "write": 0
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "step_time",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 0
+}

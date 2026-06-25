@@ -33,6 +33,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    min-height: var(--smriti-toolbar-height); /* THEME-003: density token */
     background: var(--smriti-color-bg-primary) !important;
     border: 1px solid var(--smriti-color-border-default) !important;
     padding: var(--smriti-spacing-padding-y) var(--smriti-spacing-xl);
@@ -176,6 +177,7 @@
     border-radius: var(--smriti-radius-md) !important;
     padding: var(--smriti-spacing-sm) var(--smriti-spacing-md) !important;
     height: auto !important;
+    min-height: var(--smriti-form-field-height) !important; /* THEME-003: density token */
     box-shadow: none !important;
     transition: box-shadow var(--smriti-t-base) var(--smriti-ease), border-color var(--smriti-t-base) var(--smriti-ease) !important;
 }
@@ -229,7 +231,7 @@
     background: var(--smriti-color-bg-primary) !important;
     border: 1px solid var(--smriti-color-border-default) !important;
     border-radius: var(--smriti-radius-md);
-    padding: var(--smriti-spacing-lg);
+    padding: var(--smriti-spacing-card); /* THEME-003: density token (was spacing-lg) */
     flex-grow: 1;
     overflow-y: auto;
     max-height: 520px;
@@ -253,13 +255,15 @@
     font-size: var(--smriti-font-size-sm);
     letter-spacing: 0.5px;
     padding: var(--smriti-spacing-md) var(--smriti-spacing-sm);
+    min-height: var(--smriti-table-row-height); /* THEME-003: density token */
 }
 
 #smriti-pur-table td {
     border-color: var(--smriti-color-border-default) !important;
     color: var(--smriti-color-text-primary) !important;
     vertical-align: middle;
-    padding: var(--smriti-spacing-sm);
+    padding: var(--smriti-spacing-padding-y) var(--smriti-spacing-padding-x); /* THEME-003: density tokens (was spacing-sm) */
+    min-height: var(--smriti-table-row-height); /* THEME-003: density token */
 }
 
 /* ── Grid inputs ── */
@@ -342,7 +346,7 @@
     background: var(--smriti-color-bg-primary) !important;
     border: 1px solid var(--smriti-color-border-default) !important;
     border-radius: var(--smriti-radius-md);
-    padding: var(--smriti-spacing-lg);
+    padding: var(--smriti-spacing-card); /* THEME-003: density token (was spacing-lg) */
     display: flex;
     flex-direction: column;
     gap: var(--smriti-spacing-padding-y);
@@ -358,6 +362,7 @@
     letter-spacing: 0.5px;
     border-bottom: 1px solid var(--smriti-color-border-default);
     padding-bottom: var(--smriti-spacing-sm);
+    min-height: var(--smriti-card-header-height); /* THEME-003: density token */
     display: inline-flex;
     align-items: center;
 }

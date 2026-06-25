@@ -43,6 +43,10 @@ class TestPSV(FrappeTestCase):
             frappe.db.delete("POS Invoice", {"name": ["in", pos_invoice_names]})
 
         frappe.db.commit()
+        try:
+            frappe.cache().delete_keys("psv:*")
+        except Exception:
+            pass
 
         # 1. Resolve or Create basic link dependencies
         self.uom = frappe.db.exists("UOM", "Nos") or frappe.db.get_value("UOM", {}, "name")
@@ -732,5 +736,65 @@ class TestPSV(FrappeTestCase):
         })
         self.assertTrue(len(cols) > 0)
         self.assertIsInstance(data, list)
+
+    def test_psv_opening_balance_collision_prevention(self):
+        # Test 1 — Same Day Reimport: consecutive imports
+        init_bal = get_party_balance(self.account_name, self.item)
+        
+        res1 = import_opening_balances(self.company, self.account_name, [{"item_code": self.item, "qty": 10.0}])
+        self.assertTrue(res1)
+        
+        res2 = import_opening_balances(self.company, self.account_name, [{"item_code": self.item, "qty": 20.0}])
+        self.assertTrue(res2)
+        
+        self.assertNotEqual(res1, res2)
+        
+        tx1 = frappe.get_doc("SMRITI PSV Transaction", res1)
+        tx2 = frappe.get_doc("SMRITI PSV Transaction", res2)
+        
+        self.assertNotEqual(tx1.reference_name, tx2.reference_name)
+        self.assertNotEqual(tx1.opening_import_batch, tx2.opening_import_batch)
+        self.assertIn(tx1.opening_import_batch, tx1.remarks)
+        self.assertIn(tx2.opening_import_batch, tx2.remarks)
+        
+        new_bal = get_party_balance(self.account_name, self.item)
+        self.assertEqual(new_bal - init_bal, 30.0)
+
+    def test_psv_opening_balance_high_concurrency(self):
+        # Test 2 — High Concurrency: 10 parallel/consecutive imports
+        # Test 3 — Audit Traceability: verify audit components
+        init_bal = get_party_balance(self.account_name, self.item)
+        
+        num_imports = 10
+        tx_names = []
+        
+        for i in range(num_imports):
+            tx_name = import_opening_balances(
+                self.company,
+                self.account_name,
+                [{"item_code": self.item, "qty": 5.0}]
+            )
+            tx_names.append(tx_name)
+                
+        self.assertEqual(len(tx_names), num_imports)
+        self.assertEqual(len(set(tx_names)), num_imports)
+        
+        batch_ids = []
+        for name in tx_names:
+            tx = frappe.get_doc("SMRITI PSV Transaction", name)
+            batch_ids.append(tx.opening_import_batch)
+            
+            # Pattern validation
+            self.assertTrue(tx.reference_name.startswith(f"OPENING-{self.account_name}-"))
+            # Audit field validation
+            self.assertEqual(tx.owner, frappe.session.user or "Administrator")
+            self.assertTrue(tx.creation)
+            self.assertTrue(tx.opening_import_batch)
+            
+        self.assertEqual(len(set(batch_ids)), num_imports)
+        
+        new_bal = get_party_balance(self.account_name, self.item)
+        self.assertEqual(new_bal - init_bal, num_imports * 5.0)
+
 
 

@@ -1066,7 +1066,7 @@ HELP_CENTER_REGISTRY = {
         "author": {
             "name": "Jawahar R. Mallah",
             "title": _("Founder & Chief Architect, AITDL"),
-            "quote": _("Light begins with learning.")
+            "quote": _("Dynamic clienteling converts raw transaction data into personalized customer relationships.")
         },
         "content": _(
             "SMRITI Customer Intelligence Graph (CIG) is the core analytical engine for modern retail clienteling, enabling stores to dynamically evaluate customer loyalty, risk profiles, and next-purchase affinity.\n\n"
@@ -1214,16 +1214,29 @@ def get_governance_data():
     return get_governance_stats()
 
 
+def _get_unfiltered_document_registry():
+    combined = DOCUMENT_REGISTRY.copy()
+    from smriti_retail_os.services.knowledge_service import get_assets
+    try:
+        dynamic_assets = get_assets(module="PSV", category="Enablement")
+        for asset in dynamic_assets:
+            combined[asset["name"]] = asset
+    except Exception:
+        pass
+    return combined
+
+
 @frappe.whitelist()
 def get_document_registry():
     """
-    Exposes SMRITI DOCUMENT_REGISTRY.
+    Exposes SMRITI DOCUMENT_REGISTRY combined with dynamic assets.
     Filters out visibility: admin documents for non-System Managers.
     """
     is_sys_admin = "System Manager" in frappe.get_roles(frappe.session.user)
     
+    unfiltered = _get_unfiltered_document_registry()
     filtered_registry = {}
-    for key, doc in DOCUMENT_REGISTRY.items():
+    for key, doc in unfiltered.items():
         if doc.get("visibility") == "admin" and not is_sys_admin:
             continue
         filtered_registry[key] = doc
@@ -1246,7 +1259,7 @@ def get_manual_html(volume_name=None):
     if not volume_name:
         frappe.throw(_("Document name is required"), frappe.ValidationError)
         
-    registry_entry = DOCUMENT_REGISTRY.get(volume_name)
+    registry_entry = _get_unfiltered_document_registry().get(volume_name)
     if not registry_entry:
         frappe.throw(_("Document '{0}' is not registered").format(volume_name), frappe.DoesNotExistError)
         
@@ -1263,6 +1276,10 @@ def get_manual_html(volume_name=None):
         sub_dir = "about"
     elif doc_type == "governance":
         sub_dir = "governance"
+    elif doc_type == "enablement":
+        sub_dir = "enablement"
+    elif doc_type == "certification":
+        sub_dir = "certification"
     else:
         sub_dir = "user_manual"
         
@@ -1321,3 +1338,698 @@ def get_knowledge_assets():
         "formulas": formulas,
         "terms": terms
     }
+
+
+# =============================================================================
+# SMRITI Certification Engine & Enablement Downloads APIs
+# =============================================================================
+
+QUESTION_CHAPTER_MAP = {
+    1: {"chapter_number": 1, "chapter_title": "Understanding the Distribution Visibility Gap", "section_slug": "chapter-1-understanding-the-distribution-visibility-gap"},
+    2: {"chapter_number": 1, "chapter_title": "Understanding the Distribution Visibility Gap", "section_slug": "chapter-1-understanding-the-distribution-visibility-gap"},
+    3: {"chapter_number": 2, "chapter_title": "Understanding Weeks of Cover (WOC)", "section_slug": "chapter-2-understanding-weeks-of-cover-woc"},
+    4: {"chapter_number": 2, "chapter_title": "Understanding Weeks of Cover (WOC)", "section_slug": "chapter-2-understanding-weeks-of-cover-woc"},
+    5: {"chapter_number": 2, "chapter_title": "Understanding Weeks of Cover (WOC)", "section_slug": "chapter-2-understanding-weeks-of-cover-woc"},
+    6: {"chapter_number": 3, "chapter_title": "Understanding Sell-Through %", "section_slug": "chapter-3-understanding-sell-through"},
+    7: {"chapter_number": 3, "chapter_title": "Understanding Sell-Through %", "section_slug": "chapter-3-understanding-sell-through"},
+    8: {"chapter_number": 4, "chapter_title": "Reorder Planning", "section_slug": "chapter-4-reorder-planning"},
+    9: {"chapter_number": 4, "chapter_title": "Reorder Planning", "section_slug": "chapter-4-reorder-planning"},
+    10: {"chapter_number": 5, "chapter_title": "Stock Transfer Decisions", "section_slug": "chapter-5-stock-transfer-decisions"},
+    11: {"chapter_number": 6, "chapter_title": "Exception Handling", "section_slug": "chapter-6-exception-handling"},
+    12: {"chapter_number": 6, "chapter_title": "Exception Handling", "section_slug": "chapter-6-exception-handling"},
+    13: {"chapter_number": 7, "chapter_title": "Capital Efficiency", "section_slug": "chapter-7-capital-efficiency"},
+    14: {"chapter_number": 7, "chapter_title": "Capital Efficiency", "section_slug": "chapter-7-capital-efficiency"},
+    15: {"chapter_number": 6, "chapter_title": "Exception Handling", "section_slug": "chapter-6-exception-handling"},
+    16: {"chapter_number": 6, "chapter_title": "Exception Handling", "section_slug": "chapter-6-exception-handling"},
+    17: {"chapter_number": 7, "chapter_title": "Capital Efficiency", "section_slug": "chapter-7-capital-efficiency"},
+    18: {"chapter_number": 1, "chapter_title": "Understanding the Distribution Visibility Gap", "section_slug": "chapter-1-understanding-the-distribution-visibility-gap"},
+    19: {"chapter_number": 4, "chapter_title": "Reorder Planning", "section_slug": "chapter-4-reorder-planning"},
+    20: {"chapter_number": 4, "chapter_title": "Reorder Planning", "section_slug": "chapter-4-reorder-planning"}
+}
+
+def _parse_answer_key(file_key):
+    """
+    Parses the answer key from the markdown guide file.
+    """
+    import os
+    import re
+    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "..", "..", "docs"))
+    
+    file_name = f"{file_key}.md"
+    file_path = None
+    for sub in ["certification", "enablement", "user_manual", "governance"]:
+        p = os.path.join(docs_root, sub, file_name)
+        if os.path.exists(p):
+            file_path = p
+            break
+            
+    if not file_path:
+        for root, dirs, files in os.walk(docs_root):
+            if file_name in files:
+                file_path = os.path.join(root, file_name)
+                break
+                
+    if not file_path or not os.path.exists(file_path):
+        frappe.throw(_("Source guide not found for answer key parsing: {0}").format(file_key), frappe.DoesNotExistError)
+        
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+        
+    answers = {}
+    match = re.search(r"Answer Key:\s*(.*?)(?:\n\n|\n---|---|$)", content, re.IGNORECASE | re.DOTALL)
+    if match:
+        raw_key = match.group(1).strip()
+        pairs = re.findall(r"(\d+)-([A-D])", raw_key)
+        for num, ans in pairs:
+            answers[int(num)] = ans
+            
+    return answers
+
+def _parse_questions(file_key):
+    """
+    Parses questions and choices dynamically from the guide markdown file.
+    """
+    import os
+    import re
+    
+    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "..", "..", "docs"))
+    file_name = f"{file_key}.md"
+    file_path = None
+    for sub in ["certification", "enablement", "user_manual", "governance"]:
+        p = os.path.join(docs_root, sub, file_name)
+        if os.path.exists(p):
+            file_path = p
+            break
+            
+    if not file_path:
+        for root, dirs, files in os.walk(docs_root):
+            if file_name in files:
+                file_path = os.path.join(root, file_name)
+                break
+                
+    if not file_path or not os.path.exists(file_path):
+        frappe.throw(_("Source guide not found for questions parsing: {0}").format(file_key), frappe.DoesNotExistError)
+        
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+        
+    q_section_match = re.search(r"### Questions:\s*(.*?)(?:\n\n###|\n---|---|$)", content, re.IGNORECASE | re.DOTALL)
+    if not q_section_match:
+        return []
+        
+    q_section = q_section_match.group(1).strip()
+    
+    questions = []
+    lines = q_section.split("\n")
+    current_q = None
+    
+    for line in lines:
+        line_str = line.strip()
+        if not line_str:
+            continue
+            
+        q_match = re.match(r"^(\d+)\.\s*(?:\*\*)?([^\*]+)(?:\*\*)?", line_str)
+        if q_match:
+            if current_q:
+                questions.append(current_q)
+            q_num = int(q_match.group(1))
+            q_text = q_match.group(2).strip().rstrip("**").strip()
+            current_q = {
+                "question_number": q_num,
+                "question_text": q_text,
+                "choices": []
+            }
+            continue
+            
+        choice_match = re.match(r"^\*\s+([A-D])\.\s*(.+)", line_str)
+        if choice_match and current_q:
+            opt = choice_match.group(1)
+            txt = choice_match.group(2).strip().rstrip("**").strip()
+            current_q["choices"].append({
+                "key": opt,
+                "text": txt
+            })
+            
+    if current_q:
+        questions.append(current_q)
+        
+    return questions
+
+@frappe.whitelist()
+def start_psv_exam(exam_id=None):
+    """
+    Checks for active attempts, restricts roles, and returns questions with answers omitted.
+    """
+    if not exam_id:
+        exam_id = frappe.form_dict.get("exam_id")
+        
+    if not exam_id:
+        frappe.throw(_("Exam ID is required"), frappe.ValidationError)
+        
+    user_roles = frappe.get_roles(frappe.session.user)
+    if "Guest" in user_roles and len(user_roles) == 1:
+        frappe.throw(_("Guest is not permitted to take exams"), frappe.PermissionError)
+        
+    # Check if there is already an active attempt
+    active_attempt_name = frappe.db.get_value(
+        "SMRITI PSV Exam Attempt",
+        filters={
+            "user": frappe.session.user,
+            "exam_id": exam_id,
+            "status": "In Progress"
+        },
+        fieldname="name"
+    )
+    
+    if active_attempt_name:
+        attempt_doc = frappe.get_doc("SMRITI PSV Exam Attempt", active_attempt_name)
+    else:
+        attempt_doc = frappe.get_doc({
+            "doctype": "SMRITI PSV Exam Attempt",
+            "user": frappe.session.user,
+            "exam_id": exam_id,
+            "start_time": frappe.utils.now_datetime(),
+            "status": "In Progress"
+        })
+        attempt_doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+    source_document = frappe.db.get_value("SMRITI Certification Exam", exam_id, "source_document")
+    if not source_document:
+        frappe.throw(_("Exam source document not configured"), frappe.ValidationError)
+        
+    questions = _parse_questions(source_document)
+    duration_minutes = frappe.db.get_value("SMRITI Certification Exam", exam_id, "duration_minutes") or 60
+    
+    return {
+        "status": "In Progress",
+        "attempt_id": attempt_doc.name,
+        "questions": questions,
+        "start_time": attempt_doc.start_time,
+        "duration_minutes": duration_minutes
+    }
+
+@frappe.whitelist()
+def submit_psv_exam(attempt_id=None, answers_json=None):
+    """
+    Performs grading, checks timeout, generates hash, and compiles feedback maps.
+    """
+    import json
+    if not attempt_id:
+        attempt_id = frappe.form_dict.get("attempt_id")
+    if not answers_json:
+        answers_json = frappe.form_dict.get("answers_json")
+        
+    if not attempt_id or not answers_json:
+        frappe.throw(_("Attempt ID and Answers are required"), frappe.ValidationError)
+        
+    attempt_doc = frappe.get_doc("SMRITI PSV Exam Attempt", attempt_id)
+    if attempt_doc.status in ("Passed", "Failed"):
+        frappe.throw(_("This exam attempt has already been graded and closed."), frappe.ValidationError)
+        
+    # Check for expiration
+    elapsed_seconds = (frappe.utils.now_datetime() - attempt_doc.start_time).total_seconds()
+    duration_limit_minutes = frappe.db.get_value("SMRITI Certification Exam", attempt_doc.exam_id, "duration_minutes") or 60
+    is_expired = elapsed_seconds > (duration_limit_minutes * 60)
+    
+    source_document = frappe.db.get_value("SMRITI Certification Exam", attempt_doc.exam_id, "source_document")
+    answer_key = _parse_answer_key(source_document)
+    
+    if is_expired:
+        attempt_doc.end_time = frappe.utils.now_datetime()
+        attempt_doc.score = 0.0
+        attempt_doc.correct_answers = 0
+        attempt_doc.total_questions = len(answer_key)
+        attempt_doc.status = "Failed"
+        attempt_doc.submitted_answers_json = answers_json
+        attempt_doc.save(ignore_permissions=True)
+        frappe.db.commit()
+        return {
+            "status": "Failed",
+            "score": 0.0,
+            "correct_answers": 0,
+            "total_questions": len(answer_key),
+            "reason": "Time limit exceeded. The exam session expired.",
+            "incorrect_feedback": []
+        }
+        
+    submitted = json.loads(answers_json)
+    
+    correct_count = 0
+    total_count = len(answer_key)
+    for q_num_str, ans in submitted.items():
+        q_num = int(q_num_str)
+        if answer_key.get(q_num) == ans:
+            correct_count += 1
+            
+    score = (correct_count / total_count) * 100.0 if total_count > 0 else 0.0
+    passing_score = frappe.db.get_value("SMRITI Certification Exam", attempt_doc.exam_id, "passing_score") or 80.0
+    
+    passed = score >= passing_score
+    status = "Passed" if passed else "Failed"
+    
+    certificate_hash = None
+    if passed:
+        import hashlib
+        hash_input = f"{attempt_doc.user}|{attempt_doc.exam_id}|{attempt_doc.start_time}|{score}"
+        certificate_hash = hashlib.sha256(hash_input.encode('utf-8')).hexdigest()
+        
+    incorrect_feedback = []
+    for q_num, corr_ans in answer_key.items():
+        user_ans = submitted.get(str(q_num))
+        if user_ans != corr_ans:
+            chapter_info = QUESTION_CHAPTER_MAP.get(q_num, {
+                "chapter_number": 1,
+                "chapter_title": "Understanding the Distribution Visibility Gap",
+                "section_slug": "chapter-1-understanding-the-distribution-visibility-gap"
+            })
+            incorrect_feedback.append({
+                "question_number": q_num,
+                "user_answer": user_ans or "No Answer",
+                "correct_answer": corr_ans,
+                "chapter_title": chapter_info["chapter_title"],
+                "chapter_number": chapter_info["chapter_number"],
+                "section_slug": chapter_info["section_slug"]
+            })
+            
+    incorrect_feedback.sort(key=lambda x: x["question_number"])
+            
+    attempt_doc.end_time = frappe.utils.now_datetime()
+    attempt_doc.score = score
+    attempt_doc.correct_answers = correct_count
+    attempt_doc.total_questions = total_count
+    attempt_doc.status = status
+    attempt_doc.submitted_answers_json = answers_json
+    attempt_doc.certificate_hash = certificate_hash
+    attempt_doc.save(ignore_permissions=True)
+    frappe.db.commit()
+    
+    return {
+        "status": status,
+        "score": score,
+        "correct_answers": correct_count,
+        "total_questions": total_count,
+        "certificate_hash": certificate_hash,
+        "incorrect_feedback": incorrect_feedback
+    }
+
+@frappe.whitelist()
+def get_psv_exam_status(exam_id=None):
+    """
+    Returns active, best, and past attempts for the logged-in user and exam.
+    """
+    if not exam_id:
+        exam_id = frappe.form_dict.get("exam_id")
+        
+    if not exam_id:
+        frappe.throw(_("Exam ID is required"), frappe.ValidationError)
+        
+    user = frappe.session.user
+    
+    attempts = frappe.get_all(
+        "SMRITI PSV Exam Attempt",
+        filters={"user": user, "exam_id": exam_id},
+        fields=["name", "start_time", "score", "status", "end_time"],
+        order_by="start_time desc"
+    )
+    
+    mapped_attempts = []
+    for att in attempts:
+        mapped_attempts.append({
+            "attempt_id": att.name,
+            "start_time": att.start_time,
+            "end_time": att.end_time,
+            "score": att.score,
+            "status": att.status
+        })
+        
+    active_attempt = None
+    for att in mapped_attempts:
+        if att["status"] == "In Progress":
+            elapsed_seconds = (frappe.utils.now_datetime() - att["start_time"]).total_seconds()
+            duration_limit_minutes = frappe.db.get_value("SMRITI Certification Exam", exam_id, "duration_minutes") or 60
+            if elapsed_seconds > (duration_limit_minutes * 60):
+                doc = frappe.get_doc("SMRITI PSV Exam Attempt", att["attempt_id"])
+                doc.status = "Failed"
+                doc.score = 0.0
+                doc.end_time = frappe.utils.now_datetime()
+                doc.save(ignore_permissions=True)
+                frappe.db.commit()
+                att["status"] = "Failed"
+                att["score"] = 0.0
+            else:
+                active_attempt = att
+                break
+                
+    best_attempt = None
+    passed_attempts = [att for att in mapped_attempts if att["status"] == "Passed"]
+    if passed_attempts:
+        passed_attempts.sort(key=lambda x: (x["score"], -x["start_time"].timestamp() if x["start_time"] else 0), reverse=True)
+        best_attempt = passed_attempts[0]
+        
+    return {
+        "active_attempt": active_attempt,
+        "best_attempt": best_attempt,
+        "attempts": mapped_attempts
+    }
+
+@frappe.whitelist(allow_guest=True)
+def get_certified_registry():
+    """
+    Returns a list of certified planners without leaking internal IDs or emails.
+    """
+    attempts = frappe.get_all(
+        "SMRITI PSV Exam Attempt",
+        filters={"status": "Passed"},
+        fields=["user", "exam_id", "end_time", "certificate_hash"],
+        order_by="end_time desc"
+    )
+    
+    registry = []
+    user_names = {}
+    exam_titles = {}
+    
+    for att in attempts:
+        if not att.certificate_hash:
+            continue
+            
+        user = att.user
+        if user not in user_names:
+            user_names[user] = frappe.db.get_value("User", user, "full_name") or user
+            
+        exam_id = att.exam_id
+        if exam_id not in exam_titles:
+            exam_titles[exam_id] = frappe.db.get_value("SMRITI Certification Exam", exam_id, "title") or exam_id
+            
+        registry.append({
+            "candidate_name": user_names[user],
+            "exam_title": exam_titles[exam_id],
+            "completion_date": frappe.utils.format_date(att.end_time) if att.end_time else "",
+            "certificate_hash": att.certificate_hash
+        })
+        
+    return registry
+
+@frappe.whitelist()
+def download_psv_certificate(attempt_id=None):
+    """
+    Renders certificate HTML page for viewing/printing.
+    """
+    if not attempt_id:
+        attempt_id = frappe.form_dict.get("attempt_id")
+        
+    if not attempt_id:
+        frappe.throw(_("Attempt ID is required"), frappe.ValidationError)
+        
+    attempt = frappe.get_doc("SMRITI PSV Exam Attempt", attempt_id)
+    if attempt.status != "Passed":
+        frappe.throw(_("Certificate is only available for passed attempts."), frappe.ValidationError)
+        
+    candidate_name = frappe.db.get_value("User", attempt.user, "full_name") or attempt.user
+    exam_title = frappe.db.get_value("SMRITI Certification Exam", attempt.exam_id, "title") or attempt.exam_id
+    completion_date = frappe.utils.format_date(attempt.end_time) if attempt.end_time else ""
+    score = attempt.score
+    certificate_hash = attempt.certificate_hash
+    
+    html_template = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SMRITI Certified Planner Certificate</title>
+    <style>
+        body {{
+            font-family: 'Arial', sans-serif;
+            background-color: #F8FAFC;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }}
+        .certificate-container {{
+            width: 800px;
+            height: 550px;
+            padding: 40px;
+            border: 20px solid #1A2B5C;
+            background-color: #FFFFFF;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            position: relative;
+            text-align: center;
+            box-sizing: border-box;
+        }}
+        .certificate-border-inner {{
+            border: 2px solid #2563EB;
+            height: 100%;
+            padding: 30px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }}
+        .logo {{
+            font-size: 24px;
+            font-weight: bold;
+            color: #1A2B5C;
+            letter-spacing: 2px;
+        }}
+        .title {{
+            font-size: 38px;
+            font-weight: bold;
+            color: #1A2B5C;
+            margin-top: 10px;
+        }}
+        .subtitle {{
+            font-size: 16px;
+            color: #64748B;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }}
+        .recipient-label {{
+            font-size: 18px;
+            color: #334155;
+            margin-top: 20px;
+        }}
+        .recipient-name {{
+            font-size: 32px;
+            font-weight: bold;
+            color: #2563EB;
+            border-bottom: 2px solid #E2E8F0;
+            display: inline-block;
+            padding: 5px 40px;
+            margin: 10px 0;
+        }}
+        .achievement-text {{
+            font-size: 15px;
+            color: #475569;
+            max-width: 550px;
+            margin: 0 auto;
+        }}
+        .footer-section {{
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 30px;
+        }}
+        .signature-block {{
+            text-align: center;
+            width: 200px;
+        }}
+        .signature-line {{
+            border-top: 1px solid #94A3B8;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #64748B;
+            padding-top: 5px;
+        }}
+        .signature-name {{
+            font-weight: bold;
+            color: #1A2B5C;
+            font-size: 14px;
+        }}
+        .verify-info {{
+            text-align: left;
+            font-size: 10px;
+            color: #94A3B8;
+            max-width: 300px;
+        }}
+        .hash-code {{
+            font-family: monospace;
+            font-size: 10px;
+            word-break: break-all;
+            color: #64748B;
+        }}
+        @media print {{
+            body {{
+                background: none;
+                margin: 0;
+            }}
+            .certificate-container {{
+                box-shadow: none;
+                page-break-inside: avoid;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="certificate-container">
+        <div class="certificate-border-inner">
+            <div class="logo">SMRITI RETAIL OS</div>
+            <div>
+                <div class="subtitle">Certificate of Achievement</div>
+                <div class="title">Certified Planner</div>
+            </div>
+            <div>
+                <div class="recipient-label">This credential is proudly presented to</div>
+                <div class="recipient-name">{candidate_name}</div>
+                <div class="achievement-text">
+                    for successfully passing the <strong>{exam_title}</strong> with a score of <strong>{score}%</strong>, demonstrating mastery of weeks of cover calculations, sell-through velocity analytics, and network stock distribution planning.
+                </div>
+            </div>
+            <div class="footer-section">
+                <div class="verify-info">
+                    <strong>Verification Registry Details:</strong><br>
+                    Date Issued: {completion_date}<br>
+                    Verification Hash:<br>
+                    <span class="hash-code">{certificate_hash}</span>
+                </div>
+                <div class="signature-block">
+                    <div class="signature-name">Jawahar R. Mallah</div>
+                    <div class="signature-line">Founder & Chief Architect, AITDL</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        window.onload = function() {{
+            if (window.location.search.includes("print=1")) {{
+                window.print();
+            }}
+        }}
+    </script>
+</body>
+</html>"""
+    
+    html_content = html_template.format(
+        candidate_name=candidate_name,
+        exam_title=exam_title,
+        completion_date=completion_date,
+        score=score,
+        certificate_hash=certificate_hash
+    )
+    
+    frappe.response.type = "binary"
+    frappe.response.filecontent = html_content
+    frappe.response.filename = None
+    
+    frappe.local.response.setdefault('headers', {})
+    frappe.local.response.headers['Content-Type'] = 'text/html; charset=utf-8'
+
+@frappe.whitelist(allow_guest=True)
+def verify_psv_certificate(certificate_hash=None):
+    """
+    Public validation endpoint for certificate hashes.
+    """
+    if not certificate_hash:
+        certificate_hash = frappe.form_dict.get("certificate_hash")
+        
+    if not certificate_hash:
+        return {"valid": False, "error": "Missing certificate hash"}
+        
+    attempt = frappe.get_all(
+        "SMRITI PSV Exam Attempt",
+        filters={"certificate_hash": certificate_hash, "status": "Passed"},
+        fields=["name", "user", "exam_id", "end_time", "score"]
+    )
+    
+    if not attempt:
+        return {"valid": False, "error": "Invalid or non-existent certificate hash"}
+        
+    attempt_doc = attempt[0]
+    candidate_name = frappe.db.get_value("User", attempt_doc.user, "full_name") or attempt_doc.user
+    exam_title = frappe.db.get_value("SMRITI Certification Exam", attempt_doc.exam_id, "title") or attempt_doc.exam_id
+    
+    return {
+        "valid": True,
+        "attempt_id": attempt_doc.name,
+        "user": attempt_doc.user,
+        "candidate_name": candidate_name,
+        "exam_id": attempt_doc.exam_id,
+        "exam_title": exam_title,
+        "completion_date": frappe.utils.format_datetime(attempt_doc.end_time, "yyyy-MM-dd HH:mm:ss"),
+        "score": attempt_doc.score
+    }
+
+@frappe.whitelist()
+def download_enablement_file(file_key=None):
+    """
+    Allows permitted users to download enablement resources and zip bundles.
+    """
+    if not file_key:
+        file_key = frappe.form_dict.get("file_key")
+        
+    if not file_key:
+        frappe.throw(_("File key is required"), frappe.ValidationError)
+        
+    user_roles = frappe.get_roles(frappe.session.user)
+    if "Guest" in user_roles and len(user_roles) == 1:
+        frappe.throw(_("Guest is not permitted to download files"), frappe.PermissionError)
+        
+    if ".." in file_key or "/" in file_key or "\\" in file_key:
+        frappe.throw(_("Invalid file key formatting"), frappe.ValidationError)
+        
+    import os
+    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "..", "..", "docs"))
+    
+    if file_key == "zip_bundle":
+        import io
+        import zipfile
+        
+        enablement_dir = os.path.join(docs_root, "enablement")
+        if not os.path.exists(enablement_dir):
+            frappe.throw(_("Enablement pack directory not found"), frappe.DoesNotExistError)
+            
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            for root, dirs, files in os.walk(enablement_dir):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    rel_path = os.path.relpath(file_path, enablement_dir)
+                    zip_file.write(file_path, rel_path)
+                    
+        frappe.local.response.filename = "SMRITI_PSV_Enablement_Pack.zip"
+        frappe.local.response.filecontent = zip_buffer.getvalue()
+        frappe.local.response.type = "download"
+        return
+        
+    registry = get_document_registry()
+    asset = registry.get(file_key)
+    if not asset:
+        frappe.throw(_("Asset '{0}' is not registered or accessible.").format(file_key), frappe.DoesNotExistError)
+        
+    file_name = asset.get("file_name")
+    if not file_name or ".." in file_name or "/" in file_name or "\\" in file_name:
+        frappe.throw(_("Invalid filename associated with asset"), frappe.ValidationError)
+        
+    doc_type = asset.get("document_type")
+    if doc_type == "enablement":
+        sub_dir = "enablement"
+    elif doc_type == "certification":
+        sub_dir = "certification"
+    else:
+        sub_dir = "user_manual"
+        
+    allowed_dir = os.path.join(docs_root, sub_dir)
+    file_path = os.path.abspath(os.path.join(allowed_dir, file_name))
+    
+    if not file_path.startswith(allowed_dir):
+        frappe.throw(_("Access denied: path traversal detected"), frappe.ValidationError)
+        
+    if not os.path.exists(file_path):
+        frappe.throw(_("File not found: {0}").format(file_name), frappe.DoesNotExistError)
+        
+    with open(file_path, "rb") as f:
+        file_content = f.read()
+        
+    frappe.local.response.filename = file_name
+    frappe.local.response.filecontent = file_content
+    frappe.local.response.type = "download"
