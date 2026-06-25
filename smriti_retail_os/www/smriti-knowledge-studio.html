@@ -34,6 +34,11 @@
             --radius-sm:       8px;
             --shadow-lg:       0 10px 30px -10px rgba(0,0,0,0.5);
             --transition:      all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --accent-teal-bg:  rgba(20, 184, 166, 0.15);
+            --accent-green-bg: rgba(16, 185, 129, 0.15);
+            --danger-color:    #ef4444;
+            --code-bg:         #000000;
+            --code-color:      #38bdf8;
         }
 
         html, body {
@@ -651,6 +656,10 @@
                 <span class="tag">Studio</span>
             </div>
             <div class="topbar-right">
+                <button class="topbtn" style="border-color: var(--accent-teal); color: var(--accent-teal);" onclick="toggleAIChat()" title="Ask SMRITI AI">
+                    <span class="material-symbols-outlined" style="font-size:16px; display:inline-block; vertical-align:middle;">smart_toy</span>
+                    <span style="vertical-align:middle;">Ask AI</span>
+                </button>
                 <button class="topbtn" onclick="history.back()" title="Go Back">
                     <span class="material-symbols-outlined">arrow_back</span>
                 </button>
@@ -896,7 +905,37 @@
                 <div style="display:flex; flex-wrap:wrap; gap:6px;" id="ask-more-chips">
                     <!-- Chip prompts injected here -->
                 </div>
+                <button class="topbtn" style="border-color: var(--accent-teal); color: var(--accent-teal); width: 100%; justify-content: center; margin-top: 8px;" onclick="triggerAIDecisionExplain()">
+                    <span class="material-symbols-outlined" style="font-size:16px; display:inline-block; vertical-align:middle; margin-right:4px;">smart_toy</span>
+                    <span style="vertical-align:middle;">Explain Decision via AI</span>
+                </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Chat Drawer Container -->
+<div class="drawer-overlay" id="ai-chat-overlay" onclick="toggleAIChat()"></div>
+<div class="drawer-pane" id="ai-chat-drawer" style="width: 500px; right: -500px;">
+    <div class="drawer-header">
+        <div class="drawer-title-wrapper">
+            <span class="result-type-badge" style="background: var(--accent-teal-bg); color: var(--accent-teal);">AI ASSISTANT</span>
+            <h3 class="drawer-title">Ask SMRITI AI</h3>
+        </div>
+        <button class="drawer-close" onclick="toggleAIChat()">✕</button>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 20px; gap: 16px;">
+        <!-- Chat History -->
+        <div id="ai-chat-history" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;">
+            <div style="padding: 12px; background: var(--bg-dark); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-teal); line-height: 1.5;">
+                <strong>SMRITI AI:</strong> Hello! Ask me any questions about the repository, APIs, formulas, or schemas. I resolve answers using verified SKE Ground Truth.
+            </div>
+        </div>
+        
+        <!-- Input Box -->
+        <div style="display: flex; gap: 8px; flex-shrink: 0;">
+            <input type="text" id="ai-chat-input" style="flex: 1; padding: 12px; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-primary); outline: none;" placeholder="Ask SMRITI AI... (e.g. Why isn't barcode printing?)">
+            <button class="topbtn" style="border-color: var(--accent-teal); color: var(--accent-teal); padding: 0 16px;" onclick="sendAIChatQuery()">Send</button>
         </div>
     </div>
 </div>
@@ -916,6 +955,13 @@
         $("#studio-search").on("keydown", function(e) {
             if (e.key === "Enter") {
                 performSearch($(this).val());
+            }
+        });
+
+        // AI Chat input key handler
+        $("#ai-chat-input").on("keydown", function(e) {
+            if (e.key === "Enter") {
+                sendAIChatQuery();
             }
         });
 
@@ -1168,6 +1214,127 @@
         } else {
             $icon.text("expand_more");
         }
+    }
+
+    function triggerAIDecisionExplain() {
+        if (!ACTIVE_DRAWER_OBJECT) return;
+        const type = ACTIVE_DRAWER_OBJECT.type;
+        const id = ACTIVE_DRAWER_OBJECT.id;
+        
+        closeDrawer();
+        toggleAIChat();
+        
+        // Populate chat input and submit
+        document.getElementById("ai-chat-input").value = `Explain ${type} ${id}`;
+        sendAIChatQuery();
+    }
+
+    // AI Chat UI functions
+    function toggleAIChat() {
+        const overlay = document.getElementById("ai-chat-overlay");
+        const drawer = document.getElementById("ai-chat-drawer");
+        overlay.classList.toggle("open");
+        drawer.classList.toggle("open");
+        if (drawer.classList.contains("open")) {
+            document.getElementById("ai-chat-input").focus();
+        }
+    }
+
+    function sendAIChatQuery() {
+        const input = document.getElementById("ai-chat-input");
+        const query = input.value.trim();
+        if (!query) return;
+
+        input.value = "";
+        
+        // Append user query to chat history
+        const $history = $("#ai-chat-history");
+        $history.append(`
+            <div style="padding: 12px; background: var(--bg-elevated); border-radius: var(--radius-sm); border-left: 3px solid var(--primary); line-height: 1.5; align-self: flex-end; width: 90%; margin-left:auto;">
+                <strong>You:</strong> ${esc(query)}
+            </div>
+        `);
+        $history.scrollTop($history[0].scrollHeight);
+
+        // Append temporary loading bubble
+        const $loading = $(`
+            <div id="ai-loading-bubble" style="padding: 12px; background: var(--bg-dark); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-teal); line-height: 1.5;">
+                <strong>SMRITI AI:</strong> Typing...
+            </div>
+        `);
+        $history.append($loading);
+        $history.scrollTop($history[0].scrollHeight);
+
+        frappe.call({
+            method: "smriti_retail_os.api.ai_integration_api.ask_smriti_ai",
+            args: { query: query },
+            callback: function(r) {
+                $("#ai-loading-bubble").remove();
+                if (r.message) {
+                    const data = r.message;
+                    const ansHtml = formatMarkdownAsHtml(data.answer);
+                    const cpId = "cp_" + Math.random().toString(36).substr(2, 9);
+                    
+                    $history.append(`
+                        <div style="padding: 12px; background: var(--bg-dark); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-teal); line-height: 1.5; display:flex; flex-direction:column; gap:10px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong>SMRITI AI:</strong>
+                                <span style="font-size: 0.75rem; background: var(--accent-green-bg); color: var(--accent-green); padding: 2px 8px; border-radius: 4px; font-weight:600;">
+                                    ${esc(data.evidence_badge)}
+                                </span>
+                            </div>
+                            <div style="word-break: break-word;">${ansHtml}</div>
+                            
+                            <!-- Collapsible Context pack -->
+                            <button class="collapsible-trigger" style="margin-top: 8px; padding: 6px 10px; font-size:11px; width:auto; border-radius:4px;" onclick="$('#${cpId}').toggle();">
+                                <span>🔍 View SKE Ground Truth Used</span>
+                                <span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle; margin-left:4px;">expand_more</span>
+                            </button>
+                            <div class="collapsible-content" id="${cpId}" style="display:none; margin-top:8px;">
+                                <div class="section-card" style="padding:10px; font-family: monospace; font-size:0.8rem; background: var(--code-bg); color: var(--code-color); overflow-x:auto; white-space:pre-wrap;">${esc(data.context_pack)}</div>
+                            </div>
+                        </div>
+                    `);
+                    $history.scrollTop($history[0].scrollHeight);
+                }
+            },
+            error: function(err) {
+                $("#ai-loading-bubble").remove();
+                $history.append(`
+                    <div style="padding: 12px; background: var(--bg-dark); border-radius: var(--radius-sm); border-left: 3px solid var(--danger-color); color: var(--danger-color); line-height: 1.5;">
+                        <strong>SMRITI AI:</strong> Failed to fetch response. Check system console.
+                    </div>
+                `);
+                $history.scrollTop($history[0].scrollHeight);
+            }
+        });
+    }
+
+    function formatMarkdownAsHtml(md) {
+        if (!md) return "";
+        let html = md;
+        
+        // Escape HTML tags to prevent XSS except basic markup we control
+        html = esc(html);
+        
+        // Convert headers
+        html = html.replace(/### (.*?)(?:&lt;br\/&gt;|<br\/?>|\n|$)/g, '<h4 style="margin-top: 10px; font-family:\'Outfit\',sans-serif; font-weight:700; color:var(--text-primary);">$1</h4>');
+        
+        // Convert bold
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Convert code blocks
+        html = html.replace(/```text\n([\s\S]*?)```/g, '<pre style="background: var(--code-bg); padding:10px; border-radius:4px; font-family:monospace; font-size:0.85rem; color: var(--code-color); margin: 6px 0; overflow-x:auto;">$1</pre>');
+        html = html.replace(/`(.*?)`/g, '<code style="background:var(--bg-elevated); padding:2px 4px; border-radius:4px; font-family:monospace; font-size:0.85rem; color:var(--accent-teal);">$1</code>');
+        
+        // Convert lists
+        html = html.replace(/\* (.*?)(?:&lt;br\/&gt;|<br\/?>|\n|$)/g, '<li style="margin-left: 15px; margin-top: 4px;">$1</li>');
+        html = html.replace(/• (.*?)(?:&lt;br\/&gt;|<br\/?>|\n|$)/g, '<li style="margin-left: 15px; margin-top: 4px;">$1</li>');
+        
+        // Newlines to line breaks
+        html = html.replace(/\n/g, '<br/>');
+        
+        return html;
     }
 </script>
 </body>
