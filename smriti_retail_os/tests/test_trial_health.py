@@ -29,14 +29,9 @@ class TestTrialHealth(unittest.TestCase):
         self.original_user = frappe.session.user
         frappe.set_user("Administrator")
         
-        # Dynamically provision DocType in the test DB if it doesn't exist
-        if not frappe.db.exists("DocType", "SMRITI Trial Health Snapshot"):
-            from smriti_retail_os.setup import create_smriti_trial_health_snapshot_doctype
-            create_smriti_trial_health_snapshot_doctype()
-            frappe.db.commit()
-        elif not frappe.db.table_exists("SMRITI Trial Health Snapshot"):
-            frappe.db.updatedb("SMRITI Trial Health Snapshot")
-            frappe.db.commit()
+        # Dynamically provision DocType and table in the test DB
+        from smriti_retail_os.tests.utils import ensure_doctype_schema
+        ensure_doctype_schema("SMRITI Trial Health Snapshot")
         
         # Clear snapshots for testing
         frappe.db.delete("SMRITI Trial Health Snapshot")
