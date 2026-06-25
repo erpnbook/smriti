@@ -1,20 +1,14 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/api/pdt_api.py
-# @description: SMRITI Pdt Api — retail operating system module.
+# @description: REST API endpoints for SMRITI Product Twin (PDT) operations.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.0.0
+# @version: 1.2.14
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
-# @file: smriti_retail_os/api/pdt_api.py
-# @description: REST API endpoints for SMRITI Product Twin (PDT) operations.
-# @author: Antigravity AI
-# @date: 2026-06-19
-#
+
 
 import frappe
 import json

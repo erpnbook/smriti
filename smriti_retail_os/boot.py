@@ -26,6 +26,7 @@ import frappe
 import fnmatch
 import werkzeug.routing.exceptions
 from frappe import _
+from smriti_retail_os import __version__
 from smriti_retail_os.security_constants import PROTECTED_CONFIG_PATTERNS
 from werkzeug.exceptions import HTTPException
 from werkzeug.wrappers import Response
@@ -105,7 +106,7 @@ def extend_bootinfo(bootinfo):
 
         bootinfo.smriti = frappe._dict({
             "app_name":      "SMRITI Retail OS",
-            "app_version":   "1.0.0",
+            "app_version":   __version__,
             "logo_url":      "/assets/smriti_retail_os/images/smriti_logo.svg",
             "user_roles":    user_roles,
             "default_route": smriti_route,
@@ -380,7 +381,6 @@ def health_check():
     GET /api/method/smriti_retail_os.boot.health_check
     Returns system status — useful during deployments.
     """
-    from smriti_retail_os import __version__
     status = {"status": "ok", "app": "SMRITI Retail OS", "version": __version__}
 
     try:

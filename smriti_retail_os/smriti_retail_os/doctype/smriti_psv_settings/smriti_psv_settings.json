@@ -19,7 +19,10 @@
     "default_lead_time_days",
     "default_safety_stock",
     "default_target_days_cover",
-    "reorder_avg_weeks"
+    "reorder_avg_weeks",
+    "section_break_pdt_forecasting",
+    "ema_alpha",
+    "variant_dimension"
   ],
   "fields": [
     {
@@ -108,11 +111,31 @@
       "fieldname": "reorder_avg_weeks",
       "fieldtype": "Int",
       "label": "Sale Average Lookback (Weeks)"
+    },
+    {
+      "fieldname": "section_break_pdt_forecasting",
+      "fieldtype": "Section Break",
+      "label": "PDT Forecasting Parameters"
+    },
+    {
+      "default": "0.3",
+      "description": "EMA smoothing factor for demand forecasting. Range: 0.05 (stable/slow) to 0.95 (reactive/volatile). Recommended: 0.3 for standard retail SKUs, 0.2 for staples, 0.5+ for seasonal/fashion.",
+      "fieldname": "ema_alpha",
+      "fieldtype": "Float",
+      "label": "EMA Alpha (Forecast Smoothing)",
+      "precision": "2"
+    },
+    {
+      "default": "Size",
+      "description": "Item Variant Attribute name used to label missing sizes in variant curve analysis. Set per category: footwear/garments = Size, furniture = Dimension, electronics = Storage, colour variants = Colour.",
+      "fieldname": "variant_dimension",
+      "fieldtype": "Data",
+      "label": "Variant Dimension Attribute"
     }
   ],
   "index_web_pages_for_search": 0,
   "links": [],
-  "modified": "2026-06-09 00:00:00.000000",
+  "modified": "2026-06-25 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "SMRITI Retail OS",
   "name": "SMRITI PSV Settings",
