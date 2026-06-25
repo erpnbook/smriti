@@ -122,11 +122,13 @@ class TestPSVPhase1_1(FrappeTestCase):
                 t.insert(ignore_permissions=True)
 
         # Create standard Item Attribute for template items
-        if not frappe.db.exists("Item Attribute", "Test Attribute"):
-            attr = frappe.new_doc("Item Attribute")
-            attr.attribute_name = "Test Attribute"
-            attr.append("item_attribute_values", {"attribute_value": "Default", "abbr": "Def"})
-            attr.insert(ignore_permissions=True)
+        if frappe.db.exists("Item Attribute", "Test Attribute"):
+            frappe.delete_doc("Item Attribute", "Test Attribute", force=True)
+            
+        attr = frappe.new_doc("Item Attribute")
+        attr.attribute_name = "Test Attribute"
+        attr.append("item_attribute_values", {"attribute_value": "Default", "abbr": "Def"})
+        attr.insert(ignore_permissions=True)
 
         # Setup PSV System Settings
         settings = frappe.get_single("PSV System Settings")
