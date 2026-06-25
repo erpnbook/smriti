@@ -1,19 +1,14 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/services/pdt_service.py
-# @description: SMRITI Product Digital Twin service — SKU analytics and health scores.
+# @description: Main coordinator service for SMRITI Product Twin (PDT) builds.
+#               Calculates SKU analytics, health scores, dead stock probability,
+#               network transfer optimization, and variant curve health.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.0.0
+# @version: 1.2.14
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
-#
-# -*- coding: utf-8 -*-
-#
-# @file: smriti_retail_os/services/pdt_service.py
-# @description: Main coordinator service for SMRITI Product Twin (PDT) builds.
-# @author: Antigravity AI
-# @date: 2026-06-19
 #
 
 import frappe
@@ -249,11 +244,13 @@ def rebuild_twin_cache(company, party_stock_account=None, item_code=None, source
         
     finally:
         # 8. Release Rebuild Lock
+        # Infrastructure cleanup — failure here must NOT propagate.
+        # The lock will expire naturally via Redis TTL (300s) if delete fails.
         lock_key = _get_rebuild_lock_key(company, party_stock_account, item_code)
         try:
             frappe.cache().delete_key(lock_key)
         except Exception:
-            frappe.log_error(frappe.get_traceback(), "SMRITI: Exception in services/pdt_service.py")
+            frappe.logger().debug(f"PDT: lock release failed for {lock_key} — will expire via TTL")
 
 
 # ─── Hook Handlers ───────────────────────────────────────────────────────────

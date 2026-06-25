@@ -1,20 +1,15 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/services/twin_quality_service.py
-# @description: SMRITI Twin Quality Service — retail operating system module.
+# @description: Evaluates twin quality metrics and variant size curve mismatches.
+#               Quality score is based on physical audit and sales upload timeliness.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.0.0
+# @version: 1.2.14
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
-# @file: smriti_retail_os/services/twin_quality_service.py
-# @description: Evaluates twin quality metrics and variant size curve mismatches.
-# @author: Antigravity AI
-# @date: 2026-06-19
-#
+
 
 import frappe
 from frappe.utils import now_datetime, getdate, today
@@ -124,12 +119,26 @@ def evaluate_variant_curve(item_code, party_stock_account):
     ]
     
     if missing_variants:
-        # Extract attribute values (e.g. Size values) for the missing variants
+        # Extract the configured variant dimension attribute value (e.g. "Size") for each missing variant.
+        # The lookup dimension is configurable via SMRITI PSV Settings > variant_dimension.
+        # This prevents ambiguous first-attribute lookup on multi-attribute items (Size + Colour + Width).
+        variant_dimension = "Size"  # Sensible retail default
+        try:
+            if frappe.db.exists("DocType", "SMRITI PSV Settings"):
+                settings = frappe.get_cached_doc("SMRITI PSV Settings")
+                variant_dimension = settings.get("variant_dimension") or "Size"
+        except Exception:
+            pass  # Use default dimension — settings read failure is non-critical for this path
+
         missing_labels = []
         for code in missing_variants:
-            size_val = frappe.db.get_value("Item Variant Attribute", {"parent": code}, "attribute_value") or code
-            missing_labels.append(size_val)
-            
+            attr_val = frappe.db.get_value(
+                "Item Variant Attribute",
+                {"parent": code, "attribute": variant_dimension},
+                "attribute_value"
+            )
+            missing_labels.append(attr_val or code)  # Fall back to item_code if attribute not found
+
         return {
             "variant_curve_status": "Broken",
             "missing_sizes": ", ".join(missing_labels)

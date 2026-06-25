@@ -1,20 +1,15 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/services/forecasting_service.py
-# @description: SMRITI Forecasting Service — retail operating system module.
+# @description: Forecasting service for SMRITI PDT — EMA velocity, WOC,
+#               and predicted stockout date calculations.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.0.0
+# @version: 1.2.14
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
-# @file: smriti_retail_os/services/forecasting_service.py
-# @description: Forecasting service for SMRITI PDT - EMA, Volatility, and WOC calculations.
-# @author: Antigravity AI
-# @date: 2026-06-19
-#
+
 
 import frappe
 import math
@@ -28,14 +23,19 @@ def calculate_weekly_velocity_stats(company, party_stock_account, item_code):
     - velocity_confidence (forecast reliability percentage based on CV)
     - forecast_parameters (JSON configuration)
     """
-    # 1. Resolve lookback window (default 28 days)
+    # 1. Resolve lookback window and EMA alpha from settings
     avg_weeks = 4
+    alpha = 0.3  # Default: higher weight to recent sales (recommended for retail)
     try:
         if frappe.db.exists("DocType", "SMRITI PSV Settings"):
             settings = frappe.get_cached_doc("SMRITI PSV Settings")
             avg_weeks = settings.reorder_avg_weeks or 4
+            # ema_alpha is configurable: 0.05 (slow/stable) to 0.95 (reactive/volatile)
+            # Default 0.3 is appropriate for standard retail SKUs.
+            raw_alpha = float(settings.get("ema_alpha") or 0.3)
+            alpha = max(0.05, min(0.95, raw_alpha))  # Clamp to valid range
     except Exception:
-        frappe.log_error(frappe.get_traceback(), "SMRITI: Exception in services/forecasting_service.py")
+        frappe.log_error(frappe.get_traceback(), "SMRITI: forecasting_service settings read failed")
     
     lookback_days = avg_weeks * 7
     start_date = add_days(today(), -lookback_days)
@@ -61,8 +61,10 @@ def calculate_weekly_velocity_stats(company, party_stock_account, item_code):
         chk_date = getdate(add_days(start_date, d))
         daily_sales.append(sales_map.get(chk_date, 0.0))
         
-    # 3. Calculate EMA (alpha = 0.2)
-    alpha = 0.2
+    # 3. Calculate EMA — alpha read from SMRITI PSV Settings (default 0.3)
+    # alpha=0.2: slower response, better for stable demand
+    # alpha=0.3: balanced, recommended for standard retail SKUs  
+    # alpha=0.5+: fast-responding, better for highly volatile/seasonal SKUs
     ema = 0.0
     for qty in daily_sales:
         ema = (alpha * qty) + ((1.0 - alpha) * ema)

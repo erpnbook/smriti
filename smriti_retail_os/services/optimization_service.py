@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 #
 # @file: smriti_retail_os/services/optimization_service.py
-# @description: SMRITI Optimization Service — retail operating system module.
+# @description: Network rebalancing optimization service for SMRITI PDT.
+#               Evaluates excess stock across PSA network and recommends
+#               economically beneficial inter-PSA transfers.
+#
+#               OPTIMIZATION SCOPE (v1):
+#               This service solves the single-source optimization problem:
+#               "Find the best individual source for a given transfer need."
+#               Multi-source network optimization (combining multiple partial
+#               sources) is reserved for PDT v2.
+#
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.0.0
+# @version: 1.2.14
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
-#
-# -*- coding: utf-8 -*-
-#
-# @file: smriti_retail_os/services/optimization_service.py
-# @description: Network rebalancing optimization service with cost awareness.
-# @author: Antigravity AI
-# @date: 2026-06-19
 #
 
 import frappe
