@@ -73,6 +73,7 @@ const SMRITI_ROUTE_MAP = {
   "roi_calculator":                   "/smriti-roi-calculator",
   "trial_signup":                     "/smriti-trial",
   "trial_leads":                      "/smriti-trial-leads",   // Sprint 2
+  "pos_profiles":                     "/smriti-pos-profiles",
 };
 
 function resolveSmritiRoute(key) {
@@ -523,6 +524,11 @@ const SMRITI_NAV = {
           label: "Platform Center",
           route: resolveSmritiRoute("platform_center"),
           standalone_route: "/platform_center",
+          status: "active" },
+        { id: "pos_profiles",
+          label: "POS Profiles",
+          route: resolveSmritiRoute("pos_profiles"),
+          standalone_route: "/smriti-pos-profiles",
           status: "active" }
       ]
     },

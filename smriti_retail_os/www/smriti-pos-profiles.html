@@ -1,0 +1,1113 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/smriti-pos-profiles.html
+  @description: Standalone SMRITI POS Profile Management Console.
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @date: 2026-06-25
+  @version: 1.0.0
+  @sprint: 3C — POS Profile Custom Manager
+-->
+<html lang="en">
+<head>
+  {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMRITI — POS Profiles</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+  
+  <style>
+    /* Custom style refinements for POS Profiles */
+    .filter-bar {
+      padding: 16px 24px;
+      background: var(--smriti-color-bg-primary);
+      border-bottom: 1px solid var(--smriti-color-border-default);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 250px;
+      max-width: 400px;
+    }
+    
+    .search-input {
+      width: 100%;
+      background: var(--smriti-color-bg-secondary);
+      border: 1px solid var(--smriti-color-border-default);
+      border-radius: var(--smriti-radius-md);
+      color: var(--smriti-color-text-primary);
+      padding: 8px 12px 8px 36px;
+      outline: none;
+      font-size: var(--smriti-font-size-sm);
+      transition: border-color 0.2s ease;
+    }
+    .search-input:focus { border-color: var(--smriti-color-brand-primary); }
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--smriti-color-text-subtle);
+      font-size: var(--smriti-font-size-md);
+    }
+    
+    .filter-select {
+      background: var(--smriti-color-bg-secondary);
+      border: 1px solid var(--smriti-color-border-default);
+      border-radius: var(--smriti-radius-md);
+      color: var(--smriti-color-text-primary);
+      padding: 8px 12px;
+      font-size: var(--smriti-font-size-sm);
+      outline: none;
+      min-width: 160px;
+      cursor: pointer;
+    }
+    .filter-select:focus { border-color: var(--smriti-color-brand-primary); }
+    
+    .right-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 12px;
+    }
+    
+    /* Table View Styling */
+    .table-container {
+      margin: 24px;
+      border: 1px solid var(--smriti-color-border-default);
+      border-radius: var(--smriti-radius-md);
+      background: var(--smriti-color-bg-primary);
+      overflow-x: auto;
+    }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: var(--smriti-font-size-sm);
+    }
+    .data-table th {
+      background: var(--smriti-color-bg-secondary);
+      padding: 12px 16px;
+      font-weight: 700;
+      color: var(--smriti-color-text-muted);
+      border-bottom: 1px solid var(--smriti-color-border-default);
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.5px;
+    }
+    .data-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--smriti-color-border-default);
+      color: var(--smriti-color-text-primary);
+      vertical-align: middle;
+    }
+    .data-table tr:hover td { background: var(--smriti-color-bg-secondary); }
+    
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: var(--smriti-radius-full);
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .status-badge.active {
+      background: var(--smriti-color-status-success-bg);
+      color: var(--smriti-color-status-success);
+      border: 1px solid var(--smriti-color-status-success-border);
+    }
+    .status-badge.disabled {
+      background: var(--smriti-color-status-danger-bg);
+      color: var(--smriti-color-status-danger);
+      border: 1px solid var(--smriti-color-status-danger-border);
+    }
+    
+    /* Action Buttons */
+    .sm-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 16px;
+      font-size: var(--smriti-font-size-sm);
+      font-weight: 600;
+      border-radius: var(--smriti-radius-md);
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      font-family: inherit;
+    }
+    .sm-btn-primary {
+      background: var(--smriti-color-brand-primary);
+      color: var(--smriti-color-text-primary);
+    }
+    .sm-btn-primary:hover {
+      background: var(--smriti-color-brand-secondary);
+    }
+    .sm-btn-secondary {
+      background: none;
+      border: 1px solid var(--smriti-color-border-default);
+      color: var(--smriti-color-text-muted);
+    }
+    .sm-btn-secondary:hover {
+      border-color: var(--smriti-color-border-strong);
+      color: var(--smriti-color-text-primary);
+    }
+    .action-icon-btn {
+      background: none;
+      border: none;
+      color: var(--smriti-color-text-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: var(--smriti-radius-sm);
+      display: inline-flex;
+      align-items: center;
+      transition: all 0.15s ease;
+    }
+    .action-icon-btn:hover {
+      background: var(--smriti-color-bg-secondary);
+      color: var(--smriti-color-text-primary);
+    }
+    .action-icon-btn.danger-action:hover {
+      color: var(--smriti-color-status-danger);
+    }
+    
+    /* Right Side Drawer Styling */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 9500;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: none;
+    }
+    .drawer-backdrop.open { display: block; }
+    
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      height: 100vh;
+      width: min(650px, 95vw);
+      background: var(--smriti-color-bg-primary);
+      border-left: 1px solid var(--smriti-color-border-default);
+      z-index: 9600;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5);
+    }
+    .drawer-backdrop.open + .drawer { transform: translateX(0); }
+    
+    .drawer-header {
+      height: var(--smriti-toolbar-height);
+      border-bottom: 1px solid var(--smriti-color-border-default);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    
+    .drawer-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: var(--smriti-font-size-md);
+      font-weight: 700;
+      color: var(--smriti-color-text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .drawer-close {
+      background: none;
+      border: none;
+      color: var(--smriti-color-text-subtle);
+      cursor: pointer;
+      font-size: var(--smriti-font-size-md);
+      display: flex;
+      align-items: center;
+    }
+    .drawer-close:hover { color: var(--smriti-color-status-danger); }
+    
+    /* Shift Warning Banner inside Drawer */
+    .shift-warning-banner {
+      background: var(--smriti-color-status-warning-bg);
+      border-bottom: 1px solid var(--smriti-color-status-warning-border);
+      color: var(--smriti-color-status-warning);
+      padding: 10px 24px;
+      font-size: var(--smriti-font-size-xs);
+      font-weight: 500;
+      display: none;
+      align-items: center;
+      gap: 10px;
+    }
+    .shift-warning-banner span.material-symbols-outlined {
+      font-size: 1.15rem;
+    }
+    
+    /* Tabs inside Drawer */
+    .drawer-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--smriti-color-border-default);
+      background: var(--smriti-color-bg-secondary);
+      flex-shrink: 0;
+    }
+    
+    .drawer-tab {
+      flex: 1;
+      padding: 12px 8px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--smriti-color-text-muted);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: var(--smriti-font-size-xs);
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+    .drawer-tab.active {
+      border-bottom-color: var(--smriti-color-brand-primary);
+      color: var(--smriti-color-text-primary);
+      background: var(--smriti-color-bg-primary);
+    }
+    
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+    
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+    
+    .drawer-footer {
+      height: var(--smriti-toolbar-height);
+      border-top: 1px solid var(--smriti-color-border-default);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 12px;
+      justify-content: flex-end;
+      flex-shrink: 0;
+      background: var(--smriti-color-bg-secondary);
+    }
+    
+    /* Forms */
+    .form-group {
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .form-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--smriti-color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .form-input, select, textarea {
+      background: var(--smriti-color-bg-secondary);
+      border: 1px solid var(--smriti-color-border-default);
+      border-radius: var(--smriti-radius-sm);
+      color: var(--smriti-color-text-primary);
+      padding: 10px 12px;
+      font-size: var(--smriti-font-size-sm);
+      outline: none;
+      width: 100%;
+      font-family: inherit;
+    }
+    .form-input:focus, select:focus, textarea:focus {
+      border-color: var(--smriti-color-brand-primary);
+    }
+    .form-input:disabled, select:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .checkbox-group {
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+    }
+    .checkbox-group input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--smriti-color-brand-primary);
+      cursor: pointer;
+    }
+    
+    /* Child Lists Management */
+    .child-table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    
+    .child-table-wrapper {
+      border: 1px solid var(--smriti-color-border-default);
+      border-radius: var(--smriti-radius-sm);
+      overflow: hidden;
+      background: var(--smriti-color-bg-secondary);
+    }
+    .child-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: var(--smriti-font-size-xs);
+    }
+    .child-table th {
+      padding: 10px 12px;
+      background: rgba(0, 0, 0, 0.15);
+      color: var(--smriti-color-text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--smriti-color-border-default);
+    }
+    .child-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--smriti-color-border-default);
+      vertical-align: middle;
+    }
+    .child-table tr:last-child td { border-bottom: none; }
+    
+    /* Spinner & toast overlays */
+    .spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 40px; }
+    .spinner { width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.05); border-top-color: var(--smriti-color-brand-primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .empty-state { text-align: center; padding: 48px 24px; color: var(--smriti-color-text-subtle); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .empty-icon { font-size: 2.5rem; color: var(--smriti-color-text-muted); }
+  </style>
+</head>
+<body data-page-title="POS Profiles">
+
+<div class="smriti-shell">
+  {%- include "smriti_retail_os/templates/includes/smriti_sidebar.html" -%}
+  
+  <main class="smriti-main">
+    {%- include "smriti_retail_os/templates/includes/smriti_topbar.html" -%}
+    
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input type="text" id="profile-search" class="search-input" placeholder="Search POS Profiles..."/>
+      </div>
+      
+      <select id="company-filter" class="filter-select">
+        <option value="">-- All Companies --</option>
+      </select>
+      
+      <select id="warehouse-filter" class="filter-select">
+        <option value="">-- All Warehouses --</option>
+      </select>
+      
+      <select id="status-filter" class="filter-select">
+        <option value="">-- All Statuses --</option>
+        <option value="active">Active</option>
+        <option value="disabled">Disabled</option>
+      </select>
+      
+      <div class="right-actions">
+        <button class="sm-btn sm-btn-primary" onclick="openProfileDrawer()">
+          <span class="material-symbols-outlined" style="font-size: 18px">add</span>
+          New POS Profile
+        </button>
+      </div>
+    </div>
+    
+    <!-- Content table -->
+    <div class="smriti-content">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>POS Profile Name</th>
+              <th>Company</th>
+              <th>Default Warehouse</th>
+              <th>Status</th>
+              <th style="width: 120px; text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="profile-list-body">
+            <tr>
+              <td colspan="5">
+                <div class="spinner-wrap"><div class="spinner"></div></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Drawer Backdrop -->
+<div class="drawer-backdrop" id="drawer-backdrop" onclick="closeProfileDrawer()"></div>
+
+<!-- Right Side Drawer -->
+<div class="drawer" id="profile-drawer">
+  <div class="drawer-header">
+    <div class="drawer-title" id="drawer-title-text">
+      <span class="material-symbols-outlined">settings_input_composite</span>
+      POS Profile Settings
+    </div>
+    <button class="drawer-close" onclick="closeProfileDrawer()">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </div>
+  
+  <!-- Shift Warning Banner -->
+  <div class="shift-warning-banner" id="shift-warning-banner">
+    <span class="material-symbols-outlined">warning_amber</span>
+    <span id="shift-warning-message">Shift lock active. Critical fields are blocked.</span>
+  </div>
+  
+  <div class="drawer-tabs">
+    <button class="drawer-tab active" data-tab="general" onclick="switchTab(this)">General</button>
+    <button class="drawer-tab" data-tab="payments" onclick="switchTab(this)">Payments</button>
+    <button class="drawer-tab" data-tab="cashiers" onclick="switchTab(this)">Cashiers</button>
+    <button class="drawer-tab" data-tab="advanced" onclick="switchTab(this)">Advanced</button>
+  </div>
+  
+  <div class="drawer-body">
+    <form id="profile-form">
+      <input type="hidden" id="is-new-profile" value="1"/>
+      
+      <!-- Tab 1: General Settings -->
+      <div class="tab-pane active" id="tab-general">
+        <div class="form-group">
+          <label class="form-label">Profile Name *</label>
+          <input type="text" id="profile-name" class="form-input" placeholder="e.g. Express checkout lane 01" required/>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Company *</label>
+          <select id="profile-company" required onchange="filterAccountsByCompany()">
+            <option value="">-- Select Company --</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Default Warehouse *</label>
+          <select id="profile-warehouse" required>
+            <option value="">-- Select Warehouse --</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Selling Price List *</label>
+          <select id="profile-price-list" required>
+            <option value="">-- Select Price List --</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Currency</label>
+          <input type="text" id="profile-currency" class="form-input" value="INR" placeholder="INR"/>
+        </div>
+        
+        <div class="form-group checkbox-group">
+          <input type="checkbox" id="profile-disabled"/>
+          <label class="form-label" style="cursor: pointer; margin-bottom: 0;">Disable POS Profile (Soft Delete)</label>
+        </div>
+        
+        <div style="border-top: 1px solid var(--smriti-color-border-default); margin: 20px 0; padding-top: 15px;">
+          <h4 style="font-size: var(--smriti-font-size-xs); font-weight: 700; color: var(--smriti-color-text-muted); text-transform: uppercase; margin-bottom: 12px;">Accounting Offsets</h4>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Write-off Account</label>
+          <select id="profile-write-off-account">
+            <option value="">-- Select Write-off Account --</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Write-off Cost Center</label>
+          <input type="text" id="profile-write-off-cost-center" class="form-input" placeholder="e.g. Main Cost Center"/>
+        </div>
+      </div>
+      
+      <!-- Tab 2: Payments Mapping -->
+      <div class="tab-pane" id="tab-payments">
+        <div class="child-table-header">
+          <h3 style="font-size: var(--smriti-font-size-xs); font-weight: 700; color: var(--smriti-color-text-primary);">Configured Payment Methods</h3>
+          <button type="button" class="sm-btn sm-btn-secondary sm-btn-sm" id="btn-add-payment" onclick="addPaymentRow()">
+            <span class="material-symbols-outlined" style="font-size: 16px">add</span> Add Mode
+          </button>
+        </div>
+        
+        <div class="child-table-wrapper">
+          <table class="child-table">
+            <thead>
+              <tr>
+                <th>Mode of Payment</th>
+                <th>Clearing Account</th>
+                <th style="width: 70px; text-align: center;">Default</th>
+                <th style="width: 50px; text-align: center;">Del</th>
+              </tr>
+            </thead>
+            <tbody id="payment-rows-container">
+              <!-- Dynamically added payment rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Tab 3: Cashiers Mapping -->
+      <div class="tab-pane" id="tab-cashiers">
+        <div class="child-table-header">
+          <h3 style="font-size: var(--smriti-font-size-xs); font-weight: 700; color: var(--smriti-color-text-primary);">Authorized Users (Cashiers)</h3>
+          <button type="button" class="sm-btn sm-btn-secondary sm-btn-sm" id="btn-add-cashier" onclick="addCashierRow()">
+            <span class="material-symbols-outlined" style="font-size: 16px">add</span> Add User
+          </button>
+        </div>
+        
+        <div class="child-table-wrapper">
+          <table class="child-table">
+            <thead>
+              <tr>
+                <th>Select User</th>
+                <th style="width: 50px; text-align: center;">Del</th>
+              </tr>
+            </thead>
+            <tbody id="cashier-rows-container">
+              <!-- Dynamically added cashier rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Tab 4: Advanced & Clone Operations -->
+      <div class="tab-pane" id="tab-advanced">
+        <div style="border: 1px solid var(--smriti-color-border-default); border-radius: var(--smriti-radius-md); padding: 16px; background: rgba(255,255,255,0.01); margin-bottom: 24px;">
+          <h3 style="font-size: var(--smriti-font-size-sm); font-weight: 700; color: var(--smriti-color-text-primary); margin-bottom: 6px;">Clone POS Profile</h3>
+          <p style="font-size: var(--smriti-font-size-xs); color: var(--smriti-color-text-muted); margin-bottom: 14px;">
+            Copy all payments, warehouses, price lists, and cashiers from this configuration directly into a new profile record.
+          </p>
+          <div class="form-group">
+            <label class="form-label">New Profile Name</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="clone-target-name" class="form-input" placeholder="e.g. Store 01 - Backup Lane"/>
+              <button type="button" class="sm-btn sm-btn-primary" onclick="cloneCurrentProfile()">Clone</button>
+            </div>
+          </div>
+        </div>
+        
+        <div style="border: 1px solid var(--smriti-color-border-default); border-radius: var(--smriti-radius-md); padding: 16px; background: rgba(0,0,0,0.15);">
+          <h3 style="font-size: var(--smriti-font-size-xs); font-weight: 700; color: var(--smriti-color-text-muted); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">Audit Details</h3>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: var(--smriti-font-size-xs); color: var(--smriti-color-text-muted);">
+            <div>Modified By: <span id="audit-modified-by" style="color: var(--smriti-color-text-primary);">-</span></div>
+            <div>Last Updated: <span id="audit-modified-date" style="color: var(--smriti-color-text-primary);">-</span></div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  
+  <div class="drawer-footer">
+    <button class="sm-btn sm-btn-secondary" onclick="closeProfileDrawer()">Cancel</button>
+    <button class="sm-btn sm-btn-primary" id="btn-save-profile" onclick="saveProfileData()">Save Profile</button>
+  </div>
+</div>
+
+<!-- SMRITI Standard Dialog Layer for notifications -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- JS Implementation -->
+<script>
+  let allProfiles = [];
+  let dropdownData = {};
+  let currentOpenShift = null;
+
+  document.addEventListener("DOMContentLoaded", () => {
+      loadDropdownData();
+      loadProfilesList();
+      
+      // Wire up list page search / filters
+      document.getElementById("profile-search").addEventListener("input", filterList);
+      document.getElementById("company-filter").addEventListener("change", filterList);
+      document.getElementById("warehouse-filter").addEventListener("change", filterList);
+      document.getElementById("status-filter").addEventListener("change", filterList);
+  });
+
+  // Switch Drawer Tabs
+  function switchTab(btn) {
+      document.querySelectorAll(".drawer-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
+      
+      btn.classList.add("active");
+      const tabId = "tab-" + btn.dataset.tab;
+      document.getElementById(tabId).classList.add("active");
+  }
+
+  // Toast Alerts
+  function toast(message, type = "success") {
+      const container = document.getElementById("toast-container");
+      const el = document.createElement("div");
+      el.className = `toast ${type}`;
+      el.innerHTML = `
+        <span class="material-symbols-outlined">${type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info'}</span>
+        <span>${message}</span>
+      `;
+      container.appendChild(el);
+      setTimeout(() => {
+          el.style.opacity = "0";
+          setTimeout(() => el.remove(), 300);
+      }, 4000);
+  }
+
+  // Load Dropdown Options from Service Layer
+  function loadDropdownData() {
+      frappe.call({
+          method: "smriti_retail_os.api.pos_profile_api.get_dropdowns",
+          callback: (r) => {
+              if (r.message) {
+                  dropdownData = r.message;
+                  
+                  // Fill list filters
+                  updateDropdown("company-filter", dropdownData.companies);
+                  updateDropdown("warehouse-filter", dropdownData.warehouses);
+                  
+                  // Fill form selects
+                  updateDropdown("profile-company", dropdownData.companies, "-- Select Company --");
+                  updateDropdown("profile-warehouse", dropdownData.warehouses, "-- Select Warehouse --");
+                  updateDropdown("profile-price-list", dropdownData.price_lists, "-- Select Price List --");
+              }
+          }
+      });
+  }
+
+  function updateDropdown(id, items, defaultLabel = "") {
+      const sel = document.getElementById(id);
+      sel.innerHTML = defaultLabel ? `<option value="">${defaultLabel}</option>` : sel.options[0] ? sel.options[0].outerHTML : "";
+      items.forEach(item => {
+          const val = typeof item === 'object' ? item.value : item;
+          const lbl = typeof item === 'object' ? item.label : item;
+          sel.appendChild(new Option(lbl, val));
+      });
+  }
+
+  // Filter Clearing Accounts based on Company Selection
+  function filterAccountsByCompany() {
+      const company = document.getElementById("profile-company").value;
+      const filteredAccounts = dropdownData.accounts ? dropdownData.accounts.filter(a => a.company === company).map(a => a.name) : [];
+      
+      // Update all payment rows clearing accounts lists
+      document.querySelectorAll(".payment-account-select").forEach(sel => {
+          const val = sel.value;
+          sel.innerHTML = `<option value="">-- Select Clearing Account --</option>`;
+          filteredAccounts.forEach(a => sel.appendChild(new Option(a, a)));
+          if (filteredAccounts.includes(val)) sel.value = val;
+      });
+  }
+
+  // Load POS Profiles
+  function loadProfilesList() {
+      const body = document.getElementById("profile-list-body");
+      frappe.call({
+          method: "smriti_retail_os.api.pos_profile_api.get_profiles",
+          callback: (r) => {
+              if (r.message) {
+                  allProfiles = r.message;
+                  renderProfilesTable(allProfiles);
+              }
+          }
+      });
+  }
+
+  function renderProfilesTable(list) {
+      const body = document.getElementById("profile-list-body");
+      body.innerHTML = "";
+      if (!list.length) {
+          body.innerHTML = `
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <span class="material-symbols-outlined empty-icon">sentiment_dissatisfied</span>
+                  <div>No POS Profiles found.</div>
+                </div>
+              </td>
+            </tr>
+          `;
+          return;
+      }
+      
+      list.forEach(p => {
+          const statusClass = p.disabled ? 'disabled' : 'active';
+          const statusText = p.disabled ? 'Disabled' : 'Active';
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td style="font-weight: 600;">${p.name}</td>
+            <td>${p.company}</td>
+            <td>${p.warehouse || '<span style="color:var(--smriti-color-text-subtle)">Not Configured</span>'}</td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td style="text-align: right;">
+              <button class="action-icon-btn" onclick="openProfileDrawer('${p.name}')" title="Edit Settings">
+                <span class="material-symbols-outlined" style="font-size: 20px">edit</span>
+              </button>
+              <button class="action-icon-btn danger-action" onclick="confirmArchive('${p.name}')" title="Archive Profile">
+                <span class="material-symbols-outlined" style="font-size: 20px">archive</span>
+              </button>
+            </td>
+          `;
+          body.appendChild(tr);
+      });
+  }
+
+  function filterList() {
+      const search = document.getElementById("profile-search").value.toLowerCase();
+      const comp = document.getElementById("company-filter").value;
+      const wh = document.getElementById("warehouse-filter").value;
+      const status = document.getElementById("status-filter").value;
+      
+      const filtered = allProfiles.filter(p => {
+          const matchSearch = p.name.toLowerCase().includes(search);
+          const matchComp = !comp || p.company === comp;
+          const matchWh = !wh || p.warehouse === wh;
+          const matchStatus = !status || (status === "active" && !p.disabled) || (status === "disabled" && p.disabled);
+          return matchSearch && matchComp && matchWh && matchStatus;
+      });
+      renderProfilesTable(filtered);
+  }
+
+  // Open Drawer (Create / Edit Mode)
+  function openProfileDrawer(name = "") {
+      document.getElementById("drawer-backdrop").classList.add("open");
+      document.getElementById("profile-drawer").style.transform = "translateX(0)";
+      
+      // Default to general tab
+      switchTab(document.querySelector(".drawer-tab[data-tab='general']"));
+      
+      // Reset form fields
+      document.getElementById("profile-form").reset();
+      document.getElementById("payment-rows-container").innerHTML = "";
+      document.getElementById("cashier-rows-container").innerHTML = "";
+      document.getElementById("shift-warning-banner").style.display = "none";
+      document.getElementById("clone-target-name").value = "";
+      
+      // Toggle inputs state
+      toggleFormControls(false);
+      currentOpenShift = null;
+
+      if (name) {
+          document.getElementById("is-new-profile").value = "0";
+          document.getElementById("profile-name").value = name;
+          document.getElementById("profile-name").disabled = true;
+          document.getElementById("drawer-title-text").innerHTML = `<span class="material-symbols-outlined">settings_input_composite</span> Edit POS Profile: ${name}`;
+          
+          // Check shift lock status first
+          frappe.call({
+              method: "smriti_retail_os.api.pos_profile_api.validate_profile",
+              args: { name },
+              callback: (r) => {
+                  if (r.message && r.message.is_locked) {
+                      currentOpenShift = r.message.active_shift;
+                      document.getElementById("shift-warning-message").innerHTML = `ⓘ Shift lock active: Shift <strong>${currentOpenShift.name}</strong> is open by <strong>${currentOpenShift.user}</strong>. Warehouse, Payments, and Cashiers cannot be modified.`;
+                      document.getElementById("shift-warning-banner").style.display = "flex";
+                      toggleFormControls(true);
+                  }
+                  
+                  // Load detailed fields
+                  loadProfileDetails(name);
+              }
+          });
+      } else {
+          document.getElementById("is-new-profile").value = "1";
+          document.getElementById("profile-name").disabled = false;
+          document.getElementById("drawer-title-text").innerHTML = `<span class="material-symbols-outlined">settings_input_composite</span> Create New POS Profile`;
+          
+          // Default to first company in list if available
+          if (dropdownData.companies && dropdownData.companies.length) {
+              document.getElementById("profile-company").value = dropdownData.companies[0];
+              filterAccountsByCompany();
+          }
+          
+          // Audit section defaults
+          document.getElementById("audit-modified-by").textContent = "New Profile";
+          document.getElementById("audit-modified-date").textContent = "Unsaved";
+          
+          // Pre-populate with a cash payment method by default
+          addPaymentRow("Cash", "", true);
+      }
+  }
+
+  function toggleFormControls(isLocked) {
+      document.getElementById("profile-warehouse").disabled = isLocked;
+      document.getElementById("profile-company").disabled = isLocked;
+      document.getElementById("btn-add-payment").disabled = isLocked;
+      document.getElementById("btn-add-cashier").disabled = isLocked;
+      
+      // Disable delete columns and account selects
+      document.querySelectorAll(".payment-row-delete").forEach(btn => btn.style.display = isLocked ? "none" : "inline-flex");
+      document.querySelectorAll(".payment-account-select").forEach(sel => sel.disabled = isLocked);
+      document.querySelectorAll(".payment-mode-select").forEach(sel => sel.disabled = isLocked);
+      document.querySelectorAll(".payment-default-radio").forEach(rad => rad.disabled = isLocked);
+      document.querySelectorAll(".cashier-row-delete").forEach(btn => btn.style.display = isLocked ? "none" : "inline-flex");
+      document.querySelectorAll(".cashier-select").forEach(sel => sel.disabled = isLocked);
+  }
+
+  function loadProfileDetails(name) {
+      frappe.call({
+          method: "smriti_retail_os.api.pos_profile_api.get_details",
+          args: { name },
+          callback: (r) => {
+              if (r.message) {
+                  const d = r.message;
+                  document.getElementById("profile-company").value = d.company;
+                  
+                  // Re-filter accounts to ensure selects populate correctly
+                  filterAccountsByCompany();
+                  
+                  document.getElementById("profile-warehouse").value = d.warehouse || "";
+                  document.getElementById("profile-price-list").value = d.selling_price_list || "";
+                  document.getElementById("profile-currency").value = d.currency || "INR";
+                  document.getElementById("profile-disabled").checked = !!d.disabled;
+                  
+                  // Accounting offsets
+                  updateDropdown("profile-write-off-account", dropdownData.accounts ? dropdownData.accounts.filter(a => a.company === d.company).map(a => a.name) : []);
+                  document.getElementById("profile-write-off-account").value = d.write_off_account || "";
+                  document.getElementById("profile-write-off-cost-center").value = d.write_off_cost_center || "";
+                  
+                  // Audit trail
+                  document.getElementById("audit-modified-by").textContent = d.modified_by || "System";
+                  document.getElementById("audit-modified-date").textContent = d.modified || "Unknown";
+                  
+                  // Populate payments child rows
+                  if (d.payments && d.payments.length) {
+                      d.payments.forEach(p => {
+                          addPaymentRow(p.mode_of_payment, p.default_account, !!p.default);
+                      });
+                  }
+                  
+                  // Populate cashier mappings
+                  if (d.applicable_for_users && d.applicable_for_users.length) {
+                      d.applicable_for_users.forEach(u => {
+                          addCashierRow(u.user);
+                      });
+                  }
+                  
+                  // Re-apply shift lock disabling to newly generated dynamically injected child rows
+                  if (currentOpenShift) {
+                      toggleFormControls(true);
+                  }
+              }
+          }
+      });
+  }
+
+  function closeProfileDrawer() {
+      document.getElementById("drawer-backdrop").classList.remove("open");
+      document.getElementById("profile-drawer").style.transform = "translateX(100%)";
+  }
+
+  // Payment Table Row Management
+  function addPaymentRow(mode = "", account = "", isDefault = false) {
+      const container = document.getElementById("payment-rows-container");
+      const tr = document.createElement("tr");
+      tr.className = "payment-method-row";
+      
+      const comp = document.getElementById("profile-company").value;
+      const filteredAccounts = dropdownData.accounts ? dropdownData.accounts.filter(a => a.company === comp).map(a => a.name) : [];
+      
+      let modeOptions = "";
+      if (dropdownData.payment_modes) {
+          dropdownData.payment_modes.forEach(m => {
+              modeOptions += `<option value="${m}" ${m === mode ? 'selected' : ''}>${m}</option>`;
+          });
+      }
+      
+      let accountOptions = `<option value="">-- Select Clearing Account --</option>`;
+      filteredAccounts.forEach(a => {
+          accountOptions += `<option value="${a}" ${a === account ? 'selected' : ''}>${a}</option>`;
+      });
+      
+      tr.innerHTML = `
+        <td>
+          <select class="payment-mode-select" required>
+            ${modeOptions}
+          </select>
+        </td>
+        <td>
+          <select class="payment-account-select" required>
+            ${accountOptions}
+          </select>
+        </td>
+        <td style="text-align: center;">
+          <input type="radio" name="default_payment_mode" class="payment-default-radio" ${isDefault ? 'checked' : ''}/>
+        </td>
+        <td style="text-align: center;">
+          <button type="button" class="action-icon-btn danger-action payment-row-delete" onclick="this.closest('tr').remove()">
+            <span class="material-symbols-outlined" style="font-size: 18px">delete</span>
+          </button>
+        </td>
+      `;
+      container.appendChild(tr);
+  }
+
+  // Cashier Table Row Management
+  function addCashierRow(selectedUser = "") {
+      const container = document.getElementById("cashier-rows-container");
+      const tr = document.createElement("tr");
+      tr.className = "cashier-user-row";
+      
+      let userOptions = `<option value="">-- Select User --</option>`;
+      if (dropdownData.users) {
+          dropdownData.users.forEach(u => {
+              userOptions += `<option value="${u.value}" ${u.value === selectedUser ? 'selected' : ''}>${u.label}</option>`;
+          });
+      }
+      
+      tr.innerHTML = `
+        <td>
+          <select class="cashier-select" required>
+            ${userOptions}
+          </select>
+        </td>
+        <td style="text-align: center;">
+          <button type="button" class="action-icon-btn danger-action cashier-row-delete" onclick="this.closest('tr').remove()">
+            <span class="material-symbols-outlined" style="font-size: 18px">delete</span>
+          </button>
+        </td>
+      `;
+      container.appendChild(tr);
+  }
+
+  // Save POS Profile
+  function saveProfileData() {
+      const form = document.getElementById("profile-form");
+      if (!form.reportValidity()) {
+          toast("Please fill out all required fields", "error");
+          return;
+      }
+      
+      const isNew = document.getElementById("is-new-profile").value === "1";
+      const name = document.getElementById("profile-name").value.strip();
+      
+      // Compile payments
+      const payments = [];
+      let defaultSelected = false;
+      
+      const payRows = document.querySelectorAll(".payment-method-row");
+      for (let r of payRows) {
+          const mode = r.querySelector(".payment-mode-select").value;
+          const acc = r.querySelector(".payment-account-select").value;
+          const isDef = r.querySelector(".payment-default-radio").checked;
+          
+          if (!mode || !acc) {
+              toast("All mapped payment rows require both mode and account configuration", "error");
+              return;
+          }
+          
+          if (isDef) defaultSelected = true;
+          
+          payments.push({
+              mode_of_payment: mode,
+              default_account: acc,
+              default: isDef ? 1 : 0
+          });
+      }
+      
+      if (payRows.length > 0 && !defaultSelected) {
+          toast("Please mark at least one payment mode as Default", "error");
+          return;
+      }
+      
+      // Compile cashiers
+      const cashiers = [];
+      const cashierRows = document.querySelectorAll(".cashier-user-row");
+      for (let r of cashierRows) {
+          const user = r.querySelector(".cashier-select").value;
+          if (!user) {
+              toast("Please select a cashier email user", "error");
+              return;
+          }
+          cashiers.push({ user });
+      }
+      
+      const payload = {
+          name: name,
+          company: document.getElementById("profile-company").value,
+          warehouse: document.getElementById("profile-warehouse").value,
+          selling_price_list: document.getElementById("profile-price-list").value,
+          currency: document.getElementById("profile-currency").value || "INR",
+          disabled: document.getElementById("profile-disabled").checked ? 1 : 0,
+          write_off_account: document.getElementById("profile-write-off-account").value,
+          write_off_cost_center: document.getElementById("profile-write-off-cost-center").value,
+          payments: payments,
+          applicable_for_users: cashiers
+      };
+      
+      document.getElementById("btn-save-profile").disabled = true;
+      
+      frappe.call({
+          method: "smriti_retail_os.api.pos_profile_api.save_profile",
+          args: { doc_data: payload },
+          callback: (r) => {
+              document.getElementById("btn-save-profile").disabled = false;
+              if (r.message) {
+                  toast(`POS Profile '${r.message}' saved successfully`);
+                  closeProfileDrawer();
+                  loadProfilesList();
+              }
+          },
+          error: (err) => {
+              document.getElementById("btn-save-profile").disabled = false;
+          }
+      });
+  }
+
+  // Clone POS Profile Function
+  function cloneCurrentProfile() {
+      const source = document.getElementById("profile-name").value;
+      const target = document.getElementById("clone-target-name").value.strip();
+      
+      if (!target) {
+          toast("Please enter a target name for the cloned profile", "error");
+          return;
+      }
+      
+      frappe.call({
+          method: "smriti_retail_os.api.pos_profile_api.clone_profile",
+          args: { source_name: source, target_name: target },
+          callback: (r) => {
+              if (r.message) {
+                  toast(`Profile cloned successfully as '${r.message}'`);
+                  closeProfileDrawer();
+                  loadProfilesList();
+              }
+          }
+      });
+  }
+
+  // Archive / Disable POS Profile
+  function confirmArchive(name) {
+      if (confirm(`Are you sure you want to archive (disable) the POS Profile '${name}'? This keeps transaction histories intact but restricts it from shifts.`)) {
+          frappe.call({
+              method: "smriti_retail_os.api.pos_profile_api.archive_profile",
+              args: { name },
+              callback: (r) => {
+                  if (r.message) {
+                      toast(`POS Profile '${name}' archived successfully`);
+                      loadProfilesList();
+                  }
+              }
+          });
+      }
+  }
+</script>
+</body>
+</html>
+{% endblock %}
