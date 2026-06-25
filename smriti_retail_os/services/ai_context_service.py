@@ -3,7 +3,7 @@
 # @file: smriti_retail_os/services/ai_context_service.py
 # @description: SMRITI AI Context Builder — Retrieval-Augmented Context Generation.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.0.0
+# @version: 1.2.14
 # @license: MIT
 #
 
@@ -14,12 +14,24 @@ import frappe
 
 def _get_ske_engine():
     app_path = frappe.get_app_path("smriti_retail_os")
-    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(app_path)))
-    sdc_path = os.path.join(repo_root, "sdc")
+    
+    # Check for packaged sdc directory inside custom app
+    sdc_path = os.path.join(app_path, "sdc")
+    if not os.path.exists(sdc_path):
+        repo_root = os.path.dirname(os.path.dirname(os.path.dirname(app_path)))
+        sdc_path = os.path.join(repo_root, "sdc")
+    
     if sdc_path not in sys.path:
         sys.path.append(sdc_path)
+        
     from ske import SMRITIKnowledgeEngine
-    return SMRITIKnowledgeEngine(repo_root)
+    
+    # Check for packaged docs/discovery inside custom app
+    if os.path.exists(os.path.join(app_path, "docs", "discovery")):
+        return SMRITIKnowledgeEngine(app_path)
+    else:
+        repo_root = os.path.dirname(os.path.dirname(os.path.dirname(app_path)))
+        return SMRITIKnowledgeEngine(repo_root)
 
 def build_context_pack(query):
     """

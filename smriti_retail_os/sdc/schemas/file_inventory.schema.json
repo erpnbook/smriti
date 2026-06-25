@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FileInventory",
+  "type": "OBJECT",
+  "required": ["ir_version", "compiler_version", "artifact_type", "generated_at", "repository_commit", "provenance", "data"],
+  "properties": {
+    "ir_version": { "type": "STRING" },
+    "compiler_version": { "type": "STRING" },
+    "artifact_type": { "type": "STRING", "enum": ["file_inventory"] },
+    "generated_at": { "type": "STRING" },
+    "repository_commit": { "type": "STRING" },
+    "provenance": {
+      "type": "OBJECT",
+      "required": ["artifact_id", "produced_by", "consumes", "used_by"],
+      "properties": {
+        "artifact_id": { "type": "STRING" },
+        "produced_by": { "type": "STRING" },
+        "consumes": { "type": "ARRAY", "items": { "type": "STRING" } },
+        "used_by": { "type": "ARRAY", "items": { "type": "STRING" } }
+      }
+    },
+    "data": {
+      "type": "ARRAY",
+      "items": {
+        "type": "OBJECT",
+        "required": ["file_path", "sha256", "size_bytes", "modified_date"],
+        "properties": {
+          "file_path": { "type": "STRING" },
+          "sha256": { "type": "STRING" },
+          "size_bytes": { "type": "INTEGER" },
+          "modified_date": { "type": "STRING" }
+        }
+      }
+    }
+  }
+}

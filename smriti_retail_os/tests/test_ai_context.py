@@ -3,7 +3,7 @@
 # @file: smriti_retail_os/tests/test_ai_context.py
 # @description: Unit tests for SMRITI AI Context Builder & LLM Integration (Sprint SDC-004)
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.0.0
+# @version: 1.2.14
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
@@ -68,7 +68,7 @@ class TestAIContext(unittest.TestCase):
         self.assertIn("answer", res)
         self.assertIn("context_pack", res)
         self.assertIn("evidence_badge", res)
-        self.assertIn("shadow ledger architecture", res["answer"])
+        self.assertIn("Inventory Visibility Layer", res["answer"])
 
     def test_api_ask_smriti_ai_unverified(self):
         """Test ask_smriti_ai safety fallback with unverified queries."""

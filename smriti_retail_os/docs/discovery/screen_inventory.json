@@ -1,0 +1,206 @@
+{
+  "ir_version": "1.0",
+  "compiler_version": "1.1",
+  "artifact_type": "screen_inventory",
+  "generated_at": "2026-06-25T10:19:35Z",
+  "repository_commit": "f95b4fe91f273f7a6745f2f7d1de4733757db2dd",
+  "provenance": {
+    "artifact_id": "ART-SCREEN-INV-00001",
+    "produced_by": "Phase0_Discovery",
+    "consumes": [
+      "sdc/rules/screen_narratives.json"
+    ],
+    "used_by": [
+      "docs_renderers",
+      "dependency_graph"
+    ]
+  },
+  "data": [
+    {
+      "screen_id": "item_master",
+      "title": "Item Master Import",
+      "route": "/item_master",
+      "doctype": "Item",
+      "fields": [
+        "custom_mrp",
+        "custom_gst_percentage",
+        "custom_is_retail_item",
+        "custom_department",
+        "custom_barcode_size",
+        "custom_current_stock_html",
+        "custom_purchase_class",
+        "custom_merchandise_category",
+        "custom_sub_category",
+        "custom_gender",
+        "custom_upper_material",
+        "custom_outsole",
+        "custom_heel_type",
+        "custom_style_code"
+      ],
+      "apis": [
+        "smriti_retail_os.barcode_api.expand_item_variants",
+        "smriti_retail_os.barcode_api.get_transaction_items_checklist",
+        "smriti_retail_os.barcode_api.generate_prn",
+        "smriti_retail_os.billing_api.add_item_by_barcode",
+        "smriti_retail_os.inventory_api.scan_item_for_inventory",
+        "smriti_retail_os.inventory_api.create_grn",
+        "smriti_retail_os.inventory_api.create_stock_transfer",
+        "smriti_retail_os.inventory_api.create_stock_adjustment",
+        "smriti_retail_os.inventory_api.create_stock_audit",
+        "smriti_retail_os.inventory_api.get_stock_summary",
+        "smriti_retail_os.item_master_api.import_item_master",
+        "smriti_retail_os.item_master_api.generate_ean13_barcode",
+        "smriti_retail_os.item_master_api.get_style_details",
+        "smriti_retail_os.item_master_api.create_style_with_variants",
+        "smriti_retail_os.item_master_api.delete_size_variant",
+        "smriti_retail_os.item_master_api.delete_style_and_variants",
+        "smriti_retail_os.item_master_api.import_pivot_item_master",
+        "smriti_retail_os.master_api.quick_create_item",
+        "smriti_retail_os.psv_snapshot_service.generate_snapshots",
+        "smriti_retail_os.purchase_api.get_po_details",
+        "smriti_retail_os.purchase_api.create_purchase_order",
+        "smriti_retail_os.reports_api.get_stock_report",
+        "smriti_retail_os.sales_order_api.create_sales_order",
+        "smriti_retail_os.sizewise_invoice_api.search_items",
+        "smriti_retail_os.sizewise_invoice_api.get_item_details_by_article",
+        "smriti_retail_os.transaction_kernel.resolve_identifiers",
+        "smriti_retail_os.api.brand_api.delete_brand",
+        "smriti_retail_os.api.category_api.delete_category",
+        "smriti_retail_os.api.scheme_api.create_scheme",
+        "smriti_retail_os.api.scheme_api.update_scheme",
+        "smriti_retail_os.cge.service.cge_service.validate_checkout_rules",
+        "smriti_retail_os.utils.opening_balance.parse_opening_excel"
+      ],
+      "reports": [
+        "Item Catalog Report"
+      ],
+      "labels": [
+        "Garment Label Template"
+      ],
+      "beginner": {
+        "purpose": "Used to import catalog item details directly from spreadsheet sheets.",
+        "how_to_use": "Select/Paste spreadsheet cells containing headers and rows, then validate and click submit.",
+        "example": "Importing 100 new styles of footwear with planned MRP and costs."
+      },
+      "power_user": {
+        "validation": "Validates size run curve consistency and verifies that brand and categories exist in SMRITI masters.",
+        "workflow": "Draft -> Row-by-Row Validation -> Bulk Insertion -> Stock Master Registry"
+      },
+      "developer": {
+        "manual_reference": "Volume 2 > Master Data > Item Import Services",
+        "training_reference": "TRN-item-master-import"
+      }
+    },
+    {
+      "screen_id": "billing",
+      "title": "POS Billing Center",
+      "route": "/billing",
+      "doctype": "Sales Invoice",
+      "fields": [
+        "custom_sizewise_json",
+        "custom_billing_session_id",
+        "custom_party_stock_account",
+        "custom_wallet_deduction",
+        "custom_loyalty_points_earned",
+        "custom_coupon_discount"
+      ],
+      "apis": [
+        "smriti_retail_os.billing_api.submit_bill",
+        "smriti_retail_os.billing_api.generate_mock_eway_bill",
+        "smriti_retail_os.billing_api.create_return_invoice",
+        "smriti_retail_os.billing_api.create_custom_sales_return",
+        "smriti_retail_os.billing_api.update_sales_return",
+        "smriti_retail_os.billing_api.delete_sales_return",
+        "smriti_retail_os.reports_api.get_outstanding_report",
+        "smriti_retail_os.sizewise_invoice_api.save_sizewise_invoice",
+        "smriti_retail_os.sizewise_invoice_api.submit_sizewise_invoice",
+        "smriti_retail_os.sizewise_invoice_api.get_sizewise_invoice",
+        "smriti_retail_os.sizewise_invoice_api.list_sizewise_invoices",
+        "smriti_retail_os.sizewise_invoice_api.cancel_sizewise_invoice",
+        "smriti_retail_os.cge.service.cge_service.validate_checkout_rules"
+      ],
+      "reports": [
+        "Sales Register",
+        "Payment Summary"
+      ],
+      "labels": [
+        "Garment Label Template"
+      ],
+      "beginner": {
+        "purpose": "Used by cashiers to record counter sales, process payments, and print customer bills.",
+        "how_to_use": "Add items via barcode search or manual lookup, input customer details, select payment method, and complete sale.",
+        "example": "Billing 2 pairs of sports shoes with a 10% promotional discount."
+      },
+      "power_user": {
+        "validation": "Checks stock availability in the active POS store warehouse, applies active promotions, and calculates taxes.",
+        "workflow": "Scan -> Price Apply -> Payment Capture -> Invoice Insertion -> Receipt Print"
+      },
+      "developer": {
+        "manual_reference": "Volume 3 > Store Operations > POS Billing",
+        "training_reference": "TRN-billing-pos"
+      }
+    },
+    {
+      "screen_id": "purchase",
+      "title": "Purchase Order Center",
+      "route": "/purchase",
+      "doctype": "Purchase Order",
+      "fields": [],
+      "apis": [
+        "smriti_retail_os.purchase_api.get_open_purchase_orders",
+        "smriti_retail_os.purchase_api.get_po_details",
+        "smriti_retail_os.purchase_api.create_purchase_order",
+        "smriti_retail_os.purchase_api.create_purchase_receipt"
+      ],
+      "reports": [
+        "Purchase Order Registry"
+      ],
+      "labels": [],
+      "beginner": {
+        "purpose": "Used to raise formal purchase requests to suppliers for inventory procurement.",
+        "how_to_use": "Select supplier, add items with style codes, purchase prices, quantities, and submit for approval.",
+        "example": "Ordering 500 units of Autumn apparel from active supplier AITDL Supplier."
+      },
+      "power_user": {
+        "validation": "Validates prices against supplier price lists and ensures total quantity satisfies vendor minimum order quantities (MOQ).",
+        "workflow": "Reorder Suggestion -> Draft PO -> Vendor Alignment -> Management Approval -> Submission"
+      },
+      "developer": {
+        "manual_reference": "Volume 4 > Procurement > Purchase Operations",
+        "training_reference": "TRN-purchase-order"
+      }
+    },
+    {
+      "screen_id": "inventory",
+      "title": "Stock Center",
+      "route": "/inventory",
+      "doctype": "Stock Entry",
+      "fields": [
+        "custom_party_stock_account"
+      ],
+      "apis": [
+        "smriti_retail_os.barcode_api.get_items_for_printing",
+        "smriti_retail_os.inventory_api.create_stock_transfer",
+        "smriti_retail_os.inventory_api.create_stock_adjustment",
+        "smriti_retail_os.psv_api.get_psv_health"
+      ],
+      "reports": [
+        "Stock Balance"
+      ],
+      "labels": [],
+      "beginner": {
+        "purpose": "Used for recording stock transfers, warehouse adjustments, and physical count reconciliations.",
+        "how_to_use": "Select entry type (Material Transfer/Issue), source & target warehouses, add items, and log quantities.",
+        "example": "Transferring 50 pairs of shoes from Main Warehouse to Counter A."
+      },
+      "power_user": {
+        "validation": "Checks stock levels at source warehouse and logs entries dynamically to ERPNext Stock Ledger without bypassing tax controls.",
+        "workflow": "Request -> Verification -> Transfer Entry -> Target Receipt confirmation"
+      },
+      "developer": {
+        "manual_reference": "Volume 5 > Warehouse Operations > Inventory Ledger",
+        "training_reference": "TRN-inventory-ledger"
+      }
+    }
+  ]
+}

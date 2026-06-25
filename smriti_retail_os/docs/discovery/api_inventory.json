@@ -1,0 +1,4831 @@
+{
+  "ir_version": "1.0",
+  "compiler_version": "1.1",
+  "artifact_type": "api_inventory",
+  "generated_at": "2026-06-25T10:19:35Z",
+  "repository_commit": "f95b4fe91f273f7a6745f2f7d1de4733757db2dd",
+  "provenance": {
+    "artifact_id": "ART-API-INV-00001",
+    "produced_by": "Phase0_Discovery",
+    "consumes": [
+      "apps/smriti_retail_os"
+    ],
+    "used_by": [
+      "docs_renderers",
+      "dependency_graph"
+    ]
+  },
+  "data": [
+    {
+      "artifact_id": "ART-API-00194",
+      "method": "smriti_retail_os.backup_api.get_settings",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/backup_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "f2dddcff065b2a0e36ba046e9f2db92a7eb51fe304ea9e3465517efc7a0773c7"
+    },
+    {
+      "artifact_id": "ART-API-00195",
+      "method": "smriti_retail_os.backup_api.save_settings",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/backup_api.py",
+      "arguments": [
+        "settings"
+      ],
+      "db_references": [],
+      "checksum": "87f3ff67187b252f94029497b3916a7cb3a822eafcb71841bb78b3f500979704"
+    },
+    {
+      "artifact_id": "ART-API-00196",
+      "method": "smriti_retail_os.backup_api.get_backup_status",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/backup_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "d1f75469b4d440bcaf72a5ee2d2a78c4fefe3ac16bbd9440f0eead4620158790"
+    },
+    {
+      "artifact_id": "ART-API-00197",
+      "method": "smriti_retail_os.backup_api.get_backup_history",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/backup_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "831e18cba3ebd3b5cf7a6c964377dbb5fb2f7063777ed95d98fe3e1b0cf9772f"
+    },
+    {
+      "artifact_id": "ART-API-00198",
+      "method": "smriti_retail_os.backup_api.export_site_config",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/backup_api.py",
+      "arguments": [
+        "password"
+      ],
+      "db_references": [],
+      "checksum": "bf0d8a3921184f094cdf0bb2173183d4a2532b7dcfde927cace06a4486f8fe1b"
+    },
+    {
+      "artifact_id": "ART-API-00199",
+      "method": "smriti_retail_os.backup_api.run_smtp_password_migration",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/backup_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "02957950ff5e3224eab7553a3c70729bbb61fc2ffbaf02ca79ef8079a80a585a"
+    },
+    {
+      "artifact_id": "ART-API-00200",
+      "method": "smriti_retail_os.backup_api.verify_custodian_emails",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/backup_api.py",
+      "arguments": [
+        "emails"
+      ],
+      "db_references": [],
+      "checksum": "43ebd5e13a42d7328b1b3c0521b111a0f5e9c4816f779c3a4da14e10e9fbd278"
+    },
+    {
+      "artifact_id": "ART-API-00201",
+      "method": "smriti_retail_os.backup_api.send_recovery_key",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/backup_api.py",
+      "arguments": [
+        "recipient_email"
+      ],
+      "db_references": [],
+      "checksum": "9a8f801c9fb5824972d6c51aed7e631afa1ca2b6e953e86bc637547290ab0552"
+    },
+    {
+      "artifact_id": "ART-API-00202",
+      "method": "smriti_retail_os.backup_api.get_encryption_status",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/backup_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "b49a96665d540c9ca34e69d442ffc994a74a297c74ea4a924704783b245d1e83"
+    },
+    {
+      "artifact_id": "ART-API-00203",
+      "method": "smriti_retail_os.backup_api.confirm_custodian_otp",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/backup_api.py",
+      "arguments": [
+        "email",
+        "otp"
+      ],
+      "db_references": [],
+      "checksum": "e3b58caec52c3e9a82df9550443f5e36af0b569ebd43d9b02852e7bd2a940919"
+    },
+    {
+      "artifact_id": "ART-API-00204",
+      "method": "smriti_retail_os.backup_api.rotate_encryption_key",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/backup_api.py",
+      "arguments": [
+        "new_key"
+      ],
+      "db_references": [],
+      "checksum": "c4cb7e8cca73ef8087cf7909965c98ce293951b5035ae58e0985945f62905d7e"
+    },
+    {
+      "artifact_id": "ART-API-00205",
+      "method": "smriti_retail_os.backup_api.take_backup_now",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/backup_api.py",
+      "arguments": [
+        "backup_type"
+      ],
+      "db_references": [],
+      "checksum": "b36216ce3542dc22aef38249274ba5448b4099d0268e609fd21a935744c63362"
+    },
+    {
+      "artifact_id": "ART-API-00206",
+      "method": "smriti_retail_os.backup_api.delete_backup",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/backup_api.py",
+      "arguments": [
+        "file_name"
+      ],
+      "db_references": [],
+      "checksum": "18735ccd95a1d77d8e792709be7ec8657b20ff08f7847d19deb80c421298592e"
+    },
+    {
+      "artifact_id": "ART-API-00207",
+      "method": "smriti_retail_os.backup_api.restore_backup",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/backup_api.py",
+      "arguments": [
+        "file_name"
+      ],
+      "db_references": [],
+      "checksum": "a3c084ad909c84661a00ef3d96a952abe1730418a948b4756609d713d9facee5"
+    },
+    {
+      "artifact_id": "ART-API-00101",
+      "method": "smriti_retail_os.barcode_api.get_barcode_filters",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [],
+      "db_references": [
+        "Brand",
+        "Department",
+        "DocType",
+        "Item Group",
+        "SMRITI Gender",
+        "SMRITI Print Template",
+        "Supplier"
+      ],
+      "checksum": "4b28a8c2b0fcd75af10657c244ee73ce8646e9f92f5e68fb3575c5a289e21cd6"
+    },
+    {
+      "artifact_id": "ART-API-00102",
+      "method": "smriti_retail_os.barcode_api.get_print_templates",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [],
+      "db_references": [
+        "DocType",
+        "SMRITI Print Template"
+      ],
+      "checksum": "4f2844d129853d4812566fadc362a19008a3f121c4319d4d41f8a3a73e642389"
+    },
+    {
+      "artifact_id": "ART-API-00103",
+      "method": "smriti_retail_os.barcode_api.expand_item_variants",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "item_code",
+        "default_print_qty"
+      ],
+      "db_references": [
+        "Item"
+      ],
+      "checksum": "b0b8a587fbab4d046f34e133bbd51486babb85b2714e8ea68e8a58731860c45b"
+    },
+    {
+      "artifact_id": "ART-API-00104",
+      "method": "smriti_retail_os.barcode_api.get_transaction_items_checklist",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "source_doctype",
+        "source_name"
+      ],
+      "db_references": [
+        "Item",
+        "Item Barcode"
+      ],
+      "checksum": "509d99d83bfe1e95072bce84eec4f87fcb974e086cf8829236cec5aaf8e3dce5"
+    },
+    {
+      "artifact_id": "ART-API-00105",
+      "method": "smriti_retail_os.barcode_api.get_items_by_range",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "from_article",
+        "to_article"
+      ],
+      "db_references": [],
+      "checksum": "7efcd1c1e31c1ce80e5faa2c4e6d19cb0517519f4dc3d26fd9a88fd5a0a3b0e3"
+    },
+    {
+      "artifact_id": "ART-API-00106",
+      "method": "smriti_retail_os.barcode_api.get_items_for_printing",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "filters",
+        "source_doctype",
+        "source_name"
+      ],
+      "db_references": [
+        "Item Attribute",
+        "Purchase Receipt",
+        "Stock Entry"
+      ],
+      "checksum": "b04f8d9f7777495e90ff2697136fc6fda801e194a34830a17469056fdab9392f"
+    },
+    {
+      "artifact_id": "ART-API-00107",
+      "method": "smriti_retail_os.barcode_api.generate_prn",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "items",
+        "template_name"
+      ],
+      "db_references": [
+        "DocType",
+        "Item",
+        "SMRITI Print Template"
+      ],
+      "checksum": "dee84dde0c2efeb44cf1b8052715e812b0b1885caa0dc7eeff8bb251e538333d"
+    },
+    {
+      "artifact_id": "ART-API-00108",
+      "method": "smriti_retail_os.barcode_api.send_to_network_printer",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "items",
+        "template_name",
+        "printer_ip",
+        "printer_port"
+      ],
+      "db_references": [],
+      "checksum": "06d9062d9cebc8e8ac8d0cacf537e3f3b310a7e966d2cf775582e4c14fd996f8"
+    },
+    {
+      "artifact_id": "ART-API-00109",
+      "method": "smriti_retail_os.barcode_api.get_field_mapping_reference",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "1d29f0ced59558c1dda728cee610114a50d86723586229d336c3fa8aa895d569"
+    },
+    {
+      "artifact_id": "ART-API-00110",
+      "method": "smriti_retail_os.barcode_api.get_recent_transactions",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "doctype",
+        "limit"
+      ],
+      "db_references": [],
+      "checksum": "8919f9b9fe057f495a4163eb6634682e28ef1ec932dee3fe6e27b48c2f234ddf"
+    },
+    {
+      "artifact_id": "ART-API-00111",
+      "method": "smriti_retail_os.barcode_api.test_printer_connection",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "printer_ip",
+        "printer_port"
+      ],
+      "db_references": [],
+      "checksum": "a67095457d6daa9cba29d98184810853e5db1ffd569e6a0b5313c881ef73cbc3"
+    },
+    {
+      "artifact_id": "ART-API-00112",
+      "method": "smriti_retail_os.barcode_api.print_test_label",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "printer_ip",
+        "printer_port",
+        "printer_language"
+      ],
+      "db_references": [],
+      "checksum": "f8c7b365e75f009a27931e3b305ac701aad90b7f67abf47cd53b8fd822dcb398"
+    },
+    {
+      "artifact_id": "ART-API-00113",
+      "method": "smriti_retail_os.barcode_api.log_print_job",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "template_name",
+        "printer_ip",
+        "labels_count",
+        "success",
+        "error_message",
+        "print_profile",
+        "details"
+      ],
+      "db_references": [
+        "Activity Log",
+        "Company"
+      ],
+      "checksum": "f3f2cbf375a5112853e82237cdd1f5d927b77eb758a30d7185a80656861bc557"
+    },
+    {
+      "artifact_id": "ART-API-00114",
+      "method": "smriti_retail_os.barcode_api.get_print_analytics",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "26a366f7815df6db8afdfec9dda1fb79fc1121a4f7389361501b277ba0bd1967"
+    },
+    {
+      "artifact_id": "ART-API-00115",
+      "method": "smriti_retail_os.barcode_api.get_template_usage_stats",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "627b6b96e1ae9a5e0b8cc8da3798555879f9102fb42020cf87e09851e80caf8d"
+    },
+    {
+      "artifact_id": "ART-API-00116",
+      "method": "smriti_retail_os.barcode_api.get_print_profiles",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [],
+      "db_references": [
+        "SMRITI Company Settings"
+      ],
+      "checksum": "58250bf1e3a1405fe3db5a8602bba4174353fb1d4a0f24d0bbbce534365d9cb4"
+    },
+    {
+      "artifact_id": "ART-API-00117",
+      "method": "smriti_retail_os.barcode_api.save_print_profile",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "profile_name",
+        "template_name",
+        "printer_ip",
+        "printer_port",
+        "dpi",
+        "copies",
+        "label_size",
+        "is_default"
+      ],
+      "db_references": [
+        "Company",
+        "SMRITI Company Settings"
+      ],
+      "checksum": "63b5545c33180bfd8ed36fb7451a3d958e9ed498b775815225702f649b2825d2"
+    },
+    {
+      "artifact_id": "ART-API-00118",
+      "method": "smriti_retail_os.barcode_api.delete_print_profile",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "profile_name"
+      ],
+      "db_references": [
+        "SMRITI Company Settings"
+      ],
+      "checksum": "02089fbd8a2815ee76cf9f9f74d8252194c494fefedd0dcdc213d70c014c5755"
+    },
+    {
+      "artifact_id": "ART-API-00119",
+      "method": "smriti_retail_os.barcode_api.save_print_template",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "template_name",
+        "label_size",
+        "printer_language",
+        "raw_template",
+        "field_mappings_json",
+        "printer_family",
+        "custom_active",
+        "custom_is_default",
+        "custom_version",
+        "custom_visual_layout_json",
+        "version_label"
+      ],
+      "db_references": [
+        "DocType",
+        "SMRITI Print Template"
+      ],
+      "checksum": "f4b235d54b7e1a8095c1b7e459b1d10f0e011960c20641ccfc2c86d5de6f1cef"
+    },
+    {
+      "artifact_id": "ART-API-00120",
+      "method": "smriti_retail_os.barcode_api.delete_print_template",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "name_id"
+      ],
+      "db_references": [
+        "DocType",
+        "SMRITI Print Template"
+      ],
+      "checksum": "7725d6c1c9351d6f95b322907809979f8fdb79c5440e13f5010665a55bd52f11"
+    },
+    {
+      "artifact_id": "ART-API-00121",
+      "method": "smriti_retail_os.barcode_api.search_barcode_items",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "txt"
+      ],
+      "db_references": [],
+      "checksum": "1bb202adb081f3f142e1a803eba6bb2147ca67712ebb90faef8e51eec637f056"
+    },
+    {
+      "artifact_id": "ART-API-00122",
+      "method": "smriti_retail_os.barcode_api.enqueue_print_job",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "template_name",
+        "printer_ip",
+        "printer_port",
+        "payload",
+        "print_qty",
+        "labels_count",
+        "item_code",
+        "barcode"
+      ],
+      "db_references": [
+        "SMRITI Print Job"
+      ],
+      "checksum": "3b3eb7f922abb7b2bfc687d01a3149997960e9e23e66962dd720134300e02baf"
+    },
+    {
+      "artifact_id": "ART-API-00123",
+      "method": "smriti_retail_os.barcode_api._process_print_job",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "job_id",
+        "print_job_id"
+      ],
+      "db_references": [
+        "SMRITI Print Job"
+      ],
+      "checksum": "db125c0e00fd87050f1ab8772be4860c48bb284832088d52d300f5b559a03ed8"
+    },
+    {
+      "artifact_id": "ART-API-00124",
+      "method": "smriti_retail_os.barcode_api.get_print_job_status",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "job_id"
+      ],
+      "db_references": [
+        "SMRITI Print Job"
+      ],
+      "checksum": "ead10ce3e3d72258082f220fbee74afabcdfc5ac73df1c2f2519340b5f39bc49"
+    },
+    {
+      "artifact_id": "ART-API-00125",
+      "method": "smriti_retail_os.barcode_api.retry_print_job",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "job_id"
+      ],
+      "db_references": [
+        "SMRITI Print Job"
+      ],
+      "checksum": "999534b7f512b9c6d99304339f0415d4104f0a42937239ddb52657d4eb7d1d89"
+    },
+    {
+      "artifact_id": "ART-API-00126",
+      "method": "smriti_retail_os.barcode_api.get_recent_print_jobs",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "limit"
+      ],
+      "db_references": [
+        "SMRITI Print Job"
+      ],
+      "checksum": "0e84d9f69429da1a4742e5f86e0d6f0462f7f6f0b2cd6f003425824aa279ff51"
+    },
+    {
+      "artifact_id": "ART-API-00127",
+      "method": "smriti_retail_os.barcode_api.get_print_template_versions",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "template_name"
+      ],
+      "db_references": [
+        "SMRITI Print Template",
+        "SMRITI Print Template Version"
+      ],
+      "checksum": "b32c830148198e35f29c1e5bd78772cb910946a64f3723c128d868dc0f764a81"
+    },
+    {
+      "artifact_id": "ART-API-00128",
+      "method": "smriti_retail_os.barcode_api.restore_print_template_version",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "template_name",
+        "version_number",
+        "expected_checksum"
+      ],
+      "db_references": [
+        "SMRITI Print Template",
+        "SMRITI Print Template Version"
+      ],
+      "checksum": "83d3429c292532c79b1039a33c72ab11aa77a70e3c5404991dd221e8ac6c90db"
+    },
+    {
+      "artifact_id": "ART-API-00129",
+      "method": "smriti_retail_os.barcode_api.validate_layout_diagnostics",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "layout_json",
+        "label_size",
+        "item_data"
+      ],
+      "db_references": [],
+      "checksum": "27cc9ca0d96983dd3bc909e8ebcd266847581bd10200d36ee19eb6ad6bb3b916"
+    },
+    {
+      "artifact_id": "ART-API-00130",
+      "method": "smriti_retail_os.barcode_api.cleanup_old_print_jobs",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [],
+      "db_references": [
+        "SMRITI Print Job"
+      ],
+      "checksum": "1f720f8f99503cfa8c2a1d32363cc84e48f1cc9eaeabc6b9be824631c1161b76"
+    },
+    {
+      "artifact_id": "ART-API-00131",
+      "method": "smriti_retail_os.barcode_api.get_barcode_feature_flags",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [],
+      "db_references": [
+        "DocType",
+        "SMRITI Barcode Settings"
+      ],
+      "checksum": "b833d2e0bf26f7efc745ec15f89e932893ff083a08c1c84674e57bc72a8ffa92"
+    },
+    {
+      "artifact_id": "ART-API-00132",
+      "method": "smriti_retail_os.barcode_api.log_barcode_scan_event",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "event_uuid",
+        "template_id",
+        "barcode_family",
+        "printer_profile",
+        "scan_method",
+        "scan_attempts",
+        "scan_success",
+        "first_pass_success",
+        "store_id",
+        "pos_invoice",
+        "pos_invoice_item"
+      ],
+      "db_references": [
+        "SMRITI Barcode Scan Event",
+        "Warehouse"
+      ],
+      "checksum": "7c72262bf2c1671e884a109373b84988de63e8f90059c8897ded40145bccfa0d"
+    },
+    {
+      "artifact_id": "ART-API-00133",
+      "method": "smriti_retail_os.barcode_api.aggregate_scan_telemetry",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/barcode_api.py",
+      "arguments": [
+        "period",
+        "target_date"
+      ],
+      "db_references": [
+        "SMRITI Barcode Telemetry Snapshot"
+      ],
+      "checksum": "d7809e1794de83343d80cc9ec8972c96b11e2c9984252344e4fdba84f904559c"
+    },
+    {
+      "artifact_id": "ART-API-00208",
+      "method": "smriti_retail_os.billing_api.add_item_by_barcode",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/billing_api.py",
+      "arguments": [
+        "barcode",
+        "price_list"
+      ],
+      "db_references": [
+        "Item",
+        "Item Barcode",
+        "Item Price"
+      ],
+      "checksum": "d2ebdcd11e96954c1c67900863c0c0af4991c85ca316521002798865849e8f9d"
+    },
+    {
+      "artifact_id": "ART-API-00209",
+      "method": "smriti_retail_os.billing_api.search_customer",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/billing_api.py",
+      "arguments": [
+        "query"
+      ],
+      "db_references": [],
+      "checksum": "df6e72b06e9a2c1e88d7a1039dead52b98b9ed921afa57c43e2e82b23a76a7fd"
+    },
+    {
+      "artifact_id": "ART-API-00210",
+      "method": "smriti_retail_os.billing_api.hold_bill",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/billing_api.py",
+      "arguments": [
+        "cashier",
+        "customer",
+        "items",
+        "remarks",
+        "sales_staff"
+      ],
+      "db_references": [
+        "Company",
+        "POS Invoice"
+      ],
+      "checksum": "29b348056c8671548e4f6bbc8ce187c34b91ad4ec2f30b15ac849d01bf4cb56b"
+    },
+    {
+      "artifact_id": "ART-API-00211",
+      "method": "smriti_retail_os.billing_api.recall_bill",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/billing_api.py",
+      "arguments": [
+        "cashier"
+      ],
+      "db_references": [],
+      "checksum": "82813590bef0e7e639f7b44a426b151564811e00e75b16502a7bcf5868efa758"
+    },
+    {
+      "artifact_id": "ART-API-00212",
+      "method": "smriti_retail_os.billing_api.submit_bill",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/billing_api.py",
+      "arguments": [
+        "cashier",
+        "customer",
+        "items",
+        "payments",
+        "loyalty_points",
+        "invoice_name",
+        "remarks",
+        "sales_staff",
+        "on_credit",
+        "tax_override",
+        "billing_address",
+        "shipping_address",
+        "billing_session_id"
+      ],
+      "db_references": [
+        "Address",
+        "Company",
+        "Cost Center",
+        "Customer",
+        "Mode of Payment Account",
+        "POS Invoice",
+        "POS Opening Entry",
+        "Sales Invoice",
+        "Sales Taxes and Charges Template",
+        "Warehouse"
+      ],
+      "checksum": "9106156ddec5a303203fa969670b3a9e797a4be618327e3a5c586dbba04b7f83"
+    },
+    {
+      "artifact_id": "ART-API-00213",
+      "method": "smriti_retail_os.billing_api.search_items",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/billing_api.py",
+      "arguments": [
+        "query",
+        "price_list"
+      ],
+      "db_references": [],
+      "checksum": "3fd3943a21f37d4187a649cc9d79e616d93addcfa85b50eff760b502ad60ea54"
+    },
+    {
+      "artifact_id": "ART-API-00214",
+      "method": "smriti_retail_os.billing_api.load_held_invoice",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/billing_api.py",
+      "arguments": [
+        "invoice_name"
+      ],
+      "db_references": [
+        "Item Price",
+        "POS Invoice"
+      ],
+      "checksum": "ed7d881b12000df6cd75214be00cf857e5e6f23471d749eacd9f38261738257e"
+    },
+    {
+      "artifact_id": "ART-API-00215",
+      "method": "smriti_retail_os.billing_api.validate_manager_override",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/billing_api.py",
+      "arguments": [
+        "pin",
+        "action_type",
+        "invoice_name"
+      ],
+      "db_references": [
+        "User"
+      ],
+      "checksum": "576146360400d1f245fe5e9b9ec1165801cac135f073e0119658672cd295bf8c"
+    },
+    {
+      "artifact_id": "ART-API-00216",
+      "method": "smriti_retail_os.billing_api.generate_mock_eway_bill",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/billing_api.py",
+      "arguments": [
+        "invoice_name",
+        "vehicle_no",
+        "distance",
+        "mode_of_transport",
+        "gst_vehicle_type",
+        "transporter_name"
+      ],
+      "db_references": [
+        "Sales Invoice"
+      ],
+      "checksum": "a456f44af3db23c62eaff27501b37b0874a3154a6daeaf87cfb66721fe2dd95c"
+    },
+    {
+      "artifact_id": "ART-API-00217",
+      "method": "smriti_retail_os.billing_api.create_return_invoice",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/billing_api.py",
+      "arguments": [
+        "invoice_name"
+      ],
+      "db_references": [
+        "POS Invoice",
+        "Sales Invoice"
+      ],
+      "checksum": "584dc56843d6c500ec0470a907dd747d00e9cd9a8b6510af8dab7c11459d3e79"
+    },
+    {
+      "artifact_id": "ART-API-00218",
+      "method": "smriti_retail_os.billing_api.create_custom_sales_return",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/billing_api.py",
+      "arguments": [
+        "customer",
+        "items",
+        "return_against_invoice",
+        "remarks",
+        "company",
+        "draft"
+      ],
+      "db_references": [
+        "Company",
+        "Cost Center",
+        "Sales Invoice",
+        "Sales Taxes and Charges Template",
+        "Warehouse"
+      ],
+      "checksum": "791a32dab457158ce4f6fcb1efd1428ddd961389588896da5d50dbd07ac75643"
+    },
+    {
+      "artifact_id": "ART-API-00219",
+      "method": "smriti_retail_os.billing_api.update_sales_return",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/billing_api.py",
+      "arguments": [
+        "name",
+        "items",
+        "remarks",
+        "draft"
+      ],
+      "db_references": [
+        "Company",
+        "Cost Center",
+        "Sales Invoice",
+        "Warehouse"
+      ],
+      "checksum": "5e8fd225a17e907b098bc6b9b79f59cc59095ca8859b857ec7aaa6cdab1c3377"
+    },
+    {
+      "artifact_id": "ART-API-00220",
+      "method": "smriti_retail_os.billing_api.delete_sales_return",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/billing_api.py",
+      "arguments": [
+        "name",
+        "manager_pin"
+      ],
+      "db_references": [
+        "Sales Invoice"
+      ],
+      "checksum": "cef9e90fdcabd188839f415193b43f6919eb0f2c0e4be2ac938e69fbbb1dfbf5"
+    },
+    {
+      "artifact_id": "ART-API-00221",
+      "method": "smriti_retail_os.boot.get_smriti_session_info",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/boot.py",
+      "arguments": [],
+      "db_references": [
+        "User"
+      ],
+      "checksum": "a1b2ca4d22173f7863254b8b1c8a94d13f6f520633e522c9abbd8f4db66ea033"
+    },
+    {
+      "artifact_id": "ART-API-00222",
+      "method": "smriti_retail_os.boot.health_check",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/boot.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "2a56b903071a6bff95aefd5045876c6e3a5a7002e695f4b159e753a16e59cacd"
+    },
+    {
+      "artifact_id": "ART-API-00223",
+      "method": "smriti_retail_os.branding_api.get_versions",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/branding_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "a3347754f8772b706c7cc7487decf4256b036cdd80658ab4bcd4ad41ec06834d"
+    },
+    {
+      "artifact_id": "ART-API-00224",
+      "method": "smriti_retail_os.company_api.get_business_type",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/company_api.py",
+      "arguments": [],
+      "db_references": [
+        "Company",
+        "SMRITI Company Settings"
+      ],
+      "checksum": "3fae6a853cbd0bd9c6b6a7c0f6eefb7db844ef883b9a0d237b745d3d72f6eff6"
+    },
+    {
+      "artifact_id": "ART-API-00225",
+      "method": "smriti_retail_os.company_api.list_companies",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/company_api.py",
+      "arguments": [],
+      "db_references": [
+        "Company"
+      ],
+      "checksum": "053f26b0c5e76ab0ee7db07bdbdd7a0b89e5d3ef7dfbce4aab0201c6a0a4cb69"
+    },
+    {
+      "artifact_id": "ART-API-00226",
+      "method": "smriti_retail_os.company_api.get_company_settings",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/company_api.py",
+      "arguments": [
+        "company"
+      ],
+      "db_references": [
+        "Company"
+      ],
+      "checksum": "bda88ba03404de5d603eca66ecb412dc881cea1babe453c7e00e9dfea46e53d1"
+    },
+    {
+      "artifact_id": "ART-API-00227",
+      "method": "smriti_retail_os.company_api.save_company_settings",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/company_api.py",
+      "arguments": [
+        "company",
+        "settings"
+      ],
+      "db_references": [
+        "Company"
+      ],
+      "checksum": "0d91b0fbf8880918a0dfdb6a6bc974d8ccfa51f29fa5e9a6cb5af79389e61918"
+    },
+    {
+      "artifact_id": "ART-API-00228",
+      "method": "smriti_retail_os.company_api.get_store_address",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/company_api.py",
+      "arguments": [
+        "company"
+      ],
+      "db_references": [
+        "Address",
+        "Dynamic Link"
+      ],
+      "checksum": "8bb756df3b9d997363dc4d73d6a5c836ded298a0b07f3baf996e01d0a2893734"
+    },
+    {
+      "artifact_id": "ART-API-00229",
+      "method": "smriti_retail_os.company_api.save_store_address",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/company_api.py",
+      "arguments": [
+        "company",
+        "address_data"
+      ],
+      "db_references": [
+        "Address",
+        "Company",
+        "Dynamic Link"
+      ],
+      "checksum": "e04f9e0c1e27c8eb7f9d61b6316a6931dd4b4a782a4d4711ea33570d311cdd8a"
+    },
+    {
+      "artifact_id": "ART-API-00230",
+      "method": "smriti_retail_os.company_api.create_company",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/company_api.py",
+      "arguments": [
+        "company_name",
+        "abbr",
+        "country",
+        "default_currency",
+        "gstin"
+      ],
+      "db_references": [
+        "Company"
+      ],
+      "checksum": "309a8bb7dffe3448ffcf02789f3cfe7d2f348f78d534bc01730cda875a51d6b1"
+    },
+    {
+      "artifact_id": "ART-API-00231",
+      "method": "smriti_retail_os.company_api.update_company",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/company_api.py",
+      "arguments": [
+        "company",
+        "company_name",
+        "gstin",
+        "default_currency"
+      ],
+      "db_references": [
+        "Company"
+      ],
+      "checksum": "39910bd371582d16726bd706b86300e19a8a2ff8888ec4eaed30923c2a1b4a6c"
+    },
+    {
+      "artifact_id": "ART-API-00232",
+      "method": "smriti_retail_os.company_api.delete_company",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/company_api.py",
+      "arguments": [
+        "company"
+      ],
+      "db_references": [
+        "Company"
+      ],
+      "checksum": "4b5552872638a978d4a009a9b4783d5f78bd2f2439b06dcfed86827be8cab4fb"
+    },
+    {
+      "artifact_id": "ART-API-00233",
+      "method": "smriti_retail_os.company_api.get_item_attributes",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/company_api.py",
+      "arguments": [
+        "company"
+      ],
+      "db_references": [
+        "DocType",
+        "SMRITI Attribute Layout",
+        "SMRITI Custom Attribute"
+      ],
+      "checksum": "abc987241f85acce450bdb8276a3cf3dea6b65a141f75c2eb2447c6fcc5269ad"
+    },
+    {
+      "artifact_id": "ART-API-00234",
+      "method": "smriti_retail_os.company_api.save_item_attributes",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/company_api.py",
+      "arguments": [
+        "company",
+        "attributes"
+      ],
+      "db_references": [
+        "SMRITI Attribute Layout",
+        "SMRITI Audit Event"
+      ],
+      "checksum": "d7575f6768f44099781cd48fadc5065357e9d012102986b48dd1316ae1ab9984"
+    },
+    {
+      "artifact_id": "ART-API-00235",
+      "method": "smriti_retail_os.company_api.reset_item_attributes",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/company_api.py",
+      "arguments": [
+        "company"
+      ],
+      "db_references": [
+        "SMRITI Attribute Layout",
+        "SMRITI Audit Event"
+      ],
+      "checksum": "583c84afcf2fcf91d52c4c614dc729e08d51bad48d6c99f709390b89a1c205f2"
+    },
+    {
+      "artifact_id": "ART-API-00236",
+      "method": "smriti_retail_os.inventory_api.scan_item_for_inventory",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/inventory_api.py",
+      "arguments": [
+        "barcode",
+        "warehouse"
+      ],
+      "db_references": [
+        "Company",
+        "Global Defaults",
+        "Item",
+        "Item Barcode"
+      ],
+      "checksum": "d3d40a8b101404e0b7c0bc34a46d7691a7336d3affa256bef62ee5203f69ba27"
+    },
+    {
+      "artifact_id": "ART-API-00237",
+      "method": "smriti_retail_os.inventory_api.create_grn",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/inventory_api.py",
+      "arguments": [
+        "supplier",
+        "invoice_no",
+        "items",
+        "warehouse"
+      ],
+      "db_references": [
+        "Company",
+        "Global Defaults",
+        "Item",
+        "Purchase Receipt"
+      ],
+      "checksum": "ee3caf35814aa9fd9d95c23d12534a1dbd109644cf6f85d3d4fef4da11292f32"
+    },
+    {
+      "artifact_id": "ART-API-00238",
+      "method": "smriti_retail_os.inventory_api.create_stock_transfer",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/inventory_api.py",
+      "arguments": [
+        "from_warehouse",
+        "to_warehouse",
+        "items"
+      ],
+      "db_references": [
+        "Company",
+        "Item",
+        "Stock Entry"
+      ],
+      "checksum": "26c958758ff7a8169d32aedc84354b2da7aa47aeee96f40ebd058cd3b11d2282"
+    },
+    {
+      "artifact_id": "ART-API-00239",
+      "method": "smriti_retail_os.inventory_api.create_stock_adjustment",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/inventory_api.py",
+      "arguments": [
+        "items",
+        "reason"
+      ],
+      "db_references": [
+        "Account",
+        "Company",
+        "Item",
+        "Stock Entry"
+      ],
+      "checksum": "5058a864a43504a53e68cf4c53181b6e22ec477f39e98d72e148b48f55ca39f0"
+    },
+    {
+      "artifact_id": "ART-API-00240",
+      "method": "smriti_retail_os.inventory_api.create_stock_audit",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/inventory_api.py",
+      "arguments": [
+        "items"
+      ],
+      "db_references": [
+        "Account",
+        "Company",
+        "Item",
+        "Stock Reconciliation"
+      ],
+      "checksum": "d560a9ef7de44a5d7ca0048d8e2b60d1a93be86c1cdb697237bd40782507ddcf"
+    },
+    {
+      "artifact_id": "ART-API-00241",
+      "method": "smriti_retail_os.inventory_api.get_stock_summary",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/inventory_api.py",
+      "arguments": [
+        "warehouse"
+      ],
+      "db_references": [
+        "Item"
+      ],
+      "checksum": "d498499f2d7a8b3620a072311c9f653cc8cb0134037f456797d72b4464ac4f85"
+    },
+    {
+      "artifact_id": "ART-API-00242",
+      "method": "smriti_retail_os.inventory_api.reset_db",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/inventory_api.py",
+      "arguments": [
+        "confirmation_token"
+      ],
+      "db_references": [],
+      "checksum": "dc412ae6c062aa9497db9c856fac4d30d5aecbe46aaa87230566d61fe2401d83"
+    },
+    {
+      "artifact_id": "ART-API-00243",
+      "method": "smriti_retail_os.item_master_api.get_import_column_defs",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/item_master_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "bdb2d889a1bccf837ea05ccbdcfe9285b52b86fe929224d255b5739b908c790d"
+    },
+    {
+      "artifact_id": "ART-API-00244",
+      "method": "smriti_retail_os.item_master_api.get_import_template_headers",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/item_master_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "9ef6a97ef49bce908a08e1f88efea929a333fb721b36e4111d62f016d1aeaf66"
+    },
+    {
+      "artifact_id": "ART-API-00245",
+      "method": "smriti_retail_os.item_master_api.get_hsn_gst_rate",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/item_master_api.py",
+      "arguments": [
+        "hsn_code"
+      ],
+      "db_references": [],
+      "checksum": "7d72eeca5689153276317a08997cfa800631f47ba45739b1eb1f9b220abc1ed9"
+    },
+    {
+      "artifact_id": "ART-API-00246",
+      "method": "smriti_retail_os.item_master_api.validate_import_rows",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/item_master_api.py",
+      "arguments": [
+        "rows_json"
+      ],
+      "db_references": [
+        "Company"
+      ],
+      "checksum": "e0bc204c8fcb63304bae751200de0b997fb15db92e1dbcf95bd3177c282c012c"
+    },
+    {
+      "artifact_id": "ART-API-00247",
+      "method": "smriti_retail_os.item_master_api.import_item_master",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/item_master_api.py",
+      "arguments": [
+        "rows_json"
+      ],
+      "db_references": [
+        "Company",
+        "Item",
+        "Item Barcode",
+        "Item Group"
+      ],
+      "checksum": "8d79d9e3cc272f8efdb4bac50f7019eb2ae07ae2467b2d25835e7b54622b7567"
+    },
+    {
+      "artifact_id": "ART-API-00248",
+      "method": "smriti_retail_os.item_master_api.generate_ean13_barcode",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/item_master_api.py",
+      "arguments": [],
+      "db_references": [
+        "Item",
+        "Item Barcode"
+      ],
+      "checksum": "59bcc1d544a689f672cd8e2f16a62cc1891646af4aa7472792afb2bd836b6166"
+    },
+    {
+      "artifact_id": "ART-API-00249",
+      "method": "smriti_retail_os.item_master_api.get_style_details",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/item_master_api.py",
+      "arguments": [
+        "article_no"
+      ],
+      "db_references": [
+        "Item",
+        "Item Barcode",
+        "Item Supplier",
+        "Item Variant Attribute"
+      ],
+      "checksum": "c4abee94855f28b32759a4d14a97b54c7a133ec183e6f74720318bbfa3cf0575"
+    },
+    {
+      "artifact_id": "ART-API-00250",
+      "method": "smriti_retail_os.item_master_api.create_style_with_variants",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/item_master_api.py",
+      "arguments": [
+        "base_details",
+        "sizes_config"
+      ],
+      "db_references": [
+        "Company",
+        "Item",
+        "Item Barcode"
+      ],
+      "checksum": "c3e146ab4c4825646ceb4f464d06ce96675a274ac99de0c7626a8d2662bdad94"
+    },
+    {
+      "artifact_id": "ART-API-00251",
+      "method": "smriti_retail_os.item_master_api.delete_size_variant",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/item_master_api.py",
+      "arguments": [
+        "variant_code"
+      ],
+      "db_references": [
+        "Item"
+      ],
+      "checksum": "4c7ddc74e95ba90ce5118f10fdf72ff1d1877f553f00c6bc508f827cdceeba78"
+    },
+    {
+      "artifact_id": "ART-API-00252",
+      "method": "smriti_retail_os.item_master_api.delete_style_and_variants",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/item_master_api.py",
+      "arguments": [
+        "style_code"
+      ],
+      "db_references": [
+        "Item"
+      ],
+      "checksum": "2a7e543cefc4c147f0342e4b0a188a7fc7e5942f4b1881c2e420fb5468bd5287"
+    },
+    {
+      "artifact_id": "ART-API-00253",
+      "method": "smriti_retail_os.item_master_api.validate_pivot_values",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/item_master_api.py",
+      "arguments": [
+        "styles_json"
+      ],
+      "db_references": [
+        "DocType",
+        "Item Attribute"
+      ],
+      "checksum": "fb5caa69c1479469ed06731ec9330c25e77da720644f09b286201cab99391adf"
+    },
+    {
+      "artifact_id": "ART-API-00254",
+      "method": "smriti_retail_os.item_master_api.import_pivot_item_master",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/item_master_api.py",
+      "arguments": [
+        "styles_json"
+      ],
+      "db_references": [
+        "Company",
+        "Item",
+        "Item Barcode",
+        "Item Group"
+      ],
+      "checksum": "22baf6158e0ebd196ecb594cdac1c8f8315f45ab71d3d1efb9175c66d64c40fe"
+    },
+    {
+      "artifact_id": "ART-API-00255",
+      "method": "smriti_retail_os.item_master_api.reset_all_transactions",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/item_master_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "1f7264b81043e5e05f2585a81c547d7fece86f98af3d7582e0d4cf112da775f7"
+    },
+    {
+      "artifact_id": "ART-API-00256",
+      "method": "smriti_retail_os.item_master_api.reset_all_items",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/item_master_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "4d8b846b2652de7c98cd571cb35a56bc91b73675b62ff3f2657daf30bd243553"
+    },
+    {
+      "artifact_id": "ART-API-00257",
+      "method": "smriti_retail_os.item_master_api.get_items_missing_barcodes",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/item_master_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "89735b6fc89d67d3802ffb4744053a0b59b35f0df254b5f885d75984c2266b94"
+    },
+    {
+      "artifact_id": "ART-API-00258",
+      "method": "smriti_retail_os.loyalty_api.get_loyalty_details",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/loyalty_api.py",
+      "arguments": [
+        "customer"
+      ],
+      "db_references": [
+        "Customer"
+      ],
+      "checksum": "fe21fb1733de11c93a1d3eb3f033d57090311662c1a882956eb5475779ac0b20"
+    },
+    {
+      "artifact_id": "ART-API-00259",
+      "method": "smriti_retail_os.loyalty_api.get_loyalty_schemes",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/loyalty_api.py",
+      "arguments": [],
+      "db_references": [
+        "Loyalty Program",
+        "Loyalty Program Collection"
+      ],
+      "checksum": "1c3996f849afe3105d0c88157abfa2f0f86a24c26cc5ce8d5dc572830ff2f9a0"
+    },
+    {
+      "artifact_id": "ART-API-00260",
+      "method": "smriti_retail_os.loyalty_api.save_loyalty_scheme",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/loyalty_api.py",
+      "arguments": [
+        "doc_name",
+        "loyalty_program_name",
+        "conversion_factor",
+        "auto_opt_in",
+        "min_spent",
+        "collection_factor",
+        "tier_name"
+      ],
+      "db_references": [
+        "Account",
+        "Company",
+        "Cost Center",
+        "Loyalty Program"
+      ],
+      "checksum": "d2047cbb2c4c3575321c5ba9b73ef0667775c44f364e67210e24ea57223a9e57"
+    },
+    {
+      "artifact_id": "ART-API-00261",
+      "method": "smriti_retail_os.loyalty_api.enroll_customer",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/loyalty_api.py",
+      "arguments": [
+        "customer",
+        "program_name"
+      ],
+      "db_references": [
+        "Customer",
+        "Loyalty Program"
+      ],
+      "checksum": "1065df2e11b4c519cda1340d9ec7970184d092b094e48f36a952b7f2c78ffbe7"
+    },
+    {
+      "artifact_id": "ART-API-00262",
+      "method": "smriti_retail_os.master_api.quick_create_item",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [
+        "item_name",
+        "barcode",
+        "rate",
+        "mrp",
+        "gst_percentage",
+        "style_code"
+      ],
+      "db_references": [
+        "GST HSN Code",
+        "Item",
+        "Item Tax Template"
+      ],
+      "checksum": "10b0dc7ce4c5f0da17628bb6a1da2dfcd1fad533b93b785fbf31789af5f58b7e"
+    },
+    {
+      "artifact_id": "ART-API-00263",
+      "method": "smriti_retail_os.master_api.quick_create_customer",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [
+        "customer_name",
+        "mobile_no"
+      ],
+      "db_references": [
+        "Customer",
+        "Customer Group",
+        "Territory"
+      ],
+      "checksum": "c01f0b95ba107c067b1feae7e555d078f925f5130460c3fb6c698de49026233a"
+    },
+    {
+      "artifact_id": "ART-API-00264",
+      "method": "smriti_retail_os.master_api.quick_create_supplier",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [
+        "supplier_name",
+        "mobile_no"
+      ],
+      "db_references": [
+        "Supplier",
+        "Supplier Group"
+      ],
+      "checksum": "42d11cce2d7c2eb1d12d613272026c8f416ea989839e2b5d170df2b7f1a367ae"
+    },
+    {
+      "artifact_id": "ART-API-00265",
+      "method": "smriti_retail_os.master_api.save_supplier_on_fly",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [
+        "supplier_name",
+        "supplier_group",
+        "supplier_type",
+        "name"
+      ],
+      "db_references": [
+        "Supplier",
+        "Supplier Group"
+      ],
+      "checksum": "978192a158f3b115d0ac869cf85f7ddd9a4f2d369912875ee63d673df540f51a"
+    },
+    {
+      "artifact_id": "ART-API-00266",
+      "method": "smriti_retail_os.master_api.get_customer_detail",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [
+        "name"
+      ],
+      "db_references": [
+        "Customer"
+      ],
+      "checksum": "a638bbeef68370b842b7a3395ef29e3cc0561ea3a7379de51cde90ca1dc0904e"
+    },
+    {
+      "artifact_id": "ART-API-00267",
+      "method": "smriti_retail_os.master_api.get_supplier_detail",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [
+        "name"
+      ],
+      "db_references": [
+        "Contact",
+        "Dynamic Link",
+        "Supplier"
+      ],
+      "checksum": "fcfc5c843c0d77cfdf89d6d89df8c761dcd96ec9057243e8c2a66d74fac1cd76"
+    },
+    {
+      "artifact_id": "ART-API-00268",
+      "method": "smriti_retail_os.master_api.save_supplier_detail",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [],
+      "db_references": [
+        "Contact",
+        "Dynamic Link",
+        "Supplier",
+        "Supplier Group"
+      ],
+      "checksum": "31ac2ab76955fc59aa8e8c2ac2babd03a9bda3eeddb2bce742f94c47d2b39b62"
+    },
+    {
+      "artifact_id": "ART-API-00269",
+      "method": "smriti_retail_os.master_api.save_customer_detail",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [
+        "customer_name",
+        "customer_type",
+        "customer_group",
+        "territory",
+        "mobile_no",
+        "email_id",
+        "tax_id",
+        "gst_category",
+        "pan",
+        "custom_address_text",
+        "custom_shipping_address_text",
+        "custom_tax_inclusive_override",
+        "name"
+      ],
+      "db_references": [
+        "Customer",
+        "Customer Group",
+        "Territory"
+      ],
+      "checksum": "bbf0ba255648fc905ce5397c41920ee6e683b9afa148e8a20e504e1fb46e8e65"
+    },
+    {
+      "artifact_id": "ART-API-00270",
+      "method": "smriti_retail_os.master_api.get_size_groups",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "55e5a1a2092c0fe4b914db8050c1df61baf20a18bed0902e28ecf177efa5e18d"
+    },
+    {
+      "artifact_id": "ART-API-00271",
+      "method": "smriti_retail_os.master_api.save_size_groups",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [
+        "size_groups"
+      ],
+      "db_references": [],
+      "checksum": "18810eed09ea2004337c5748d1e309901ca7678c62e0f06d792a599982f9be6e"
+    },
+    {
+      "artifact_id": "ART-API-00272",
+      "method": "smriti_retail_os.master_api.get_destinationwise_taxes",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "fb470335b50d02cb5bcb1e89f9d421db424a8da0069139d6be0b5c2eaa05d3a6"
+    },
+    {
+      "artifact_id": "ART-API-00273",
+      "method": "smriti_retail_os.master_api.save_destinationwise_taxes",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [
+        "mappings"
+      ],
+      "db_references": [],
+      "checksum": "f991d8660de9793f86c0760a6994053518fa9adfa2e95a6588b23a4345a6a9b8"
+    },
+    {
+      "artifact_id": "ART-API-00274",
+      "method": "smriti_retail_os.master_api.get_item_tax_templates",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [],
+      "db_references": [
+        "Item Tax Template",
+        "Item Tax Template Detail"
+      ],
+      "checksum": "cb809d1593c0b169c0e89fbf50459d4d8597b3aa54f31dca18bc2d2d9e8a16da"
+    },
+    {
+      "artifact_id": "ART-API-00275",
+      "method": "smriti_retail_os.master_api.create_item_tax_template",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [
+        "title",
+        "gst_rate",
+        "taxes"
+      ],
+      "db_references": [
+        "Account",
+        "Item Tax Template"
+      ],
+      "checksum": "203e99dc92a6eeb33ed47df1aadac0924492264812ed1d30ec83fea790b03947"
+    },
+    {
+      "artifact_id": "ART-API-00276",
+      "method": "smriti_retail_os.master_api.get_brands",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [],
+      "db_references": [
+        "Brand"
+      ],
+      "checksum": "ea48e82034dcc45f8707f7685e55a0958778d76c3a8121ed0a288bfafb49a155"
+    },
+    {
+      "artifact_id": "ART-API-00277",
+      "method": "smriti_retail_os.master_api.create_brand",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [
+        "brand_name",
+        "brand_description"
+      ],
+      "db_references": [
+        "Brand"
+      ],
+      "checksum": "3cbec9de74cfd98975161f15325f18ffdbd325a2d0eb42695fe3831ed5a4fd67"
+    },
+    {
+      "artifact_id": "ART-API-00278",
+      "method": "smriti_retail_os.master_api.delete_brand",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [
+        "brand_name"
+      ],
+      "db_references": [
+        "Brand"
+      ],
+      "checksum": "b98fa153bcb7581ed34bb293c60d798232a5e3ab53a33be09b112ca74bf7d30c"
+    },
+    {
+      "artifact_id": "ART-API-00279",
+      "method": "smriti_retail_os.master_api.get_tax_accounts",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/master_api.py",
+      "arguments": [],
+      "db_references": [
+        "Account"
+      ],
+      "checksum": "8db53bc224072c43794907959e3b56d079429e9365b977533c1a04e90d7716a5"
+    },
+    {
+      "artifact_id": "ART-API-00280",
+      "method": "smriti_retail_os.platform_api.get_system_health",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/platform_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "791eeee0e49e15de0d14d4049fbb44ef6f161ce8029925049c666a2cbd1c64a5"
+    },
+    {
+      "artifact_id": "ART-API-00281",
+      "method": "smriti_retail_os.platform_api.get_backup_history",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/platform_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "831e18cba3ebd3b5cf7a6c964377dbb5fb2f7063777ed95d98fe3e1b0cf9772f"
+    },
+    {
+      "artifact_id": "ART-API-00282",
+      "method": "smriti_retail_os.platform_api.trigger_backup",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/platform_api.py",
+      "arguments": [
+        "backup_type"
+      ],
+      "db_references": [],
+      "checksum": "775a81991206f3d7b5bfb61b591b07cccf1950eae5015034b1e10587541d7f30"
+    },
+    {
+      "artifact_id": "ART-API-00283",
+      "method": "smriti_retail_os.platform_api.run_migration_action",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/platform_api.py",
+      "arguments": [
+        "action"
+      ],
+      "db_references": [],
+      "checksum": "f8a8b659361b2ba7167a2ca0d6fbb503c77798b90e5a7b24709a1de15d2f6b1e"
+    },
+    {
+      "artifact_id": "ART-API-00284",
+      "method": "smriti_retail_os.platform_api.get_diagnostics",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/platform_api.py",
+      "arguments": [
+        "log_type",
+        "limit"
+      ],
+      "db_references": [],
+      "checksum": "28ba28f309bed8fb8c29b46686abf2f847181164ef87ea8b31e7fb5f89ebf1d4"
+    },
+    {
+      "artifact_id": "ART-API-00285",
+      "method": "smriti_retail_os.platform_api.run_repair",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/platform_api.py",
+      "arguments": [
+        "tool",
+        "dry_run"
+      ],
+      "db_references": [
+        "Account",
+        "Company"
+      ],
+      "checksum": "62bc1c2f225478d533df572ccb1102e0652c16771f9b423008c6b010af3588b0"
+    },
+    {
+      "artifact_id": "ART-API-00286",
+      "method": "smriti_retail_os.platform_api.toggle_maintenance_mode",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/platform_api.py",
+      "arguments": [
+        "enable"
+      ],
+      "db_references": [],
+      "checksum": "7fa5d039aaf984863bfd760a4a756489e7bf351b29138cf18539d001494b2ff6"
+    },
+    {
+      "artifact_id": "ART-API-00287",
+      "method": "smriti_retail_os.platform_api.get_backup_summary",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/platform_api.py",
+      "arguments": [
+        "file_name"
+      ],
+      "db_references": [],
+      "checksum": "3b1cc4d67841c8ea07f5e5ca6d12be4fb030470b5650e095d65c7cea9c78479a"
+    },
+    {
+      "artifact_id": "ART-API-00288",
+      "method": "smriti_retail_os.platform_api.execute_restore",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/platform_api.py",
+      "arguments": [
+        "file_name",
+        "confirm_text",
+        "password"
+      ],
+      "db_references": [],
+      "checksum": "f54502f02a58e627747ea6c76386620f0c10f36909dddd468095a2f813020a3d"
+    },
+    {
+      "artifact_id": "ART-API-00289",
+      "method": "smriti_retail_os.psv_analytics_service.get_redistribution_suggestions",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_analytics_service.py",
+      "arguments": [
+        "company"
+      ],
+      "db_references": [
+        "PSV Channel Partner",
+        "SMRITI Party Stock Account"
+      ],
+      "checksum": "7bd3e95e3de6198d7fa3ce5845893e95ca0414cee8738e0480e91f32b3cdaa83"
+    },
+    {
+      "artifact_id": "ART-API-00290",
+      "method": "smriti_retail_os.psv_analytics_service.get_channel_health_score",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_analytics_service.py",
+      "arguments": [
+        "channel_partner",
+        "from_date",
+        "to_date"
+      ],
+      "db_references": [
+        "PSV System Settings"
+      ],
+      "checksum": "224e7329d3e60a9104a8b4caba49534bfe73803a74c2a4611cefa21d21c46945"
+    },
+    {
+      "artifact_id": "ART-API-00291",
+      "method": "smriti_retail_os.psv_analytics_service.get_sellin_sellout_summary",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_analytics_service.py",
+      "arguments": [
+        "company",
+        "channel_partner"
+      ],
+      "db_references": [],
+      "checksum": "c3d62a8cebf180ca27a2b4bc7a3ad07fed8b7300823c8ba4842493bf22f3ebae"
+    },
+    {
+      "artifact_id": "ART-API-00292",
+      "method": "smriti_retail_os.psv_analytics_service.get_stock_cover_risks",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_analytics_service.py",
+      "arguments": [
+        "company"
+      ],
+      "db_references": [
+        "PSV Channel Partner",
+        "PSV Ledger Entry",
+        "SMRITI Party Stock Account"
+      ],
+      "checksum": "1230e043d9aa7fec4d80d74eb5bf1f654c4e6225ca454599044a3afe3841abbf"
+    },
+    {
+      "artifact_id": "ART-API-00293",
+      "method": "smriti_retail_os.psv_analytics_service.get_channel_stock_trend",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_analytics_service.py",
+      "arguments": [
+        "company"
+      ],
+      "db_references": [],
+      "checksum": "6bee85e6668942f2179cf27326bd57b584462402094e5db24acebf455b967cf4"
+    },
+    {
+      "artifact_id": "ART-API-00294",
+      "method": "smriti_retail_os.psv_analytics_service.get_inventory_productivity_metrics",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_analytics_service.py",
+      "arguments": [
+        "company",
+        "timespan_days"
+      ],
+      "db_references": [
+        "PSV Ledger Entry",
+        "PSV System Settings"
+      ],
+      "checksum": "a09ee256210bd18c5cd4d5f614a61baa52417cb1bdd657dab6dafeb97fba9c15"
+    },
+    {
+      "artifact_id": "ART-API-00295",
+      "method": "smriti_retail_os.psv_analytics_service.get_inventory_productivity_methodology",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_analytics_service.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "dd0021262344886b55ad33463f54d1f92c9fce9f86aaa364ac6d4520c50b22ec"
+    },
+    {
+      "artifact_id": "ART-API-00296",
+      "method": "smriti_retail_os.psv_api.get_dashboard_summary",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_api.py",
+      "arguments": [
+        "company"
+      ],
+      "db_references": [
+        "PSV Ledger Entry"
+      ],
+      "checksum": "be691e18fa18f43f665db9f485539f93757695d6107711709a9d1ce92eb6b5aa"
+    },
+    {
+      "artifact_id": "ART-API-00297",
+      "method": "smriti_retail_os.psv_api.get_party_balance_detail",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_api.py",
+      "arguments": [
+        "company",
+        "party_stock_account"
+      ],
+      "db_references": [
+        "PSV Ledger Entry"
+      ],
+      "checksum": "8a62a98a42ad2eee0c2af560b891b69358fe4c6ab0a33a61076dc068748aef62"
+    },
+    {
+      "artifact_id": "ART-API-00298",
+      "method": "smriti_retail_os.psv_api.get_reorder_dashboard_data",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_api.py",
+      "arguments": [
+        "company"
+      ],
+      "db_references": [
+        "PSV Channel Partner",
+        "PSV Ledger Entry",
+        "SMRITI Party Stock Account"
+      ],
+      "checksum": "e345bb27a8f7f5c35e6f764be8e19efdcbcca569a80c1f5c37dd30dff85c01ad"
+    },
+    {
+      "artifact_id": "ART-API-00299",
+      "method": "smriti_retail_os.psv_api.create_psa",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_api.py",
+      "arguments": [
+        "company",
+        "customer",
+        "location_name",
+        "zone",
+        "region",
+        "area_manager",
+        "contact_person",
+        "mobile",
+        "email",
+        "active"
+      ],
+      "db_references": [
+        "SMRITI Party Stock Account"
+      ],
+      "checksum": "cea2eaf19334ce277b57d798b7d962997dbf1b041dc0405f3a6f1a8f0b25fdb5"
+    },
+    {
+      "artifact_id": "ART-API-00300",
+      "method": "smriti_retail_os.psv_api.update_psa",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_api.py",
+      "arguments": [
+        "name",
+        "zone",
+        "region",
+        "area_manager",
+        "contact_person",
+        "mobile",
+        "email",
+        "active"
+      ],
+      "db_references": [
+        "SMRITI Party Stock Account"
+      ],
+      "checksum": "de70abd9987bfec63e3d73d0a48d9cdea84d96a714330c6f8c5d23fece68d13d"
+    },
+    {
+      "artifact_id": "ART-API-00301",
+      "method": "smriti_retail_os.psv_api.get_psa",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_api.py",
+      "arguments": [
+        "name"
+      ],
+      "db_references": [
+        "SMRITI Party Stock Account"
+      ],
+      "checksum": "069dbd195b551b1474b6f4106976059fbd299578538f4c24ac799644caa81d5e"
+    },
+    {
+      "artifact_id": "ART-API-00302",
+      "method": "smriti_retail_os.psv_api.list_psas",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_api.py",
+      "arguments": [
+        "company",
+        "active"
+      ],
+      "db_references": [
+        "SMRITI Party Stock Account"
+      ],
+      "checksum": "c9d8168e42c234b41b95301d5a7624bfecf536f09c47d9e0b15ee209895ebbfe"
+    },
+    {
+      "artifact_id": "ART-API-00303",
+      "method": "smriti_retail_os.psv_api.upload_sell_through",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_api.py",
+      "arguments": [
+        "upload_doc_name"
+      ],
+      "db_references": [
+        "PSV Sell-Through Upload"
+      ],
+      "checksum": "5a79c092be740f65ae791226cf44ff37c777d5a1e7a9a6ccbe125519d69b15cc"
+    },
+    {
+      "artifact_id": "ART-API-00304",
+      "method": "smriti_retail_os.psv_api.fetch_channel_balance",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_api.py",
+      "arguments": [
+        "customer",
+        "item_code"
+      ],
+      "db_references": [],
+      "checksum": "1416544eef43773a89f27a64981832c47e06172ae849c375c5ec1c2510c5ca06"
+    },
+    {
+      "artifact_id": "ART-API-00305",
+      "method": "smriti_retail_os.psv_api.get_psv_health",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_api.py",
+      "arguments": [],
+      "db_references": [
+        "Delivery Note",
+        "DocType",
+        "SMRITI PSV Exception Record",
+        "Stock Entry"
+      ],
+      "checksum": "c8fd3ffdb6466d71bcf3200d8e4b955534ad34161675d8a145ad0489556555c9"
+    },
+    {
+      "artifact_id": "ART-API-00306",
+      "method": "smriti_retail_os.psv_migration_service.create_reversal_entry",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_migration_service.py",
+      "arguments": [
+        "original_name",
+        "reason"
+      ],
+      "db_references": [
+        "PSV Ledger Entry"
+      ],
+      "checksum": "21277c237b139d539e8ecfe371137981538ce7fa842ebf19dba6456c17f04365"
+    },
+    {
+      "artifact_id": "ART-API-00307",
+      "method": "smriti_retail_os.psv_migration_service.migrate_to_new_psv_partner",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_migration_service.py",
+      "arguments": [
+        "dry_run"
+      ],
+      "db_references": [
+        "Company",
+        "Customer",
+        "Fiscal Year",
+        "PSV Channel Partner",
+        "PSV Ledger Entry",
+        "SMRITI Party Stock Account",
+        "SMRITI Party Stock Ledger Entry",
+        "Territory"
+      ],
+      "checksum": "a6c44448f8bb4346abdf093bc873a9031f4b07297d4db98f75f94898e007872f"
+    },
+    {
+      "artifact_id": "ART-API-00308",
+      "method": "smriti_retail_os.psv_service.process_opening_balance",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_service.py",
+      "arguments": [
+        "company",
+        "party_stock_account",
+        "items"
+      ],
+      "db_references": [],
+      "checksum": "03aaef6d078de3d079ebfd6b86a53b8135af2fb45c2478202a26a1d667a1c096"
+    },
+    {
+      "artifact_id": "ART-API-00309",
+      "method": "smriti_retail_os.psv_snapshot_service.get_landing_cost",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_snapshot_service.py",
+      "arguments": [
+        "variant"
+      ],
+      "db_references": [],
+      "checksum": "45b3e861e92cd3d98b254f7ad7de157dc00b7ee1169ac380f4a1e4e83b35f383"
+    },
+    {
+      "artifact_id": "ART-API-00310",
+      "method": "smriti_retail_os.psv_snapshot_service.generate_snapshots",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/psv_snapshot_service.py",
+      "arguments": [],
+      "db_references": [
+        "Item",
+        "PSV Channel Partner",
+        "SMRITI Party Stock Account"
+      ],
+      "checksum": "3f85cbad47d7534629be7e0fc45b5ec8960fa2e2fb0207192244d95c73ca0d55"
+    },
+    {
+      "artifact_id": "ART-API-00311",
+      "method": "smriti_retail_os.purchase_api.get_open_purchase_orders",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/purchase_api.py",
+      "arguments": [
+        "supplier"
+      ],
+      "db_references": [
+        "Purchase Order"
+      ],
+      "checksum": "4ae3c35b73195f3e860d18c9bc27ac2ad1cde1c35fcb7a4e0f1dbb98fb4a88d2"
+    },
+    {
+      "artifact_id": "ART-API-00312",
+      "method": "smriti_retail_os.purchase_api.get_po_details",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/purchase_api.py",
+      "arguments": [
+        "po_name"
+      ],
+      "db_references": [
+        "Item",
+        "Purchase Order"
+      ],
+      "checksum": "ef18f724b6c512dfdad2b438304ff5802362b7563d317b1a388fed86f77cf753"
+    },
+    {
+      "artifact_id": "ART-API-00313",
+      "method": "smriti_retail_os.purchase_api.create_purchase_order",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/purchase_api.py",
+      "arguments": [
+        "supplier",
+        "items",
+        "schedule_date",
+        "remarks",
+        "image_base64",
+        "image_filename",
+        "warehouse"
+      ],
+      "db_references": [
+        "Company",
+        "GST HSN Code",
+        "Global Defaults",
+        "Item",
+        "Item Group",
+        "Item Price",
+        "Item Tax Template",
+        "Purchase Order"
+      ],
+      "checksum": "3115221a0cd0317d0a18f6fe75c11d1cc7b28836c6faa65a2be2b54cd17d9c55"
+    },
+    {
+      "artifact_id": "ART-API-00314",
+      "method": "smriti_retail_os.purchase_api.create_purchase_receipt",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/purchase_api.py",
+      "arguments": [
+        "supplier",
+        "items",
+        "po_name",
+        "warehouse"
+      ],
+      "db_references": [
+        "Company",
+        "Global Defaults",
+        "Purchase Order",
+        "Purchase Receipt"
+      ],
+      "checksum": "c85cbbe77c9fd1fedabea1786ec379ec29bbd3c82b601020927c9436034a27f6"
+    },
+    {
+      "artifact_id": "ART-API-00315",
+      "method": "smriti_retail_os.purchase_api.create_purchase_return",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/purchase_api.py",
+      "arguments": [
+        "receipt_name"
+      ],
+      "db_references": [
+        "Purchase Receipt"
+      ],
+      "checksum": "a42bff1eea6aea5943dc3c64e1d328449938c66b509a2864ea156955f05efe01"
+    },
+    {
+      "artifact_id": "ART-API-00316",
+      "method": "smriti_retail_os.reports_api.get_sales_report",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [
+        "from_date",
+        "to_date",
+        "granularity"
+      ],
+      "db_references": [],
+      "checksum": "65919b76ca4806c5c2fd1736d2bf0c177acb4ae733e158622f3172b2b15d7403"
+    },
+    {
+      "artifact_id": "ART-API-00317",
+      "method": "smriti_retail_os.reports_api.get_stock_report",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [
+        "warehouse",
+        "item_group",
+        "show_zero"
+      ],
+      "db_references": [
+        "Bin",
+        "Item"
+      ],
+      "checksum": "94412e19d81426f63e9798904760c5386a557422e53559e4746f4b1a8898af0b"
+    },
+    {
+      "artifact_id": "ART-API-00318",
+      "method": "smriti_retail_os.reports_api.get_gst_report",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [
+        "from_date",
+        "to_date"
+      ],
+      "db_references": [],
+      "checksum": "2c3e6b3290799735cc199e97c32abb7150210bd500af80f6d304cfa0bc89caf5"
+    },
+    {
+      "artifact_id": "ART-API-00319",
+      "method": "smriti_retail_os.reports_api.get_outstanding_report",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [
+        "customer",
+        "days_overdue"
+      ],
+      "db_references": [
+        "Sales Invoice"
+      ],
+      "checksum": "3a92f6b8f188d74c415fb50da0b649f5beee5935f97a4914f4bbdbe7d71bb557"
+    },
+    {
+      "artifact_id": "ART-API-00320",
+      "method": "smriti_retail_os.reports_api.get_quick_stats",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "1f9113b454165abe70f9dfe048960d074a806f55e141a83964e54b83141e5e40"
+    },
+    {
+      "artifact_id": "ART-API-00321",
+      "method": "smriti_retail_os.reports_api.get_sales_return_register",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [
+        "from_date",
+        "to_date"
+      ],
+      "db_references": [],
+      "checksum": "73bffe47d21b4e977bd459726a95dd890d3a00bed5f53489d4ee944ab3df4c20"
+    },
+    {
+      "artifact_id": "ART-API-00322",
+      "method": "smriti_retail_os.reports_api.get_purchase_return_register",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [
+        "from_date",
+        "to_date"
+      ],
+      "db_references": [],
+      "checksum": "c0135c6df4dda5c5208b4cd19437e84eea7b249eb155900d24b3f2cf57364b5b"
+    },
+    {
+      "artifact_id": "ART-API-00323",
+      "method": "smriti_retail_os.reports_api.get_gstr1_9b_report",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [
+        "from_date",
+        "to_date"
+      ],
+      "db_references": [],
+      "checksum": "1724fe2848fe38aad2f9fbcad944949e166739c18a878d931f595212d588a05e"
+    },
+    {
+      "artifact_id": "ART-API-00324",
+      "method": "smriti_retail_os.reports_api.get_deadline_alerts",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "0e5c7ea76768d340fd225778f67cd028b802cb28db5297a35268bf66a3eda1c4"
+    },
+    {
+      "artifact_id": "ART-API-00325",
+      "method": "smriti_retail_os.reports_api.get_smriti_report_data",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [
+        "report_key",
+        "filters"
+      ],
+      "db_references": [],
+      "checksum": "0f84a48e53c225892b935d19968e86d44270bbccfa2a9595dd50af4be723c462"
+    },
+    {
+      "artifact_id": "ART-API-00326",
+      "method": "smriti_retail_os.reports_api.save_smriti_saved_view",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [
+        "view_name",
+        "report_key",
+        "applied_filters_json",
+        "visible_columns_json",
+        "is_default"
+      ],
+      "db_references": [
+        "SMRITI Saved View"
+      ],
+      "checksum": "40d068f349779f5477d4fbaa2da2f56a499baa8553c918c85d89508549d8a786"
+    },
+    {
+      "artifact_id": "ART-API-00327",
+      "method": "smriti_retail_os.reports_api.get_smriti_saved_views",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [
+        "report_key"
+      ],
+      "db_references": [
+        "SMRITI Saved View"
+      ],
+      "checksum": "5829badc410a42f99640a6cf8b39c7a7980a7a07033b4d9c94f06d7741b566de"
+    },
+    {
+      "artifact_id": "ART-API-00328",
+      "method": "smriti_retail_os.reports_api.delete_smriti_saved_view",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [
+        "view_name"
+      ],
+      "db_references": [
+        "SMRITI Saved View"
+      ],
+      "checksum": "e2d2790914763be86b5a1ea4fef9d87ffb814f20f1bff02afe2a63216af0bdb0"
+    },
+    {
+      "artifact_id": "ART-API-00329",
+      "method": "smriti_retail_os.reports_api.get_smriti_reports_list",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [],
+      "db_references": [
+        "SMRITI Report Template"
+      ],
+      "checksum": "5a45cc37cfeb90410cb8e031317561c1b69d490ab125a51094e8eccbdb5b3083"
+    },
+    {
+      "artifact_id": "ART-API-00330",
+      "method": "smriti_retail_os.reports_api.get_smriti_warehouses",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [],
+      "db_references": [
+        "Warehouse"
+      ],
+      "checksum": "8ec74509a484ff74f227e45bda2499d65519816ff6778383e344627640a78a80"
+    },
+    {
+      "artifact_id": "ART-API-00331",
+      "method": "smriti_retail_os.reports_api.get_smriti_item_groups",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [],
+      "db_references": [
+        "Item Group"
+      ],
+      "checksum": "cc5d17877674e54fee15900b2435586d27376d9636902edcd5d741df16ed8c15"
+    },
+    {
+      "artifact_id": "ART-API-00332",
+      "method": "smriti_retail_os.reports_api.get_smriti_brands",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [],
+      "db_references": [
+        "Brand"
+      ],
+      "checksum": "ccbb88e151fd3b105b48fa0ba9d196ef3c8992570b57cc71cde080836fab53a1"
+    },
+    {
+      "artifact_id": "ART-API-00333",
+      "method": "smriti_retail_os.reports_api.get_smriti_salespersons",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [],
+      "db_references": [
+        "Sales Person"
+      ],
+      "checksum": "f6df88594fc4511ead8caa61649fa71fd5e94984e1d9e952980e8b9def70be60"
+    },
+    {
+      "artifact_id": "ART-API-00334",
+      "method": "smriti_retail_os.reports_api.get_smriti_cashiers",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "75b0a210af760efb05414554adf74cf03a476d7ea06876ed039f080fce5522ed"
+    },
+    {
+      "artifact_id": "ART-API-00335",
+      "method": "smriti_retail_os.reports_api.export_smriti_report",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [
+        "report_key",
+        "filters",
+        "format_type"
+      ],
+      "db_references": [],
+      "checksum": "7f0281863aa8b0b764e79755a656b20ef95092ff1fb7503bba15eeac4aa15757"
+    },
+    {
+      "artifact_id": "ART-API-00336",
+      "method": "smriti_retail_os.reports_api.get_report_glossary",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/reports_api.py",
+      "arguments": [
+        "report_key"
+      ],
+      "db_references": [
+        "SMRITI Business Term",
+        "SMRITI Formula Definition",
+        "SMRITI Report Template"
+      ],
+      "checksum": "994488790b6240420335424509e16cf98dccaa87e9b799c696ca301f8939ead4"
+    },
+    {
+      "artifact_id": "ART-API-00337",
+      "method": "smriti_retail_os.sales_order_api.get_open_sales_orders",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sales_order_api.py",
+      "arguments": [
+        "customer"
+      ],
+      "db_references": [
+        "Sales Order"
+      ],
+      "checksum": "84943b02875eb44a6aafc5e49f35f32ecafdf95355d9a9ef10582724a7be9173"
+    },
+    {
+      "artifact_id": "ART-API-00338",
+      "method": "smriti_retail_os.sales_order_api.get_so_details",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sales_order_api.py",
+      "arguments": [
+        "so_name"
+      ],
+      "db_references": [
+        "Sales Order"
+      ],
+      "checksum": "62c45d80e3a240a3a1bf1adb71e0a619321909ad820c9ccaf90be768d09feacb"
+    },
+    {
+      "artifact_id": "ART-API-00339",
+      "method": "smriti_retail_os.sales_order_api.create_sales_order",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sales_order_api.py",
+      "arguments": [
+        "customer",
+        "items",
+        "delivery_date",
+        "remarks"
+      ],
+      "db_references": [
+        "Company",
+        "Global Defaults",
+        "Item",
+        "Item Reorder",
+        "Sales Order",
+        "Warehouse"
+      ],
+      "checksum": "fbf104f3a0b6de95fa9c1abb0d0dbb93bada3ed0dc6d2befc23d6e1033aa997f"
+    },
+    {
+      "artifact_id": "ART-API-00340",
+      "method": "smriti_retail_os.security_api.list_users",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [],
+      "db_references": [
+        "Has Role",
+        "User"
+      ],
+      "checksum": "73cf19f89bd4b44f337b6a590bf9112fe5207e05f1553c6b0d83356bede3e07b"
+    },
+    {
+      "artifact_id": "ART-API-00341",
+      "method": "smriti_retail_os.security_api.save_user",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "email",
+        "first_name",
+        "last_name",
+        "roles",
+        "role_profile"
+      ],
+      "db_references": [
+        "User"
+      ],
+      "checksum": "e1740bee924f55884eadde19259d9eea03f45a7df11de7e3639c0454a9f80b5c"
+    },
+    {
+      "artifact_id": "ART-API-00342",
+      "method": "smriti_retail_os.security_api.set_user_status",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "email",
+        "enabled"
+      ],
+      "db_references": [
+        "User"
+      ],
+      "checksum": "a122f37b327b56616820b765cfbc9428daf8ce4d3b4099114ec1b19b9ecc0752"
+    },
+    {
+      "artifact_id": "ART-API-00343",
+      "method": "smriti_retail_os.security_api.reset_user_password",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "email",
+        "password"
+      ],
+      "db_references": [
+        "Role",
+        "User"
+      ],
+      "checksum": "b52ca744144df1057c4c704bbc5b7cfa4eb624787a59773a81c94897a9783957"
+    },
+    {
+      "artifact_id": "ART-API-00344",
+      "method": "smriti_retail_os.security_api.set_user_pin",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "email",
+        "pin"
+      ],
+      "db_references": [
+        "User"
+      ],
+      "checksum": "0f99434908f6ec108248c0d0d217569095636b84282a772043e08a91eb9fc613"
+    },
+    {
+      "artifact_id": "ART-API-00345",
+      "method": "smriti_retail_os.security_api.clear_user_pin",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "email"
+      ],
+      "db_references": [
+        "User"
+      ],
+      "checksum": "eb38024db22fea3b4282608dec34725418a5353a0f7ed5a030a281f1d11a18b8"
+    },
+    {
+      "artifact_id": "ART-API-00346",
+      "method": "smriti_retail_os.security_api.get_user_metrics",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [],
+      "db_references": [
+        "Has Role",
+        "User"
+      ],
+      "checksum": "fca5d66fcb74d00b5d936e5ac29d2bbec6c3e380919c71eaae70d5fed118ff13"
+    },
+    {
+      "artifact_id": "ART-API-00347",
+      "method": "smriti_retail_os.security_api.list_roles",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [],
+      "db_references": [
+        "Role"
+      ],
+      "checksum": "48ed15314ff3748713fb06c5b8d880200623e9c7d7272c3098f48a976733032a"
+    },
+    {
+      "artifact_id": "ART-API-00348",
+      "method": "smriti_retail_os.security_api.create_role",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "role_name"
+      ],
+      "db_references": [
+        "Role"
+      ],
+      "checksum": "8900133fc0ffdc96639bc4b8e45cf7fde013b4660e10731a43b33b5eedab627b"
+    },
+    {
+      "artifact_id": "ART-API-00349",
+      "method": "smriti_retail_os.security_api.delete_role",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "role_name"
+      ],
+      "db_references": [
+        "Role"
+      ],
+      "checksum": "ad7f8712362973fd75f810b508ff58960e1fcdde07873c86a6dd82a85fb0baa6"
+    },
+    {
+      "artifact_id": "ART-API-00350",
+      "method": "smriti_retail_os.security_api.list_role_profiles",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [],
+      "db_references": [
+        "Has Role",
+        "Role Profile"
+      ],
+      "checksum": "f1e6d3aa890b6da285147ddc7e5727bce8c2dc923c89c6df27adb9e13012ebfa"
+    },
+    {
+      "artifact_id": "ART-API-00351",
+      "method": "smriti_retail_os.security_api.save_role_profile",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "name",
+        "roles"
+      ],
+      "db_references": [
+        "Role Profile"
+      ],
+      "checksum": "3d6986b1d1907e095f91d1f9348f5f64cc1edbbe2924d23e819517a570a6bc11"
+    },
+    {
+      "artifact_id": "ART-API-00352",
+      "method": "smriti_retail_os.security_api.delete_role_profile",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "name"
+      ],
+      "db_references": [
+        "Role Profile"
+      ],
+      "checksum": "f49bd23239e937330addbaf1b0a2ce78b00fd9650182fcd2a2ec280635ca5279"
+    },
+    {
+      "artifact_id": "ART-API-00353",
+      "method": "smriti_retail_os.security_api.list_user_permissions",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "user"
+      ],
+      "db_references": [
+        "User",
+        "User Permission"
+      ],
+      "checksum": "9cabc1e3d2ea8a159566b0318f3e3db78520733206a2acee2b250e2313beeedc"
+    },
+    {
+      "artifact_id": "ART-API-00354",
+      "method": "smriti_retail_os.security_api.add_user_permission",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "user",
+        "doctype",
+        "docname",
+        "is_default"
+      ],
+      "db_references": [
+        "User"
+      ],
+      "checksum": "cc4c8638990641cc1c9e676f20e843fc6a1cd51c112df1f1c98e9ad0dcea63e3"
+    },
+    {
+      "artifact_id": "ART-API-00355",
+      "method": "smriti_retail_os.security_api.remove_user_permission",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "name"
+      ],
+      "db_references": [
+        "User"
+      ],
+      "checksum": "ad28ce08ddc5387dc1226157e8478ed926ac87c8ae28a543746bf6b4c392fe41"
+    },
+    {
+      "artifact_id": "ART-API-00356",
+      "method": "smriti_retail_os.security_api.list_workflows",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [],
+      "db_references": [
+        "Workflow"
+      ],
+      "checksum": "c58b4243aca29fbffa2439f96924555c4d3ba2d9b2fbb77e19811ea3a11d947f"
+    },
+    {
+      "artifact_id": "ART-API-00357",
+      "method": "smriti_retail_os.security_api.get_workflow_details",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "workflow_name"
+      ],
+      "db_references": [
+        "Workflow"
+      ],
+      "checksum": "e827e02b56895c7fcfde34e0ea9d5f8c95f116d300af96c1927f3d3b4da2460e"
+    },
+    {
+      "artifact_id": "ART-API-00358",
+      "method": "smriti_retail_os.security_api.save_workflow",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "name",
+        "document_type",
+        "is_active",
+        "states",
+        "transitions"
+      ],
+      "db_references": [
+        "Workflow"
+      ],
+      "checksum": "d97f63c0edd75c2cf72e9beb001b26e18c9915368229cb6b256adbf06547c7dc"
+    },
+    {
+      "artifact_id": "ART-API-00359",
+      "method": "smriti_retail_os.security_api.delete_workflow",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "name"
+      ],
+      "db_references": [
+        "Workflow"
+      ],
+      "checksum": "47a2afe4c17481fff504ae9f4d81f112e6861d1c1a9632a39d1b99b1fe746bd6"
+    },
+    {
+      "artifact_id": "ART-API-00360",
+      "method": "smriti_retail_os.security_api.list_workflow_states",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [],
+      "db_references": [
+        "Workflow State"
+      ],
+      "checksum": "0bc8c2873575b30f748b3ab487bc7960a7aa8891eff8f414fa58e7c8a5d7de8c"
+    },
+    {
+      "artifact_id": "ART-API-00361",
+      "method": "smriti_retail_os.security_api.save_workflow_state",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "name",
+        "style"
+      ],
+      "db_references": [
+        "Workflow State"
+      ],
+      "checksum": "dcfa8f734d0e97392e43a24507777307b73fe1dbc69fb97c4f5fd6bed952d468"
+    },
+    {
+      "artifact_id": "ART-API-00362",
+      "method": "smriti_retail_os.security_api.get_pending_approvals",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [],
+      "db_references": [
+        "Workflow"
+      ],
+      "checksum": "8f3b5ca71e89e780222a341f68adfdb67e6d19dce3e45677bc36f40feb3a3a5c"
+    },
+    {
+      "artifact_id": "ART-API-00363",
+      "method": "smriti_retail_os.security_api.apply_workflow_action",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "doctype",
+        "docname",
+        "action"
+      ],
+      "db_references": [],
+      "checksum": "20f719ec6bdc4cad28336c3e15746fdeb649885583c59ac4d1386c031e0eb1bb"
+    },
+    {
+      "artifact_id": "ART-API-00364",
+      "method": "smriti_retail_os.security_api.verify_user_password",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [
+        "password"
+      ],
+      "db_references": [],
+      "checksum": "77c74eff0152b4623efdd47d49be343802324d28001aa45188c210fdc14be81c"
+    },
+    {
+      "artifact_id": "ART-API-00365",
+      "method": "smriti_retail_os.security_api.get_managers_list",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/security_api.py",
+      "arguments": [],
+      "db_references": [
+        "User"
+      ],
+      "checksum": "73fb3d97143de9d9c2c11834543ac38e6eef0d3f6117eff29cac6a9374fada36"
+    },
+    {
+      "artifact_id": "ART-API-00366",
+      "method": "smriti_retail_os.setup_wizard_api.get_setup_wizard_initial_data",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/setup_wizard_api.py",
+      "arguments": [],
+      "db_references": [
+        "Company",
+        "User"
+      ],
+      "checksum": "12d610e42a072416c5fac992693b8b43a6a07aa82c0f5e2ab4ffa0572c8adc0a"
+    },
+    {
+      "artifact_id": "ART-API-00367",
+      "method": "smriti_retail_os.setup_wizard_api.run_setup_wizard",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/setup_wizard_api.py",
+      "arguments": [
+        "setup_data"
+      ],
+      "db_references": [
+        "Account",
+        "Address",
+        "Company",
+        "Cost Center",
+        "Customer",
+        "Customer Group",
+        "Mode of Payment",
+        "POS Profile",
+        "SMRITI Company Settings",
+        "Sales Taxes and Charges Template",
+        "Territory",
+        "User",
+        "Warehouse",
+        "Warehouse Type"
+      ],
+      "checksum": "592cef40601b6666741008a6741ce92b912a9db2d50c4d7f5d68a403093dbb00"
+    },
+    {
+      "artifact_id": "ART-API-00368",
+      "method": "smriti_retail_os.shift_api.open_shift",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/shift_api.py",
+      "arguments": [
+        "cashier",
+        "pos_profile",
+        "opening_entries"
+      ],
+      "db_references": [
+        "Company",
+        "POS Opening Entry",
+        "POS Profile"
+      ],
+      "checksum": "db7415003fb439f567eba41a2d1447aadf557a2a8c5ecd861858ff95e947f965"
+    },
+    {
+      "artifact_id": "ART-API-00369",
+      "method": "smriti_retail_os.shift_api.get_active_shift",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/shift_api.py",
+      "arguments": [
+        "cashier",
+        "pos_profile"
+      ],
+      "db_references": [],
+      "checksum": "f52a12e14b0a44b44837fe73b679a0a2509a7bb88d2aa494caf5a522880dadfa"
+    },
+    {
+      "artifact_id": "ART-API-00370",
+      "method": "smriti_retail_os.shift_api.get_shift_summary",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/shift_api.py",
+      "arguments": [
+        "opening_entry_name"
+      ],
+      "db_references": [
+        "POS Opening Entry"
+      ],
+      "checksum": "3bae3481b9303793cc05513f94d0dc5e8254a68147d8fffddc6d85d4fb58c7a6"
+    },
+    {
+      "artifact_id": "ART-API-00371",
+      "method": "smriti_retail_os.shift_api.close_shift",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/shift_api.py",
+      "arguments": [
+        "opening_entry_name",
+        "closing_entries",
+        "manager_pin",
+        "notes"
+      ],
+      "db_references": [
+        "POS Closing Entry",
+        "POS Opening Entry",
+        "POS Settings"
+      ],
+      "checksum": "1d54a452d5e08d8a24269921b1488b9b2bf2625ca2e0c1a7ae462fff79e059fb"
+    },
+    {
+      "artifact_id": "ART-API-00372",
+      "method": "smriti_retail_os.shift_api.get_pos_profiles",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/shift_api.py",
+      "arguments": [],
+      "db_references": [
+        "POS Profile"
+      ],
+      "checksum": "f278e5cb24cc7b9d4d5aff95ee61e68f0515e3db473eede8ceb310a7dac4edf8"
+    },
+    {
+      "artifact_id": "ART-API-00373",
+      "method": "smriti_retail_os.shift_api.get_payment_modes",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/shift_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "7afd162724da59add1ef77c46f954e344399749c10a8e9ae9c76cfd86f84b166"
+    },
+    {
+      "artifact_id": "ART-API-00374",
+      "method": "smriti_retail_os.shift_api.get_shift_status",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/shift_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "98024d92585100ae203c2d3b769ae6dad79c6e883e6b7f5494934b8e33cc2a1d"
+    },
+    {
+      "artifact_id": "ART-API-00375",
+      "method": "smriti_retail_os.sizewise_invoice_api.get_company_details",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sizewise_invoice_api.py",
+      "arguments": [
+        "company"
+      ],
+      "db_references": [
+        "Address",
+        "Bank Account",
+        "Company",
+        "Dynamic Link",
+        "Global Defaults"
+      ],
+      "checksum": "5fcc44138a69417aa4203643b6fe051290a058d1f96c89ccccff71050f4dd77c"
+    },
+    {
+      "artifact_id": "ART-API-00376",
+      "method": "smriti_retail_os.sizewise_invoice_api.get_customer_details",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sizewise_invoice_api.py",
+      "arguments": [
+        "customer"
+      ],
+      "db_references": [
+        "Address",
+        "Customer",
+        "Dynamic Link"
+      ],
+      "checksum": "6568abcb7efb2c7208ccc2b85392be1ec39538a91339e469d5bfeed9ca3cab91"
+    },
+    {
+      "artifact_id": "ART-API-00377",
+      "method": "smriti_retail_os.sizewise_invoice_api.search_customers",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sizewise_invoice_api.py",
+      "arguments": [
+        "query"
+      ],
+      "db_references": [
+        "Customer"
+      ],
+      "checksum": "b671ca228c4d8b10202de1c538e6d58440a834182f414a86b84f448e71f95599"
+    },
+    {
+      "artifact_id": "ART-API-00378",
+      "method": "smriti_retail_os.sizewise_invoice_api.search_items",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sizewise_invoice_api.py",
+      "arguments": [
+        "query"
+      ],
+      "db_references": [
+        "Item"
+      ],
+      "checksum": "3fd3943a21f37d4187a649cc9d79e616d93addcfa85b50eff760b502ad60ea54"
+    },
+    {
+      "artifact_id": "ART-API-00379",
+      "method": "smriti_retail_os.sizewise_invoice_api.resolve_barcode",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sizewise_invoice_api.py",
+      "arguments": [
+        "barcode"
+      ],
+      "db_references": [],
+      "checksum": "3e6d500614c6fc5141b5bdc042d31758ab8f0e3ef7c2a009ae345ff2a287be0d"
+    },
+    {
+      "artifact_id": "ART-API-00380",
+      "method": "smriti_retail_os.sizewise_invoice_api.get_item_details_by_article",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sizewise_invoice_api.py",
+      "arguments": [
+        "article",
+        "color"
+      ],
+      "db_references": [
+        "Item"
+      ],
+      "checksum": "05d3b12a3aec43b8a4145cccca1a3ee9b23853a29ff7da5821db63b0cf838527"
+    },
+    {
+      "artifact_id": "ART-API-00381",
+      "method": "smriti_retail_os.sizewise_invoice_api.get_states_list",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sizewise_invoice_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "06d2bf7f1f577384644953e13d300cb395b18bb624e4032977f2819e84ed2eb2"
+    },
+    {
+      "artifact_id": "ART-API-00382",
+      "method": "smriti_retail_os.sizewise_invoice_api.save_sizewise_invoice",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sizewise_invoice_api.py",
+      "arguments": [
+        "payload"
+      ],
+      "db_references": [
+        "Address",
+        "Company",
+        "SMRITI Party Stock Account",
+        "Sales Invoice"
+      ],
+      "checksum": "e85d26162b243e8b24fa803ca329492fafcdb4135c515531eae584e212a5a4ef"
+    },
+    {
+      "artifact_id": "ART-API-00383",
+      "method": "smriti_retail_os.sizewise_invoice_api.submit_sizewise_invoice",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sizewise_invoice_api.py",
+      "arguments": [
+        "invoice_name"
+      ],
+      "db_references": [
+        "Sales Invoice"
+      ],
+      "checksum": "f84c0e5ab54006937ad7b9d225f4d30a919b137c18548df57bbdbcfc414c44a4"
+    },
+    {
+      "artifact_id": "ART-API-00384",
+      "method": "smriti_retail_os.sizewise_invoice_api.get_sizewise_invoice",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sizewise_invoice_api.py",
+      "arguments": [
+        "invoice_name"
+      ],
+      "db_references": [
+        "Sales Invoice"
+      ],
+      "checksum": "2f445c66de448630df6419157d1796a82286a9c057cdf315a4a035672a65bacd"
+    },
+    {
+      "artifact_id": "ART-API-00385",
+      "method": "smriti_retail_os.sizewise_invoice_api.list_sizewise_invoices",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sizewise_invoice_api.py",
+      "arguments": [
+        "customer",
+        "limit"
+      ],
+      "db_references": [
+        "Sales Invoice"
+      ],
+      "checksum": "364dfd6b9f923e0fbbea4f623dd69d43b9c220e39c07ab5cbafaa92422c3e188"
+    },
+    {
+      "artifact_id": "ART-API-00386",
+      "method": "smriti_retail_os.sizewise_invoice_api.cancel_sizewise_invoice",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sizewise_invoice_api.py",
+      "arguments": [
+        "invoice_name"
+      ],
+      "db_references": [
+        "Sales Invoice"
+      ],
+      "checksum": "8fdd6194ec351e98b3a95911428cd3d207031b59875614e34cf571183530205d"
+    },
+    {
+      "artifact_id": "ART-API-00387",
+      "method": "smriti_retail_os.sizewise_invoice_api.get_admin_session_for_pdf",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sizewise_invoice_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "f384cb2113ff443c8597ff4dc3a6dce6ccb7f2550e9382603239af8e1dd04a87"
+    },
+    {
+      "artifact_id": "ART-API-00388",
+      "method": "smriti_retail_os.sizewise_invoice_api.get_pdt_column_map",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sizewise_invoice_api.py",
+      "arguments": [
+        "file_content",
+        "file_type"
+      ],
+      "db_references": [],
+      "checksum": "1ff0346a2fa8638ff0c0364c703e121a3b4ca944970fe54e0e5641f16a991e29"
+    },
+    {
+      "artifact_id": "ART-API-00389",
+      "method": "smriti_retail_os.sizewise_invoice_api.preview_pdt_import",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sizewise_invoice_api.py",
+      "arguments": [
+        "file_content",
+        "file_type",
+        "mapping",
+        "price_type",
+        "supplier"
+      ],
+      "db_references": [],
+      "checksum": "41af78c9dc141c3d92295c0fd461bbc0b626a19620a6949594b548768b4d1ca9"
+    },
+    {
+      "artifact_id": "ART-API-00390",
+      "method": "smriti_retail_os.transaction_kernel.execute_smriti_transaction",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/transaction_kernel.py",
+      "arguments": [
+        "doctype",
+        "payload",
+        "action"
+      ],
+      "db_references": [],
+      "checksum": "bd3aad1768b9c62782f0b8e81c0bf29f700e02b10b74e4b82a85c7ea3bafd277"
+    },
+    {
+      "artifact_id": "ART-API-00391",
+      "method": "smriti_retail_os.transaction_kernel.resolve_identifiers",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/transaction_kernel.py",
+      "arguments": [
+        "identifiers",
+        "company"
+      ],
+      "db_references": [
+        "Item"
+      ],
+      "checksum": "8a6369011f8b6ba915784b7f11f5ab69f87cac725149867d1e9c342e91468f5f"
+    },
+    {
+      "artifact_id": "ART-API-00392",
+      "method": "smriti_retail_os.transaction_kernel.apply_pricing_rules",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/transaction_kernel.py",
+      "arguments": [
+        "doctype",
+        "payload",
+        "company"
+      ],
+      "db_references": [],
+      "checksum": "9c55d259aab6bb8a620c562bc77e1130230a0fb24a86d4e3b4731855bf87f92a"
+    },
+    {
+      "artifact_id": "ART-API-00393",
+      "method": "smriti_retail_os.transaction_kernel.get_doctype_schema",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/transaction_kernel.py",
+      "arguments": [
+        "doctype"
+      ],
+      "db_references": [],
+      "checksum": "d79ea99fc5f7b28b183179637c7612fc6baa84ddac3dd8d27d8b14ad22906aa2"
+    },
+    {
+      "artifact_id": "ART-API-00394",
+      "method": "smriti_retail_os.api.analytics_api.get_dashboard_kpis",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/analytics_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "a2f8a7d1846be89d5eea1ea56473a390c22165eb21a5af782974db2d15291ea5"
+    },
+    {
+      "artifact_id": "ART-API-00395",
+      "method": "smriti_retail_os.api.analytics_api.get_sales_trend",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/analytics_api.py",
+      "arguments": [
+        "days"
+      ],
+      "db_references": [],
+      "checksum": "e7910954052e14abe6a937f26fd831ad20f6654d3cbf819cefa4f2f049e42c00"
+    },
+    {
+      "artifact_id": "ART-API-00396",
+      "method": "smriti_retail_os.api.analytics_api.get_payment_mix",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/analytics_api.py",
+      "arguments": [
+        "days"
+      ],
+      "db_references": [],
+      "checksum": "b38969f1b73c470967d07ac287ef2c6f3da579bf9a59d705ff9143a1081da9b4"
+    },
+    {
+      "artifact_id": "ART-API-00397",
+      "method": "smriti_retail_os.api.analytics_api.get_top_items",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/analytics_api.py",
+      "arguments": [
+        "days",
+        "limit"
+      ],
+      "db_references": [],
+      "checksum": "2d1754d1816639479ad429f9b5d5c0360dee27819ded779b693cde752db3608e"
+    },
+    {
+      "artifact_id": "ART-API-00398",
+      "method": "smriti_retail_os.api.analytics_api.get_cashier_performance",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/analytics_api.py",
+      "arguments": [
+        "days"
+      ],
+      "db_references": [],
+      "checksum": "92af3d59de7cebd6cdf2785278b0e9190adb8b9744151e71c500a1c9e3bc1e78"
+    },
+    {
+      "artifact_id": "ART-API-00399",
+      "method": "smriti_retail_os.api.analytics_api.get_outstanding_aging",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/analytics_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "baa1b0132a34219da73f4e1243132bde9a16eb2b809a6fe23e1f4ca1825b8359"
+    },
+    {
+      "artifact_id": "ART-API-00400",
+      "method": "smriti_retail_os.api.audit_log_api.get_security_events",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/audit_log_api.py",
+      "arguments": [
+        "page",
+        "page_size",
+        "operation_filter"
+      ],
+      "db_references": [
+        "Activity Log"
+      ],
+      "checksum": "5b95aee5fee46b038122e4422c44a5ab343f5c4a464669fd51182b96f7d24a86"
+    },
+    {
+      "artifact_id": "ART-API-00401",
+      "method": "smriti_retail_os.api.audit_log_api.get_event_detail",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/audit_log_api.py",
+      "arguments": [
+        "event_name"
+      ],
+      "db_references": [
+        "Activity Log"
+      ],
+      "checksum": "44f4d9722843e0b7122ff5eabfeab905437ce682f566e768bb818109f26428a3"
+    },
+    {
+      "artifact_id": "ART-API-00402",
+      "method": "smriti_retail_os.api.audit_log_api.get_stats",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/audit_log_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "9c6af6d0fddcfa0c87d243e064c20062f428ef527af591b4351a7d2c87dfd698"
+    },
+    {
+      "artifact_id": "ART-API-00403",
+      "method": "smriti_retail_os.api.brand_api.get_brands",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/brand_api.py",
+      "arguments": [
+        "search_txt"
+      ],
+      "db_references": [
+        "Brand"
+      ],
+      "checksum": "ea48e82034dcc45f8707f7685e55a0958778d76c3a8121ed0a288bfafb49a155"
+    },
+    {
+      "artifact_id": "ART-API-00404",
+      "method": "smriti_retail_os.api.brand_api.create_brand",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/brand_api.py",
+      "arguments": [
+        "brand_name",
+        "description"
+      ],
+      "db_references": [
+        "Brand"
+      ],
+      "checksum": "3cbec9de74cfd98975161f15325f18ffdbd325a2d0eb42695fe3831ed5a4fd67"
+    },
+    {
+      "artifact_id": "ART-API-00405",
+      "method": "smriti_retail_os.api.brand_api.update_brand",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/brand_api.py",
+      "arguments": [
+        "brand_name",
+        "description"
+      ],
+      "db_references": [
+        "Brand"
+      ],
+      "checksum": "a7590465d4cfbdc2f26c07cbda2951d4a4175b76877575dae9bf8d196a92df98"
+    },
+    {
+      "artifact_id": "ART-API-00406",
+      "method": "smriti_retail_os.api.brand_api.delete_brand",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/brand_api.py",
+      "arguments": [
+        "brand_name"
+      ],
+      "db_references": [
+        "Brand",
+        "Item"
+      ],
+      "checksum": "b98fa153bcb7581ed34bb293c60d798232a5e3ab53a33be09b112ca74bf7d30c"
+    },
+    {
+      "artifact_id": "ART-API-00407",
+      "method": "smriti_retail_os.api.category_api.get_categories",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/category_api.py",
+      "arguments": [
+        "search_txt"
+      ],
+      "db_references": [
+        "Item Group"
+      ],
+      "checksum": "8689128cda4de43310a17c8a012cae7076c3d7f307f091b1b71bd8674c766b3d"
+    },
+    {
+      "artifact_id": "ART-API-00408",
+      "method": "smriti_retail_os.api.category_api.create_category",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/category_api.py",
+      "arguments": [
+        "category_name",
+        "parent_category",
+        "is_group"
+      ],
+      "db_references": [
+        "Item Group"
+      ],
+      "checksum": "85a6de9fe4daa92bfde0145b7f440c2bb50373ce006897482b19caf9a21f1149"
+    },
+    {
+      "artifact_id": "ART-API-00409",
+      "method": "smriti_retail_os.api.category_api.update_category",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/category_api.py",
+      "arguments": [
+        "category_name",
+        "parent_category"
+      ],
+      "db_references": [
+        "Item Group"
+      ],
+      "checksum": "841403b0f5440f2c5a7f3c6d9423d91445b5429894beaea750927bffbb2fd3f8"
+    },
+    {
+      "artifact_id": "ART-API-00410",
+      "method": "smriti_retail_os.api.category_api.delete_category",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/category_api.py",
+      "arguments": [
+        "category_name"
+      ],
+      "db_references": [
+        "Item",
+        "Item Group"
+      ],
+      "checksum": "aeca337a684d827fcf2cfe01b0f0b6dbc5c3e5fd3a47682bf1faa66ca3ae0744"
+    },
+    {
+      "artifact_id": "ART-API-00411",
+      "method": "smriti_retail_os.api.coming_soon_api.get_feature_info",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/coming_soon_api.py",
+      "arguments": [
+        "feature_key"
+      ],
+      "db_references": [],
+      "checksum": "517d77342e7c3d50671f898e790a037e6dec437fc72571c343096209ccf94a2e"
+    },
+    {
+      "artifact_id": "ART-API-00412",
+      "method": "smriti_retail_os.api.coming_soon_api.get_all_coming_soon",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/coming_soon_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "57033f00db5543cc382e2a6bd2ff7a70ad1f5ac1a133cd00f97164e3d9f22472"
+    },
+    {
+      "artifact_id": "ART-API-00413",
+      "method": "smriti_retail_os.api.dictionary_api.get_active_terms",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/dictionary_api.py",
+      "arguments": [
+        "category"
+      ],
+      "db_references": [],
+      "checksum": "087e3a55bbff0375e9392e4d3132064fe6831b8aa00d2cfa4ebf8eac6aeb5882"
+    },
+    {
+      "artifact_id": "ART-API-00414",
+      "method": "smriti_retail_os.api.dictionary_api.get_term_detail",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/dictionary_api.py",
+      "arguments": [
+        "term_id",
+        "version"
+      ],
+      "db_references": [],
+      "checksum": "af98eb345eab75542345f44ec5aa4a3b9dad796b460a4bb6749adaa5e4429e0e"
+    },
+    {
+      "artifact_id": "ART-API-00415",
+      "method": "smriti_retail_os.api.explain_api.get_explain_payload",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/explain_api.py",
+      "arguments": [
+        "formula_id",
+        "version"
+      ],
+      "db_references": [],
+      "checksum": "bd0b7a460cbe1e8ca9363f403bd667f97afe5b8f257ac5250c28e353494a4cb0"
+    },
+    {
+      "artifact_id": "ART-API-00416",
+      "method": "smriti_retail_os.api.formula_api.get_active_formulas",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/formula_api.py",
+      "arguments": [
+        "category"
+      ],
+      "db_references": [],
+      "checksum": "2f9770f92c20d5c080db35eae7784bea64560cd36c711b1eac7ed8b7766db9c4"
+    },
+    {
+      "artifact_id": "ART-API-00417",
+      "method": "smriti_retail_os.api.formula_api.get_formula_detail",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/formula_api.py",
+      "arguments": [
+        "formula_id",
+        "version"
+      ],
+      "db_references": [],
+      "checksum": "23d6cc7947715cf55f417410e87f18ca2104dd7a5eb92cb53283af832bb2ca11"
+    },
+    {
+      "artifact_id": "ART-API-00418",
+      "method": "smriti_retail_os.api.golive_api.get_checklist",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/golive_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "25c562e26affa718629e9d5f9cb6d1962ad0754eb291d96100909d8a28a407f4"
+    },
+    {
+      "artifact_id": "ART-API-00419",
+      "method": "smriti_retail_os.api.help_api.get_help_article",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/help_api.py",
+      "arguments": [
+        "article_key"
+      ],
+      "db_references": [],
+      "checksum": "d5a1894b9de1021826d722471bc6f875a5ca435931709ef2802083c6a506a623"
+    },
+    {
+      "artifact_id": "ART-API-00420",
+      "method": "smriti_retail_os.api.help_api.get_help_toc",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/help_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "7e17195377e24710795aeb7291bcac226f31a2025449ba3a6fcd30d31cd94731"
+    },
+    {
+      "artifact_id": "ART-API-00421",
+      "method": "smriti_retail_os.api.help_api.search_knowledge",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/help_api.py",
+      "arguments": [
+        "query"
+      ],
+      "db_references": [],
+      "checksum": "04ab1cdae0be8eebfe92481ef3671cf9b55f229553a657f224bc1b43c6335ad3"
+    },
+    {
+      "artifact_id": "ART-API-00422",
+      "method": "smriti_retail_os.api.help_api.rebuild_index_cache",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/help_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "eb252f275e0b1d3377299d55320201f1059cc54ef76bd395398976b91ef52539"
+    },
+    {
+      "artifact_id": "ART-API-00423",
+      "method": "smriti_retail_os.api.help_api.get_governance_data",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/help_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "5d20fee6f92fe3c7c4d36c322a881467a7acf0aa441605159f3246790ce96262"
+    },
+    {
+      "artifact_id": "ART-API-00424",
+      "method": "smriti_retail_os.api.help_api.get_document_registry",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/help_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "9b7cfe1ec534cad8c80b74a4872e56ea84ccc34e22204678fd44abf7b0036594"
+    },
+    {
+      "artifact_id": "ART-API-00425",
+      "method": "smriti_retail_os.api.help_api.get_manual_html",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/help_api.py",
+      "arguments": [
+        "volume_name"
+      ],
+      "db_references": [],
+      "checksum": "421a4938656c48d134e7ca06ca0c48f310ef2cd7a9f3077afb3c28e2aa79c12b"
+    },
+    {
+      "artifact_id": "ART-API-00426",
+      "method": "smriti_retail_os.api.help_api.get_knowledge_assets",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/help_api.py",
+      "arguments": [],
+      "db_references": [
+        "SMRITI Business Term",
+        "SMRITI Formula Definition",
+        "SMRITI Related Formula",
+        "SMRITI Related Term"
+      ],
+      "checksum": "b506ffea28c19111ca8005632413f61f3bca8dade1a7f0240fad0077215c1e36"
+    },
+    {
+      "artifact_id": "ART-API-00427",
+      "method": "smriti_retail_os.api.help_api.start_psv_exam",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/help_api.py",
+      "arguments": [
+        "exam_id"
+      ],
+      "db_references": [
+        "SMRITI Certification Exam",
+        "SMRITI PSV Exam Attempt"
+      ],
+      "checksum": "68959df8fa6437f31661ec7041625c5724a77b1ca7a4aeedfce1f0bf4ca71424"
+    },
+    {
+      "artifact_id": "ART-API-00428",
+      "method": "smriti_retail_os.api.help_api.submit_psv_exam",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/help_api.py",
+      "arguments": [
+        "attempt_id",
+        "answers_json"
+      ],
+      "db_references": [
+        "SMRITI Certification Exam",
+        "SMRITI PSV Exam Attempt"
+      ],
+      "checksum": "8bb73dd0b10a20f8039a583d46962a4d1cad5f6eeb60aa061df0140d3e34c61a"
+    },
+    {
+      "artifact_id": "ART-API-00429",
+      "method": "smriti_retail_os.api.help_api.get_psv_exam_status",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/help_api.py",
+      "arguments": [
+        "exam_id"
+      ],
+      "db_references": [
+        "SMRITI Certification Exam",
+        "SMRITI PSV Exam Attempt"
+      ],
+      "checksum": "2528ec91c6cc841285475a65622f6fdeb7e380bfcf8d0041b8988d0c89ad927d"
+    },
+    {
+      "artifact_id": "ART-API-00430",
+      "method": "smriti_retail_os.api.help_api.get_certified_registry",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/help_api.py",
+      "arguments": [],
+      "db_references": [
+        "SMRITI Certification Exam",
+        "SMRITI PSV Exam Attempt",
+        "User"
+      ],
+      "checksum": "ad3ab8e1ea91f2767f6b13d2abc47bfae069f5f21bf39b28adb0bcc5112b6b8a"
+    },
+    {
+      "artifact_id": "ART-API-00431",
+      "method": "smriti_retail_os.api.help_api.download_psv_certificate",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/help_api.py",
+      "arguments": [
+        "attempt_id"
+      ],
+      "db_references": [
+        "SMRITI Certification Exam",
+        "SMRITI PSV Exam Attempt",
+        "User"
+      ],
+      "checksum": "9d7d0359102b8336fee0fcb1c8da6d8f2376f247b949d491b940ab45b848d36a"
+    },
+    {
+      "artifact_id": "ART-API-00432",
+      "method": "smriti_retail_os.api.help_api.verify_psv_certificate",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/help_api.py",
+      "arguments": [
+        "certificate_hash"
+      ],
+      "db_references": [
+        "SMRITI Certification Exam",
+        "SMRITI PSV Exam Attempt",
+        "User"
+      ],
+      "checksum": "90e252a7e4f604d5ea4bc2edc1678ca184619ef4e4900e7fe993c4bbc9b41d6b"
+    },
+    {
+      "artifact_id": "ART-API-00433",
+      "method": "smriti_retail_os.api.help_api.download_enablement_file",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/help_api.py",
+      "arguments": [
+        "file_key"
+      ],
+      "db_references": [],
+      "checksum": "2a0c630432d63f755d06d52c46a37cf3e784a2822976bc855fc2d863a991871a"
+    },
+    {
+      "artifact_id": "ART-API-00607",
+      "method": "smriti_retail_os.api.knowledge_studio_api.query_ske",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/knowledge_studio_api.py",
+      "arguments": [
+        "query"
+      ],
+      "db_references": [],
+      "checksum": "c60fe7bb86f9df261702f44b99de381838a1693d0d5cccb16387b30c0aee8279"
+    },
+    {
+      "artifact_id": "ART-API-00608",
+      "method": "smriti_retail_os.api.knowledge_studio_api.get_knowledge_studio_counts",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/knowledge_studio_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "252e31e26124576ad0ea1e101e3abf89bd9263a9a4d376e52b0a4917cf8631c6"
+    },
+    {
+      "artifact_id": "ART-API-00609",
+      "method": "smriti_retail_os.api.knowledge_studio_api.explain_screen_by_route",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/knowledge_studio_api.py",
+      "arguments": [
+        "route_path"
+      ],
+      "db_references": [],
+      "checksum": "8a0504fc410758a70c2ac962eb3b6b40e113ce663a457e645204d7bc632f2c62"
+    },
+    {
+      "artifact_id": "ART-API-00610",
+      "method": "smriti_retail_os.api.knowledge_studio_api.get_ske_meta",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/knowledge_studio_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "06078d16c84869b4df3adfb07aa91d91deb64593e65eeeebf754d4cda0846814"
+    },
+    {
+      "artifact_id": "ART-API-00434",
+      "method": "smriti_retail_os.api.license_api.get_license_status",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/license_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "7ea2822bd2d61964a8f6c74f2b283c7af5bb294bf94c8e6770590418c9cf2f4b"
+    },
+    {
+      "artifact_id": "ART-API-00435",
+      "method": "smriti_retail_os.api.license_api.activate_license",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/license_api.py",
+      "arguments": [
+        "license_key",
+        "organization_name",
+        "owner_name",
+        "registered_email",
+        "registered_mobile",
+        "license_type"
+      ],
+      "db_references": [],
+      "checksum": "5c398385fac10d2884d97a1696ae311ca04942705bc44d863871eb31f8c00752"
+    },
+    {
+      "artifact_id": "ART-API-00436",
+      "method": "smriti_retail_os.api.license_api.sync_from_company",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/license_api.py",
+      "arguments": [],
+      "db_references": [
+        "Company"
+      ],
+      "checksum": "53d487151fb11632555aadbf4effd1ca0a32bb76802d53bfe58fa49c796a5c3d"
+    },
+    {
+      "artifact_id": "ART-API-00437",
+      "method": "smriti_retail_os.api.license_api.get_feature_entitlements",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/license_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "a145099a37e63eb379caae76aa7fa27eb73ce8610cf4551ae5fa546002ef2b5f"
+    },
+    {
+      "artifact_id": "ART-API-00438",
+      "method": "smriti_retail_os.api.license_api.get_activity_log",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/license_api.py",
+      "arguments": [
+        "limit"
+      ],
+      "db_references": [],
+      "checksum": "6c8ac57b94280d3432927030c025394b8543dee755606baedc64ed828013dfab"
+    },
+    {
+      "artifact_id": "ART-API-00439",
+      "method": "smriti_retail_os.api.license_api.get_validation_history",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/license_api.py",
+      "arguments": [
+        "limit"
+      ],
+      "db_references": [],
+      "checksum": "38e022818ec0fa4b2e9671d08182ffa09b6858596a886dfe1b6307e6a2b7bbba"
+    },
+    {
+      "artifact_id": "ART-API-00440",
+      "method": "smriti_retail_os.api.license_api.check_feature_access",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/license_api.py",
+      "arguments": [
+        "feature_code"
+      ],
+      "db_references": [],
+      "checksum": "b38870ed02562e22ca006bfed32255f72171b55236301c8c5b1e4803bd931d18"
+    },
+    {
+      "artifact_id": "ART-API-00441",
+      "method": "smriti_retail_os.api.license_api.generate_test_key",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/license_api.py",
+      "arguments": [
+        "customer_id",
+        "tier",
+        "expiry_date",
+        "installation_id"
+      ],
+      "db_references": [],
+      "checksum": "cc58fc346e5238be8995b8fe48bd45d3c991de0b3bf46e186165be1e0988917a"
+    },
+    {
+      "artifact_id": "ART-API-00442",
+      "method": "smriti_retail_os.api.payment_api.get_payments",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/payment_api.py",
+      "arguments": [
+        "payment_type",
+        "search",
+        "date_from",
+        "date_to",
+        "limit"
+      ],
+      "db_references": [],
+      "checksum": "46fa9d079d20373aebd087a07e0f84a19168aa0f6b4576d9350e06b089d50d10"
+    },
+    {
+      "artifact_id": "ART-API-00443",
+      "method": "smriti_retail_os.api.payment_api.get_payment_detail",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/payment_api.py",
+      "arguments": [
+        "name"
+      ],
+      "db_references": [
+        "Payment Entry"
+      ],
+      "checksum": "b32c21b00ec6b790d7b35a086f649abb60da814e7c043b88babf7d85d160aab5"
+    },
+    {
+      "artifact_id": "ART-API-00444",
+      "method": "smriti_retail_os.api.payment_api.create_payment",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/payment_api.py",
+      "arguments": [
+        "payment_type",
+        "party_type",
+        "party",
+        "amount",
+        "mode_of_payment",
+        "posting_date",
+        "reference_no",
+        "reference_date",
+        "remarks",
+        "allocate_to"
+      ],
+      "db_references": [
+        "Company"
+      ],
+      "checksum": "c7dc04f0c99f6d9fbed8166896d6a7b8de9328c2b1195c8ac8b7fed20ff26f1d"
+    },
+    {
+      "artifact_id": "ART-API-00445",
+      "method": "smriti_retail_os.api.payment_api.get_outstanding_invoices",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/payment_api.py",
+      "arguments": [
+        "party_type",
+        "party"
+      ],
+      "db_references": [],
+      "checksum": "fb34354ebc9ec25c89e80f9d0bee1a08e4b5f25f10e065174f591fdb7a3db501"
+    },
+    {
+      "artifact_id": "ART-API-00446",
+      "method": "smriti_retail_os.api.payment_api.get_parties",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/payment_api.py",
+      "arguments": [
+        "party_type",
+        "search"
+      ],
+      "db_references": [],
+      "checksum": "ac5d730fe21ed202fe9eb9b8bfc572c9042e61ed72c5d998d9b12e34d36e6cd4"
+    },
+    {
+      "artifact_id": "ART-API-00447",
+      "method": "smriti_retail_os.api.payment_api.get_modes_of_payment",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/payment_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "874b753c9fbc3d960229b7d74d26fc821da06bac0ea36febfb9c08cfdbdfff5b"
+    },
+    {
+      "artifact_id": "ART-API-00448",
+      "method": "smriti_retail_os.api.pdt_api.get_twin_status",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/pdt_api.py",
+      "arguments": [
+        "party_stock_account",
+        "item_code"
+      ],
+      "db_references": [
+        "SMRITI Party Stock Account",
+        "SMRITI SKU Twin"
+      ],
+      "checksum": "905a5aacefbb2fcf5d763a60a27bb11501349428f865f87ad8fe433652899179"
+    },
+    {
+      "artifact_id": "ART-API-00449",
+      "method": "smriti_retail_os.api.pdt_api.trigger_rebuild",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/pdt_api.py",
+      "arguments": [
+        "party_stock_account",
+        "item_code"
+      ],
+      "db_references": [
+        "SMRITI Party Stock Account"
+      ],
+      "checksum": "76f69e0ca8fb18d66a637661d295a3b2a3645287833fda169e9975bb54e329a9"
+    },
+    {
+      "artifact_id": "ART-API-00450",
+      "method": "smriti_retail_os.api.pdt_api.run_simulation",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/pdt_api.py",
+      "arguments": [
+        "simulation_config"
+      ],
+      "db_references": [],
+      "checksum": "5cfd6c401213fb9fc61c5cbfc2c2ebea48e792f005438f03a40f88f5fbab56f1"
+    },
+    {
+      "artifact_id": "ART-API-00451",
+      "method": "smriti_retail_os.api.pdt_api.get_pdt_dashboard_list",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/pdt_api.py",
+      "arguments": [
+        "filters"
+      ],
+      "db_references": [
+        "SMRITI Party Stock Account",
+        "SMRITI SKU Twin"
+      ],
+      "checksum": "2edbbb4df41bfc09d5b41e04c8c3cb920166cd7efa1f0db66377015a3f1d0ff6"
+    },
+    {
+      "artifact_id": "ART-API-00452",
+      "method": "smriti_retail_os.api.pos_profile_api.get_profiles",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/pos_profile_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "39d9cc4147acdac23ebf49caba80947d17b533672b9d143917f22f17e7fd9f9c"
+    },
+    {
+      "artifact_id": "ART-API-00453",
+      "method": "smriti_retail_os.api.pos_profile_api.get_details",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/pos_profile_api.py",
+      "arguments": [
+        "name"
+      ],
+      "db_references": [],
+      "checksum": "5656b0de3774420730da7cf9f8885a3e44b42acaa052a4dafb33ddaeefcc519f"
+    },
+    {
+      "artifact_id": "ART-API-00454",
+      "method": "smriti_retail_os.api.pos_profile_api.save_profile",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/pos_profile_api.py",
+      "arguments": [
+        "doc_data"
+      ],
+      "db_references": [
+        "POS Profile"
+      ],
+      "checksum": "076d1e576d1300a7aea523c8fdd9d84d350d752f4b4284d136a85f4f99d089c4"
+    },
+    {
+      "artifact_id": "ART-API-00455",
+      "method": "smriti_retail_os.api.pos_profile_api.clone_profile",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/pos_profile_api.py",
+      "arguments": [
+        "source_name",
+        "target_name"
+      ],
+      "db_references": [],
+      "checksum": "b53dcc183d75e4b920f963a6154fcc5cfaa7aa0c0abb5e9740b9e81864c5a991"
+    },
+    {
+      "artifact_id": "ART-API-00456",
+      "method": "smriti_retail_os.api.pos_profile_api.archive_profile",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/pos_profile_api.py",
+      "arguments": [
+        "name"
+      ],
+      "db_references": [],
+      "checksum": "cdc027c07bd51b5219428a225b84a9e6f26bb9dd35e0bcf81a5016e6bf55ce5a"
+    },
+    {
+      "artifact_id": "ART-API-00457",
+      "method": "smriti_retail_os.api.pos_profile_api.get_dropdowns",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/pos_profile_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "0c22ed22c416fbfd1ea1960685c85103c91ebc5d2d7ca1543a6901b4f471de27"
+    },
+    {
+      "artifact_id": "ART-API-00458",
+      "method": "smriti_retail_os.api.pos_profile_api.validate_profile",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/pos_profile_api.py",
+      "arguments": [
+        "name"
+      ],
+      "db_references": [],
+      "checksum": "abbd991d2c3ec18ac4b2e5031212c92e5a9ca2e1f1969256fb8fd2d7d95b584b"
+    },
+    {
+      "artifact_id": "ART-API-00459",
+      "method": "smriti_retail_os.api.scheme_api.get_schemes",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/scheme_api.py",
+      "arguments": [
+        "search_txt"
+      ],
+      "db_references": [
+        "Pricing Rule"
+      ],
+      "checksum": "c54a44e0c6934c44c5869564d5b915381a674f65d48871f3c172470eaaf57e9c"
+    },
+    {
+      "artifact_id": "ART-API-00460",
+      "method": "smriti_retail_os.api.scheme_api.create_scheme",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/scheme_api.py",
+      "arguments": [
+        "title",
+        "apply_on",
+        "applied_to",
+        "discount_type",
+        "value",
+        "valid_from",
+        "valid_upto",
+        "company",
+        "min_qty",
+        "free_qty",
+        "same_item",
+        "free_item"
+      ],
+      "db_references": [
+        "Company",
+        "Item"
+      ],
+      "checksum": "dd3b56d4f8abbeb7f2af13b3941058cac033d558724a52e6f3cc97eb6f21faa2"
+    },
+    {
+      "artifact_id": "ART-API-00461",
+      "method": "smriti_retail_os.api.scheme_api.update_scheme",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/scheme_api.py",
+      "arguments": [
+        "name",
+        "title",
+        "apply_on",
+        "applied_to",
+        "discount_type",
+        "value",
+        "valid_from",
+        "valid_upto",
+        "min_qty",
+        "free_qty",
+        "same_item",
+        "free_item"
+      ],
+      "db_references": [
+        "Item",
+        "Pricing Rule"
+      ],
+      "checksum": "2da9a6e567e6d5006ba25a009d8e190e6cb82d0ce9c1b19fdf83e68beaa1abe3"
+    },
+    {
+      "artifact_id": "ART-API-00462",
+      "method": "smriti_retail_os.api.scheme_api.delete_scheme",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/scheme_api.py",
+      "arguments": [
+        "name"
+      ],
+      "db_references": [
+        "Pricing Rule"
+      ],
+      "checksum": "f0820c5a26ac8fdb5de4b2e49e7a11d95ae84dfc8fee95bb27e19a1312fc70de"
+    },
+    {
+      "artifact_id": "ART-API-00463",
+      "method": "smriti_retail_os.api.supplier_returns_api.get_submitted_receipts",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/supplier_returns_api.py",
+      "arguments": [
+        "query"
+      ],
+      "db_references": [],
+      "checksum": "6070994e921938bced029b1762a5ca9ed310ba5ef557567e6fe9d8bb09947ea7"
+    },
+    {
+      "artifact_id": "ART-API-00464",
+      "method": "smriti_retail_os.api.supplier_returns_api.get_receipt_details",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/supplier_returns_api.py",
+      "arguments": [
+        "receipt_name"
+      ],
+      "db_references": [
+        "Purchase Receipt"
+      ],
+      "checksum": "f37055b33d4e2a83b60bf51f88f085bd20547b880e1b2511bd6cc993df5382cb"
+    },
+    {
+      "artifact_id": "ART-API-00465",
+      "method": "smriti_retail_os.api.supplier_returns_api.submit_supplier_return",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/supplier_returns_api.py",
+      "arguments": [
+        "receipt_name",
+        "return_items",
+        "remarks",
+        "manager_pin"
+      ],
+      "db_references": [
+        "Purchase Receipt"
+      ],
+      "checksum": "773a5a5eb3dbbcbc20be9f6f19579af4c28e0053abaf4f0202340d03807f11cd"
+    },
+    {
+      "artifact_id": "ART-API-00466",
+      "method": "smriti_retail_os.api.trial_activation_api.get_converted_leads",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/trial_activation_api.py",
+      "arguments": [],
+      "db_references": [
+        "SMRITI Trial Activation",
+        "SMRITI Trial Lead"
+      ],
+      "checksum": "d05cdde9f8fd904d5e2c514e799b76989678c1b421e2b0812ad3d9e1aa53b297"
+    },
+    {
+      "artifact_id": "ART-API-00467",
+      "method": "smriti_retail_os.api.trial_activation_api.create_activation",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/trial_activation_api.py",
+      "arguments": [
+        "lead_name",
+        "activation_type",
+        "trial_days"
+      ],
+      "db_references": [
+        "SMRITI Trial Activation",
+        "SMRITI Trial Lead"
+      ],
+      "checksum": "f2ffdcec02c4bf5926a2a999b7a3d45c7605e7c079a0970eebd2b3952d6f8cdc"
+    },
+    {
+      "artifact_id": "ART-API-00468",
+      "method": "smriti_retail_os.api.trial_activation_api.activate_account",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/trial_activation_api.py",
+      "arguments": [
+        "activation_name",
+        "company_name",
+        "trial_days"
+      ],
+      "db_references": [
+        "SMRITI Trial Activation"
+      ],
+      "checksum": "9edcd7eb0e355fba6565884d64a87de573a09269a0c507a2f7d3de7dc3eb966b"
+    },
+    {
+      "artifact_id": "ART-API-00469",
+      "method": "smriti_retail_os.api.trial_activation_api.retry_provision",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/trial_activation_api.py",
+      "arguments": [
+        "activation_name",
+        "company_name",
+        "trial_days"
+      ],
+      "db_references": [
+        "SMRITI Trial Activation"
+      ],
+      "checksum": "d34ef8a70752c6464ce79b0dd8c9258a4303b7b8d936c53e5fa124301ad85f36"
+    },
+    {
+      "artifact_id": "ART-API-00470",
+      "method": "smriti_retail_os.api.trial_activation_api.suspend_activation",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/trial_activation_api.py",
+      "arguments": [
+        "activation_name",
+        "reason"
+      ],
+      "db_references": [
+        "SMRITI Trial Activation"
+      ],
+      "checksum": "584ae9bab45fd70a28b49d70b031da9b3a70937d9e58c1376d92050940d70a01"
+    },
+    {
+      "artifact_id": "ART-API-00471",
+      "method": "smriti_retail_os.api.trial_activation_api.extend_trial",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/trial_activation_api.py",
+      "arguments": [
+        "activation_name",
+        "additional_days",
+        "reason"
+      ],
+      "db_references": [
+        "SMRITI Trial Activation"
+      ],
+      "checksum": "a38299e6a4297d22ec1d1f798204405d1ff67d047aabeb74e97d3ed465eb3b5e"
+    },
+    {
+      "artifact_id": "ART-API-00472",
+      "method": "smriti_retail_os.api.trial_activation_api.mark_converted_to_paid",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/trial_activation_api.py",
+      "arguments": [
+        "activation_name"
+      ],
+      "db_references": [
+        "SMRITI Trial Activation"
+      ],
+      "checksum": "4ead62c701d3c5a566dcad770f9c58a8f9fb781f0a67fefbeea3e9fc5e1c95c6"
+    },
+    {
+      "artifact_id": "ART-API-00473",
+      "method": "smriti_retail_os.api.trial_activation_api.get_activations",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/trial_activation_api.py",
+      "arguments": [
+        "status",
+        "limit"
+      ],
+      "db_references": [
+        "SMRITI Trial Activation"
+      ],
+      "checksum": "ce757d0271f58a041322c5e27552d44ba34baef535e9c0e8ce97b21539fdd4c5"
+    },
+    {
+      "artifact_id": "ART-API-00474",
+      "method": "smriti_retail_os.api.trial_activation_api.get_provision_logs",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/trial_activation_api.py",
+      "arguments": [
+        "activation_name",
+        "run_id"
+      ],
+      "db_references": [
+        "SMRITI Provision Log"
+      ],
+      "checksum": "7be8c7f193c695512e70cd13bbd4ced06000b9cbfcd1398e3e1538f067e20271"
+    },
+    {
+      "artifact_id": "ART-API-00475",
+      "method": "smriti_retail_os.api.trial_activation_api.get_activation_dashboard",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/trial_activation_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "83e87d8bee59380e6864c7c19770440c88ff791a4ba4b18670cfa31e7e39b002"
+    },
+    {
+      "artifact_id": "ART-API-00476",
+      "method": "smriti_retail_os.api.trial_activation_api.get_trial_health_snapshots",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/trial_activation_api.py",
+      "arguments": [
+        "limit"
+      ],
+      "db_references": [
+        "SMRITI Trial Health Snapshot"
+      ],
+      "checksum": "970cb301223475b8a302b5002daf4b4d3b3352c6ac8b9b87fd869a79710ac65f"
+    },
+    {
+      "artifact_id": "ART-API-00477",
+      "method": "smriti_retail_os.api.trial_activation_api.trigger_trial_health_snapshot",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/trial_activation_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "ee1372f1f99949f575f606cee3643d838bc6326e2fb107fcdf05381b6adc6224"
+    },
+    {
+      "artifact_id": "ART-API-00478",
+      "method": "smriti_retail_os.api.trial_api.submit_trial_lead",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/trial_api.py",
+      "arguments": [
+        "store_name",
+        "owner_name",
+        "mobile",
+        "city",
+        "business_type",
+        "plan",
+        "warehouses",
+        "monthly_sales",
+        "source"
+      ],
+      "db_references": [
+        "SMRITI Trial Lead"
+      ],
+      "checksum": "b1a954dcac9c16415ef1a29d009b4f3fc5c36c5aed845e6413b8aa8aa51a4d30"
+    },
+    {
+      "artifact_id": "ART-API-00479",
+      "method": "smriti_retail_os.api.trial_api.get_trial_leads",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/trial_api.py",
+      "arguments": [
+        "status",
+        "limit"
+      ],
+      "db_references": [
+        "SMRITI Trial Lead"
+      ],
+      "checksum": "b981a6303f76639a671f49989cc4ffb03b0c4e5150620d1ac9fdf31d5d6fd67f"
+    },
+    {
+      "artifact_id": "ART-API-00480",
+      "method": "smriti_retail_os.api.trial_api.update_lead_status",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/trial_api.py",
+      "arguments": [
+        "lead_name",
+        "new_status",
+        "notes"
+      ],
+      "db_references": [
+        "SMRITI Trial Lead"
+      ],
+      "checksum": "8b6b5cf22d00787e3a88981a16539c1d74e61caf1cec609ccb9a3c57c08ba24e"
+    },
+    {
+      "artifact_id": "ART-API-00481",
+      "method": "smriti_retail_os.api.trial_api.get_lead_counts",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/trial_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "60f5d14f9c45b62dbb99d330a3e0ab48de8ad70379bad04e17274829d1eb3cbd"
+    },
+    {
+      "artifact_id": "ART-API-00482",
+      "method": "smriti_retail_os.api.__init__.get_item_stock",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/api/__init__.py",
+      "arguments": [
+        "item_code",
+        "warehouse"
+      ],
+      "db_references": [
+        "Bin"
+      ],
+      "checksum": "7246c501f76beb11b5c5db35753ba4210db80466383679ccf89975b92ab58272"
+    },
+    {
+      "artifact_id": "ART-API-00483",
+      "method": "smriti_retail_os.cge.api.cge_api.validate_checkout_rules",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/api/cge_api.py",
+      "arguments": [
+        "invoice_data"
+      ],
+      "db_references": [],
+      "checksum": "9e3f35f9a78ca900f7491895527dd1d6ac301dfe613005ffabf369350e63496c"
+    },
+    {
+      "artifact_id": "ART-API-00484",
+      "method": "smriti_retail_os.cge.api.cge_api.get_offline_cache",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/api/cge_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "eae6e5937cee97132a0780fe68e741b5b2253a616adebb134c2d2d383d357b64"
+    },
+    {
+      "artifact_id": "ART-API-00485",
+      "method": "smriti_retail_os.cge.api.cge_api.get_wallet_ledger",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/api/cge_api.py",
+      "arguments": [
+        "customer",
+        "transaction_type",
+        "limit"
+      ],
+      "db_references": [
+        "SMRITI Wallet Ledger"
+      ],
+      "checksum": "844e738673cbe8ba6470767c7eb2e6ada97fe8d6c9819be442190c56cc3022d0"
+    },
+    {
+      "artifact_id": "ART-API-00486",
+      "method": "smriti_retail_os.cge.api.cge_api.post_wallet_adjustment",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/api/cge_api.py",
+      "arguments": [
+        "customer",
+        "wallet_type",
+        "transaction_type",
+        "amount",
+        "remarks",
+        "adjustment_reason_type",
+        "company"
+      ],
+      "db_references": [],
+      "checksum": "8dc99c0f4f17363e33372808e71da9819ea46afdee2925d011567320f2bc1619"
+    },
+    {
+      "artifact_id": "ART-API-00487",
+      "method": "smriti_retail_os.cge.api.cge_api.reverse_wallet_transaction",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/api/cge_api.py",
+      "arguments": [
+        "ledger_seq",
+        "reason"
+      ],
+      "db_references": [
+        "SMRITI Wallet Ledger"
+      ],
+      "checksum": "9f90be2558cc68009ab7e7052b70990e394f3e6ec0aaedb3e597127ddcc806c3"
+    },
+    {
+      "artifact_id": "ART-API-00488",
+      "method": "smriti_retail_os.cge.api.cge_api.get_cge_liability_metrics",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/api/cge_api.py",
+      "arguments": [],
+      "db_references": [],
+      "checksum": "58ca1e7a38991a77810109d7bfdc2e7de3fdc1bf1c4f41bf614d7ff3b39fc451"
+    },
+    {
+      "artifact_id": "ART-API-00489",
+      "method": "smriti_retail_os.cge.api.cge_api.get_campaigns_with_utilization",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/api/cge_api.py",
+      "arguments": [],
+      "db_references": [
+        "SMRITI Coupon Campaign"
+      ],
+      "checksum": "9f37b9f5d9bb15bd7829b99d31a2f211406da631dfa0bbafb20e2d3b37c7d39f"
+    },
+    {
+      "artifact_id": "ART-API-00490",
+      "method": "smriti_retail_os.cge.api.cge_api.save_coupon_campaign",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/api/cge_api.py",
+      "arguments": [
+        "campaign_data"
+      ],
+      "db_references": [
+        "SMRITI Coupon Campaign"
+      ],
+      "checksum": "2889d2415537efe12200420ee89b201184d474a1f3a1d8c03263632381236626"
+    },
+    {
+      "artifact_id": "ART-API-00491",
+      "method": "smriti_retail_os.cge.api.cge_api.save_loyalty_rule",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/api/cge_api.py",
+      "arguments": [
+        "rule_data"
+      ],
+      "db_references": [
+        "SMRITI Loyalty Rule"
+      ],
+      "checksum": "7b3755d94ab39166fd1200c5f757407fca9240443743d1e5bb4cd8416b75cad3"
+    },
+    {
+      "artifact_id": "ART-API-00492",
+      "method": "smriti_retail_os.cge.api.cge_api.save_loyalty_tier",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/api/cge_api.py",
+      "arguments": [
+        "tier_data"
+      ],
+      "db_references": [
+        "SMRITI Loyalty Tier"
+      ],
+      "checksum": "097d159c5f368637d36080556407be61b56d0420ce1439ba26b4eb150daed895"
+    },
+    {
+      "artifact_id": "ART-API-00493",
+      "method": "smriti_retail_os.cge.api.cge_api.get_cge_generic_fields",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/api/cge_api.py",
+      "arguments": [
+        "doctype"
+      ],
+      "db_references": [],
+      "checksum": "888abd0d1868d8e4d68d26ab9c8d4ec5002c284d06f40cb6316e6f2f11136ad9"
+    },
+    {
+      "artifact_id": "ART-API-00494",
+      "method": "smriti_retail_os.cge.api.cge_api.get_cge_generic_list",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/api/cge_api.py",
+      "arguments": [
+        "doctype",
+        "filters",
+        "limit"
+      ],
+      "db_references": [],
+      "checksum": "0a0876502e6abb4da34b497bede1630f20a02cff638e6387bf52b303d49d8224"
+    },
+    {
+      "artifact_id": "ART-API-00495",
+      "method": "smriti_retail_os.cge.api.cge_api.get_cge_generic_doc",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/api/cge_api.py",
+      "arguments": [
+        "doctype",
+        "name"
+      ],
+      "db_references": [],
+      "checksum": "38e4d9c80f8c099efc24041a16af3175e96db1d6422dac034473e53137e3ab8d"
+    },
+    {
+      "artifact_id": "ART-API-00496",
+      "method": "smriti_retail_os.cge.api.cge_api.save_cge_generic_doc",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/api/cge_api.py",
+      "arguments": [
+        "doctype",
+        "doc_data"
+      ],
+      "db_references": [],
+      "checksum": "dfc649acfae4ecbc84e3917eb4874b9f4003c0eb13569324b7df2c981942faa0"
+    },
+    {
+      "artifact_id": "ART-API-00497",
+      "method": "smriti_retail_os.cge.api.cge_api.delete_cge_generic_doc",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/api/cge_api.py",
+      "arguments": [
+        "doctype",
+        "name"
+      ],
+      "db_references": [],
+      "checksum": "6f93d3dcaecd64eebb8ef6f80096ea8ae2ff0cf483a43b831aba514e889c5642"
+    },
+    {
+      "artifact_id": "ART-API-00498",
+      "method": "smriti_retail_os.cge.service.cge_service.validate_checkout_rules",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/service/cge_service.py",
+      "arguments": [
+        "invoice_data"
+      ],
+      "db_references": [
+        "Company",
+        "Customer",
+        "Item",
+        "Loyalty Program Collection",
+        "Pricing Rule",
+        "SMRITI CGE Settings",
+        "SMRITI Coupon Campaign",
+        "Sales Invoice"
+      ],
+      "checksum": "9e3f35f9a78ca900f7491895527dd1d6ac301dfe613005ffabf369350e63496c"
+    },
+    {
+      "artifact_id": "ART-API-00499",
+      "method": "smriti_retail_os.cge.service.cge_service.get_offline_cache",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/cge/service/cge_service.py",
+      "arguments": [],
+      "db_references": [
+        "SMRITI CGE Settings",
+        "SMRITI Coupon Campaign",
+        "SMRITI Loyalty Rule",
+        "SMRITI Loyalty Tier"
+      ],
+      "checksum": "eae6e5937cee97132a0780fe68e741b5b2253a616adebb134c2d2d383d357b64"
+    },
+    {
+      "artifact_id": "ART-API-00500",
+      "method": "smriti_retail_os.clienteling.api.clienteling_api.get_customer_profile",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/clienteling/api/clienteling_api.py",
+      "arguments": [
+        "customer"
+      ],
+      "db_references": [
+        "Customer",
+        "SMRITI Customer Intelligence Graph",
+        "SMRITI Customer Profile",
+        "SMRITI Formula Definition"
+      ],
+      "checksum": "0051b35b9c0ee8245bde5e4fbaf41f2986b177edbc0b0b759754b3c3787d654d"
+    },
+    {
+      "artifact_id": "ART-API-00501",
+      "method": "smriti_retail_os.clienteling.api.clienteling_api.log_customer_interaction",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/clienteling/api/clienteling_api.py",
+      "arguments": [
+        "customer",
+        "interaction_type",
+        "employee",
+        "interaction_outcome",
+        "store",
+        "channel",
+        "details"
+      ],
+      "db_references": [
+        "SMRITI Customer Interaction"
+      ],
+      "checksum": "5d86fd9f9bf63a354b857f51292d12df45bfa7f20fd3501c761e3ef17ec85b21"
+    },
+    {
+      "artifact_id": "ART-API-00502",
+      "method": "smriti_retail_os.clienteling.api.clienteling_api.register_walk_in",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/clienteling/api/clienteling_api.py",
+      "arguments": [
+        "store",
+        "phone",
+        "customer",
+        "status"
+      ],
+      "db_references": [],
+      "checksum": "4669d05cde4e40a26e615ff0830edc4b6899bbc45fe1b73747ac022b7ad627c1"
+    },
+    {
+      "artifact_id": "ART-API-00503",
+      "method": "smriti_retail_os.clienteling.api.clienteling_api.update_walk_in_visit",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/clienteling/api/clienteling_api.py",
+      "arguments": [
+        "visit_id",
+        "status",
+        "reason",
+        "invoice_type",
+        "invoice_id",
+        "duration"
+      ],
+      "db_references": [],
+      "checksum": "5999779bdb60730149d609db6518b23a9cff0ada32a31f78c9e2ae05ccd47577"
+    },
+    {
+      "artifact_id": "ART-API-00504",
+      "method": "smriti_retail_os.clienteling.api.clienteling_api.get_store_walk_in_analytics",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/clienteling/api/clienteling_api.py",
+      "arguments": [
+        "store",
+        "date"
+      ],
+      "db_references": [
+        "SMRITI Walk In Analytics"
+      ],
+      "checksum": "654e83ded5fb3ed0fae88ea32774df1fc4c0de65a2c61750f6bbe8888f033c40"
+    },
+    {
+      "artifact_id": "ART-API-00505",
+      "method": "smriti_retail_os.clienteling.api.clienteling_api.log_explain_audit",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/clienteling/api/clienteling_api.py",
+      "arguments": [
+        "metric",
+        "customer",
+        "formula_id",
+        "session_id",
+        "source_screen"
+      ],
+      "db_references": [
+        "SMRITI Explain Audit Event",
+        "SMRITI Formula Definition"
+      ],
+      "checksum": "1a6149fedbddd5213c75b79d20957d790878b6149834032b7e3aaacb20fbe340"
+    },
+    {
+      "artifact_id": "ART-API-00506",
+      "method": "smriti_retail_os.services.formula_service.get_active_formulas",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/services/formula_service.py",
+      "arguments": [
+        "category"
+      ],
+      "db_references": [
+        "SMRITI Formula Definition"
+      ],
+      "checksum": "2f9770f92c20d5c080db35eae7784bea64560cd36c711b1eac7ed8b7766db9c4"
+    },
+    {
+      "artifact_id": "ART-API-00507",
+      "method": "smriti_retail_os.services.formula_service.get_formula_detail",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/services/formula_service.py",
+      "arguments": [
+        "formula_id",
+        "version"
+      ],
+      "db_references": [
+        "SMRITI Formula Definition"
+      ],
+      "checksum": "23d6cc7947715cf55f417410e87f18ca2104dd7a5eb92cb53283af832bb2ca11"
+    },
+    {
+      "artifact_id": "ART-API-00508",
+      "method": "smriti_retail_os.services.knowledge_service.get_asset_by_uri",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/services/knowledge_service.py",
+      "arguments": [
+        "uri"
+      ],
+      "db_references": [
+        "SMRITI Knowledge Asset"
+      ],
+      "checksum": "d744da315d3771f66bd11de2f31807b31c77a2486c14b1599af6c7e325bf2174"
+    },
+    {
+      "artifact_id": "ART-API-00509",
+      "method": "smriti_retail_os.services.knowledge_service.resolve_relations",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/services/knowledge_service.py",
+      "arguments": [
+        "asset_id",
+        "tenant_context",
+        "max_depth"
+      ],
+      "db_references": [],
+      "checksum": "8639571df4c8af2ed757e383b6fd8fbb8c7746f0bd8cf26715d5fcfbc2b51790"
+    },
+    {
+      "artifact_id": "ART-API-00510",
+      "method": "smriti_retail_os.services.knowledge_service.search_assets",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/services/knowledge_service.py",
+      "arguments": [
+        "query",
+        "asset_type"
+      ],
+      "db_references": [
+        "SMRITI Knowledge Asset"
+      ],
+      "checksum": "39c0a7b8b43c58cb295e5986e750782dfbd66852cce18249ea847c79c2351dd8"
+    },
+    {
+      "artifact_id": "ART-API-00511",
+      "method": "smriti_retail_os.sfm.api.sfc_api.run_monthly_calculation",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sfm/api/sfc_api.py",
+      "arguments": [
+        "company",
+        "fiscal_year",
+        "month"
+      ],
+      "db_references": [],
+      "checksum": "6c0d2aa8066b3ff2f3b3e975aca40451980ea0db4a16e2dac7af8152515d4296"
+    },
+    {
+      "artifact_id": "ART-API-00512",
+      "method": "smriti_retail_os.sfm.api.sfc_api.get_monthly_commissions",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sfm/api/sfc_api.py",
+      "arguments": [
+        "company",
+        "fiscal_year",
+        "month"
+      ],
+      "db_references": [
+        "Employee",
+        "SMRITI Commission Settlement"
+      ],
+      "checksum": "56b684c7c9419688ace684743d66e43736d22250f44d885635d18d4673b74571"
+    },
+    {
+      "artifact_id": "ART-API-00513",
+      "method": "smriti_retail_os.sfm.api.sfm_api.get_sfm_leaderboard",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sfm/api/sfm_api.py",
+      "arguments": [
+        "company",
+        "fiscal_year",
+        "month",
+        "store"
+      ],
+      "db_references": [
+        "Employee",
+        "SMRITI Sales KPI Snapshot"
+      ],
+      "checksum": "d85296cf65437b133219756d3e3000785e8fc826f4656103096a4f0f5192ea48"
+    },
+    {
+      "artifact_id": "ART-API-00514",
+      "method": "smriti_retail_os.sfm.api.sfm_api.get_employee_summary",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sfm/api/sfm_api.py",
+      "arguments": [
+        "employee",
+        "fiscal_year",
+        "month",
+        "company"
+      ],
+      "db_references": [
+        "Employee",
+        "SMRITI Sales KPI Snapshot"
+      ],
+      "checksum": "a755d1c967469287a1fc454d95240009e77ab7d534eff3d24057510eef32ebaa"
+    },
+    {
+      "artifact_id": "ART-API-00515",
+      "method": "smriti_retail_os.sfm.api.sfm_api.get_store_performance_center",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/sfm/api/sfm_api.py",
+      "arguments": [
+        "company",
+        "fiscal_year",
+        "month",
+        "store"
+      ],
+      "db_references": [
+        "SMRITI Sales KPI Snapshot",
+        "SMRITI Sales Target"
+      ],
+      "checksum": "b98907f344e26bdc50f87a5d0877d07f9bb0640c43452c64b70dfc75fa45d41f"
+    },
+    {
+      "artifact_id": "ART-API-00516",
+      "method": "smriti_retail_os.utils.opening_balance.parse_opening_excel",
+      "evidence_type": "AST",
+      "source_file": "apps/smriti_retail_os/smriti_retail_os/utils/opening_balance.py",
+      "arguments": [
+        "file_url"
+      ],
+      "db_references": [
+        "File",
+        "Item"
+      ],
+      "checksum": "26b68da1f9d33778eb2ba1f23d178a0f5c9d1140e8cc460efac4577409d1e42e"
+    }
+  ]
+}

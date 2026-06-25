@@ -3,7 +3,7 @@
 # @file: smriti_retail_os/api/ai_integration_api.py
 # @description: Whitelisted backend API endpoints for SMRITI AI integration.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.0.0
+# @version: 1.2.14
 # @license: MIT
 #
 
@@ -25,7 +25,15 @@ def get_ai_context(query):
 def ask_smriti_ai(query):
     """
     RAG Chat endpoint: queries SKE, builds the context pack, and generates a response.
-    Implements a deterministic, safety-guarded response engine to prevent hallucinations.
+    
+    ARCHITECTURE (Zero-Hallucination Compliance):
+    - v1 (Curated RAG): In the absence of a live LLM API configuration, the assistant uses a 
+      deterministic response parser that maps common retail queries (barcode troubleshooting, 
+      weeks of cover calculations, inventory visibility layer constraints) directly to their 
+      underlying SKE ground truth facts. For other queries, it dynamically extracts and summarizes 
+      the resolved SKE primary objects.
+    - v2 (Live LLM): Leverages the context pack as the sole ground truth block in a system prompt 
+      to generate contextual answers.
     """
     try:
         context_pack = ai_context_service.build_context_pack(query)
@@ -86,8 +94,8 @@ def ask_smriti_ai(query):
                 "PSV (Party Stock Visibility) tracks stock levels, capital locked, and coverage days across distributor and channel networks. "
                 "It is a **Business-Type Activated Core Extension** that remains hidden for standard retail stores but acts as the primary operational dashboard for brands selling through distributor networks.\n\n"
                 "### 2. Sandbox Constraints (PSV Rule):\n"
-                "PSV maintains its own **shadow ledger architecture**. It reads ERPNext masters (Customers, Items, Warehouses) but **must never modify** ERPNext Stock Ledger Entries or General Ledger Entries.\n\n"
-                "Please refer to the SKE Ground Truth logs below to view details on the shadow ledger database schemas."
+                "PSV maintains its own **Inventory Visibility Layer**. It reads ERPNext masters (Customers, Items, Warehouses) but **must never modify** ERPNext Stock Ledger Entries or General Ledger Entries.\n\n"
+                "Please refer to the SKE Ground Truth logs below to view details on the Inventory Visibility Layer database schemas."
             )
         else:
             # General answer summarizing retrieved SKE primary objects
