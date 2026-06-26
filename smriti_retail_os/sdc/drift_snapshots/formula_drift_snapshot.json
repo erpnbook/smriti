@@ -1,0 +1,10 @@
+{
+  "formulas": {
+    "TEST-002": {
+      "formula_name": "Test Formula 2",
+      "formula_hash": "5dbd10467d3cb1ee49701887449719aa6974653a3c0b270a499c4dfabcbaf7db",
+      "explain_hash": "f68c471eae2ced75bf07c65a380abf9dbb0457163fcac9916fe34eea872c5c30",
+      "last_verified": "2026-01-01T00:00:00Z"
+    }
+  }
+}

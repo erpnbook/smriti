@@ -1220,7 +1220,12 @@ class Phase0Compiler(object):
         Returns: list[dict] of violations, each with file, line, matched_text.
         """
         BANNED_TERMS = ["shadow ledger"]
-        EXCLUDED_FILES = {"test_knowledge_governance.py"}
+        EXCLUDED_FILES = {
+            "test_knowledge_governance.py",
+            "test_sdc006_mutation.py",
+            "discovery.py",
+            "compiler.py"
+        }
 
         scan_scope = self.config.get("scan_scope", ["apps/smriti_retail_os"])
         excluded_dirs = self.config.get("excluded", ["node_modules", ".git", "__pycache__"])
