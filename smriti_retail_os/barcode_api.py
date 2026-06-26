@@ -816,7 +816,7 @@ def get_field_mapping_reference():
         {
             "placeholder": "{brand}",
             "item_master_field": "Brand",
-            "example": "BIG BOSS",
+            "example": "Tattly Threads",
             "description": "Brand name printed prominently on label"
         },
         {
