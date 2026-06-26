@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/tests/test_cge_generic.py
 # @description: Hardened unit tests for SMRITI CGE Generic CRUD APIs & Route Resolution.
 # @author: Antigravity AI

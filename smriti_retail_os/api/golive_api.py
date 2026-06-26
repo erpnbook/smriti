@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/api/golive_api.py
 # @description: Go-Live Readiness Checklist API for SMRITI Retail OS.
 #               Each check returns a status: PASS | WARN | FAIL | INFO

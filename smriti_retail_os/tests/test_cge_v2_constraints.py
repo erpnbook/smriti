@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/tests/test_cge_v2_constraints.py
 # @description: Database index and integrity constraint tests for CGE v2.
 # @author: SMRITI Architect / USER & AITDL

@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/www/category_master.py
 # @description: Page controller for SMRITI Category Master.
 #               Enforces access checks and initializes template context.

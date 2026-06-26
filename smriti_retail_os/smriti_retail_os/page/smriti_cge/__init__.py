@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/page/smriti_cge/__init__.py
 # @description: Page package initialization.
 # @author: Antigravity AI

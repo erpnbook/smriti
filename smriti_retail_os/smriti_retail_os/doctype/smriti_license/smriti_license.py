@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/smriti_retail_os/doctype/smriti_license/smriti_license.py
 # @description: SMRITI License DocType controller.
 #               Enforces architecture invariants: installation_id immutability,

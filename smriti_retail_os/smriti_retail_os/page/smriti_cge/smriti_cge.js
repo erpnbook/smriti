@@ -7,12 +7,6 @@
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
-/**
- * @file: smriti_retail_os/page/smriti_cge/smriti_cge.js
- * @description: Page controller for SMRITI CGE Studio (POS Integration & Growth Engine).
- * @author: Antigravity AI
- * @date: 2026-06-19
- */
 
 frappe.pages['smriti-cge'].on_page_load = function(wrapper) {
     const page = frappe.ui.make_app_page({

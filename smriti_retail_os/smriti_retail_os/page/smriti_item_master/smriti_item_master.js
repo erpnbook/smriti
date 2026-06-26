@@ -7,12 +7,6 @@
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
-
-// ============================================================
-//  SMRITI Item Master Import — Paste-from-Excel Grid
-//  Shopper9-style: copy from Excel → paste → import
-// ============================================================
-
 frappe.pages['smriti-item-master'].on_page_load = function (wrapper) {
     const page = frappe.ui.make_app_page({
         parent: wrapper,

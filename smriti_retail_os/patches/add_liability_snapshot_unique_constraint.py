@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/patches/add_liability_snapshot_unique_constraint.py
 # @description: Adds unique index on SMRITI Liability Snapshot for (company, snapshot_date)
 # @author: Antigravity AI

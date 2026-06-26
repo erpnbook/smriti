@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/api/coming_soon_api.py
 # @description: whitelisted API endpoints for feature roadmaps and coming soon registry.
 #

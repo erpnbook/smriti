@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/tests/test_backup_security_hotfix.py
 # @description: v1.8.2a Security Hotfix — 8 unit tests covering protected config
 #               denylist, export redaction, boot guards, and restore cleanup.

@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/doctype/smriti_cge_settings/smriti_cge_settings.py
 # @description: Controller for SMRITI CGE Settings (Single DocType).
 # @author: Antigravity AI

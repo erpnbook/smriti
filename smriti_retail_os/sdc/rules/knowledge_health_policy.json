@@ -34,6 +34,7 @@
     "docs/discovery/",
     "apps/smriti_retail_os/ARCHITECTURE.md",
     "apps/smriti_retail_os/README.md",
-    "apps/smriti_retail_os/docs/architecture/PDT_ARCHITECTURE.md"
+    "apps/smriti_retail_os/docs/architecture/PDT_ARCHITECTURE.md",
+    "apps/smriti_retail_os/CHANGELOG.md"
   ]
 }

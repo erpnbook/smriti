@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/license/__init__.py
 # @description: SMRITI License module — convenience re-exports.
 # @authority: docs/architecture/licensing/SMRITI_LICENSE_ARCHITECTURE_V1.md

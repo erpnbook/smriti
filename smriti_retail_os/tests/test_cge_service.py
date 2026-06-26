@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/tests/test_cge_service.py
 # @description: Unit tests for SMRITI Customer Growth Engine (CGE) service layer components.
 # @author: Antigravity AI

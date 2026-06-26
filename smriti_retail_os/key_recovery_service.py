@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/key_recovery_service.py
 # @description: Custodian email onboarding, OTP validation, and midpoint splitting.
 # @author: Antigravity AI

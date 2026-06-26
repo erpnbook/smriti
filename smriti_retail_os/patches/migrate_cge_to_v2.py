@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/patches/migrate_cge_to_v2.py
 # @description: Migration patch to transition CGE v1.0 data to CGE v2.0 architecture.
 # @author: SMRITI Architect / USER & AITDL

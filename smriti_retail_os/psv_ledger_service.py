@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/smriti_retail_os/psv_ledger_service.py
 # @description: Channel Stock ledger service — routes all writes through the
 #               canonical PSV Transaction document (create_psv_transaction) to

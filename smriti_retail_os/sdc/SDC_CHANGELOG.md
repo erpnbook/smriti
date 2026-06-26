@@ -28,6 +28,7 @@ SDC adheres to strict semantic versioning rules:
 
 | Version | Date | Author | Summary of Changes |
 | :--- | :--- | :--- | :--- |
+| 1.2.0-SDC006 | 2026-06-26 | Jawahar R. Mallah | SDC-006 Production Hardening — Policy file, fail-fast loading, mutation tests, coverage history, architecture fitness tests. |
 | 1.1.2-GA | 2026-06-25 | Jawahar R. Mallah | Initial version of the changelog document. |
 
 ---

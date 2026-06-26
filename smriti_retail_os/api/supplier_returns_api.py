@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/api/supplier_returns_api.py
 # @description: Whitelisted API endpoints for SMRITI Supplier Returns module.
 # @author: Antigravity AI

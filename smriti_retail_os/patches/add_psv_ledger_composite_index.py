@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/patches/add_psv_ledger_composite_index.py
 # @description: PERF-002 fix — Adds a composite index on
 #               (party_stock_account, item_code, posting_datetime) to the

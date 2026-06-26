@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/page/smriti_cge/smriti_cge.py
 # @description: SMRITI Customer Growth Engine (CGE) Studio page controller.
 # @author: Antigravity AI

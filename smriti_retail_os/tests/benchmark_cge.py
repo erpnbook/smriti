@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/tests/benchmark_cge.py
 # @description: Performance scaling curve benchmark script for SMRITI Customer Growth Engine (CGE).
 # @author: Antigravity AI

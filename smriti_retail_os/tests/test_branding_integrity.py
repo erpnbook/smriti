@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/tests/test_branding_integrity.py
 # @description: Regression tests verifying the integrity of SMRITI Retail OS global branding assets.
 # @author: Antigravity AI

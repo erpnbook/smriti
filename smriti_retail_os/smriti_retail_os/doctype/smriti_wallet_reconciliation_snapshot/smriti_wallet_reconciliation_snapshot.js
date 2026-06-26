@@ -7,14 +7,6 @@
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
-// -*- coding: utf-8 -*-
-//
-// @file: smriti_retail_os/smriti_retail_os/doctype/smriti_wallet_reconciliation_snapshot/smriti_wallet_reconciliation_snapshot.js
-// @description: Client script for SMRITI Wallet Reconciliation Snapshot.
-// @author: Antigravity AI
-// @date: 2026-06-19
-//
-
 frappe.ui.form.on('SMRITI Wallet Reconciliation Snapshot', {
 	refresh: function(frm) {
 

@@ -7,10 +7,6 @@
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
-
-frappe.ui.form.on('Customer', {
-    onload: function(frm) {
-        // Apply mobile format warning on field description
         frm.set_df_property('primary_mobile_no', 'description', 'Enter 10-digit mobile number');
     },
     refresh: function(frm) {

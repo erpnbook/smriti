@@ -7,9 +7,6 @@
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
-// Copyright (c) 2026, SMRITI Retail OS and contributors
-// For license information, please see license.txt
-
 frappe.query_reports["PSV Reorder Report"] = {
 	filters: [
 		{

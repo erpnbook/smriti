@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/www/smriti-coming-soon.py
 # @description: Page controller for the SMRITI Coming Soon placeholder view.
 #

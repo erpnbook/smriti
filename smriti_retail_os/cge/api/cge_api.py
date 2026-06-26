@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/cge/api/cge_api.py
 # @description: Whitelisted API endpoints for SMRITI Customer Growth Engine (CGE) POS operations and CGE Studio UI.
 # @author: Antigravity AI

@@ -7,9 +7,6 @@
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
-// SMRITI Universal Explain Engine JS Client
-// Copyright (c) 2026, SMRITI Retail OS and contributors
-
 (function () {
     const templates = {
         "INV-001": "{total_sales_qty} ÷ {lookback_days} × 7 = {result} pieces/week",

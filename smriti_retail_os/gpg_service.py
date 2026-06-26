@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/gpg_service.py
 # @description: GPG-only symmetric encryption/decryption and key versioning.
 # @author: Antigravity AI

@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/api/scheme_api.py
 # @description: Whitelisted API endpoints for SMRITI Scheme Creator (Pricing Rules).
 # @author: Antigravity AI

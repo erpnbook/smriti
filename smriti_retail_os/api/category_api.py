@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/api/category_api.py
 # @description: Whitelisted API endpoints for Category (Item Group) management.
 # @author: Antigravity AI

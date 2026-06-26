@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/smriti_retail_os/psv_upload_service.py
 # @description: Channel Stock — PSV Sell-Through Upload processing service.
 #               Handles validation, CSV parsing, barcode mapping, and ledger writes

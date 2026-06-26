@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/smriti_retail_os/doctype/smriti_wallet_reconciliation_snapshot/smriti_wallet_reconciliation_snapshot.py
 # @description: Controller for SMRITI Wallet Reconciliation Snapshot.
 # @author: Antigravity AI

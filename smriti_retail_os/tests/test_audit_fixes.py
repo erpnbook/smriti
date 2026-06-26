@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/tests/test_audit_fixes.py
 # @description: Regression and verification tests for Deep Audit report fixes.
 # @author: Antigravity AI

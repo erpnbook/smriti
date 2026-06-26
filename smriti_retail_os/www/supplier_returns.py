@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/www/supplier_returns.py
 # @description: Python controller for the standalone SMRITI Supplier Returns page.
 #               - Enforces login (redirects Guests to /login)

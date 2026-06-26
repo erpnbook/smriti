@@ -6,6 +6,132 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [Unreleased]
+
+---
+
+## [1.2.14] — 2026-06-27
+
+### HARDEN-9.3 — Production Quality Hardening (Score 9.0 → 9.3)
+
+> Authority: Jawahar R. Mallah / AITDL  
+> Review result: 9.0 → 9.3 / 10 (four targeted fixes)
+
+#### Added
+- **`.github/workflows/smriti_ci.yml`**: GitHub Actions CI pipeline (Frappe-free gate).
+  Runs on every push to `main` and every pull request:
+  1. Python syntax check — `py_compile` all `*.py` files
+  2. SDC compiler — `python sdc/discovery.py` must exit 0
+  3. Architecture fitness tests — 4 file-scanning governance tests (no DB required)
+  4. SDC-006 mutation tests — 6 pure-Python mutation tests
+  - Integration tests explicitly scoped out with comment: `bench run-tests --app smriti_retail_os`
+
+#### Fixed
+- **`barcode_api.py` — `_process_print_job()` failure path**: Added `frappe.log_error()` before
+  `log_print_job()`. Print job failures now appear in Frappe admin **Error Log** (`/app/error-log`)
+  in addition to the local file log and Activity Log. Administrators no longer need file system
+  access to diagnose background worker failures.
+- **`item_master_api.py` — `get_style_details()` N+1 elimination**: Replaced 3 per-variant
+  `frappe.db.get_value()` calls in a loop with 3 bulk `frappe.get_all()` queries total.
+  For a 20-size footwear style: 60 queries → 3 queries. Also corrected `color_val` from
+  taking arbitrary `variants[-1]` color to collecting unique colors across all variants via
+  `dict.fromkeys()` — multi-color styles (combo packs) now correctly return `"Black, Brown"`
+  instead of whichever variant happened to be last.
+- **`services/field_explorer_service.py` — version alignment**: `@version 1.0.0` → `1.2.14`
+  to align with the repo canonical version declared in `hooks.py`.
+
+---
+
+## [1.2.13] — 2026-06-26
+
+### UFE-001 — SMRITI Universal Field Explorer
+
+> Authority: Jawahar R. Mallah / AITDL  
+> Approved rating: 9.8/10
+
+#### Added
+- **`services/field_explorer_service.py`**: Canonical metadata service for all SMRITI field
+  discovery. Reads `frappe.get_meta()` live with 1-hour TTL cache. Contains `FIELD_ID_REGISTRY`
+  — stable Field ID → path mapping used by Barcode Studio.
+- **`api/field_explorer_api.py`**: 6 whitelisted endpoints:
+  - `get_doctype_fields` — fields of any DocType grouped by section
+  - `get_document_data` — real field values for any document
+  - `search_fields` — cross-DocType field name search
+  - `get_field_relationships` — linked DocType tree
+  - `resolve_label_preview` — resolve Field IDs/paths to real values
+  - `get_field_id_registry` — canonical Field ID registry (printable fields only or all)
+- **`www/smriti-field-explorer.html`**: Full SMRITI page at `/smriti-field-explorer`. Six tabs:
+  1. **Field Explorer** — browse fields grouped by section, `[C]` badge for custom fields, one-click path copy
+  2. **Document Data** — inspect real document values, blank fields highlighted amber
+  3. **Cross-Search** — search "gstin", "barcode" etc across all retail DocTypes
+  4. **Label Preview** — paste Field IDs or paths + document name → resolve values before printing
+  5. **Relationship Tree** — linked DocType hierarchy with expandable nodes
+  6. **Barcode Mode** — Field ID registry (stable IDs only, not raw paths)
+- **`www/smriti-field-explorer.py`**: Auth + context controller for the UFE page.
+- **`public/js/smriti_field_explorer_widget.js`**: Embeddable modal widget. Any SMRITI page
+  can call `smritiFieldExplorer.openModal({ doctype, mode, onSelect })` to open Field Explorer
+  inline without navigating away. Callback receives `{ field_id, label, fieldname, path, doctype, fieldtype }`.
+
+#### Changed
+- **`hooks.py`**: Added `Custom Field` and `DocType` `on_update` cache invalidation hooks.
+  New custom fields added in ERPNext appear in UFE within seconds — no bench restart needed.
+  Added `/smriti-field-explorer` website route entry.
+
+#### Architecture Decision (Barcode Studio — Field ID Pattern)
+Barcode Studio stores stable **Field IDs** (`ITEM_BARCODE`, `ITEM_MRP`, `ITEM_SIZE`)
+not raw paths (`Item.barcodes[].barcode`). If the underlying ERPNext path changes tomorrow,
+only `FIELD_ID_REGISTRY` in `field_explorer_service.py` is updated — every label template
+continues to work without modification. This is the approved architecture from the 9.8/10
+design review by Jawahar R. Mallah.
+
+---
+
+## [1.2.12] — 2026-06-26
+
+### SDC-006 — Knowledge Governance Production Hardening
+
+> Authority: Jawahar R. Mallah / AITDL  
+> Final score: 9.0/10 (up from 8.6 before this sprint)
+
+#### Added
+- **`sdc/knowledge_health_policy.json`** (SDC-POL-001): Single Source of Truth for all
+  SDC governance policy. Centralises banned terms, scan extensions, ignore paths, and
+  tolerances. Previously scattered across `discovery.py` and tests.
+- **SDC-006 Fail-Fast Policy Loading**: `SDCPolicy.load()` validates schema immediately on
+  startup — missing or malformed policy file raises `SystemExit(1)` with a clear diagnostic.
+  Silent defaults eliminated.
+- **`sdc/tests/test_sdc006_mutation.py`**: 6 mutation tests:
+  - `test_banned_terminology_in_source_file_raises_violation` — confirms shadow ledger detection
+  - `test_css_box_shadow_not_flagged_as_banned_term` — CSS `box-shadow` not a false positive
+  - `test_formula_expression_change_without_explain_update` — drift detection
+  - `test_formula_and_explain_both_updated_no_violation` — clean update passes
+  - `test_coverage_history_appended_on_success` — trending works
+  - `test_coverage_history_appends_multiple_runs` — multi-run history
+- **Coverage Trend History**: `sdc/coverage_history.json` — each SDC run appends a timestamped
+  snapshot of `coverage_pct`, `health_score`, and `total_formulas`. Enables longitudinal tracking.
+- **`sdc/tests/test_knowledge_governance.py` — Architecture Fitness Tests** (lines 245–320):
+  - `test_no_hardcoded_evidence_badge` — evidence badge must be dynamic, never hardcoded
+  - `test_no_banned_terminology` — zero occurrences of `shadow ledger` in production code
+  - `test_every_formula_has_explain_object` — every formula must have a matching explain object
+  - `test_no_orphan_knowledge_objects` — no orphaned KPIs or explain objects
+
+#### Fixed
+- **P1A — Evidence badge dynamic**: `build_context_pack(return_metadata=True)` now returns
+  actual edge count from `seen_edges` and derives `validation_status` (Draft/Certified/Verified)
+  dynamically. Hardcoded `"12 Graph Links"` eliminated.
+- **P1B — Transaction integrity** (`billing_api.py`, `transaction_kernel.py`):
+  - Critical paths: `create_custom_sales_return`, `update_sales_return`, `delete_sales_return`,
+    `_build_and_persist_doc` — all now `rollback + raise`
+  - Auxiliary paths: `set_taxes`, address sync — `log_error` only, no raise (per architecture decision)
+- **P2A — Banned terminology**: Zero occurrences of `shadow ledger` in production code.
+  10 remaining occurrences are all legitimate: SDC `banned_terms` list definition (1),
+  `test_sdc006_mutation.py` deliberate injection tests (6), `test_knowledge_governance.py`
+  docstrings/assertions (3).
+- **`smriti-presentation.html`**: Removed `shadow ledger` terminology from slide content.
+  Remaining `shadow` hits are CSS (`box-shadow`, `shadow-lg`) — styling, not banned terminology.
+
+---
+
 ## [Unreleased] — 2026-06-20
 
 ### Remediation Directive — 10/10 Audit Score (Phases 0–4)

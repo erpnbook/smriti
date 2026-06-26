@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/www/smriti-license.py
 # @description: Python controller for the SMRITI License & Registration page.
 #               Enforces login and SMRITI System Admin / System Manager role.

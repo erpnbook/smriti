@@ -489,7 +489,7 @@ The UI must render this via a `ⓘ Explain` button on every metric card.
 
 ## 14. AI Agent Rules
 
-For Antigravity, Gemini, Claude, Cursor, or any AI agent working on SMRITI:
+For any AI assistant or automated development tool working on SMRITI:
 
 ### Before Any Change
 

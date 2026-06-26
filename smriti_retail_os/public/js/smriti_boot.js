@@ -7,9 +7,6 @@
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
-// SMRITI Boot JS — injected on Frappe Desk (admin only)
-// Applies SMRITI branding and enforces safe routing
-
 (function () {
     'use strict';
 

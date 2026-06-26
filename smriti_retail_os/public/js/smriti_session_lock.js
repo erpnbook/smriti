@@ -7,21 +7,6 @@
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
-/**
- * @file: smriti_retail_os/public/js/smriti_session_lock.js
- * @description: SMRITI POS Session Lock — auto-locks the terminal after configurable
- *               idle time. Unlockable via cashier password or manager override PIN.
- * @version: 1.0.0
- * @copyright: (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
- *
- * Usage (add to any SMRITI page script or billing JS constructor):
- *   SmritiSessionLock.init({ idleMinutes: 5 });
- *
- * Architecture compliance:
- *   - Rule 2: All unlock validation via API (security_api.verify_user_password)
- *   - SEC-02: Manager PIN unlock reuses existing validate_manager_override flow
- *   - No direct DB access from frontend
- */
 
 const SmritiSessionLock = (() => {
     // ── Config ────────────────────────────────────────────────────────────────

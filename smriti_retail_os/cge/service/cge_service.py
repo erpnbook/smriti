@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/cge/service/cge_service.py
 # @description: Core Business Logic and Engine for SMRITI Customer Growth Engine (CGE) v1.0.
 # @author: Antigravity AI

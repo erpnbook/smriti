@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/license/tasks.py
 # @description: SMRITI License scheduled tasks.
 #               Architecture §6a Trigger A — daily evaluation job.

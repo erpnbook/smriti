@@ -2,7 +2,7 @@
 #
 # @file: smriti_retail_os/security_constants.py
 # @description: Security constants for SMRITI Retail OS backup and config exports.
-# @author: Jawahar R Mallah <jawahar.mallah@gmail.com> & Antigravity AI
+# @author: Jawahar R Mallah <jawahar.mallah@gmail.com> & AITDL
 # @date: 2026-06-10
 # @version: 1.8.2a
 # @license: MIT

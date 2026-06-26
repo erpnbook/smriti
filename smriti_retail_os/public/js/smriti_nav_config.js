@@ -7,11 +7,6 @@
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
-// ─────────────────────────────────────────
-// SMRITI Navigation Configuration
-// Single source of truth for all sidebar items
-// ─────────────────────────────────────────
-
 const SMRITI_NAV_META = {
   version: "2.1.0",
   updated_at: "2026-06-24",

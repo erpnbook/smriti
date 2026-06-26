@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/tests/test_cge_rules.py
 # @description: Comprehensive unit tests and DR validation suite for SMRITI Customer Growth Engine (CGE).
 # @author: Antigravity AI

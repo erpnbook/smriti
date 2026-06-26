@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/patches/add_twin_unique_index.py
 # @description: Adds unique index on SMRITI SKU Twin for (company, party_stock_account, item_code)
 # @author: Antigravity AI

@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/smriti_retail_os/psv_analysis_service.py
 # @description: Channel Stock analysis — broken size detection and reorder suggestions.
 #               BUG-005 FIX: Was referencing non-existent DocTypes "PSV Reorder Rule"

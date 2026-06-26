@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/www/smriti-cge.py
 # @description: Page controller for SMRITI Customer Growth Engine (CGE) Studio.
 #               Enforces access checks and initializes template context.

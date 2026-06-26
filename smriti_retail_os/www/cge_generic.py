@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/www/cge_generic.py
 # @description: Dynamic page controller for SMRITI CGE v2 Module Explorers.
 #               Enforces access checks and initializes target DocType context.

@@ -8,17 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
-# @file: smriti_retail_os/www/brand_master.py
-# @description: Page controller for SMRITI Brand Master.
-#               Enforces access checks and initializes template context.
-# @author: Antigravity AI
-# @date: 2026-06-16
-# @version: 1.0.0
-# @license: MIT
-# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
-#
 
 import frappe
 from frappe import _

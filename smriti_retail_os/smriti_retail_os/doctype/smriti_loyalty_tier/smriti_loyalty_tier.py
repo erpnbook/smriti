@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/doctype/smriti_loyalty_tier/smriti_loyalty_tier.py
 # @description: Controller for SMRITI Loyalty Tier.
 # @author: Antigravity AI

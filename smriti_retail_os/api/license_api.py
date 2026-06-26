@@ -8,8 +8,6 @@
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-#
 # @file: smriti_retail_os/api/license_api.py
 # @description: SMRITI License API — whitelisted endpoints for the License UI page.
 #               All operations go through this service layer (Rule 2 compliant).
