@@ -785,20 +785,32 @@ def get_field_mapping_reference():
         },
         {
             "placeholder": "{item_code}",
-            "item_master_field": "Item Code",
-            "example": "BBM-40-BRZ",
-            "description": "ERPNext item code — also used as the full Style/Article reference"
+            "item_master_field": "Item Code (inventory identification)",
+            "example": "BBM-SPORTS-BLK-08",
+            "description": "ERPNext Item Code used for inventory identification. May differ from the resolved business Style/Article code."
         },
         {
             "placeholder": "{style}",
-            "item_master_field": "Item Code (prefix before first hyphen)",
-            "example": "BBM",
-            "description": "Short style/article code — auto-derived from item_code split on '-'"
+            "item_master_field": "Intelligent Style Resolution",
+            "example": "BBM-SPORTS",
+            "description": "Resolved Style/Article code using priority: variant_of > Explicit Style Code > Import Profile > SKU splitting."
+        },
+        {
+            "placeholder": "{style_code}",
+            "item_master_field": "Explicit Style Code / Article Number",
+            "example": "BBM-SPORTS",
+            "description": "Returns the explicit Style Code / Article Number field exactly as stored in the Item Master without applying Style Resolution."
+        },
+        {
+            "placeholder": "{variant_template}",
+            "item_master_field": "ERP Variant Template ID",
+            "example": "BBM-SPORTS",
+            "description": "Returns the template item ID (variant_of) for variant items."
         },
         {
             "placeholder": "{item_name}",
             "item_master_field": "Item Name",
-            "example": "Big Boss Men Casual Loafer",
+            "example": "BBM Sports Black",
             "description": "Full product name / description (truncated to 28 chars on label)"
         },
         {
@@ -810,8 +822,8 @@ def get_field_mapping_reference():
         {
             "placeholder": "{mrp}",
             "item_master_field": "Custom MRP / Item Price (MRP list)",
-            "example": "499",
-            "description": "Maximum Retail Price — integer only (e.g. 499, not 499.00)"
+            "example": "1899",
+            "description": "Maximum Retail Price — integer only (e.g. 1899, not 1899.00)"
         },
         {
             "placeholder": "{size}",
@@ -822,13 +834,13 @@ def get_field_mapping_reference():
         {
             "placeholder": "{color}",
             "item_master_field": "Item Attributes → Color",
-            "example": "BRONZE",
+            "example": "BLACK",
             "description": "Color from Item Attribute table (attribute names: Color/Colour/Shade)"
         },
         {
             "placeholder": "{pkd_date}",
             "item_master_field": "Auto-generated at print time",
-            "example": "05/26",
+            "example": "06/26",
             "description": "Packing date in MM/YY format — stamped when the PRN is generated"
         },
         {
@@ -870,7 +882,7 @@ def get_field_mapping_reference():
         {
             "placeholder": "{purchase_class}",
             "item_master_field": "Custom Purchase Class (custom_purchase_class) → SMRITI Purchase Class master",
-            "example": "MFW",
+            "example": "SPORTS",
             "description": "Buying classification — FW/MFW/LFW/BFW/GFW/KFW/SPORTS/ACC/BAG etc."
         },
     ]
