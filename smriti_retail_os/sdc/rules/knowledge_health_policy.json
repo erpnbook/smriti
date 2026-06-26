@@ -1,0 +1,9 @@
+{
+  "policy_version": "1.0",
+  "weights": {
+    "coverage": 0.45,
+    "validation": 0.20,
+    "broken_references": 0.20,
+    "drift": 0.15
+  }
+}

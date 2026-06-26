@@ -34,8 +34,15 @@
             --radius-sm:       8px;
             --shadow-lg:       0 10px 30px -10px rgba(0,0,0,0.5);
             --transition:      all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            --accent-teal-bg:  rgba(20, 184, 166, 0.15);
-            --accent-green-bg: rgba(16, 185, 129, 0.15);
+            --accent-teal-bg:  hsla(172, 80%, 40%, 0.15);
+            --accent-teal-bg-dim: hsla(172, 80%, 40%, 0.05);
+            --accent-teal-bg-bright: hsla(172, 80%, 40%, 0.3);
+            --accent-green-bg: hsla(160, 84%, 39%, 0.15);
+            --accent-blue-bg:  hsla(220, 83%, 53%, 0.15);
+            --accent-blue-bg-bright: hsla(220, 83%, 53%, 0.2);
+            --accent-red-bg:   hsla(0, 84%, 60%, 0.15);
+            --accent-orange:   hsl(38, 92%, 50%);
+            --accent-orange-bg: hsla(38, 92%, 50%, 0.15);
             --danger-color:    #ef4444;
             --code-bg:         #000000;
             --code-color:      #38bdf8;
@@ -755,27 +762,41 @@
 
                 <!-- Knowledge Health and Coverage Dashboard Panel -->
                 <div class="dashboard-panel" style="margin-top: 16px;">
-                    <div class="dashboard-panel-title">
-                        <span class="material-symbols-outlined" style="color:var(--accent-green)">health_and_safety</span>
-                        <span>Knowledge Health & Coverage</span>
+                    <div class="dashboard-panel-title" style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="material-symbols-outlined" style="color:var(--accent-green)">health_and_safety</span>
+                            <span>Repository Health Index</span>
+                        </div>
+                        <div style="font-size:1.1rem; font-weight:800; color:var(--text-primary);" id="health-index-score">--%</div>
                     </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 10px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 10px;" id="health-breakdown-container">
                         <div style="padding: 12px; background: var(--bg-dark); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-teal);">
                             <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight:700;">Knowledge Coverage</div>
-                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;">96%</div>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;">--%</div>
                         </div>
                         <div style="padding: 12px; background: var(--bg-dark); border-radius: var(--radius-sm); border-left: 3px solid var(--primary);">
-                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight:700;">Verified Components</div>
-                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;" id="cnt-verified-total">418</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight:700;">Validation Status</div>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;">--%</div>
                         </div>
                         <div style="padding: 12px; background: var(--bg-dark); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-green);">
-                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight:700;">Manual Coverage</div>
-                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;">91%</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight:700;">Broken References</div>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;">--%</div>
                         </div>
                         <div style="padding: 12px; background: var(--bg-dark); border-radius: var(--radius-sm); border-left: 3px solid var(--text-muted);">
-                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight:700;">Broken References</div>
-                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent-green); margin-top: 4px;">0</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight:700;">Repository Drift</div>
+                            <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;">--%</div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Collections Grid Panel -->
+                <div class="dashboard-panel" style="margin-top: 16px;">
+                    <div class="dashboard-panel-title">
+                        <span class="material-symbols-outlined" style="color:var(--accent-teal)">layers</span>
+                        <span>Knowledge Collections</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 10px;" id="collections-grid-container">
+                        <!-- Dynamic Collection Cards -->
                     </div>
                 </div>
             </div>
@@ -950,6 +971,8 @@
 
         // Load dashboard stats and metadata
         loadMetaAndCounts();
+        loadExplainableHealth();
+        loadCollectionsGrid();
 
         // Search key handler
         $("#studio-search").on("keydown", function(e) {
@@ -1018,11 +1041,29 @@
             return;
         }
 
+        const startTime = Date.now();
         frappe.call({
             method: "smriti_retail_os.api.knowledge_studio_api.query_ske",
             args: { query: query },
             callback: function(r) {
-                renderResults(r.message || []);
+                const results = r.message || [];
+                renderResults(results);
+
+                const duration = Date.now() - startTime;
+                const uniqueProviders = results.map(o => o.type).filter((v, i, self) => self.indexOf(v) === i).join(', ');
+                const hasResult = results.length > 0 ? 1 : 0;
+
+                frappe.call({
+                    method: "smriti_retail_os.api.knowledge_studio_api.log_telemetry_event",
+                    args: {
+                        event_type: "SEARCH",
+                        query: query,
+                        has_result: hasResult,
+                        resolution_time_ms: duration,
+                        provider_hit: uniqueProviders || "none",
+                        confidence_source: hasResult ? "Merged" : "None"
+                    }
+                });
             }
         });
     }
@@ -1054,6 +1095,29 @@
             const apiCount = obj.type === 'screen' ? (obj.apis ? obj.apis.length : 0) : 0;
             const labelCount = obj.type === 'screen' ? (obj.labels ? obj.labels.length : 0) : 0;
 
+            let valColor = "var(--text-muted)";
+            let valBg = "var(--bg-dark)";
+            if (obj.validation_status === 'Certified') {
+                valColor = "var(--accent-green)";
+                valBg = "var(--accent-green-bg)";
+            } else if (obj.validation_status === 'Verified') {
+                valColor = "var(--accent-teal)";
+                valBg = "var(--accent-teal-bg)";
+            } else if (obj.validation_status === 'Draft') {
+                valColor = "var(--danger-color)";
+                valBg = "var(--accent-red-bg)";
+            }
+
+            let opColor = "var(--text-muted)";
+            let opBg = "var(--bg-dark)";
+            if (obj.operational_status === 'Active') {
+                opColor = "var(--primary)";
+                opBg = "var(--accent-blue-bg)";
+            } else if (obj.operational_status === 'Deprecated') {
+                opColor = "var(--accent-orange)";
+                opBg = "var(--accent-orange-bg)";
+            }
+
             const $card = $(`
                 <div class="result-card">
                     <div class="result-card-header">
@@ -1075,6 +1139,8 @@
                             <span class="badge-pill"><span class="material-symbols-outlined" style="font-size: 14px;">link</span>Relations: ${relCount}</span>
                             ${obj.type === 'screen' ? `<span class="badge-pill"><span class="material-symbols-outlined" style="font-size: 14px;">api</span>APIs: ${apiCount}</span>` : ''}
                             ${obj.type === 'screen' ? `<span class="badge-pill"><span class="material-symbols-outlined" style="font-size: 14px;">print</span>Templates: ${labelCount}</span>` : ''}
+                            <span class="badge-pill" style="color: ${valColor}; background: ${valBg}; border-color: ${valColor}33;"><span class="material-symbols-outlined" style="font-size: 14px;">verified</span>${obj.validation_status || 'Verified'}</span>
+                            <span class="badge-pill" style="color: ${opColor}; background: ${opBg}; border-color: ${opColor}33;"><span class="material-symbols-outlined" style="font-size: 14px;">published_with_changes</span>${obj.operational_status || 'Active'}</span>
                         </div>
                         <button class="topbtn" style="border-color: var(--primary); color: var(--primary);" onclick="openDrawer(${JSON.stringify(obj).replace(/"/g, '&quot;')})">Open Detail →</button>
                     </div>
@@ -1152,7 +1218,10 @@
 
         // Render Evidence Trust Badge & Details
         const evCount = obj.evidence ? obj.evidence.length : 0;
-        $("#det-trust-badge").html(`<span style="color:var(--accent-green)">✔ Verified</span> | ${evCount} Artifacts | Scan: Today`);
+        let vColor = "var(--accent-teal)";
+        if (obj.validation_status === 'Certified') vColor = "var(--accent-green)";
+        if (obj.validation_status === 'Draft') vColor = "var(--danger-color)";
+        $("#det-trust-badge").html(`<span style="color:${vColor}">✔ ${obj.validation_status || 'Verified'}</span> | ${obj.operational_status || 'Active'} | ${evCount} Artifacts | Scan: Today`);
 
         let evHtml = "";
         if (obj.evidence && obj.evidence.length > 0) {
@@ -1185,7 +1254,7 @@
             `Show ${obj.title} Labels`
         ];
         promptSuggestions.forEach(p => {
-            const $chip = $(`<button class="chip" style="font-size: 0.8rem; border-color: rgba(37,99,235,0.2);" onclick="closeDrawer(); triggerPreset('${p}')">${p}</button>`);
+            const $chip = $(`<button class="chip" style="font-size: 0.8rem; border-color: var(--accent-blue-bg-bright);" onclick="closeDrawer(); triggerPreset('${p}')">${p}</button>`);
             $askMore.append($chip);
         });
 
@@ -1198,6 +1267,20 @@
         $(".drawer-tab[data-tab='business']").addClass("active");
         $(".tab-panel").removeClass("active");
         $("#panel-business").addClass("active");
+
+        // Log Telemetry Event
+        frappe.call({
+            method: "smriti_retail_os.api.knowledge_studio_api.log_telemetry_event",
+            args: {
+                event_type: "VIEW",
+                query: null,
+                target_asset: obj.id,
+                has_result: 1,
+                resolution_time_ms: 0,
+                provider_hit: obj.type,
+                confidence_source: obj.validation_status || "Verified"
+            }
+        });
     }
 
     function closeDrawer() {
@@ -1265,6 +1348,7 @@
         $history.append($loading);
         $history.scrollTop($history[0].scrollHeight);
 
+        const chatStartTime = Date.now();
         frappe.call({
             method: "smriti_retail_os.api.ai_integration_api.ask_smriti_ai",
             args: { query: query },
@@ -1275,6 +1359,27 @@
                     const ansHtml = formatMarkdownAsHtml(data.answer);
                     const cpId = "cp_" + Math.random().toString(36).substr(2, 9);
                     
+                    // Parse primary objects from context pack for deep links
+                    const matches = [...data.context_pack.matchAll(/--- Primary Object: \[(.*?)\] ---/g)];
+                    let evidenceLinksHtml = "";
+                    if (matches.length > 0) {
+                        evidenceLinksHtml += `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; align-items:center;">
+                            <span style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">Resolved Assets:</span>`;
+                        const uniqueIds = new Set();
+                        matches.forEach(m => {
+                            const assetId = m[1];
+                            if (!uniqueIds.has(assetId)) {
+                                uniqueIds.add(assetId);
+                                evidenceLinksHtml += `
+                                    <button class="chip" style="font-size: 0.72rem; border-color: var(--accent-teal-bg-bright); background: var(--accent-teal-bg-dim); color: var(--accent-teal); cursor:pointer; padding: 2px 8px; border-radius: 4px; display:inline-flex; align-items:center; gap:2px;" onclick="openAssetDetailById('${assetId}')">
+                                        <span class="material-symbols-outlined" style="font-size: 12px;">open_in_new</span>${assetId}
+                                    </button>
+                                `;
+                            }
+                        });
+                        evidenceLinksHtml += `</div>`;
+                    }
+
                     $history.append(`
                         <div style="padding: 12px; background: var(--bg-dark); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-teal); line-height: 1.5; display:flex; flex-direction:column; gap:10px;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -1285,6 +1390,8 @@
                             </div>
                             <div style="word-break: break-word;">${ansHtml}</div>
                             
+                            ${evidenceLinksHtml}
+
                             <!-- Collapsible Context pack -->
                             <button class="collapsible-trigger" style="margin-top: 8px; padding: 6px 10px; font-size:11px; width:auto; border-radius:4px;" onclick="$('#${cpId}').toggle();">
                                 <span>🔍 View SKE Ground Truth Used</span>
@@ -1296,6 +1403,20 @@
                         </div>
                     `);
                     $history.scrollTop($history[0].scrollHeight);
+
+                    // Log Telemetry
+                    const duration = Date.now() - chatStartTime;
+                    frappe.call({
+                        method: "smriti_retail_os.api.knowledge_studio_api.log_telemetry_event",
+                        args: {
+                            event_type: "AI_CHAT",
+                            query: query,
+                            has_result: 1,
+                            resolution_time_ms: duration,
+                            provider_hit: "AI",
+                            confidence_source: "AI_CHAT"
+                        }
+                    });
                 }
             },
             error: function(err) {
@@ -1308,6 +1429,101 @@
                 $history.scrollTop($history[0].scrollHeight);
             }
         });
+    }
+
+    function openAssetDetailById(assetId) {
+        frappe.call({
+            method: "smriti_retail_os.api.knowledge_studio_api.query_ske",
+            args: { query: assetId },
+            callback: function(r) {
+                if (r.message && r.message.length > 0) {
+                    openDrawer(r.message[0]);
+                } else {
+                    frappe.msgprint("Asset not found: " + assetId);
+                }
+            }
+        });
+    }
+
+    function loadExplainableHealth() {
+        frappe.call({
+            method: "smriti_retail_os.api.knowledge_studio_api.get_explainable_health",
+            callback: function(r) {
+                if (r.message) {
+                    const health = r.message;
+                    $("#health-index-score").text(Math.round(health.health_score) + "%");
+                    
+                    const container = $("#health-breakdown-container");
+                    container.empty();
+                    
+                    const labels = {
+                        "coverage": { title: "Knowledge Coverage", color: "var(--accent-teal)" },
+                        "validation": { title: "Validation Status", color: "var(--primary)" },
+                        "broken_references": { title: "Broken References", color: "var(--accent-green)" },
+                        "drift": { title: "Repository Drift", color: "var(--text-muted)" }
+                    };
+                    
+                    Object.keys(health.breakdown).forEach(key => {
+                        const item = health.breakdown[key];
+                        const meta = labels[key] || { title: key, color: "var(--text-muted)" };
+                        const scoreDisplay = Math.round(item.score) + "%";
+                        const weightDisplay = "wt: " + (item.weight * 100) + "%";
+                        
+                        container.append(`
+                            <div style="padding: 12px; background: var(--bg-dark); border-radius: var(--radius-sm); border-left: 3px solid ${meta.color}; display:flex; flex-direction:column; justify-content:space-between;">
+                                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight:700;">${meta.title}</div>
+                                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:8px;">
+                                    <span style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary);">${scoreDisplay}</span>
+                                    <span style="font-size: 0.75rem; color: var(--text-subtle); font-weight: 600;">${weightDisplay}</span>
+                                </div>
+                            </div>
+                        `);
+                    });
+                }
+            }
+        });
+    }
+
+    function loadCollectionsGrid() {
+        frappe.call({
+            method: "smriti_retail_os.api.knowledge_studio_api.get_collections",
+            callback: function(r) {
+                if (r.message) {
+                    const collections = r.message;
+                    const container = $("#collections-grid-container");
+                    container.empty();
+                    
+                    collections.forEach(col => {
+                        container.append(`
+                            <div style="padding: 16px; background: var(--bg-dark); border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px; cursor: pointer; transition: var(--transition);" onclick="triggerPreset('${col.title}')">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <h4 style="font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--text-primary);">${col.title}</h4>
+                                    <span class="tag" style="font-size: 0.75rem; background: var(--accent-blue-bg); color: var(--primary); padding: 2px 8px; border-radius: 4px; font-weight: 600;">
+                                        ${col.assets ? col.assets.length : 0} Assets
+                                    </span>
+                                </div>
+                                <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">${col.description || ''}</p>
+                                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: auto; padding-top: 8px; border-top: 1px dashed var(--border-color);">
+                                    <span style="font-size: 0.75rem; color: var(--accent-teal); font-weight: 600;">Cov: ${Math.round(col.coverage_score)}%</span>
+                                    <span style="font-size: 0.75rem; color: var(--primary); font-weight: 600;">Val: ${Math.round(col.validation_score)}%</span>
+                                    <span style="font-size: 0.75rem; color: var(--accent-green); font-weight: 600;">Drift: ${Math.round(col.drift_score)}%</span>
+                                </div>
+                            </div>
+                        `);
+                    });
+                }
+            }
+        });
+    }
+
+    function esc(s) {
+        if (!s) return "";
+        return s.toString()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#x27;");
     }
 
     function formatMarkdownAsHtml(md) {

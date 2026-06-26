@@ -153,14 +153,79 @@ def get_ske_meta():
 
         return {
             "ske_version": "1.1.2-GA",
-            "ir_version": "1.0",
+            "ir_version": "1.2",
             "repository_commit": commit_sha[:8] if commit_sha != "UNKNOWN_COMMIT" else "UNKNOWN",
             "last_scan": scan_time
         }
     except Exception:
         return {
             "ske_version": "1.1.2-GA",
-            "ir_version": "1.0",
+            "ir_version": "1.2",
             "repository_commit": "N/A",
             "last_scan": "N/A"
         }
+
+@frappe.whitelist()
+def log_telemetry_event(event_type, query=None, target_asset=None, has_result=1, resolution_time_ms=0, provider_hit=None, confidence_source=None):
+    """Logs SMRITI Knowledge platform telemetry search/open/explain events."""
+    try:
+        doc = frappe.get_doc({
+            "doctype": "SMRITI Knowledge Usage Log",
+            "event_type": event_type,
+            "query": query,
+            "target_asset": target_asset,
+            "has_result": int(has_result),
+            "resolution_time_ms": int(resolution_time_ms),
+            "provider_hit": provider_hit,
+            "confidence_source": confidence_source,
+            "user": frappe.session.user,
+            "timestamp": frappe.utils.now_datetime()
+        })
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        return {"success": True, "name": doc.name}
+    except Exception as e:
+        frappe.log_error(message=str(e), title="Failed to log telemetry event")
+        return {"success": False, "error": str(e)}
+
+@frappe.whitelist()
+def get_telemetry_logs(limit=50, has_result=None):
+    """Fetches telemetry usage logs for audit or backlog review."""
+    filters = {}
+    if has_result is not None:
+        filters["has_result"] = int(has_result)
+    return frappe.get_all(
+        "SMRITI Knowledge Usage Log",
+        filters=filters,
+        fields=["name", "event_type", "query", "target_asset", "has_result", "resolution_time_ms", "provider_hit", "confidence_source", "user", "timestamp"],
+        order_by="timestamp desc",
+        limit=int(limit)
+    )
+
+@frappe.whitelist()
+def trigger_telemetry_cleanup():
+    """Manually triggers the daily telemetry cleanup job and returns status."""
+    if "System Manager" not in frappe.get_roles(frappe.session.user):
+        frappe.throw(_("Not permitted"), frappe.PermissionError)
+        
+    from smriti_retail_os.tasks import daily_telemetry_cleanup
+    daily_telemetry_cleanup()
+    return {"success": True, "message": "Telemetry cleanup completed successfully."}
+
+@frappe.whitelist()
+def get_explainable_health():
+    """Exposes the explainable health score breakdown."""
+    try:
+        engine = _get_ske_engine()
+        return engine.get_health()
+    except Exception as e:
+        frappe.throw(f"Failed to fetch health status: {str(e)}")
+
+@frappe.whitelist()
+def get_collections():
+    """Exposes logical collections inventory."""
+    try:
+        engine = _get_ske_engine()
+        return engine.get_ir("collections_inventory", [])
+    except Exception as e:
+        frappe.throw(f"Failed to fetch collections: {str(e)}")

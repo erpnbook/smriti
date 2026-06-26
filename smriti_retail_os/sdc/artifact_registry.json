@@ -1,5 +1,5 @@
 {
-  "lease_count": 610,
+  "lease_count": 612,
   "artifacts": {
     "doctype:PSV Channel Partner": {
       "id": "ART-DOCTYPE-00001",
@@ -4270,6 +4270,20 @@
       "type": "api",
       "status": "ACTIVE",
       "leased_at": "2026-06-25 15:45:36"
+    },
+    "api:smriti_retail_os.api.ai_integration_api.get_ai_context": {
+      "id": "ART-API-00611",
+      "name": "smriti_retail_os.api.ai_integration_api.get_ai_context",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-06-26 01:45:04"
+    },
+    "api:smriti_retail_os.api.ai_integration_api.ask_smriti_ai": {
+      "id": "ART-API-00612",
+      "name": "smriti_retail_os.api.ai_integration_api.ask_smriti_ai",
+      "type": "api",
+      "status": "ACTIVE",
+      "leased_at": "2026-06-26 01:45:04"
     }
   }
 }

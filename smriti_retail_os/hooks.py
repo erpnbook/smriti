@@ -418,6 +418,7 @@ scheduler_events = {
         "smriti_retail_os.api.trial_operations_api.send_trial_reminders",
         "smriti_retail_os.api.trial_operations_api.check_trial_health",
         "smriti_retail_os.api.trial_operations_api.cleanup_failed_provisioning",
+        "smriti_retail_os.tasks.daily_telemetry_cleanup",
     ],
     "cron": {
         "*/30 * * * *": [

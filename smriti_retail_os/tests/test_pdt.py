@@ -133,12 +133,21 @@ class TestPDT(TestPSV):
         self.assertIn("EXCESS_WOC_AT_SOURCE", opt["reason_codes"])
 
     def test_variant_curve_detection(self):
+        # Force reload PSV settings to ensure schema is synced in the test database
+        frappe.reload_doc("smriti_retail_os", "doctype", "smriti_psv_settings")
+        frappe.db.commit()
+
         # Configure variant_dimension setting
         if frappe.db.exists("DocType", "SMRITI PSV Settings"):
             settings = frappe.get_doc("SMRITI PSV Settings")
             settings.variant_dimension = "Test Curve Attribute"
             settings.save(ignore_permissions=True)
             frappe.clear_document_cache("SMRITI PSV Settings", "SMRITI PSV Settings")
+
+        # Ensure items do not exist
+        for itm_code in ["TEST-STYLE-SHIRT-S", "TEST-STYLE-SHIRT-M", "TEST-STYLE-SHIRT"]:
+            if frappe.db.exists("Item", itm_code):
+                frappe.delete_doc("Item", itm_code, force=True)
 
         # Ensure Item Attribute "Test Curve Attribute" exists with correct values
         if frappe.db.exists("Item Attribute", "Test Curve Attribute"):

@@ -1807,7 +1807,9 @@ class SMRITIReportEngine:
                     has_alias = False
                     has_doctype = False
                     if original_doctype:
-                        normalized_sql = " ".join(base_sql.split()).replace("`", "").replace('"', "")
+                        from_idx = find_top_level_from(base_sql)
+                        sql_part_for_tables = base_sql[from_idx:] if from_idx != -1 else base_sql
+                        normalized_sql = " ".join(sql_part_for_tables.split()).replace("`", "").replace('"', "")
                         alias_pattern = rf"\b(?:tab)?{re.escape(original_doctype)}\s+(?:AS\s+)?\b{re.escape(clean_alias)}\b"
                         has_alias = bool(re.search(alias_pattern, normalized_sql, re.IGNORECASE))
                         
@@ -1857,7 +1859,9 @@ class SMRITIReportEngine:
 
         if dynamic_projections and "FROM" in base_sql.upper():
             select_part = "SELECT " + ", ".join(dynamic_projections)
-            from_index = base_sql.upper().find("FROM")
+            from_index = find_top_level_from(base_sql)
+            if from_index == -1:
+                from_index = base_sql.upper().find("FROM")
             base_sql = select_part + " " + base_sql[from_index:]
             
             if dimensions:
@@ -2211,22 +2215,14 @@ def expression_contains_subquery(expr):
     clean_expr = expr.upper()
     return bool(re.search(r"\bSELECT\b", clean_expr) or re.search(r"\bEXISTS\b", clean_expr))
 
-def extract_select_alias_map(base_sql):
-    """
-    Parses base_sql to map fieldnames/aliases to their SQL expressions.
-    Handles nested functions, CASE statements, and complex formatting.
-    """
-    import re
-    alias_map = {}
+def find_top_level_from(base_sql):
     sql_upper = base_sql.upper()
     select_index = sql_upper.find("SELECT")
     if select_index == -1:
-        return alias_map
+        return -1
 
-    # Scan for top-level FROM clause, ignoring nested subqueries
     start_pos = select_index + 6
     depth = 0
-    from_index = -1
     for i in range(start_pos, len(base_sql)):
         char = base_sql[i]
         if char == '(':
@@ -2235,12 +2231,23 @@ def extract_select_alias_map(base_sql):
             depth -= 1
         elif depth == 0:
             if base_sql[i:i+4].upper() == "FROM" and (i == 0 or base_sql[i-1].isspace()) and (i+4 == len(base_sql) or base_sql[i+4].isspace() or base_sql[i+4] == '`'):
-                from_index = i
-                break
+                return i
+    return -1
 
+def extract_select_alias_map(base_sql):
+    """
+    Parses base_sql to map fieldnames/aliases to their SQL expressions.
+    Handles nested functions, CASE statements, and complex formatting.
+    """
+    import re
+    alias_map = {}
+    from_index = find_top_level_from(base_sql)
     if from_index == -1:
         return alias_map
 
+    sql_upper = base_sql.upper()
+    select_index = sql_upper.find("SELECT")
+    start_pos = select_index + 6
     select_clause = base_sql[start_pos:from_index].strip()
     
     # Split select clause by comma at depth 0

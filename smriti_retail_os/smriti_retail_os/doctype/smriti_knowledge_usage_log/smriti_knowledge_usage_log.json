@@ -1,0 +1,101 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-06-25 10:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "event_type",
+  "query",
+  "target_asset",
+  "has_result",
+  "resolution_time_ms",
+  "provider_hit",
+  "confidence_source",
+  "user",
+  "timestamp"
+ ],
+ "fields": [
+  {
+   "fieldname": "event_type",
+   "fieldtype": "Select",
+   "label": "Event Type",
+   "options": "SEARCH\nOPEN\nVIEW\nAI_CHAT\nSCREEN_EXPLAIN\nMANUAL_OPEN\nAPI_OPEN",
+   "in_list_view": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "query",
+   "fieldtype": "Data",
+   "label": "Query",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "target_asset",
+   "fieldtype": "Data",
+   "label": "Target Asset",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "has_result",
+   "fieldtype": "Check",
+   "label": "Has Result"
+  },
+  {
+   "fieldname": "resolution_time_ms",
+   "fieldtype": "Int",
+   "label": "Resolution Time (ms)"
+  },
+  {
+   "fieldname": "provider_hit",
+   "fieldtype": "Data",
+   "label": "Provider Hit"
+  },
+  {
+   "fieldname": "confidence_source",
+   "fieldtype": "Data",
+   "label": "Confidence Source"
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "timestamp",
+   "fieldtype": "Datetime",
+   "label": "Timestamp",
+   "in_list_view": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-06-25 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Knowledge Usage Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Store Manager",
+   "read": 1,
+   "export": 1,
+   "report": 1
+  }
+ ]
+}

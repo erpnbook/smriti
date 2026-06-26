@@ -32,6 +32,7 @@ class Phase0Compiler(object):
         self.api_list = []
         self.business_dictionary_list = []
         self.screen_list = []
+        self.collections_list = []
         self.search_index_map = {}
         
         # Graph nodes and edges
@@ -105,11 +106,17 @@ class Phase0Compiler(object):
         # 6. Parse Screen Inventory
         self.parse_screens()
 
+        # 6.5 Parse Collections
+        self.parse_collections()
+
         # 7. Generate O(1) Search Index
         self.generate_search_index()
 
         # 8. Build Dependency Graph
         self.build_graph()
+
+        # 8.5 Post-process Governance Metadata
+        self.post_process_governance_metadata()
 
         # 9. Save JSON inventories and validate against registry schemas
         self.save_and_validate()
@@ -479,7 +486,7 @@ class Phase0Compiler(object):
         SDCLogger.info("Compiling SMRITI screen inventory...")
         narratives_path = os.path.join(self.repo_path, "sdc", "rules", "screen_narratives.json")
         if not os.path.exists(narratives_path):
-            SDCLogger.warning("screen_narratives.json not found in sdc/rules/")
+            SDCLogger.warn("screen_narratives.json not found in sdc/rules/")
             return
             
         with io.open(narratives_path, "r", encoding="utf-8") as f:
@@ -675,6 +682,385 @@ class Phase0Compiler(object):
                         "relation": "RELATED_TO"
                     })
 
+    def compute_asset_coverage(self, asset_type, asset_data):
+        """Computes boolean pass/fail status for each validation rule and returns coverage rules and score."""
+        rules = {
+            "BUSINESS": "FAIL",
+            "TECHNICAL": "FAIL",
+            "API": "FAIL",
+            "SCREEN": "FAIL",
+            "MANUAL": "FAIL"
+        }
+        
+        if asset_type == "doctype":
+            if asset_data.get("doctype_name"):
+                rules["BUSINESS"] = "PASS"
+            if asset_data.get("schema_path") and asset_data.get("fields"):
+                rules["TECHNICAL"] = "PASS"
+            rules["API"] = "PASS" if len(asset_data.get("fields", [])) > 2 else "FAIL"
+            rules["SCREEN"] = "PASS" if asset_data.get("schema_path") else "FAIL"
+            rules["MANUAL"] = "PASS" if len(asset_data.get("fields", [])) > 0 else "FAIL"
+            
+        elif asset_type == "field":
+            if asset_data.get("label"):
+                rules["BUSINESS"] = "PASS"
+            if asset_data.get("fieldname") and asset_data.get("fieldtype"):
+                rules["TECHNICAL"] = "PASS"
+            rules["API"] = "PASS" if asset_data.get("target_doctype") else "FAIL"
+            rules["SCREEN"] = "PASS" if "custom" in asset_data.get("fieldname", "") else "FAIL"
+            rules["MANUAL"] = "PASS" if asset_data.get("source_line", 0) > 0 else "FAIL"
+            
+        elif asset_type == "api":
+            if asset_data.get("method"):
+                rules["BUSINESS"] = "PASS"
+            if asset_data.get("arguments") is not None:
+                rules["TECHNICAL"] = "PASS"
+            rules["API"] = "PASS" if asset_data.get("db_references") else "FAIL"
+            rules["SCREEN"] = "PASS" if len(asset_data.get("arguments", [])) < 5 else "FAIL"
+            rules["MANUAL"] = "PASS" if asset_data.get("source_file") else "FAIL"
+            
+        elif asset_type == "glossary_term":
+            if asset_data.get("definition"):
+                rules["BUSINESS"] = "PASS"
+            if asset_data.get("hinglish_definition"):
+                rules["TECHNICAL"] = "PASS"
+            rules["API"] = "PASS" if asset_data.get("faq") else "FAIL"
+            rules["SCREEN"] = "PASS" if asset_data.get("manual_reference") else "FAIL"
+            rules["MANUAL"] = "PASS" if asset_data.get("training_reference") else "FAIL"
+            
+        elif asset_type == "screen":
+            if asset_data.get("title"):
+                rules["BUSINESS"] = "PASS"
+            if asset_data.get("route") and asset_data.get("doctype"):
+                rules["TECHNICAL"] = "PASS"
+            rules["API"] = "PASS" if asset_data.get("apis") else "FAIL"
+            rules["SCREEN"] = "PASS" if asset_data.get("fields") else "FAIL"
+            rules["MANUAL"] = "PASS" if asset_data.get("beginner") or asset_data.get("developer") else "FAIL"
+
+        pass_count = sum(1 for status in rules.values() if status == "PASS")
+        score = (float(pass_count) / len(rules)) * 100.0
+        return rules, score
+
+    def parse_collections(self):
+        """Groups discovered assets into logical collections (e.g. Barcode Studio, PSV Depot)."""
+        SDCLogger.info("Packaging assets into logical Knowledge Collections...")
+        
+        collections_definitions = [
+            {
+                "collection_id": "barcode_studio",
+                "title": "Barcode Studio",
+                "description": "Enterprise barcode printing, warehouse ergonomics, and reprint queue management.",
+                "scopes": ["barcode", "label", "print"]
+            },
+            {
+                "collection_id": "psv_depot",
+                "title": "PSV Depot",
+                "description": "Party Stock Visibility, distributor inventory levels, coverage days, and aging.",
+                "scopes": ["psv", "psa", "partner", "distributor", "ledger"]
+            },
+            {
+                "collection_id": "billing_hub",
+                "title": "Billing Hub",
+                "description": "Point of Sale billing center, pricing, promotions, and cash registry.",
+                "scopes": ["billing", "invoice", "payment", "scheme", "coupon"]
+            },
+            {
+                "collection_id": "item_master_center",
+                "title": "Item Master Center",
+                "description": "Catalog management, item definitions, and size run curves.",
+                "scopes": ["item", "catalog", "brand", "category"]
+            }
+        ]
+        
+        collections = []
+        for defn in collections_definitions:
+            assets_in_coll = []
+            
+            def matches_scopes(name):
+                if not name:
+                    return False
+                name_lower = name.lower()
+                return any(scope in name_lower for scope in defn["scopes"])
+
+            for dt in self.doctype_list:
+                if matches_scopes(dt["doctype_name"]):
+                    assets_in_coll.append({
+                        "artifact_id": dt["artifact_id"],
+                        "asset_type": "doctype",
+                        "title": dt["doctype_name"]
+                    })
+                    
+            for fld in self.field_list:
+                if matches_scopes(fld["fieldname"]) or matches_scopes(fld["target_doctype"]):
+                    assets_in_coll.append({
+                        "artifact_id": fld["artifact_id"],
+                        "asset_type": "field",
+                        "title": f"{fld['target_doctype']}.{fld['fieldname']}"
+                    })
+                    
+            for api in self.api_list:
+                if matches_scopes(api["method"]):
+                    assets_in_coll.append({
+                        "artifact_id": api["artifact_id"],
+                        "asset_type": "api",
+                        "title": api["method"].split(".")[-1]
+                    })
+                    
+            for term in self.business_dictionary_list:
+                if matches_scopes(term["term_id"]) or matches_scopes(term["term_name"]):
+                    assets_in_coll.append({
+                        "artifact_id": term["artifact_id"],
+                        "asset_type": "glossary_term",
+                        "title": term["term_name"]
+                    })
+                    
+            for screen in self.screen_list:
+                if matches_scopes(screen["screen_id"]) or matches_scopes(screen["title"]):
+                    assets_in_coll.append({
+                        "artifact_id": f"ART-SCREEN-{screen['screen_id'].upper()}",
+                        "asset_type": "screen",
+                        "title": screen["title"]
+                    })
+            
+            formulas = [
+                ("INV-001", "Sales Velocity", "velocity"),
+                ("INV-002", "Weeks of Cover (WOC)", "cover"),
+                ("INV-003", "Dead Stock Score", "dead")
+            ]
+            for fid, title, keyword in formulas:
+                if any(keyword in scope for scope in defn["scopes"]) or any(scope in keyword for scope in defn["scopes"]):
+                    assets_in_coll.append({
+                        "artifact_id": fid,
+                        "asset_type": "formula",
+                        "title": title
+                    })
+                    
+            validation_statuses = [a.get("validation_status", "Verified") for a in assets_in_coll]
+            status_scores = {"Certified": 100.0, "Verified": 85.0, "Draft": 50.0}
+            val_score = sum(status_scores.get(s, 85.0) for s in validation_statuses) / float(len(validation_statuses)) if validation_statuses else 100.0
+            
+            collections.append({
+                "collection_id": defn["collection_id"],
+                "title": defn["title"],
+                "description": defn["description"],
+                "assets": assets_in_coll,
+                "coverage_score": sum(a.get("coverage_score", 100.0) for a in assets_in_coll) / float(len(assets_in_coll)) if assets_in_coll else 100.0,
+                "validation_score": val_score,
+                "drift_score": 100.0
+            })
+            
+        self.collections_list = collections
+        SDCLogger.info(f"Discovered {len(self.collections_list)} knowledge collections.")
+
+    def post_process_governance_metadata(self):
+        SDCLogger.info("Enriching SDC assets with Knowledge Governance metadata...")
+        
+        for dt in self.doctype_list:
+            coverage_rules, coverage_score = self.compute_asset_coverage("doctype", dt)
+            dt.update({
+                "asset_type": "doctype",
+                "validation_status": dt.get("validation_status", "Certified"),
+                "operational_status": dt.get("operational_status", "Active"),
+                "coverage_rules": coverage_rules,
+                "coverage_score": coverage_score,
+                "freshness": {
+                    "last_scanned_commit": self.commit,
+                    "last_scan_timestamp": self.timestamp,
+                    "last_validated_timestamp": self.timestamp
+                },
+                "related_assets": [],
+                "evidence": {
+                    "type": "schema",
+                    "path": dt.get("schema_path"),
+                    "checksum": dt.get("checksum")
+                },
+                "owner": "AITDL"
+            })
+            
+        for fld in self.field_list:
+            coverage_rules, coverage_score = self.compute_asset_coverage("field", fld)
+            fld.update({
+                "asset_type": "field",
+                "validation_status": fld.get("validation_status", "Verified"),
+                "operational_status": fld.get("operational_status", "Active"),
+                "coverage_rules": coverage_rules,
+                "coverage_score": coverage_score,
+                "freshness": {
+                    "last_scanned_commit": self.commit,
+                    "last_scan_timestamp": self.timestamp,
+                    "last_validated_timestamp": self.timestamp
+                },
+                "related_assets": [],
+                "evidence": {
+                    "type": "ast",
+                    "path": fld.get("source_file"),
+                    "line": fld.get("source_line"),
+                    "checksum": fld.get("checksum")
+                },
+                "owner": "AITDL"
+            })
+            
+        for api in self.api_list:
+            coverage_rules, coverage_score = self.compute_asset_coverage("api", api)
+            api.update({
+                "asset_type": "api",
+                "validation_status": api.get("validation_status", "Verified"),
+                "operational_status": api.get("operational_status", "Active"),
+                "coverage_rules": coverage_rules,
+                "coverage_score": coverage_score,
+                "freshness": {
+                    "last_scanned_commit": self.commit,
+                    "last_scan_timestamp": self.timestamp,
+                    "last_validated_timestamp": self.timestamp
+                },
+                "related_assets": [],
+                "evidence": {
+                    "type": "ast",
+                    "path": api.get("source_file"),
+                    "checksum": api.get("checksum")
+                },
+                "owner": "AITDL"
+            })
+            
+        for term in self.business_dictionary_list:
+            coverage_rules, coverage_score = self.compute_asset_coverage("glossary_term", term)
+            default_val = "Certified" if term.get("status") == "Approved" else "Draft"
+            term.update({
+                "asset_type": "glossary_term",
+                "validation_status": term.get("validation_status", default_val),
+                "operational_status": term.get("operational_status", "Active"),
+                "coverage_rules": coverage_rules,
+                "coverage_score": coverage_score,
+                "freshness": {
+                    "last_scanned_commit": self.commit,
+                    "last_scan_timestamp": self.timestamp,
+                    "last_validated_timestamp": self.timestamp
+                },
+                "related_assets": term.get("related_terms", []),
+                "evidence": {
+                    "type": "seeder",
+                    "path": "apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py",
+                    "checksum": term.get("checksum", "")
+                },
+                "owner": term.get("owner", "AITDL")
+            })
+            
+        for scr in self.screen_list:
+            coverage_rules, coverage_score = self.compute_asset_coverage("screen", scr)
+            scr.update({
+                "asset_type": "screen",
+                "validation_status": scr.get("validation_status", "Certified"),
+                "operational_status": scr.get("operational_status", "Active"),
+                "coverage_rules": coverage_rules,
+                "coverage_score": coverage_score,
+                "freshness": {
+                    "last_scanned_commit": self.commit,
+                    "last_scan_timestamp": self.timestamp,
+                    "last_validated_timestamp": self.timestamp
+                },
+                "related_assets": [],
+                "evidence": {
+                    "type": "narrative",
+                    "path": "sdc/rules/screen_narratives.json",
+                    "checksum": ""
+                },
+                "owner": "AITDL"
+            })
+
+    def load_health_policy(self):
+        policy_path = os.path.join(self.repo_path, "sdc", "rules", "knowledge_health_policy.json")
+        if os.path.exists(policy_path):
+            try:
+                with io.open(policy_path, "r", encoding="utf-8") as f:
+                    policy = json.load(f)
+                return policy
+            except Exception as e:
+                SDCLogger.warn(f"Failed to load health policy: {str(e)}")
+        return {
+            "policy_version": "1.0",
+            "weights": {
+                "coverage": 0.45,
+                "validation": 0.20,
+                "broken_references": 0.20,
+                "drift": 0.15
+            }
+        }
+
+    def calculate_drift(self):
+        """Calculates drift dynamically using Git, Checksums, or Manifest version fallback."""
+        drift_score = 100.0
+        
+        git_dir = os.path.join(self.repo_path, ".git")
+        if os.path.exists(git_dir):
+            try:
+                import subprocess
+                res = subprocess.Popen(["git", "status", "--porcelain"], cwd=self.repo_path, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                out, err = res.communicate()
+                modified_files = []
+                for line in out.decode("utf-8").splitlines():
+                    if line.strip():
+                        parts = line.strip().split(None, 1)
+                        if len(parts) > 1:
+                            modified_files.append(parts[1])
+                
+                scan_scope = self.config.get("scan_scope", ["apps/smriti_retail_os"])
+                in_scope_mods = 0
+                for mf in modified_files:
+                    mf_clean = mf.replace(os.sep, "/")
+                    if any(mf_clean.startswith(scope) for scope in scan_scope):
+                        in_scope_mods += 1
+                
+                if in_scope_mods > 0:
+                    drift_score = max(50.0, 100.0 - (in_scope_mods * 10.0))
+                SDCLogger.info(f"Drift Engine: Git mode detected {in_scope_mods} changes in scope. Drift Score: {drift_score}")
+                return drift_score
+            except Exception as e:
+                SDCLogger.warn(f"Drift Engine: Git check failed, falling back to Checksums. Error: {str(e)}")
+
+        prev_inv_path = os.path.join(self.repo_path, "docs", "discovery", "file_inventory.json")
+        if os.path.exists(prev_inv_path):
+            try:
+                with io.open(prev_inv_path, "r", encoding="utf-8") as f:
+                    prev_inv = json.load(f)
+                prev_data = prev_inv.get("data", [])
+                prev_checksums = {item["file_path"]: item["sha256"] for item in prev_data if "file_path" in item and "sha256" in item}
+                
+                mismatches = 0
+                total_checked = 0
+                for fld in self.file_list:
+                    path = fld["file_path"]
+                    total_checked += 1
+                    if path in prev_checksums:
+                        if prev_checksums[path] != fld["sha256"]:
+                            mismatches += 1
+                    else:
+                        mismatches += 1
+                
+                if total_checked > 0:
+                    drift_score = (1.0 - (float(mismatches) / total_checked)) * 100.0
+                SDCLogger.info(f"Drift Engine: Checksum fallback. Checked {total_checked} files, {mismatches} mismatches. Drift Score: {drift_score}")
+                return drift_score
+            except Exception as e:
+                SDCLogger.warn(f"Drift Engine: Checksum check failed, falling back to Manifest. Error: {str(e)}")
+
+        prev_manifest_path = os.path.join(self.repo_path, "docs", "discovery", "discovery_manifest.json")
+        if os.path.exists(prev_manifest_path):
+            try:
+                with io.open(prev_manifest_path, "r", encoding="utf-8") as f:
+                    prev_manifest = json.load(f)
+                prev_ir_ver = prev_manifest.get("ir_version", "1.0")
+                curr_ir_ver = self.config.get("ir_version", "1.2")
+                if prev_ir_ver == curr_ir_ver:
+                    drift_score = 100.0
+                else:
+                    drift_score = 75.0
+                SDCLogger.info(f"Drift Engine: Manifest version fallback. Previous IR: {prev_ir_ver}, Current IR: {curr_ir_ver}. Drift Score: {drift_score}")
+                return drift_score
+            except Exception as e:
+                SDCLogger.warn(f"Drift Engine: Manifest check failed. Defaulting Drift Score to 100.0. Error: {str(e)}")
+                
+        return 100.0
+
     def save_and_validate(self):
         """Writes canonical JSON files and runs the validation check."""
         out_dir = os.path.join(self.repo_path, "docs", "discovery")
@@ -688,14 +1074,17 @@ class Phase0Compiler(object):
             "api_inventory": (self.api_list, "ART-API-INV-00001", ["apps/smriti_retail_os/"]),
             "business_dictionary": (self.business_dictionary_list, "ART-GLOSSARY-INV-00001", ["apps/smriti_retail_os/smriti_retail_os/patches/seed_default_terms.py"]),
             "screen_inventory": (self.screen_list, "ART-SCREEN-INV-00001", ["sdc/rules/screen_narratives.json"]),
+            "collections_inventory": (self.collections_list, "ART-COLLECTIONS-INV-00001", ["sdc/rules/screen_narratives.json"]),
             "search_index": (self.search_index_map, "ART-SEARCH-INDEX-00001", [])
         }
 
         # Save and validate individual inventories
         for inv_type, (data_list, art_id, consumes) in inventories.items():
             json_data = {
-                "ir_version": "1.0",
+                "ir_version": "1.2",
                 "compiler_version": "1.1",
+                "generated_by": "SDC 1.1.2-GA",
+                "schema_version": "1.2",
                 "artifact_type": inv_type,
                 "generated_at": self.timestamp,
                 "repository_commit": self.commit,
@@ -715,8 +1104,10 @@ class Phase0Compiler(object):
 
         # Save and validate dependency graph
         graph_data = {
-            "ir_version": "1.0",
+            "ir_version": "1.2",
             "compiler_version": "1.1",
+            "generated_by": "SDC 1.1.2-GA",
+            "schema_version": "1.2",
             "artifact_type": "dependency_graph",
             "generated_at": self.timestamp,
             "repository_commit": self.commit,
@@ -741,8 +1132,10 @@ class Phase0Compiler(object):
 
         # Write manifest
         manifest_data = {
-            "ir_version": "1.0",
+            "ir_version": "1.2",
             "compiler_version": "1.1",
+            "generated_by": "SDC 1.1.2-GA",
+            "schema_version": "1.2",
             "artifact_type": "discovery_manifest",
             "generated_at": self.timestamp,
             "repository_commit": self.commit,
@@ -762,6 +1155,66 @@ class Phase0Compiler(object):
             f.write(content if isinstance(content, type(u"")) else content.decode("utf-8"))
         SDCLogger.info(f"Wrote manifest: {manifest_path}")
 
+        # Calculate explainable health score
+        all_scores = []
+        for lst in [self.doctype_list, self.field_list, self.api_list, self.business_dictionary_list, self.screen_list]:
+            for item in lst:
+                all_scores.append(item.get("coverage_score", 100.0))
+        avg_coverage = sum(all_scores) / float(len(all_scores)) if all_scores else 100.0
+
+        val_scores = []
+        status_map = {"Certified": 100.0, "Verified": 85.0, "Draft": 50.0}
+        for lst in [self.doctype_list, self.field_list, self.api_list, self.business_dictionary_list, self.screen_list]:
+            for item in lst:
+                status = item.get("validation_status", "Verified")
+                val_scores.append(status_map.get(status, 85.0))
+        avg_validation = sum(val_scores) / float(len(val_scores)) if val_scores else 100.0
+
+        node_ids = set(n["id"] for n in self.nodes)
+        node_ids.update(["INV-001", "INV-002", "INV-003"])
+        broken_edges = 0
+        for edge in self.edges:
+            if edge["target"] not in node_ids:
+                broken_edges += 1
+        broken_score = (1.0 - (float(broken_edges) / len(self.edges) if self.edges else 0.0)) * 100.0
+
+        drift_score = self.calculate_drift()
+
+        policy = self.load_health_policy()
+        w = policy.get("weights", {})
+        overall_health = (
+            avg_coverage * w.get("coverage", 0.45) +
+            avg_validation * w.get("validation", 0.20) +
+            broken_score * w.get("broken_references", 0.20) +
+            drift_score * w.get("drift", 0.15)
+        )
+
+        health_data = {
+            "ir_version": "1.2",
+            "generated_by": "SDC 1.1.2-GA",
+            "schema_version": "1.2",
+            "artifact_type": "health_status",
+            "generated_at": self.timestamp,
+            "repository_commit": self.commit,
+            "provenance": self.get_provenance_meta("ART-HEALTH-STATUS-00001", [], ["docs_renderers", "quality_gates"]),
+            "data": {
+                "health_score": overall_health,
+                "policy_version": policy.get("policy_version", "1.0"),
+                "breakdown": {
+                    "coverage": { "score": avg_coverage, "weight": w.get("coverage", 0.45) },
+                    "validation": { "score": avg_validation, "weight": w.get("validation", 0.20) },
+                    "broken_references": { "score": broken_score, "weight": w.get("broken_references", 0.20) },
+                    "drift": { "score": drift_score, "weight": w.get("drift", 0.15) }
+                }
+            }
+        }
+        
+        health_path = os.path.join(out_dir, "health_status.json")
+        with io.open(health_path, "w", encoding="utf-8") as f:
+            content = json.dumps(health_data, indent=2, ensure_ascii=False)
+            f.write(content if isinstance(content, type(u"")) else content.decode("utf-8"))
+        SDCLogger.info(f"Wrote health status: {health_path}")
+
         # Print final Gate Verification
         print(json.dumps({
             "PHASE_0_COMPLETE": True,
@@ -773,6 +1226,15 @@ class Phase0Compiler(object):
                 "glossary_terms_discovered": len(self.business_dictionary_list),
                 "screens_discovered": len(self.screen_list),
                 "edges_compiled": len(self.edges)
+            },
+            "HEALTH_STATUS": {
+                "health_score": overall_health,
+                "breakdown": {
+                    "coverage": avg_coverage,
+                    "validation": avg_validation,
+                    "broken_references": broken_score,
+                    "drift": drift_score
+                }
             },
             "REGRESSION_CHECK": "PASSED"
         }, indent=2))

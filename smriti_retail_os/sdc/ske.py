@@ -16,11 +16,18 @@ from compiler import SDCLogger
 class KnowledgeObject(object):
     __slots__ = ('id', 'type', 'title', 'summary', 'business_definition',
                  'technical_definition', 'dependencies', 'evidence',
-                 'related_objects', 'examples', 'references', 'relations')
+                 'related_objects', 'examples', 'references', 'relations',
+                 'validation_status', 'operational_status')
 
     def __init__(self, **kwargs):
         for slot in self.__slots__:
-            super(KnowledgeObject, self).__setattr__(slot, kwargs.get(slot, None) or [])
+            val = kwargs.get(slot, None)
+            if val is None:
+                if slot in ('validation_status', 'operational_status'):
+                    val = ""
+                else:
+                    val = []
+            super(KnowledgeObject, self).__setattr__(slot, val)
 
     def __setattr__(self, key, value):
         raise AttributeError("KnowledgeObject is immutable and cannot be modified after creation.")
@@ -36,13 +43,27 @@ class KnowledgeObject(object):
         return res
 
 
-class KnowledgeProvider(object):
-    def priority(self):
-        return 50
-
+class SMRITIProvider(object):
+    @property
+    def name(self):
+        raise NotImplementedError
+    @property
     def capabilities(self):
-        return []
+        raise NotImplementedError
+    @property
+    def version(self):
+        return "1.0.0"
+    @property
+    def supports_ir(self):
+        return ["1.0", "1.1", "1.2"]
+    @property
+    def enabled_by_default(self):
+        return True
+    @property
+    def priority(self):
+        return 100
 
+class KnowledgeProvider(SMRITIProvider):
     def supports(self, engine, query):
         """Returns relevance score between 0.0 and 1.0."""
         raise NotImplementedError()
@@ -52,10 +73,17 @@ class KnowledgeProvider(object):
         raise NotImplementedError()
 
 
+
 class GlossaryProvider(KnowledgeProvider):
+    @property
+    def name(self):
+        return "glossary"
+
+    @property
     def priority(self):
         return 100
 
+    @property
     def capabilities(self):
         return ["glossary"]
 
@@ -127,9 +155,15 @@ class GlossaryProvider(KnowledgeProvider):
 
 
 class FieldProvider(KnowledgeProvider):
+    @property
+    def name(self):
+        return "field"
+
+    @property
     def priority(self):
         return 80
 
+    @property
     def capabilities(self):
         return ["field"]
 
@@ -184,9 +218,15 @@ class FieldProvider(KnowledgeProvider):
 
 
 class DocTypeProvider(KnowledgeProvider):
+    @property
+    def name(self):
+        return "doctype"
+
+    @property
     def priority(self):
         return 70
 
+    @property
     def capabilities(self):
         return ["doctype"]
 
@@ -270,9 +310,15 @@ class DocTypeProvider(KnowledgeProvider):
 
 
 class APIProvider(KnowledgeProvider):
+    @property
+    def name(self):
+        return "api"
+
+    @property
     def priority(self):
         return 60
 
+    @property
     def capabilities(self):
         return ["api"]
 
@@ -323,9 +369,15 @@ class APIProvider(KnowledgeProvider):
 
 
 class FormulaProvider(KnowledgeProvider):
+    @property
+    def name(self):
+        return "formula"
+
+    @property
     def priority(self):
         return 90
 
+    @property
     def capabilities(self):
         return ["formula"]
 
@@ -386,9 +438,15 @@ class FormulaProvider(KnowledgeProvider):
 
 
 class ScreenProvider(KnowledgeProvider):
+    @property
+    def name(self):
+        return "screen"
+
+    @property
     def priority(self):
         return 95
 
+    @property
     def capabilities(self):
         return ["screen"]
 
@@ -819,7 +877,8 @@ class SMRITIKnowledgeEngine(object):
         self.ir_cache = {}
         
         # Register Pluggable Providers
-        self.providers = {
+        active_ir_version = "1.2"
+        all_providers = {
             "glossary": GlossaryProvider(),
             "field": FieldProvider(),
             "doctype": DocTypeProvider(),
@@ -827,6 +886,21 @@ class SMRITIKnowledgeEngine(object):
             "formula": FormulaProvider(),
             "screen": ScreenProvider()
         }
+        
+        self.providers = {}
+        for p_name, provider in all_providers.items():
+            # Check enabled_by_default
+            if not getattr(provider, "enabled_by_default", True):
+                SDCLogger.warn(f"SKE Startup: Provider '{p_name}' is disabled.")
+                continue
+            
+            # Check supports_ir compatibility
+            supports_ir = getattr(provider, "supports_ir", ["1.0", "1.1", "1.2"])
+            if active_ir_version not in supports_ir:
+                SDCLogger.error(f"SKE Startup: Provider '{p_name}' does not support active IR version '{active_ir_version}'. Mismatched supports_ir: {supports_ir}")
+                continue
+                
+            self.providers[p_name] = provider
 
         # Register Resolvers
         self.resolvers = [
@@ -878,14 +952,25 @@ class SMRITIKnowledgeEngine(object):
         try:
             with io.open(path, "r", encoding="utf-8") as f:
                 ir_data = json.load(f)
+            
+            # Dynamic migration registry transform
+            try:
+                from migration_registry import IRMigratorRegistry
+                ir_data = IRMigratorRegistry.migrate(ir_data, target_version="1.2")
+            except Exception as me:
+                SDCLogger.warn(f"SKE get_ir: Failed to migrate {name}.json: {str(me)}")
+                
             self.ir_cache[name] = ir_data.get("data", default)
             return self.ir_cache[name]
         except Exception:
             return default
 
-    def resolve(self, query, context=None, output_format="structured"):
+    def resolve(self, query, context=None, output_format="structured", developer_mode=False):
         """Main resolve pipeline: Query -> Intent -> Resolve -> Merge -> Rank -> Render."""
         SDCLogger.info(f"SKE resolving query: '{query}'")
+
+        if isinstance(context, dict) and "developer_mode" in context:
+            developer_mode = context["developer_mode"]
 
         # 1. Dispatch query to resolvers for scoring
         scored_resolvers = []
@@ -903,6 +988,38 @@ class SMRITIKnowledgeEngine(object):
         # 3. Merge overlapping KnowledgeObjects
         merged_objects = self.merge_knowledge_objects(resolved_objects)
 
+        # 3.5 AI Safe Gate: Filter based on validation/operational status
+        filtered_objects = []
+        for obj in merged_objects:
+            asset = self.get_asset_by_id(obj.id)
+            if asset:
+                op_status = asset.get("operational_status", "Active")
+                val_status = asset.get("validation_status", "Verified")
+            else:
+                op_status = "Active"
+                val_status = "Verified"
+                # Hardcoded formulas INV-001, INV-002, INV-003 are Certified and Active
+                if obj.id in ["INV-001", "INV-002", "INV-003"]:
+                    op_status = "Active"
+                    val_status = "Certified"
+
+            if op_status == "Retired":
+                continue
+            if val_status == "Draft" and not developer_mode:
+                continue
+
+            super(KnowledgeObject, obj).__setattr__("validation_status", val_status)
+            super(KnowledgeObject, obj).__setattr__("operational_status", op_status)
+
+            if op_status == "Deprecated":
+                warning_banner = "[DEPRECATION WARNING: This asset is deprecated and represents legacy behavior.] "
+                new_bus_def = warning_banner + (obj.business_definition or "")
+                new_summary = warning_banner + (obj.summary or "")
+                super(KnowledgeObject, obj).__setattr__("business_definition", new_bus_def)
+                super(KnowledgeObject, obj).__setattr__("summary", new_summary)
+
+            filtered_objects.append(obj)
+
         # 4. Rank resolved objects based on Search Ranking Guardrails
         type_priority = {
             "glossary_term": 1,
@@ -915,10 +1032,116 @@ class SMRITIKnowledgeEngine(object):
             "dependency": 8,
             "impact_analysis": 9
         }
-        merged_objects.sort(key=lambda x: type_priority.get(x.type, 99))
+        filtered_objects.sort(key=lambda x: type_priority.get(x.type, 99))
 
         # 5. Render output
-        return SKERenderer.render(merged_objects, output_format=output_format)
+        return SKERenderer.render(filtered_objects, output_format=output_format)
+
+    def resolve_by_id(self, asset_id):
+        """Fetches an asset by its registry identifier."""
+        for name, provider in self.providers.items():
+            if hasattr(provider, "resolve"):
+                resolved = provider.resolve(self, asset_id)
+                if resolved:
+                    for obj in resolved:
+                        if obj.id.lower() == asset_id.lower() or obj.title.lower() == asset_id.lower():
+                            return obj
+        return None
+
+    def search(self, keywords):
+        """Queries the SKE search index."""
+        clean_k = self.clean_query(keywords)
+        tokens = clean_k.split()
+        matched_ids = set()
+        for token in tokens:
+            if token in self.search_index:
+                matched_ids.update(self.search_index[token])
+        
+        results = []
+        for aid in matched_ids:
+            obj = self.resolve_by_id(aid)
+            if obj:
+                results.append(obj)
+        return self.merge_knowledge_objects(results)
+
+    def get_dependencies(self, asset_id):
+        """Fetches all nodes/edges connected to the asset."""
+        graph = self.get_ir("dependency_graph", {}).get("data", {})
+        nodes = graph.get("nodes", [])
+        edges = graph.get("edges", [])
+        
+        connected_edges = []
+        connected_node_ids = {asset_id}
+        
+        for edge in edges:
+            if edge["source"] == asset_id or edge["target"] == asset_id:
+                connected_edges.append(edge)
+                connected_node_ids.add(edge["source"])
+                connected_node_ids.add(edge["target"])
+                
+        connected_nodes = [n for n in nodes if n["id"] in connected_node_ids]
+        return {
+            "nodes": connected_nodes,
+            "edges": connected_edges
+        }
+
+    def get_health(self, asset_id=None):
+        """Resolves coverage and health scoring."""
+        if asset_id:
+            asset = self.get_asset_by_id(asset_id)
+            if asset:
+                return {
+                    "asset_id": asset_id,
+                    "coverage_score": asset.get("coverage_score", 100.0),
+                    "coverage_rules": asset.get("coverage_rules", {}),
+                    "validation_status": asset.get("validation_status", "Verified"),
+                    "operational_status": asset.get("operational_status", "Active")
+                }
+            if asset_id in ["INV-001", "INV-002", "INV-003"]:
+                return {
+                    "asset_id": asset_id,
+                    "coverage_score": 100.0,
+                    "coverage_rules": { "BUSINESS": "PASS", "TECHNICAL": "PASS", "API": "PASS", "SCREEN": "PASS", "MANUAL": "PASS" },
+                    "validation_status": "Certified",
+                    "operational_status": "Active"
+                }
+            return None
+        
+        return self.get_ir("health_status", {}).get("data", {})
+
+    def get_context_pack(self, query):
+        """Compiles the RAG ground truth package."""
+        resolved = self.resolve(query, output_format="structured")
+        
+        pack = []
+        for obj in resolved:
+            deps = self.get_dependencies(obj.id)
+            pack.append({
+                "id": obj.id,
+                "type": obj.type,
+                "title": obj.title,
+                "summary": obj.summary,
+                "business_definition": obj.business_definition,
+                "technical_definition": obj.technical_definition,
+                "dependencies": [n["label"] for n in deps.get("nodes", []) if n["id"] != obj.id],
+                "evidence": obj.evidence
+            })
+        return {
+            "query": query,
+            "resolved_count": len(pack),
+            "context_pack": pack
+        }
+
+    def get_asset_by_id(self, asset_id):
+        """Looks up raw asset dictionary in the loaded IR inventories by ID."""
+        for inv_name in ["doctype_inventory", "field_inventory", "api_inventory", "business_dictionary", "screen_inventory"]:
+            data = self.get_ir(inv_name, [])
+            for item in data:
+                if item.get("artifact_id") == asset_id:
+                    return item
+                if inv_name == "screen_inventory" and (item.get("screen_id") == asset_id or f"ART-SCREEN-{item.get('screen_id', '').upper()}" == asset_id):
+                    return item
+        return None
 
     def merge_knowledge_objects(self, objects):
         if not objects:
@@ -993,3 +1216,4 @@ class SMRITIKnowledgeEngine(object):
                     relations=dedup_relations
                 ))
         return merged
+
