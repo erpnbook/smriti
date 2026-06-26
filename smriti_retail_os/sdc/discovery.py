@@ -17,6 +17,101 @@ from compiler import (
     SDCException, sdc_exit, get_git_commit
 )
 
+class SDCPolicy(object):
+    def __init__(self, data):
+        self._data = data
+        self.schema_version = data.get("schema_version", "1.0")
+        self.policy_version = data.get("policy_version", "1.0")
+        self.weights = data.get("weights", {
+            "coverage": 0.45,
+            "validation": 0.20,
+            "broken_references": 0.20,
+            "drift": 0.15
+        })
+        thresholds = data.get("thresholds", {})
+        self.coverage_min = thresholds.get("coverage_min", 92.0)
+        self.broken_references_max = thresholds.get("broken_references_max", 0)
+        self.formula_drift_tolerance = thresholds.get("formula_drift_tolerance", 0)
+        self.banned_terminology_tolerance = thresholds.get("banned_terminology_tolerance", 0)
+        self.banned_terms = data.get("banned_terms", ["shadow ledger"])
+        self.scan_extensions = tuple(data.get("scan_extensions", [".py", ".js", ".md", ".json", ".yml", ".yaml", ".html"]))
+        self.ignore_paths = data.get("ignore_paths", [])
+
+    def __setattr__(self, name, value):
+        if name != "_data" and hasattr(self, name):
+            raise AttributeError("SDCPolicy properties are read-only / immutable.")
+        super(SDCPolicy, self).__setattr__(name, value)
+
+    @classmethod
+    def load(cls, repo_path):
+        policy_path = os.path.join(repo_path, "sdc", "rules", "knowledge_health_policy.json")
+        if not os.path.exists(policy_path):
+            raise SDCException("SDC103", f"Policy configuration file not found at {policy_path}")
+        
+        try:
+            with io.open(policy_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception as e:
+            raise SDCException("SDC103", f"Malformed policy JSON configuration: {str(e)}")
+
+        # Schema Validation: check required keys
+        required_keys = ["schema_version", "policy_version", "weights", "thresholds", "banned_terms", "scan_extensions", "ignore_paths"]
+        missing = [k for k in required_keys if k not in data]
+        if missing:
+            raise SDCException("SDC103", f"Policy schema validation error: missing fields: {', '.join(missing)}")
+
+        # Check versions
+        if data.get("schema_version") != "1.0":
+            raise SDCException("SDC105", f"Unsupported policy schema version: {data.get('schema_version')}")
+
+        # Policy Validation: check content errors
+        thresholds = data.get("thresholds", {})
+        if not isinstance(thresholds, dict):
+            raise SDCException("SDC103", "Policy error: 'thresholds' must be a dictionary.")
+        if not isinstance(data.get("banned_terms"), list):
+            raise SDCException("SDC103", "Policy error: 'banned_terms' must be a list.")
+        if not isinstance(data.get("scan_extensions"), list):
+            raise SDCException("SDC103", "Policy error: 'scan_extensions' must be a list.")
+        if not isinstance(data.get("ignore_paths"), list):
+            raise SDCException("SDC103", "Policy error: 'ignore_paths' must be a list.")
+
+        return cls(data)
+
+
+def canonical_json_str(obj):
+    """Serialize any python data structure canonically (stable formatting, sorted keys, no whitespace)."""
+    if obj is None:
+        return ""
+    if isinstance(obj, str):
+        try:
+            obj = json.loads(obj)
+        except Exception:
+            return "".join(obj.split())
+    
+    def sort_dict_keys(o):
+        if isinstance(o, dict):
+            return {k: sort_dict_keys(v) for k, v in sorted(o.items())}
+        if isinstance(o, list):
+            return [sort_dict_keys(el) for el in o]
+        return o
+
+    sorted_obj = sort_dict_keys(obj)
+    return json.dumps(sorted_obj, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
+
+
+def canonical_expr_str(expr):
+    """Normalize formula expression formatting (strip line endings, replace runs of whitespace)."""
+    if not expr:
+        return ""
+    lines = expr.splitlines()
+    normalized_lines = []
+    for line in lines:
+        cleaned = " ".join(line.strip().split())
+        if cleaned:
+            normalized_lines.append(cleaned)
+    return "\n".join(normalized_lines)
+
+
 class Phase0Compiler(object):
     def __init__(self, repo_path):
         self.repo_path = repo_path
@@ -24,6 +119,7 @@ class Phase0Compiler(object):
         self.registry = ArtifactRegistry()
         self.commit = get_git_commit(self.repo_path)
         self.timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        self.policy = SDCPolicy.load(self.repo_path)
 
         # Inventory variables
         self.file_list = []
@@ -968,21 +1064,14 @@ class Phase0Compiler(object):
             })
 
     def load_health_policy(self):
-        policy_path = os.path.join(self.repo_path, "sdc", "rules", "knowledge_health_policy.json")
-        if os.path.exists(policy_path):
-            try:
-                with io.open(policy_path, "r", encoding="utf-8") as f:
-                    policy = json.load(f)
-                return policy
-            except Exception as e:
-                SDCLogger.warn(f"Failed to load health policy: {str(e)}")
         return {
-            "policy_version": "1.0",
-            "weights": {
-                "coverage": 0.45,
-                "validation": 0.20,
-                "broken_references": 0.20,
-                "drift": 0.15
+            "policy_version": self.policy.policy_version,
+            "weights": self.policy.weights,
+            "thresholds": {
+                "coverage_min": self.policy.coverage_min,
+                "broken_references_max": self.policy.broken_references_max,
+                "formula_drift_tolerance": self.policy.formula_drift_tolerance,
+                "banned_terminology_tolerance": self.policy.banned_terminology_tolerance
             }
         }
 
@@ -1129,6 +1218,27 @@ class Phase0Compiler(object):
         """Compute SHA256 of a string — used for drift hash computation."""
         return hashlib.sha256((s or "").encode("utf-8")).hexdigest()
 
+    def load_and_migrate_snapshot(self, snapshot_path):
+        """Loads the snapshot and performs migration if version mismatch is detected."""
+        if not os.path.exists(snapshot_path):
+            return {}, {}
+
+        try:
+            with io.open(snapshot_path, "r", encoding="utf-8") as f:
+                loaded = json.load(f)
+        except Exception as e:
+            raise SDCException("SDC104", f"Drift snapshot file is corrupted or unreadable: {str(e)}")
+
+        snapshot_version = loaded.get("snapshot_version", "1.0")
+        if snapshot_version == "1.0":
+            return loaded.get("formulas", {}), loaded
+        else:
+            return self.migrate_snapshot(loaded, snapshot_version)
+
+    def migrate_snapshot(self, loaded_snapshot, from_version):
+        """Migration hook for upgrading older snapshot schemas."""
+        raise SDCException("SDC105", f"Unsupported snapshot schema version: {from_version}")
+
     def check_formula_drift(self, formulas):
         """
         SDC-006 P1A — Formula-to-Explain Drift Gate.
@@ -1138,17 +1248,16 @@ class Phase0Compiler(object):
         object was NOT updated, this is a governance drift violation (SDC402).
 
         On a clean run, writes an updated snapshot.
-        Returns: (violations: list[dict], updated_snapshot: dict)
+        Returns: (violations: list[dict], updated_formulas: dict)
         """
         snapshot_path = os.path.join(self.repo_path, "sdc", "drift_snapshots", "formula_drift_snapshot.json")
         prev_snapshot = {}
-        if os.path.exists(snapshot_path):
-            try:
-                with io.open(snapshot_path, "r", encoding="utf-8") as f:
-                    loaded = json.load(f)
-                prev_snapshot = loaded.get("formulas", {})
-            except Exception as e:
-                SDCLogger.warn(f"[SDC-006] Could not load drift snapshot: {str(e)}. First-run assumed.")
+        try:
+            prev_snapshot, full_loaded = self.load_and_migrate_snapshot(snapshot_path)
+        except SDCException:
+            raise
+        except Exception as e:
+            SDCLogger.warn(f"[SDC-006] Could not load drift snapshot: {str(e)}. First-run assumed.")
 
         violations = []
         updated_formulas = {}
@@ -1156,14 +1265,22 @@ class Phase0Compiler(object):
         for formula in formulas:
             fid = formula.get("formula_id", "")
             if not fid:
+                SDCLogger.warn("[SDC-006] Formula encountered with empty formula_id. Skipping.")
                 continue
+            if fid in updated_formulas:
+                SDCLogger.warn(f"[SDC-006] Duplicate formula_id found: {fid}. Overwriting.")
 
-            expr = str(formula.get("formula_expression", ""))
-            variables = str(formula.get("variables_and_inputs", ""))
-            explain = str(formula.get("explainability_json", ""))
+            expr = formula.get("formula_expression", "")
+            variables = formula.get("variables_and_inputs", "")
+            explain = formula.get("explainability_json", "")
 
-            current_formula_hash = self._sha256_str(expr + "|" + variables)
-            current_explain_hash = self._sha256_str(explain)
+            # Normalized representations
+            expr_norm = canonical_expr_str(expr)
+            vars_norm = canonical_json_str(variables)
+            explain_norm = canonical_json_str(explain)
+
+            current_formula_hash = self._sha256_str(f"{expr_norm}|{vars_norm}")
+            current_explain_hash = self._sha256_str(explain_norm)
 
             updated_formulas[fid] = {
                 "formula_name": formula.get("formula_name", fid),
@@ -1183,7 +1300,6 @@ class Phase0Compiler(object):
                     violations.append({
                         "formula_id": fid,
                         "formula_name": formula.get("formula_name", fid),
-                        "violation": "FORMULA_EXPRESSION_CHANGED_WITHOUT_EXPLAIN_UPDATE",
                         "detail": (
                             f"formula_expression or variables changed "
                             f"(prev: {prev_formula_hash[:12]}... → curr: {current_formula_hash[:12]}...) "
@@ -1201,32 +1317,19 @@ class Phase0Compiler(object):
             else:
                 SDCLogger.info(f"[SDC-006] {fid}: new formula, adding to snapshot.")
 
-        updated_snapshot = {
-            "snapshot_version": "1.0",
-            "generated_at": self.timestamp,
-            "description": (
-                "SHA256 hashes of formula_expression+variables and explainability_json per formula. "
-                "SDC-006 drift gate uses this to detect when a formula changes without its explain object being updated."
-            ),
-            "formulas": updated_formulas
-        }
-        return violations, updated_snapshot
+        return violations, updated_formulas
 
     def check_terminology_drift(self):
         """
         SDC-006 P1B — Banned Terminology Drift Gate (compiler-level).
 
-        Scans all .py and .js files in the app scope for banned terms.
-        Returns: list[dict] of violations, each with file, line, matched_text.
+        Scans all configured extensions in the scan scope for banned terms,
+        bypassing path-prefix matched files/directories.
         """
-        BANNED_TERMS = ["shadow ledger"]
-        EXCLUDED_FILES = {
-            "test_knowledge_governance.py",
-            "test_sdc006_mutation.py",
-            "discovery.py",
-            "compiler.py"
-        }
-
+        banned_terms = self.policy.banned_terms
+        scan_extensions = self.policy.scan_extensions
+        ignore_paths = self.policy.ignore_paths
+        
         scan_scope = self.config.get("scan_scope", ["apps/smriti_retail_os"])
         excluded_dirs = self.config.get("excluded", ["node_modules", ".git", "__pycache__"])
         violations = []
@@ -1239,19 +1342,28 @@ class Phase0Compiler(object):
             for root, dirs, files in os.walk(full_scope_path):
                 dirs[:] = [d for d in dirs if d not in excluded_dirs]
                 for filename in files:
-                    if not filename.endswith((".py", ".js")):
+                    if not filename.lower().endswith(scan_extensions):
                         continue
-                    if filename in EXCLUDED_FILES:
-                        continue
+                    
                     filepath = os.path.join(root, filename)
                     rel_path = os.path.relpath(filepath, self.repo_path).replace(os.sep, "/")
+                    
+                    # Prefix-based ignore path matching
+                    is_ignored = False
+                    for ip in ignore_paths:
+                        ip_norm = ip.replace("\\", "/").rstrip("/")
+                        if rel_path == ip_norm or rel_path.startswith(ip_norm + "/"):
+                            is_ignored = True
+                            break
+                    if is_ignored:
+                        continue
+
                     try:
                         with io.open(filepath, "r", encoding="utf-8", errors="ignore") as f:
                             for lineno, line in enumerate(f, start=1):
                                 line_lower = line.lower()
-                                for term in BANNED_TERMS:
+                                for term in banned_terms:
                                     if term in line_lower:
-                                        # Exclude CSS box-shadow property lines
                                         if "box-shadow" in line_lower or "text-shadow" in line_lower:
                                             continue
                                         violations.append({
@@ -1274,11 +1386,31 @@ class Phase0Compiler(object):
         SDC-006 P2 — Coverage Trend History.
 
         Appends one JSONL entry to docs/discovery/coverage_history.jsonl after
-        every successful SDC run. Only called when the gate passes.
-
-        metrics: dict with keys: coverage, broken_refs, drift_violations, health_score
+        every successful SDC run, skipping duplicates on the same commit hash.
         """
         history_path = os.path.join(self.repo_path, "docs", "discovery", "coverage_history.jsonl")
+        
+        # Ensure parent directory exists (Issue 12)
+        parent_dir = os.path.dirname(history_path)
+        try:
+            if not os.path.exists(parent_dir):
+                os.makedirs(parent_dir, exist_ok=True)
+        except Exception as e:
+            SDCLogger.warn(f"[SDC-006] Could not create coverage history directory: {str(e)}")
+
+        # Deduplication based on latest commit hash (Issue 7)
+        if os.path.exists(history_path):
+            try:
+                with io.open(history_path, "r", encoding="utf-8") as f:
+                    lines = [l.strip() for l in f if l.strip()]
+                if lines:
+                    last_entry = json.loads(lines[-1])
+                    if last_entry.get("commit") == self.commit:
+                        SDCLogger.info(f"[SDC-006] Coverage history already updated for commit {self.commit}. Skipping append.")
+                        return
+            except Exception as e:
+                SDCLogger.warn(f"[SDC-006] Could not check existing coverage history: {str(e)}")
+
         entry = {
             "timestamp": self.timestamp,
             "commit": self.commit,
@@ -1462,8 +1594,13 @@ class Phase0Compiler(object):
 
         total_drift_violations = len(formula_violations) + len(terminology_violations)
 
-        is_coverage_gate_passed = (avg_coverage >= 92.0) and (broken_edges == 0)
-        is_drift_gate_passed = (total_drift_violations == 0)
+        # Enforce tolerances from loaded SDCPolicy (Issue 10)
+        is_coverage_gate_passed = (avg_coverage >= self.policy.coverage_min) and (broken_edges == self.policy.broken_references_max)
+        is_drift_gate_passed = (
+            len(formula_violations) <= self.policy.formula_drift_tolerance
+        ) and (
+            len(terminology_violations) <= self.policy.banned_terminology_tolerance
+        )
 
         print("\n" + "="*50)
         print("      KNOWLEDGE COVERAGE GATE REPORT (SDC-006)    ")
@@ -1488,20 +1625,36 @@ class Phase0Compiler(object):
         print(f"STATUS: {overall_status}")
         print("="*50 + "\n")
 
-        # Coverage gate failure — SDC401
+        # Exit codes based on validation errors (Issue A)
         if not is_coverage_gate_passed:
-            sdc_exit("SDC401", "Knowledge Coverage Gate failed: Coverage < 92.0% or Broken References > 0.")
+            sdc_exit("SDC401", f"Knowledge Coverage Gate failed: Coverage < {self.policy.coverage_min}% or Broken References > {self.policy.broken_references_max}.")
 
-        # Drift gate failure — SDC402
-        if not is_drift_gate_passed:
-            sdc_exit("SDC402", f"Knowledge Drift Detected: {len(formula_violations)} formula violation(s), {len(terminology_violations)} terminology violation(s).")
+        if len(formula_violations) > self.policy.formula_drift_tolerance:
+            sdc_exit("SDC402", f"Formula Drift Detected: {len(formula_violations)} violation(s) exceeds tolerance of {self.policy.formula_drift_tolerance}.")
 
-        # Both gates passed — write updated drift snapshot
+        if len(terminology_violations) > self.policy.banned_terminology_tolerance:
+            sdc_exit("SDC403", f"Banned Terminology Drift Detected: {len(terminology_violations)} violation(s) exceeds tolerance of {self.policy.banned_terminology_tolerance}.")
+
+        # Both gates passed — write updated drift snapshot (Issue 3, 6, D)
         snapshot_path = os.path.join(self.repo_path, "sdc", "drift_snapshots", "formula_drift_snapshot.json")
         try:
             os.makedirs(os.path.dirname(snapshot_path), exist_ok=True)
+            
+            # Sort formulas alphabetically by ID to keep Git diffs clean
+            sorted_formulas = {}
+            for fid in sorted(updated_snapshot.keys()):
+                sorted_formulas[fid] = updated_snapshot[fid]
+
+            snapshot_data = {
+                "snapshot_version": "1.0",
+                "compiler_version": "1.1",
+                "policy_version": self.policy.policy_version,
+                "generated_at": self.timestamp,
+                "generator": "SDC Discovery Compiler",
+                "formulas": sorted_formulas
+            }
             with io.open(snapshot_path, "w", encoding="utf-8") as f:
-                content = json.dumps(updated_snapshot, indent=2, ensure_ascii=False)
+                content = json.dumps(snapshot_data, indent=2, ensure_ascii=False)
                 f.write(content if isinstance(content, type(u"")) else content.decode("utf-8"))
             SDCLogger.info(f"[SDC-006] Drift snapshot updated: {snapshot_path}")
         except Exception as e:
@@ -1514,6 +1667,27 @@ class Phase0Compiler(object):
             "drift_violations": total_drift_violations,
             "health_score": overall_health
         })
+
+        # Write machine-readable run report (Enhancement)
+        run_report = {
+            "status": overall_status,
+            "policy_version": self.policy.policy_version,
+            "schema_version": self.policy.schema_version,
+            "formula_count": formulas_count,
+            "formula_drift": len(formula_violations),
+            "terminology_drift": len(terminology_violations),
+            "coverage": round(avg_coverage, 4),
+            "generated_at": self.timestamp,
+            "warnings": []
+        }
+        report_path = os.path.join(out_dir, "discovery_run_report.json")
+        try:
+            with io.open(report_path, "w", encoding="utf-8") as f:
+                content = json.dumps(run_report, indent=2, ensure_ascii=False)
+                f.write(content if isinstance(content, type(u"")) else content.decode("utf-8"))
+            SDCLogger.info(f"Wrote machine-readable run report: {report_path}")
+        except Exception as e:
+            SDCLogger.warn(f"Failed to write run report: {str(e)}")
 
         print(json.dumps({
             "PHASE_0_COMPLETE": True,
@@ -1548,7 +1722,20 @@ class Phase0Compiler(object):
 if __name__ == "__main__":
     import sys
     repo_root = "d:\\Smriti_Retail_OS"
-    if len(sys.argv) > 1:
+    
+    # Standalone policy validation check (Enhancement)
+    if len(sys.argv) > 1 and sys.argv[1] in ("validate-policy", "--validate-policy"):
+        if len(sys.argv) > 2:
+            repo_root = sys.argv[2]
+        try:
+            SDCPolicy.load(repo_root)
+            sdc_exit("SDC000", "Policy validation successful.")
+        except SDCException as se:
+            sdc_exit(se.code, str(se))
+        except Exception as e:
+            sdc_exit("SDC103", f"Policy validation failed: {str(e)}")
+    
+    if len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
         repo_root = sys.argv[1]
     
     try:

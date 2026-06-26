@@ -24,22 +24,32 @@ import tempfile
 # Path bootstrap — works in both Frappe bench context and standalone Python
 # ---------------------------------------------------------------------------
 def _locate_sdc_and_repo():
-    """Locate the SDC directory and repository root."""
+    """Locate the SDC directory and repository root.
+
+    Prefers the *topmost* ancestor directory that contains sdc/discovery.py.
+    This prevents the search from stopping at the app-level copy when the
+    canonical repo root is further up.
+    """
     # Try Frappe path first
     try:
         import frappe
         app_path = frappe.get_app_path("smriti_retail_os")
         repo_root = os.path.dirname(os.path.dirname(os.path.dirname(app_path)))
     except Exception:
-        # Standalone: walk up from this test file
+        # Standalone: walk up from this test file and collect ALL ancestors
+        # that contain sdc/discovery.py — then pick the highest-level one.
         here = os.path.dirname(os.path.abspath(__file__))
-        # tests/ → smriti_retail_os/ → smriti_retail_os/ → apps/smriti_retail_os/ → root
-        repo_root = here
-        for _ in range(5):
-            candidate = os.path.join(repo_root, "sdc", "discovery.py")
-            if os.path.exists(candidate):
+        candidates = []
+        current = here
+        for _ in range(8):
+            if os.path.exists(os.path.join(current, "sdc", "discovery.py")):
+                candidates.append(current)
+            parent = os.path.dirname(current)
+            if parent == current:
                 break
-            repo_root = os.path.dirname(repo_root)
+            current = parent
+        # Pick the topmost match (fewest path components = true repo root)
+        repo_root = candidates[-1] if candidates else here
 
     sdc_path = os.path.join(repo_root, "sdc")
     if sdc_path not in sys.path:
@@ -66,14 +76,29 @@ class TestSDC006MutationDriftGate(unittest.TestCase):
         self.tmp_repo = tempfile.mkdtemp(prefix="sdc006_test_")
         # Create minimal directory structure
         os.makedirs(os.path.join(self.tmp_repo, "sdc", "drift_snapshots"), exist_ok=True)
+        os.makedirs(os.path.join(self.tmp_repo, "sdc", "rules"), exist_ok=True)
         os.makedirs(os.path.join(self.tmp_repo, "docs", "discovery"), exist_ok=True)
         os.makedirs(os.path.join(self.tmp_repo, "apps"), exist_ok=True)
+        # Seed the real policy so SDCPolicy.load() succeeds in the temp repo
+        real_policy_src = os.path.join(_repo_root, "sdc", "rules", "knowledge_health_policy.json")
+        real_policy_dst = os.path.join(self.tmp_repo, "sdc", "rules", "knowledge_health_policy.json")
+        if os.path.exists(real_policy_src):
+            shutil.copy2(real_policy_src, real_policy_dst)
 
     def tearDown(self):
         shutil.rmtree(self.tmp_repo, ignore_errors=True)
 
-    def _sha256_str(self, s):
-        return hashlib.sha256((s or "").encode("utf-8")).hexdigest()
+    def _formula_hash(self, expr, variables):
+        """Matches the compiler's formula hash: sha256(canonical_expr|canonical_vars)."""
+        from discovery import canonical_json_str, canonical_expr_str
+        expr_norm = canonical_expr_str(expr)
+        vars_norm = canonical_json_str(variables)
+        return hashlib.sha256(f"{expr_norm}|{vars_norm}".encode("utf-8")).hexdigest()
+
+    def _explain_hash(self, explain_val):
+        """Matches the compiler's explain hash: sha256(canonical_json_str(explain_val))."""
+        from discovery import canonical_json_str
+        return hashlib.sha256(canonical_json_str(explain_val).encode("utf-8")).hexdigest()
 
     # ------------------------------------------------------------------
     # Test 1: Formula expression changes but explain object NOT updated
@@ -95,11 +120,13 @@ class TestSDC006MutationDriftGate(unittest.TestCase):
             "explainability_json": json.dumps({"meaning": "original explain"})  # not updated
         }
 
-        # Snapshot uses the OLD expression hash
-        old_expr = "OLD_EXPRESSION = x + y"
-        old_vars = json.dumps({"x": "var x", "y": "var y"})
-        old_formula_hash = self._sha256_str(old_expr + "|" + old_vars)
-        old_explain_hash = self._sha256_str(json.dumps({"meaning": "original explain"}))
+        # Snapshot records the OLD formula hash, but SAME explain hash as the current formula.
+        # This means: formula changed, explain did NOT change → violation expected.
+        old_explain_content = json.dumps({"meaning": "original explain"})
+        old_formula_hash = self._formula_hash("OLD_EXPRESSION = x + y",
+                                              json.dumps({"x": "var x", "y": "var y"}))
+        # explain_hash matches what the compiler will compute for the current formula
+        same_explain_hash = self._explain_hash(old_explain_content)
 
         snapshot_path = os.path.join(_repo_root, "sdc", "drift_snapshots", "formula_drift_snapshot.json")
         original_snapshot = {}
@@ -109,10 +136,11 @@ class TestSDC006MutationDriftGate(unittest.TestCase):
 
         # Inject the old snapshot for TEST-001
         test_snapshot = copy.deepcopy(original_snapshot)
+        test_snapshot["snapshot_version"] = "1.0"
         test_snapshot.setdefault("formulas", {})["TEST-001"] = {
             "formula_name": "Test Formula",
-            "formula_hash": old_formula_hash,
-            "explain_hash": old_explain_hash,
+            "formula_hash": old_formula_hash,   # old expression → different from current
+            "explain_hash": same_explain_hash,   # same explain hash → explain NOT updated
             "last_verified": "2026-01-01T00:00:00Z"
         }
 
@@ -126,7 +154,8 @@ class TestSDC006MutationDriftGate(unittest.TestCase):
             self.assertEqual(len(violations), 1,
                 "Expected exactly 1 drift violation when formula changes but explain is not updated.")
             self.assertEqual(violations[0]["formula_id"], "TEST-001")
-            self.assertEqual(violations[0]["violation"], "FORMULA_EXPRESSION_CHANGED_WITHOUT_EXPLAIN_UPDATE")
+            self.assertIn("formula_expression or variables changed", violations[0]["detail"],
+                "Violation detail should describe that formula expression changed.")
         finally:
             # Restore original snapshot
             if original_snapshot:
@@ -153,9 +182,10 @@ class TestSDC006MutationDriftGate(unittest.TestCase):
             "explainability_json": json.dumps({"meaning": "updated explain"})  # also updated
         }
 
-        # Snapshot uses OLD hashes for BOTH expression AND explain
-        old_formula_hash = self._sha256_str("OLD_EXPR = a + b|" + json.dumps({"a": "var a"}))
-        old_explain_hash = self._sha256_str(json.dumps({"meaning": "original explain"}))  # different
+        # Snapshot records OLD hashes for BOTH formula AND explain.
+        # Current formula has NEW expression and NEW explain → both changed → no violation.
+        old_formula_hash = self._formula_hash("OLD_EXPR = a + b", json.dumps({"a": "var a"}))
+        old_explain_hash = self._explain_hash(json.dumps({"meaning": "original explain"}))
 
         snapshot_path = os.path.join(_repo_root, "sdc", "drift_snapshots", "formula_drift_snapshot.json")
         original_snapshot = {}
@@ -164,10 +194,11 @@ class TestSDC006MutationDriftGate(unittest.TestCase):
                 original_snapshot = json.load(f)
 
         test_snapshot = copy.deepcopy(original_snapshot)
+        test_snapshot["snapshot_version"] = "1.0"
         test_snapshot.setdefault("formulas", {})["TEST-002"] = {
             "formula_name": "Test Formula 2",
             "formula_hash": old_formula_hash,
-            "explain_hash": old_explain_hash,
+            "explain_hash": old_explain_hash,  # old hash → different from current (updated explain)
             "last_verified": "2026-01-01T00:00:00Z"
         }
 
@@ -253,10 +284,12 @@ class TestSDC006CoverageTrendHistory(unittest.TestCase):
         self.tmp_repo = tempfile.mkdtemp(prefix="sdc006_hist_")
         os.makedirs(os.path.join(self.tmp_repo, "docs", "discovery"), exist_ok=True)
         os.makedirs(os.path.join(self.tmp_repo, "sdc"), exist_ok=True)
-        # Minimal compiler config
-        config_path = os.path.join(self.tmp_repo, "sdc", "compiler_config.json")
-        with io.open(config_path, "w", encoding="utf-8") as f:
-            json.dump({"scan_scope": ["apps"], "excluded": [".git"], "ir_version": "1.2"}, f)
+        os.makedirs(os.path.join(self.tmp_repo, "sdc", "rules"), exist_ok=True)
+        # Seed the real policy so SDCPolicy.load() succeeds in the temp repo
+        real_policy_src = os.path.join(_repo_root, "sdc", "rules", "knowledge_health_policy.json")
+        real_policy_dst = os.path.join(self.tmp_repo, "sdc", "rules", "knowledge_health_policy.json")
+        if os.path.exists(real_policy_src):
+            shutil.copy2(real_policy_src, real_policy_dst)
 
     def tearDown(self):
         shutil.rmtree(self.tmp_repo, ignore_errors=True)

@@ -18,11 +18,15 @@ EXIT_CODES = {
     "SDC000": 0,    # Success
     "SDC101": 101,  # Repository not found
     "SDC102": 102,  # IR validation failed (Schema mismatch)
+    "SDC103": 103,  # Policy validation failed (Schema/Content error)
+    "SDC104": 104,  # Snapshot corruption / load failure
+    "SDC105": 105,  # Unsupported schema/policy version
     "SDC201": 201,  # Structural regression (Missing files / broken links)
     "SDC202": 202,  # Semantic regression warning
     "SDC301": 301,  # Dependency graph inconsistent (cycle or orphans)
     "SDC401": 401,  # Quality gate failed (coverage < threshold or broken references > 0)
-    "SDC402": 402   # Knowledge drift detected (formula changed, explain object not updated; or banned terminology found)
+    "SDC402": 402,  # Formula drift detected
+    "SDC403": 403   # Banned terminology drift detected
 }
 
 
