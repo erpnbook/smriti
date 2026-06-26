@@ -1,0 +1,1647 @@
+<!--
+  @file: smriti_retail_os/www/smriti-field-explorer.html
+  @description: SMRITI Universal Field Explorer — metadata platform for field discovery,
+                PRN mapping, print formats, barcode label design, and report column building.
+  @route: /smriti-field-explorer
+  @author: Jawahar R. Mallah <jawahar.mallah@gmail.com>
+  @date: 2026-06-26
+  @version: 1.0.0
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMRITI Universal Field Explorer</title>
+    <meta name="description" content="SMRITI Universal Field Explorer — discover, browse, and copy fields from any DocType for reports, barcode labels, and print formats.">
+    <link rel="icon" href="/assets/smriti_retail_os/images/smriti_logo.svg">
+    <style>
+        :root {
+            --navy:       #1A2B5C;
+            --blue:       #2563EB;
+            --blue-light: #3B82F6;
+            --blue-pale:  #EFF6FF;
+            --bg:         #F8FAFC;
+            --card:       #FFFFFF;
+            --text:       #0F172A;
+            --muted:      #475569;
+            --border:     #E2E8F0;
+            --shadow:     0 4px 20px rgba(26,43,92,0.07);
+            --shadow-sm:  0 2px 8px rgba(26,43,92,0.05);
+            --trans:      all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            --green:      #10B981;
+            --amber:      #F59E0B;
+            --red:        #EF4444;
+            --purple:     #8B5CF6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Header ──────────────────────────────────────────────────── */
+        header {
+            background: var(--navy);
+            color: white;
+            padding: 0 32px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            flex-shrink: 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand img { height: 32px; }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+
+        .brand-badge {
+            font-size: 11px;
+            background: rgba(255,255,255,0.15);
+            padding: 3px 9px;
+            border-radius: 20px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-header {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--trans);
+        }
+
+        .btn-header:hover { background: rgba(255,255,255,0.2); }
+
+        /* ── Layout ──────────────────────────────────────────────────── */
+        .explorer-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            height: calc(100vh - 60px);
+        }
+
+        /* ── Left Sidebar — DocType Picker ───────────────────────────── */
+        .sidebar {
+            width: 240px;
+            flex-shrink: 0;
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+
+        .sidebar-header h3 {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        #dt-search {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            transition: var(--trans);
+        }
+
+        #dt-search:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+
+        .sidebar-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .dt-group-label {
+            padding: 6px 16px 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--muted);
+        }
+
+        .dt-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+            transition: var(--trans);
+            border-left: 3px solid transparent;
+        }
+
+        .dt-item:hover { background: var(--blue-pale); color: var(--blue); }
+
+        .dt-item.active {
+            background: var(--blue-pale);
+            color: var(--blue);
+            border-left-color: var(--blue);
+            font-weight: 700;
+        }
+
+        .dt-item .dt-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            background: var(--blue-pale);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: var(--blue);
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .dt-item.active .dt-icon { background: var(--blue); color: white; }
+
+        /* ── Main Content Area ───────────────────────────────────────── */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── Tab Bar ─────────────────────────────────────────────────── */
+        .tab-bar {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 0 24px;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            height: 52px;
+        }
+
+        .tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--muted);
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            border-bottom: 3px solid transparent;
+            transition: var(--trans);
+            white-space: nowrap;
+        }
+
+        .tab:hover { color: var(--blue); background: var(--blue-pale); }
+
+        .tab.active {
+            color: var(--blue);
+            border-bottom-color: var(--blue);
+            background: var(--blue-pale);
+        }
+
+        .tab .tab-badge {
+            background: var(--blue);
+            color: white;
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        /* ── Content Panel ───────────────────────────────────────────── */
+        .content-panel {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-left { display: flex; align-items: center; gap: 10px; flex: 1; flex-wrap: wrap; }
+        .toolbar-right { display: flex; align-items: center; gap: 8px; }
+
+        .search-box {
+            position: relative;
+            min-width: 260px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            background: white;
+            transition: var(--trans);
+        }
+
+        .search-box input:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+
+        .search-box .s-icon {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .toggle-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            cursor: pointer;
+            transition: var(--trans);
+            background: white;
+            user-select: none;
+        }
+
+        .toggle-pill.on { background: var(--blue-pale); border-color: var(--blue); color: var(--blue); }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: var(--trans);
+        }
+
+        .btn-primary { background: var(--blue); color: white; }
+        .btn-primary:hover { background: #1D4ED8; }
+        .btn-outline { background: white; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
+
+        /* ── Field Table ─────────────────────────────────────────────── */
+        .scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 24px 24px;
+        }
+
+        .section-block {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--muted);
+            padding: 8px 0 6px;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 8px;
+        }
+
+        .section-title .child-badge {
+            background: var(--purple);
+            color: white;
+            font-size: 9px;
+            padding: 1px 6px;
+            border-radius: 10px;
+        }
+
+        .field-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .field-table th {
+            text-align: left;
+            padding: 8px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--muted);
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .field-table td {
+            padding: 9px 12px;
+            border-bottom: 1px solid #F1F5F9;
+            vertical-align: middle;
+        }
+
+        .field-table tr:hover td { background: var(--blue-pale); }
+
+        .field-label-cell {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+
+        .badge-custom {
+            background: #D1FAE5;
+            color: #065F46;
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-weight: 800;
+        }
+
+        .badge-req {
+            background: #FEE2E2;
+            color: #991B1B;
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-weight: 800;
+        }
+
+        .badge-type {
+            background: var(--blue-pale);
+            color: var(--blue);
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .btn-copy {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: white;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+            cursor: pointer;
+            transition: var(--trans);
+        }
+
+        .btn-copy:hover { border-color: var(--blue); color: var(--blue); }
+        .btn-copy.copied { border-color: var(--green); color: var(--green); background: #F0FDF4; }
+
+        .field-path-text {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: var(--muted);
+            background: var(--bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        /* ── Empty & Loading States ──────────────────────────────────── */
+        .state-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 60px 24px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .state-icon { font-size: 48px; opacity: 0.3; }
+        .state-title { font-size: 16px; font-weight: 700; color: var(--text); }
+        .state-desc { font-size: 13px; max-width: 380px; }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Stats Bar ───────────────────────────────────────────────── */
+        .stats-bar {
+            display: flex;
+            gap: 16px;
+            padding: 10px 24px;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .stat-pill span { color: var(--blue); font-size: 14px; font-weight: 800; }
+
+        /* ── Document Data Mode ──────────────────────────────────────── */
+        .doc-lookup-bar {
+            display: flex;
+            gap: 8px;
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+        }
+
+        .doc-lookup-bar input {
+            flex: 1;
+            padding: 9px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            transition: var(--trans);
+        }
+
+        .doc-lookup-bar input:focus { border-color: var(--blue); }
+
+        .blank-warning {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #FFFBEB;
+            border: 1px solid #FCD34D;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #92400E;
+            margin-bottom: 12px;
+        }
+
+        .blank-cell { background: #FFFBEB; color: var(--amber); font-weight: 600; }
+
+        /* ── Search Mode ─────────────────────────────────────────────── */
+        .search-results-grid {
+            display: grid;
+            gap: 8px;
+        }
+
+        .search-result-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: var(--trans);
+            cursor: pointer;
+        }
+
+        .search-result-card:hover { border-color: var(--blue); box-shadow: var(--shadow-sm); }
+
+        .src-doctype-badge {
+            background: var(--navy);
+            color: white;
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .src-info { flex: 1 }
+        .src-label { font-size: 14px; font-weight: 700; }
+        .src-path { font-size: 11px; font-family: monospace; color: var(--muted); }
+
+        /* ── Preview Mode ────────────────────────────────────────────── */
+        .preview-input-area {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .preview-paths-input {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            resize: vertical;
+            outline: none;
+        }
+
+        .preview-paths-input:focus { border-color: var(--blue); }
+
+        /* ── Relationship Tree Mode ──────────────────────────────────── */
+        .tree-node {
+            margin-left: 20px;
+            border-left: 2px solid var(--border);
+            padding-left: 12px;
+        }
+
+        .tree-node-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--trans);
+            margin: 3px 0;
+        }
+
+        .tree-node-label:hover { background: var(--blue-pale); color: var(--blue); }
+
+        .tree-link-type {
+            font-size: 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 1px 5px;
+            border-radius: 4px;
+            color: var(--muted);
+        }
+
+        /* ── Barcode Mode ────────────────────────────────────────────── */
+        .barcode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 10px;
+        }
+
+        .barcode-field-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            transition: var(--trans);
+            cursor: pointer;
+        }
+
+        .barcode-field-card:hover { border-color: var(--blue); background: var(--blue-pale); }
+
+        .barcode-field-card.selected {
+            border-color: var(--blue);
+            background: var(--blue-pale);
+            box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+        }
+
+        .bfc-id {
+            background: var(--navy);
+            color: white;
+            font-size: 9px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: 800;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .bfc-info { flex: 1; }
+        .bfc-label { font-size: 13px; font-weight: 700; }
+        .bfc-path { font-size: 10px; font-family: monospace; color: var(--muted); }
+        .bfc-doctype { font-size: 10px; color: var(--blue); font-weight: 600; }
+
+        .bfc-print-icon {
+            color: var(--green);
+            font-size: 12px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* ── Toast ───────────────────────────────────────────────────── */
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--navy);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.25s;
+            pointer-events: none;
+        }
+
+        #toast.show { opacity: 1; transform: translateY(0); }
+
+        /* ── Field ID copy button in barcode mode ─────────────────────── */
+        .btn-use-field-id {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--blue);
+            background: var(--blue);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--trans);
+        }
+
+        .btn-use-field-id:hover { background: #1D4ED8; }
+
+        /* ── Responsive tweaks ───────────────────────────────────────── */
+        @media (max-width: 900px) {
+            .sidebar { width: 180px; }
+            .barcode-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 640px) {
+            .sidebar { display: none; }
+            .barcode-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── HEADER ──────────────────────────────────────────────────────────── -->
+<header>
+    <div class="brand">
+        <img src="/assets/smriti_retail_os/images/smriti_logo.svg" alt="SMRITI" onerror="this.style.display='none'">
+        <span class="brand-name">SMRITI Retail OS</span>
+        <span class="brand-badge">FIELD EXPLORER</span>
+    </div>
+    <div class="header-actions">
+        <button class="btn-header" id="btn-export" onclick="exportFieldCatalog()">
+            ⬇ Export CSV
+        </button>
+        <a class="btn-header" href="/smriti">
+            ← Dashboard
+        </a>
+    </div>
+</header>
+
+<!-- ── MAIN LAYOUT ─────────────────────────────────────────────────────── -->
+<div class="explorer-layout">
+
+    <!-- LEFT SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>DocType</h3>
+            <input type="text" id="dt-search" placeholder="Search DocType…" oninput="filterDocTypes(this.value)">
+        </div>
+        <div class="sidebar-body" id="sidebar-list">
+            <div class="state-box"><div class="spinner"></div></div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+        <!-- TAB BAR -->
+        <div class="tab-bar">
+            <div class="tab active" id="tab-fields"   onclick="switchTab('fields')">
+                🔎 Field Explorer
+            </div>
+            <div class="tab" id="tab-docdata" onclick="switchTab('docdata')">
+                📄 Document Data
+            </div>
+            <div class="tab" id="tab-search"  onclick="switchTab('search')">
+                🔍 Cross-Search
+            </div>
+            <div class="tab" id="tab-preview" onclick="switchTab('preview')">
+                🖨 Label Preview
+            </div>
+            <div class="tab" id="tab-tree"    onclick="switchTab('tree')">
+                🌳 Relationship Tree
+            </div>
+            <div class="tab" id="tab-barcode" onclick="switchTab('barcode')">
+                📦 Barcode Mode <span class="tab-badge">IDs</span>
+            </div>
+        </div>
+
+        <!-- CONTENT PANEL -->
+        <div class="content-panel">
+
+            <!-- ── TAB: FIELD EXPLORER ───────────────────────────────── -->
+            <div id="panel-fields" class="panel-body" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+                <div class="panel-toolbar">
+                    <div class="toolbar-left">
+                        <div class="search-box">
+                            <span class="s-icon">🔎</span>
+                            <input type="text" id="fields-search" placeholder="Search label or fieldname…"
+                                   oninput="debounce(() => loadFields(), 350)()">
+                        </div>
+                        <label class="toggle-pill on" id="tog-custom" onclick="toggleFilter('custom', this)">
+                            ✦ Custom Fields
+                        </label>
+                        <label class="toggle-pill on" id="tog-standard" onclick="toggleFilter('standard', this)">
+                            ○ Standard Fields
+                        </label>
+                        <label class="toggle-pill" id="tog-hidden" onclick="toggleFilter('hidden', this)">
+                            👁 Hidden
+                        </label>
+                        <label class="toggle-pill on" id="tog-child" onclick="toggleFilter('child', this)">
+                            ⊕ Child Tables
+                        </label>
+                    </div>
+                    <div class="toolbar-right">
+                        <div class="stat-pill" id="stat-total">— fields</div>
+                    </div>
+                </div>
+                <div class="scroll-area" id="fields-content">
+                    <div class="state-box">
+                        <div class="state-icon">🔎</div>
+                        <div class="state-title">Select a DocType</div>
+                        <div class="state-desc">Choose a DocType from the left sidebar to explore its fields.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TAB: DOCUMENT DATA ────────────────────────────────── -->
+            <div id="panel-docdata" class="panel-body" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+                <div class="doc-lookup-bar">
+                    <input type="text" id="docdata-docname" placeholder="Enter Document Name / ID (e.g. ITEM-0001)…">
+                    <button class="btn-action btn-primary" onclick="loadDocumentData()">Load Document</button>
+                </div>
+                <div class="scroll-area" id="docdata-content">
+                    <div class="state-box">
+                        <div class="state-icon">📄</div>
+                        <div class="state-title">Enter Document Name</div>
+                        <div class="state-desc">Select a DocType and enter a document name to inspect all field values.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TAB: CROSS-SEARCH ─────────────────────────────────── -->
+            <div id="panel-search" class="panel-body" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+                <div class="panel-toolbar">
+                    <div class="toolbar-left">
+                        <div class="search-box" style="min-width:340px;">
+                            <span class="s-icon">🔍</span>
+                            <input type="text" id="xsearch-input" placeholder="Search across all DocTypes (e.g. gstin, barcode, mobile)…"
+                                   oninput="debounce(() => runCrossSearch(), 400)()">
+                        </div>
+                    </div>
+                    <div class="toolbar-right">
+                        <div class="stat-pill" id="xsearch-count">—</div>
+                    </div>
+                </div>
+                <div class="scroll-area" id="search-content">
+                    <div class="state-box">
+                        <div class="state-icon">🔍</div>
+                        <div class="state-title">Cross-DocType Field Search</div>
+                        <div class="state-desc">Type a keyword to find matching fields across Item, Customer, Sales Invoice, and more.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TAB: LABEL PREVIEW ────────────────────────────────── -->
+            <div id="panel-preview" class="panel-body" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+                <div class="preview-input-area">
+                    <div style="display:flex;gap:8px;align-items:flex-start;">
+                        <div style="flex:1;">
+                            <label style="font-size:12px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px;">Field Paths or Field IDs (one per line)</label>
+                            <textarea id="preview-paths" class="preview-paths-input"
+                                placeholder="ITEM_CODE&#10;ITEM_BARCODE&#10;ITEM_MRP&#10;Item.item_name&#10;Item.barcodes[].barcode"></textarea>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:6px;padding-top:18px;">
+                            <input type="text" id="preview-docname" placeholder="Document Name (e.g. ITEM-0001)"
+                                   style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;width:200px;">
+                            <button class="btn-action btn-primary" onclick="runPreview()" style="width:100%;">
+                                🖨 Preview Values
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="scroll-area" id="preview-content">
+                    <div class="state-box">
+                        <div class="state-icon">🖨</div>
+                        <div class="state-title">Label Data Preview</div>
+                        <div class="state-desc">Paste field paths or Field IDs and a document name to verify values before printing. Blank fields will be flagged in amber.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TAB: RELATIONSHIP TREE ────────────────────────────── -->
+            <div id="panel-tree" class="panel-body" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+                <div class="panel-toolbar">
+                    <div class="toolbar-left">
+                        <label style="font-size:12px;font-weight:700;color:var(--muted);">Depth:</label>
+                        <select id="tree-depth" onchange="loadRelTree()" style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;">
+                            <option value="1">1 — Direct links</option>
+                            <option value="2" selected>2 — One level deeper</option>
+                            <option value="3">3 — Full depth</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="scroll-area" id="tree-content">
+                    <div class="state-box">
+                        <div class="state-icon">🌳</div>
+                        <div class="state-title">Relationship Tree</div>
+                        <div class="state-desc">Select a DocType to see its linked documents and fields.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── TAB: BARCODE MODE ─────────────────────────────────── -->
+            <div id="panel-barcode" class="panel-body" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+                <div class="panel-toolbar">
+                    <div class="toolbar-left">
+                        <div class="search-box">
+                            <span class="s-icon">📦</span>
+                            <input type="text" id="barcode-search" placeholder="Filter by label or Field ID…"
+                                   oninput="renderBarcodeMode(this.value)">
+                        </div>
+                        <label class="toggle-pill on" id="tog-printable" onclick="toggleBarcodeFilter('printable', this)">
+                            🖨 Printable Only
+                        </label>
+                        <select id="barcode-doctype-filter" onchange="renderBarcodeMode()"
+                                style="padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;outline:none;">
+                            <option value="">All DocTypes</option>
+                        </select>
+                    </div>
+                    <div class="toolbar-right">
+                        <div class="stat-pill" id="barcode-count">— fields</div>
+                        <button class="btn-action btn-outline" onclick="copySelectedFieldIds()">⎘ Copy Selected IDs</button>
+                    </div>
+                </div>
+                <div style="padding:6px 24px;background:var(--blue-pale);border-bottom:1px solid var(--border);font-size:12px;color:var(--blue);font-weight:600;">
+                    ℹ Barcode Mode uses stable Field IDs (e.g. <code>ITEM_BARCODE</code>) — not raw paths. Label templates stay valid even if underlying schema changes.
+                </div>
+                <div class="scroll-area" id="barcode-content">
+                    <div class="state-box"><div class="spinner"></div></div>
+                </div>
+            </div>
+
+        </div><!-- .content-panel -->
+    </div><!-- .main-content -->
+</div><!-- .explorer-layout -->
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// SMRITI Universal Field Explorer — Frontend Controller
+// ─────────────────────────────────────────────────────────────────────────────
+
+const UFE = {
+    currentDoctype: '{{ initial_doctype }}' || 'Item',
+    currentTab: '{{ initial_mode }}' || 'fields',
+    filters: { custom: true, standard: true, hidden: false, child: true },
+    barcodeFilters: { printable: true },
+    fieldIdRegistry: [],
+    selectedFieldIds: new Set(),
+    allDocTypes: {},
+};
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadDocTypeList();
+    loadFieldIdRegistry();
+
+    const initialDt = UFE.currentDoctype;
+    if (initialDt) setActiveDoctype(initialDt);
+
+    const initialTab = UFE.currentTab;
+    if (initialTab) switchTab(initialTab);
+
+    const initialSearch = '{{ initial_search }}';
+    if (initialSearch && initialTab === 'search') {
+        document.getElementById('xsearch-input').value = initialSearch;
+        runCrossSearch();
+    }
+});
+
+// ── DocType List ──────────────────────────────────────────────────────────────
+async function loadDocTypeList() {
+    try {
+        const res = await frappe.call({
+            method: 'smriti_retail_os.api.field_explorer_api.get_doctype_list',
+            freeze: false,
+        });
+        const data = res.message || {};
+        const modules = data.modules || {};
+        UFE.allDocTypes = modules;
+
+        const sidebar = document.getElementById('sidebar-list');
+        sidebar.innerHTML = '';
+
+        // Priority order for retail
+        const priority = [
+            'Item', 'Customer', 'Supplier', 'Sales Invoice', 'POS Invoice',
+            'Purchase Order', 'Purchase Receipt', 'Payment Entry',
+            'Stock Entry', 'Delivery Note', 'Sales Order',
+        ];
+
+        // Pinned section
+        const pinnedGroup = document.createElement('div');
+        pinnedGroup.innerHTML = '<div class="dt-group-label">Frequently Used</div>';
+        priority.forEach(dt => {
+            if (Object.values(modules).flat().includes(dt) || true) {
+                pinnedGroup.appendChild(makeDtItem(dt));
+            }
+        });
+        sidebar.appendChild(pinnedGroup);
+
+        // All by module
+        Object.keys(modules).sort().forEach(mod => {
+            const group = document.createElement('div');
+            group.innerHTML = `<div class="dt-group-label">${escHtml(mod)}</div>`;
+            (modules[mod] || []).sort().forEach(dt => {
+                if (!priority.includes(dt)) {
+                    group.appendChild(makeDtItem(dt));
+                }
+            });
+            if (group.querySelectorAll('.dt-item').length > 0) sidebar.appendChild(group);
+        });
+
+        // Set active
+        highlightActiveDt(UFE.currentDoctype);
+    } catch (e) {
+        console.error('UFE: Failed to load DocType list', e);
+        document.getElementById('sidebar-list').innerHTML = '<div class="state-box"><div class="state-desc">Failed to load DocTypes</div></div>';
+    }
+}
+
+function makeDtItem(dt) {
+    const el = document.createElement('div');
+    el.className = 'dt-item';
+    el.dataset.dt = dt;
+    el.innerHTML = `<div class="dt-icon">${escHtml(dt[0])}</div>${escHtml(dt)}`;
+    el.onclick = () => setActiveDoctype(dt);
+    return el;
+}
+
+function filterDocTypes(query) {
+    const q = query.toLowerCase();
+    document.querySelectorAll('.dt-item').forEach(el => {
+        const dt = (el.dataset.dt || '').toLowerCase();
+        el.style.display = dt.includes(q) ? '' : 'none';
+    });
+}
+
+function setActiveDoctype(dt) {
+    UFE.currentDoctype = dt;
+    highlightActiveDt(dt);
+    // Reload current tab content
+    const tab = UFE.currentTab;
+    if (tab === 'fields') loadFields();
+    else if (tab === 'tree') loadRelTree();
+    else if (tab === 'barcode') renderBarcodeMode();
+}
+
+function highlightActiveDt(dt) {
+    document.querySelectorAll('.dt-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.dt === dt);
+    });
+}
+
+// ── Tab Switching ─────────────────────────────────────────────────────────────
+function switchTab(tabId) {
+    UFE.currentTab = tabId;
+    ['fields', 'docdata', 'search', 'preview', 'tree', 'barcode'].forEach(t => {
+        document.getElementById('tab-' + t).classList.toggle('active', t === tabId);
+        const p = document.getElementById('panel-' + t);
+        if (p) p.style.display = t === tabId ? 'flex' : 'none';
+    });
+
+    // Trigger load on first switch
+    if (tabId === 'fields' && UFE.currentDoctype) loadFields();
+    if (tabId === 'tree' && UFE.currentDoctype) loadRelTree();
+    if (tabId === 'barcode') renderBarcodeMode();
+}
+
+// ── Field Explorer Tab ────────────────────────────────────────────────────────
+async function loadFields() {
+    const dt = UFE.currentDoctype;
+    if (!dt) return;
+
+    const content = document.getElementById('fields-content');
+    content.innerHTML = '<div class="state-box"><div class="spinner"></div></div>';
+
+    const search = document.getElementById('fields-search').value.trim();
+
+    try {
+        const res = await frappe.call({
+            method: 'smriti_retail_os.api.field_explorer_api.get_doctype_fields',
+            args: {
+                doctype:          dt,
+                show_standard:    UFE.filters.standard,
+                show_custom:      UFE.filters.custom,
+                show_hidden:      UFE.filters.hidden,
+                show_child_tables: UFE.filters.child,
+                search:           search || null,
+            },
+            freeze: false,
+        });
+
+        const data = res.message || {};
+        document.getElementById('stat-total').innerHTML =
+            `<span>${data.total_fields || 0}</span> fields`;
+
+        if (!data.sections || data.sections.length === 0) {
+            content.innerHTML = '<div class="state-box"><div class="state-icon">🔎</div><div class="state-title">No Fields Found</div><div class="state-desc">Try adjusting filters or search term.</div></div>';
+            return;
+        }
+
+        content.innerHTML = '';
+        data.sections.forEach(section => {
+            const block = document.createElement('div');
+            block.className = 'section-block';
+
+            const isChild = !!section.child_doctype;
+            block.innerHTML = `
+                <div class="section-title">
+                    ${isChild ? '⊕' : '§'} ${escHtml(section.section)}
+                    ${isChild ? `<span class="child-badge">Child: ${escHtml(section.child_doctype)}</span>` : ''}
+                </div>
+                <table class="field-table">
+                    <thead>
+                        <tr>
+                            <th>Label</th>
+                            <th>Field Name</th>
+                            <th>Type</th>
+                            <th>Path</th>
+                            <th>Copy</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-${escHtml(section.section.replace(/\s/g, '_'))}"></tbody>
+                </table>`;
+            content.appendChild(block);
+
+            const tbody = block.querySelector('tbody');
+            (section.fields || []).forEach(f => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="field-label-cell">
+                            ${escHtml(f.label)}
+                            ${f.is_custom ? '<span class="badge-custom">C</span>' : ''}
+                            ${f.mandatory ? '<span class="badge-req">*</span>' : ''}
+                        </div>
+                    </td>
+                    <td><code style="font-size:12px;color:var(--muted)">${escHtml(f.fieldname)}</code></td>
+                    <td><span class="badge-type">${escHtml(f.fieldtype)}</span></td>
+                    <td><span class="field-path-text">${escHtml(f.path)}</span></td>
+                    <td>
+                        <button class="btn-copy" onclick="copyPath('${escHtml(f.path)}', this)">⎘ Copy Path</button>
+                    </td>`;
+                tbody.appendChild(tr);
+            });
+        });
+
+    } catch (e) {
+        content.innerHTML = `<div class="state-box"><div class="state-desc">Error: ${escHtml(String(e))}</div></div>`;
+    }
+}
+
+function toggleFilter(key, el) {
+    const map = { custom: 'custom', standard: 'standard', hidden: 'hidden', child: 'child' };
+    UFE.filters[map[key]] = !UFE.filters[map[key]];
+    el.classList.toggle('on', UFE.filters[map[key]]);
+    loadFields();
+}
+
+// ── Document Data Tab ─────────────────────────────────────────────────────────
+async function loadDocumentData() {
+    const dt = UFE.currentDoctype;
+    const docname = document.getElementById('docdata-docname').value.trim();
+    const content = document.getElementById('docdata-content');
+
+    if (!dt) { showToast('Please select a DocType first.'); return; }
+    if (!docname) { showToast('Please enter a Document Name.'); return; }
+
+    content.innerHTML = '<div class="state-box"><div class="spinner"></div></div>';
+
+    try {
+        const res = await frappe.call({
+            method: 'smriti_retail_os.api.field_explorer_api.get_document_data',
+            args: { doctype: dt, docname: docname },
+            freeze: false,
+        });
+
+        const data = res.message || {};
+        content.innerHTML = '';
+
+        if (data.blank_count > 0) {
+            const warn = document.createElement('div');
+            warn.className = 'blank-warning';
+            warn.innerHTML = `⚠ ${data.blank_count} blank field(s) detected — these will print empty.`;
+            content.appendChild(warn);
+        }
+
+        // Group by section
+        const sections = {};
+        (data.fields || []).forEach(f => {
+            const sec = f.section || 'General';
+            if (!sections[sec]) sections[sec] = [];
+            sections[sec].push(f);
+        });
+
+        Object.keys(sections).forEach(sec => {
+            const block = document.createElement('div');
+            block.className = 'section-block';
+            block.innerHTML = `
+                <div class="section-title">§ ${escHtml(sec)}</div>
+                <table class="field-table">
+                    <thead>
+                        <tr><th>Label</th><th>Field Name</th><th>Value</th><th>Status</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>`;
+            content.appendChild(block);
+
+            const tbody = block.querySelector('tbody');
+            sections[sec].forEach(f => {
+                const tr = document.createElement('tr');
+                const valDisplay = f.value !== null && f.value !== undefined ? escHtml(String(f.value)) : '<em style="color:var(--muted)">—</em>';
+                tr.innerHTML = `
+                    <td class="field-label-cell">
+                        ${escHtml(f.label)}
+                        ${f.is_custom ? '<span class="badge-custom">C</span>' : ''}
+                    </td>
+                    <td><code style="font-size:12px;color:var(--muted)">${escHtml(f.fieldname)}</code></td>
+                    <td class="${f.blank ? 'blank-cell' : ''}">${valDisplay}</td>
+                    <td>${f.blank ? '⚠ Blank' : '✓'}</td>`;
+                tbody.appendChild(tr);
+            });
+        });
+
+        // Child tables
+        if (data.child_tables && Object.keys(data.child_tables).length > 0) {
+            Object.keys(data.child_tables).forEach(tableName => {
+                const rows = data.child_tables[tableName];
+                if (!rows || rows.length === 0) return;
+                const block = document.createElement('div');
+                block.className = 'section-block';
+                const cols = Object.keys(rows[0]);
+                block.innerHTML = `
+                    <div class="section-title">⊕ ${escHtml(tableName)} <span class="child-badge">Child Table — ${rows.length} rows</span></div>
+                    <table class="field-table">
+                        <thead><tr>${cols.map(c => `<th>${escHtml(c)}</th>`).join('')}</tr></thead>
+                        <tbody>${rows.map(row => `<tr>${cols.map(c => `<td>${escHtml(String(row[c] ?? ''))}</td>`).join('')}</tr>`).join('')}</tbody>
+                    </table>`;
+                content.appendChild(block);
+            });
+        }
+
+    } catch (e) {
+        content.innerHTML = `<div class="state-box"><div class="state-desc">Error: ${escHtml(String(e))}</div></div>`;
+    }
+}
+
+// ── Cross-Search Tab ──────────────────────────────────────────────────────────
+async function runCrossSearch() {
+    const query = document.getElementById('xsearch-input').value.trim();
+    const content = document.getElementById('search-content');
+
+    if (!query || query.length < 2) {
+        document.getElementById('xsearch-count').innerHTML = '—';
+        content.innerHTML = '<div class="state-box"><div class="state-icon">🔍</div><div class="state-title">Type to Search</div><div class="state-desc">Enter at least 2 characters to search across DocTypes.</div></div>';
+        return;
+    }
+
+    content.innerHTML = '<div class="state-box"><div class="spinner"></div></div>';
+
+    try {
+        const res = await frappe.call({
+            method: 'smriti_retail_os.api.field_explorer_api.search_fields',
+            args: { query: query },
+            freeze: false,
+        });
+
+        const results = res.message || [];
+        document.getElementById('xsearch-count').innerHTML = `<span>${results.length}</span> results`;
+
+        if (results.length === 0) {
+            content.innerHTML = '<div class="state-box"><div class="state-icon">🔍</div><div class="state-title">No Results</div><div class="state-desc">Try a different search term.</div></div>';
+            return;
+        }
+
+        content.innerHTML = '';
+        const grid = document.createElement('div');
+        grid.className = 'search-results-grid';
+
+        results.forEach(f => {
+            const card = document.createElement('div');
+            card.className = 'search-result-card';
+            card.innerHTML = `
+                <span class="src-doctype-badge">${escHtml(f.doctype)}</span>
+                <div class="src-info">
+                    <div class="src-label">
+                        ${escHtml(f.label)}
+                        ${f.is_custom ? '<span class="badge-custom">C</span>' : ''}
+                    </div>
+                    <div class="src-path">${escHtml(f.path)}</div>
+                </div>
+                <span class="badge-type">${escHtml(f.fieldtype)}</span>
+                <button class="btn-copy" onclick="copyPath('${escHtml(f.path)}', this)">⎘ Copy</button>`;
+            grid.appendChild(card);
+        });
+
+        content.appendChild(grid);
+
+    } catch (e) {
+        content.innerHTML = `<div class="state-box"><div class="state-desc">Error: ${escHtml(String(e))}</div></div>`;
+    }
+}
+
+// ── Label Preview Tab ─────────────────────────────────────────────────────────
+async function runPreview() {
+    const dt = UFE.currentDoctype;
+    const docname = document.getElementById('preview-docname').value.trim();
+    const pathsRaw = document.getElementById('preview-paths').value.trim();
+    const content = document.getElementById('preview-content');
+
+    if (!dt) { showToast('Select a DocType first.'); return; }
+    if (!docname) { showToast('Enter a Document Name.'); return; }
+    if (!pathsRaw) { showToast('Enter field paths or Field IDs.'); return; }
+
+    const paths = pathsRaw.split('\n').map(p => p.trim()).filter(Boolean);
+    content.innerHTML = '<div class="state-box"><div class="spinner"></div></div>';
+
+    try {
+        const res = await frappe.call({
+            method: 'smriti_retail_os.api.field_explorer_api.resolve_label_preview',
+            args: { doctype: dt, docname: docname, field_paths: paths },
+            freeze: false,
+        });
+
+        const data = res.message || {};
+        content.innerHTML = '';
+
+        if (data.warning) {
+            const warn = document.createElement('div');
+            warn.className = 'blank-warning';
+            warn.innerHTML = `⚠ ${escHtml(data.warning)}`;
+            content.appendChild(warn);
+        }
+
+        const table = document.createElement('table');
+        table.className = 'field-table';
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>Field ID / Path</th>
+                    <th>Label</th>
+                    <th>Resolved Value</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${(data.resolved || []).map(r => `
+                    <tr>
+                        <td><span class="field-path-text">${escHtml(r.field_id || r.path)}</span></td>
+                        <td>${escHtml(r.label)}</td>
+                        <td class="${r.blank ? 'blank-cell' : ''}">${r.value !== null && r.value !== undefined ? escHtml(String(r.value)) : '<em style="color:var(--muted)">—</em>'}</td>
+                        <td>${r.error ? '⚠ Error' : r.blank ? '⚠ Blank' : '✓ OK'}</td>
+                    </tr>`).join('')}
+            </tbody>`;
+        content.appendChild(table);
+
+    } catch (e) {
+        content.innerHTML = `<div class="state-box"><div class="state-desc">Error: ${escHtml(String(e))}</div></div>`;
+    }
+}
+
+// ── Relationship Tree Tab ─────────────────────────────────────────────────────
+async function loadRelTree() {
+    const dt = UFE.currentDoctype;
+    if (!dt) return;
+
+    const depth = parseInt(document.getElementById('tree-depth').value) || 2;
+    const content = document.getElementById('tree-content');
+    content.innerHTML = '<div class="state-box"><div class="spinner"></div></div>';
+
+    try {
+        const res = await frappe.call({
+            method: 'smriti_retail_os.api.field_explorer_api.get_doctype_tree',
+            args: { doctype: dt, depth: depth },
+            freeze: false,
+        });
+
+        const data = res.message || {};
+        content.innerHTML = '';
+        content.appendChild(renderTreeNode(data, true));
+
+    } catch (e) {
+        content.innerHTML = `<div class="state-box"><div class="state-desc">Error: ${escHtml(String(e))}</div></div>`;
+    }
+}
+
+function renderTreeNode(node, isRoot) {
+    const el = document.createElement('div');
+
+    const label = document.createElement('div');
+    label.className = 'tree-node-label';
+    label.style.fontWeight = isRoot ? '800' : '600';
+    label.style.color = isRoot ? 'var(--navy)' : 'var(--text)';
+    label.innerHTML = `${isRoot ? '📦' : '🔗'} ${escHtml(node.fieldname ? `${node.fieldname} →` : '')} <strong>${escHtml(node.doctype || node.linked_doctype || '')}</strong>`;
+    if (node.link_type) {
+        label.innerHTML += ` <span class="tree-link-type">${escHtml(node.link_type)}</span>`;
+    }
+    label.onclick = () => {
+        if (node.doctype) {
+            setActiveDoctype(node.doctype);
+            switchTab('fields');
+        }
+    };
+    el.appendChild(label);
+
+    if (node.children && node.children.length > 0) {
+        const childContainer = document.createElement('div');
+        childContainer.className = 'tree-node';
+        node.children.forEach(child => {
+            childContainer.appendChild(renderTreeNode(child, false));
+        });
+        el.appendChild(childContainer);
+    }
+
+    return el;
+}
+
+// ── Barcode Mode Tab ──────────────────────────────────────────────────────────
+async function loadFieldIdRegistry() {
+    try {
+        const res = await frappe.call({
+            method: 'smriti_retail_os.api.field_explorer_api.get_field_id_registry',
+            freeze: false,
+        });
+        UFE.fieldIdRegistry = res.message || [];
+
+        // Populate DocType filter dropdown
+        const dtFilter = document.getElementById('barcode-doctype-filter');
+        const doctypes = [...new Set(UFE.fieldIdRegistry.map(f => f.doctype))].sort();
+        doctypes.forEach(dt => {
+            const opt = document.createElement('option');
+            opt.value = dt;
+            opt.textContent = dt;
+            dtFilter.appendChild(opt);
+        });
+
+        // Render if barcode tab is active
+        if (UFE.currentTab === 'barcode') renderBarcodeMode();
+
+    } catch (e) {
+        console.error('UFE: Failed to load Field ID Registry', e);
+    }
+}
+
+function renderBarcodeMode(searchOverride) {
+    const search = (searchOverride !== undefined ? searchOverride : (document.getElementById('barcode-search')?.value || '')).toLowerCase();
+    const printableOnly = UFE.barcodeFilters.printable;
+    const dtFilter = document.getElementById('barcode-doctype-filter')?.value || '';
+    const content = document.getElementById('barcode-content');
+
+    if (!UFE.fieldIdRegistry || UFE.fieldIdRegistry.length === 0) {
+        content.innerHTML = '<div class="state-box"><div class="spinner"></div></div>';
+        return;
+    }
+
+    let fields = UFE.fieldIdRegistry;
+    if (printableOnly) fields = fields.filter(f => f.printable);
+    if (dtFilter) fields = fields.filter(f => f.doctype === dtFilter);
+    if (search) {
+        fields = fields.filter(f =>
+            f.label.toLowerCase().includes(search) ||
+            f.field_id.toLowerCase().includes(search) ||
+            f.fieldname.toLowerCase().includes(search)
+        );
+    }
+
+    document.getElementById('barcode-count').innerHTML = `<span>${fields.length}</span> fields`;
+
+    if (fields.length === 0) {
+        content.innerHTML = '<div class="state-box"><div class="state-icon">📦</div><div class="state-title">No Fields</div><div class="state-desc">Adjust filters to see more fields.</div></div>';
+        return;
+    }
+
+    content.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'barcode-grid';
+
+    fields.forEach(f => {
+        const card = document.createElement('div');
+        card.className = 'barcode-field-card' + (UFE.selectedFieldIds.has(f.field_id) ? ' selected' : '');
+        card.dataset.fieldId = f.field_id;
+        card.innerHTML = `
+            <div class="bfc-id">${escHtml(f.field_id)}</div>
+            <div class="bfc-info">
+                <div class="bfc-label">${escHtml(f.label)}</div>
+                <div class="bfc-doctype">${escHtml(f.doctype)}</div>
+                <div class="bfc-path">${escHtml(f.path)}</div>
+            </div>
+            ${f.printable ? '<div class="bfc-print-icon">🖨</div>' : ''}`;
+
+        card.onclick = (e) => {
+            if (e.target.closest('.btn-copy') || e.target.closest('.btn-use-field-id')) return;
+            toggleSelectFieldId(f.field_id, card);
+        };
+
+        // Copy button area
+        const actions = document.createElement('div');
+        actions.style.cssText = 'display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;';
+        actions.innerHTML = `
+            <button class="btn-copy" onclick="copyPath('${escHtml(f.field_id)}', this)">⎘ ID</button>
+            <button class="btn-copy" onclick="copyPath('${escHtml(f.path)}', this)">⎘ Path</button>`;
+        card.appendChild(actions);
+
+        grid.appendChild(card);
+    });
+
+    content.appendChild(grid);
+}
+
+function toggleSelectFieldId(fieldId, card) {
+    if (UFE.selectedFieldIds.has(fieldId)) {
+        UFE.selectedFieldIds.delete(fieldId);
+        card.classList.remove('selected');
+    } else {
+        UFE.selectedFieldIds.add(fieldId);
+        card.classList.add('selected');
+    }
+}
+
+function copySelectedFieldIds() {
+    if (UFE.selectedFieldIds.size === 0) { showToast('No fields selected.'); return; }
+    const ids = [...UFE.selectedFieldIds].join('\n');
+    navigator.clipboard.writeText(ids).then(() => {
+        showToast(`Copied ${UFE.selectedFieldIds.size} Field ID(s) to clipboard`);
+    });
+}
+
+function toggleBarcodeFilter(key, el) {
+    UFE.barcodeFilters[key] = !UFE.barcodeFilters[key];
+    el.classList.toggle('on', UFE.barcodeFilters[key]);
+    renderBarcodeMode();
+}
+
+// ── Export ────────────────────────────────────────────────────────────────────
+async function exportFieldCatalog() {
+    const dt = UFE.currentDoctype;
+    if (!dt) { showToast('Select a DocType first.'); return; }
+
+    try {
+        const res = await frappe.call({
+            method: 'smriti_retail_os.api.field_explorer_api.get_doctype_fields',
+            args: { doctype: dt, show_standard: true, show_custom: true, show_hidden: true, show_child_tables: true },
+            freeze: false,
+        });
+
+        const data = res.message || {};
+        const rows = [['Section', 'Label', 'Field Name', 'Type', 'Mandatory', 'Custom', 'Path']];
+
+        (data.sections || []).forEach(s => {
+            (s.fields || []).forEach(f => {
+                rows.push([
+                    s.section, f.label, f.fieldname, f.fieldtype,
+                    f.mandatory ? 'Yes' : 'No',
+                    f.is_custom ? 'Yes' : 'No',
+                    f.path
+                ]);
+            });
+        });
+
+        const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `SMRITI_Field_Catalog_${dt}_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(`Exported field catalog for ${dt}`);
+
+    } catch (e) {
+        showToast('Export failed. Please try again.');
+    }
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function copyPath(path, btn) {
+    navigator.clipboard.writeText(path).then(() => {
+        if (btn) {
+            const orig = btn.innerHTML;
+            btn.classList.add('copied');
+            btn.innerHTML = '✓ Copied';
+            setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 1500);
+        }
+        showToast(`Copied: ${path}`);
+    }).catch(() => {
+        showToast('Copy failed. Please copy manually.');
+    });
+}
+
+let _toastTimer;
+function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+function escHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function debounce(fn, delay) {
+    let t;
+    return function(...args) {
+        clearTimeout(t);
+        t = setTimeout(() => fn.apply(this, args), delay);
+    };
+}
+</script>
+
+</body>
+</html>

@@ -393,6 +393,15 @@ doc_events = {
     },
     "SMRITI Attribution Ledger": {
         "after_insert": "smriti_retail_os.sfm.service.commission_service.process_attribution_ledger_insert"
+    },
+    # UFE — Universal Field Explorer: auto-invalidate metadata cache when
+    # custom fields or DocType definitions change. New fields appear in
+    # the Field Explorer within seconds without a bench restart.
+    "Custom Field": {
+        "on_update": "smriti_retail_os.services.field_explorer_service.invalidate_ufe_cache"
+    },
+    "DocType": {
+        "on_update": "smriti_retail_os.services.field_explorer_service.invalidate_ufe_cache"
     }
 }
 
@@ -757,6 +766,12 @@ website_route_rules = [
         # License & Registration — served from www/smriti-license.html + www/smriti-license.py
         "from_route": "/smriti-license",
         "to_route": "smriti-license"
+    },
+    {
+        # SMRITI Universal Field Explorer — metadata discovery for fields, barcode, PRN, reports.
+        # Served from www/smriti-field-explorer.html + www/smriti-field-explorer.py
+        "from_route": "/smriti-field-explorer",
+        "to_route": "smriti-field-explorer"
     }
 ]
 
