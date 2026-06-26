@@ -990,18 +990,56 @@ def get_style_details(article_no):
     
     sizes = []
     color_val = ""
-    for var in variants:
-        size_val = frappe.db.get_value("Item Variant Attribute", {"parent": var.name, "attribute": "Size"}, "attribute_value") or ""
-        color_val = frappe.db.get_value("Item Variant Attribute", {"parent": var.name, "attribute": "Color"}, "attribute_value") or ""
-        barcode = frappe.db.get_value("Item Barcode", {"parent": var.name}, "barcode") or ""
-        sizes.append({
-            "variant_code": var.name,
-            "size": size_val,
-            "barcode": barcode,
-            "mrp": var.custom_mrp,
-            "cost": var.valuation_rate
-        })
-        
+
+    if variants:
+        variant_names = [v.name for v in variants]
+
+        # Bulk fetch all Size + Color attributes for all variants (1 query instead of 2×N)
+        all_attrs = frappe.get_all(
+            "Item Variant Attribute",
+            filters={
+                "parent": ["in", variant_names],
+                "attribute": ["in", ["Size", "Color"]]
+            },
+            fields=["parent", "attribute", "attribute_value"]
+        )
+        attr_map = {}  # {variant_name: {"Size": val, "Color": val}}
+        for a in all_attrs:
+            attr_map.setdefault(a.parent, {})[a.attribute] = a.attribute_value
+
+        # Bulk fetch primary barcodes for all variants (1 query instead of N)
+        all_barcodes = frappe.get_all(
+            "Item Barcode",
+            filters={"parent": ["in", variant_names]},
+            fields=["parent", "barcode"],
+            order_by="idx asc"  # first barcode = primary
+        )
+        barcode_map = {}
+        for b in all_barcodes:
+            if b.parent not in barcode_map:  # first occurrence = primary
+                barcode_map[b.parent] = b.barcode
+
+        for var in variants:
+            attrs = attr_map.get(var.name, {})
+            sizes.append({
+                "variant_code": var.name,
+                "size":         attrs.get("Size", ""),
+                "barcode":      barcode_map.get(var.name, ""),
+                "mrp":          var.custom_mrp,
+                "cost":         var.valuation_rate,
+            })
+
+        # Collect all unique colors across all variants.
+        # Most footwear styles are single-color (one style = one color family),
+        # but multi-color styles (e.g. combo packs) are handled by joining.
+        unique_colors = list(dict.fromkeys(
+            attr_map.get(v.name, {}).get("Color", "")
+            for v in variants
+            if attr_map.get(v.name, {}).get("Color", "")
+        ))
+        color_val = unique_colors[0] if len(unique_colors) == 1 else ", ".join(unique_colors)
+
+
     return {
         "exists": True,
         "description": doc.item_name,

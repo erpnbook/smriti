@@ -1,0 +1,108 @@
+# SMRITI Retail OS — CI Pipeline
+#
+# What runs here (NO live Frappe instance required):
+#   1. Python syntax check  — py_compile on all *.py files
+#   2. SDC compiler         — sdc/discovery.py must exit 0
+#   3. Architecture fitness — file-scanning governance tests (no DB)
+#   4. SDC mutation tests   — pure Python file-based tests
+#
+# What does NOT run here (requires live Frappe + DB):
+#   - test_billing_api, test_barcode_api, test_psv_*, test_cge_*, etc.
+#   Full integration tests: bench run-tests --app smriti_retail_os
+#   Run these manually on staging or via a self-hosted runner with a Frappe bench.
+#
+# Trigger: every push to main, every pull request targeting main
+
+name: SMRITI CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  smriti-static-gate:
+    name: Static Quality Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Python setup ──────────────────────────────────────────────────────
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # ── Install test deps (no Frappe, pure Python only) ───────────────────
+      - name: Install test dependencies
+        run: |
+          pip install --quiet pytest
+          # No frappe install — these tests are explicitly Frappe-free
+
+      # ── 1. Syntax Check ───────────────────────────────────────────────────
+      - name: Python syntax check — all app files
+        run: |
+          echo "=== SMRITI Syntax Gate ==="
+          FAILED=0
+          find smriti_retail_os -name "*.py" | while read f; do
+            python -m py_compile "$f" || { echo "SYNTAX ERROR: $f"; FAILED=1; }
+          done
+          # Check SDC files
+          find sdc -name "*.py" 2>/dev/null | while read f; do
+            python -m py_compile "$f" || { echo "SYNTAX ERROR: $f"; FAILED=1; }
+          done
+          if [ $FAILED -ne 0 ]; then
+            echo "FAIL: Syntax errors found."
+            exit 1
+          fi
+          echo "OK: All Python files pass syntax check."
+
+      # ── 2. SDC Compiler — Knowledge Governance ───────────────────────────
+      - name: SDC compiler — exit code must be 0
+        run: |
+          echo "=== SDC Knowledge Governance Compiler ==="
+          python sdc/discovery.py
+          echo "OK: SDC compiler passed."
+        env:
+          PYTHONPATH: "."
+
+      # ── 3. Architecture Fitness Tests — Frappe-free file scanning ─────────
+      - name: Architecture fitness tests
+        run: |
+          echo "=== Architecture Fitness Gate ==="
+          # These 4 tests scan source files — no DB required
+          python -m pytest smriti_retail_os/tests/test_knowledge_governance.py \
+            -k "test_no_hardcoded_evidence_badge or test_no_banned_terminology or test_every_formula_has_explain_object or test_no_orphan_knowledge_objects" \
+            -v
+        env:
+          PYTHONPATH: "."
+
+      # ── 4. SDC-006 Mutation Tests — pure Python ───────────────────────────
+      - name: SDC-006 mutation tests
+        run: |
+          echo "=== SDC-006 Mutation Tests ==="
+          python -m pytest smriti_retail_os/tests/test_sdc006_mutation.py \
+            -v
+        env:
+          PYTHONPATH: "."
+
+      # ── Summary ───────────────────────────────────────────────────────────
+      - name: CI gate summary
+        if: always()
+        run: |
+          echo ""
+          echo "==================================================="
+          echo " SMRITI Static Quality Gate Complete"
+          echo "==================================================="
+          echo " Syntax check:             done"
+          echo " SDC compiler:             done"
+          echo " Architecture fitness:     done"
+          echo " SDC-006 mutation tests:   done"
+          echo ""
+          echo " Full integration tests → run manually:"
+          echo "   bench run-tests --app smriti_retail_os"
+          echo "==================================================="

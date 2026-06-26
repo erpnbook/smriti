@@ -1708,6 +1708,13 @@ def _process_print_job(job_id=None, print_job_id=None):
         doc.save(ignore_permissions=True)
         frappe.db.commit()
 
+        # Write to Frappe Error Log — visible at /app/error-log for administrators.
+        # log_print_job() writes to local file + Activity Log, but not Error Log.
+        frappe.log_error(
+            title=f"SMRITI Print Job Failed: {job_id}",
+            message=f"Printer: {doc.printer_ip}:{doc.printer_port}\nTemplate: {doc.template_name}\nError: {str(e)}"
+        )
+
         # Publish realtime failed event
         frappe.publish_realtime(
             "smriti.barcode.print_status",
@@ -1718,10 +1725,10 @@ def _process_print_job(job_id=None, print_job_id=None):
             },
             user=doc.created_by or "Administrator"
         )
-        
-        # Log Failure
+
+        # Log Failure to local file + Activity Log
         log_print_job(doc.template_name, doc.printer_ip, doc.print_qty, 0, error_message=str(e))
-        
+
         # Log Audit event: SMRITI Print Job Failed
         try:
             frappe.get_doc({
@@ -1735,11 +1742,12 @@ def _process_print_job(job_id=None, print_job_id=None):
             frappe.db.commit()
         except Exception as le:
             frappe.log_error(f"Error logging print job failed: {str(le)}")
-            
+
         raise e
     finally:
         # always runs cleanup
         pass
+
 
 
 @frappe.whitelist()
