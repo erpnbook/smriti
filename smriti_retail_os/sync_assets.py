@@ -150,6 +150,13 @@ def _run_sync():
     # ── Step 4: Build assets.json by merging bench manifest + auto-discovery ──
     _build_assets_json(sites_assets_dir, bench_assets_dir, apps)
 
+    # ── Step 5: Execute Status Sentinel (S³) to generate initial baseline status JSON ──
+    try:
+        from smriti_retail_os.status import status_sentinel
+        status_sentinel.run()
+    except Exception as e:
+        print(f"[SMRITI] Warning: could not run Status Sentinel during asset sync: {e}")
+
     print("[SMRITI] Asset sync complete — physical files now in sites/assets/ (shared volume).")
 
 
