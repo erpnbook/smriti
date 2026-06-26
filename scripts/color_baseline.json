@@ -329,6 +329,31 @@
       "hex": 12,
       "rgba": 10,
       "note": "Auto-recorded on first validation"
+    },
+    "maintenance.html": {
+      "hex": 0,
+      "rgba": 0,
+      "note": "Auto-recorded on first validation"
+    },
+    "migration.html": {
+      "hex": 0,
+      "rgba": 0,
+      "note": "Auto-recorded on first validation"
+    },
+    "outage.html": {
+      "hex": 0,
+      "rgba": 0,
+      "note": "Auto-recorded on first validation"
+    },
+    "readonly.html": {
+      "hex": 0,
+      "rgba": 0,
+      "note": "Auto-recorded on first validation"
+    },
+    "recovery.html": {
+      "hex": 0,
+      "rgba": 0,
+      "note": "Auto-recorded on first validation"
     }
   }
 }
