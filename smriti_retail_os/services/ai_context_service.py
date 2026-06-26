@@ -33,13 +33,16 @@ def _get_ske_engine():
         repo_root = os.path.dirname(os.path.dirname(os.path.dirname(app_path)))
         return SMRITIKnowledgeEngine(repo_root)
 
-def build_context_pack(query):
+def build_context_pack(query, return_metadata=False):
     """
     SKE Retrieval Layer: Query SKE runtime, fetch resolved KnowledgeObjects
     and related dependencies, and compile them into a ground-truth Markdown context.
     """
     if not query:
-        return "ERROR: Query string cannot be empty."
+        res_err = "ERROR: Query string cannot be empty."
+        if return_metadata:
+            return res_err, {"num_links": 0, "validation_status": "Unverified"}
+        return res_err
 
     try:
         engine = _get_ske_engine()
@@ -47,11 +50,14 @@ def build_context_pack(query):
         primary_objects = engine.resolve(query, output_format="structured")
         
         if not primary_objects:
-            return (
+            res_str = (
                 "=== SMRITI GROUND TRUTH KNOWLEDGE CONTEXT PACK ===\n"
                 "WARNING: No primary knowledge objects resolved from the repository for the query.\n"
                 "=== END OF CONTEXT PACK ==="
             )
+            if return_metadata:
+                return res_str, {"num_links": 0, "validation_status": "Unverified"}
+            return res_str
 
         lines = []
         lines.append("=== SMRITI GROUND TRUTH KNOWLEDGE CONTEXT PACK ===")
@@ -123,11 +129,38 @@ def build_context_pack(query):
                         lines.append(f"Technical: {l_obj.technical_definition}")
 
         lines.append("\n=== END OF CONTEXT PACK ===")
-        return "\n".join(lines)
+        context_str = "\n".join(lines)
+        
+        if return_metadata:
+            # calculate validation_status and num_links dynamically
+            validation_statuses = [obj.validation_status for obj in primary_objects if getattr(obj, "validation_status", None)]
+            if "Draft" in validation_statuses:
+                val_status = "Draft"
+            elif all(s == "Certified" for s in validation_statuses) and validation_statuses:
+                val_status = "Certified"
+            else:
+                val_status = "Verified"
+                
+            seen_edges = set()
+            for obj in primary_objects:
+                if obj.relations:
+                    for rel_type, rel_id in obj.relations:
+                        seen_edges.add((obj.id, rel_id, rel_type))
+                if obj.dependencies:
+                    for dep in obj.dependencies:
+                        seen_edges.add((obj.id, dep, "DEPENDENCY"))
+            num_links = len(seen_edges)
+            
+            return context_str, {"num_links": num_links, "validation_status": val_status}
+            
+        return context_str
 
     except Exception as e:
         frappe.log_error(message=str(e), title="SKE Context Builder Failed")
-        return f"ERROR: SKE Context Generation failed due to an exception: {str(e)}"
+        res_err = f"ERROR: SKE Context Generation failed due to an exception: {str(e)}"
+        if return_metadata:
+            return res_err, {"num_links": 0, "validation_status": "Unverified"}
+        return res_err
 
 def explain_decision_context(decision_type, entity_id):
     """

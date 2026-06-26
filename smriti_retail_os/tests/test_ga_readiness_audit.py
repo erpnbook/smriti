@@ -49,7 +49,7 @@ class TestGAReadinessAudit(TestPSV):
 
     @patch("smriti_retail_os.psv_service.create_psv_transaction", side_effect=Exception("Simulated PSV DB Failure"))
     def test_billing_psv_resiliency(self, mock_create):
-        """Verify that PSV shadow ledger failure does not block Sales Invoice submission and creates an Exception Record."""
+        """Verify that PSV Inventory Visibility Layer failure does not block Sales Invoice submission and creates an Exception Record."""
         # 1. Create a standard Sales Invoice referencing custom_party_stock_account
         si = frappe.new_doc("Sales Invoice")
         si.company = self.company

@@ -36,7 +36,7 @@ def ask_smriti_ai(query):
       to generate contextual answers.
     """
     try:
-        context_pack = ai_context_service.build_context_pack(query)
+        context_pack, meta = ai_context_service.build_context_pack(query, return_metadata=True)
         
         # 1. Safety Gate: If no primary objects were resolved, decline to answer.
         if "WARNING: No primary" in context_pack or "ERROR" in context_pack:
@@ -119,7 +119,7 @@ def ask_smriti_ai(query):
         return {
             "answer": answer,
             "context_pack": context_pack,
-            "evidence_badge": "✔ Verified | 12 Graph Links | Scan: Today"
+            "evidence_badge": f"✔ Verified | {meta['num_links']} Graph Links | {meta['validation_status']}"
         }
 
     except Exception as e:

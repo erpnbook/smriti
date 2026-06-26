@@ -274,6 +274,7 @@ def _ensure_sentinel_item():
             }).insert(ignore_permissions=True)
             frappe.db.commit()
         except Exception:
+            frappe.log_error(title="Sentinel Item creation failed")
             first = frappe.db.get_value("Item", {"is_sales_item": 1, "disabled": 0}, "name")
             return first or ""
     return sentinel
@@ -567,22 +568,25 @@ def _build_and_persist_doc(doctype, enriched, meta, company, action):
         try:
             doc.run_method("set_taxes")
         except Exception:
-            import sys
-            _frappe = sys.modules.get('frappe')
-            if _frappe: _frappe.logger().warning(f"SMRITI Warning: Financial/Data-integrity-adjacent exception in transaction_kernel.py:569: {sys.exc_info()[1]}")
+            frappe.log_error(title="Transaction set_taxes failed")
 
     # ── Save / Submit ────────────────────────────────────────────────────────
     save_flags = dict(ignore_permissions=True)
 
-    if is_update:
-        doc.save(**save_flags)
-    else:
-        doc.insert(**save_flags)
+    try:
+        if is_update:
+            doc.save(**save_flags)
+        else:
+            doc.insert(**save_flags)
 
-    if action == "submit":
-        doc.submit()
+        if action == "submit":
+            doc.submit()
 
-    frappe.db.commit()
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        frappe.log_error(title=f"Transaction persist failed ({action})")
+        raise
     return doc
 
 

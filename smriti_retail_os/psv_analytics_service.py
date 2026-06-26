@@ -776,7 +776,7 @@ def get_inventory_productivity_methodology():
             },
             {
                 "warning": "Inventory Adjustment Required",
-                "trigger": _("Current stock balance in shadow ledger is negative"),
+                "trigger": _("Current stock balance in Inventory Visibility Layer is negative"),
                 "action": _("A stock reconciliation or transaction correction is required to fix the negative balance.")
             }
         ],

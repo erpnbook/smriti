@@ -299,12 +299,12 @@ def execute():
             "formula_language": "documentation",
             "variables_and_inputs": json.dumps({
                 "physical_qty": "Total quantity counted physically at store",
-                "ledger_qty": "Total shadow ledger balance recorded in system"
+                "ledger_qty": "Total Inventory Visibility Layer balance recorded in system"
             }),
             "data_sources": "tabSMRITI Party Physical Item, tabSMRITI Party Stock Ledger Entry",
             "business_owner": "Jawahar R. Mallah",
             "technical_owner": "AITDL Core Team",
-            "business_meaning": "Stock Accuracy % measures audit matching. Physical stock aur shadow ledger stock kitna match karta hai.",
+            "business_meaning": "Stock Accuracy % measures audit matching. Physical stock aur Inventory Visibility Layer stock kitna match karta hai.",
             "worked_example": "If ledger has 100 pieces and physical audit counts 97:\naccuracy = (1 - (abs(97 - 100) / 100)) * 100 = (1 - 0.03) * 100 = 97%.",
             "interpretation_guide": "Bands:\n- High Accuracy: > 98%\n- Moderate: 90-98%\n- Poor Accuracy: < 90%",
             "recommended_action": "For poor accuracy (< 90%), trigger a deep reconciliation audit check.",

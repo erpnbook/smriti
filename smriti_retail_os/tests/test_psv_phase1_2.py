@@ -114,7 +114,7 @@ class TestPSVPhase1_2(FrappeTestCase):
         frappe.db.set_value("Sales Invoice", si2.name, {"docstatus": 1})
         frappe.db.sql("UPDATE `tabSales Invoice Item` SET docstatus = 1 WHERE parent = %s", (si2.name,))
 
-        # Add some shadow ledger entries
+        # Add some Party Stock Ledger entries
         # Qty sold: 10 units over last 14 days (velocity = 5.0 units/wk)
         frappe.db.sql("""
             INSERT INTO `tabSMRITI Party Stock Ledger Entry` 

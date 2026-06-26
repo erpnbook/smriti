@@ -2,17 +2,17 @@
 #
 # @file: smriti_retail_os/psv_integration.py
 # @description: PSV integration hooks for Delivery Note and Stock Entry events.
-#               Handles shadow ledger entries for channel stock operations.
+#               Handles Inventory Visibility Layer entries for channel stock operations.
 #
 # ─── Architecture Note ───────────────────────────────────────────────────────
 # This module is called by Frappe document event hooks (hooks.py).
-# It bridges ERPNext Delivery Notes and Stock Entries into the PSV shadow ledger
+# It bridges ERPNext Delivery Notes and Stock Entries into the PSV Inventory Visibility Layer
 # WITHOUT mutating the ERPNext Stock Ledger Entry or GL Entry.
 #
 # PSV SPECIAL RULE (GEMINI.md):
 #   - MUST NOT modify tabStock Ledger Entry
 #   - MUST NOT modify tabGL Entry
-#   - MUST use its own shadow ledger only (SMRITI Party Stock Ledger Entry)
+#   - MUST use its own Inventory Visibility Layer only (SMRITI Party Stock Ledger Entry)
 #
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-11
@@ -55,7 +55,7 @@ def handle_delivery_note_submit(doc, method=None):
                     create_psv_transaction which creates a RETURN type entry.
                     No special handling is needed here.
 
-    ARCHITECTURE: Reads ERPNext DN data, writes SMRITI shadow ledger only.
+    ARCHITECTURE: Reads ERPNext DN data, writes SMRITI Inventory Visibility Layer only.
     No SLE or GL mutation occurs here.
     ──────────────────────────────────────────────────────────────────────────
     """
@@ -158,7 +158,7 @@ def handle_sales_return_submit(doc, method=None):
     """
     Called on Stock Entry submission (on_submit hook).
 
-    Handles PSV shadow ledger for Sales Returns received back from a
+    Handles PSV Inventory Visibility Layer for Sales Returns received back from a
     SMRITI Party Stock Account (stock_entry_type = "Material Receipt" or
     custom_party_stock_account is set).
 
@@ -208,7 +208,7 @@ def handle_sales_return_cancel(doc, method=None):
     Called on Stock Entry cancellation (on_cancel hook).
 
     Reverses the PSV Transaction created during Stock Entry submit,
-    restoring shadow ledger to pre-return state.
+    restoring Inventory Visibility Layer to pre-return state.
     """
     psa = doc.get("custom_party_stock_account")
     if not psa:

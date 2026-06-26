@@ -241,3 +241,78 @@ class TestKnowledgeGovernance(unittest.TestCase):
         
         self.assertFalse(frappe.db.exists("SMRITI Knowledge Usage Log", doc1.name))
         self.assertTrue(frappe.db.exists("SMRITI Knowledge Usage Log", doc2.name))
+
+    def test_no_hardcoded_evidence_badge(self):
+        """Assert no hardcoded evidence badge strings remain in ai_integration_api.py."""
+        app_path = frappe.get_app_path("smriti_retail_os")
+        api_path = os.path.join(app_path, "api", "ai_integration_api.py")
+        with io.open(api_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        import re
+        self.assertFalse(re.search(r'evidence_badge"\s*:\s*"✔ Verified \| \d+ Graph Links \| \w+"', content))
+
+    def test_no_banned_terminology(self):
+        """Assert that the banned term 'shadow ledger' is not used in SMRITI Python controllers or patches."""
+        app_path = frappe.get_app_path("smriti_retail_os")
+        for root, dirs, files in os.walk(app_path):
+            if "node_modules" in dirs:
+                dirs.remove("node_modules")
+            if ".git" in dirs:
+                dirs.remove(".git")
+            for file in files:
+                if file.endswith((".py", ".js")):
+                    if file == "test_knowledge_governance.py":
+                        continue
+                    filepath = os.path.join(root, file)
+                    with io.open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                        content = f.read()
+                    # Ensure we don't have "shadow ledger" in lowercase
+                    self.assertNotIn("shadow ledger", content.lower(), f"Banned terminology 'shadow ledger' found in {filepath}")
+
+    def test_every_formula_has_explain_object(self):
+        """Verify that all formulas in seed_default_formulas.py have an explainability_json/explain structure."""
+        seed_py = os.path.join(frappe.get_app_path("smriti_retail_os"), "patches", "seed_default_formulas.py")
+        with io.open(seed_py, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        import ast
+        tree = ast.parse(content)
+        
+        formulas = []
+        class FormulaVisitor(ast.NodeVisitor):
+            def visit_Assign(self, node):
+                for target in node.targets:
+                    if isinstance(target, ast.Name) and target.id == "formulas":
+                        if isinstance(node.value, ast.List):
+                            for element in node.value.elts:
+                                if isinstance(element, ast.Dict):
+                                    fd = {}
+                                    for k, v in zip(element.keys, element.values):
+                                        if isinstance(k, ast.Constant):
+                                            fd[k.value] = v
+                                    formulas.append(fd)
+                self.generic_visit(node)
+                
+        FormulaVisitor().visit(tree)
+        self.assertGreater(len(formulas), 0, "No formulas found in seeder")
+        for fd in formulas:
+            self.assertIn("explainability_json", fd, f"Formula missing explainability_json: {fd.get('formula_id')}")
+
+    def test_no_orphan_knowledge_objects(self):
+        """Assert that all glossary terms and screen narratives are connected in the dependency graph."""
+        graph_path = os.path.join(repo_root, "docs", "discovery", "dependency_graph.json")
+        self.assertTrue(os.path.exists(graph_path), "dependency_graph.json not found")
+        with io.open(graph_path, "r", encoding="utf-8") as f:
+            graph = json.load(f)
+        
+        nodes = graph.get("data", {}).get("nodes", [])
+        edges = graph.get("data", {}).get("edges", [])
+        
+        connected_node_ids = set()
+        for edge in edges:
+            connected_node_ids.add(edge["source"])
+            connected_node_ids.add(edge["target"])
+            
+        for node in nodes:
+            if node["type"] in ("GLOSSARY_TERM", "SCREEN", "COLLECTION"):
+                self.assertIn(node["id"], connected_node_ids, f"Orphan knowledge object found: {node['id']} ({node['label']})")

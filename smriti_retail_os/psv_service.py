@@ -335,7 +335,7 @@ def process_sales_upload_cancel(doc):
 # ─── PHYSICAL STOCK RECONCILIATION SNAPSHOT ────────────────────────────────────
 
 def validate_physical_snapshot(doc):
-    """Calculates variance based on current shadow ledger state"""
+    """Calculates variance based on current Party Stock Ledger state"""
     for item in doc.items:
         # Populate system balance
         item.system_qty = get_party_balance(doc.party_stock_account, item.item_code)

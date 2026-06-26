@@ -942,13 +942,18 @@ def create_custom_sales_return(customer, items, return_against_invoice=None, rem
     if remarks:
         return_doc.remarks = remarks
         
-    return_doc.flags.ignore_permissions = True
-    return_doc.insert(ignore_permissions=True)
-    
-    if not draft:
-        return_doc.submit()
+    try:
+        return_doc.flags.ignore_permissions = True
+        return_doc.insert(ignore_permissions=True)
         
-    frappe.db.commit()
+        if not draft:
+            return_doc.submit()
+            
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        frappe.log_error(title="Create Custom Sales Return Failed")
+        raise
     
     return {
         "name": return_doc.name,
@@ -1020,13 +1025,18 @@ def update_sales_return(name, items, remarks=None, draft=0):
     if remarks is not None:
         doc.remarks = remarks
         
-    doc.flags.ignore_permissions = True
-    doc.save(ignore_permissions=True)
-    
-    if not draft:
-        doc.submit()
+    try:
+        doc.flags.ignore_permissions = True
+        doc.save(ignore_permissions=True)
         
-    frappe.db.commit()
+        if not draft:
+            doc.submit()
+            
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        frappe.log_error(title="Update Sales Return Failed")
+        raise
     
     return {
         "name": doc.name,
@@ -1062,17 +1072,22 @@ def delete_sales_return(name, manager_pin=None):
         if not override_res.get("authorized"):
             frappe.throw(_("Invalid Manager PIN: Access Denied."))
 
-    doc.flags.ignore_permissions = True
-    if doc.docstatus == 0:
-        frappe.delete_doc("Sales Invoice", name, ignore_permissions=True)
-        message = _("Draft Sales Return {0} deleted successfully.").format(name)
-    elif doc.docstatus == 1:
-        doc.cancel()
-        message = _("Sales Return {0} cancelled successfully.").format(name)
-    else:
-        frappe.throw(_("Sales Return {0} is already cancelled.").format(name))
-        
-    frappe.db.commit()
+    try:
+        doc.flags.ignore_permissions = True
+        if doc.docstatus == 0:
+            frappe.delete_doc("Sales Invoice", name, ignore_permissions=True)
+            message = _("Draft Sales Return {0} deleted successfully.").format(name)
+        elif doc.docstatus == 1:
+            doc.cancel()
+            message = _("Sales Return {0} cancelled successfully.").format(name)
+        else:
+            frappe.throw(_("Sales Return {0} is already cancelled.").format(name))
+            
+        frappe.db.commit()
+    except Exception:
+        frappe.db.rollback()
+        frappe.log_error(title="Delete Sales Return Failed")
+        raise
     return {
         "name": name,
         "message": message

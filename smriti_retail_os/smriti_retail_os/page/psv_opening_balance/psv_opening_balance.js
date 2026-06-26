@@ -166,7 +166,7 @@ frappe.pages['psv-opening-balance'].on_page_load = function(wrapper) {
                     callback(r) {
                         frappe.show_alert({ message: __('Opening Balances imported successfully!'), indicator: 'green' });
                         $('#ob-import').hide();
-                        $('#ob-preview-area').html('<div class="alert alert-success">Import Complete. Check Shadow Ledger for entries.</div>');
+                        $('#ob-preview-area').html('<div class="alert alert-success">Import Complete. Check Party Stock Ledger for entries.</div>');
                         parsedRows = [];
                         document.getElementById('ob-file').value = "";
                     }

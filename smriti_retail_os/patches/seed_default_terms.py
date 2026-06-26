@@ -25,15 +25,15 @@ def execute():
             "term_id": "PSA",
             "term_name": "Party Stock Account",
             "term_category": "Distribution",
-            "definition": "Party Stock Account maintains the ledger balances and shadow accounting of stock held by channel partners.",
-            "hinglish_definition": "Distributors ya channel partners ke stock balances aur shadow ledger calculations ko track karne wala internal ledger master.",
+            "definition": "Party Stock Account maintains the ledger balances and visibility tracking of stock held by channel partners.",
+            "hinglish_definition": "Distributors ya channel partners ke stock balances aur Inventory Visibility Layer calculations ko track karne wala internal ledger master.",
             "term_aliases": ["PSA", "Stock Account", "Channel Account"],
             "manual_reference": "Volume 3 > Distribution Operations",
             "training_reference": "TRN-DIST-PSA",
             "related_formulas": [],
             "related_terms": ["PSV", "Party Stock Ledger"],
             "faq": [
-                {"q": "Does PSA replace ERPNext warehouses?", "a": "No, it reads ERPNext master data but acts as an independent shadow ledger."}
+                {"q": "Does PSA replace ERPNext warehouses?", "a": "No, it reads ERPNext master data but acts as an independent Inventory Visibility Layer."}
             ],
             "common_mistakes": [
                 {"mistake": "Updating general ledger direct", "a": "PSA should never write directly to ERPNext General Ledger."}
