@@ -21,8 +21,10 @@ EXIT_CODES = {
     "SDC201": 201,  # Structural regression (Missing files / broken links)
     "SDC202": 202,  # Semantic regression warning
     "SDC301": 301,  # Dependency graph inconsistent (cycle or orphans)
-    "SDC401": 401   # Quality gate failed
+    "SDC401": 401,  # Quality gate failed (coverage < threshold or broken references > 0)
+    "SDC402": 402   # Knowledge drift detected (formula changed, explain object not updated; or banned terminology found)
 }
+
 
 class SDCLogger:
     @staticmethod

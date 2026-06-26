@@ -1061,7 +1061,236 @@ class Phase0Compiler(object):
                 
         return 100.0
 
+    def parse_formulas(self):
+        """Parses the default formulas seeded in seed_default_formulas.py using AST."""
+        seed_py = os.path.join(
+            self.repo_path, "apps", "smriti_retail_os", "smriti_retail_os", "patches", "seed_default_formulas.py"
+        )
+        if not os.path.exists(seed_py):
+            return []
+
+        try:
+            with io.open(seed_py, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            tree = ast.parse(content)
+            
+            class FormulaVisitor(ast.NodeVisitor):
+                def __init__(self):
+                    self.formulas = []
+
+                def visit_Assign(self, node):
+                    for target in node.targets:
+                        if isinstance(target, ast.Name) and target.id == "formulas":
+                            if isinstance(node.value, ast.List):
+                                for element in node.value.elts:
+                                    if isinstance(element, ast.Dict):
+                                        formula_data = self.parse_dict(element)
+                                        if formula_data and "formula_id" in formula_data:
+                                            self.formulas.append(formula_data)
+                    self.generic_visit(node)
+
+                def parse_dict(self, dict_node):
+                    res = {}
+                    for k, v in zip(dict_node.keys, dict_node.values):
+                        k_val = self.get_value(k)
+                        if k_val:
+                            res[k_val] = self.parse_node(v)
+                    return res
+
+                def parse_node(self, node):
+                    if isinstance(node, ast.Dict):
+                        return self.parse_dict(node)
+                    elif isinstance(node, ast.List):
+                        return [self.parse_node(el) for el in node.elts]
+                    elif isinstance(node, ast.Constant):
+                        return node.value
+                    if hasattr(ast, "Str") and isinstance(node, ast.Str):
+                        return node.s
+                    if hasattr(ast, "Num") and isinstance(node, ast.Num):
+                        return node.n
+                    return None
+
+                def get_value(self, node):
+                    if isinstance(node, ast.Constant):
+                        return node.value
+                    if hasattr(ast, "Str") and isinstance(node, ast.Str):
+                        return node.s
+                    return None
+
+            visitor = FormulaVisitor()
+            visitor.visit(tree)
+            return visitor.formulas
+        except Exception as e:
+            SDCLogger.error(f"Failed to parse default formulas: {str(e)}")
+            return []
+
+    def _sha256_str(self, s):
+        """Compute SHA256 of a string — used for drift hash computation."""
+        return hashlib.sha256((s or "").encode("utf-8")).hexdigest()
+
+    def check_formula_drift(self, formulas):
+        """
+        SDC-006 P1A — Formula-to-Explain Drift Gate.
+
+        Compares formula_expression+variables hash against explainability_json hash
+        using a persisted snapshot. If a formula's expression changed but its explain
+        object was NOT updated, this is a governance drift violation (SDC402).
+
+        On a clean run, writes an updated snapshot.
+        Returns: (violations: list[dict], updated_snapshot: dict)
+        """
+        snapshot_path = os.path.join(self.repo_path, "sdc", "drift_snapshots", "formula_drift_snapshot.json")
+        prev_snapshot = {}
+        if os.path.exists(snapshot_path):
+            try:
+                with io.open(snapshot_path, "r", encoding="utf-8") as f:
+                    loaded = json.load(f)
+                prev_snapshot = loaded.get("formulas", {})
+            except Exception as e:
+                SDCLogger.warn(f"[SDC-006] Could not load drift snapshot: {str(e)}. First-run assumed.")
+
+        violations = []
+        updated_formulas = {}
+
+        for formula in formulas:
+            fid = formula.get("formula_id", "")
+            if not fid:
+                continue
+
+            expr = str(formula.get("formula_expression", ""))
+            variables = str(formula.get("variables_and_inputs", ""))
+            explain = str(formula.get("explainability_json", ""))
+
+            current_formula_hash = self._sha256_str(expr + "|" + variables)
+            current_explain_hash = self._sha256_str(explain)
+
+            updated_formulas[fid] = {
+                "formula_name": formula.get("formula_name", fid),
+                "formula_hash": current_formula_hash,
+                "explain_hash": current_explain_hash,
+                "last_verified": self.timestamp
+            }
+
+            if fid in prev_snapshot:
+                prev_formula_hash = prev_snapshot[fid].get("formula_hash", "")
+                prev_explain_hash = prev_snapshot[fid].get("explain_hash", "")
+
+                formula_changed = (current_formula_hash != prev_formula_hash)
+                explain_changed = (current_explain_hash != prev_explain_hash)
+
+                if formula_changed and not explain_changed:
+                    violations.append({
+                        "formula_id": fid,
+                        "formula_name": formula.get("formula_name", fid),
+                        "violation": "FORMULA_EXPRESSION_CHANGED_WITHOUT_EXPLAIN_UPDATE",
+                        "detail": (
+                            f"formula_expression or variables changed "
+                            f"(prev: {prev_formula_hash[:12]}... → curr: {current_formula_hash[:12]}...) "
+                            f"but explainability_json was not updated (hash still: {current_explain_hash[:12]}...)."
+                        )
+                    })
+                    SDCLogger.error(
+                        f"[SDC-006] DRIFT DETECTED — {fid} ({formula.get('formula_name', '')}): "
+                        f"formula changed but explain object not updated."
+                    )
+                elif formula_changed and explain_changed:
+                    SDCLogger.info(f"[SDC-006] {fid}: formula and explain both updated — OK.")
+                else:
+                    SDCLogger.info(f"[SDC-006] {fid}: no change since last snapshot — OK.")
+            else:
+                SDCLogger.info(f"[SDC-006] {fid}: new formula, adding to snapshot.")
+
+        updated_snapshot = {
+            "snapshot_version": "1.0",
+            "generated_at": self.timestamp,
+            "description": (
+                "SHA256 hashes of formula_expression+variables and explainability_json per formula. "
+                "SDC-006 drift gate uses this to detect when a formula changes without its explain object being updated."
+            ),
+            "formulas": updated_formulas
+        }
+        return violations, updated_snapshot
+
+    def check_terminology_drift(self):
+        """
+        SDC-006 P1B — Banned Terminology Drift Gate (compiler-level).
+
+        Scans all .py and .js files in the app scope for banned terms.
+        Returns: list[dict] of violations, each with file, line, matched_text.
+        """
+        BANNED_TERMS = ["shadow ledger"]
+        EXCLUDED_FILES = {"test_knowledge_governance.py"}
+
+        scan_scope = self.config.get("scan_scope", ["apps/smriti_retail_os"])
+        excluded_dirs = self.config.get("excluded", ["node_modules", ".git", "__pycache__"])
+        violations = []
+
+        for scope in scan_scope:
+            full_scope_path = os.path.join(self.repo_path, scope)
+            if not os.path.exists(full_scope_path):
+                continue
+
+            for root, dirs, files in os.walk(full_scope_path):
+                dirs[:] = [d for d in dirs if d not in excluded_dirs]
+                for filename in files:
+                    if not filename.endswith((".py", ".js")):
+                        continue
+                    if filename in EXCLUDED_FILES:
+                        continue
+                    filepath = os.path.join(root, filename)
+                    rel_path = os.path.relpath(filepath, self.repo_path).replace(os.sep, "/")
+                    try:
+                        with io.open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                            for lineno, line in enumerate(f, start=1):
+                                line_lower = line.lower()
+                                for term in BANNED_TERMS:
+                                    if term in line_lower:
+                                        # Exclude CSS box-shadow property lines
+                                        if "box-shadow" in line_lower or "text-shadow" in line_lower:
+                                            continue
+                                        violations.append({
+                                            "file": rel_path,
+                                            "line": lineno,
+                                            "matched_term": term,
+                                            "line_content": line.rstrip()
+                                        })
+                                        SDCLogger.error(
+                                            f"[SDC-006] BANNED TERM '{term}' found: "
+                                            f"{rel_path}:{lineno}"
+                                        )
+                    except Exception as e:
+                        SDCLogger.warn(f"[SDC-006] Could not scan {rel_path}: {str(e)}")
+
+        return violations
+
+    def append_coverage_history(self, metrics):
+        """
+        SDC-006 P2 — Coverage Trend History.
+
+        Appends one JSONL entry to docs/discovery/coverage_history.jsonl after
+        every successful SDC run. Only called when the gate passes.
+
+        metrics: dict with keys: coverage, broken_refs, drift_violations, health_score
+        """
+        history_path = os.path.join(self.repo_path, "docs", "discovery", "coverage_history.jsonl")
+        entry = {
+            "timestamp": self.timestamp,
+            "commit": self.commit,
+            "coverage": round(metrics.get("coverage", 0.0), 4),
+            "broken_refs": metrics.get("broken_refs", 0),
+            "drift_violations": metrics.get("drift_violations", 0),
+            "health_score": round(metrics.get("health_score", 0.0), 4)
+        }
+        try:
+            with io.open(history_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            SDCLogger.info(f"[SDC-006] Coverage history appended: coverage={entry['coverage']}% | health={entry['health_score']}")
+        except Exception as e:
+            SDCLogger.warn(f"[SDC-006] Could not append coverage history: {str(e)}")
+
     def save_and_validate(self):
+
         """Writes canonical JSON files and runs the validation check."""
         out_dir = os.path.join(self.repo_path, "docs", "discovery")
         if not os.path.exists(out_dir):
@@ -1216,6 +1445,71 @@ class Phase0Compiler(object):
         SDCLogger.info(f"Wrote health status: {health_path}")
 
         # Print final Gate Verification
+        terms_count = len(self.business_dictionary_list)
+        formulas = self.parse_formulas()
+        formulas_count = len(formulas)
+
+        # SDC-006 P1A — Formula-to-Explain Drift Check
+        formula_violations, updated_snapshot = self.check_formula_drift(formulas)
+
+        # SDC-006 P1B — Banned Terminology Check (compiler-level)
+        terminology_violations = self.check_terminology_drift()
+
+        total_drift_violations = len(formula_violations) + len(terminology_violations)
+
+        is_coverage_gate_passed = (avg_coverage >= 92.0) and (broken_edges == 0)
+        is_drift_gate_passed = (total_drift_violations == 0)
+
+        print("\n" + "="*50)
+        print("      KNOWLEDGE COVERAGE GATE REPORT (SDC-006)    ")
+        print("="*50)
+        print(f"Total Scanned Files     : {len(self.file_list)}")
+        print(f"Total Discovered Terms  : {terms_count}")
+        print(f"Total Discovered Formulas: {formulas_count}")
+        print(f"Knowledge Coverage Score: {avg_coverage:.2f}%")
+        print(f"Broken References       : {broken_edges}")
+        print(f"Formula Drift Violations: {len(formula_violations)}")
+        print(f"Terminology Violations  : {len(terminology_violations)}")
+        print("-"*50)
+        if formula_violations:
+            print("  FORMULA DRIFT DETAILS:")
+            for v in formula_violations:
+                print(f"    [{v['formula_id']}] {v['formula_name']}: {v['detail']}")
+        if terminology_violations:
+            print("  TERMINOLOGY VIOLATIONS:")
+            for v in terminology_violations:
+                print(f"    {v['file']}:{v['line']} — '{v['matched_term']}' found")
+        overall_status = "PASS" if (is_coverage_gate_passed and is_drift_gate_passed) else "BUILD FAILED"
+        print(f"STATUS: {overall_status}")
+        print("="*50 + "\n")
+
+        # Coverage gate failure — SDC401
+        if not is_coverage_gate_passed:
+            sdc_exit("SDC401", "Knowledge Coverage Gate failed: Coverage < 92.0% or Broken References > 0.")
+
+        # Drift gate failure — SDC402
+        if not is_drift_gate_passed:
+            sdc_exit("SDC402", f"Knowledge Drift Detected: {len(formula_violations)} formula violation(s), {len(terminology_violations)} terminology violation(s).")
+
+        # Both gates passed — write updated drift snapshot
+        snapshot_path = os.path.join(self.repo_path, "sdc", "drift_snapshots", "formula_drift_snapshot.json")
+        try:
+            os.makedirs(os.path.dirname(snapshot_path), exist_ok=True)
+            with io.open(snapshot_path, "w", encoding="utf-8") as f:
+                content = json.dumps(updated_snapshot, indent=2, ensure_ascii=False)
+                f.write(content if isinstance(content, type(u"")) else content.decode("utf-8"))
+            SDCLogger.info(f"[SDC-006] Drift snapshot updated: {snapshot_path}")
+        except Exception as e:
+            SDCLogger.warn(f"[SDC-006] Could not update drift snapshot: {str(e)}")
+
+        # SDC-006 P2 — Append to coverage trend history
+        self.append_coverage_history({
+            "coverage": avg_coverage,
+            "broken_refs": broken_edges,
+            "drift_violations": total_drift_violations,
+            "health_score": overall_health
+        })
+
         print(json.dumps({
             "PHASE_0_COMPLETE": True,
             "METRICS": {
@@ -1223,7 +1517,8 @@ class Phase0Compiler(object):
                 "doctypes_discovered": len(self.doctype_list),
                 "fields_discovered": len(self.field_list),
                 "apis_discovered": len(self.api_list),
-                "glossary_terms_discovered": len(self.business_dictionary_list),
+                "glossary_terms_discovered": terms_count,
+                "formulas_discovered": formulas_count,
                 "screens_discovered": len(self.screen_list),
                 "edges_compiled": len(self.edges)
             },
@@ -1235,6 +1530,11 @@ class Phase0Compiler(object):
                     "broken_references": broken_score,
                     "drift": drift_score
                 }
+            },
+            "SDC006_GOVERNANCE": {
+                "formula_drift_violations": len(formula_violations),
+                "terminology_violations": len(terminology_violations),
+                "drift_gate": "PASS"
             },
             "REGRESSION_CHECK": "PASSED"
         }, indent=2))
