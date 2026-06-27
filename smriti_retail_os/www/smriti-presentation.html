@@ -1960,6 +1960,32 @@
         `
       },
       {
+        title: "UDNE Engine",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-6">
+            <div class="text-center space-y-1">
+              <span class="text-purple-400 font-bold uppercase tracking-wider text-[10px]">Compliance Core</span>
+              <h2 class="text-4xl font-outfit font-extrabold text-white">Universal Document Numbering Engine (UDNE)</h2>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center pt-4">
+              <div class="space-y-4">
+                <p class="text-slate-300 text-sm leading-relaxed">SMRITI mandates whitelisted document number allocation. The UDNE engine builds sequential document IDs with full formula transparency.</p>
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-white/5 text-xs text-slate-400 space-y-2">
+                  <div><span class="text-purple-400">Stable Naming:</span> Ensures compliant transaction numbering.</div>
+                  <div><span class="text-purple-400">Explainable Widget:</span> Live ⓘ panel details numbering generation sources.</div>
+                </div>
+              </div>
+              <div class="glass-card p-6 rounded-2xl border border-white/5 space-y-3 font-mono text-[10px] text-purple-300">
+                <div class="text-white font-bold border-b border-white/5 pb-2 text-xs">UDNE Numbering Structure</div>
+                <div>{Company_Code}-{Branch_Code}-{DocType_Short}-{Fiscal_Year}-{Sequence}</div>
+                <div class="text-slate-500">[INFO] Generating next invoice number...</div>
+                <div class="text-emerald-400">[SUCCESS] Allocated: SMRITI-MUM-INV-2026-04128</div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
         title: "Scan Telemetry",
         html: `
           <div class="max-w-6xl mx-auto space-y-6">
@@ -2041,14 +2067,43 @@
         `
       },
       {
+        title: "UFE Field Explorer",
+        html: `
+          <div class="max-w-6xl mx-auto space-y-6">
+            <div class="text-center space-y-1">
+              <span class="text-purple-400 font-bold uppercase tracking-wider text-[10px]">Metadata Discovery</span>
+              <h2 class="text-4xl font-outfit font-extrabold text-white">Universal Field Explorer (UFE)</h2>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center pt-4">
+              <div class="space-y-4">
+                <p class="text-slate-300 text-sm leading-relaxed">SMRITI provides an interactive metadata browser at /smriti-field-explorer to browse, search, and trace live field definitions across all DocTypes, ensuring stable barcode templates.</p>
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-white/5 text-xs text-slate-400 space-y-2">
+                  <div><span class="text-purple-400">Stable Barcode IDs:</span> Hardened layouts prevent template breakage.</div>
+                  <div><span class="text-purple-400">Schema Inspection:</span> Direct browse/search tool inside SMRITI portal.</div>
+                </div>
+              </div>
+              <div class="glass-card p-6 rounded-2xl border border-white/5 space-y-3 font-mono text-[10px] text-cyan-300">
+                <div class="text-white font-bold border-b border-white/5 pb-2 text-xs">UFE Field Catalog Explorer</div>
+                <div>Search: "hsn_code"</div>
+                <div class="text-slate-500">[INFO] Locating fields across all active DocTypes...</div>
+                <div class="text-emerald-400">[FOUND] DocType: Item -> Field: hsn_code (Type: Link)</div>
+                <div class="text-emerald-400">[FOUND] DocType: Purchase Receipt Item -> Field: hsn_code (Type: Data)</div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
         title: "Governance",
         html: `
           <div class="max-w-6xl mx-auto space-y-6">
             <h2 class="text-4xl font-outfit font-extrabold text-white text-center">AITDL Governance Rules</h2>
             <div class="glass-card p-6 rounded-2xl max-w-xl mx-auto space-y-3 text-xs md:text-sm">
-              <p>✔ **Rule 7 Compliance**: Complete suppression of raw system forms.</p>
-              <p>✔ **Rule 8 Compliance**: System wizards replaced by custom standalone interfaces.</p>
-              <p>✔ **Rule 9 Compliance**: Strict route redirection and enforcement guards.</p>
+              <p>✔ **Rule 7**: Frappe/ERPNext Desk forms are completely hidden from user flows.</p>
+              <p>✔ **Rule 8**: Setup Wizard fully intercepted and replaced with SMRITI pages.</p>
+              <p>✔ **Rule 9**: No Desk Elements policy enforces standalone custom www routes.</p>
+              <p>✔ **Rule 10 &amp; 11**: central Formula Registry with ⓘ Explain tooltips on every metric.</p>
+              <p>✔ **Rule 12 &amp; 13**: Explainability-First code verification gates and author credibility.</p>
             </div>
           </div>
         `
@@ -6613,7 +6668,7 @@ const SLIDES_CGE = [
 
         // Appending dynamic IT Evaluation Banner
         let itBannerHtml = '';
-        if (currentDeck === SLIDES_TECH && index >= 19 && index <= 23) {
+        if (currentDeck === SLIDES_TECH && index >= 21 && index <= 25) {
           itBannerHtml = `
             <div class="absolute top-6 left-1/2 transform -translate-x-1/2 flex items-center gap-2 bg-purple-500/10 border border-purple-500/25 px-4 py-1.5 rounded-full text-[10px] font-bold text-purple-400 select-none shadow-lg tracking-wider uppercase">
               <span>⚠️ For Technical Evaluation &amp; IT Teams Only</span>
