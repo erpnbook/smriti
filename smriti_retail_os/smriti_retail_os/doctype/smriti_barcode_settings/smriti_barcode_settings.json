@@ -1,0 +1,88 @@
+{
+ "actions": [],
+ "allow_events_in_timeline": 0,
+ "allow_import": 0,
+ "allow_rename": 0,
+ "autoname": "",
+ "creation": "2026-06-27 22:20:00",
+ "doctype": "DocType",
+ "editable_grid": 0,
+ "engine": "InnoDB",
+ "field_order": [
+  "barcode_hrt_reserved_height_mm",
+  "enforce_printability_threshold",
+  "barcode_telemetry_capture_enabled",
+  "barcode_telemetry_aggregation_enabled",
+  "barcode_learning_enabled"
+ ],
+ "fields": [
+  {
+   "default": "2.5",
+   "fieldname": "barcode_hrt_reserved_height_mm",
+   "fieldtype": "Float",
+   "label": "Barcode HRT Reserved Height (mm)"
+  },
+  {
+   "default": "1",
+   "fieldname": "enforce_printability_threshold",
+   "fieldtype": "Check",
+   "label": "Enforce Printability Threshold"
+  },
+  {
+   "default": "0",
+   "fieldname": "barcode_telemetry_capture_enabled",
+   "fieldtype": "Check",
+   "label": "Enable Barcode Telemetry Capture",
+   "description": "Enables raw barcode scan event capture at the source."
+  },
+  {
+   "default": "0",
+   "fieldname": "barcode_telemetry_aggregation_enabled",
+   "fieldtype": "Check",
+   "label": "Enable Barcode Telemetry Aggregation",
+   "description": "Enables the daily aggregation snapshot scheduler."
+  },
+  {
+   "default": "0",
+   "fieldname": "barcode_learning_enabled",
+   "fieldtype": "Check",
+   "label": "Enable Barcode Learning Engine",
+   "description": "Reserved for future ACP-BARCODE-002B. Currently inactive."
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-06-27 22:20:00",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Barcode Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "SMRITI Store Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "states": []
+}

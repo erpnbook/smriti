@@ -1459,73 +1459,29 @@ def create_smriti_cge_settings_doctype():
         frappe.log_error(f"Error creating SMRITI CGE Settings DocType: {str(e)}")
 
 def create_smriti_barcode_settings_doctype():
-    """Creates the SMRITI Barcode Settings single DocType."""
-    new_fields = [
-        {"fieldname": "barcode_telemetry_capture_enabled", "fieldtype": "Check", "label": "Enable Barcode Telemetry Capture", "default": 0, "description": "Enables raw barcode scan event capture at the source."},
-        {"fieldname": "barcode_telemetry_aggregation_enabled", "fieldtype": "Check", "label": "Enable Barcode Telemetry Aggregation", "default": 0, "description": "Enables the daily aggregation snapshot scheduler."},
-        {"fieldname": "barcode_learning_enabled", "fieldtype": "Check", "label": "Enable Barcode Learning Engine", "default": 0, "description": "Reserved for future ACP-BARCODE-002B. Currently inactive."}
-    ]
-    if frappe.db.exists("DocType", "SMRITI Barcode Settings"):
-        try:
-            dt_doc = frappe.get_doc("DocType", "SMRITI Barcode Settings")
-            existing_fields = {f.fieldname for f in dt_doc.fields}
+    """Seeds default values for the SMRITI Barcode Settings single DocType (schema is now standard file-backed)."""
+    try:
+        if frappe.db.exists("DocType", "SMRITI Barcode Settings"):
+            settings = frappe.get_doc("SMRITI Barcode Settings")
             updated = False
-            for nf in new_fields:
-                if nf["fieldname"] not in existing_fields:
-                    dt_doc.append("fields", nf)
+            defaults = {
+                "barcode_hrt_reserved_height_mm": 2.5,
+                "enforce_printability_threshold": 1,
+                "barcode_telemetry_capture_enabled": 0,
+                "barcode_telemetry_aggregation_enabled": 0,
+                "barcode_learning_enabled": 0
+            }
+            for key, val in defaults.items():
+                if settings.get(key) is None:
+                    settings.set(key, val)
                     updated = True
             if updated:
-                dt_doc.save(ignore_permissions=True)
-                frappe.db.commit()
-                
-                # Initialize values in single DocType
-                settings = frappe.get_doc("SMRITI Barcode Settings")
-                for nf in new_fields:
-                    fn = nf["fieldname"]
-                    if settings.get(fn) is None:
-                        settings.set(fn, 0)
                 settings.save(ignore_permissions=True)
                 frappe.db.commit()
-                print("[SMRITI] Upgraded SMRITI Barcode Settings DocType fields")
-        except Exception as e:
-            frappe.log_error(title="Error upgrading SMRITI Barcode Settings DocType", message=str(e))
-        return
-
-    try:
-        doc = frappe.new_doc("DocType")
-        doc.name = "SMRITI Barcode Settings"
-        doc.module = "SMRITI Retail OS"
-        doc.custom = 1
-        doc.editable_grid = 0
-        doc.quick_entry = 0
-        doc.track_changes = 1
-        doc.issingle = 1
-
-        fields = [
-            {"fieldname": "barcode_hrt_reserved_height_mm", "fieldtype": "Float", "label": "Barcode HRT Reserved Height (mm)", "default": 2.5},
-            {"fieldname": "enforce_printability_threshold", "fieldtype": "Check", "label": "Enforce Printability Threshold", "default": 1}
-        ] + new_fields
-        for f in fields:
-            doc.append("fields", f)
-
-        doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
-        doc.append("permissions", {"role": "SMRITI Store Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
-
-        doc.insert(ignore_permissions=True)
-        frappe.db.commit()
-        
-        # Seed default value
-        settings = frappe.get_doc("SMRITI Barcode Settings")
-        settings.barcode_hrt_reserved_height_mm = 2.5
-        settings.enforce_printability_threshold = 1
-        for nf in new_fields:
-            settings.set(nf["fieldname"], 0)
-        settings.save(ignore_permissions=True)
-        frappe.db.commit()
-        
-        print("[SMRITI] Created SMRITI Barcode Settings DocType")
+                print("[SMRITI] Seeded defaults for SMRITI Barcode Settings")
     except Exception as e:
-        frappe.log_error(title="Error creating SMRITI Barcode Settings DocType", message=str(e))
+        frappe.log_error(title="Error seeding defaults for SMRITI Barcode Settings", message=str(e))
+
 
 
 

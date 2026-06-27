@@ -354,6 +354,21 @@
       "hex": 0,
       "rgba": 0,
       "note": "Auto-recorded on first validation"
+    },
+    "blank.html": {
+      "hex": 0,
+      "rgba": 0,
+      "note": "Auto-recorded on first validation"
+    },
+    "smriti_email_footer.html": {
+      "hex": 4,
+      "rgba": 0,
+      "note": "Auto-recorded on first validation"
+    },
+    "smriti_email_header.html": {
+      "hex": 4,
+      "rgba": 0,
+      "note": "Auto-recorded on first validation"
     }
   }
 }
