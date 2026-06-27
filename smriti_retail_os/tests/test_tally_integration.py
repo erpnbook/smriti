@@ -144,3 +144,107 @@ class TestTallyIntegration(unittest.TestCase):
 		"""Tests getting sync logs list."""
 		logs = tally_api.get_sync_logs(limit=5)
 		self.assertIsNotNone(logs)
+
+	def test_purchase_voucher_xml(self):
+		"""Tests generating Tally XML for a Purchase Invoice."""
+		settings = frappe.get_doc("SMRITI Tally Settings")
+		settings.tally_company = "Purchase Test Company"
+		settings.purchase_ledger = "Test Purchase Account"
+		
+		# In-memory Purchase Invoice doc
+		mock_doc = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"name": "PINV-26-00001",
+			"posting_date": "2026-06-27",
+			"supplier": "Test Supplier",
+			"grand_total": 500.0,
+			"net_total": 500.0,
+			"is_return": 0,
+			"taxes": []
+		})
+		
+		xml_output = tally_service.generate_voucher_xml("Purchase Invoice", mock_doc, settings)
+		self.assertIn("<VOUCHER VCHTYPE=\"Purchase\"", xml_output)
+		self.assertIn("<PARTYLEDGERNAME>Test Supplier</PARTYLEDGERNAME>", xml_output)
+		self.assertIn("<LEDGERNAME>Test Purchase Account</LEDGERNAME>", xml_output)
+
+	def test_credit_note_xml(self):
+		"""Tests generating Tally XML for a Credit Note."""
+		settings = frappe.get_doc("SMRITI Tally Settings")
+		settings.sales_ledger = "Test Sales Account"
+		
+		mock_doc = frappe.get_doc({
+			"doctype": "Sales Invoice",
+			"name": "SINV-26-CN001",
+			"posting_date": "2026-06-27",
+			"customer": "Test Customer",
+			"grand_total": 200.0,
+			"net_total": 200.0,
+			"is_return": 1,
+			"taxes": []
+		})
+		
+		xml_output = tally_service.generate_voucher_xml("Sales Invoice", mock_doc, settings)
+		self.assertIn("<VOUCHER VCHTYPE=\"Credit Note\"", xml_output)
+		self.assertIn("<PARTYLEDGERNAME>Test Customer</PARTYLEDGERNAME>", xml_output)
+		self.assertIn("<ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>", xml_output) # Credit note credit party
+
+	def test_debit_note_xml(self):
+		"""Tests generating Tally XML for a Debit Note."""
+		settings = frappe.get_doc("SMRITI Tally Settings")
+		settings.purchase_ledger = "Test Purchase Account"
+		
+		mock_doc = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"name": "PINV-26-DN001",
+			"posting_date": "2026-06-27",
+			"supplier": "Test Supplier",
+			"grand_total": 300.0,
+			"net_total": 300.0,
+			"is_return": 1,
+			"taxes": []
+		})
+		
+		xml_output = tally_service.generate_voucher_xml("Purchase Invoice", mock_doc, settings)
+		self.assertIn("<VOUCHER VCHTYPE=\"Debit Note\"", xml_output)
+		self.assertIn("<PARTYLEDGERNAME>Test Supplier</PARTYLEDGERNAME>", xml_output)
+
+	def test_payment_entry_xml(self):
+		"""Tests generating Tally XML for Payment Entry Receipt & Payment."""
+		settings = frappe.get_doc("SMRITI Tally Settings")
+		settings.cash_ledger = "Tally Cash"
+		settings.bank_ledger = "Tally Bank"
+		
+		# Receipt (Receive Advance)
+		receipt_doc = frappe.get_doc({
+			"doctype": "Payment Entry",
+			"name": "PE-26-00001",
+			"posting_date": "2026-06-27",
+			"payment_type": "Receive",
+			"party_type": "Customer",
+			"party": "Test Customer",
+			"paid_amount": 1000.0,
+			"paid_to": "Cash"
+		})
+		
+		xml_receipt = tally_service.generate_voucher_xml("Payment Entry", receipt_doc, settings)
+		self.assertIn("<VOUCHER VCHTYPE=\"Receipt\"", xml_receipt)
+		self.assertIn("<PARTYLEDGERNAME>Test Customer</PARTYLEDGERNAME>", xml_receipt)
+		self.assertIn("<LEDGERNAME>Tally Cash</LEDGERNAME>", xml_receipt)
+		
+		# Payment (Pay Supplier)
+		payment_doc = frappe.get_doc({
+			"doctype": "Payment Entry",
+			"name": "PE-26-00002",
+			"posting_date": "2026-06-27",
+			"payment_type": "Pay",
+			"party_type": "Supplier",
+			"party": "Test Supplier",
+			"paid_amount": 2500.0,
+			"paid_from": "Bank"
+		})
+		
+		xml_payment = tally_service.generate_voucher_xml("Payment Entry", payment_doc, settings)
+		self.assertIn("<VOUCHER VCHTYPE=\"Payment\"", xml_payment)
+		self.assertIn("<PARTYLEDGERNAME>Test Supplier</PARTYLEDGERNAME>", xml_payment)
+		self.assertIn("<LEDGERNAME>Tally Bank</LEDGERNAME>", xml_payment)

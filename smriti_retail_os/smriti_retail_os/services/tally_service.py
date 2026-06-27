@@ -35,37 +35,125 @@ def get_tally_date_format(date_val):
 	return date_val.strftime("%Y%m%d")
 
 def generate_sales_voucher_xml(invoice, settings=None):
-	"""Generates a Tally-compliant XML Voucher payload for a Sales Invoice."""
+	"""Backward compatibility wrapper for Sales Invoice XML generation."""
+	return generate_voucher_xml("Sales Invoice", invoice, settings)
+
+def generate_voucher_xml(doctype, doc_name, settings=None):
+	"""Generates a Tally-compliant XML Voucher payload for Sales, Purchase, Debit/Credit Notes, and Receipt/Payment entries."""
 	if not settings:
 		settings = get_settings()
 
-	invoice_doc = frappe.get_doc("Sales Invoice", invoice) if isinstance(invoice, str) else invoice
-	date_str = get_tally_date_format(invoice_doc.posting_date)
+	doc = frappe.get_doc(doctype, doc_name) if isinstance(doc_name, str) else doc_name
+	date_str = get_tally_date_format(doc.posting_date)
 	
 	company_name = settings.tally_company or "SMRITI Company"
 	sales_ledger = settings.sales_ledger or "Sales Account"
+	purchase_ledger = settings.purchase_ledger or "Purchase Account"
 	cgst_ledger = settings.cgst_ledger or "CGST"
 	sgst_ledger = settings.sgst_ledger or "SGST"
 	igst_ledger = settings.igst_ledger or "IGST"
 
-	# Determine customer ledger (for POS, it could be Cash/Bank, or standard Customer)
-	party_ledger = invoice_doc.customer
-	if invoice_doc.is_pos:
-		# If POS, check mode of payment to resolve Cash or Bank ledger mapping
-		if invoice_doc.payments:
-			first_pay = invoice_doc.payments[0]
-			if "cash" in (first_pay.mode_of_payment or "").lower():
-				party_ledger = settings.cash_ledger or "Cash"
-			else:
-				party_ledger = settings.bank_ledger or "Bank"
+	if doctype == "Payment Entry":
+		vch_type = "Receipt" if doc.payment_type == "Receive" else "Payment"
+		party_ledger = doc.party
+		
+		# Resolve Cash/Bank Ledger
+		account_fieldname = "paid_to" if vch_type == "Receipt" else "paid_from"
+		account_head = doc.get(account_fieldname)
+		is_cash = False
+		if account_head:
+			acc_type = frappe.db.get_value("Account", account_head, "account_type")
+			if acc_type == "Cash" or "cash" in account_head.lower():
+				is_cash = True
+		cash_bank_ledger = settings.cash_ledger if is_cash else settings.bank_ledger
+		cash_bank_ledger = cash_bank_ledger or ("Cash" if is_cash else "Bank")
+		
+		total_amount = float(doc.paid_amount or 0.0)
+		
+		# Decide Sign and Deemed Positive flag:
+		# Receipt: Debit Cash/Bank (Yes, -Total), Credit Party (No, +Total)
+		# Payment: Debit Party (Yes, -Total), Credit Cash/Bank (No, +Total)
+		if vch_type == "Receipt":
+			party_deemed = "No"
+			party_amt = f"{total_amount:.2f}"
+			cb_deemed = "Yes"
+			cb_amt = f"-{total_amount:.2f}"
 		else:
-			party_ledger = settings.cash_ledger or "Cash"
+			party_deemed = "Yes"
+			party_amt = f"-{total_amount:.2f}"
+			cb_deemed = "No"
+			cb_amt = f"{total_amount:.2f}"
+
+		# Build XML lines for Payment Entry
+		xml_lines = [
+			"<ENVELOPE>",
+			"  <HEADER>",
+			"    <TALLYREQUEST>Import Data</TALLYREQUEST>",
+			"  </HEADER>",
+			"  <BODY>",
+			"    <IMPORTDATA>",
+			"      <REQUESTDESC>",
+			"        <REPORTNAME>Vouchers</REPORTNAME>",
+			"        <STATICVARIABLES>",
+			f"          <SVCOMPANYNAME>{company_name}</SVCOMPANYNAME>",
+			"        </STATICVARIABLES>",
+			"      </REQUESTDESC>",
+			"      <REQUESTDATA>",
+			'        <TALLYMESSAGE xmlns:UDF="TallyUDF">',
+			f'          <VOUCHER VCHTYPE="{vch_type}" ACTION="Create" OBJVIEW="Invoice">',
+			f"            <DATE>{date_str}</DATE>",
+			f"            <VOUCHERNUMBER>{doc.name}</VOUCHERNUMBER>",
+			f"            <PARTYLEDGERNAME>{party_ledger}</PARTYLEDGERNAME>",
+			f"            <EFFECTIVEDATE>{date_str}</EFFECTIVEDATE>",
+			# Party Entry
+			"            <ALLLEDGERENTRIES.LIST>",
+			f"              <LEDGERNAME>{party_ledger}</LEDGERNAME>",
+			f"              <ISDEEMEDPOSITIVE>{party_deemed}</ISDEEMEDPOSITIVE>",
+			f"              <AMOUNT>{party_amt}</AMOUNT>",
+			"            </ALLLEDGERENTRIES.LIST>",
+			# Cash/Bank Entry
+			"            <ALLLEDGERENTRIES.LIST>",
+			f"              <LEDGERNAME>{cash_bank_ledger}</LEDGERNAME>",
+			f"              <ISDEEMEDPOSITIVE>{cb_deemed}</ISDEEMEDPOSITIVE>",
+			f"              <AMOUNT>{cb_amt}</AMOUNT>",
+			"            </ALLLEDGERENTRIES.LIST>",
+			"          </VOUCHER>",
+			"        </TALLYMESSAGE>",
+			"      </REQUESTDATA>",
+			"    </IMPORTDATA>",
+			"  </BODY>",
+			"</ENVELOPE>"
+		]
+		return "\r\n".join(xml_lines)
+
+	# Determine Voucher Type & Debit/Credit direction for Invoice Doctypes
+	is_return = doc.get("is_return") or 0
+	
+	if doctype == "Sales Invoice":
+		vch_type = "Credit Note" if is_return else "Sales"
+	else:
+		vch_type = "Debit Note" if is_return else "Purchase"
+
+	# Resolve party ledger (Customer or Supplier)
+	if doctype == "Sales Invoice":
+		party_ledger = doc.customer
+		if doc.is_pos:
+			if doc.payments:
+				first_pay = doc.payments[0]
+				if "cash" in (first_pay.mode_of_payment or "").lower():
+					party_ledger = settings.cash_ledger or "Cash"
+				else:
+					party_ledger = settings.bank_ledger or "Bank"
+			else:
+				party_ledger = settings.cash_ledger or "Cash"
+	else:
+		party_ledger = doc.supplier
 
 	# Calculate tax breakdowns
 	cgst_amt = 0.0
 	sgst_amt = 0.0
 	igst_amt = 0.0
-	for tax in invoice_doc.get("taxes", []):
+	for tax in doc.get("taxes", []):
 		lbl = (tax.description or tax.account_head or "").lower()
 		if "cgst" in lbl:
 			cgst_amt += float(tax.tax_amount or 0.0)
@@ -74,15 +162,48 @@ def generate_sales_voucher_xml(invoice, settings=None):
 		elif "igst" in lbl:
 			igst_amt += float(tax.tax_amount or 0.0)
 
-	total_amount = float(invoice_doc.grand_total or 0.0)
-	net_amount = float(invoice_doc.net_total or 0.0)
+	total_amount = float(doc.grand_total or 0.0)
+	net_amount = float(doc.net_total or 0.0)
 
-	# Format amounts:
-	# Debit (Party/Customer): ISDEEMEDPOSITIVE = Yes, AMOUNT = -Total
-	# Credit (Sales): ISDEEMEDPOSITIVE = No, AMOUNT = Net
-	# Credit (Taxes): ISDEEMEDPOSITIVE = No, AMOUNT = Tax
+	# Decide Sign and Deemed Positive flag:
+	# Party:
+	# - Sales: Debited (Yes, -Total)
+	# - Credit Note: Credited (No, +Total)
+	# - Purchase: Credited (No, +Total)
+	# - Debit Note: Debited (Yes, -Total)
+	if (vch_type == "Sales") or (vch_type == "Debit Note"):
+		party_deemed = "Yes"
+		party_amt = f"-{total_amount:.2f}"
+	else:
+		party_deemed = "No"
+		party_amt = f"{total_amount:.2f}"
 
-	# XML Template for Voucher Import
+	# Revenue (Sales / Purchase):
+	# - Sales: Credited (No, +Net)
+	# - Credit Note: Debited (Yes, -Net)
+	# - Purchase: Debited (Yes, -Net)
+	# - Debit Note: Credited (No, +Net)
+	rev_ledger = sales_ledger if doctype == "Sales Invoice" else purchase_ledger
+	if (vch_type == "Sales") or (vch_type == "Debit Note"):
+		rev_deemed = "No"
+		rev_amt = f"{net_amount:.2f}"
+	else:
+		rev_deemed = "Yes"
+		rev_amt = f"-{net_amount:.2f}"
+
+	# Taxes (GST):
+	# - Sales: Credited (No, +Tax)
+	# - Credit Note: Debited (Yes, -Tax)
+	# - Purchase: Debited (Yes, -Tax)
+	# - Debit Note: Credited (No, +Tax)
+	if (vch_type == "Sales") or (vch_type == "Debit Note"):
+		tax_deemed = "No"
+		tax_sign = ""
+	else:
+		tax_deemed = "Yes"
+		tax_sign = "-"
+
+	# Build XML lines
 	xml_lines = [
 		"<ENVELOPE>",
 		"  <HEADER>",
@@ -98,22 +219,22 @@ def generate_sales_voucher_xml(invoice, settings=None):
 		"      </REQUESTDESC>",
 		"      <REQUESTDATA>",
 		'        <TALLYMESSAGE xmlns:UDF="TallyUDF">',
-		f'          <VOUCHER VCHTYPE="Sales" ACTION="Create" OBJVIEW="Invoice">',
+		f'          <VOUCHER VCHTYPE="{vch_type}" ACTION="Create" OBJVIEW="Invoice">',
 		f"            <DATE>{date_str}</DATE>",
-		f"            <VOUCHERNUMBER>{invoice_doc.name}</VOUCHERNUMBER>",
+		f"            <VOUCHERNUMBER>{doc.name}</VOUCHERNUMBER>",
 		f"            <PARTYLEDGERNAME>{party_ledger}</PARTYLEDGERNAME>",
 		f"            <EFFECTIVEDATE>{date_str}</EFFECTIVEDATE>",
-		# Debit Entry (Customer / Cash / Bank)
+		# Party Entry
 		"            <ALLLEDGERENTRIES.LIST>",
 		f"              <LEDGERNAME>{party_ledger}</LEDGERNAME>",
-		"              <ISDEEMEDPOSITIVE>Yes</ISDEEMEDPOSITIVE>",
-		f"              <AMOUNT>-{total_amount:.2f}</AMOUNT>",
+		f"              <ISDEEMEDPOSITIVE>{party_deemed}</ISDEEMEDPOSITIVE>",
+		f"              <AMOUNT>{party_amt}</AMOUNT>",
 		"            </ALLLEDGERENTRIES.LIST>",
-		# Credit Entry (Sales)
+		# Revenue Entry (Sales / Purchase)
 		"            <ALLLEDGERENTRIES.LIST>",
-		f"              <LEDGERNAME>{sales_ledger}</LEDGERNAME>",
-		"              <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>",
-		f"              <AMOUNT>{net_amount:.2f}</AMOUNT>",
+		f"              <LEDGERNAME>{rev_ledger}</LEDGERNAME>",
+		f"              <ISDEEMEDPOSITIVE>{rev_deemed}</ISDEEMEDPOSITIVE>",
+		f"              <AMOUNT>{rev_amt}</AMOUNT>",
 		"            </ALLLEDGERENTRIES.LIST>"
 	]
 
@@ -122,8 +243,8 @@ def generate_sales_voucher_xml(invoice, settings=None):
 		xml_lines.extend([
 			"            <ALLLEDGERENTRIES.LIST>",
 			f"              <LEDGERNAME>{cgst_ledger}</LEDGERNAME>",
-			"              <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>",
-			f"              <AMOUNT>{cgst_amt:.2f}</AMOUNT>",
+			f"              <ISDEEMEDPOSITIVE>{tax_deemed}</ISDEEMEDPOSITIVE>",
+			f"              <AMOUNT>{tax_sign}{cgst_amt:.2f}</AMOUNT>",
 			"            </ALLLEDGERENTRIES.LIST>"
 		])
 
@@ -132,8 +253,8 @@ def generate_sales_voucher_xml(invoice, settings=None):
 		xml_lines.extend([
 			"            <ALLLEDGERENTRIES.LIST>",
 			f"              <LEDGERNAME>{sgst_ledger}</LEDGERNAME>",
-			"              <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>",
-			f"              <AMOUNT>{sgst_amt:.2f}</AMOUNT>",
+			f"              <ISDEEMEDPOSITIVE>{tax_deemed}</ISDEEMEDPOSITIVE>",
+			f"              <AMOUNT>{tax_sign}{sgst_amt:.2f}</AMOUNT>",
 			"            </ALLLEDGERENTRIES.LIST>"
 		])
 
@@ -142,8 +263,8 @@ def generate_sales_voucher_xml(invoice, settings=None):
 		xml_lines.extend([
 			"            <ALLLEDGERENTRIES.LIST>",
 			f"              <LEDGERNAME>{igst_ledger}</LEDGERNAME>",
-			"              <ISDEEMEDPOSITIVE>No</ISDEEMEDPOSITIVE>",
-			f"              <AMOUNT>{igst_amt:.2f}</AMOUNT>",
+			f"              <ISDEEMEDPOSITIVE>{tax_deemed}</ISDEEMEDPOSITIVE>",
+			f"              <AMOUNT>{tax_sign}{igst_amt:.2f}</AMOUNT>",
 			"            </ALLLEDGERENTRIES.LIST>"
 		])
 

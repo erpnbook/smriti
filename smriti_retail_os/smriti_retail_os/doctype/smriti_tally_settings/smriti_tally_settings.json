@@ -16,6 +16,7 @@
   "cash_ledger",
   "bank_ledger",
   "sales_ledger",
+  "purchase_ledger",
   "cgst_ledger",
   "sgst_ledger",
   "igst_ledger",
@@ -67,6 +68,13 @@
    "fieldname": "sales_ledger",
    "fieldtype": "Data",
    "label": "Sales Ledger Name",
+   "reqd": 1
+  },
+  {
+   "default": "Purchase Account",
+   "fieldname": "purchase_ledger",
+   "fieldtype": "Data",
+   "label": "Purchase Ledger Name",
    "reqd": 1
   },
   {

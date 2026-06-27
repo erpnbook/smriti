@@ -192,6 +192,17 @@ select.form-input option { background:var(--card); }
                     </div>
                     <div class="filters-row">
                         <div class="form-group">
+                            <label class="form-label">Voucher Type</label>
+                            <select id="voucher-type" class="form-input" style="height: 38px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 0 12px; color: var(--text);" onchange="loadPendingVouchers()">
+                                <option value="Sales">Sales Invoice</option>
+                                <option value="Purchase">Purchase Invoice</option>
+                                <option value="Credit Note">Credit Note</option>
+                                <option value="Debit Note">Debit Note</option>
+                                <option value="Receipt">Customer Receipt / Advance</option>
+                                <option value="Payment">Supplier Payment</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">From Date</label>
                             <input type="date" id="from-date" class="form-input" onchange="loadPendingVouchers()">
                         </div>
@@ -208,7 +219,7 @@ select.form-input option { background:var(--card); }
                         <thead>
                             <tr>
                                 <th style="width: 40px;"><input type="checkbox" id="select-all" onclick="toggleSelectAll(this)"></th>
-                                <th>Invoice Name</th>
+                                <th>Voucher Name</th>
                                 <th>Posting Date</th>
                                 <th>Party Name</th>
                                 <th>Grand Total</th>
@@ -273,6 +284,10 @@ select.form-input option { background:var(--card); }
                         <div class="form-group">
                             <label class="form-label">Sales Ledger Name</label>
                             <input type="text" id="sales-ledger" class="form-input" placeholder="Sales Account">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Purchase Ledger Name</label>
+                            <input type="text" id="purchase-ledger" class="form-input" placeholder="Purchase Account">
                         </div>
                         <div class="form-group">
                             <label class="form-label">CGST Ledger Name</label>
@@ -431,6 +446,7 @@ function loadTallySettings() {
                 document.getElementById('cash-ledger').value = s.cash_ledger || 'Cash';
                 document.getElementById('bank-ledger').value = s.bank_ledger || 'Bank';
                 document.getElementById('sales-ledger').value = s.sales_ledger || 'Sales Account';
+                document.getElementById('purchase-ledger').value = s.purchase_ledger || 'Purchase Account';
                 document.getElementById('cgst-ledger').value = s.cgst_ledger || 'CGST';
                 document.getElementById('sgst-ledger').value = s.sgst_ledger || 'SGST';
                 document.getElementById('igst-ledger').value = s.igst_ledger || 'IGST';
@@ -450,6 +466,7 @@ function saveTallySettings() {
         cash_ledger: document.getElementById('cash-ledger').value,
         bank_ledger: document.getElementById('bank-ledger').value,
         sales_ledger: document.getElementById('sales-ledger').value,
+        purchase_ledger: document.getElementById('purchase-ledger').value,
         cgst_ledger: document.getElementById('cgst-ledger').value,
         sgst_ledger: document.getElementById('sgst-ledger').value,
         igst_ledger: document.getElementById('igst-ledger').value,
@@ -480,12 +497,13 @@ function saveTallySettings() {
 function loadPendingVouchers() {
     const from_date = document.getElementById('from-date').value;
     const to_date = document.getElementById('to-date').value;
+    const vch_type = document.getElementById('voucher-type').value;
     
     document.getElementById('kpi-range').innerText = `${from_date} to ${to_date}`;
 
     frappe.call({
         method: 'smriti_retail_os.smriti_retail_os.api.tally_api.get_pending_vouchers',
-        args: { from_date: from_date, to_date: to_date },
+        args: { from_date: from_date, to_date: to_date, voucher_type: vch_type },
         callback: function(r) {
             const tbody = document.getElementById('vouchers-tbody');
             tbody.innerHTML = '';
@@ -498,13 +516,14 @@ function loadPendingVouchers() {
                     if (item.status === 'Pending') pendingCount++;
                     
                     const tr = document.createElement('tr');
+                    const display_type = item.voucher_type || vch_type;
                     tr.innerHTML = `
                         <td><input type="checkbox" class="voucher-chk" value="${item.name}"></td>
                         <td class="mono">${item.name}</td>
                         <td>${item.posting_date}</td>
                         <td>${item.customer}</td>
                         <td class="mono">₹${parseFloat(item.grand_total).toFixed(2)}</td>
-                        <td>${item.is_pos ? 'POS Retail' : 'Sales Standard'}</td>
+                        <td>${item.is_pos ? 'POS Retail' : display_type}</td>
                         <td><span class="badge badge-${item.status}">${item.status}</span></td>
                     `;
                     tbody.appendChild(tr);
@@ -515,7 +534,7 @@ function loadPendingVouchers() {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">
-                            No submitted Sales Invoices found for this period.
+                            No submitted ${vch_type} vouchers found for this period.
                         </td>
                     </tr>
                 `;
@@ -541,9 +560,10 @@ function getSelectedVouchers() {
 function triggerXmlExport() {
     const from_date = document.getElementById('from-date').value;
     const to_date = document.getElementById('to-date').value;
+    const vch_type = document.getElementById('voucher-type').value;
     const selected = getSelectedVouchers();
     
-    let url = `/api/method/smriti_retail_os.smriti_retail_os.api.tally_api.export_bulk_xml?from_date=${from_date}&to_date=${to_date}`;
+    let url = `/api/method/smriti_retail_os.smriti_retail_os.api.tally_api.export_bulk_xml?from_date=${from_date}&to_date=${to_date}&voucher_type=${vch_type}`;
     if (selected.length > 0) {
         url += `&invoice_names=${encodeURIComponent(JSON.stringify(selected))}`;
     }
@@ -556,16 +576,18 @@ function triggerXmlExport() {
 function triggerDirectSync() {
     const from_date = document.getElementById('from-date').value;
     const to_date = document.getElementById('to-date').value;
+    const vch_type = document.getElementById('voucher-type').value;
     const selected = getSelectedVouchers();
 
-    showToast('Syncing selected invoices to TallyPrime...', 'ok');
+    showToast(`Syncing selected ${vch_type} vouchers to TallyPrime...`, 'ok');
 
     frappe.call({
         method: 'smriti_retail_os.smriti_retail_os.api.tally_api.sync_to_tally',
         args: {
             from_date: from_date,
             to_date: to_date,
-            invoice_names: selected.length > 0 ? selected : null
+            invoice_names: selected.length > 0 ? selected : null,
+            voucher_type: vch_type
         },
         callback: function(r) {
             if (r.message) {
