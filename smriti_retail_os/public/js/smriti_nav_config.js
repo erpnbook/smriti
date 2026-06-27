@@ -71,6 +71,7 @@ const SMRITI_ROUTE_MAP = {
   "pos_profiles":                     "/smriti-pos-profiles",
   "knowledge_studio":                 "/smriti-knowledge-studio",
   "tally_integration":                "/smriti-tally",
+  "uie_integration":                  "/smriti-uie",
 };
 
 function resolveSmritiRoute(key) {
@@ -413,10 +414,10 @@ const SMRITI_NAV = {
           route: "/advances",
           standalone_route: "/advances",
           status: "active" },
-        { id: "tally_integration",
-          label: "Tally Integration",
-          route: resolveSmritiRoute("tally_integration"),
-          standalone_route: "/smriti-tally",
+        { id: "uie_integration",
+          label: "Integration Center",
+          route: resolveSmritiRoute("uie_integration"),
+          standalone_route: "/smriti-uie",
           status: "active" }
       ]
     },
