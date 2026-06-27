@@ -22,6 +22,14 @@ from smriti_retail_os.services.formula_service import (
 )
 
 class TestFormulaRegistry(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from smriti_retail_os.patches.seed_default_formulas import execute as seed_formulas
+        seed_formulas()
+        from smriti_retail_os.patches.seed_telemetry_meta import execute as seed_telemetry
+        seed_telemetry()
+        frappe.db.commit()
+
     def setUp(self):
         # Clean up any test formula entries to avoid collision
         frappe.db.delete("SMRITI Formula Definition", {"formula_id": "TST-001"})

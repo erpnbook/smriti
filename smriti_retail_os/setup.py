@@ -1968,7 +1968,137 @@ def ensure_cge_v2_doctypes():
                             print(msg)
                             frappe.log_error(msg, "SMRITI CGE Index Verification")
     except Exception as e:
-        print(f"[SMRITI] Warning verifying database indexes: {str(e)}")
+        print(f"[SMRITI] Warning verifying database indexes: {str(e)}")def create_udne_doctypes():
+    """Creates custom DocTypes for UDNE (Universal Document Numbering Engine)."""
+    # 1. SMRITI Numbering Rule
+    if not frappe.db.exists("DocType", "SMRITI Numbering Rule"):
+        try:
+            doc = frappe.new_doc("DocType")
+            doc.name = "SMRITI Numbering Rule"
+            doc.module = "SMRITI Retail OS"
+            doc.custom = 1
+            doc.autoname = "Prompt"
+            doc.editable_grid = 0
+            doc.quick_entry = 0
+            doc.track_changes = 1
+            doc.issingle = 0
+            fields = [
+                {"fieldname": "document_type", "fieldtype": "Link", "options": "DocType", "label": "Document Type", "reqd": 1, "in_list_view": 1},
+                {"fieldname": "is_active", "fieldtype": "Check", "label": "Is Active", "default": "1", "in_list_view": 1},
+                {"fieldname": "priority", "fieldtype": "Select", "options": "Store\nBranch\nCompany\nGlobal", "label": "Priority", "default": "Global", "in_list_view": 1},
+                {"fieldname": "priority_value", "fieldtype": "Data", "label": "Priority Value", "in_list_view": 1},
+                {"fieldname": "version", "fieldtype": "Int", "label": "Version", "default": "1"},
+                {"fieldname": "effective_from", "fieldtype": "Date", "label": "Effective From"},
+                {"fieldname": "effective_until", "fieldtype": "Date", "label": "Effective Until"},
+                {"fieldname": "template", "fieldtype": "Data", "label": "Template", "reqd": 1},
+                {"fieldname": "reset_rule", "fieldtype": "Select", "options": "Never\nYearly\nMonthly\nDaily\nFinancial Year\nStore\nTerminal", "label": "Reset Rule", "default": "Never"},
+                {"fieldname": "allow_manual_override", "fieldtype": "Check", "label": "Allow Manual Override", "default": "0"}
+            ]
+            for f in fields:
+                doc.append("fields", f)
+            doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+            doc.append("permissions", {"role": "SMRITI Administrator", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+            doc.insert(ignore_permissions=True)
+            frappe.db.commit()
+            print("[SMRITI] Created SMRITI Numbering Rule DocType")
+        except Exception as e:
+            frappe.log_error(f"Error creating SMRITI Numbering Rule DocType: {str(e)}")
+
+    # 2. SMRITI Numbering Counter
+    if not frappe.db.exists("DocType", "SMRITI Numbering Counter"):
+        try:
+            doc = frappe.new_doc("DocType")
+            doc.name = "SMRITI Numbering Counter"
+            doc.module = "SMRITI Retail OS"
+            doc.custom = 1
+            doc.autoname = "Prompt"
+            doc.editable_grid = 0
+            doc.quick_entry = 0
+            doc.track_changes = 1
+            doc.issingle = 0
+            fields = [
+                {"fieldname": "rule", "fieldtype": "Link", "options": "SMRITI Numbering Rule", "label": "Rule", "reqd": 1, "in_list_view": 1},
+                {"fieldname": "context_hash", "fieldtype": "Data", "label": "Context Hash", "reqd": 1, "unique": 1, "in_list_view": 1},
+                {"fieldname": "context_details", "fieldtype": "Small Text", "label": "Context Details"},
+                {"fieldname": "current_value", "fieldtype": "Int", "label": "Current Value", "default": "0", "in_list_view": 1}
+            ]
+            for f in fields:
+                doc.append("fields", f)
+            doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+            doc.append("permissions", {"role": "SMRITI Administrator", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+            doc.insert(ignore_permissions=True)
+            frappe.db.commit()
+            print("[SMRITI] Created SMRITI Numbering Counter DocType")
+        except Exception as e:
+            frappe.log_error(f"Error creating SMRITI Numbering Counter DocType: {str(e)}")
+
+    # 3. SMRITI Numbering Reserved Range
+    if not frappe.db.exists("DocType", "SMRITI Numbering Reserved Range"):
+        try:
+            doc = frappe.new_doc("DocType")
+            doc.name = "SMRITI Numbering Reserved Range"
+            doc.module = "SMRITI Retail OS"
+            doc.custom = 1
+            doc.autoname = "Prompt"
+            doc.editable_grid = 0
+            doc.quick_entry = 0
+            doc.track_changes = 1
+            doc.issingle = 0
+            fields = [
+                {"fieldname": "document_type", "fieldtype": "Link", "options": "DocType", "label": "Document Type", "reqd": 1, "in_list_view": 1},
+                {"fieldname": "terminal_id", "fieldtype": "Data", "label": "Terminal ID", "reqd": 1, "in_list_view": 1},
+                {"fieldname": "start_number", "fieldtype": "Int", "label": "Start Number", "reqd": 1},
+                {"fieldname": "end_number", "fieldtype": "Int", "label": "End Number", "reqd": 1},
+                {"fieldname": "current_counter", "fieldtype": "Int", "label": "Current Counter", "default": "0"},
+                {"fieldname": "status", "fieldtype": "Select", "options": "Allocated\nActive\nExhausted\nExpired\nReleased\nArchived", "label": "Status", "default": "Allocated", "in_list_view": 1},
+                {"fieldname": "expiry_datetime", "fieldtype": "Datetime", "label": "Expiry Datetime"}
+            ]
+            for f in fields:
+                doc.append("fields", f)
+            doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+            doc.append("permissions", {"role": "SMRITI Administrator", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+            doc.insert(ignore_permissions=True)
+            frappe.db.commit()
+            print("[SMRITI] Created SMRITI Numbering Reserved Range DocType")
+        except Exception as e:
+            frappe.log_error(f"Error creating SMRITI Numbering Reserved Range DocType: {str(e)}")
+
+    # 4. SMRITI Numbering Audit Log
+    if not frappe.db.exists("DocType", "SMRITI Numbering Audit Log"):
+        try:
+            doc = frappe.new_doc("DocType")
+            doc.name = "SMRITI Numbering Audit Log"
+            doc.module = "SMRITI Retail OS"
+            doc.custom = 1
+            doc.autoname = "Prompt"
+            doc.editable_grid = 0
+            doc.quick_entry = 0
+            doc.track_changes = 0
+            doc.issingle = 0
+            fields = [
+                {"fieldname": "document_type", "fieldtype": "Link", "options": "DocType", "label": "Document Type", "reqd": 1, "in_list_view": 1},
+                {"fieldname": "document_name", "fieldtype": "Data", "label": "Document Name", "reqd": 1, "in_list_view": 1},
+                {"fieldname": "generated_number", "fieldtype": "Data", "label": "Generated Number", "reqd": 1, "in_list_view": 1},
+                {"fieldname": "rule_version", "fieldtype": "Int", "label": "Rule Version"},
+                {"fieldname": "generation_mode", "fieldtype": "Select", "options": "Auto\nManual\nOffline", "label": "Generation Mode", "default": "Auto"},
+                {"fieldname": "generation_duration_ms", "fieldtype": "Float", "label": "Generation Duration (ms)"},
+                {"fieldname": "retry_count", "fieldtype": "Int", "label": "Retry Count", "default": "0"},
+                {"fieldname": "conflict_count", "fieldtype": "Int", "label": "Conflict Count", "default": "0"},
+                {"fieldname": "source_module", "fieldtype": "Data", "label": "Source Module"},
+                {"fieldname": "terminal_id", "fieldtype": "Data", "label": "Terminal ID"},
+                {"fieldname": "branch", "fieldtype": "Link", "options": "Warehouse", "label": "Branch"},
+                {"fieldname": "user", "fieldtype": "Link", "options": "User", "label": "User"},
+                {"fieldname": "timestamp", "fieldtype": "Datetime", "label": "Timestamp", "reqd": 1}
+            ]
+            for f in fields:
+                doc.append("fields", f)
+            doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+            doc.append("permissions", {"role": "SMRITI Administrator", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+            doc.insert(ignore_permissions=True)
+            frappe.db.commit()
+            print("[SMRITI] Created SMRITI Numbering Audit Log DocType")
+        except Exception as e:
+            frappe.log_error(f"Error creating SMRITI Numbering Audit Log DocType: {str(e)}")
 
 
 def setup_smriti_retail_os():
@@ -2028,6 +2158,9 @@ def setup_smriti_retail_os():
     # 0g. Verify and Bootstrap CGE v2 DocTypes (v2.0 Architecture Freeze)
     ensure_cge_v2_doctypes()
 
+    # 0h. Provision UDNE DocTypes (v1.0 GA Platform)
+    create_udne_doctypes()
+
     # 0d. Update Activity Log operation options
     setup_activity_log_options()
 
@@ -2041,7 +2174,6 @@ def setup_smriti_retail_os():
     # 1. Custom Fields Provisioning
     custom_fields = {}
 
-
     if frappe.db.exists("DocType", "SMRITI Company Settings"):
         custom_fields["SMRITI Company Settings"] = [
             {
@@ -2051,6 +2183,63 @@ def setup_smriti_retail_os():
                 "options": "Footwear\nFMCG\nGarments\nPharma\nCosmetics\nGeneral Retail",
                 "default": "Footwear",
                 "insert_after": "company",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_discount_mode",
+                "label": "Discount Mode",
+                "fieldtype": "Select",
+                "options": "Bill Only\nItem Only\nBoth",
+                "default": "Both",
+                "insert_after": "custom_business_type",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_enable_bill_sales_person",
+                "label": "Enable Bill Sales Person",
+                "fieldtype": "Check",
+                "default": "1",
+                "insert_after": "custom_discount_mode",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_enable_item_sales_person",
+                "label": "Enable Item Sales Person",
+                "fieldtype": "Check",
+                "default": "1",
+                "insert_after": "custom_enable_bill_sales_person",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_allow_item_sales_person_override",
+                "label": "Allow Item Sales Person Override",
+                "fieldtype": "Check",
+                "default": "1",
+                "insert_after": "custom_enable_item_sales_person",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_mandatory_discount_reason",
+                "label": "Mandatory Discount Reason",
+                "fieldtype": "Check",
+                "default": "0",
+                "insert_after": "custom_allow_item_sales_person_override",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_discount_approval_limit",
+                "label": "Discount Approval Limit (%)",
+                "fieldtype": "Float",
+                "default": "10.0",
+                "insert_after": "custom_mandatory_discount_reason",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_max_offline_cashier_discount",
+                "label": "Max Offline Cashier Discount (%)",
+                "fieldtype": "Float",
+                "default": "5.0",
+                "insert_after": "custom_discount_approval_limit",
                 "module": "SMRITI Retail OS"
             },
             {
@@ -2181,6 +2370,21 @@ def setup_smriti_retail_os():
                 "fieldtype": "Currency",
                 "insert_after": "custom_loyalty_points_earned",
                 "default": "0",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_sales_person",
+                "label": "Sales Person",
+                "fieldtype": "Link",
+                "options": "Sales Person",
+                "insert_after": "custom_coupon_discount",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_discount_reason",
+                "label": "Discount Reason",
+                "fieldtype": "Small Text",
+                "insert_after": "custom_sales_person",
                 "module": "SMRITI Retail OS"
             }
         ],
@@ -2521,6 +2725,55 @@ def setup_smriti_retail_os():
                 "fieldtype": "Currency",
                 "insert_after": "custom_loyalty_points_earned",
                 "default": "0",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_sales_person",
+                "label": "Sales Person",
+                "fieldtype": "Link",
+                "options": "Sales Person",
+                "insert_after": "custom_coupon_discount",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_discount_reason",
+                "label": "Discount Reason",
+                "fieldtype": "Small Text",
+                "insert_after": "custom_sales_person",
+                "module": "SMRITI Retail OS"
+            }
+        ],
+        "Sales Invoice Item": [
+            {
+                "fieldname": "custom_sales_person",
+                "label": "Sales Person",
+                "fieldtype": "Link",
+                "options": "Sales Person",
+                "insert_after": "discount_percentage",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_discount_reason",
+                "label": "Discount Reason",
+                "fieldtype": "Small Text",
+                "insert_after": "custom_sales_person",
+                "module": "SMRITI Retail OS"
+            }
+        ],
+        "POS Invoice Item": [
+            {
+                "fieldname": "custom_sales_person",
+                "label": "Sales Person",
+                "fieldtype": "Link",
+                "options": "Sales Person",
+                "insert_after": "discount_percentage",
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_discount_reason",
+                "label": "Discount Reason",
+                "fieldtype": "Small Text",
+                "insert_after": "custom_sales_person",
                 "module": "SMRITI Retail OS"
             }
         ],

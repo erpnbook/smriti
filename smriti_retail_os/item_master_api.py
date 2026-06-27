@@ -1716,7 +1716,7 @@ def reset_all_items():
         "GL Entry"
     ]
     for dt in transaction_doctypes:
-        if frappe.db.exists(dt):
+        if frappe.db.count(dt) > 0:
             frappe.throw(
                 _("Cannot reset Item Master because active transactions exist in {0}. Please reset all transactions first.").format(dt),
                 title=_("Active Transactions Found")

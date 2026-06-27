@@ -171,23 +171,27 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
             self.income_account = acc.name
             
         # Configure Round Off and Cash details on the test Company to support payments precision rounding
-        comp_doc = frappe.get_doc("Company", self.company)
-        comp_doc.round_off_cost_center = self.cost_center
-        comp_doc.round_off_account = frappe.db.get_value("Account", {"company": self.company, "account_type": "Round Off"}, "name") or self.income_account
-        comp_doc.default_cash_account = frappe.db.get_value("Account", {"company": self.company, "account_type": "Cash"}, "name") or frappe.db.get_value("Account", {"company": self.company, "account_name": "Cash"}, "name")
+        round_off_cost_center = self.cost_center
+        round_off_account = frappe.db.get_value("Account", {"company": self.company, "account_type": "Round Off"}, "name") or self.income_account
+        default_cash_account = frappe.db.get_value("Account", {"company": self.company, "account_type": "Cash"}, "name") or frappe.db.get_value("Account", {"company": self.company, "account_name": "Cash"}, "name")
+        
+        updates = {
+            "round_off_cost_center": round_off_cost_center,
+            "round_off_account": round_off_account,
+            "default_cash_account": default_cash_account
+        }
         
         # Clean up any invalid account/cost center references to prevent LinkValidationErrors due to test DB pollution
         for field in ["stock_received_but_not_billed", "default_inventory_account", 
                       "stock_adjustment_account", "default_expense_account", 
-                      "round_off_account", "default_cash_account", "default_bank_account",
-                      "round_off_cost_center", "cost_center"]:
-            val = comp_doc.get(field)
+                      "default_bank_account", "cost_center"]:
+            val = frappe.db.get_value("Company", self.company, field)
             if val:
-                doctype = "Cost Center" if "cost_center" in field else "Account"
+                doctype = "Cost Center" if field == "cost_center" else "Account"
                 if not frappe.db.exists(doctype, val):
-                    comp_doc.set(field, None)
+                    updates[field] = None
                     
-        comp_doc.save(ignore_permissions=True)
+        frappe.db.set_value("Company", self.company, updates)
         frappe.db.commit()
 
         # Create active Fiscal Year robustly if missing or if company is not in it
@@ -314,7 +318,8 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
 
         # Create test Item Tax Template for 18% GST
         self.item_tax_template_name = "18% GST"
-        if not frappe.db.exists("Item Tax Template", self.item_tax_template_name):
+        existing_itt = frappe.db.get_value("Item Tax Template", {"title": self.item_tax_template_name, "company": self.company}, "name")
+        if not existing_itt:
             itt = frappe.new_doc("Item Tax Template")
             itt.title = self.item_tax_template_name
             itt.company = self.company
@@ -324,10 +329,13 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
                 "tax_rate": 18.0
             })
             itt.insert(ignore_permissions=True)
+            existing_itt = itt.name
+        self.item_tax_template_name = existing_itt
 
         # Create test Sales Taxes and Charges Template for 18% GST
         self.sales_tax_template_name = "18% GST Template"
-        if not frappe.db.exists("Sales Taxes and Charges Template", self.sales_tax_template_name):
+        existing_stct = frappe.db.get_value("Sales Taxes and Charges Template", {"title": self.sales_tax_template_name, "company": self.company}, "name")
+        if not existing_stct:
             stct = frappe.new_doc("Sales Taxes and Charges Template")
             stct.title = self.sales_tax_template_name
             stct.company = self.company
@@ -339,8 +347,10 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
                 "rate": 18.0
             })
             stct.insert(ignore_permissions=True)
+            existing_stct = stct.name
         else:
-            frappe.db.set_value("Sales Taxes and Charges Template", self.sales_tax_template_name, "is_default", 1)
+            frappe.db.set_value("Sales Taxes and Charges Template", existing_stct, "is_default", 1)
+        self.sales_tax_template_name = existing_stct
 
         # 2. Setup a test Retail Item
         self.item = frappe.new_doc("Item")
@@ -826,10 +836,136 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         self.assertTrue(frappe.db.exists("Sales Invoice", ret_name))
         self.assertEqual(frappe.db.get_value("Sales Invoice", ret_name, "docstatus"), 2)
 
-        # Clean up
         frappe.db.delete("Sales Invoice", {"name": ret_name})
         frappe.db.delete("GL Entry", {"voucher_no": ret_name})
         frappe.db.delete("Stock Ledger Entry", {"voucher_no": ret_name})
         frappe.db.commit()
 
 
+# =============================================================================
+#  BILLING-002 — Stability Gap Tests
+#  Sprint: Milestone 2 — Billing & POS Stability
+#  Author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+#  Authority: AITDL / AF-01 Architecture Freeze Compliant
+# =============================================================================
+
+class TestBillingStabilityGaps(TestSmritiRetailBillingAPI):
+    """
+    Targeted regression tests for the 4 stability gaps identified in BILLING-002.
+    Inherits the full setUp/tearDown scaffold from TestBillingAPI to reuse
+    test item, customer, stock, and POS profile setup.
+    """
+
+    def _base_items(self, qty=2, discount_percentage=0.0):
+        return [{
+            "item_code": "TEST-ITEM-BAR",
+            "stock_uom": self.uom,
+            "qty": qty,
+            "rate": 100.0,
+            "mrp": 150.0,
+            "gst_percentage": 18,
+            "tax_template": "",
+            "discount_percentage": discount_percentage,
+        }]
+
+    def _base_payments(self, amount):
+        return [{"mode_of_payment": self.mode_of_payment, "amount": amount}]
+
+    # ── GAP-B02: Discount preserved through Hold → Recall ──
+
+    def test_hold_preserves_discount_percentage(self):
+        """
+        GAP-B02: discount_percentage must survive hold → recall cycle.
+        Risk: cashier holds discounted bill → recalls → discount lost → customer overcharged.
+        """
+        res = hold_bill(
+            cashier=frappe.session.user,
+            customer="Test Billing Customer",
+            items=frappe.as_json(self._base_items(qty=1, discount_percentage=15.0))
+        )
+        loaded = load_held_invoice(res["invoice_name"])
+        self.assertIsNotNone(loaded)
+        self.assertEqual(flt(loaded["items"][0]["discount_percentage"]), 15.0)
+
+    # ── GAP-B05: recall_bill returns non-zero display_total ──
+
+    def test_recall_bill_returns_display_total(self):
+        """
+        GAP-B05: recall_bill must return display_total = SUM(qty x rate).
+        Draft POS Invoices always have grand_total = 0 (Frappe skips totals on hold).
+        display_total is an estimate for UI identification ONLY — not an accounting total.
+        """
+        res = hold_bill(
+            cashier=frappe.session.user,
+            customer="Test Billing Customer",
+            items=frappe.as_json(self._base_items(qty=3))  # 3 x 100 = 300
+        )
+        invoice_name = res["invoice_name"]
+
+        # Confirm draft grand_total is 0 (the bug this test targets)
+        self.assertEqual(flt(frappe.db.get_value("POS Invoice", invoice_name, "grand_total")), 0.0)
+
+        held_list = recall_bill(frappe.session.user)
+        matched = [b for b in held_list if b["name"] == invoice_name]
+        self.assertEqual(len(matched), 1)
+        self.assertIn("display_total", matched[0])
+        self.assertAlmostEqual(flt(matched[0]["display_total"]), 300.0, places=2)
+
+    # ── GAP-B01: Idempotent submit — same session_id = same invoice ──
+
+    def test_idempotent_submit_same_session_id(self):
+        """
+        GAP-B01: Submitting the same billing_session_id twice must return the
+        SAME invoice. Prevents duplicate billing on double-click or network retry.
+        """
+        frappe.db.delete("POS Opening Entry", {"user": frappe.session.user})
+        frappe.db.commit()
+
+        session_id = "TEST-BSID-IDEMPOTENT-001"
+        kwargs = dict(
+            cashier=frappe.session.user,
+            customer="Test Billing Customer",
+            items=frappe.as_json(self._base_items(qty=1)),
+            payments=frappe.as_json(self._base_payments(118.0)),
+            billing_session_id=session_id
+        )
+
+        res1 = submit_bill(**kwargs)
+        res2 = submit_bill(**kwargs)   # same session_id — must be idempotent
+
+        self.assertEqual(
+            res1["invoice"], res2["invoice"],
+            f"Idempotency violated: two different invoices for session_id={session_id}"
+        )
+        # Cleanup
+        frappe.db.delete("Sales Invoice", {"name": res1["invoice"]})
+        frappe.db.delete("GL Entry", {"voucher_no": res1["invoice"]})
+        frappe.db.commit()
+
+    # ── GAP-B03: sales_staff appears in submitted invoice remarks ──
+
+    def test_sales_staff_attributed_in_invoice_remarks(self):
+        """
+        GAP-B03: sales_staff must appear in submitted invoice remarks.
+        Commission attribution requires staff linkage at invoice level.
+        """
+        frappe.db.delete("POS Opening Entry", {"user": frappe.session.user})
+        frappe.db.commit()
+
+        staff_name = "Rahul Sharma"
+        res = submit_bill(
+            cashier=frappe.session.user,
+            customer="Test Billing Customer",
+            items=frappe.as_json(self._base_items(qty=1)),
+            payments=frappe.as_json(self._base_payments(118.0)),
+            sales_staff=staff_name
+        )
+        invoice_name = res["invoice"]
+        remarks = frappe.db.get_value("Sales Invoice", invoice_name, "remarks") or ""
+        self.assertIn(staff_name, remarks,
+            f"sales_staff '{staff_name}' must appear in remarks for commission attribution")
+
+        # Cleanup
+        frappe.db.delete("Sales Invoice", {"name": invoice_name})
+        frappe.db.delete("GL Entry", {"voucher_no": invoice_name})
+        frappe.db.commit()

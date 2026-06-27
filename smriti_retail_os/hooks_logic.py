@@ -138,12 +138,17 @@ def get_gst_rate_from_hsn(hsn_code, company=None):
 def sync_item_taxes_and_prices(doc, method):
     """
     Triggers before_save on Item.
-    1. HSN-first: If gst_hsn_code is set, derive custom_gst_percentage from India Compliance's HSN master.
+    1. Enforces Master Data Governance validations.
+    2. HSN-first: If gst_hsn_code is set, derive custom_gst_percentage from India Compliance's HSN master.
        Falls back to manual custom_gst_percentage only when HSN is absent or has no configured taxes.
-    2. Maps the resolved GST percentage to the correct Item Tax Template.
-    3. Syncs custom_mrp to standard Item Price.
-    4. Handles UOM fallbacks.
+    3. Maps the resolved GST percentage to the correct Item Tax Template.
+    4. Syncs custom_mrp to standard Item Price.
+    5. Handles UOM fallbacks.
     """
+    # Enforce SMRITI Master Data Governance Foundation validations
+    from smriti_retail_os.services.master_data_validator import validate as validate_master_data
+    validate_master_data(doc, strict=True, collect_errors=False)
+
     if not doc.stock_uom:
         doc.stock_uom = "Nos"
 

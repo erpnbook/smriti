@@ -316,10 +316,18 @@ class TestBrandingIntegrity(unittest.TestCase):
 
             # Check for console.log / alert outside script/style/comments
             for statement in ["console.log", "alert"]:
-                if statement in stripped.lower():
+                if statement == "alert":
+                    match = re.search(r"\balert\s*\(", stripped.lower())
+                    if not match:
+                        continue
+                    idx = match.start()
+                else:
+                    if statement not in stripped.lower():
+                        continue
                     idx = stripped.lower().find(statement)
-                    snippet = stripped[max(0, idx - 50) : min(len(stripped), idx + 100)]
-                    self.fail(
-                        f"'{statement}' statement found outside script block in template '{os.path.basename(filepath)}'.\n"
-                        f"Snippet: ... {snippet.strip()} ..."
-                    )
+
+                snippet = stripped[max(0, idx - 50) : min(len(stripped), idx + 100)]
+                self.fail(
+                    f"'{statement}' statement found outside script block in template '{os.path.basename(filepath)}'.\n"
+                    f"Snippet: ... {snippet.strip()} ..."
+                )

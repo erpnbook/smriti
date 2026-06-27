@@ -90,6 +90,12 @@ class TestCGERulesAndDR(unittest.TestCase):
             brand_doc.brand = cls.brand
             brand_doc.insert(ignore_permissions=True)
             
+        # Ensure test HSN code exists
+        if not frappe.db.exists("GST HSN Code", "999900"):
+            hsn = frappe.new_doc("GST HSN Code")
+            hsn.hsn_code = "999900"
+            hsn.insert(ignore_permissions=True)
+
         # Create test item
         cls.item_code = "_Test CGE Item Rules"
         if not frappe.db.exists("Item", cls.item_code):

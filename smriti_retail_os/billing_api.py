@@ -190,8 +190,17 @@ def hold_bill(cashier, customer, items, remarks=None, sales_staff=None):
 def recall_bill(cashier):
     """
     Returns the list of held draft invoices where custom_is_held = 1 and custom_held_by = cashier.
+    Includes display_total (SUM of qty * rate from items child table) since draft POS Invoices
+    saved with flags.ignore_validate=True always have grand_total = 0.0.
+
+    NOTE: display_total is a convenience estimate for the Recall modal UI.
+    It equals SUM(qty × rate) from POS Invoice Items — without tax, rounding, or charges.
+    It is NOT an accounting total. The authoritative grand_total is computed only after
+    submission by Frappe's calculate_taxes_and_totals. Use display_total for held bill
+    identification only; never use it for financial reconciliation.
+    (GAP-B05 FIX)
     """
-    return frappe.db.get_all(
+    held_bills = frappe.db.get_all(
         "POS Invoice",
         filters={
             "docstatus": 0,
@@ -202,9 +211,28 @@ def recall_bill(cashier):
         order_by="custom_hold_time desc"
     )
 
+    if not held_bills:
+        return held_bills
+
+    # Batch-compute display_total from items child table (grand_total is 0 on held drafts)
+    bill_names = [b.name for b in held_bills]
+    placeholders = ", ".join(["%s"] * len(bill_names))
+    total_rows = frappe.db.sql(
+        f"SELECT parent, SUM(qty * rate) AS display_total FROM `tabPOS Invoice Item`"
+        f" WHERE parent IN ({placeholders}) GROUP BY parent",
+        tuple(bill_names),
+        as_dict=True
+    )
+    total_map = {r.parent: flt(r.display_total) for r in total_rows}
+
+    for b in held_bills:
+        b["display_total"] = total_map.get(b.name, 0.0)
+
+    return held_bills
+
 
 @frappe.whitelist()
-def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_name=None, remarks=None, sales_staff=None, on_credit=0, tax_override="Default", billing_address=None, shipping_address=None, billing_session_id=None):
+def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_name=None, remarks=None, sales_staff=None, on_credit=0, tax_override="Default", billing_address=None, shipping_address=None, billing_session_id=None, bill_discount_percentage=0.0, bill_discount_amount=0.0, manager_pin=None):
     """
     Creates and submits a standard POS Invoice or falls back to Sales Invoice.
     Uses billing_session_id for idempotency to prevent double-billing.
@@ -408,45 +436,79 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
         company_cc = frappe.db.get_value("Cost Center", {"company": company, "is_group": 0}, "name")
     # ─────────────────────────────────────────────────────────────────────────
 
+    # Resolve context on items list
     for it in items_list:
         item_code = it.get("item_code")
-
-        # Warehouse: pre-fetched item default → fallback warehouse
-        item_wh = item_wh_map.get(item_code) or _fallback_wh
-
-        # Tax template: caller-supplied → pre-fetched item tax → None
+        it["warehouse"] = it.get("warehouse") or item_wh_map.get(item_code) or _fallback_wh
+        
         tax_template = it.get("tax_template") or it.get("item_tax_template")
         if not tax_template:
             tax_template = item_tax_map.get(item_code)
-
-        # Validate tax template belongs to this company (using pre-fetched map)
-        if tax_template:
-            if tmpl_company_map.get(tax_template) != company:
-                tax_template = None
-
-        # Cost center: caller-supplied → company default (pre-fetched)
-        item_cc = it.get("cost_center") or company_cc
-
-        # GST rate for tax-inclusive rate calculation (pre-fetched)
-        rate = flt(it.get("rate"))
+        if tax_template and tmpl_company_map.get(tax_template) != company:
+            tax_template = None
+        it["item_tax_template"] = tax_template
+        
+        it["cost_center"] = it.get("cost_center") or company_cc
+        it["mrp"] = flt(it.get("mrp") or it.get("price_list_rate") or it.get("rate") or 0.0)
+        it["stock_uom"] = it.get("stock_uom") or "Nos"
+        
+        # Calculate base rate if GST is tax-inclusive
         gst_pct = flt(it.get("gst_percentage") or it.get("custom_gst_percentage") or 0.0)
         if gst_pct <= 0.0:
             gst_pct = item_gst_map.get(item_code, 0.0)
-
+        it["custom_gst_percentage"] = gst_pct
+        
+        # Adjust base rate if input was inclusive
+        rate = flt(it.get("rate"))
         if resolved_tax_override == "Inclusive" and gst_pct > 0.0:
             rate = rate / (1.0 + (gst_pct / 100.0))
+        it["rate"] = rate
 
-        invoice_doc.append("items", {
-            "item_code": item_code,
-            "qty": flt(it.get("qty")),
-            "rate": rate,
-            "price_list_rate": flt(it.get("mrp")),
-            "discount_percentage": flt(it.get("discount_percentage") or 0.0),
-            "uom": it.get("stock_uom") or "Nos",
-            "warehouse": item_wh,
-            "item_tax_template": tax_template,
-            "cost_center": item_cc
-        })
+    # Resolve salesperson allocations
+    from smriti_retail_os.services.salesperson_service import resolve_item_salespersons
+    items_list = resolve_item_salespersons(items_list, sales_staff, company)
+
+    # Compute final billing summary values (subtotal, item/bill discounts, taxes)
+    from smriti_retail_os.services.billing_summary_engine import calculate_billing_summary
+    summary_data = calculate_billing_summary(
+        items_list,
+        bill_discount_percentage=bill_discount_percentage,
+        bill_discount_amount=bill_discount_amount,
+        tax_inclusive=(resolved_tax_override in ["Inclusive", "Default"]),
+        company=company
+    )
+
+    # Validate manager approvals for discount override
+    net_total = flt(summary_data.get("net_total") or 0.0)
+    total_item_disc = flt(summary_data.get("total_item_discount") or 0.0)
+    bill_disc = flt(summary_data.get("bill_discount") or 0.0)
+    total_disc = total_item_disc + bill_disc
+    
+    if total_disc > 0.0:
+        total_disc_pct = (total_disc / (net_total + total_item_disc) * 100.0) if (net_total + total_item_disc) > 0.0 else 0.0
+        
+        # Check limits and validate overrides
+        from smriti_retail_os.services.approval_service import validate_approval_override
+        approval_res = validate_approval_override(
+            manager_pin,
+            action_type=f"Submit Bill Discount Override: {round(total_disc_pct, 2)}%",
+            discount_percentage=total_disc_pct,
+            is_offline=False,
+            company=company,
+            invoice_name=invoice_name
+        )
+        if not approval_res.get("authorized"):
+            frappe.throw(approval_res.get("message") or _("Manager authorization required."), frappe.PermissionError)
+
+    # Translate and map SMRITI session state values to standard invoice fields
+    from smriti_retail_os.services.invoice_mapper import map_smriti_session_to_invoice
+    invoice_doc = map_smriti_session_to_invoice(
+        invoice_doc,
+        summary_data,
+        sales_staff=sales_staff,
+        remarks=remarks,
+        company=company
+    )
 
     # 2. Split Payments
     for p in payments_list:
@@ -554,14 +616,75 @@ def process_post_billing_tasks(invoice_name, doctype, payments_list, company):
                 frappe.log_error(f"Post-Billing Payment Entry Error for {invoice_name}: {frappe.get_traceback()}")
 
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  ITEM CONTEXT HELPER  (GAP-B04 — Reusable batch loader)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def load_item_context(item_names, price_list="Standard Selling"):
+    """
+    Batch-loads all context needed to enrich a list of Items for POS display.
+    Returns a dict of maps, each keyed by item_code.
+
+    Replaces per-item frappe.get_cached_doc calls — eliminates N+1 queries
+    regardless of catalog size. Reusable by search_items, add_item_by_barcode,
+    Import Engine, Label Studio, and future APIs.
+
+    Returns:
+        dict with keys:
+            selling_price_map   — { item_code: selling_rate }
+            mrp_price_map       — { item_code: mrp_rate }
+            item_tax_map        — { item_code: first_tax_template_name }
+    """
+    if not item_names:
+        return {
+            "selling_price_map": {},
+            "mrp_price_map": {},
+            "item_tax_map": {},
+        }
+
+    # Batch 1+2: Selling prices and MRP prices in one query
+    price_rows = frappe.db.get_all(
+        "Item Price",
+        filters={"item_code": ["in", item_names], "price_list": ["in", [price_list, "MRP"]]},
+        fields=["item_code", "price_list", "price_list_rate"]
+    )
+    selling_price_map = {}
+    mrp_price_map = {}
+    for pr in price_rows:
+        if pr.price_list == price_list:
+            selling_price_map[pr.item_code] = flt(pr.price_list_rate)
+        elif pr.price_list == "MRP":
+            mrp_price_map[pr.item_code] = flt(pr.price_list_rate)
+
+    # Batch 3: First Item Tax Template per item (order by idx — first row wins)
+    tax_rows = frappe.db.get_all(
+        "Item Tax",
+        filters={"parent": ["in", item_names]},
+        fields=["parent", "item_tax_template"],
+        order_by="idx asc"
+    )
+    item_tax_map = {}
+    for r in tax_rows:
+        if r.parent not in item_tax_map:   # first row per item wins
+            item_tax_map[r.parent] = r.item_tax_template
+
+    return {
+        "selling_price_map": selling_price_map,
+        "mrp_price_map": mrp_price_map,
+        "item_tax_map": item_tax_map,
+    }
+
+
 @frappe.whitelist()
 def search_items(query, price_list="Standard Selling"):
     """
     Searches items by code, name, brand, or group. Returns rates, MRPs, and GST details.
+    All batch DB lookups are delegated to load_item_context() — zero N+1 queries.
     """
     if not query:
         return []
-    
+
     items = frappe.db.get_all(
         "Item",
         filters={
@@ -574,54 +697,37 @@ def search_items(query, price_list="Standard Selling"):
             "brand": ["like", f"%{query}%"],
             "item_group": ["like", f"%{query}%"]
         },
-        fields=["name", "item_name", "stock_uom", "brand", "item_group", "custom_mrp", "custom_gst_percentage", "valuation_rate", "gst_hsn_code"]
+        fields=["name", "item_name", "stock_uom", "brand", "item_group",
+                "custom_mrp", "custom_gst_percentage", "valuation_rate", "gst_hsn_code"]
     )
-    
-    # ── Batch-fetch all selling prices and MRP prices — eliminates N+1 per item ──
-    item_names = [it.name for it in items]
 
-    price_rows = frappe.db.get_all(
-        "Item Price",
-        filters={"item_code": ["in", item_names], "price_list": ["in", [price_list, "MRP"]]},
-        fields=["item_code", "price_list", "price_list_rate"]
-    )
-    selling_price_map = {}   # item_code → selling rate
-    mrp_price_map = {}       # item_code → MRP rate
-    for pr in price_rows:
-        if pr.price_list == price_list:
-            selling_price_map[pr.item_code] = flt(pr.price_list_rate)
-        elif pr.price_list == "MRP":
-            mrp_price_map[pr.item_code] = flt(pr.price_list_rate)
-    # ──────────────────────────────────────────────────────────────────────────
+    if not items:
+        return []
+
+    item_names = [it.name for it in items]
+    ctx = load_item_context(item_names, price_list)
 
     results = []
     for it in items:
-        # Prices now resolved from pre-fetched maps — zero DB hits per item
-        rate = selling_price_map.get(it.name) or flt(it.valuation_rate) or 0.0
-        mrp = flt(it.custom_mrp) or mrp_price_map.get(it.name) or rate
+        rate = ctx["selling_price_map"].get(it.name) or flt(it.valuation_rate) or 0.0
+        mrp  = flt(it.custom_mrp) or ctx["mrp_price_map"].get(it.name) or rate
 
         gst_percentage = cint(it.custom_gst_percentage) if it.custom_gst_percentage else 0
         if not gst_percentage and it.gst_hsn_code:
             from smriti_retail_os.hooks_logic import get_gst_rate_from_hsn
             gst_percentage = get_gst_rate_from_hsn(it.gst_hsn_code) or 0
 
-        # Resolve tax template — use cached doc (no extra DB hit)
-        tax_template = ""
-        item_doc = frappe.get_cached_doc("Item", it.name)
-        if item_doc.taxes:
-            tax_template = item_doc.taxes[0].item_tax_template
-
         results.append({
-            "item_code": it.name,
-            "item_name": it.item_name,
-            "stock_uom": it.stock_uom,
-            "brand": it.brand,
-            "item_group": it.item_group,
-            "rate": flt(rate),
-            "mrp": flt(mrp),
+            "item_code":      it.name,
+            "item_name":      it.item_name,
+            "stock_uom":      it.stock_uom,
+            "brand":          it.brand,
+            "item_group":     it.item_group,
+            "rate":           flt(rate),
+            "mrp":            flt(mrp),
             "gst_percentage": gst_percentage,
-            "tax_template": tax_template,
-            "gst_hsn_code": it.gst_hsn_code or ""
+            "tax_template":   ctx["item_tax_map"].get(it.name, ""),
+            "gst_hsn_code":   it.gst_hsn_code or ""
         })
     return results
 

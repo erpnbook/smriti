@@ -1433,3 +1433,148 @@ class TestSmritiAttributeLayoutReorg(unittest.TestCase):
         self.assertEqual(len(reset_events), 1)
         self.assertEqual(json.loads(reset_events[0]["before_state"])[0]["attribute_id"], "COLOR")
         self.assertEqual(json.loads(reset_events[0]["after_state"]), [])
+
+
+class TestMasterDataValidatorPipeline(unittest.TestCase):
+    def setUp(self):
+        frappe.set_user("Administrator")
+        self.item = frappe.get_doc({
+            "doctype": "Item",
+            "item_code": "TST-VAL-PIPE-ITEM",
+            "item_name": "Test Validation Pipeline Item",
+            "item_group": "Products",
+            "stock_uom": "Nos",
+            "is_stock_item": 1,
+            "custom_gst_percentage": "18"
+        })
+
+    def test_pipeline_strict_single_error(self):
+        """validate(doc, strict=True, collect_errors=False) immediately throws on the first violation."""
+        from smriti_retail_os.services.master_data_validator import validate
+        
+        # Introduce invalid Brand
+        self.item.brand = "Nonexistent Brand XYZ"
+        
+        # Must throw immediately
+        with self.assertRaises(frappe.ValidationError) as context:
+            validate(self.item, strict=True, collect_errors=False)
+        self.assertIn("Brand 'Nonexistent Brand XYZ' does not exist", str(context.exception))
+
+    def test_pipeline_collect_errors_non_strict(self):
+        """validate(doc, strict=False, collect_errors=True) collects all violations without throwing."""
+        from smriti_retail_os.services.master_data_validator import validate
+        
+        # Introduce multiple invalid properties
+        self.item.brand = "Nonexistent Brand XYZ"
+        self.item.item_group = "Nonexistent Category ABC"
+        self.item.stock_uom = "Nonexistent UOM MNO"
+        self.item.custom_gst_percentage = "99"  # invalid rate
+        
+        errors = validate(self.item, strict=False, collect_errors=True)
+        
+        # Verify multiple errors collected, and no exception thrown
+        self.assertIsInstance(errors, list)
+        self.assertGreaterEqual(len(errors), 3)
+        
+        # Verify brand error
+        self.assertTrue(any("Brand" in err for err in errors))
+        # Verify item group error
+        self.assertTrue(any("Item Group" in err for err in errors))
+        # Verify UOM error
+        self.assertTrue(any("UOM" in err for err in errors))
+        # Verify GST rate error
+        self.assertTrue(any("GST Rate" in err for err in errors))
+
+    def test_pipeline_collect_errors_strict(self):
+        """validate(doc, strict=True, collect_errors=True) throws a single exception containing all violations."""
+        from smriti_retail_os.services.master_data_validator import validate
+        
+        # Introduce multiple invalid properties
+        self.item.brand = "Nonexistent Brand XYZ"
+        self.item.item_group = "Nonexistent Category ABC"
+        
+        # Must throw ValidationError containing all errors
+        with self.assertRaises(frappe.ValidationError) as context:
+            validate(self.item, strict=True, collect_errors=True)
+            
+        error_msg = str(context.exception)
+        self.assertIn("Brand 'Nonexistent Brand XYZ' does not exist", error_msg)
+        self.assertIn("Item Group 'Nonexistent Category ABC' does not exist", error_msg)
+
+
+class TestIdempotentImport(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        frappe.set_user("Administrator")
+        # Ensure brand/supplier exist
+        if not frappe.db.exists("Brand", "Nike"):
+            frappe.get_doc({"doctype": "Brand", "brand_name": "Nike"}).insert(ignore_permissions=True)
+        if not frappe.db.exists("Supplier", "Test Supplier"):
+            frappe.get_doc({
+                "doctype": "Supplier",
+                "supplier_name": "Test Supplier",
+                "supplier_group": "Local",
+                "custom_vendor_code": "VND-TEST-1"
+            }).insert(ignore_permissions=True)
+        frappe.db.commit()
+
+    @classmethod
+    def tearDownClass(cls):
+        # Clean up created items
+        for item in ["TST-IDEM-STYLE-RED-9", "TST-IDEM-STYLE"]:
+            frappe.delete_doc("Item", item, ignore_missing=True, force=True)
+        frappe.db.delete("Brand", {"name": "Nike"})
+        frappe.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-1"})
+        frappe.db.commit()
+
+    def test_idempotent_import_twice(self):
+        """
+        Verify that importing the exact same sheet/payload twice is idempotent and produces no duplicates.
+        """
+        from smriti_retail_os.item_master_api import import_item_master
+        
+        rows = [{
+            "BARCODE NO": "TEST-IDEM-BAR-1",
+            "PRODUCT STYLE CODE": "TST-IDEM-STYLE",
+            "ITEM DESCRIPTION": "Test Idempotent Item",
+            "BRAND NAME": "Nike",
+            "COLOR": "RED",
+            "SIZE": "9",
+            "PLANNED MRP": 2000,
+            "COST PRICE": 1000,
+            "PRODUCT TAX": "18",
+            "HSN CODE": "999900",  # Seeded HSN
+            "GENDER": "UNISEX",
+            "VENDOR CODE": "VND-TEST-1",
+            "PURCHASE CLASS": "FW",
+            "DEPARTMENT": "LADIES FTW",
+            "MERCHANDISE CATEGORY": "SANDAL",
+            "Sub category": "LASTIC PATTA",
+            "HEELS": "FLAT",
+            "UPPER MATERIAL": "CLOTH"
+        }]
+
+        # Clean up before we start
+        frappe.db.delete("Item Barcode", {"barcode": "TEST-IDEM-BAR-1"})
+        for item in ["TST-IDEM-STYLE-RED-9", "TST-IDEM-STYLE"]:
+            frappe.delete_doc("Item", item, ignore_missing=True, force=True)
+        frappe.db.commit()
+
+        # Count items before import
+        count_before = frappe.db.count("Item", {"name": ["in", ["TST-IDEM-STYLE-RED-9", "TST-IDEM-STYLE"]]})
+        self.assertEqual(count_before, 0)
+
+        # First import: should create the items successfully
+        res1 = import_item_master(frappe.as_json(rows))
+        self.assertEqual(len(res1.get("failed", [])), 0)
+        
+        count_after_1 = frappe.db.count("Item", {"name": ["in", ["TST-IDEM-STYLE-RED-9", "TST-IDEM-STYLE"]]})
+        self.assertGreater(count_after_1, 0)
+
+        # Second import: should run successfully and result in exactly 0 duplicate records
+        res2 = import_item_master(frappe.as_json(rows))
+        self.assertEqual(len(res2.get("failed", [])), 0)
+
+        count_after_2 = frappe.db.count("Item", {"name": ["in", ["TST-IDEM-STYLE-RED-9", "TST-IDEM-STYLE"]]})
+        # Assert no new/duplicate Item records created in database on second import
+        self.assertEqual(count_after_2 - count_after_1, 0)

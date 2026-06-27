@@ -435,6 +435,45 @@ def execute():
                     "Reject PRs containing undocumented KPIs"
                 ]
             })
+        },
+        {
+            "formula_id": "TR-HLTH-01",
+            "formula_name": "Trial Pipeline Health Score",
+            "formula_version": "1.0.0",
+            "formula_category": "Trial Operations",
+            "status": "Approved",
+            "is_active": 1,
+            "effective_date": "2026-06-25",
+            "implementation_reference": "services/trial_service.py::calculate_trial_health_score",
+            "dependent_features": json.dumps(["Platform Admin Dashboard", "Trial Health Snapshot"]),
+            "formula_expression": "health_score = max(0.0, (active / max(1, active + failed)) * 100.0 - penalty)",
+            "formula_language": "documentation",
+            "variables_and_inputs": json.dumps({
+                "active": "Active trial activations count",
+                "failed": "Failed trial activations count",
+                "penalty": "SLA breach penalty: min(20.0, max(0.0, (avg_sla_hours - target_sla) * penalty_mult))"
+            }),
+            "data_sources": "tabSMRITI Trial Activation",
+            "business_owner": "Jawahar R. Mallah",
+            "technical_owner": "AITDL Core Team",
+            "business_meaning": "Trial Pipeline Health Score measures the overall quality of the trial provisioning system. Hum ye check karte hain ki trial activation kitni jaldi ho raha hai aur koi failure to nahi aa raha pipeline mein.",
+            "worked_example": "If there are 8 active trials and 2 failed ones (success rate = 80%), and average SLA time is 6 hours (penalty = (6 - 4) * 5 = 10%):\nhealth_score = 80.0 - 10.0 = 70.0% (Monitor band).",
+            "interpretation_guide": "Bands:\n- Healthy: >= 80.0\n- Monitor: 50.0 - 79.9\n- Critical: < 50.0",
+            "recommended_action": "For scores < 80 (Monitor), check recent failed activations in Provision Log. For scores < 50 (Critical), immediately investigate server connectivity and SMTP configuration.",
+            "explainability_json": json.dumps({
+                "meaning": "Measures provisioning success rate and SLA compliance.",
+                "formula": "health_score = success_rate - sla_penalty",
+                "example": "8 active, 2 failed -> 80% success. SLA 6 hours -> 10% penalty. Score = 70.0%",
+                "bands": [
+                    {"min": 0, "max": 50, "label": "Critical"},
+                    {"min": 50, "max": 80, "label": "Monitor"},
+                    {"min": 80, "max": 100, "label": "Healthy"}
+                ],
+                "actions": [
+                    "Investigate Provision Logs for failed trials",
+                    "Verify SMTP and server resources if health is critical"
+                ]
+            })
         }
     ]
 
@@ -457,4 +496,4 @@ def execute():
             doc.insert(ignore_permissions=True)
             
     frappe.db.commit()
-    frappe.logger().info("[KGF Patch] Seeded 10 core SMRITI Formula Definitions successfully.")
+    frappe.logger().info("[KGF Patch] Seeded 11 core SMRITI Formula Definitions successfully.")
