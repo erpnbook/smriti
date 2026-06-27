@@ -1,5 +1,6 @@
 import unittest
 import frappe
+from frappe.utils import nowdate
 import datetime
 from smriti_retail_os.services.udne.interfaces import GenerationContext
 from smriti_retail_os.services.udne import generate, explain, metrics, health, gaps, reservations
@@ -292,4 +293,62 @@ class TestUDNE(unittest.TestCase):
         
         g = gaps()
         self.assertEqual(len(g), 0)
+
+    def test_before_print_document_hook(self):
+        doc = frappe.get_doc({
+            "doctype": "Sales Invoice",
+            "company": frappe.get_all("Company")[0].name,
+            "posting_date": nowdate(),
+            "customer": "Walk-In Customer",
+            "custom_business_display_number": "MUM/FY26/INV/000088"
+        })
+        
+        from smriti_retail_os.services.udne.hooks import before_print_document
+        before_print_document(doc)
+        
+        self.assertEqual(doc.udne_display_number, "MUM/FY26/INV/000088")
+        self.assertEqual(doc.udne_print_number, "MUM/FY26/INV/000088")
+        self.assertEqual(doc.select_print_heading, "MUM/FY26/INV/000088")
+        
+        # Verify canonical name is NOT mutated to prevent downstream bugs!
+        self.assertNotEqual(doc.name, "MUM/FY26/INV/000088")
+
+    def test_search_by_partial_business_number(self):
+        comp = frappe.get_all("Company")[0].name
+        doc = frappe.get_doc({
+            "doctype": "Sales Invoice",
+            "company": comp,
+            "posting_date": nowdate(),
+            "customer": "Walk-In Customer",
+            "custom_business_display_number": "MUM/FY26/INV/000099",
+            "base_grand_total": 0.0,
+            "base_rounded_total": 0.0,
+            "grand_total": 0.0,
+            "rounded_total": 0.0
+        })
+        doc.insert(ignore_permissions=True, ignore_mandatory=True)
+        frappe.db.commit()
+        
+        # Verify list query returns match by display number (partial lookups)
+        res = frappe.get_list("Sales Invoice", filters={"custom_business_display_number": ["like", "%000099%"]})
+        self.assertEqual(len(res), 1)
+        self.assertEqual(res[0].name, doc.name)
+
+    def test_missing_business_number_fallback(self):
+        doc = frappe.get_doc({
+            "doctype": "Sales Invoice",
+            "company": frappe.get_all("Company")[0].name,
+            "posting_date": nowdate(),
+            "customer": "Walk-In Customer"
+        })
+        
+        # Capture current select_print_heading if any
+        initial_heading = getattr(doc, "select_print_heading", None)
+        
+        from smriti_retail_os.services.udne.hooks import before_print_document
+        before_print_document(doc)
+        
+        self.assertIsNone(getattr(doc, "udne_display_number", None))
+        self.assertIsNone(getattr(doc, "udne_print_number", None))
+        self.assertEqual(getattr(doc, "select_print_heading", None), initial_heading)
 

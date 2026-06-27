@@ -572,6 +572,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     
     return {
         "invoice": invoice_doc.name,
+        "business_display_number": getattr(invoice_doc, "custom_business_display_number", invoice_doc.name),
         "grand_total": flt(invoice_doc.grand_total),
         "print_url": print_url
     }

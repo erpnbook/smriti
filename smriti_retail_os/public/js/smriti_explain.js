@@ -371,4 +371,119 @@
         overlay.classList.add("open");
         modal.classList.add("open");
     }
+
+    window.smritiExplainDoc = function (doctype, docname) {
+        if (!docname) return;
+
+        frappe.call({
+            method: "smriti_retail_os.api.udne_api.explain_doc",
+            args: { doc_name: docname },
+            callback: function (r) {
+                if (r.message && r.message.success) {
+                    renderDocExplainModal(r.message);
+                } else {
+                    frappe.show_alert({message: __("No explainability audit log trace found for this document."), indicator: 'orange'});
+                }
+            }
+        });
+    };
+
+    function renderDocExplainModal(res) {
+        let overlay = document.getElementById("smriti-explain-overlay");
+        let modal = document.getElementById("smriti-explain-modal");
+
+        if (!overlay) {
+            overlay = document.createElement("div");
+            overlay.id = "smriti-explain-overlay";
+            overlay.className = "smriti-explain-overlay";
+            overlay.onclick = closeExplainModal;
+            document.body.appendChild(overlay);
+        }
+
+        if (!modal) {
+            modal = document.createElement("div");
+            modal.id = "smriti-explain-modal";
+            modal.className = "smriti-explain-modal";
+            document.body.appendChild(modal);
+        }
+
+        modal.innerHTML = `
+            <div class="smriti-explain-header">
+                <div>
+                    <span class="smriti-explain-id">${__('DOCUMENT TRACER')}</span>
+                    <h3 class="smriti-explain-title">${res.evidence.generated_number}</h3>
+                </div>
+                <button class="smriti-explain-close" onclick="closeExplainModal()">✕</button>
+            </div>
+            
+            <div class="smriti-explain-body" style="display: flex; flex-direction: column; gap: 16px; padding: 20px 28px;">
+                <!-- 1. Summary Card -->
+                <div class="smriti-explain-section" style="margin:0;">
+                    <span class="smriti-explain-section-title">${__('Summary')}</span>
+                    <div class="smriti-explain-text-box" style="border-left-color: #027a48; background: #f0fdf4; color: #166534; font-weight: 500;">
+                        ${res.summary}
+                    </div>
+                </div>
+
+                <!-- 2. Timeline Card -->
+                <div class="smriti-explain-section" style="margin:0;">
+                    <span class="smriti-explain-section-title">${__('Decision Timeline')}</span>
+                    <div class="smriti-explain-live-box" style="margin:0; padding:16px; background:#f8fafc; border:1px solid #e2e8f0;">
+                        <div style="position: relative; padding-left: 20px; border-left: 2px solid #cbd5e1;">
+                            ${res.timeline.map((step, idx) => `
+                                <div style="position: relative; margin-bottom: 10px; font-size: 13px; color: #475569;">
+                                    <span style="position: absolute; left: -26px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: #2563eb; border: 2px solid #fff;"></span>
+                                    ${step}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Evidence Card -->
+                <div class="smriti-explain-section" style="margin:0;">
+                    <span class="smriti-explain-section-title">${__('Audit Evidence Details')}</span>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div class="smriti-explain-live-box" style="margin:0; padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0;">
+                            <span style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase;">Applied Rule</span>
+                            <div style="font-size:12px; font-weight:600; color:#1e293b; margin-top:2px;">${res.evidence.applied_rule}</div>
+                        </div>
+                        <div class="smriti-explain-live-box" style="margin:0; padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0;">
+                            <span style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase;">Rule Template</span>
+                            <div style="font-size:12px; font-weight:600; color:#1e293b; margin-top:2px; font-family:monospace;">${res.evidence.rule_template}</div>
+                        </div>
+                    </div>
+                    <div class="smriti-explain-code-box" style="margin:0;">
+                        <pre style="margin:0; font-family:monospace; font-size:11px; white-space:pre-wrap; word-break:break-all; background:none; border:none; padding:0; color:#334155;">${JSON.stringify(res.evidence, null, 2)}</pre>
+                    </div>
+                </div>
+
+                <!-- 4. Performance Card -->
+                <div class="smriti-explain-section" style="margin:0;">
+                    <span class="smriti-explain-section-title">${__('Performance Metadata')}</span>
+                    <div class="smriti-explain-grid" style="margin-top:0;">
+                        <div>
+                            <span class="smriti-explain-label">Latency</span>
+                            <span class="smriti-explain-val">${res.metrics.latency_ms} ms</span>
+                        </div>
+                        <div>
+                            <span class="smriti-explain-label">Rule Version</span>
+                            <span class="smriti-explain-val">v${res.metrics.rule_version}</span>
+                        </div>
+                        <div>
+                            <span class="smriti-explain-label">Explainability</span>
+                            <span class="smriti-explain-val" style="color:#027a48; font-weight:700;">${res.confidence}%</span>
+                        </div>
+                        <div>
+                            <span class="smriti-explain-label">Authorized User</span>
+                            <span class="smriti-explain-val" style="font-size:11px; word-break:break-all;">${res.evidence.user}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        overlay.classList.add("open");
+        modal.classList.add("open");
+    }
 })();

@@ -1,4 +1,4 @@
-﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/sales_invoices.html
   @description: SMRITI Billing Transactions — Standalone UI (Zero system chrome)
@@ -138,6 +138,8 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 }
 </style>
 
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_theme.css">
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_branding.css">
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
 <body>
 <script>
@@ -268,6 +270,9 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
             </div>
         </div>
         <div class="drawer-footer" style="display:flex; flex-direction:column; gap:8px;">
+            <button class="btn-print" id="btn-explain-number" style="background:#475569;" onclick="explainNumber()">
+                <span class="material-symbols-outlined">help</span> Explain Document
+            </button>
             <button class="btn-print" id="btn-print-b2b" style="display:none; background:var(--success);" onclick="printB2BInvoice()">
                 <span class="material-symbols-outlined">receipt_long</span> Print B2B Invoice
             </button>
@@ -347,7 +352,7 @@ async function loadInvoices() {
         const data = await api('frappe.client.get_list', {
             doctype: 'Sales Invoice',
             filters: filters,
-            fields: ['name', 'posting_date', 'posting_time', 'customer_name', 'grand_total', 'outstanding_amount', 'status'],
+            fields: ['name', 'custom_business_display_number', 'posting_date', 'posting_time', 'customer_name', 'grand_total', 'outstanding_amount', 'status'],
             order_by: 'posting_date desc, posting_time desc',
             limit_page_length: 150
         });
@@ -367,9 +372,10 @@ function renderTable(list) {
     }
     tbody.innerHTML = list.map(inv => {
         const statusCls = inv.status.toLowerCase();
+        const displayNum = inv.custom_business_display_number || inv.name;
         return `
             <tr onclick="loadInvoiceDetails('${inv.name}')">
-                <td><span class="invoice-badge">${inv.name}</span></td>
+                <td><span class="invoice-badge">${displayNum}</span></td>
                 <td>
                     <div style="font-weight:600;">${inv.posting_date}</div>
                     <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${inv.posting_time || ''}</div>
@@ -398,6 +404,7 @@ function applyFilters() {
     if (q) {
         filtered = filtered.filter(inv => 
             inv.name.toLowerCase().includes(q) ||
+            (inv.custom_business_display_number && inv.custom_business_display_number.toLowerCase().includes(q)) ||
             inv.customer_name.toLowerCase().includes(q)
         );
     }
@@ -417,7 +424,7 @@ async function loadInvoiceDetails(invoiceId) {
 
         activeInvoiceDoc = doc;
         
-        document.getElementById('drw-id').textContent = doc.name;
+        document.getElementById('drw-id').textContent = doc.custom_business_display_number || doc.name;
         document.getElementById('drw-date').textContent = `${doc.posting_date} | ${doc.posting_time || ''}`;
         document.getElementById('drw-customer').textContent = doc.customer_name;
         document.getElementById('drw-outstanding').textContent = `Rs. ${parseFloat(doc.outstanding_amount).toFixed(2)}`;
@@ -504,7 +511,7 @@ function printReceipt() {
         </div>
         <hr style="border:none;border-top:1px dashed var(--smriti-c1-black);margin:6px 0;">
         <table style="width:100%;font-size:11px;">
-            <tr><td>Bill No:</td><td style="text-align:right;font-weight:700;">${doc.name}</td></tr>
+            <tr><td>Bill No:</td><td style="text-align:right;font-weight:700;">${doc.custom_business_display_number || doc.name}</td></tr>
             <tr><td>Date:</td><td style="text-align:right;">${doc.posting_date} ${doc.posting_time || ''}</td></tr>
             <tr><td>Customer:</td><td style="text-align:right;">${doc.customer_name}</td></tr>
         </table>
@@ -580,9 +587,15 @@ function openPopout(e, url) {
     }
 }
 
+function explainNumber() {
+    if (!activeInvoiceDoc) return;
+    window.smritiExplainDoc("Sales Invoice", activeInvoiceDoc.name);
+}
+
 window.onload = init;
 </script>
 
+<script src="/assets/smriti_retail_os/js/smriti_explain.js"></script>
 <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js?v=2.0.7"></script>
 <script>
     const urlParams = new URLSearchParams(window.location.search);

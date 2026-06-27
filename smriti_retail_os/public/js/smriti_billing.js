@@ -642,9 +642,44 @@ class SmritiBillingController {
                 if (r.message) {
                     frappe.show_alert({message: __("Invoice submitted successfully!"), indicator: 'green'});
                     
-                    // Trigger browser print format window for standard download
-                    frappe.show_alert({message: __("Print receipt triggered: ") + r.message.invoice, indicator: 'green'});
-                    window.open(r.message.print_url, '_blank');
+                    const display_num = r.message.business_display_number || r.message.invoice;
+                    const success_dialog = new frappe.ui.Dialog({
+                        title: `<span style="color:#027a48; font-weight:700;">✅ ${__('Transaction Complete')}</span>`,
+                        fields: [
+                            {
+                                fieldtype: 'HTML',
+                                fieldname: 'success_html',
+                                html: `
+                                    <div style="text-align: center; padding: 20px 10px;">
+                                        <div style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px;">Business Number</div>
+                                        <div style="font-size: 32px; font-weight: 800; color: #1A2B5C; margin-bottom: 8px; font-family: monospace;">${display_num}</div>
+                                        <div style="font-size: 14px; color: #64748b; margin-bottom: 24px;">Grand Total: <b style="color: #6941c6;">INR ${r.message.grand_total.toFixed(2)}</b></div>
+                                        
+                                        <div style="display: flex; gap: 10px; justify-content: center;">
+                                            <button class="btn btn-primary" id="success-print-btn" style="padding: 10px 20px; font-weight: 600;">🖨️ ${__('Print Receipt')}</button>
+                                            <button class="btn btn-default" id="success-why-btn" style="padding: 10px 20px; font-weight: 600;">❓ ${__('Explain Document')}</button>
+                                            <button class="btn btn-success" id="success-new-btn" style="padding: 10px 20px; font-weight: 600; background-color: #027a48; border-color: #027a48; color: white;">🆕 ${__('New Transaction')}</button>
+                                        </div>
+                                    </div>
+                                `
+                            }
+                        ]
+                    });
+                    
+                    success_dialog.show();
+                    
+                    success_dialog.$wrapper.find("#success-print-btn").on("click", function() {
+                        window.open(r.message.print_url, '_blank');
+                    });
+                    
+                    success_dialog.$wrapper.find("#success-why-btn").on("click", function() {
+                        const doctype = r.message.print_url.includes("Sales+Invoice") ? "Sales Invoice" : "POS Invoice";
+                        window.smritiExplainDoc(doctype, r.message.invoice);
+                    });
+                    
+                    success_dialog.$wrapper.find("#success-new-btn").on("click", function() {
+                        success_dialog.hide();
+                    });
 
                     // Reset screen
                     me.items = [];

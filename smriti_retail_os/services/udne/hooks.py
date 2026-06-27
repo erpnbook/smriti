@@ -46,3 +46,15 @@ def before_save_numbering_rule(doc, method=None):
         old_template = doc.get_db_value("template")
         if old_template and old_template != doc.template:
             doc.version = (doc.version or 1) + 1
+
+def before_print_document(doc, format_name=None):
+    """
+    Hook to ensure print formats and PDFs consistently show the business display number
+    without mutating doc.name to prevent side-effects.
+    Sets doc.udne_display_number, doc.udne_print_number, and doc.select_print_heading.
+    """
+    display_num = getattr(doc, "custom_business_display_number", None)
+    if display_num:
+        doc.udne_display_number = display_num
+        doc.udne_print_number = display_num
+        doc.select_print_heading = display_num

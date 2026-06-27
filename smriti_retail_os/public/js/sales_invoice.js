@@ -25,6 +25,12 @@ frappe.ui.form.on("Sales Invoice", {
     },
 
     refresh: function(frm) {
+        if (frm.doc.custom_business_display_number) {
+            frm.add_custom_button(__("Explain Document"), () => {
+                window.smritiExplainDoc("Sales Invoice", frm.doc.name);
+            }, __("SMRITI"));
+        }
+
         if (frappe.user.has_role("System Manager")) return;
         _pure_apply_clutter_removal(frm);
         _pure_render_sleek_ui(frm);
@@ -33,6 +39,11 @@ frappe.ui.form.on("Sales Invoice", {
         frm.page.clear_inner_toolbar();
         if (frappe.user.has_role("SMRITI Cashier")) {
             frm.add_custom_button(__("← New Bill"), () => frappe.set_route("smriti-billing"), __("SMRITI"));
+        }
+        if (frm.doc.custom_business_display_number) {
+            frm.add_custom_button(__("Explain Document"), () => {
+                window.smritiExplainDoc("Sales Invoice", frm.doc.name);
+            }, __("SMRITI"));
         }
     }
 });
@@ -109,11 +120,16 @@ function _pure_render_sleek_ui(frm) {
     const amount = frappe.format(frm.doc.rounded_total || frm.doc.grand_total, {fieldtype:"Currency"});
     const tax = frappe.format(frm.doc.total_taxes_and_charges, {fieldtype:"Currency"});
     const items_count = (frm.doc.items || []).length;
+    const business_num = frm.doc.custom_business_display_number || frm.doc.name;
     
     // Inject custom "Rearranged" Sleek Header styled by smriti_sales_invoice.css
     frm.dashboard.set_headline(`
         <div class="dashboard-headline-card" style="padding: 20px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
             <div style="display: flex; gap: 40px;">
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; color: #667085; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px;">Business Number</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #1A2B5C; font-family: monospace;">${business_num}</div>
+                </div>
                 <div>
                     <div style="font-size: 11px; text-transform: uppercase; color: #667085; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px;">Customer</div>
                     <div style="font-size: 16px; font-weight: 600; color: #101828;">${frm.doc.customer_name || 'Walk-In Customer'}</div>

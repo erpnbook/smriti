@@ -262,6 +262,7 @@ doc_events = {
     },
     "POS Invoice": {
         "autoname": "smriti_retail_os.services.udne.hooks.autoname_document",
+        "before_print": "smriti_retail_os.services.udne.hooks.before_print_document",
         "before_validate": [
             "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
             "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
@@ -288,6 +289,7 @@ doc_events = {
     },
     "Sales Invoice": {
         "autoname": "smriti_retail_os.services.udne.hooks.autoname_document",
+        "before_print": "smriti_retail_os.services.udne.hooks.before_print_document",
         "before_validate": [
             "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
             "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
