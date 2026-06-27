@@ -236,13 +236,16 @@ select.form-input option { background:var(--card); }
                         </tbody>
                     </table>
 
-                    <div class="btn-row">
+                    <div class="btn-row" style="align-items: center;">
                         <button class="btn btn-primary" onclick="triggerDirectSync()">
                             <span class="material-symbols-outlined">cloud_sync</span>Sync Selected to Tally
                         </button>
                         <button class="btn btn-success" onclick="triggerXmlExport()">
                             <span class="material-symbols-outlined">download</span>Export Tally XML
                         </button>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-left: 12px; font-size: 0.85rem; color: var(--text-sub);">
+                            <input type="checkbox" id="force-repost" style="accent-color: var(--primary);"> Force Overwrite / Repost
+                        </label>
                     </div>
                 </div>
             </div>
@@ -578,6 +581,7 @@ function triggerDirectSync() {
     const to_date = document.getElementById('to-date').value;
     const vch_type = document.getElementById('voucher-type').value;
     const selected = getSelectedVouchers();
+    const force = document.getElementById('force-repost')?.checked ? 1 : 0;
 
     showToast(`Syncing selected ${vch_type} vouchers to TallyPrime...`, 'ok');
 
@@ -587,7 +591,8 @@ function triggerDirectSync() {
             from_date: from_date,
             to_date: to_date,
             invoice_names: selected.length > 0 ? selected : null,
-            voucher_type: vch_type
+            voucher_type: vch_type,
+            force: force
         },
         callback: function(r) {
             if (r.message) {

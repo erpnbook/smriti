@@ -46,6 +46,11 @@ def generate_voucher_xml(doctype, doc_name, settings=None):
 	doc = frappe.get_doc(doctype, doc_name) if isinstance(doc_name, str) else doc_name
 	date_str = get_tally_date_format(doc.posting_date)
 	
+	# Narration: Mention it is posted from SMRITI Retail OS
+	narration = f"Posted from SMRITI Retail OS. Ref: {doc.name}"
+	if doc.get("remarks"):
+		narration += f" | {doc.remarks}"
+	
 	company_name = settings.tally_company or "SMRITI Company"
 	sales_ledger = settings.sales_ledger or "Sales Account"
 	purchase_ledger = settings.purchase_ledger or "Purchase Account"
@@ -102,9 +107,11 @@ def generate_voucher_xml(doctype, doc_name, settings=None):
 			'        <TALLYMESSAGE xmlns:UDF="TallyUDF">',
 			f'          <VOUCHER VCHTYPE="{vch_type}" ACTION="Create" OBJVIEW="Invoice">',
 			f"            <DATE>{date_str}</DATE>",
+			f"            <VOUCHERTYPENAME>{vch_type}</VOUCHERTYPENAME>",
 			f"            <VOUCHERNUMBER>{doc.name}</VOUCHERNUMBER>",
 			f"            <PARTYLEDGERNAME>{party_ledger}</PARTYLEDGERNAME>",
 			f"            <EFFECTIVEDATE>{date_str}</EFFECTIVEDATE>",
+			f"            <NARRATION>{narration}</NARRATION>",
 			# Party Entry
 			"            <ALLLEDGERENTRIES.LIST>",
 			f"              <LEDGERNAME>{party_ledger}</LEDGERNAME>",
@@ -221,9 +228,11 @@ def generate_voucher_xml(doctype, doc_name, settings=None):
 		'        <TALLYMESSAGE xmlns:UDF="TallyUDF">',
 		f'          <VOUCHER VCHTYPE="{vch_type}" ACTION="Create" OBJVIEW="Invoice">',
 		f"            <DATE>{date_str}</DATE>",
+		f"            <VOUCHERTYPENAME>{vch_type}</VOUCHERTYPENAME>",
 		f"            <VOUCHERNUMBER>{doc.name}</VOUCHERNUMBER>",
 		f"            <PARTYLEDGERNAME>{party_ledger}</PARTYLEDGERNAME>",
 		f"            <EFFECTIVEDATE>{date_str}</EFFECTIVEDATE>",
+		f"            <NARRATION>{narration}</NARRATION>",
 		# Party Entry
 		"            <ALLLEDGERENTRIES.LIST>",
 		f"              <LEDGERNAME>{party_ledger}</LEDGERNAME>",

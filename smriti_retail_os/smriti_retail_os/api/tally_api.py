@@ -152,7 +152,7 @@ def export_bulk_xml(from_date, to_date, invoice_names=None, voucher_type="Sales"
 	frappe.response.type = "download"
 
 @frappe.whitelist()
-def sync_to_tally(from_date, to_date, invoice_names=None, voucher_type="Sales"):
+def sync_to_tally(from_date, to_date, invoice_names=None, voucher_type="Sales", force=0):
 	"""Directly posts selected/all vouchers for a date range to the Tally HTTP port."""
 	if isinstance(invoice_names, str):
 		import json
@@ -208,8 +208,9 @@ def sync_to_tally(from_date, to_date, invoice_names=None, voucher_type="Sales"):
 	last_error = ""
 
 	for inv in invoices:
-		if frappe.db.exists("SMRITI Tally Sync Log", {"reference_name": inv.name, "status": "Success"}):
-			continue
+		if not frappe.utils.cint(force):
+			if frappe.db.exists("SMRITI Tally Sync Log", {"reference_name": inv.name, "status": "Success"}):
+				continue
 
 		# Check for zero-value vouchers
 		total_amt = 0.0
