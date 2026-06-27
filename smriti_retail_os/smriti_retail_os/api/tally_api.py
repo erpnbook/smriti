@@ -126,6 +126,22 @@ def sync_to_tally(from_date, to_date, invoice_names=None):
 		return {"status": "Failed", "message": _("No submitted Sales Invoices found to sync.")}
 
 	settings = tally_service.get_settings()
+	
+	# Auto-create mapped settings ledgers in Tally if enabled
+	if settings.get("auto_create_ledgers"):
+		if settings.get("sales_ledger"):
+			tally_service.create_ledger_in_tally(settings.get("sales_ledger"), "Sales Accounts", settings)
+		if settings.get("cash_ledger"):
+			tally_service.create_ledger_in_tally(settings.get("cash_ledger"), "Cash-in-Hand", settings)
+		if settings.get("bank_ledger"):
+			tally_service.create_ledger_in_tally(settings.get("bank_ledger"), "Bank Accounts", settings)
+		if settings.get("cgst_ledger"):
+			tally_service.create_ledger_in_tally(settings.get("cgst_ledger"), "Duties & Taxes", settings)
+		if settings.get("sgst_ledger"):
+			tally_service.create_ledger_in_tally(settings.get("sgst_ledger"), "Duties & Taxes", settings)
+		if settings.get("igst_ledger"):
+			tally_service.create_ledger_in_tally(settings.get("igst_ledger"), "Duties & Taxes", settings)
+
 	success_count = 0
 	failed_count = 0
 	last_error = ""
