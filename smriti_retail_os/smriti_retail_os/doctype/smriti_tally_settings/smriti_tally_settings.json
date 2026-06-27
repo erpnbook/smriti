@@ -23,7 +23,42 @@
   "options_section",
   "sync_invoices",
   "sync_payments",
-  "auto_create_ledgers"
+  "auto_create_ledgers",
+  "accounting_sync_section",
+  "sync_sales_invoices",
+  "sync_purchase_invoices",
+  "sync_sales_returns",
+  "sync_purchase_returns",
+  "sync_payment_entries",
+  "sync_receipt_entries",
+  "sync_journal_entries",
+  "inventory_sync_section",
+  "sync_inventory",
+  "inventory_sync_mode",
+  "sync_item_masters",
+  "sync_stock_groups",
+  "sync_units",
+  "sync_warehouses",
+  "sync_opening_stock",
+  "sync_stock_journals",
+  "sync_stock_reconciliations",
+  "sync_batch_numbers",
+  "sync_serial_numbers",
+  "masters_sync_section",
+  "sync_customers",
+  "sync_suppliers",
+  "sync_ledger_masters",
+  "sync_gst_ledgers",
+  "sync_cost_centres",
+  "conflict_section",
+  "if_item_exists",
+  "if_ledger_exists",
+  "if_warehouse_exists",
+  "if_quantity_mismatch",
+  "state_section",
+  "last_sync_accounting",
+  "last_sync_inventory",
+  "last_sync_masters"
  ],
  "fields": [
   {
@@ -117,6 +152,213 @@
    "fieldname": "auto_create_ledgers",
    "fieldtype": "Check",
    "label": "Auto-Create Missing Ledgers in Tally"
+  },
+  {
+   "fieldname": "accounting_sync_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Sync Configurations"
+  },
+  {
+   "default": "1",
+   "fieldname": "sync_sales_invoices",
+   "fieldtype": "Check",
+   "label": "Sync Sales Invoices (V2)"
+  },
+  {
+   "default": "1",
+   "fieldname": "sync_purchase_invoices",
+   "fieldtype": "Check",
+   "label": "Sync Purchase Invoices"
+  },
+  {
+   "default": "1",
+   "fieldname": "sync_sales_returns",
+   "fieldtype": "Check",
+   "label": "Sync Sales Returns (Credit Notes)"
+  },
+  {
+   "default": "1",
+   "fieldname": "sync_purchase_returns",
+   "fieldtype": "Check",
+   "label": "Sync Purchase Returns (Debit Notes)"
+  },
+  {
+   "default": "1",
+   "fieldname": "sync_payment_entries",
+   "fieldtype": "Check",
+   "label": "Sync Payment Entries"
+  },
+  {
+   "default": "1",
+   "fieldname": "sync_receipt_entries",
+   "fieldtype": "Check",
+   "label": "Sync Receipt Entries"
+  },
+  {
+   "default": "1",
+   "fieldname": "sync_journal_entries",
+   "fieldtype": "Check",
+   "label": "Sync Journal Entries"
+  },
+  {
+   "fieldname": "inventory_sync_section",
+   "fieldtype": "Section Break",
+   "label": "Inventory Sync Configurations"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_inventory",
+   "fieldtype": "Check",
+   "label": "Enable Inventory Synchronization"
+  },
+  {
+   "default": "Accounting Only",
+   "fieldname": "inventory_sync_mode",
+   "fieldtype": "Select",
+   "label": "Inventory Sync Mode",
+   "options": "Accounting Only\nSummary Inventory\nFull Inventory"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_item_masters",
+   "fieldtype": "Check",
+   "label": "Sync Item Masters"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_stock_groups",
+   "fieldtype": "Check",
+   "label": "Sync Stock Groups"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_units",
+   "fieldtype": "Check",
+   "label": "Sync Units of Measure"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_warehouses",
+   "fieldtype": "Check",
+   "label": "Sync Warehouses (Godowns)"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_opening_stock",
+   "fieldtype": "Check",
+   "label": "Sync Opening Stock"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_stock_journals",
+   "fieldtype": "Check",
+   "label": "Sync Stock Journals"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_stock_reconciliations",
+   "fieldtype": "Check",
+   "label": "Sync Stock Reconciliations"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_batch_numbers",
+   "fieldtype": "Check",
+   "label": "Sync Batch Numbers"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_serial_numbers",
+   "fieldtype": "Check",
+   "label": "Sync Serial Numbers"
+  },
+  {
+   "fieldname": "masters_sync_section",
+   "fieldtype": "Section Break",
+   "label": "Masters Sync Configurations"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_customers",
+   "fieldtype": "Check",
+   "label": "Sync Customer Masters"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_suppliers",
+   "fieldtype": "Check",
+   "label": "Sync Supplier Masters"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_ledger_masters",
+   "fieldtype": "Check",
+   "label": "Sync Ledger Masters"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_gst_ledgers",
+   "fieldtype": "Check",
+   "label": "Sync GST Ledgers"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_cost_centres",
+   "fieldtype": "Check",
+   "label": "Sync Cost Centres"
+  },
+  {
+   "fieldname": "conflict_section",
+   "fieldtype": "Section Break",
+   "label": "Conflict Resolution Policies"
+  },
+  {
+   "default": "Skip",
+   "fieldname": "if_item_exists",
+   "fieldtype": "Select",
+   "label": "If Item Exists in Target",
+   "options": "Skip\nUpdate\nRename\nAsk"
+  },
+  {
+   "default": "Skip",
+   "fieldname": "if_ledger_exists",
+   "fieldtype": "Select",
+   "label": "If Ledger Exists in Target",
+   "options": "Skip\nUpdate\nRename\nAsk"
+  },
+  {
+   "default": "Skip",
+   "fieldname": "if_warehouse_exists",
+   "fieldtype": "Select",
+   "label": "If Warehouse Exists in Target",
+   "options": "Skip\nUpdate\nRename"
+  },
+  {
+   "default": "Keep SMRITI",
+   "fieldname": "if_quantity_mismatch",
+   "fieldtype": "Select",
+   "label": "If Quantity Mismatch",
+   "options": "Keep SMRITI\nKeep Tally\nCompare"
+  },
+  {
+   "fieldname": "state_section",
+   "fieldtype": "Section Break",
+   "label": "Synchronization State Tracker"
+  },
+  {
+   "fieldname": "last_sync_accounting",
+   "fieldtype": "Datetime",
+   "label": "Last Successful Accounting Sync"
+  },
+  {
+   "fieldname": "last_sync_inventory",
+   "fieldtype": "Datetime",
+   "label": "Last Successful Inventory Sync"
+  },
+  {
+   "fieldname": "last_sync_masters",
+   "fieldtype": "Datetime",
+   "label": "Last Successful Masters Sync"
   }
  ],
  "index_web_pages_for_search": 1,
