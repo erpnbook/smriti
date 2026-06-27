@@ -33,7 +33,7 @@ def dispatch_queue_item(queue_name):
 	if integration.connector_type == "REST":
 		adapter = RestAdapter()
 	else:
-		adapter = RestAdapter()
+		frappe.throw(_("Unsupported connector type: {0}").format(integration.connector_type))
 
 	try:
 		success, http_status, response_content = adapter.send(

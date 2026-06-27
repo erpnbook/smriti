@@ -281,7 +281,7 @@ def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
             else:
                 # Fallback: search in Item Attributes
                 items_with_season = frappe.get_all(
-                    "Item Attribute",
+                    "Item Variant Attribute",
                     filters={"attribute": ["like", "%season%"], "attribute_value": season_val},
                     fields=["parent"]
                 )
@@ -294,7 +294,7 @@ def get_items_for_printing(filters=None, source_doctype=None, source_name=None):
             else:
                 # Fallback: search in Item Attributes
                 items_with_collection = frappe.get_all(
-                    "Item Attribute",
+                    "Item Variant Attribute",
                     filters={"attribute": ["like", "%collection%"], "attribute_value": collection_val},
                     fields=["parent"]
                 )
