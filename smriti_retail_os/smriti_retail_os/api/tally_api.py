@@ -287,3 +287,37 @@ def get_sync_logs(limit=50):
 		order_by="creation desc",
 		limit=limit
 	)
+
+@frappe.whitelist()
+def compare_sync_status(from_date, to_date, voucher_type="Sales"):
+	"""Compares ERPNext transactions with SMRITI Tally Sync Logs to find missing vouchers."""
+	# 1. Fetch pending vouchers using get_pending_vouchers
+	all_vouchers = get_pending_vouchers(from_date, to_date, voucher_type)
+	
+	# 2. Extract their names
+	voucher_names = [v["name"] for v in all_vouchers] if all_vouchers else []
+	
+	if not voucher_names:
+		return {
+			"total": 0,
+			"synced": 0,
+			"missing": 0,
+			"missing_list": []
+		}
+	
+	# 3. Find which ones are successfully logged in SMRITI Tally Sync Log
+	synced_logs = frappe.db.get_all(
+		"SMRITI Tally Sync Log",
+		filters={"reference_name": ["in", voucher_names], "status": "Success"},
+		fields=["reference_name"]
+	)
+	synced_names = {log.reference_name for log in synced_logs}
+	
+	missing_list = [v for v in all_vouchers if v["name"] not in synced_names]
+	
+	return {
+		"total": len(all_vouchers),
+		"synced": len(synced_names),
+		"missing": len(missing_list),
+		"missing_list": missing_list
+	}

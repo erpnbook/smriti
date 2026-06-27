@@ -243,6 +243,9 @@ select.form-input option { background:var(--card); }
                         <button class="btn btn-success" onclick="triggerXmlExport()">
                             <span class="material-symbols-outlined">download</span>Export Tally XML
                         </button>
+                        <button class="btn btn-outline" onclick="triggerAuditCompare()">
+                            <span class="material-symbols-outlined">rule_folder</span>Audit Sync Status
+                        </button>
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-left: 12px; font-size: 0.85rem; color: var(--text-sub);">
                             <input type="checkbox" id="force-repost" style="accent-color: var(--primary);"> Force Overwrite / Repost
                         </label>
@@ -602,6 +605,52 @@ function triggerDirectSync() {
                     showToast(r.message.message, 'err');
                 }
                 loadPendingVouchers();
+            }
+        }
+    });
+}
+
+// Trigger audit check
+function triggerAuditCompare() {
+    const from_date = document.getElementById('from-date').value;
+    const to_date = document.getElementById('to-date').value;
+    const vch_type = document.getElementById('voucher-type').value;
+
+    showToast(`Auditing sync status for ${vch_type} vouchers...`, 'ok');
+
+    frappe.call({
+        method: 'smriti_retail_os.smriti_retail_os.api.tally_api.compare_sync_status',
+        args: {
+            from_date: from_date,
+            to_date: to_date,
+            voucher_type: vch_type
+        },
+        callback: function(r) {
+            if (r.message) {
+                const audit = r.message;
+                const msg = `Audit Completed: Total ${audit.total} vouchers found. Synced: ${audit.synced}, Missing in Tally: ${audit.missing}.`;
+                if (audit.missing > 0) {
+                    showToast(msg, 'err');
+                    
+                    // Highlight missing vouchers in the table
+                    const missingNames = new Set(audit.missing_list.map(m => m.name));
+                    document.querySelectorAll('#vouchers-tbody tr').forEach(tr => {
+                        const nameCell = tr.querySelector('.mono');
+                        if (nameCell && missingNames.has(nameCell.innerText.trim())) {
+                            tr.style.background = 'var(--danger-bg)';
+                            tr.style.borderLeft = '3px solid var(--danger)';
+                        } else {
+                            tr.style.background = '';
+                            tr.style.borderLeft = '';
+                        }
+                    });
+                } else {
+                    showToast(msg + ' All in sync!', 'ok');
+                    document.querySelectorAll('#vouchers-tbody tr').forEach(tr => {
+                        tr.style.background = '';
+                        tr.style.borderLeft = '';
+                    });
+                }
             }
         }
     });

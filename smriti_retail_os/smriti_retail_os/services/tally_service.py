@@ -45,6 +45,15 @@ def generate_voucher_xml(doctype, doc_name, settings=None):
 
 	doc = frappe.get_doc(doctype, doc_name) if isinstance(doc_name, str) else doc_name
 	date_str = get_tally_date_format(doc.posting_date)
+
+	# Resolve Voucher Number and Reference Number
+	vch_number = doc.name
+	ref_number = doc.name
+	if doctype == "Purchase Invoice" and doc.get("bill_no"):
+		vch_number = doc.bill_no
+		ref_number = doc.bill_no
+	elif doctype == "Payment Entry" and doc.get("reference_no"):
+		ref_number = doc.reference_no
 	
 	# Narration: Mention it is posted from SMRITI Retail OS
 	narration = f"Posted from SMRITI Retail OS. Ref: {doc.name}"
@@ -108,7 +117,8 @@ def generate_voucher_xml(doctype, doc_name, settings=None):
 			f'          <VOUCHER VCHTYPE="{vch_type}" ACTION="Create" OBJVIEW="Invoice">',
 			f"            <DATE>{date_str}</DATE>",
 			f"            <VOUCHERTYPENAME>{vch_type}</VOUCHERTYPENAME>",
-			f"            <VOUCHERNUMBER>{doc.name}</VOUCHERNUMBER>",
+			f"            <VOUCHERNUMBER>{vch_number}</VOUCHERNUMBER>",
+			f"            <REFERENCE>{ref_number}</REFERENCE>",
 			f"            <PARTYLEDGERNAME>{party_ledger}</PARTYLEDGERNAME>",
 			f"            <EFFECTIVEDATE>{date_str}</EFFECTIVEDATE>",
 			f"            <NARRATION>{narration}</NARRATION>",
@@ -229,7 +239,8 @@ def generate_voucher_xml(doctype, doc_name, settings=None):
 		f'          <VOUCHER VCHTYPE="{vch_type}" ACTION="Create" OBJVIEW="Invoice">',
 		f"            <DATE>{date_str}</DATE>",
 		f"            <VOUCHERTYPENAME>{vch_type}</VOUCHERTYPENAME>",
-		f"            <VOUCHERNUMBER>{doc.name}</VOUCHERNUMBER>",
+		f"            <VOUCHERNUMBER>{vch_number}</VOUCHERNUMBER>",
+		f"            <REFERENCE>{ref_number}</REFERENCE>",
 		f"            <PARTYLEDGERNAME>{party_ledger}</PARTYLEDGERNAME>",
 		f"            <EFFECTIVEDATE>{date_str}</EFFECTIVEDATE>",
 		f"            <NARRATION>{narration}</NARRATION>",
