@@ -3,7 +3,7 @@
 # @file: smriti_retail_os/tests/test_knowledge_governance.py
 # @description: Sprint SDC-005 unit tests for SKE runtime, migrations, drift fallback, AI safe gate and telemetry retention.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.8.4
+# @version: 1.8.5
 # @license: MIT
 #
 

@@ -3,7 +3,7 @@
 # @file: smriti_retail_os/services/ai_context_service.py
 # @description: SMRITI AI Context Builder — Retrieval-Augmented Context Generation.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.8.4
+# @version: 1.8.5
 # @license: MIT
 #
 

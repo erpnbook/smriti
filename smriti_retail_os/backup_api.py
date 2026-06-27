@@ -29,7 +29,7 @@ from smriti_retail_os.security_constants import (
 )
 
 
-# ─── SMTP Password Encryption Helpers (F3-FIX v1.8.4) ───────────────────────
+# ─── SMTP Password Encryption Helpers (F3-FIX v1.8.5) ───────────────────────
 # Frappe's encrypted password store is used for SMTP credentials.
 # The password is NEVER written to tabDefaultValue (plain-text JSON blob).
 #
@@ -370,12 +370,12 @@ def export_site_config(password):
     frappe.response.type = "download"
 
 
-# ─── v1.8.4 SMTP Password Migration Endpoint ─────────────────────────────────
+# ─── v1.8.5 SMTP Password Migration Endpoint ─────────────────────────────────
 
 @frappe.whitelist()
 def run_smtp_password_migration():
     """
-    F3-FIX v1.8.4: Migrates a plain-text SMTP password from tabDefaultValue
+    F3-FIX v1.8.5: Migrates a plain-text SMTP password from tabDefaultValue
     into Frappe's encrypted password store (tabPassword).
 
     Safe to call multiple times — idempotent.
