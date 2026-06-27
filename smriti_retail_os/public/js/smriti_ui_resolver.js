@@ -3,7 +3,7 @@
  * @description: SMRITI UI Configuration Engine — Deterministic 7-Level Token Resolver
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
- * @version: 1.4.0
+ * @version: 1.8.6
  * @license: MIT
  * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  *
@@ -52,7 +52,7 @@
  *   - It does NOT expose themeProfile, experienceProfile, or brandProfile externally.
  *   - Components must never import this file directly — use smriti_theme_manager.js
  *
- * @version 1.0.0
+ * @version 1.8.6
  * @status Phase 1A — Foundation Layer
  * @author AITDL / SMRITI Engineering
  * @license MIT — Copyright (c) 2026 AITDL NETWORK & ERPNbook.com
@@ -62,6 +62,40 @@
     "use strict";
 
     global.SMRITI = global.SMRITI || {};
+
+    // Standalone SMRITI execution: Mock frappe.call using native fetch
+    global.frappe = global.frappe || {};
+    if (typeof global.frappe.call !== 'function') {
+        global.frappe.call = function(opts) {
+            return new Promise((resolve, reject) => {
+                var csrfToken = global.csrf_token || (document.cookie.match(/system_csrf_token=([^;]+)/) || [])[1] || "";
+                fetch("/api/method/" + opts.method, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Frappe-CSRF-Token': csrfToken
+                    },
+                    body: JSON.stringify(opts.args || {})
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.exc) {
+                        if (opts.error) opts.error(data);
+                        reject(data);
+                    } else {
+                        var responseObj = { message: data.message };
+                        if (opts.callback) opts.callback(responseObj);
+                        resolve(responseObj);
+                    }
+                })
+                .catch(function(err) {
+                    if (opts.error) opts.error(err);
+                    reject(err);
+                });
+            });
+        };
+    }
 
     /**
      * DEFAULT_THEME_PROFILE — SMRITI-THEME-005
