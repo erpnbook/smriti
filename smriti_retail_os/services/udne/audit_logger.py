@@ -13,7 +13,10 @@ def log_audit(
     source_module: str,
     terminal_id: str,
     branch: str,
-    user: str
+    user: str,
+    rule: str = None,
+    template: str = None,
+    context_details: str = None
 ) -> None:
     """
     Logs metadata about the generated number into SMRITI Numbering Audit Log.
@@ -24,7 +27,10 @@ def log_audit(
             "document_type": doctype,
             "document_name": docname,
             "generated_number": generated_number,
+            "rule": rule,
+            "template": template,
             "rule_version": rule_version,
+            "context_details": context_details,
             "generation_mode": generation_mode,
             "generation_duration_ms": duration_ms,
             "retry_count": retry_count,

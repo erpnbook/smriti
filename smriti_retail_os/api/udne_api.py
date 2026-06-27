@@ -79,3 +79,36 @@ def scan_sequence_gaps(doctype: str, rule_name: str) -> dict:
         return {"success": True, "gaps": gaps}
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+@frappe.whitelist()
+def explain_doc(doc_name: str) -> dict:
+    """
+    Exposes UDNE resolution explainability trace for a given document.
+    """
+    try:
+        from smriti_retail_os.services import udne
+        res = udne.explain(doc_name)
+        return res
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@frappe.whitelist()
+def get_dashboard_metrics(timespan: str = "Today") -> dict:
+    """
+    Retrieves full dashboard metrics bundle including performance, health, sequence gaps, and reservations.
+    """
+    try:
+        from smriti_retail_os.services import udne
+        m = udne.metrics(timespan)
+        h = udne.health()
+        g = udne.gaps()
+        r = udne.reservations()
+        return {
+            "success": True,
+            "metrics": m,
+            "health": h,
+            "gaps": g,
+            "reservations": r
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}

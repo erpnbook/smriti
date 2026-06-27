@@ -1,4 +1,5 @@
 import time
+import json
 import frappe
 from smriti_retail_os.services.udne.interfaces import GenerationContext, UDNEResult
 from smriti_retail_os.services.udne.rule_loader import load_active_rule
@@ -86,7 +87,10 @@ def generate_number(doctype: str, context: GenerationContext) -> UDNEResult:
                 source_module=context.department or "Retail",
                 terminal_id=context.terminal_id or "Online",
                 branch=context.branch or "",
-                user=context.user or "Administrator"
+                user=context.user or "Administrator",
+                rule=rule_name,
+                template=template_str,
+                context_details=json.dumps(ctx_dict, default=str)
             )
             
             return UDNEResult(

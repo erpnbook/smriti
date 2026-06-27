@@ -2082,15 +2082,18 @@ def create_udne_doctypes():
                 {"fieldname": "document_type", "fieldtype": "Link", "options": "DocType", "label": "Document Type", "reqd": 1, "in_list_view": 1},
                 {"fieldname": "document_name", "fieldtype": "Data", "label": "Document Name", "reqd": 1, "in_list_view": 1},
                 {"fieldname": "generated_number", "fieldtype": "Data", "label": "Generated Number", "reqd": 1, "in_list_view": 1},
+                {"fieldname": "rule", "fieldtype": "Link", "options": "SMRITI Numbering Rule", "label": "Rule"},
+                {"fieldname": "template", "fieldtype": "Data", "label": "Template"},
                 {"fieldname": "rule_version", "fieldtype": "Int", "label": "Rule Version"},
+                {"fieldname": "context_details", "fieldtype": "Small Text", "label": "Context Details"},
                 {"fieldname": "generation_mode", "fieldtype": "Select", "options": "Auto\nManual\nOffline", "label": "Generation Mode", "default": "Auto"},
                 {"fieldname": "generation_duration_ms", "fieldtype": "Float", "label": "Generation Duration (ms)"},
                 {"fieldname": "retry_count", "fieldtype": "Int", "label": "Retry Count", "default": "0"},
                 {"fieldname": "conflict_count", "fieldtype": "Int", "label": "Conflict Count", "default": "0"},
                 {"fieldname": "source_module", "fieldtype": "Data", "label": "Source Module"},
                 {"fieldname": "terminal_id", "fieldtype": "Data", "label": "Terminal ID"},
-                {"fieldname": "branch", "fieldtype": "Link", "options": "Warehouse", "label": "Branch"},
-                {"fieldname": "user", "fieldtype": "Link", "options": "User", "label": "User"},
+                {"fieldname": "branch", "fieldtype": "Data", "label": "Branch"},
+                {"fieldname": "user", "fieldtype": "Data", "label": "User"},
                 {"fieldname": "timestamp", "fieldtype": "Datetime", "label": "Timestamp", "reqd": 1}
             ]
             for f in fields:

@@ -2,7 +2,7 @@ import unittest
 import frappe
 import datetime
 from smriti_retail_os.services.udne.interfaces import GenerationContext
-from smriti_retail_os.services.udne import generate
+from smriti_retail_os.services.udne import generate, explain, metrics, health, gaps, reservations
 from smriti_retail_os.services.udne.cache import clear_compiled_template_cache
 from smriti_retail_os.services.udne.gap_scanner import scan_gaps
 from smriti_retail_os.services.udne.reservation_manager import reserve_range
@@ -21,6 +21,8 @@ class TestUDNE(unittest.TestCase):
         frappe.db.delete("SMRITI Numbering Counter")
         frappe.db.delete("SMRITI Numbering Reserved Range")
         frappe.db.delete("SMRITI Numbering Audit Log")
+        frappe.db.delete("POS Invoice")
+        frappe.db.delete("Sales Invoice")
         frappe.db.commit()
         clear_compiled_template_cache()
         
@@ -29,6 +31,8 @@ class TestUDNE(unittest.TestCase):
         frappe.db.delete("SMRITI Numbering Counter")
         frappe.db.delete("SMRITI Numbering Reserved Range")
         frappe.db.delete("SMRITI Numbering Audit Log")
+        frappe.db.delete("POS Invoice")
+        frappe.db.delete("Sales Invoice")
         frappe.db.commit()
         clear_compiled_template_cache()
         
@@ -199,3 +203,93 @@ class TestUDNE(unittest.TestCase):
         self.assertEqual(gaps[0]["number"], 2)
         self.assertEqual(gaps[0]["status"], "Pending")
         self.assertEqual(gaps[1]["number"], 3)
+
+    def test_explain_generation(self):
+        rule = frappe.get_doc({
+            "doctype": "SMRITI Numbering Rule",
+            "document_type": "POS Invoice",
+            "priority": "Global",
+            "template": "INV-{counter}",
+            "is_active": 1
+        })
+        rule.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        ctx = GenerationContext(company="Test Company", branch="MUMBAI")
+        res = generate("POS Invoice", ctx)
+        
+        exp = explain(res.identity)
+        self.assertTrue(exp["success"])
+        self.assertEqual(exp["schema_version"], 1)
+        self.assertEqual(exp["evidence"]["generated_number"], "INV-1")
+        self.assertEqual(exp["evidence"]["context"]["branch"], "MUMBAI")
+        self.assertEqual(exp["metrics"]["explainability_score"], 100)
+        self.assertTrue(len(exp["timeline"]) > 3)
+        
+        # Test look up by business display number too
+        exp_by_display = explain("INV-1")
+        self.assertTrue(exp_by_display["success"])
+        self.assertEqual(exp_by_display["evidence"]["document_name"], res.identity)
+
+    def test_explain_missing_record(self):
+        exp = explain("NONEXISTENT-INV-999")
+        self.assertFalse(exp["success"])
+        self.assertEqual(exp["schema_version"], 1)
+        self.assertEqual(exp["confidence"], 0)
+        self.assertEqual(exp["metrics"]["explainability_score"], 0)
+        self.assertIn("No UDNE audit trace found", exp["summary"])
+
+    def test_explain_invalid_json_context(self):
+        # Create a mock audit log with malformed context details
+        log = frappe.get_doc({
+            "doctype": "SMRITI Numbering Audit Log",
+            "document_type": "POS Invoice",
+            "document_name": "PI-MALFORMED",
+            "generated_number": "INV-MALFORMED",
+            "rule_version": 1,
+            "context_details": "{invalid-json}",
+            "timestamp": datetime.datetime.now()
+        })
+        log.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        exp = explain("PI-MALFORMED")
+        self.assertTrue(exp["success"])
+        self.assertEqual(exp["evidence"]["context"], {})  # Graceful fallback to empty dict
+        self.assertEqual(exp["confidence"], 60)  # Deducted for missing rule reference (20) & missing template (20)
+
+    def test_dashboard_metrics_aggregation(self):
+        rule = frappe.get_doc({
+            "doctype": "SMRITI Numbering Rule",
+            "document_type": "POS Invoice",
+            "priority": "Global",
+            "template": "INV-{counter}",
+            "is_active": 1
+        })
+        rule.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        ctx = GenerationContext(company="Test Company")
+        res1 = generate("POS Invoice", ctx)
+        res2 = generate("POS Invoice", ctx)
+        
+        # Insert generated numbers into the table so gaps() returns 0 unexplained gaps
+        frappe.db.sql("insert into `tabPOS Invoice` (name, custom_business_display_number, company, docstatus) values (%s, %s, %s, 0)", (res1.identity, res1.display_number, "Test Company"))
+        frappe.db.sql("insert into `tabPOS Invoice` (name, custom_business_display_number, company, docstatus) values (%s, %s, %s, 0)", (res2.identity, res2.display_number, "Test Company"))
+        frappe.db.commit()
+        
+        m = metrics("Today")
+        self.assertEqual(m["total_generations"], 2)
+        self.assertTrue(m["average_latency_ms"] >= 0.0)
+        self.assertTrue(m["p95_latency_ms"] >= 0.0)
+        
+        h = health()
+        self.assertEqual(h["active_rules"], 1)
+        self.assertEqual(h["explainability_score"], 100.0)
+        
+        r = reservations()
+        self.assertEqual(len(r), 0)
+        
+        g = gaps()
+        self.assertEqual(len(g), 0)
+
