@@ -1,0 +1,159 @@
+.smriti-udne-container {
+    padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1e293b;
+    background-color: #f8fafc;
+    min-height: 100vh;
+}
+
+.smriti-udne-header {
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 16px;
+}
+
+.smriti-udne-header h2 {
+    color: #1A2B5C;
+    margin: 0;
+    font-weight: 700;
+    font-size: 24px;
+}
+
+.smriti-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    border: 1px solid #e2e8f0;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.smriti-card h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #1A2B5C;
+    font-size: 18px;
+    font-weight: 600;
+    border-left: 4px solid #2563EB;
+    padding-left: 8px;
+}
+
+.smriti-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+}
+
+.smriti-form-group {
+    margin-bottom: 16px;
+}
+
+.smriti-form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 14px;
+    color: #475569;
+}
+
+.smriti-form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: #ffffff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.smriti-form-control:focus {
+    outline: none;
+    border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.smriti-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+    border: 1px solid transparent;
+}
+
+.smriti-btn:active {
+    transform: scale(0.98);
+}
+
+.smriti-btn-primary {
+    background-color: #2563EB;
+    color: #ffffff;
+}
+
+.smriti-btn-primary:hover {
+    background-color: #1d4ed8;
+}
+
+.smriti-btn-secondary {
+    background-color: #f1f5f9;
+    color: #334155;
+    border-color: #e2e8f0;
+}
+
+.smriti-btn-secondary:hover {
+    background-color: #e2e8f0;
+}
+
+.smriti-preview-box {
+    background-color: #0f172a;
+    color: #38bdf8;
+    padding: 16px;
+    border-radius: 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 16px;
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.smriti-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+}
+
+.smriti-table th, .smriti-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.smriti-table th {
+    background-color: #f1f5f9;
+    color: #475569;
+    font-weight: 600;
+}
+
+.smriti-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.smriti-badge-active { background-color: #dcfce7; color: #166534; }
+.smriti-badge-inactive { background-color: #fee2e2; color: #991b1b; }
+.smriti-badge-explained { background-color: #e0f2fe; color: #0369a1; }
+.smriti-badge-reserved { background-color: #fef3c7; color: #92400e; }
+.smriti-badge-pending { background-color: #fae8ff; color: #86198f; }
+.smriti-badge-unexplained { background-color: #fee2e2; color: #991b1b; }

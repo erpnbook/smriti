@@ -261,6 +261,7 @@ doc_events = {
         "on_update": "smriti_retail_os.hooks_logic.sync_supplier_address_and_credit_days"
     },
     "POS Invoice": {
+        "autoname": "smriti_retail_os.services.udne.hooks.autoname_document",
         "before_validate": [
             "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
             "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
@@ -286,6 +287,7 @@ doc_events = {
         ]
     },
     "Sales Invoice": {
+        "autoname": "smriti_retail_os.services.udne.hooks.autoname_document",
         "before_validate": [
             "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
             "smriti_retail_os.hooks_logic.validate_and_reconcile_retail_invoice"
@@ -365,6 +367,9 @@ doc_events = {
     },
     "SMRITI Barcode Scan Event": {
         "before_save": "smriti_retail_os.barcode_api.enforce_barcode_scan_event_immutability"
+    },
+    "SMRITI Numbering Rule": {
+        "before_save": "smriti_retail_os.services.udne.hooks.before_save_numbering_rule"
     },
     "SMRITI Barcode Settings": {
         "on_update": "smriti_retail_os.barcode_api.clear_barcode_feature_flags_cache"

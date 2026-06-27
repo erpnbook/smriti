@@ -1968,7 +1968,10 @@ def ensure_cge_v2_doctypes():
                             print(msg)
                             frappe.log_error(msg, "SMRITI CGE Index Verification")
     except Exception as e:
-        print(f"[SMRITI] Warning verifying database indexes: {str(e)}")def create_udne_doctypes():
+        print(f"[SMRITI] Warning verifying database indexes: {str(e)}")
+
+
+def create_udne_doctypes():
     """Creates custom DocTypes for UDNE (Universal Document Numbering Engine)."""
     # 1. SMRITI Numbering Rule
     if not frappe.db.exists("DocType", "SMRITI Numbering Rule"):
@@ -1977,7 +1980,7 @@ def ensure_cge_v2_doctypes():
             doc.name = "SMRITI Numbering Rule"
             doc.module = "SMRITI Retail OS"
             doc.custom = 1
-            doc.autoname = "Prompt"
+            doc.autoname = "hash"
             doc.editable_grid = 0
             doc.quick_entry = 0
             doc.track_changes = 1
@@ -2039,7 +2042,7 @@ def ensure_cge_v2_doctypes():
             doc.name = "SMRITI Numbering Reserved Range"
             doc.module = "SMRITI Retail OS"
             doc.custom = 1
-            doc.autoname = "Prompt"
+            doc.autoname = "hash"
             doc.editable_grid = 0
             doc.quick_entry = 0
             doc.track_changes = 1
@@ -2070,7 +2073,7 @@ def ensure_cge_v2_doctypes():
             doc.name = "SMRITI Numbering Audit Log"
             doc.module = "SMRITI Retail OS"
             doc.custom = 1
-            doc.autoname = "Prompt"
+            doc.autoname = "hash"
             doc.editable_grid = 0
             doc.quick_entry = 0
             doc.track_changes = 0
@@ -2346,6 +2349,14 @@ def setup_smriti_retail_os():
                 "insert_after": "custom_hold_time",
                 "read_only": 1,
                 "unique": 1,
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_business_display_number",
+                "label": "Business Display Number",
+                "fieldtype": "Data",
+                "insert_after": "custom_billing_session_id",
+                "read_only": 1,
                 "module": "SMRITI Retail OS"
             },
             {
@@ -2693,6 +2704,14 @@ def setup_smriti_retail_os():
                 "insert_after": "custom_sizewise_json",
                 "read_only": 1,
                 "unique": 1,
+                "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_business_display_number",
+                "label": "Business Display Number",
+                "fieldtype": "Data",
+                "insert_after": "custom_billing_session_id",
+                "read_only": 1,
                 "module": "SMRITI Retail OS"
             },
             {
