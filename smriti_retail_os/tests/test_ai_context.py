@@ -3,7 +3,7 @@
 # @file: smriti_retail_os/tests/test_ai_context.py
 # @description: Unit tests for SMRITI AI Context Builder & LLM Integration (Sprint SDC-004)
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.2.15
+# @version: 1.8.4
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #

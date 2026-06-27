@@ -3,7 +3,7 @@
 # @file: smriti_retail_os/api/knowledge_studio_api.py
 # @description: SMRITI Knowledge Studio Backend APIs (Sprint SDC-003)
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.2.15
+# @version: 1.8.4
 # @license: MIT
 #
 

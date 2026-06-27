@@ -10,7 +10,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-## [1.2.15] — 2026-06-27
+## [1.8.4] — 2026-06-27
 
 ### UI & Modal Resiliency Improvements
 

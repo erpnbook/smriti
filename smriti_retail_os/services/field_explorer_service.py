@@ -6,7 +6,7 @@
 #               and report column configuration.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-26
-# @version: 1.2.15
+# @version: 1.8.4
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
