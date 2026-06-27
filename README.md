@@ -5,7 +5,7 @@
   **Enterprise Retail Operations Platform**<br/>
   Built on the ERPNext® application and the Frappe® Framework.
 
-  ![Version](https://img.shields.io/badge/version-v1.2.14-1A2B5C)
+  ![Version](https://img.shields.io/badge/version-v1.2.15-1A2B5C)
   ![CI](https://img.shields.io/github/actions/workflow/status/erpnbook/smriti/smriti_ci.yml?label=CI&logo=github)
   ![Status](https://img.shields.io/badge/status-Production%20Candidate-22c55e)
   ![License](https://img.shields.io/badge/license-MIT-yellow)
@@ -20,7 +20,7 @@
 | | |
 |---|---|
 | **Developer** | AITDL – AI Technology & Development Lab |
-| **Version** | `v1.2.14` — Production Candidate |
+| **Version** | `v1.2.15` — Production Candidate |
 | **Compatibility** | ERPNext v16 · Frappe v16 · India Compliance v16 |
 | **License** | MIT — Free for commercial use |
 | **Copyright** | © 2026 AITDL NETWORK & ERPNbook.com |

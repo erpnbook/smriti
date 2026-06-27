@@ -1,4 +1,5 @@
 import frappe
+from frappe.utils import getdate
 from smriti_retail_os.services.udne.interfaces import GenerationContext
 from smriti_retail_os.services.udne import generate
 from smriti_retail_os.services.udne.exceptions import UDNERuleNotFoundError
@@ -22,7 +23,7 @@ def autoname_document(doc, method=None):
             terminal_id=getattr(doc, "custom_terminal_id", None) or getattr(doc, "pos_profile", None),
             user=doc.owner or frappe.session.user,
             department=getattr(doc, "department", None),
-            transaction_date=frappe.utils.to_date(getattr(doc, "posting_date", None) or getattr(doc, "transaction_date", None))
+            transaction_date=getdate(getattr(doc, "posting_date", None) or getattr(doc, "transaction_date", None))
         )
         
         result = generate(doc.doctype, context)

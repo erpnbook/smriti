@@ -352,3 +352,75 @@ class TestUDNE(unittest.TestCase):
         self.assertIsNone(getattr(doc, "udne_print_number", None))
         self.assertEqual(getattr(doc, "select_print_heading", None), initial_heading)
 
+    def test_rule_loader_getdate(self):
+        # Create a rule with validity period in the future
+        future_from = frappe.utils.add_to_date(frappe.utils.nowdate(), days=5)
+        rule = frappe.get_doc({
+            "doctype": "SMRITI Numbering Rule",
+            "document_type": "POS Invoice",
+            "priority": "Global",
+            "template": "FUTURE-{counter}",
+            "is_active": 1,
+            "effective_from": future_from
+        })
+        rule.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        from smriti_retail_os.services.udne.rule_loader import load_active_rule
+        # Verify it raises UDNERuleNotFoundError because the future rule is not yet valid
+        with self.assertRaises(UDNERuleNotFoundError):
+            load_active_rule("POS Invoice", {"company": "Test Company"})
+
+    def test_autoname_transaction_date(self):
+        # Verify that autoname hook resolves posting_date, transaction_date, and None safely
+        comp = frappe.get_all("Company")[0].name
+        
+        # 1. Posting date present
+        doc1 = frappe.get_doc({
+            "doctype": "Sales Invoice",
+            "company": comp,
+            "posting_date": nowdate(),
+            "customer": "Walk-In Customer"
+        })
+        
+        # 2. Transaction date present (no posting date)
+        doc2 = frappe.get_doc({
+            "doctype": "Sales Invoice",
+            "company": comp,
+            "transaction_date": nowdate(),
+            "customer": "Walk-In Customer"
+        })
+        
+        # 3. Neither present
+        doc3 = frappe.get_doc({
+            "doctype": "Sales Invoice",
+            "company": comp,
+            "customer": "Walk-In Customer"
+        })
+        
+        from smriti_retail_os.services.udne.hooks import autoname_document
+        
+        # Create a numbering rule first to trigger the hook logic
+        rule = frappe.get_doc({
+            "doctype": "SMRITI Numbering Rule",
+            "document_type": "Sales Invoice",
+            "priority": "Global",
+            "template": "INV-{year}-{counter}",
+            "is_active": 1
+        })
+        rule.insert(ignore_permissions=True)
+        frappe.db.commit()
+        
+        # Test them, verifying that they all run autoname successfully without AttributeError
+        autoname_document(doc1)
+        self.assertTrue(doc1.name.startswith("SI-"))
+        self.assertTrue(doc1.custom_business_display_number.startswith("INV-2026-"))
+        
+        autoname_document(doc2)
+        self.assertTrue(doc2.name.startswith("SI-"))
+        self.assertTrue(doc2.custom_business_display_number.startswith("INV-2026-"))
+        
+        autoname_document(doc3)
+        self.assertTrue(doc3.name.startswith("SI-"))
+        self.assertTrue(doc3.custom_business_display_number.startswith("INV-2026-"))
+

@@ -3,7 +3,7 @@
 # @file: smriti_retail_os/api/ai_integration_api.py
 # @description: Whitelisted backend API endpoints for SMRITI AI integration.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.2.14
+# @version: 1.2.15
 # @license: MIT
 #
 

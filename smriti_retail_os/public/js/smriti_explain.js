@@ -8,6 +8,8 @@
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
 (function () {
+    const __ = typeof window.__ !== "undefined" ? window.__ : (txt) => txt;
+
     const templates = {
         "INV-001": "{total_sales_qty} ÷ {lookback_days} × 7 = {result} pieces/week",
         "INV-002": "{current_stock} ÷ {weekly_velocity} = {result} weeks",
@@ -22,17 +24,56 @@
         "KGF-001": "({registered_kpis} ÷ {total_kpis}) × 100 = {result}% compliance"
     };
 
+    function callAPI(method, args, callback) {
+        if (typeof frappe !== "undefined" && typeof frappe.call === "function") {
+            frappe.call({
+                method: method,
+                args: args,
+                callback: callback
+            });
+        } else {
+            let headers = {
+                'Content-Type': 'application/json'
+            };
+            let csrf = typeof CSRF_TOKEN !== "undefined" ? CSRF_TOKEN : (typeof window.csrf_token !== "undefined" ? window.csrf_token : null);
+            if (csrf) {
+                headers['X-Frappe-CSRF-Token'] = csrf;
+            }
+            fetch(`/api/method/${method}`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(args)
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('API request failed');
+                return res.json();
+            })
+            .then(d => {
+                callback({ message: d.message });
+            })
+            .catch(err => {
+                console.error("API Call error:", err);
+                showAlert("API communication failed: " + err.message, "red");
+            });
+        }
+    }
+
+    function showAlert(msg, indicator = 'info') {
+        if (typeof frappe !== "undefined" && typeof frappe.show_alert === "function") {
+            frappe.show_alert({ message: msg, indicator: indicator });
+        } else if (typeof toast === "function") {
+            toast(msg, indicator === 'green' || indicator === 'success' ? 'success' : (indicator === 'orange' || indicator === 'warning' ? 'info' : 'error'));
+        } else {
+            alert(msg);
+        }
+    }
+
     window.smritiExplain = function (formulaId, liveInputs = null) {
         if (!formulaId) return;
 
-        // Fetch payload from API
-        frappe.call({
-            method: "smriti_retail_os.api.explain_api.get_explain_payload",
-            args: { formula_id: formulaId },
-            callback: function (r) {
-                if (r.message) {
-                    renderExplainModal(r.message, liveInputs);
-                }
+        callAPI("smriti_retail_os.api.explain_api.get_explain_payload", { formula_id: formulaId }, function (r) {
+            if (r.message) {
+                renderExplainModal(r.message, liveInputs);
             }
         });
     };
@@ -375,15 +416,11 @@
     window.smritiExplainDoc = function (doctype, docname) {
         if (!docname) return;
 
-        frappe.call({
-            method: "smriti_retail_os.api.udne_api.explain_doc",
-            args: { doc_name: docname },
-            callback: function (r) {
-                if (r.message && r.message.success) {
-                    renderDocExplainModal(r.message);
-                } else {
-                    frappe.show_alert({message: __("No explainability audit log trace found for this document."), indicator: 'orange'});
-                }
+        callAPI("smriti_retail_os.api.udne_api.explain_doc", { doc_name: docname }, function (r) {
+            if (r.message && r.message.success) {
+                renderDocExplainModal(r.message);
+            } else {
+                showAlert("No explainability audit log trace found for this document.", 'orange');
             }
         });
     };

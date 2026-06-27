@@ -4,7 +4,7 @@
 > **Document ID**: DEV-072
 > **Module**: PDT (Product Digital Twin)
 > **Category**: Developer Architecture Reference
-> **Status**: LOCKED — v1.2.14
+> **Status**: LOCKED — v1.2.15
 > **Authority**: Jawahar R. Mallah, Founder & Chief Architect, AITDL
 > **Date**: 2026-06-25
 

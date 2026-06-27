@@ -10,6 +10,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.2.15] — 2026-06-27
+
+### UI & Modal Resiliency Improvements
+
+#### Fixed
+- **`www/billing.html` — Modal display fix**: Removed inline `style="display:none;"` from `item-options-modal`, `bill-discount-modal`, and `manager-override-modal`. Visibilities are now cleanly driven by the CSS `.open` class to prevent modals remaining hidden on click.
+- **`www/billing.html` — API error formatting**: Improved `api()` fetch error handler to extract user-friendly error messages from double-encoded `_server_messages` or final exception traceback lines, preventing full Python tracebacks from leaking into the cashier override UI.
+
+---
+
 ## [1.2.14] — 2026-06-27
 
 ### HARDEN-9.3 — Production Quality Hardening (Score 9.0 → 9.3)

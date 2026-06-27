@@ -1,5 +1,6 @@
 import datetime
 import frappe
+from frappe.utils import getdate
 from smriti_retail_os.services.udne.exceptions import UDNERuleNotFoundError
 
 def load_active_rule(doctype: str, context_dict: dict) -> dict:
@@ -20,9 +21,9 @@ def load_active_rule(doctype: str, context_dict: dict) -> dict:
     
     valid_rules = []
     for r in rules:
-        if r.effective_from and today < frappe.utils.to_date(r.effective_from):
+        if r.effective_from and today < getdate(r.effective_from):
             continue
-        if r.effective_until and today > frappe.utils.to_date(r.effective_until):
+        if r.effective_until and today > getdate(r.effective_until):
             continue
         valid_rules.append(r)
         

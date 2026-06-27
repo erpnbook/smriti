@@ -1059,7 +1059,7 @@ tbody tr:last-child td { border-bottom: none; }
 </div>
 
 <!-- ── Item Options Modal (Discount & Salesperson Override) ── -->
-<div class="modal-backdrop" id="item-options-modal" style="display:none;">
+<div class="modal-backdrop" id="item-options-modal">
     <div class="modal" style="max-width:400px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-lg);">
         <div class="modal-title" style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:15px;display:flex;align-items:center;gap:6px;">
             <span class="material-symbols-outlined" style="color:var(--primary);">edit_note</span> Customize Item Row
@@ -1109,7 +1109,7 @@ tbody tr:last-child td { border-bottom: none; }
 </div>
 
 <!-- ── Bill Discount Modal ── -->
-<div class="modal-backdrop" id="bill-discount-modal" style="display:none;">
+<div class="modal-backdrop" id="bill-discount-modal">
     <div class="modal" style="max-width:400px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-lg);">
         <div class="modal-title" style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:15px;display:flex;align-items:center;gap:6px;">
             <span class="material-symbols-outlined" style="color:var(--primary);">label</span> Apply Bill Discount
@@ -1156,7 +1156,7 @@ tbody tr:last-child td { border-bottom: none; }
 </div>
 
 <!-- ── Manager Override Modal ── -->
-<div class="modal-backdrop" id="manager-override-modal" style="display:none;">
+<div class="modal-backdrop" id="manager-override-modal">
     <div class="modal" style="max-width:350px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-lg);">
         <div class="modal-title" style="color:var(--danger);display:flex;align-items:center;gap:6px;font-size:1.1rem;font-weight:700;margin-bottom:10px;">
             <span class="material-symbols-outlined">lock</span> Approval Required
@@ -1223,7 +1223,28 @@ function api(method, params = {}) {
     })
     .then(r => r.json())
     .then(d => {
-        if (d.exc) throw new Error(d._error_message || d.exc);
+        if (d.exc) {
+            let msg = '';
+            try {
+                const msgs = JSON.parse(d._server_messages || '[]');
+                if (Array.isArray(msgs) && msgs.length) {
+                    const first = JSON.parse(msgs[0]);
+                    msg = (first.message || '').replace(/<[^>]+>/g, '');
+                }
+            } catch (_) {}
+            
+            if (!msg && d.exc) {
+                try {
+                    const excList = typeof d.exc === 'string' ? JSON.parse(d.exc) : d.exc;
+                    const excStr = Array.isArray(excList) ? excList.join('\n') : String(excList);
+                    const lines = excStr.trim().split('\n');
+                    const lastLine = lines[lines.length - 1] || '';
+                    const match = lastLine.match(/^[a-zA-Z0-9.]+:\s*(.*)$/);
+                    msg = match ? match[1] : lastLine;
+                } catch (_) {}
+            }
+            throw new Error(msg || d._error_message || 'An error occurred');
+        }
         return d.message;
     });
 }
