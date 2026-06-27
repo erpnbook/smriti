@@ -1486,36 +1486,9 @@ def create_smriti_barcode_settings_doctype():
 
 
 def create_smriti_telemetry_event_definition_doctype():
-    """Creates the SMRITI Telemetry Event Definition DocType."""
-    if frappe.db.exists("DocType", "SMRITI Telemetry Event Definition"):
-        return
-    try:
-        doc = frappe.new_doc("DocType")
-        doc.name = "SMRITI Telemetry Event Definition"
-        doc.module = "SMRITI Retail OS"
-        doc.custom = 1
-        doc.autoname = "Prompt"
-        doc.editable_grid = 1
-        doc.quick_entry = 1
-        doc.track_changes = 1
-        doc.issingle = 0
+    """SMRITI Telemetry Event Definition schema is now standard file-backed."""
+    pass
 
-        fields = [
-            {"fieldname": "event_name", "fieldtype": "Data", "label": "Event Name", "reqd": 1},
-            {"fieldname": "description", "fieldtype": "Small Text", "label": "Description"}
-        ]
-        for f in fields:
-            doc.append("fields", f)
-
-        doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
-        doc.append("permissions", {"role": "SMRITI Store Manager", "read": 1, "write": 0, "create": 0, "delete": 0})
-        doc.append("permissions", {"role": "SMRITI Cashier", "read": 1, "write": 0, "create": 0, "delete": 0})
-
-        doc.insert(ignore_permissions=True)
-        frappe.db.commit()
-        print("[SMRITI] Created SMRITI Telemetry Event Definition DocType")
-    except Exception as e:
-        frappe.log_error(title="Error creating SMRITI Telemetry Event Definition DocType", message=str(e))
 
 
 def create_smriti_barcode_scan_event_doctype():

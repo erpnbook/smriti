@@ -6,6 +6,8 @@
  "autoname": "",
  "creation": "2026-06-27 22:20:00",
  "doctype": "DocType",
+ "custom": 0,
+
  "editable_grid": 0,
  "engine": "InnoDB",
  "field_order": [
