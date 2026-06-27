@@ -784,5 +784,8 @@ website_route_rules = [
     }
 ]
 
+commands = ["smriti_retail_os.commands"]
+
+
 
 

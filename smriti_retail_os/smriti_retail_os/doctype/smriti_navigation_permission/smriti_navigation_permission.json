@@ -1,0 +1,73 @@
+{
+ "actions": [],
+ "allow_events_in_timeline": 0,
+ "allow_import": 0,
+ "allow_rename": 0,
+ "creation": "2026-06-28 04:50:00",
+ "doctype": "DocType",
+ "custom": 0,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "role",
+  "user",
+  "company",
+  "capability",
+  "allowed",
+  "condition_rules"
+ ],
+ "fields": [
+  {
+   "fieldname": "role",
+   "fieldtype": "Link",
+   "label": "Role",
+   "options": "Role",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "capability",
+   "fieldtype": "Select",
+   "label": "Capability",
+   "options": "Visible\nOpen\nExecute\nCreate\nEdit\nDelete\nApprove\nExport\nImport\nConfigure",
+   "default": "Visible",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "allowed",
+   "fieldtype": "Check",
+   "label": "Allowed",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "condition_rules",
+   "fieldtype": "Text",
+   "label": "Condition Rules (JSON)"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-06-28 04:50:00",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Navigation Permission",
+ "owner": "Administrator",
+ "permissions": [],
+ "states": []
+}

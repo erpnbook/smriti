@@ -1,0 +1,87 @@
+{
+ "actions": [],
+ "allow_events_in_timeline": 0,
+ "allow_import": 0,
+ "allow_rename": 0,
+ "creation": "2026-06-28 04:50:00",
+ "doctype": "DocType",
+ "custom": 0,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "profile_name",
+  "home_dashboard",
+  "version",
+  "favorites_section",
+  "favorites",
+  "ordering_section",
+  "order_overrides"
+ ],
+ "fields": [
+  {
+   "fieldname": "profile_name",
+   "fieldtype": "Data",
+   "label": "Profile Name",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "home_dashboard",
+   "fieldtype": "Data",
+   "label": "Home Dashboard Route"
+  },
+  {
+   "fieldname": "version",
+   "fieldtype": "Data",
+   "label": "Version",
+   "default": "1.0.0",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "favorites_section",
+   "fieldtype": "Section Break",
+   "label": "Favorite Items"
+  },
+  {
+   "fieldname": "favorites",
+   "fieldtype": "Table",
+   "label": "Favorites Table",
+   "options": "SMRITI Navigation Profile Favorite"
+  },
+  {
+   "fieldname": "ordering_section",
+   "fieldtype": "Section Break",
+   "label": "Menu Ordering"
+  },
+  {
+   "fieldname": "order_overrides",
+   "fieldtype": "Table",
+   "label": "Order Overrides Table",
+   "options": "SMRITI Navigation Profile Order"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-06-28 04:50:00",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Navigation Profile",
+ "owner": "Administrator",
+ "autoname": "field:profile_name",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "states": []
+}

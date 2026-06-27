@@ -1,0 +1,47 @@
+{
+ "actions": [],
+ "allow_events_in_timeline": 0,
+ "allow_import": 0,
+ "allow_rename": 0,
+ "creation": "2026-06-28 04:50:00",
+ "doctype": "DocType",
+ "custom": 0,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "menu_id",
+  "parent_menu_id",
+  "display_order"
+ ],
+ "fields": [
+  {
+   "fieldname": "menu_id",
+   "fieldtype": "Data",
+   "label": "Menu ID",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "parent_menu_id",
+   "fieldtype": "Data",
+   "label": "Parent Menu ID",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "display_order",
+   "fieldtype": "Int",
+   "label": "Display Order",
+   "in_list_view": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-06-28 04:50:00",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Navigation Profile Order",
+ "owner": "Administrator",
+ "permissions": [],
+ "states": []
+}

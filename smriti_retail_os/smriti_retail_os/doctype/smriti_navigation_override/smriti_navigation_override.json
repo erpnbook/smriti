@@ -1,0 +1,113 @@
+{
+ "actions": [],
+ "allow_events_in_timeline": 0,
+ "allow_import": 0,
+ "allow_rename": 0,
+ "creation": "2026-06-28 04:50:00",
+ "doctype": "DocType",
+ "custom": 0,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "menu_id",
+  "navigation_profile",
+  "override_state",
+  "label_override",
+  "icon_override",
+  "display_order",
+  "feature_flag",
+  "badge",
+  "tooltip",
+  "permissions_section",
+  "permissions"
+ ],
+ "fields": [
+  {
+   "fieldname": "menu_id",
+   "fieldtype": "Data",
+   "label": "Menu ID",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "navigation_profile",
+   "fieldtype": "Link",
+   "label": "Navigation Profile",
+   "options": "SMRITI Navigation Profile",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "override_state",
+   "fieldtype": "Select",
+   "label": "Override State",
+   "options": "Inherit\nOverride\nDisabled",
+   "default": "Inherit",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "label_override",
+   "fieldtype": "Data",
+   "label": "Label Override"
+  },
+  {
+   "fieldname": "icon_override",
+   "fieldtype": "Data",
+   "label": "Icon Override"
+  },
+  {
+   "fieldname": "display_order",
+   "fieldtype": "Int",
+   "label": "Display Order Override"
+  },
+  {
+   "fieldname": "feature_flag",
+   "fieldtype": "Data",
+   "label": "Feature Flag"
+  },
+  {
+   "fieldname": "badge",
+   "fieldtype": "Data",
+   "label": "Badge Text"
+  },
+  {
+   "fieldname": "tooltip",
+   "fieldtype": "Data",
+   "label": "Tooltip"
+  },
+  {
+   "fieldname": "permissions_section",
+   "fieldtype": "Section Break",
+   "label": "Capability Permissions"
+  },
+  {
+   "fieldname": "permissions",
+   "fieldtype": "Table",
+   "label": "Permissions Table",
+   "options": "SMRITI Navigation Permission"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-06-28 04:50:00",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Navigation Override",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "states": []
+}

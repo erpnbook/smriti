@@ -123,6 +123,13 @@ def extend_bootinfo(bootinfo):
         from smriti_retail_os.license.manager import get_license_summary
         bootinfo.smriti_license = get_license_summary()
 
+        # SMRITI Navigation Manager (SNM) dynamic resolution
+        try:
+            from smriti_retail_os.navigation.navigation_service import get_user_navigation
+            bootinfo.smriti_navigation = get_user_navigation(user)
+        except Exception as e:
+            frappe.log_error(str(e), "SMRITI Navigation Manager Resolution Error")
+
         # Injects site config for Store defaults (Level 6 resolution)
         from smriti_retail_os.company_api import get_company_settings, get_active_company
         comp = get_active_company()

@@ -265,7 +265,8 @@ SMRITI._buildSidebarDOM = function(active_page, shift) {
         return false;
     }
 
-    const navConfig = typeof SMRITI_NAV !== 'undefined' ? SMRITI_NAV : { sections: [] };
+    const navConfig = (frappe.boot && frappe.boot.smriti_navigation) || 
+                      (typeof SMRITI_NAV !== 'undefined' ? SMRITI_NAV : { sections: [] });
 
     var menu_html = '<div class="smriti-side-menu">';
 

@@ -159,7 +159,8 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
     // 4. Generate Scrollable Menu Items
     let menuHtml = '<div class="sidebar-menu">';
 
-    const navConfig = typeof SMRITI_NAV !== 'undefined' ? SMRITI_NAV : { sections: [] };
+    const navConfig = (frappe.boot && frappe.boot.smriti_navigation) || 
+                      (typeof SMRITI_NAV !== 'undefined' ? SMRITI_NAV : { sections: [] });
 
     navConfig.sections.forEach(section => {
         // 1. Hidden sections never render
