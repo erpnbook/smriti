@@ -1,0 +1,125 @@
+{
+  "actions": [],
+  "creation": "2026-06-28 02:18:00",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "autoname": "hash",
+  "field_order": [
+    "queue_id",
+    "event_type",
+    "document_type",
+    "document_name",
+    "payload",
+    "status",
+    "retry_count",
+    "last_attempt",
+    "integration",
+    "priority",
+    "idempotency_key",
+    "dead_letter_reason"
+  ],
+  "fields": [
+    {
+      "fieldname": "queue_id",
+      "fieldtype": "Data",
+      "label": "Queue ID",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "event_type",
+      "fieldtype": "Select",
+      "label": "Event Type",
+      "options": "SALE_CREATED\nSALE_CANCELLED\nSTOCK_UPDATED\nCUSTOMER_CREATED",
+      "default": "SALE_CREATED",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "document_type",
+      "fieldtype": "Data",
+      "label": "Document Type",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "document_name",
+      "fieldtype": "Data",
+      "label": "Document Name",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "payload",
+      "fieldtype": "Long Text",
+      "label": "Payload"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Pending\nSending\nSuccess\nFailed\nRetrying\nDead-Letter",
+      "default": "Pending",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "retry_count",
+      "fieldtype": "Int",
+      "label": "Retry Count",
+      "default": "0"
+    },
+    {
+      "fieldname": "last_attempt",
+      "fieldtype": "Datetime",
+      "label": "Last Attempt"
+    },
+    {
+      "fieldname": "integration",
+      "fieldtype": "Link",
+      "label": "Integration",
+      "options": "SMRITI UIE Integration",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "priority",
+      "fieldtype": "Select",
+      "label": "Priority",
+      "options": "Critical\nHigh\nNormal\nLow",
+      "default": "Normal",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "idempotency_key",
+      "fieldtype": "Data",
+      "label": "Idempotency Key",
+      "unique": 1
+    },
+    {
+      "fieldname": "dead_letter_reason",
+      "fieldtype": "Small Text",
+      "label": "Dead Letter Reason"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "issingle": 0,
+  "modified": "2026-06-28 02:18:00",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "SMRITI UIE Sync Queue",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ]
+}

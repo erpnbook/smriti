@@ -1,0 +1,82 @@
+{
+  "actions": [],
+  "creation": "2026-06-28 02:18:00",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "autoname": "hash",
+  "field_order": [
+    "timestamp",
+    "queue_item",
+    "request_payload",
+    "response_content",
+    "duration_ms",
+    "http_status",
+    "result"
+  ],
+  "fields": [
+    {
+      "fieldname": "timestamp",
+      "fieldtype": "Datetime",
+      "label": "Timestamp",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "queue_item",
+      "fieldtype": "Link",
+      "label": "Queue Item",
+      "options": "SMRITI UIE Sync Queue",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "request_payload",
+      "fieldtype": "Long Text",
+      "label": "Request Payload"
+    },
+    {
+      "fieldname": "response_content",
+      "fieldtype": "Long Text",
+      "label": "Response Content"
+    },
+    {
+      "fieldname": "duration_ms",
+      "fieldtype": "Int",
+      "label": "Duration (ms)"
+    },
+    {
+      "fieldname": "http_status",
+      "fieldtype": "Int",
+      "label": "HTTP Status"
+    },
+    {
+      "fieldname": "result",
+      "fieldtype": "Select",
+      "label": "Result",
+      "options": "Success\nFailed",
+      "default": "Success",
+      "in_list_view": 1
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "issingle": 0,
+  "modified": "2026-06-28 02:18:00",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "SMRITI UIE Sync Log",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ]
+}

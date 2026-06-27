@@ -1,0 +1,119 @@
+{
+  "actions": [],
+  "creation": "2026-06-28 02:18:00",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "autoname": "field:integration_name",
+  "field_order": [
+    "integration_name",
+    "enabled",
+    "connector_type",
+    "endpoint",
+    "credential",
+    "retry_limit",
+    "priority",
+    "batch_size",
+    "version",
+    "schema_validator",
+    "mapping_rules"
+  ],
+  "fields": [
+    {
+      "fieldname": "integration_name",
+      "fieldtype": "Data",
+      "label": "Integration Name",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "enabled",
+      "fieldtype": "Check",
+      "label": "Enabled",
+      "default": "1",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "connector_type",
+      "fieldtype": "Select",
+      "label": "Connector Type",
+      "options": "REST\nWebhook\nSFTP\nCSV\nXML",
+      "default": "REST",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "endpoint",
+      "fieldtype": "Link",
+      "label": "Endpoint",
+      "options": "SMRITI UIE Endpoint",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "credential",
+      "fieldtype": "Link",
+      "label": "Credential",
+      "options": "SMRITI UIE Credential"
+    },
+    {
+      "fieldname": "retry_limit",
+      "fieldtype": "Int",
+      "label": "Retry Limit",
+      "default": "5"
+    },
+    {
+      "fieldname": "priority",
+      "fieldtype": "Select",
+      "label": "Priority",
+      "options": "Critical\nHigh\nNormal\nLow",
+      "default": "Normal",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "batch_size",
+      "fieldtype": "Int",
+      "label": "Batch Size",
+      "default": "1"
+    },
+    {
+      "fieldname": "version",
+      "fieldtype": "Select",
+      "label": "Version",
+      "options": "v1\nv2\nv3",
+      "default": "v1"
+    },
+    {
+      "fieldname": "schema_validator",
+      "fieldtype": "Code",
+      "label": "Schema Validator (JSON)",
+      "options": "JSON"
+    },
+    {
+      "fieldname": "mapping_rules",
+      "fieldtype": "Code",
+      "label": "Mapping Rules (JSON)",
+      "options": "JSON"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "issingle": 0,
+  "modified": "2026-06-28 02:18:00",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "SMRITI UIE Integration",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ]
+}

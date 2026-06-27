@@ -1,0 +1,82 @@
+{
+  "actions": [],
+  "creation": "2026-06-28 02:18:00",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "autoname": "field:endpoint_name",
+  "field_order": [
+    "endpoint_name",
+    "url",
+    "method",
+    "content_type",
+    "headers",
+    "timeout"
+  ],
+  "fields": [
+    {
+      "fieldname": "endpoint_name",
+      "fieldtype": "Data",
+      "label": "Endpoint Name",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "url",
+      "fieldtype": "Data",
+      "label": "URL",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "method",
+      "fieldtype": "Select",
+      "label": "HTTP Method",
+      "options": "POST\nGET\nPUT\nPATCH",
+      "default": "POST",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "content_type",
+      "fieldtype": "Select",
+      "label": "Content Type",
+      "options": "application/json\napplication/xml\ntext/csv\napplication/x-www-form-urlencoded",
+      "default": "application/json",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "headers",
+      "fieldtype": "Code",
+      "label": "HTTP Headers (JSON)",
+      "options": "JSON"
+    },
+    {
+      "fieldname": "timeout",
+      "fieldtype": "Int",
+      "label": "Timeout (seconds)",
+      "default": "30"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "issingle": 0,
+  "modified": "2026-06-28 02:18:00",
+  "modified_by": "Administrator",
+  "module": "SMRITI Retail OS",
+  "name": "SMRITI UIE Endpoint",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ]
+}
