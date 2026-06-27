@@ -211,6 +211,25 @@ def sync_to_tally(from_date, to_date, invoice_names=None, voucher_type="Sales"):
 		if frappe.db.exists("SMRITI Tally Sync Log", {"reference_name": inv.name, "status": "Success"}):
 			continue
 
+		# Check for zero-value vouchers
+		total_amt = 0.0
+		if doctype == "Payment Entry":
+			total_amt = float(frappe.db.get_value("Payment Entry", inv.name, "paid_amount") or 0.0)
+		else:
+			total_amt = float(frappe.db.get_value(doctype, inv.name, "grand_total") or 0.0)
+
+		if total_amt == 0.0:
+			log_doc = frappe.new_doc("SMRITI Tally Sync Log")
+			log_doc.posting_date = inv.posting_date
+			log_doc.voucher_type = voucher_type
+			log_doc.reference_doctype = doctype
+			log_doc.reference_name = inv.name
+			log_doc.status = "Success"
+			log_doc.response = "Success (Skipped: Zero-value voucher)"
+			log_doc.insert(ignore_permissions=True)
+			success_count += 1
+			continue
+
 		# Auto-create missing customer/supplier ledgers in Tally if enabled
 		if settings.get("auto_create_ledgers"):
 			if doctype == "Sales Invoice":
