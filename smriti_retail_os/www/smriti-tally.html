@@ -293,12 +293,15 @@ select.form-input option { background:var(--card); }
                     <div class="card-title">
                         <span class="material-symbols-outlined">check_box</span>Sync Options
                     </div>
-                    <div style="display: flex; gap: 24px; margin-bottom: 20px;">
+                    <div style="display: flex; gap: 24px; margin-bottom: 20px; flex-wrap: wrap;">
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                             <input type="checkbox" id="sync-invoices" checked> Sync Sales Invoices
                         </label>
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                             <input type="checkbox" id="sync-payments" checked> Sync Payments
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="checkbox" id="auto-create-ledgers" checked> Auto-Create Missing Ledgers
                         </label>
                     </div>
 
@@ -433,6 +436,7 @@ function loadTallySettings() {
                 document.getElementById('igst-ledger').value = s.igst_ledger || 'IGST';
                 document.getElementById('sync-invoices').checked = s.sync_invoices !== 0;
                 document.getElementById('sync-payments').checked = s.sync_payments !== 0;
+                document.getElementById('auto-create-ledgers').checked = s.auto_create_ledgers !== 0;
             }
         }
     });
@@ -450,7 +454,8 @@ function saveTallySettings() {
         sgst_ledger: document.getElementById('sgst-ledger').value,
         igst_ledger: document.getElementById('igst-ledger').value,
         sync_invoices: document.getElementById('sync-invoices').checked ? 1 : 0,
-        sync_payments: document.getElementById('sync-payments').checked ? 1 : 0
+        sync_payments: document.getElementById('sync-payments').checked ? 1 : 0,
+        auto_create_ledgers: document.getElementById('auto-create-ledgers').checked ? 1 : 0
     };
 
     if (!settings.tally_url || !settings.tally_company) {

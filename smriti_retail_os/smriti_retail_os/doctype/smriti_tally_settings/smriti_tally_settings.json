@@ -21,7 +21,8 @@
   "igst_ledger",
   "options_section",
   "sync_invoices",
-  "sync_payments"
+  "sync_payments",
+  "auto_create_ledgers"
  ],
  "fields": [
   {
@@ -102,6 +103,12 @@
    "fieldname": "sync_payments",
    "fieldtype": "Check",
    "label": "Sync Payments"
+  },
+  {
+   "default": "1",
+   "fieldname": "auto_create_ledgers",
+   "fieldtype": "Check",
+   "label": "Auto-Create Missing Ledgers in Tally"
   }
  ],
  "index_web_pages_for_search": 1,

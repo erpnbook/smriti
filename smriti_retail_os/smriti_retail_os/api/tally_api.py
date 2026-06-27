@@ -135,6 +135,13 @@ def sync_to_tally(from_date, to_date, invoice_names=None):
 		if frappe.db.exists("SMRITI Tally Sync Log", {"reference_name": inv.name, "status": "Success"}):
 			continue
 
+		# Auto-create missing customer ledgers in Tally if enabled and it is a non-POS invoice
+		if settings.get("auto_create_ledgers"):
+			is_pos = frappe.db.get_value("Sales Invoice", inv.name, "is_pos")
+			if not is_pos:
+				customer_name = frappe.db.get_value("Sales Invoice", inv.name, "customer")
+				tally_service.create_ledger_in_tally(customer_name, "Sundry Debtors", settings)
+
 		xml_payload = tally_service.generate_sales_voucher_xml(inv.name, settings)
 		res = tally_service.post_to_tally(xml_payload, settings)
 

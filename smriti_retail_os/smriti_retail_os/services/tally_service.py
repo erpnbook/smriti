@@ -179,3 +179,39 @@ def post_to_tally(xml_payload, settings=None):
 			"status": "Failed",
 			"response": str(e)
 		}
+
+def create_ledger_in_tally(ledger_name, parent_group="Sundry Debtors", settings=None):
+	"""Auto-creates a Ledger in Tally if auto_create_ledgers is enabled."""
+	if not settings:
+		settings = get_settings()
+
+	xml_lines = [
+		"<ENVELOPE>",
+		"  <HEADER>",
+		"    <TALLYREQUEST>Import Data</TALLYREQUEST>",
+		"  </HEADER>",
+		"  <BODY>",
+		"    <IMPORTDATA>",
+		"      <REQUESTDESC>",
+		"        <REPORTNAME>All Masters</REPORTNAME>",
+		"        <STATICVARIABLES>",
+		f"          <SVCOMPANYNAME>{settings.tally_company or 'SMRITI Company'}</SVCOMPANYNAME>",
+		"        </STATICVARIABLES>",
+		"      </REQUESTDESC>",
+		"      <REQUESTDATA>",
+		'        <TALLYMESSAGE xmlns:UDF="TallyUDF">',
+		f'          <LEDGER NAME="{ledger_name}" ACTION="Create">',
+		"            <NAME.LIST>",
+		f"              <NAME>{ledger_name}</NAME>",
+		"            </NAME.LIST>",
+		f"            <PARENT>{parent_group}</PARENT>",
+		"          </LEDGER>",
+		"        </TALLYMESSAGE>",
+		"      </REQUESTDATA>",
+		"    </IMPORTDATA>",
+		"  </BODY>",
+		"</ENVELOPE>"
+	]
+	xml_payload = "\r\n".join(xml_lines)
+	return post_to_tally(xml_payload, settings)
+
