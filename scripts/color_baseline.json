@@ -374,6 +374,11 @@
       "hex": 6,
       "rgba": 8,
       "note": "Auto-recorded on first validation"
+    },
+    "smriti-uie.html": {
+      "hex": 7,
+      "rgba": 10,
+      "note": "Auto-recorded on first validation"
     }
   }
 }

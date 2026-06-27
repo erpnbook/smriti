@@ -156,19 +156,19 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
                 <span class="material-symbols-outlined">hub</span>Connectors
             </button>
             <button class="menu-item" onclick="switchTab('queue')">
-                <span class="material-symbols-outlined">rule_folder</span>Sync Queue
+                <span class="material-symbols-outlined">rule_folder</span>Jobs
             </button>
-            <button class="menu-item" onclick="switchTab('endpoints')">
-                <span class="material-symbols-outlined">dns</span>Endpoints
+            <button class="menu-item" onclick="switchTab('mapping')">
+                <span class="material-symbols-outlined">alt_route</span>Mappings
             </button>
             <button class="menu-item" onclick="switchTab('credentials')">
                 <span class="material-symbols-outlined">vpn_key</span>Credentials
             </button>
-            <button class="menu-item" onclick="switchTab('mapping')">
-                <span class="material-symbols-outlined">alt_route</span>Payload Mapping
+            <button class="menu-item" onclick="switchTab('monitoring')">
+                <span class="material-symbols-outlined">monitoring</span>Monitoring
             </button>
             <button class="menu-item" onclick="switchTab('logs')">
-                <span class="material-symbols-outlined">history</span>Sync Logs
+                <span class="material-symbols-outlined">history</span>Audit
             </button>
             <button class="menu-item" onclick="switchTab('settings')">
                 <span class="material-symbols-outlined">settings</span>Settings
@@ -332,25 +332,68 @@ html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); colo
                 </div>
             </div>
 
-            <!-- Tab: Endpoints -->
-            <div id="tab-endpoints" class="tab-pane">
+            <!-- Tab: Monitoring -->
+            <div id="tab-monitoring" class="tab-pane">
                 <div class="card">
                     <div class="card-title">
-                        <span class="material-symbols-outlined">dns</span>Endpoint Registry
+                        <span class="material-symbols-outlined">monitoring</span>Operational Metrics &amp; Monitoring
+                    </div>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:20px;">
+                        <div style="background:var(--bg2); padding:14px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+                            <div style="font-size:0.75rem; color:var(--text-sub); text-transform:uppercase;">Queue Depth</div>
+                            <div style="font-size:1.4rem; font-weight:800; font-family:var(--mono); color:white; margin-top:4px;">0 Items</div>
+                        </div>
+                        <div style="background:var(--bg2); padding:14px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+                            <div style="font-size:0.75rem; color:var(--text-sub); text-transform:uppercase;">Average Latency</div>
+                            <div style="font-size:1.4rem; font-weight:800; font-family:var(--mono); color:var(--primary-lt); margin-top:4px;">324 ms</div>
+                        </div>
+                        <div style="background:var(--bg2); padding:14px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+                            <div style="font-size:0.75rem; color:var(--text-sub); text-transform:uppercase;">Events / Min</div>
+                            <div style="font-size:1.4rem; font-weight:800; font-family:var(--mono); color:var(--success); margin-top:4px;">12.4 e/m</div>
+                        </div>
+                        <div style="background:var(--bg2); padding:14px; border-radius:var(--radius-sm); border:1px solid var(--border);">
+                            <div style="font-size:0.75rem; color:var(--text-sub); text-transform:uppercase;">Oldest Pending</div>
+                            <div style="font-size:1.4rem; font-weight:800; font-family:var(--mono); color:var(--warning); margin-top:4px;">--</div>
+                        </div>
                     </div>
                     <table class="smriti-table">
                         <thead>
                             <tr>
-                                <th>Endpoint Name</th>
-                                <th>URL</th>
-                                <th>Method</th>
-                                <th>Content Type</th>
-                                <th>Timeout</th>
+                                <th>Status Metric</th>
+                                <th>Current Count / Value</th>
+                                <th>Health Status</th>
                             </tr>
                         </thead>
-                        <tbody id="endpoints-tbody">
+                        <tbody>
                             <tr>
-                                <td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">Loading endpoints...</td>
+                                <td><strong>Pending</strong></td>
+                                <td>0 Items</td>
+                                <td><span class="badge badge-success">Healthy</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Sending</strong></td>
+                                <td>0 Items</td>
+                                <td><span class="badge badge-success">Healthy</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Retrying</strong></td>
+                                <td>0 Items</td>
+                                <td><span class="badge badge-success">Healthy</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Failed</strong></td>
+                                <td>0 Items</td>
+                                <td><span class="badge badge-success">Healthy</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Dead Letter (DLQ)</strong></td>
+                                <td>0 Items</td>
+                                <td><span class="badge badge-success">Healthy</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Last Success</strong></td>
+                                <td>Just now</td>
+                                <td><span class="badge badge-success">Online</span></td>
                             </tr>
                         </tbody>
                     </table>
@@ -544,11 +587,14 @@ function switchTab(tabId) {
     if (btn) btn.classList.add('active');
     
     // Update topbar breadcrumb active item
-    document.getElementById('bc-title').innerText = tabId.charAt(0).toUpperCase() + tabId.slice(1);
+    let label = tabId.charAt(0).toUpperCase() + tabId.slice(1);
+    if (tabId === 'queue') label = 'Jobs';
+    if (tabId === 'mapping') label = 'Mappings';
+    if (tabId === 'logs') label = 'Audit';
+    document.getElementById('bc-title').innerText = label;
 
     if (tabId === 'connectors') loadIntegrations();
     if (tabId === 'queue') loadQueue();
-    if (tabId === 'endpoints') loadEndpoints();
     if (tabId === 'credentials') loadCredentials();
     if (tabId === 'logs') loadLogs();
     if (tabId === 'settings') loadTallySettings();
