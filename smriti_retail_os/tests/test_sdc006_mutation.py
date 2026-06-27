@@ -6,7 +6,7 @@
 #               when faults are injected. These are NEGATIVE path tests —
 #               they prove the compiler FAILS correctly, not that it passes.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.2.15
+# @version: 1.8.4
 # @license: MIT
 #
 
