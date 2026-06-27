@@ -1,18 +1,14 @@
 # -*- coding: utf-8 -*-
 #
-# @file: smriti_retail_os/www/smriti-tally.py
-# @description: SMRITI TallyPrime Integration page controller.
-# @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @date: 2026-06-27
-# @version: 1.8.6
-# @license: MIT
-# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+# @file: smriti_retail_os/www/smriti-uie.py
+# @description: SMRITI UIE Integration Center controller.
+# @author: Jawahar R. Mallah
 #
 
 import frappe
 
 no_cache = 1
-title = "TallyPrime Integration — SMRITI"
+title = "Integration Center — SMRITI"
 
 def get_context(context):
     if frappe.session.user == "Guest":
@@ -23,7 +19,7 @@ def get_context(context):
     allowed = {"System Manager", "Administrator", "SMRITI Store Manager", "Accountant"}
     if not (roles & allowed):
         frappe.throw(
-            "Access Denied: TallyPrime Integration console is restricted to System Managers, Store Managers, and Accountants.",
+            "Access Denied: SMRITI UIE Integration Center is restricted to System Managers, Store Managers, and Accountants.",
             frappe.PermissionError
         )
 

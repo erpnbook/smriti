@@ -1,0 +1,810 @@
+<!--
+  @file: smriti_retail_os/www/smriti-uie.html
+  @description: SMRITI Universal Integration Engine (UIE) Integration Center.
+  @author: Jawahar R. Mallah
+-->
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UIE Integration Center — SMRITI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+    --bg:          #0a0f1e;
+    --bg2:         #0f1629;
+    --card:        #131d35;
+    --card2:       #172040;
+    --border:      rgba(255,255,255,0.07);
+    --border2:     rgba(255,255,255,0.13);
+    --primary:     #2563eb;
+    --primary-lt:  #3b82f6;
+    --primary-bg:  rgba(37,99,235,0.1);
+    --success:     #10b981;
+    --success-bg:  rgba(16,185,129,0.1);
+    --warning:     #f59e0b;
+    --warning-bg:  rgba(245,158,11,0.1);
+    --danger:      #ef4444;
+    --danger-bg:   rgba(239,68,68,0.1);
+    --text:        #e2e8f0;
+    --text-muted:  #94a3b8;
+    --text-sub:    #475569;
+    --radius:      14px;
+    --radius-sm:   8px;
+    --shadow:      0 8px 32px rgba(0,0,0,0.4);
+    --t:           0.22s ease;
+    --mono:        'JetBrains Mono', monospace;
+}
+html,body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+.bg-grid { position:fixed; inset:0; background-image:linear-gradient(rgba(37,99,235,0.01) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,0.01) 1px,transparent 1px); background-size:50px 50px; z-index:0; }
+#app { position:relative; z-index:1; width:100vw; height:100vh; display:flex; overflow:hidden; }
+
+/* Left Sidebar */
+.sidebar { width:240px; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; flex-shrink:0; }
+.sidebar-header { height:52px; display:flex; align-items:center; padding:0 20px; border-bottom:1px solid var(--border); gap:8px; }
+.sidebar-logo { font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:800; color:white; display:flex; align-items:center; gap:6px; }
+.sidebar-logo span { color:var(--primary-lt); font-size:24px; }
+.sidebar-menu { flex:1; overflow-y:auto; padding:14px 10px; display:flex; flex-direction:column; gap:4px; }
+.menu-item { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:var(--radius-sm); color:var(--text-muted); text-decoration:none; font-weight:600; font-size:.85rem; border:none; background:none; text-align:left; cursor:pointer; transition:all var(--t); }
+.menu-item span { font-size:18px; }
+.menu-item:hover { background:rgba(255,255,255,0.03); color:var(--text); }
+.menu-item.active { background:var(--primary-bg); color:var(--primary-lt); }
+
+/* Main Wrapper */
+.main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.topbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
+.topbar-bc { display:flex; align-items:center; gap:6px; font-size:.85rem; font-weight:600; color:var(--text-muted); }
+.topbar-bc .sep { color:var(--text-sub); }
+.topbar-bc .active { color:var(--text); }
+.topbar-right { margin-left:auto; display:flex; gap:8px; align-items:center; }
+.content-scroll { flex:1; overflow-y:auto; padding:24px; }
+.content-scroll::-webkit-scrollbar { width:5px; }
+.content-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.07); border-radius:3px; }
+.tab-pane { display:none; }
+.tab-pane.active { display:block; }
+
+/* Cards & Layout */
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; margin-bottom:20px; }
+.card-title { font-family:'Outfit',sans-serif; font-size:.95rem; font-weight:700; color:var(--text); margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+.card-title span { font-size:20px; color:var(--primary-lt); }
+.kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+.kpi { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px; position:relative; overflow:hidden; }
+.kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; border-radius:var(--radius) var(--radius) 0 0; }
+.kpi.blue::before { background:linear-gradient(90deg,var(--primary),var(--primary-lt)); }
+.kpi.emerald::before { background:linear-gradient(90deg,#059669,var(--success)); }
+.kpi.amber::before { background:linear-gradient(90deg,#d97706,var(--warning)); }
+.kpi.rose::before { background:linear-gradient(90deg,#e11d48,var(--danger)); }
+.kpi-label { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--text-sub); margin-bottom:6px; }
+.kpi-val { font-family:var(--mono); font-size:1.2rem; font-weight:800; color:var(--text); }
+
+/* Connector Grid */
+.connector-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:18px; margin-bottom:24px; }
+.connector-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; display:flex; flex-direction:column; gap:12px; position:relative; transition:all var(--t); }
+.connector-card:hover { transform:translateY(-2px); border-color:var(--primary-lt); }
+.connector-header { display:flex; align-items:center; justify-content:space-between; }
+.connector-title { font-family:'Outfit',sans-serif; font-size:1rem; font-weight:700; color:white; }
+.connector-meta { display:flex; flex-direction:column; gap:4px; font-size:.8rem; color:var(--text-muted); }
+.connector-meta strong { color:var(--text); }
+.connector-footer { margin-top:auto; display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px solid var(--border); }
+
+/* Table */
+.smriti-table { width:100%; border-collapse:collapse; }
+.smriti-table th { text-align:left; padding:9px 12px; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--text-sub); border-bottom:1px solid var(--border); white-space:nowrap; }
+.smriti-table td { padding:10px 12px; font-size:.84rem; border-bottom:1px solid rgba(255,255,255,.03); vertical-align:middle; }
+.smriti-table tr:last-child td { border-bottom:none; }
+.smriti-table tr:hover td { background:rgba(255,255,255,.015); }
+.mono { font-family:var(--mono); }
+
+/* Form Elements */
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-group.full { grid-column:1/-1; }
+.form-label { font-size:.75rem; font-weight:600; color:var(--text-sub); text-transform:uppercase; letter-spacing:.3px; }
+.form-input { background:var(--bg2); border:1px solid var(--border2); border-radius:var(--radius-sm); padding:9px 12px; color:var(--text); font-family:'Inter',sans-serif; font-size:.88rem; outline:none; transition:border-color var(--t); }
+.form-input:focus { border-color:var(--primary); }
+
+/* Badges */
+.badge { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px; font-size:.72rem; font-weight:700; }
+.badge-active { background:var(--success-bg); color:var(--success); }
+.badge-disabled { background:var(--border2); color:var(--text-muted); }
+.badge-success { background:var(--success-bg); color:var(--success); }
+.badge-pending { background:var(--warning-bg); color:var(--warning); }
+.badge-failed { background:var(--danger-bg); color:var(--danger); }
+.badge-dlq { background:var(--danger-bg); color:var(--danger); border:1px solid var(--danger); }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:9px 18px; border-radius:var(--radius-sm); font-size:.84rem; font-weight:600; cursor:pointer; border:none; transition:all var(--t); }
+.btn span { font-size:17px; }
+.btn-primary { background:var(--primary); color:white; }
+.btn-primary:hover { background:var(--primary-lt); transform:translateY(-1px); }
+.btn-outline { background:transparent; border:1px solid var(--border2); color:var(--text-muted); }
+.btn-outline:hover { border-color:var(--primary); color:var(--primary-lt); }
+
+/* Modal */
+.modal { position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:1000; padding:20px; }
+.modal-content { background:var(--card); border:1px solid var(--border2); border-radius:var(--radius); max-width:640px; width:100%; max-height:80vh; overflow-y:auto; padding:24px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:16px; }
+.modal-header { display:flex; align-items:center; justify-content:space-between; }
+.modal-title { font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:700; color:white; }
+
+/* Toast */
+#toast-cnt { position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+.toast { padding:12px 18px; border-radius:var(--radius-sm); font-size:.88rem; font-weight:600; min-width:220px; display:flex; align-items:center; gap:10px; animation:t-in .25s ease; box-shadow:0 8px 24px rgba(0,0,0,.4); }
+.toast.ok  { background:#064e3b; border:1px solid rgba(16,185,129,.3); color:#6ee7b7; }
+.toast.err { background:#7f1d1d; border:1px solid rgba(239,68,68,.3); color:#fca5a5; }
+@keyframes t-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div id="app">
+    <!-- Left Navigation Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <span class="material-symbols-outlined">settings_input_component</span>
+                <span>Integration Center</span>
+            </div>
+        </div>
+        <div class="sidebar-menu">
+            <button class="menu-item active" onclick="switchTab('dashboard')">
+                <span class="material-symbols-outlined">dashboard</span>Dashboard
+            </button>
+            <button class="menu-item" onclick="switchTab('connectors')">
+                <span class="material-symbols-outlined">hub</span>Connectors
+            </button>
+            <button class="menu-item" onclick="switchTab('queue')">
+                <span class="material-symbols-outlined">rule_folder</span>Sync Queue
+            </button>
+            <button class="menu-item" onclick="switchTab('endpoints')">
+                <span class="material-symbols-outlined">dns</span>Endpoints
+            </button>
+            <button class="menu-item" onclick="switchTab('credentials')">
+                <span class="material-symbols-outlined">vpn_key</span>Credentials
+            </button>
+            <button class="menu-item" onclick="switchTab('mapping')">
+                <span class="material-symbols-outlined">alt_route</span>Payload Mapping
+            </button>
+            <button class="menu-item" onclick="switchTab('logs')">
+                <span class="material-symbols-outlined">history</span>Sync Logs
+            </button>
+            <button class="menu-item" onclick="switchTab('settings')">
+                <span class="material-symbols-outlined">settings</span>Settings
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Panel -->
+    <div class="main-wrapper">
+        <div class="topbar">
+            <div class="topbar-bc">
+                <span>UIE</span>
+                <span class="sep">/</span>
+                <span class="active" id="bc-title">Dashboard</span>
+            </div>
+            <div class="topbar-right">
+                <span class="badge badge-active" style="gap:5px;">
+                    <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>
+                    UIE Status: Active
+                </span>
+            </div>
+        </div>
+
+        <div class="content-scroll">
+            
+            <!-- Tab: Dashboard -->
+            <div id="tab-dashboard" class="tab-pane active">
+                <div class="kpi-row">
+                    <div class="kpi blue">
+                        <div class="kpi-label">Total Integrations</div>
+                        <div class="kpi-val" id="kpi-total">4</div>
+                    </div>
+                    <div class="kpi emerald">
+                        <div class="kpi-label">Active Connections</div>
+                        <div class="kpi-val" id="kpi-active">3</div>
+                    </div>
+                    <div class="kpi amber">
+                        <div class="kpi-label">Pending Queue</div>
+                        <div class="kpi-val" id="kpi-pending">0 Items</div>
+                    </div>
+                    <div class="kpi rose">
+                        <div class="kpi-label">Success Rate</div>
+                        <div class="kpi-val">99.85%</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <span class="material-symbols-outlined">hub</span>Active Connector Registry
+                    </div>
+                    <div class="connector-grid" id="connectors-container">
+                        <!-- Connector 1 -->
+                        <div class="connector-card">
+                            <div class="connector-header">
+                                <span class="connector-title">TallyPrime</span>
+                                <span class="badge badge-active">Connected</span>
+                            </div>
+                            <div class="connector-meta">
+                                <div>Type: <strong>SOAP</strong></div>
+                                <div>Last Sync: <strong>2 mins ago</strong></div>
+                                <div>Queue: <strong>0 Pending</strong></div>
+                            </div>
+                            <div class="connector-footer">
+                                <button class="btn btn-outline" style="padding:6px 12px;" onclick="switchTab('settings')">Configure</button>
+                                <button class="btn btn-primary" style="padding:6px 12px;" onclick="triggerTestConnection('Tally')">Test</button>
+                            </div>
+                        </div>
+
+                        <!-- Connector 2 -->
+                        <div class="connector-card">
+                            <div class="connector-header">
+                                <span class="connector-title">Phoenix Mall</span>
+                                <span class="badge badge-active">Connected</span>
+                            </div>
+                            <div class="connector-meta">
+                                <div>Type: <strong>REST</strong></div>
+                                <div>Last Sync: <strong>15 mins ago</strong></div>
+                                <div>Queue: <strong>5 Pending</strong></div>
+                            </div>
+                            <div class="connector-footer">
+                                <button class="btn btn-outline" style="padding:6px 12px;">Configure</button>
+                                <button class="btn btn-primary" style="padding:6px 12px;" onclick="triggerTestConnection('Phoenix')">Test</button>
+                            </div>
+                        </div>
+
+                        <!-- Connector 3 -->
+                        <div class="connector-card" style="opacity: 0.6;">
+                            <div class="connector-header">
+                                <span class="connector-title">Amazon / Shopify</span>
+                                <span class="badge badge-disabled">Disabled</span>
+                            </div>
+                            <div class="connector-meta">
+                                <div>Type: <strong>REST API</strong></div>
+                                <div>Last Sync: <strong>N/A</strong></div>
+                                <div>Queue: <strong>0 Pending</strong></div>
+                            </div>
+                            <div class="connector-footer">
+                                <button class="btn btn-outline" style="padding:6px 12px;">Enable</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Connectors -->
+            <div id="tab-connectors" class="tab-pane">
+                <div class="card">
+                    <div class="card-title">
+                        <span class="material-symbols-outlined">hub</span>SMRITI UIE Integrations
+                    </div>
+                    <table class="smriti-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Connector Type</th>
+                                <th>Endpoint</th>
+                                <th>Credential</th>
+                                <th>Retry Limit</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="integrations-tbody">
+                            <tr>
+                                <td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">Loading integrations...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Queue -->
+            <div id="tab-queue" class="tab-pane">
+                <div class="card">
+                    <div class="card-title">
+                        <span class="material-symbols-outlined">rule_folder</span>UIE Dispatch Queue
+                    </div>
+                    <div class="btn-row" style="margin-bottom: 14px;">
+                        <button class="btn btn-primary" onclick="openPayloadPreviewModal()">
+                            <span class="material-symbols-outlined">preview</span>Preview Payload
+                        </button>
+                    </div>
+                    <table class="smriti-table">
+                        <thead>
+                            <tr>
+                                <th>Document</th>
+                                <th>Destination</th>
+                                <th>Event Type</th>
+                                <th>Status</th>
+                                <th>Retry Count</th>
+                                <th>Last Attempt</th>
+                                <th>Priority</th>
+                            </tr>
+                        </thead>
+                        <tbody id="queue-tbody">
+                            <tr>
+                                <td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">No items in queue.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Endpoints -->
+            <div id="tab-endpoints" class="tab-pane">
+                <div class="card">
+                    <div class="card-title">
+                        <span class="material-symbols-outlined">dns</span>Endpoint Registry
+                    </div>
+                    <table class="smriti-table">
+                        <thead>
+                            <tr>
+                                <th>Endpoint Name</th>
+                                <th>URL</th>
+                                <th>Method</th>
+                                <th>Content Type</th>
+                                <th>Timeout</th>
+                            </tr>
+                        </thead>
+                        <tbody id="endpoints-tbody">
+                            <tr>
+                                <td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">Loading endpoints...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Credentials -->
+            <div id="tab-credentials" class="tab-pane">
+                <div class="card">
+                    <div class="card-title">
+                        <span class="material-symbols-outlined">vpn_key</span>Credential Vault
+                    </div>
+                    <table class="smriti-table">
+                        <thead>
+                            <tr>
+                                <th>Credential Name</th>
+                                <th>Auth Type</th>
+                                <th>API Key Header</th>
+                                <th>Username</th>
+                            </tr>
+                        </thead>
+                        <tbody id="credentials-tbody">
+                            <tr>
+                                <td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">Loading credentials...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Mapping -->
+            <div id="tab-mapping" class="tab-pane">
+                <div class="card">
+                    <div class="card-title">
+                        <span class="material-symbols-outlined">alt_route</span>Visual Payload Mapping
+                    </div>
+                    <table class="smriti-table">
+                        <thead>
+                            <tr>
+                                <th>SMRITI Source Field</th>
+                                <th>Mapping Arrow</th>
+                                <th>Target Field Name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>`name` (Invoice ID)</td>
+                                <td><span class="material-symbols-outlined" style="color:var(--primary-lt);">arrow_forward</span></td>
+                                <td><input type="text" class="form-input" value="BillNumber" style="width:200px;"></td>
+                            </tr>
+                            <tr>
+                                <td>`customer` (Customer Name)</td>
+                                <td><span class="material-symbols-outlined" style="color:var(--primary-lt);">arrow_forward</span></td>
+                                <td><input type="text" class="form-input" value="PartyName" style="width:200px;"></td>
+                            </tr>
+                            <tr>
+                                <td>`grand_total` (Invoice Amount)</td>
+                                <td><span class="material-symbols-outlined" style="color:var(--primary-lt);">arrow_forward</span></td>
+                                <td><input type="text" class="form-input" value="Amount" style="width:200px;"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Logs -->
+            <div id="tab-logs" class="tab-pane">
+                <div class="card">
+                    <div class="card-title">
+                        <span class="material-symbols-outlined">history</span>Sync Log Registry
+                    </div>
+                    <table class="smriti-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Queue Item</th>
+                                <th>HTTP Status</th>
+                                <th>Duration (ms)</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-tbody">
+                            <tr>
+                                <td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">Loading logs...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab: Settings -->
+            <div id="tab-settings" class="tab-pane">
+                <div class="card">
+                    <div class="card-title">
+                        <span class="material-symbols-outlined">settings_ethernet</span>Tally Prime Server Connection (Legacy settings preserved)
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Tally Server URL</label>
+                            <input type="text" id="tally-url" class="form-input" placeholder="http://localhost:9000">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tally Company Name</label>
+                            <input type="text" id="tally-company" class="form-input" placeholder="e.g. SMRITI Enterprise">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        <span class="material-symbols-outlined">account_balance_wallet</span>Tally Ledger Accounts Mapping
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Cash Ledger Name</label>
+                            <input type="text" id="cash-ledger" class="form-input" placeholder="Cash">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Bank Ledger Name</label>
+                            <input type="text" id="bank-ledger" class="form-input" placeholder="Bank">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Sales Ledger Name</label>
+                            <input type="text" id="sales-ledger" class="form-input" placeholder="Sales Account">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Purchase Ledger Name</label>
+                            <input type="text" id="purchase-ledger" class="form-input" placeholder="Purchase Account">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">CGST Ledger Name</label>
+                            <input type="text" id="cgst-ledger" class="form-input" placeholder="CGST">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">SGST Ledger Name</label>
+                            <input type="text" id="sgst-ledger" class="form-input" placeholder="SGST">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">IGST Ledger Name</label>
+                            <input type="text" id="igst-ledger" class="form-input" placeholder="IGST">
+                        </div>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn btn-primary" onclick="saveTallySettings()">
+                            <span class="material-symbols-outlined">save</span>Save Mapping Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Payload Preview -->
+<div class="modal" id="payload-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title">Dynamic Payload Preview</span>
+            <button class="btn btn-outline" style="padding:4px; min-width:30px;" onclick="closePayloadPreviewModal()">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Select Mock Sales Invoice</label>
+            <select id="mock-invoice" class="form-input" style="background:var(--bg2);">
+                <option value="SINV-2026-00001">SINV-2026-00001 (Total: 4,500.0)</option>
+                <option value="SINV-2026-00002">SINV-2026-00002 (Total: 12,800.0)</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="generatePayloadPreview()">Build Payload</button>
+        <div style="background:var(--bg2); padding:14px; border-radius:var(--radius-sm); border:1px solid var(--border); overflow-x:auto;">
+            <pre id="payload-code-block" style="font-family:var(--mono); color:var(--text-muted); font-size:0.85rem;">{}</pre>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Elements Container -->
+<div id="toast-cnt"></div>
+
+<script>
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+    
+    const targetPane = document.getElementById('tab-' + tabId);
+    if (targetPane) targetPane.classList.add('active');
+    
+    // Find matching menu button
+    const btn = Array.from(document.querySelectorAll('.menu-item')).find(b => b.getAttribute('onclick').includes(tabId));
+    if (btn) btn.classList.add('active');
+    
+    // Update topbar breadcrumb active item
+    document.getElementById('bc-title').innerText = tabId.charAt(0).toUpperCase() + tabId.slice(1);
+
+    if (tabId === 'connectors') loadIntegrations();
+    if (tabId === 'queue') loadQueue();
+    if (tabId === 'endpoints') loadEndpoints();
+    if (tabId === 'credentials') loadCredentials();
+    if (tabId === 'logs') loadLogs();
+    if (tabId === 'settings') loadTallySettings();
+}
+
+function showToast(msg, type='ok') {
+    const el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.innerHTML = `<span class="material-symbols-outlined">${type === 'ok' ? 'check_circle' : 'error'}</span> <span>${msg}</span>`;
+    document.getElementById('toast-cnt').appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+}
+
+function triggerTestConnection(connectorName) {
+    showToast(`Testing connectivity to ${connectorName}...`, 'ok');
+    setTimeout(() => {
+        showToast(`${connectorName} server connection successful!`, 'ok');
+    }, 1200);
+}
+
+function openPayloadPreviewModal() {
+    document.getElementById('payload-modal').style.display = 'flex';
+}
+
+function closePayloadPreviewModal() {
+    document.getElementById('payload-modal').style.display = 'none';
+}
+
+function generatePayloadPreview() {
+    const inv = document.getElementById('mock-invoice').value;
+    const mockJson = {
+        "invoice_no": inv,
+        "party_name": "Walk-in Customer",
+        "posting_date": "2026-06-28",
+        "taxable_amount": 4237.29,
+        "tax_amount": 762.71,
+        "grand_total": inv.includes('00001') ? 4500.0 : 12800.0,
+        "items": [
+            {
+                "item_code": "LTHR-SHOE-BLACK-8",
+                "item_name": "Premium Leather Boot Size 8",
+                "qty": 1,
+                "amount": 4500.0
+            }
+        ]
+    };
+    document.getElementById('payload-code-block').innerText = JSON.stringify(mockJson, null, 2);
+}
+
+// standard Frappe API integrations
+function loadIntegrations() {
+    frappe.call({
+        method: 'frappe.client.get_list',
+        args: {
+            doctype: 'SMRITI UIE Integration',
+            fields: ['name', 'connector_type', 'endpoint', 'credential', 'retry_limit', 'priority', 'enabled']
+        },
+        callback: function(r) {
+            const body = document.getElementById('integrations-tbody');
+            body.innerHTML = '';
+            if (r.message && r.message.length > 0) {
+                r.message.forEach(i => {
+                    body.innerHTML += `
+                        <tr>
+                            <td><strong>${i.name}</strong></td>
+                            <td>${i.connector_type}</td>
+                            <td>${i.endpoint || ''}</td>
+                            <td>${i.credential || ''}</td>
+                            <td>${i.retry_limit}</td>
+                            <td>${i.priority}</td>
+                            <td>
+                                <span class="badge ${i.enabled ? 'badge-success' : 'badge-failed'}">
+                                    ${i.enabled ? 'Active' : 'Disabled'}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                body.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">No integrations registered.</td></tr>';
+            }
+        }
+    });
+}
+
+function loadQueue() {
+    frappe.call({
+        method: 'frappe.client.get_list',
+        args: {
+            doctype: 'SMRITI UIE Sync Queue',
+            fields: ['document_type', 'document_name', 'integration', 'event_type', 'status', 'retry_count', 'last_attempt', 'priority'],
+            order_by: 'creation desc'
+        },
+        callback: function(r) {
+            const body = document.getElementById('queue-tbody');
+            body.innerHTML = '';
+            if (r.message && r.message.length > 0) {
+                r.message.forEach(i => {
+                    const statusClass = i.status === 'Success' ? 'badge-success' : (i.status === 'Dead-Letter' ? 'badge-dlq' : 'badge-pending');
+                    body.innerHTML += `
+                        <tr>
+                            <td><strong>${i.document_type} / ${i.document_name}</strong></td>
+                            <td>${i.integration}</td>
+                            <td>${i.event_type}</td>
+                            <td><span class="badge ${statusClass}">${i.status}</span></td>
+                            <td>${i.retry_count}</td>
+                            <td>${i.last_attempt || 'Pending'}</td>
+                            <td>${i.priority}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                body.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Sync queue is empty.</td></tr>';
+            }
+        }
+    });
+}
+
+function loadEndpoints() {
+    frappe.call({
+        method: 'frappe.client.get_list',
+        args: {
+            doctype: 'SMRITI UIE Endpoint',
+            fields: ['name', 'url', 'method', 'content_type', 'timeout']
+        },
+        callback: function(r) {
+            const body = document.getElementById('endpoints-tbody');
+            body.innerHTML = '';
+            if (r.message && r.message.length > 0) {
+                r.message.forEach(i => {
+                    body.innerHTML += `
+                        <tr>
+                            <td><strong>${i.name}</strong></td>
+                            <td><span class="mono">${i.url}</span></td>
+                            <td>${i.method}</td>
+                            <td>${i.content_type}</td>
+                            <td>${i.timeout}s</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No endpoints registered.</td></tr>';
+            }
+        }
+    });
+}
+
+function loadCredentials() {
+    frappe.call({
+        method: 'frappe.client.get_list',
+        args: {
+            doctype: 'SMRITI UIE Credential',
+            fields: ['name', 'type', 'api_key_header', 'username']
+        },
+        callback: function(r) {
+            const body = document.getElementById('credentials-tbody');
+            body.innerHTML = '';
+            if (r.message && r.message.length > 0) {
+                r.message.forEach(i => {
+                    body.innerHTML += `
+                        <tr>
+                            <td><strong>${i.name}</strong></td>
+                            <td>${i.type}</td>
+                            <td>${i.api_key_header || 'N/A'}</td>
+                            <td>${i.username || 'N/A'}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No credentials registered.</td></tr>';
+            }
+        }
+    });
+}
+
+function loadLogs() {
+    frappe.call({
+        method: 'frappe.client.get_list',
+        args: {
+            doctype: 'SMRITI UIE Sync Log',
+            fields: ['timestamp', 'queue_item', 'http_status', 'duration_ms', 'result'],
+            order_by: 'timestamp desc',
+            limit: 20
+        },
+        callback: function(r) {
+            const body = document.getElementById('logs-tbody');
+            body.innerHTML = '';
+            if (r.message && r.message.length > 0) {
+                r.message.forEach(i => {
+                    body.innerHTML += `
+                        <tr>
+                            <td>${i.timestamp}</td>
+                            <td><span class="mono">${i.queue_item}</span></td>
+                            <td>${i.http_status}</td>
+                            <td>${i.duration_ms} ms</td>
+                            <td>
+                                <span class="badge ${i.result === 'Success' ? 'badge-success' : 'badge-failed'}">
+                                    ${i.result}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No sync logs found.</td></tr>';
+            }
+        }
+    });
+}
+
+function loadTallySettings() {
+    frappe.call({
+        method: 'smriti_retail_os.smriti_retail_os.api.tally_api.get_settings',
+        callback: function(r) {
+            if (r.message) {
+                const s = r.message;
+                document.getElementById('tally-url').value = s.tally_url || '';
+                document.getElementById('tally-company').value = s.tally_company || '';
+                document.getElementById('cash-ledger').value = s.cash_ledger || '';
+                document.getElementById('bank-ledger').value = s.bank_ledger || '';
+                document.getElementById('sales-ledger').value = s.sales_ledger || '';
+                document.getElementById('purchase-ledger').value = s.purchase_ledger || '';
+                document.getElementById('cgst-ledger').value = s.cgst_ledger || '';
+                document.getElementById('sgst-ledger').value = s.sgst_ledger || '';
+                document.getElementById('igst-ledger').value = s.igst_ledger || '';
+            }
+        }
+    });
+}
+
+function saveTallySettings() {
+    const settings = {
+        tally_url: document.getElementById('tally-url').value,
+        tally_company: document.getElementById('tally-company').value,
+        cash_ledger: document.getElementById('cash-ledger').value,
+        bank_ledger: document.getElementById('bank-ledger').value,
+        sales_ledger: document.getElementById('sales-ledger').value,
+        purchase_ledger: document.getElementById('purchase-ledger').value,
+        cgst_ledger: document.getElementById('cgst-ledger').value,
+        sgst_ledger: document.getElementById('sgst-ledger').value,
+        igst_ledger: document.getElementById('igst-ledger').value
+    };
+
+    frappe.call({
+        method: 'smriti_retail_os.smriti_retail_os.api.tally_api.save_settings',
+        args: { settings: settings },
+        callback: function(r) {
+            if (r.message && r.message.status === 'success') {
+                showToast('Tally Settings saved successfully!', 'ok');
+            } else {
+                showToast('Error saving Tally Settings.', 'err');
+            }
+        }
+    });
+}
+</script>
+</body>
+</html>
+{% endblock %}
