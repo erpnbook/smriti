@@ -4,7 +4,7 @@
 #               migration validation, compatibility matrix assertions, and benchmark analysis.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-11
-# @version: 1.9.0-RC1
+# @version: 1.8.6
 #
 # USAGE (from Docker container):
 #   bench --site smriti_retail execute smriti_retail_os.tests.seed_psv_uat.run_all_validation

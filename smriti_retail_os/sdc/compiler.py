@@ -3,7 +3,7 @@
 # @file: sdc/compiler.py
 # @description: Core compiler runtime framework for SMRITI Documentation Compiler (SDC) v1.1.2 GA
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.1.2-GA
+# @version: 1.8.6
 #
 
 import os

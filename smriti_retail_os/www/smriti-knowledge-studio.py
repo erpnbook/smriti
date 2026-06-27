@@ -3,7 +3,7 @@
 # @file: smriti_retail_os/www/smriti-knowledge-studio.py
 # @description: Page controller for SMRITI Knowledge Studio web workspace.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.0.0
+# @version: 1.8.6
 # @license: MIT
 #
 

@@ -3,7 +3,7 @@
  * @description: Frontend controller for SMRITI responsive sidebar toggle.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-06-12
- * @version: 1.9.1
+ * @version: 1.8.6
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */

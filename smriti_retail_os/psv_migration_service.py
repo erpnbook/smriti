@@ -4,7 +4,7 @@
 # @description: SMRITI PSV Migration Service — ledger reversal and legacy PSA to Channel Partner migration.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-20
-# @version: 2.0.0
+# @version: 1.8.6
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #

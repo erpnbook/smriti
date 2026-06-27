@@ -4,7 +4,7 @@
 # @description: SMRITI CGE Generic page controller — CGE UI context and auth.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.0.0
+# @version: 1.8.6
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
@@ -13,7 +13,7 @@
 #               Enforces access checks and initializes target DocType context.
 # @author: Antigravity AI
 # @date: 2026-06-19
-# @version: 1.0.0
+# @version: 1.8.6
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #

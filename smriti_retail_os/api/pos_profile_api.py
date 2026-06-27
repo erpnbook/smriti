@@ -4,7 +4,7 @@
 # @description: Whitelisted API layer for SMRITI POS Profile Management.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-25
-# @version: 1.0.0
+# @version: 1.8.6
 # @sprint: 3C — POS Profile Custom Manager
 # @authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL
 #

@@ -4,7 +4,7 @@
 # @description: Python controller for the SMRITI branded login page.
 #               Redirects already-authenticated users to their SMRITI home route.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.0.1
+# @version: 1.8.6
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #

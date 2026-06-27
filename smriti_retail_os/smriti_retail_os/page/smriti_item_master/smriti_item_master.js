@@ -3,7 +3,7 @@
  * @description: Page controller for SMRITI Item Master Import — Excel paste, file upload, and validation grid.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
- * @version: 1.0.0
+ * @version: 1.8.6
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */

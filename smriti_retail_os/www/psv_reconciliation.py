@@ -2,7 +2,7 @@
 # @file: smriti_retail_os/www/psv_reconciliation.py
 # @description: Page controller for PSV Stock Reconciliation.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.0.0
+# @version: 1.8.6
 # @license: MIT
 
 import frappe

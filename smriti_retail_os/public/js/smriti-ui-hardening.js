@@ -9,7 +9,7 @@
  *  - SmritiDropdownFix: upgrades any .search-dropdown inside a scroll container
  *
  * @author Jawahar R Mallah <jawahar.mallah@gmail.com>
- * @version 1.0.0
+ * @version 1.8.6
  * @license MIT
  */
 

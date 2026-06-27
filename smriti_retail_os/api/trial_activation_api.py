@@ -4,7 +4,7 @@
 # @description: SMRITI Trial Activation API — Provisioning lifecycle, state machine,
 #               provision log, retry mechanism, and dashboard metrics.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 2.0.0  (Sprint 3B — Operational Resilience)
+# @version: 1.8.6  (Sprint 3B — Operational Resilience)
 # @sprint: 3B — Trial Operations & Subscription Lifecycle
 # @authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL
 #

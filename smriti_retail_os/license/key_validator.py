@@ -4,7 +4,7 @@
 # @description: SMRITI License Key Validator — HMAC-SHA256 key generation and validation.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.0.0
+# @version: 1.8.6
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
@@ -35,7 +35,7 @@
 #       key = generate_license_key("CUST-001", "Professional", "2027-06-17")
 #
 # @authority: docs/architecture/licensing/SMRITI_LICENSE_ARCHITECTURE_V1.md §5
-# @version: 1.0.0
+# @version: 1.8.6
 #
 
 from __future__ import annotations

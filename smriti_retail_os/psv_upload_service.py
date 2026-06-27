@@ -4,7 +4,7 @@
 # @description: SMRITI Psv Upload Service — retail operating system module.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.0.0
+# @version: 1.8.6
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
@@ -12,7 +12,7 @@
 # @description: Channel Stock — PSV Sell-Through Upload processing service.
 #               Handles validation, CSV parsing, barcode mapping, and ledger writes
 #               via the canonical create_transaction() → create_psv_transaction() path.
-# @version: 2.0.0  (BUG-002 fix: broken SQL + hash mismatch resolved)
+# @version: 1.8.6  (BUG-002 fix: broken SQL + hash mismatch resolved)
 #
 
 import csv

@@ -4,7 +4,7 @@
 # @description: SMRITI Psv Ledger Service — retail operating system module.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.0.0
+# @version: 1.8.6
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
@@ -13,7 +13,7 @@
 #               canonical PSV Transaction document (create_psv_transaction) to
 #               ensure uniform fingerprint deduplication, exception handling,
 #               and activity logging. Direct ledger writes are NOT permitted here.
-# @version: 2.0.0
+# @version: 1.8.6
 #
 
 import frappe

@@ -3,7 +3,7 @@
 # @file: sdc/migration_registry.py
 # @description: IR Schema Migration Registry for SMRITI SDC v1.x
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.1.2-GA
+# @version: 1.8.6
 #
 
 class IRMigratorRegistry(object):

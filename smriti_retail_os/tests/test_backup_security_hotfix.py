@@ -4,7 +4,7 @@
 # @description: Security regression tests for backup API hardening.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.0.0
+# @version: 1.8.6
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
@@ -13,7 +13,7 @@
 #               denylist, export redaction, boot guards, and restore cleanup.
 # @author: Antigravity AI
 # @date: 2026-06-10
-# @version: 1.8.2a
+# @version: 1.8.6
 #
 
 import os

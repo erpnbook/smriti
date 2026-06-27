@@ -2,7 +2,7 @@
 # @file: smriti_retail_os/www/smriti_support.py
 # @description: Page controller for SMRITI Support Center.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.0.0
+# @version: 1.8.6
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 

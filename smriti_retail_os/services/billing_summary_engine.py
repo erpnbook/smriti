@@ -4,7 +4,7 @@
 # @description: Central monetary calculations authority (Monetary Authority Rule compliant).
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-27
-# @version: 1.0.0
+# @version: 1.8.6
 # @license: MIT
 #
 

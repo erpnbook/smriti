@@ -4,7 +4,7 @@
 # @description: SMRITI Category Api — retail operating system module.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.0.0
+# @version: 1.8.6
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
@@ -12,7 +12,7 @@
 # @description: Whitelisted API endpoints for Category (Item Group) management.
 # @author: Antigravity AI
 # @date: 2026-06-16
-# @version: 1.0.0
+# @version: 1.8.6
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #

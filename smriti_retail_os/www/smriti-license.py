@@ -4,7 +4,7 @@
 # @description: SMRITI License page controller — license key activation UI context.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.0.0
+# @version: 1.8.6
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
@@ -12,7 +12,7 @@
 # @description: Python controller for the SMRITI License & Registration page.
 #               Enforces login and SMRITI System Admin / System Manager role.
 # @authority: docs/architecture/licensing/SMRITI_LICENSE_ARCHITECTURE_V1.md §9
-# @version: 1.0.0
+# @version: 1.8.6
 #
 
 import frappe

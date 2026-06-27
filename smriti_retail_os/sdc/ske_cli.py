@@ -3,7 +3,7 @@
 # @file: sdc/ske_cli.py
 # @description: Command-Line Interface for SMRITI Knowledge Engine (SKE)
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.1.2-GA
+# @version: 1.8.6
 #
 
 import sys

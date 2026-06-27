@@ -6,7 +6,7 @@
 #               - Enforces Cashier, Store Manager, or System Manager role
 #               - Strips all Frappe chrome from the page context
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.0.0
+# @version: 1.8.6
 # @license: MIT
 #
 

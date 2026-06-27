@@ -6,7 +6,7 @@
 #               account provisioning dashboard.
 #               Access: Administrator only.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.0.0
+# @version: 1.8.6
 # @sprint: 3A — Platform Admin: Trial Activation & Account Provisioning
 # @authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL
 #

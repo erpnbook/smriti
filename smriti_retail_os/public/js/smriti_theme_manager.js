@@ -3,7 +3,7 @@
  * @description: Handles user login, registration, and JWT token generation.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
- * @version: 1.0.0
+ * @version: 1.8.6
  * @license: MIT
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
@@ -29,7 +29,7 @@
  *   ui.reducedMotion                         ← CORRECT (accessibility flag)
  *   ui.themeProfile                          ← FORBIDDEN (does not exist)
  *
- * @version 1.0.0
+ * @version 1.8.6
  * @status Phase 1A — Foundation Layer
  * @author AITDL / SMRITI Engineering
  * @license MIT — Copyright (c) 2026 AITDL NETWORK & ERPNbook.com

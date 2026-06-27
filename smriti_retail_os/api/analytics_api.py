@@ -4,7 +4,7 @@
 # @description: SMRITI Analytics Dashboard API — thin aggregation layer
 #               over existing reports_api.py methods. No new SQL queries.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.0.0
+# @version: 1.8.6
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #

@@ -6,7 +6,7 @@
 #               - Enforces Store Manager or System Manager role
 #               - Strips all Frappe chrome from the page context
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.0.1
+# @version: 1.8.6
 # @license: MIT
 #
 # NOTE: This file MUST be named smriti-home.py (hyphenated) to match

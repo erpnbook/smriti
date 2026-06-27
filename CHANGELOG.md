@@ -47,7 +47,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   taking arbitrary `variants[-1]` color to collecting unique colors across all variants via
   `dict.fromkeys()` — multi-color styles (combo packs) now correctly return `"Black, Brown"`
   instead of whichever variant happened to be last.
-- **`services/field_explorer_service.py` — version alignment**: `@version 1.0.0` → `1.2.14`
+- **`services/field_explorer_service.py` — version alignment**: `@version 1.8.6` → `1.2.14`
   to align with the repo canonical version declared in `hooks.py`.
 
 ---

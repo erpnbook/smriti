@@ -4,7 +4,7 @@
 # @description: Cross-module integration regression suite for SMRITI Retail OS (GA Readiness Audit v1.1).
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-21
-# @version: 1.1.0
+# @version: 1.8.6
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #

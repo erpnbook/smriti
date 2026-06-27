@@ -4,7 +4,7 @@
 # @description: Python controller for the SMRITI Safe Mode / Recovery page.
 #               Only System Manager or Administrator can access this page.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.0.1
+# @version: 1.8.6
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #

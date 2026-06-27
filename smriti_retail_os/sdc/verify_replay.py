@@ -3,7 +3,7 @@
 # @file: sdc/verify_replay.py
 # @description: Automated Deterministic Replay and Quality Gate Verification for SDC
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.1.2-GA
+# @version: 1.8.6
 #
 
 import os

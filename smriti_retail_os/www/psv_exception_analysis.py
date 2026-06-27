@@ -2,7 +2,7 @@
 # @file: smriti_retail_os/www/psv_exception_analysis.py
 # @description: Page controller for PSV Exception Analysis.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.0.0
+# @version: 1.8.6
 
 import frappe
 

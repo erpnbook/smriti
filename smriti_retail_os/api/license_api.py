@@ -4,7 +4,7 @@
 # @description: SMRITI License Management API — license activation and status.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.0.0
+# @version: 1.8.6
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
@@ -13,7 +13,7 @@
 #               All operations go through this service layer (Rule 2 compliant).
 #               No frontend code touches the DocType directly.
 # @authority: docs/architecture/licensing/SMRITI_LICENSE_ARCHITECTURE_V1.md
-# @version: 1.0.0
+# @version: 1.8.6
 #
 
 import frappe
