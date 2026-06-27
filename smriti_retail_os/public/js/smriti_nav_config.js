@@ -70,6 +70,7 @@ const SMRITI_ROUTE_MAP = {
   "trial_leads":                      "/smriti-trial-leads",   // Sprint 2
   "pos_profiles":                     "/smriti-pos-profiles",
   "knowledge_studio":                 "/smriti-knowledge-studio",
+  "tally_integration":                "/smriti-tally",
 };
 
 function resolveSmritiRoute(key) {
@@ -411,6 +412,11 @@ const SMRITI_NAV = {
           label: "Advances",
           route: "/advances",
           standalone_route: "/advances",
+          status: "active" },
+        { id: "tally_integration",
+          label: "Tally Integration",
+          route: resolveSmritiRoute("tally_integration"),
+          standalone_route: "/smriti-tally",
           status: "active" }
       ]
     },

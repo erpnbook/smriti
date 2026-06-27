@@ -1,0 +1,130 @@
+{
+ "actions": [],
+ "allow_events_in_timeline": 0,
+ "allow_import": 0,
+ "allow_rename": 0,
+ "creation": "2026-06-27 22:50:00",
+ "doctype": "DocType",
+ "custom": 0,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "connection_section",
+  "tally_url",
+  "tally_company",
+  "mappings_section",
+  "cash_ledger",
+  "bank_ledger",
+  "sales_ledger",
+  "cgst_ledger",
+  "sgst_ledger",
+  "igst_ledger",
+  "options_section",
+  "sync_invoices",
+  "sync_payments"
+ ],
+ "fields": [
+  {
+   "fieldname": "connection_section",
+   "fieldtype": "Section Break",
+   "label": "Tally Server Connection"
+  },
+  {
+   "default": "http://localhost:9000",
+   "fieldname": "tally_url",
+   "fieldtype": "Data",
+   "label": "Tally Server URL",
+   "reqd": 1
+  },
+  {
+   "fieldname": "tally_company",
+   "fieldtype": "Data",
+   "label": "Tally Company Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "mappings_section",
+   "fieldtype": "Section Break",
+   "label": "Ledger Mapping Settings"
+  },
+  {
+   "default": "Cash",
+   "fieldname": "cash_ledger",
+   "fieldtype": "Data",
+   "label": "Cash Ledger Name",
+   "reqd": 1
+  },
+  {
+   "default": "Bank",
+   "fieldname": "bank_ledger",
+   "fieldtype": "Data",
+   "label": "Bank Ledger Name",
+   "reqd": 1
+  },
+  {
+   "default": "Sales Account",
+   "fieldname": "sales_ledger",
+   "fieldtype": "Data",
+   "label": "Sales Ledger Name",
+   "reqd": 1
+  },
+  {
+   "default": "CGST",
+   "fieldname": "cgst_ledger",
+   "fieldtype": "Data",
+   "label": "CGST Ledger Name"
+  },
+  {
+   "default": "SGST",
+   "fieldname": "sgst_ledger",
+   "fieldtype": "Data",
+   "label": "SGST Ledger Name"
+  },
+  {
+   "default": "IGST",
+   "fieldname": "igst_ledger",
+   "fieldtype": "Data",
+   "label": "IGST Ledger Name"
+  },
+  {
+   "fieldname": "options_section",
+   "fieldtype": "Section Break",
+   "label": "Sync Options"
+  },
+  {
+   "default": "1",
+   "fieldname": "sync_invoices",
+   "fieldtype": "Check",
+   "label": "Sync Sales Invoices"
+  },
+  {
+   "default": "1",
+   "fieldname": "sync_payments",
+   "fieldtype": "Check",
+   "label": "Sync Payments"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-06-27 22:50:00",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Tally Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "states": []
+}

@@ -1,0 +1,94 @@
+{
+ "actions": [],
+ "allow_events_in_timeline": 0,
+ "allow_import": 0,
+ "allow_rename": 0,
+ "autoname": "naming_series:",
+ "creation": "2026-06-27 22:50:00",
+ "doctype": "DocType",
+ "custom": 0,
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "posting_date",
+  "voucher_type",
+  "reference_doctype",
+  "reference_name",
+  "status",
+  "response"
+ ],
+ "fields": [
+  {
+   "default": "TLY-LOG-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Naming Series",
+   "options": "TLY-LOG-.YYYY.-.#####"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Posting Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "voucher_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Voucher Type",
+   "options": "Sales\nReceipt\nPayment",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Reference DocType"
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Reference Name"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Success\nFailed",
+   "reqd": 1
+  },
+  {
+   "fieldname": "response",
+   "fieldtype": "Small Text",
+   "label": "Tally Server Response"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 0,
+ "links": [],
+ "modified": "2026-06-27 22:50:00",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Tally Sync Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "states": []
+}
