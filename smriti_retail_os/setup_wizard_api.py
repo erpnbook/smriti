@@ -665,7 +665,7 @@ def run_setup_wizard(setup_data):
             pp.save(ignore_permissions=True)
             log(f"POS Profile '{pos_profile_name}' updated successfully.")
 
-        # 8. Seed Footwear attributes and custom fields if requested
+        # 8. Seed business-type attributes and custom fields if requested
         if setup_data.get("seed_attributes", True):
             log("Running SMRITI master doctypes seeding and customizations setup...")
             from smriti_retail_os.setup import setup_smriti_retail_os
