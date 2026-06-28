@@ -231,6 +231,38 @@
   --smriti-text-muted:       var(--smriti-color-text-muted);
   --smriti-text-subtle:      var(--smriti-color-text-subtle);
 
+  /* Brand Colors */
+  --smriti-primary:          var(--smriti-color-brand-primary);
+  --smriti-primary-light:    var(--smriti-color-brand-light);
+  --smriti-primary-dark:     var(--smriti-color-brand-dark);
+  --smriti-primary-glow:     transparent;
+
+  /* Status Colors */
+  --smriti-success:          var(--smriti-color-status-success);
+  --smriti-success-bg:       var(--smriti-color-status-success-bg);
+  --smriti-success-border:   var(--smriti-color-status-success-border);
+  --smriti-danger:           var(--smriti-color-status-danger);
+  --smriti-danger-bg:        var(--smriti-color-status-danger-bg);
+  --smriti-danger-border:    var(--smriti-color-status-danger-border);
+  --smriti-warning:          var(--smriti-color-status-warning);
+  --smriti-warning-bg:       var(--smriti-color-status-warning-bg);
+  --smriti-warning-border:   var(--smriti-color-status-warning-border);
+  --smriti-info:             var(--smriti-color-status-info);
+  --smriti-info-bg:          var(--smriti-color-status-info-bg);
+  --smriti-info-border:      var(--smriti-color-status-info-border);
+  --smriti-amber:            var(--smriti-color-status-warning);
+
+  /* Shadows */
+  --neu-float:               var(--smriti-shadow-neu-float);
+  --neu-float-lg:            var(--smriti-shadow-neu-float-lg);
+  --neu-pressed:             var(--smriti-shadow-neu-pressed);
+  --neu-pressed-sm:          var(--smriti-shadow-neu-pressed-sm);
+  --shadow-xs:               var(--smriti-shadow-xs);
+  --shadow-sm:               var(--smriti-shadow-sm);
+  --shadow-md:               var(--smriti-shadow-md);
+  --shadow-lg:               var(--smriti-shadow-lg);
+  --shadow-xl:               var(--smriti-shadow-xl);
+
   --radius-xs:    var(--smriti-radius-xs);
   --radius-sm:    var(--smriti-radius-sm);
   --radius-md:    var(--smriti-radius-md);
