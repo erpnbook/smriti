@@ -329,3 +329,73 @@ class TestUIE(unittest.TestCase):
 		q_item = frappe.get_doc("SMRITI UIE Sync Queue", queue_item_name)
 		self.assertEqual(q_item.status, "Dead-Letter")
 		self.assertIn("Unsupported connector", q_item.dead_letter_reason)
+
+	@patch('requests.request')
+	def test_e2e_integration_flow(self, mock_request):
+		"""Validates SMRITI UIE lifecycle:
+		Invoice submit -> Queue Item Created -> Dispatch Worker -> Mock Endpoint -> Sync Log -> Duplicate Prevention.
+		"""
+		# 1. Setup mock response
+		mock_response = MagicMock()
+		mock_response.status_code = 200
+		mock_response.text = '{"status": "delivered", "id": "msg_999"}'
+		mock_request.return_value = mock_response
+
+		# 2. Setup document
+		mock_invoice = frappe.get_doc({
+			"doctype": "Sales Invoice",
+			"name": "SINV-TEST-E2E-001",
+			"posting_date": "2026-06-28",
+			"customer": "Test Customer",
+			"grand_total": 5500.0
+		})
+
+		# 3. Trigger Enqueue (Simulates hooks.py submitting document)
+		dispatcher.enqueue_document_sync(mock_invoice, "on_submit")
+
+		# Verify Queue Item was successfully created
+		queue_items = frappe.get_all(
+			"SMRITI UIE Sync Queue",
+			filters={
+				"document_type": "Sales Invoice",
+				"document_name": "SINV-TEST-E2E-001",
+				"integration": self.integration.name
+			},
+			fields=["name", "status"]
+		)
+		self.assertEqual(len(queue_items), 1)
+		queue_item_name = queue_items[0].name
+		self.assertEqual(queue_items[0].status, "Pending")
+
+		# 4. Dispatch the item (Simulates the background worker job pick-up)
+		success = dispatcher.dispatch_queue_item(queue_item_name)
+		self.assertTrue(success)
+
+		# Verify status updated to Success
+		q_item = frappe.get_doc("SMRITI UIE Sync Queue", queue_item_name)
+		self.assertEqual(q_item.status, "Success")
+
+		# Verify Sync Log created with exact response content
+		logs = frappe.get_all(
+			"SMRITI UIE Sync Log",
+			filters={"queue_item": queue_item_name},
+			fields=["result", "http_status", "response_content"]
+		)
+		self.assertEqual(len(logs), 1)
+		self.assertEqual(logs[0].result, "Success")
+		self.assertEqual(logs[0].http_status, 200)
+		self.assertEqual(logs[0].response_content, '{"status": "delivered", "id": "msg_999"}')
+
+		# 5. Resubmit document to test idempotency prevention
+		dispatcher.enqueue_document_sync(mock_invoice, "on_submit")
+
+		# Verify no duplicate queue items are created
+		all_items = frappe.get_all(
+			"SMRITI UIE Sync Queue",
+			filters={
+				"document_type": "Sales Invoice",
+				"document_name": "SINV-TEST-E2E-001",
+				"integration": self.integration.name
+			}
+		)
+		self.assertEqual(len(all_items), 1)
