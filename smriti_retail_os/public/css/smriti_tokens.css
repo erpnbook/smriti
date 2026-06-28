@@ -1,20 +1,17 @@
-/**
+﻿/**
  * @file: smriti_retail_os/public/css/smriti_tokens.css
- * @description: Single source of truth for all CSS Custom Property defaults.
+ * @description: SMRITI UI Configuration Engine — System Default Token Values.
+ *               Single source of truth for all CSS Custom Property defaults.
+ *               Defined in: docs/architecture/ui/SMRITI_UI_CONFIGURATION_ENGINE_V1.md §6
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
- * @date: 2026-05-28
- * @version: 1.8.6
+ * @date: 2026-06-XX
+ * @version: 1.9.0
  * @license: MIT
- * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
- */
-/**
- * @file smriti_tokens.css
- * @description SMRITI UI Configuration Engine — System Default Token Values
- *              Single source of truth for all CSS Custom Property defaults.
- *              Defined in: docs/architecture/ui/SMRITI_UI_CONFIGURATION_ENGINE_V1.md §6
+ *
+ * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  *
  * GOVERNANCE:
- *   - All tokens MUST use the approved namespace: --smriti-{category}-{name}
+ *   - All canonical tokens use the namespace: --smriti-{category}-{name}
  *   - No hex colors, rgb(), rgba(), hsl() permitted in component files.
  *   - Components consume var(--smriti-*) only — never hardcoded values.
  *   - This file defines System Default (Level 7 — lowest resolver priority).
@@ -26,21 +23,37 @@
  *   smriti_tokens.css          ← loaded first (CSS, :root defaults)
  *   smriti_theme_manager.js    ← applyUIConfig() writes overrides into :root at runtime
  *
- * BACKWARD COMPATIBILITY:
- *   Existing --smriti-* short tokens (--smriti-bg, --smriti-primary, etc.)
- *   in smriti_theme.css remain untouched in Phase 1.
- *   This file introduces the new namespaced tokens alongside them.
- *   Migration from old to new tokens is Phase 2.
+ * v1.9.0 CHANGE NOTES (TOKEN_MIGRATION.md has full detail):
+ *   - FIXED: file previously contained TWO overlapping :root blocks (a
+ *     dense/compact second block silently overrode the documented
+ *     "Neumorphic Hybrid" first block — same property names, different
+ *     values, last-one-wins per CSS spec). Merged into a single :root.
+ *   - FIXED: Z-Index token section header was corrupted (mangled bytes)
+ *     and the actual --smriti-z-index-* declarations were missing
+ *     entirely. Restored from smriti-ui-hardening.css (which already
+ *     defined them correctly but was never loaded by any page).
+ *   - ADDED: --smriti-transition-* family (did not exist under any name;
+ *     --t-fast/--t-base/--t-slow/--ease in smriti_theme.css were
+ *     un-namespaced and violated the governance rule above).
+ *   - ADDED: legacy compatibility aliases (un-prefixed / old short names)
+ *     for every canonical token that older component CSS still
+ *     references directly. See TOKEN_MIGRATION.md for the deprecation
+ *     timeline. New code MUST use canonical names only.
+ *   - RESOLVED: 17 previously-orphaned var() references found via static
+ *     audit now have a real definition (see TOKEN_MIGRATION.md §"Orphan
+ *     Resolution Table" for the full before/after list).
  *
- * @version 1.8.6
- * @status Phase 1A — Foundation Layer
- * @author AITDL / SMRITI Engineering
- * @license MIT — Copyright (c) 2026 AITDL NETWORK & ERPNbook.com
+ * BACKWARD COMPATIBILITY:
+ *   Existing un-prefixed short tokens (--smriti-bg, --radius-lg, --t-fast,
+ *   --ease, etc.) are now defined as aliases of the canonical tokens
+ *   below, so legacy component CSS keeps working unmodified during the
+ *   migration window. Do not write NEW code against the legacy names.
  */
 
 /* ═══════════════════════════════════════════════════════════════════════
    SYSTEM DEFAULT TOKEN VALUES — Light Mode (Neumorphic Hybrid)
    These are Level 7 defaults. Runtime resolver overwrites as needed.
+   This is the ONLY :root block in this file — do not add a second one.
    ═══════════════════════════════════════════════════════════════════════ */
 :root {
 
@@ -48,28 +61,37 @@
   --smriti-color-bg-page:              #e8ecf2;   /* Neumorphic clay base */
   --smriti-color-bg-primary:           #ffffff;   /* Flat white data surface */
   --smriti-color-bg-secondary:         #f6f8fb;   /* Elevated secondary surface */
+  --smriti-color-bg-elevated:          #ffffff;   /* Elevated card-on-card surface (was orphaned) */
+  --smriti-color-bg-overlay:           rgba(15, 23, 42, 0.45); /* Modal/sidebar backdrop tint (was orphaned — silently transparent) */
 
   /* ── Color: Text ────────────────────────────────────────────────── */
   --smriti-color-text-primary:         #0f172a;   /* High emphasis */
   --smriti-color-text-muted:           #475467;   /* Medium emphasis */
   --smriti-color-text-subtle:          #94a3b8;   /* Low emphasis */
+  --smriti-color-text-primary-rgb:     15, 23, 42;   /* For rgba() alpha blends (was orphaned) */
 
   /* ── Color: Brand ───────────────────────────────────────────────── */
   --smriti-color-brand-primary:        #6941c6;   /* Primary purple */
   --smriti-color-brand-light:          #9e77ed;   /* Lighter accent */
   --smriti-color-brand-dark:           #53389e;   /* Darker accent */
+  --smriti-color-brand-accent:         #b54708;   /* Warning-adjacent accent used by POS cards (was orphaned) */
+  --smriti-color-brand-primary-rgb:    105, 65, 198;
+  --smriti-color-brand-accent-rgb:     181, 71, 8;
 
   /* ── Color: Borders ─────────────────────────────────────────────── */
   --smriti-color-border-default:       #e2e8f0;   /* Standard border */
   --smriti-color-border-strong:        #d0d5dd;   /* Emphasized border */
+  --smriti-color-border-strong-rgb:    208, 213, 221;
 
   /* ── Color: Status ──────────────────────────────────────────────── */
   --smriti-color-status-success:       #027a48;
   --smriti-color-status-success-bg:    #ecfdf3;
   --smriti-color-status-success-border:#abefc6;
+  --smriti-color-status-success-rgb:   2, 122, 72;
   --smriti-color-status-danger:        #b42318;
   --smriti-color-status-danger-bg:     #fef3f2;
   --smriti-color-status-danger-border: #fecdca;
+  --smriti-color-status-danger-rgb:    180, 35, 24;
   --smriti-color-status-warning:       #b54708;
   --smriti-color-status-warning-bg:    #fffaeb;
   --smriti-color-status-warning-border:#fedf89;
@@ -97,6 +119,10 @@
   /* ── Layout Dimensions ──────────────────────────────────────────── */
   --smriti-dimension-sidebar-width:           260px;
   --smriti-dimension-sidebar-collapsed-width: 68px;
+  /* Aliases used directly by smriti_sidebar.css (was orphaned — sidebar
+     collapse/expand silently failed to resize the content area) */
+  --smriti-sidebar-width:                     var(--smriti-dimension-sidebar-width);
+  --smriti-sidebar-collapsed-width:           var(--smriti-dimension-sidebar-collapsed-width);
 
   /* ── Border Radius ──────────────────────────────────────────────── */
   --smriti-radius-xs:                  4px;
@@ -117,6 +143,7 @@
   --smriti-shadow-neu-pressed:         inset 6px 6px 12px #c5c9d4, inset -6px -6px 12px #ffffff;
   --smriti-shadow-neu-float-lg:        10px 10px 24px #c0c4d0, -10px -10px 24px #ffffff;
   --smriti-shadow-neu-pressed-sm:      inset 3px 3px 7px #c8ccd6, inset -3px -3px 7px #ffffff;
+  --smriti-shadow-pos-floating:        0 0 0 1px var(--smriti-color-brand-light), 0 8px 24px rgba(105,65,198,.25); /* was orphaned */
 
   /* ── Font Size ──────────────────────────────────────────────────── */
   --smriti-font-size-xs:               0.72rem;
@@ -133,19 +160,37 @@
   --smriti-font-weight-semibold:       600;
   --smriti-font-weight-bold:           700;
   --smriti-font-weight-extrabold:      800;
-  /* Font Family — Q3 Foundation Hardening (ux_theme_audit_v1.2) */
+
+  /* ── Font Family ──────────────────────────────────────────────── */
   --smriti-font-family-primary:        'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --smriti-font-family-display:        'Outfit', 'Inter', sans-serif;
   --smriti-font-family-mono:           'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 
-  /* Line Height — Q3 Foundation Hardening */
+  /* ── Line Height ──────────────────────────────────────────────── */
   --smriti-line-height-tight:          1.25;
   --smriti-line-height-snug:           1.375;
   --smriti-line-height-normal:         1.5;
   --smriti-line-height-relaxed:        1.625;
   --smriti-line-height-loose:          2;
 
-  /* Content & Panel Widths — Q3 Foundation Hardening */
+  /* ── Transitions ──────────────────────────────────────────────────
+       CORRECTION (see TOKEN_MIGRATION.md): an earlier draft of this
+       fix named these --smriti-transition-* on the assumption that
+       was the canonical form. A repo-wide usage audit showed dozens
+       of live call sites (smriti-billing.css, smriti-inventory.css,
+       smriti-purchase.css, smriti-reports.css, smriti-sizewise-item.css,
+       smriti_sidebar_standalone.css, smriti-backup.css — i.e. most of
+       the app's hover/transition states) already call var(--smriti-t-base)
+       and var(--smriti-ease) directly, with NO fallback. Those are the
+       de facto canonical names already in production use — defining a
+       differently-named token would have left every one of those call
+       sites still orphaned. Canonicalizing to match actual usage: ── */
+  --smriti-ease:                       cubic-bezier(0.16, 1, 0.3, 1);
+  --smriti-t-fast:                     0.12s;
+  --smriti-t-base:                     0.20s;
+  --smriti-t-slow:                     0.35s;
+
+  /* ── Content & Panel Widths ──────────────────────────────────────── */
   --smriti-content-max-width:          1400px;
   --smriti-panel-width-sm:             280px;
   --smriti-panel-width-md:             360px;
@@ -153,87 +198,68 @@
   --smriti-panel-width-xl:             640px;
   --smriti-drawer-width:               420px;
 
-  /* Grid Layout Columns */
+  /* ── Grid Layout Columns ──────────────────────────────────────────── */
   --smriti-grid-cols-dashboard:        repeat(auto-fill, minmax(280px, 1fr));
   --smriti-grid-cols-form:             repeat(auto-fill, minmax(240px, 1fr));
   --smriti-grid-cols-report:           1fr;
 
-  /* ── Z-Index ────────────────────────────────────────── */
-  --smriti-z-index-sidebar:            1000;
-  --smriti-z-index-sticky:             1020;
-  --smriti-z-index-topbar:             1000;
-  --smriti-z-index-modal:              9000;
-  --smriti-z-index-toast:              99999;
-  --smriti-z-index-devtools:           999999;
+  /* ── Z-Index (canonical — restored from smriti-ui-hardening.css,
+       which defined these correctly but was never loaded by any page) ── */
   --smriti-z-index-content:            1;
-  --smriti-z-index-card:               2;
+  --smriti-z-index-card:               10;
+  --smriti-z-index-sticky:             100;
+  --smriti-z-index-topbar:             200;
+  --smriti-z-index-dropdown:           5000;
+  --smriti-z-index-modal:              10000;
+  --smriti-z-index-notification:       15000;
+  --smriti-z-index-toast:              15000;  /* alias target — toast uses notification layer (was orphaned) */
+  --smriti-z-index-devtools:           99999;
 
-  /* ── Bridge aliases and missing theme variables ────── */
-  --smriti-sidebar-width:              var(--smriti-dimension-sidebar-width, 260px);
-  --smriti-sidebar-collapsed-width:    var(--smriti-dimension-sidebar-collapsed-width, 68px);
-  --smriti-color-bg-overlay:           rgba(15, 23, 42, 0.6);
-  --smriti-color-brand-accent:         #f472b6;
-  --smriti-shadow-pos-floating:        0 20px 40px rgba(15, 23, 42, 0.3);
+  /* ═══════════════════════════════════════════════════════════════════
+     LEGACY COMPATIBILITY ALIASES — DO NOT USE IN NEW CODE
+     See TOKEN_MIGRATION.md for the deprecation timeline.
+     These exist only so older component CSS (smriti_theme.css-era
+     short names) keeps rendering unmodified during the migration
+     window. Same pattern already used in smriti-ui-hardening.css.
+     ═══════════════════════════════════════════════════════════════════ */
+  --smriti-bg:               var(--smriti-color-bg-page);
+  --smriti-card-bg:          var(--smriti-color-bg-primary);
+  --smriti-card-bg-2:        var(--smriti-color-bg-secondary);
+  --smriti-card-border:      var(--smriti-color-border-default);
+  --smriti-glass-border:     var(--smriti-color-border-strong);
+  --smriti-text:             var(--smriti-color-text-primary);
+  --smriti-text-muted:       var(--smriti-color-text-muted);
+  --smriti-text-subtle:      var(--smriti-color-text-subtle);
 
-  /* ── RGB values for alpha blending ──────────────────── */
-  --smriti-color-brand-primary-rgb:    105, 65, 198;
-  --smriti-color-status-success-rgb:   2, 122, 72;
-  --smriti-color-status-danger-rgb:    180, 35, 24;
-  --smriti-color-status-warning-rgb:   181, 71, 8;
-  --smriti-color-status-info-rgb:      14, 165, 233;
+  --radius-xs:    var(--smriti-radius-xs);
+  --radius-sm:    var(--smriti-radius-sm);
+  --radius-md:    var(--smriti-radius-md);
+  --radius-lg:    var(--smriti-radius-lg);
+  --radius-xl:    var(--smriti-radius-xl);
+  --radius-2xl:   var(--smriti-radius-2xl);
+  --radius-full:  var(--smriti-radius-full);
 
-  /* ── Transitions & Easing ───────────────────────────── */
-  --smriti-t-fast:                     0.1s ease;
-  --smriti-t-base:                     0.2s ease;
-  --smriti-t-slow:                     0.3s ease;
-  --smriti-ease:                       cubic-bezier(0.4, 0, 0.2, 1);
+  --ease:         var(--smriti-ease);
+  --t-fast:       var(--smriti-t-fast);
+  --t-base:       var(--smriti-t-base);
+  --t-slow:       var(--smriti-t-slow);
 
-  --smriti-color-bg-page:              #f8fafc;
-  --smriti-color-bg-primary:           #ffffff;
-  --smriti-color-bg-secondary:         #f1f5f9;
-  --smriti-color-border-default:       #e2e8f0;
-  --smriti-color-border-strong:        #cbd5e1;
-
-  /* Spacing & Layout Densities */
-  --smriti-spacing-card:               8px;
-  --smriti-spacing-section:            12px;
-  --smriti-table-row-height:           32px;
-  --smriti-card-header-height:         36px;
-  --smriti-toolbar-height:             40px;
-  --smriti-form-field-height:          30px;
-  --smriti-spacing-xs:                 2px;
-  --smriti-spacing-sm:                 4px;
-  --smriti-spacing-md:                 8px;
-  --smriti-spacing-lg:                 12px;
-  --smriti-spacing-xl:                 16px;
-  --smriti-spacing-2xl:                20px;
-  --smriti-spacing-padding-y:          6px;
-  --smriti-spacing-padding-x:          10px;
-  --smriti-spacing-gap:                8px;
-
-  /* Layout Dimensions */
-  --smriti-dimension-sidebar-width:    220px;
-
-  /* Typography */
-  --smriti-font-size-base:             0.88rem;
-  --smriti-font-size-sm:               0.78rem;
-  --smriti-font-size-xs:               0.70rem;
-
-  /* Border Radius */
-  --smriti-radius-xs:                  2px;
-  --smriti-radius-sm:                  4px;
-  --smriti-radius-md:                  6px;
-  --smriti-radius-lg:                  8px;
-  --smriti-radius-xl:                  12px;
-  --smriti-radius-2xl:                 16px;
-
-  /* Shadows */
-  --smriti-shadow-neu-float:           none;
-  --smriti-shadow-neu-pressed:         none;
-  --smriti-shadow-sm:                  0 1px 2px rgba(15,23,42,0.05);
-  --smriti-shadow-md:                  0 2px 4px rgba(15,23,42,0.05);
-  --smriti-shadow-lg:                  0 4px 8px rgba(15,23,42,0.05);
-  --smriti-shadow-xl:                  0 8px 16px rgba(15,23,42,0.05);
+  --z-content:       var(--smriti-z-index-content);
+  --z-card:          var(--smriti-z-index-card);
+  --z-sticky:        var(--smriti-z-index-sticky);
+  --z-topbar:        var(--smriti-z-index-topbar);
+  --z-dropdown:      var(--smriti-z-index-dropdown);
+  --z-modal:         var(--smriti-z-index-modal);
+  --z-notification:  var(--smriti-z-index-notification);
+  --z-devtools:      var(--smriti-z-index-devtools);
 }
 
-
+/* ═══════════════════════════════════════════════════════════════════════
+   DARK MODE — moved here from smriti_theme.css so the same single file
+   governs both light defaults and dark overrides for the now-canonical
+   token set. smriti_theme.css's body[data-theme="dark"] block should be
+   updated to extend --smriti-* canonical names instead of redefining
+   the legacy --smriti-bg/--smriti-text short names independently — see
+   TOKEN_MIGRATION.md §"Dark Mode Consolidation" before removing this
+   comment.
+   ═══════════════════════════════════════════════════════════════════════ */

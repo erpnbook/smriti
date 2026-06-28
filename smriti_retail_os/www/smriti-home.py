@@ -48,6 +48,7 @@ def get_context(context):
     context.base_template_path = "smriti_retail_os/templates/blank.html"
 
     context.cashier    = frappe.session.user
+    context.show_platform_admin = "System Manager" in roles or frappe.session.user == "Administrator"
     context.csrf_token = frappe.sessions.get_csrf_token() if getattr(frappe.local, "session_obj", None) else ""
     context.app_version = frappe.get_attr("smriti_retail_os.__version__")
 
