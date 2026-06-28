@@ -88,10 +88,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 .topbar-breadcrumbs span.sep { color:var(--text-sub); }
 .topbar-breadcrumbs span.active { color:var(--text); }
 .topbar-right { margin-left:auto; display:flex; align-items:center; gap:12px; }
-.topbar-badge { display:flex; align-items:center; gap:6px; padding:5px 12px; border-radius:99px; font-size:0.78rem; font-weight:700; background:var(--bg2); border:1px solid var(--border); }
-.topbar-badge.open { border-color:var(--smriti-color-status-success-glow); background:var(--smriti-color-status-success-bg); color:var(--success); }
-.topbar-badge.closed { border-color:var(--smriti-color-status-danger-glow); background:var(--smriti-color-status-danger-bg); color:var(--danger); }
-.topbar-badge .dot { width:6px; height:6px; border-radius:50%; background-color:currentColor; }
+
 
 /* Dashboard Container */
 .dashboard-container { flex:1; overflow-y:auto; padding:28px 32px; display:flex; flex-direction:column; gap:28px; }
@@ -571,7 +568,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 <script>
 // Standalone Control Center Scripts
 const CSRF_TOKEN = '{{ csrf_token }}';
-let loggedUser = '{{ cashier }}';
+let loggedUser = '{{ frappe.session.user or "Administrator" }}';
 let activeShift = null;
 
 document.getElementById('year').textContent = new Date().getFullYear();
@@ -659,37 +656,41 @@ function updateShiftUI() {
     const alerts = document.getElementById('alerts-feed');
 
     if (activeShift) {
-        badge.className = 'topbar-badge open';
-        badgeTxt.textContent = 'Shift Active';
-        termDiag.textContent = activeShift.pos_profile || 'Default Profile';
-        kpiProf.textContent = activeShift.pos_profile;
-        kpiProfFtr.textContent = `Opened: ${activeShift.period_start_date.split(' ')[1]}`;
+        if (badge) badge.className = 'shift-status-badge open';
+        if (badgeTxt) badgeTxt.textContent = 'Shift Active';
+        if (termDiag) termDiag.textContent = activeShift.pos_profile || 'Default Profile';
+        if (kpiProf) kpiProf.textContent = activeShift.pos_profile;
+        if (kpiProfFtr) kpiProfFtr.textContent = `Opened: ${activeShift.period_start_date.split(' ')[1]}`;
 
-        alerts.insertAdjacentHTML('afterbegin', `
-            <div class="alert-item warning">
-                <div class="alert-icon">🏪</div>
-                <div class="alert-content">
-                    Active cashier shift <strong>${activeShift.name}</strong> is live with profile <strong>${activeShift.pos_profile}</strong>.
-                    <div class="alert-time">Shift Status: Active</div>
+        if (alerts) {
+            alerts.insertAdjacentHTML('afterbegin', `
+                <div class="alert-item warning">
+                    <div class="alert-icon">🏪</div>
+                    <div class="alert-content">
+                        Active cashier shift <strong>${activeShift.name}</strong> is live with profile <strong>${activeShift.pos_profile}</strong>.
+                        <div class="alert-time">Shift Status: Active</div>
+                    </div>
                 </div>
-            </div>
-        `);
+            `);
+        }
     } else {
-        badge.className = 'topbar-badge closed';
-        badgeTxt.textContent = 'No Active Shift';
-        termDiag.textContent = 'None';
-        kpiProf.textContent = 'Inactive';
-        kpiProfFtr.textContent = 'Open shift in Shift Management';
+        if (badge) badge.className = 'shift-status-badge closed';
+        if (badgeTxt) badgeTxt.textContent = 'No Active Shift';
+        if (termDiag) termDiag.textContent = 'None';
+        if (kpiProf) kpiProf.textContent = 'Inactive';
+        if (kpiProfFtr) kpiProfFtr.textContent = 'Open shift in Shift Management';
 
-        alerts.insertAdjacentHTML('afterbegin', `
-            <div class="alert-item danger">
-                <div class="alert-icon">⚠️</div>
-                <div class="alert-content">
-                    No cashier shift is active! You must open a shift before checkout processes.
-                    <div class="alert-time">Action Required</div>
+        if (alerts) {
+            alerts.insertAdjacentHTML('afterbegin', `
+                <div class="alert-item danger">
+                    <div class="alert-icon">⚠️</div>
+                    <div class="alert-content">
+                        No cashier shift is active! You must open a shift before checkout processes.
+                        <div class="alert-time">Action Required</div>
+                    </div>
                 </div>
-            </div>
-        `);
+            `);
+        }
     }
 }
 

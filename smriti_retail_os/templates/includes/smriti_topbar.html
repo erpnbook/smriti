@@ -216,6 +216,37 @@
     height: 12px;
     color: var(--smriti-color-text-subtle);
 }
+
+/* ── Shift status pill ── */
+.shift-status-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--smriti-color-bg-secondary);
+    border: 1px solid var(--smriti-color-border-default);
+    border-radius: var(--smriti-radius-full);
+    padding: 3px 10px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--smriti-color-text-muted);
+    white-space: nowrap;
+}
+.shift-status-badge.open {
+    border-color: var(--smriti-color-status-success-border);
+    background: var(--smriti-color-status-success-bg);
+    color: var(--smriti-color-status-success);
+}
+.shift-status-badge.closed {
+    border-color: var(--smriti-color-status-danger-border);
+    background: var(--smriti-color-status-danger-bg);
+    color: var(--smriti-color-status-danger);
+}
+.shift-status-badge .dot {
+    width: 6px;
+    height: 6px;
+    background-color: currentColor;
+    border-radius: 50%;
+}
 </style>
 
 <header class="smriti-topbar" id="smriti-topbar">
@@ -238,6 +269,12 @@
 
     <!-- Actions -->
     <div class="topbar-actions">
+
+        <!-- Shift status pill -->
+        <div class="shift-status-badge closed" id="shift-badge">
+            <div class="dot"></div>
+            <span id="shift-badge-text">Checking Shift...</span>
+        </div>
 
         <!-- Live status -->
         <div class="topbar-status">
