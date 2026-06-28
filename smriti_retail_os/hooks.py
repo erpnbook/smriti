@@ -77,6 +77,8 @@ required_apps = ["frappe", "erpnext", "india_compliance"]
 
 # include js, css files in header of desk.html
 app_include_css = [
+    "/assets/smriti_retail_os/css/smriti_tokens.css",
+    "/assets/smriti_retail_os/css/smriti-ui-hardening.css",
     "/assets/smriti_retail_os/css/smriti_theme.css",
     "/assets/smriti_retail_os/css/smriti_sidebar.css",
     "/assets/smriti_retail_os/css/smriti_branding.css",
@@ -85,6 +87,9 @@ app_include_css = [
     "/assets/smriti_retail_os/css/smriti_desk_override.css",
 ]
 app_include_js = [
+    "/assets/smriti_retail_os/js/smriti_ui_resolver.js",
+    "/assets/smriti_retail_os/js/smriti_theme_manager.js",
+    "/assets/smriti_retail_os/js/smriti-ui-hardening.js",
     "/assets/smriti_retail_os/js/smriti_nav_config.js",
     "/assets/smriti_retail_os/js/smriti_sidebar.js",
     "/assets/smriti_retail_os/js/smriti_reports.js",

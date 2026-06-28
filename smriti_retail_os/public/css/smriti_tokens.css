@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file: smriti_retail_os/public/css/smriti_tokens.css
  * @description: SMRITI UI Configuration Engine — System Default Token Values.
  *               Single source of truth for all CSS Custom Property defaults.
@@ -253,13 +253,38 @@
   --z-notification:  var(--smriti-z-index-notification);
   --z-devtools:      var(--smriti-z-index-devtools);
 }
-
 /* ═══════════════════════════════════════════════════════════════════════
-   DARK MODE — moved here from smriti_theme.css so the same single file
-   governs both light defaults and dark overrides for the now-canonical
-   token set. smriti_theme.css's body[data-theme="dark"] block should be
-   updated to extend --smriti-* canonical names instead of redefining
-   the legacy --smriti-bg/--smriti-text short names independently — see
-   TOKEN_MIGRATION.md §"Dark Mode Consolidation" before removing this
-   comment.
+   DARK OVERRIDES — Canonical Design Tokens
    ═══════════════════════════════════════════════════════════════════════ */
+body[data-theme="dark"], body.dark-mode {
+  --smriti-color-bg-page:              #09090b; /* Solid zinc-950 slate-zinc black */
+  --smriti-color-bg-primary:           #18181b; /* Solid flat zinc-900 card */
+  --smriti-color-bg-secondary:         #27272a; /* Solid zinc-800 */
+  --smriti-color-border-default:       #27272a; /* Razor-thin zinc-800 border */
+  --smriti-color-border-strong:        #3f3f46;
+  --smriti-color-text-primary:         #f4f4f5; /* High legibility bright text */
+  --smriti-color-text-muted:           #a1a1aa; /* Crisp zinc-400 */
+  --smriti-color-text-subtle:          #52525b; /* Zinc-600 */
+
+  /* Neumorphic Shadow System - High-Contrast Dark Mode */
+  --smriti-shadow-neu-float:
+    6px  6px 14px  #020203,
+    -6px -6px 14px #27272a;
+
+  --smriti-shadow-neu-float-lg:
+    10px 10px 24px #010102,
+    -10px -10px 24px #303035;
+
+  --smriti-shadow-neu-pressed:
+    inset 6px  6px 12px #020203,
+    inset -6px -6px 12px #27272a;
+
+  --smriti-shadow-neu-pressed-sm:
+    inset 3px  3px 6px  #020203,
+    inset -3px -3px 6px #27272a;
+
+  --smriti-shadow-sm:  0 1px 3px rgba(0,0,0,.5);
+  --smriti-shadow-md:  0 4px 12px rgba(0,0,0,.6);
+  --smriti-shadow-lg:  0 12px 28px rgba(0,0,0,.7);
+  --smriti-shadow-xl:  0 24px 48px rgba(0,0,0,.8);
+}
