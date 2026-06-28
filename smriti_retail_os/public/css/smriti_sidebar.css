@@ -18,7 +18,7 @@
     left: 0;
     bottom: 0;
     width: var(--smriti-dimension-sidebar-width);
-    background: var(--smriti-color-bg-primary) !important;
+    background: var(--smriti-color-bg-page) !important;
     border-right: 1px solid var(--smriti-color-border-default) !important;
     display: flex;
     flex-direction: column;

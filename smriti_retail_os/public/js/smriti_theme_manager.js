@@ -149,6 +149,16 @@
         /* Apply profile_token_set class to body safely */
         if (typeof document !== "undefined" && document.body) {
             var body = document.body;
+            
+            /* Sync dark mode state */
+            if (config.mode === "dark") {
+                body.classList.add("dark-mode");
+                body.setAttribute("data-theme", "dark");
+            } else {
+                body.classList.remove("dark-mode");
+                body.removeAttribute("data-theme");
+            }
+
             var classesToRemove = [];
             for (var i = 0; i < body.classList.length; i++) {
                 var cls = body.classList.item(i);
