@@ -1,6 +1,6 @@
-﻿/**
+/**
  * @file: smriti_retail_os/public/css/smriti_tokens.css
- * @description: Handles user login, registration, and JWT token generation.
+ * @description: Single source of truth for all CSS Custom Property defaults.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
  * @version: 1.8.6
@@ -158,8 +158,36 @@
   --smriti-grid-cols-form:             repeat(auto-fill, minmax(240px, 1fr));
   --smriti-grid-cols-report:           1fr;
 
-  /* ── Z-Index ────────────────────────────────────────�
-s */
+  /* ── Z-Index ────────────────────────────────────────── */
+  --smriti-z-index-sidebar:            1000;
+  --smriti-z-index-sticky:             1020;
+  --smriti-z-index-topbar:             1000;
+  --smriti-z-index-modal:              9000;
+  --smriti-z-index-toast:              99999;
+  --smriti-z-index-devtools:           999999;
+  --smriti-z-index-content:            1;
+  --smriti-z-index-card:               2;
+
+  /* ── Bridge aliases and missing theme variables ────── */
+  --smriti-sidebar-width:              var(--smriti-dimension-sidebar-width, 260px);
+  --smriti-sidebar-collapsed-width:    var(--smriti-dimension-sidebar-collapsed-width, 68px);
+  --smriti-color-bg-overlay:           rgba(15, 23, 42, 0.6);
+  --smriti-color-brand-accent:         #f472b6;
+  --smriti-shadow-pos-floating:        0 20px 40px rgba(15, 23, 42, 0.3);
+
+  /* ── RGB values for alpha blending ──────────────────── */
+  --smriti-color-brand-primary-rgb:    105, 65, 198;
+  --smriti-color-status-success-rgb:   2, 122, 72;
+  --smriti-color-status-danger-rgb:    180, 35, 24;
+  --smriti-color-status-warning-rgb:   181, 71, 8;
+  --smriti-color-status-info-rgb:      14, 165, 233;
+
+  /* ── Transitions & Easing ───────────────────────────── */
+  --smriti-t-fast:                     0.1s ease;
+  --smriti-t-base:                     0.2s ease;
+  --smriti-t-slow:                     0.3s ease;
+  --smriti-ease:                       cubic-bezier(0.4, 0, 0.2, 1);
+
   --smriti-color-bg-page:              #f8fafc;
   --smriti-color-bg-primary:           #ffffff;
   --smriti-color-bg-secondary:         #f1f5f9;
