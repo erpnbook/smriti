@@ -93,7 +93,8 @@
       "fieldname": "idempotency_key",
       "fieldtype": "Data",
       "label": "Idempotency Key",
-      "unique": 1
+      "unique": 1,
+      "search_index": 1
     },
     {
       "fieldname": "dead_letter_reason",

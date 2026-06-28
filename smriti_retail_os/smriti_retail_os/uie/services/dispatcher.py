@@ -22,7 +22,6 @@ def dispatch_queue_item(queue_name):
 	queue_item.status = "Sending"
 	queue_item.last_attempt = datetime.datetime.now()
 	queue_item.save(ignore_permissions=True)
-	frappe.db.commit()
 
 	start_time = time.time()
 	success = False
@@ -33,7 +32,24 @@ def dispatch_queue_item(queue_name):
 	if integration.connector_type == "REST":
 		adapter = RestAdapter()
 	else:
-		frappe.throw(_("Unsupported connector type: {0}").format(integration.connector_type))
+		frappe.log_error(f"Unsupported connector type: {integration.connector_type}", "UIE Dispatch Error")
+		queue_item.status = "Dead-Letter"
+		queue_item.dead_letter_reason = f"Unsupported connector: {integration.connector_type}"
+		queue_item.save(ignore_permissions=True)
+		
+		# Log the failure in UIE Sync Log
+		log = frappe.get_doc({
+			"doctype": "SMRITI UIE Sync Log",
+			"timestamp": datetime.datetime.now(),
+			"queue_item": queue_item.name,
+			"request_payload": queue_item.payload,
+			"response_content": f"Unsupported connector: {integration.connector_type}",
+			"duration_ms": 0,
+			"http_status": 500,
+			"result": "Failed"
+		})
+		log.insert(ignore_permissions=True)
+		return False
 
 	try:
 		success, http_status, response_content = adapter.send(
@@ -73,7 +89,6 @@ def dispatch_queue_item(queue_name):
 		"result": "Success" if success else "Failed"
 	})
 	log.insert(ignore_permissions=True)
-	frappe.db.commit()
 
 	return success
 
@@ -81,13 +96,21 @@ import hashlib
 
 def enqueue_document_sync(doc, method=None):
 	"""Appends document payload to UIE Sync Queue for all enabled integrations."""
-	event_type = "SALE_CREATED"
-	if method == "on_cancel":
-		event_type = "SALE_CANCELLED"
+	DOCTYPE_EVENT_MAP = {
+		"Sales Invoice": {"on_submit": "SALE_CREATED", "on_cancel": "SALE_CANCELLED"},
+		"Purchase Order": {"on_submit": "PO_CREATED", "on_cancel": "PO_CANCELLED"},
+		"Payment Entry": {"on_submit": "PAYMENT_CREATED"}
+	}
+	method_str = method or "on_submit"
+	event_type = DOCTYPE_EVENT_MAP.get(doc.doctype, {}).get(
+		method_str, 
+		f"{doc.doctype.upper().replace(' ', '_')}_{method_str.upper()}"
+	)
+
 	integrations = frappe.get_all(
 		"SMRITI UIE Integration",
 		filters={"enabled": 1},
-		fields=["name", "priority"]
+		fields=["name", "priority", "mapping_rules", "schema_validator"]
 	)
 	if not integrations:
 		return
@@ -95,10 +118,8 @@ def enqueue_document_sync(doc, method=None):
 	from smriti_retail_os.smriti_retail_os.uie.services import payload_builder
 
 	for integration in integrations:
-		integration_doc = frappe.get_doc("SMRITI UIE Integration", integration.name)
-		
 		try:
-			payload = payload_builder.build_payload(doc, integration_doc)
+			payload = payload_builder.build_payload(doc, integration)
 		except Exception as ex:
 			frappe.log_error(f"UIE payload creation failed for {doc.name}: {str(ex)}")
 			continue

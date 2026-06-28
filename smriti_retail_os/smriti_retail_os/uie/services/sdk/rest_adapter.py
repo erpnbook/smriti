@@ -51,7 +51,8 @@ class RestAdapter(BaseAdapter):
 			auth_headers = self.authenticate(integration.credential)
 			headers.update(auth_headers)
 			
-		timeout = endpoint_doc.timeout or integration.timeout or 30
+		timeout_val = endpoint_doc.timeout or integration.timeout or 30
+		timeout = (5, timeout_val)
 		url = endpoint_doc.url
 		method = endpoint_doc.method or "POST"
 		payload_str = queue_item.payload or ""

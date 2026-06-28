@@ -5,8 +5,6 @@ smriti_retail_os.patches.v1_2_10.migrate_print_template_custom_fields
 smriti_retail_os.patches.v1_8_7.migrate_barcode_settings_to_standard
 smriti_retail_os.patches.v1_8_7.migrate_telemetry_event_to_standard
 
-
-
 [post_model_sync]
 # Patches added in this section will be executed after doctypes are migrated
 
@@ -38,4 +36,7 @@ smriti_retail_os.patches.seed_telemetry_meta
 
 # v3.0.0 — Seed SMRITI Customer Intelligence Graph Formulas
 smriti_retail_os.patches.seed_intelligence_formulas
-smriti_retail_os.patches.seed_intelligence_terms
+smriti_retail_os.patches.seed_intelligence_terms
+
+# v1.8.7 — UIE-001: Add idempotency key database index
+smriti_retail_os.patches.v1_8_7.add_idempotency_key_index

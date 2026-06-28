@@ -8,6 +8,7 @@
 <html lang="en">
 <head>
 {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+  <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_tokens.css">
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>SMRITI Retail OS — Setup Wizard</title>
@@ -31,12 +32,12 @@
       --accent-2:    var(--smriti-color-brand-primary);
       --accent-2-glow: var(--smriti-color-brand-light);
       
-      --success:     #10b981;
-      --warning:     #f59e0b;
-      --danger:      #ef4444;
-      --text-1:      #f8fafc;
-      --text-2:      #94a3b8;
-      --text-3:      #475569;
+      --success:     var(--smriti-color-status-success, #10b981);
+      --warning:     var(--smriti-color-status-warning, #f59e0b);
+      --danger:      var(--smriti-color-status-danger, #ef4444);
+      --text-1:      var(--smriti-color-text-primary, #f8fafc);
+      --text-2:      var(--smriti-color-text-muted, #94a3b8);
+      --text-3:      var(--smriti-color-text-subtle, #475569);
       
       --radius:      12px;
       --radius-lg:   24px;
@@ -245,7 +246,14 @@
       box-shadow: 0 0 0 3px var(--accent-glow);
       background: rgba(255, 255, 255, 0.01);
     }
-    select option { background: #111827; }
+    select option {
+      background: var(--bg-card);
+      color: var(--text-1);
+    }
+    input::placeholder {
+      color: var(--text-3);
+      opacity: 0.8;
+    }
 
     /* Banners & Alerts */
     .error-banner {
@@ -1146,6 +1154,13 @@
       consoleLogs.appendChild(line);
       consoleLogs.scrollTop = consoleLogs.scrollHeight;
     }
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.SMRITI && typeof SMRITI.initUIEngine === 'function') {
+            SMRITI.initUIEngine();
+        }
+    });
   </script>
 </body>
 </html>
