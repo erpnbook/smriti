@@ -1805,7 +1805,7 @@ def retry_print_job(job_id):
 def get_recent_print_jobs(limit=20):
     return frappe.get_all(
         "SMRITI Print Job",
-        fields=["job_id", "status", "template_name", "labels_count", "creation", "printer_ip"],
+        fields=["job_id", "status", "template_name", "print_qty as labels_count", "creation", "printer_ip"],
         order_by="creation desc",
         limit=cint(limit) or 20
     )

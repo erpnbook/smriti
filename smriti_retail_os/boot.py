@@ -187,6 +187,58 @@ def on_session_creation(login_manager):
         frappe.local.response["home_page"] = "/smriti"
 
 
+def _map_smriti_path(path):
+    """
+    Maps legacy/custom Desk route names to SMRITI standalone web routes.
+    Example: /app/smriti-barcode -> /barcode
+    """
+    clean = path
+    if clean.startswith("/app/"):
+        clean = clean[5:]
+    elif clean.startswith("/desk/"):
+        clean = clean[6:]
+
+    if clean.startswith("smriti-"):
+        clean = clean[7:]
+    elif clean.startswith("smriti_"):
+        clean = clean[7:]
+
+    if clean == "desk":
+        return "/smriti"
+    if clean == "psv-dashboard":
+        return "/smriti-psv-dashboard"
+
+    mapping = {
+        "barcode": "/barcode",
+        "shift": "/shift",
+        "billing": "/billing",
+        "inventory": "/inventory",
+        "purchase": "/purchase",
+        "reports": "/reports",
+        "backup": "/backup",
+        "customers": "/customers",
+        "suppliers": "/suppliers",
+        "payments": "/payments",
+        "sales-invoices": "/sales_invoices",
+        "sales_invoices": "/sales_invoices",
+        "sales-return": "/sales_return",
+        "sales_return": "/sales_return",
+        "supplier-returns": "/supplier_returns",
+        "supplier_returns": "/supplier_returns",
+        "purchase-invoice": "/purchase_invoice",
+        "purchase_invoice": "/purchase_invoice",
+        "purchase-receipt": "/purchase_receipt",
+        "purchase_receipt": "/purchase_receipt",
+        "delivery-challan": "/delivery_challan",
+        "delivery_challan": "/delivery_challan",
+    }
+
+    if clean in mapping:
+        return mapping[clean]
+
+    return f"/{clean}"
+
+
 def check_desk_access():
     """
     before_request hook — fires on every request.
@@ -227,12 +279,10 @@ def check_desk_access():
             return  # Authenticated user, non-protected file — pass through
 
         # ─── SMRITI Policy: Redirect legacy /desk/smriti-* and /app/smriti-* to dedicated standalone routes
-        if path.startswith("/desk/smriti-"):
-            new_path = path.replace("/desk/", "/", 1)
-            raise werkzeug.routing.exceptions.RequestRedirect(new_path)
-        if path.startswith("/app/smriti-"):
-            new_path = path.replace("/app/", "/", 1)
-            raise werkzeug.routing.exceptions.RequestRedirect(new_path)
+        if path.startswith(("/desk/smriti-", "/desk/smriti_")):
+            raise werkzeug.routing.exceptions.RequestRedirect(_map_smriti_path(path))
+        if path.startswith(("/app/smriti-", "/app/smriti_")):
+            raise werkzeug.routing.exceptions.RequestRedirect(_map_smriti_path(path))
 
         # ─── SMRITI Policy: Redirect PSV Enablement shortcut paths to SMRITI Help Tab
         if path in ("/app/knowledge-center/psv", "/app/enablement/psv", "/knowledge-center/psv", "/enablement/psv") or path.startswith(("/app/knowledge-center/psv/", "/app/enablement/psv/", "/knowledge-center/psv/", "/enablement/psv/")):
