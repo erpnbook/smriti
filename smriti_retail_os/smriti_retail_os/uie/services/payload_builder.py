@@ -5,11 +5,14 @@
 import frappe
 import json
 
-def build_payload(doc, integration_doc):
-	"""Maps and validates the payload for a given document and integration schema."""
+def build_payload(doc, integration):
+	"""Maps and validates the payload for a given document and integration schema.
+	Accepts either a SMRITI UIE Integration document or a dict/Row containing mapping_rules and schema_validator.
+	"""
 	doc_dict = doc.as_dict()
 
-	mapping_rules = integration_doc.mapping_rules
+	# Support both document object and dictionary/Row safely without triggering N+1 database queries
+	mapping_rules = integration.get("mapping_rules") if isinstance(integration, dict) else getattr(integration, "mapping_rules", None)
 	if mapping_rules:
 		try:
 			rules = json.loads(mapping_rules)
@@ -34,7 +37,7 @@ def build_payload(doc, integration_doc):
 		payload_str = json.dumps(doc_dict, default=str)
 
 	# Validate against JSON schema if defined
-	schema_validator = integration_doc.schema_validator
+	schema_validator = integration.get("schema_validator") if isinstance(integration, dict) else getattr(integration, "schema_validator", None)
 	if schema_validator:
 		try:
 			schema = json.loads(schema_validator)
