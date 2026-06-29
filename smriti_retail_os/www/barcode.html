@@ -1,4 +1,4 @@
-﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/barcode.html
   @description: SMRITI Label Studio — Widescreen 3-panel control desk (Zero system chrome)
@@ -4407,7 +4407,11 @@ async function downloadPRN() {
             return;
         }
 
-        const blob = new Blob([prnContent], { type: 'text/plain' });
+        if (prnContent.fallback_used) {
+            toast('Warning: Built-in default template was used as a fallback for some items.', 'warning');
+        }
+
+        const blob = new Blob([prnContent.prn || prnContent], { type: 'text/plain' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -4549,13 +4553,17 @@ async function executeDirectLANPrint(checkedItems, template, ip, port, totalQty)
             throw new Error('No print payload generated.');
         }
 
+        if (prnContent.fallback_used) {
+            toast('Warning: Built-in default template was used as a fallback for some items.', 'warning');
+        }
+
         toast(`Queueing print job (${totalQty} labels)...`, 'info');
         const res = await api('smriti_retail_os.barcode_api.enqueue_print_job', {
             template_name: template || 'Built-in Default',
             printer_ip: ip,
             printer_port: port,
             labels_count: totalQty,
-            payload: prnContent
+            payload: prnContent.prn || prnContent
         });
 
         if (res && res.job_id) {
@@ -4599,6 +4607,10 @@ async function executeDirectUSBPrint(checkedItems, template, usbPrinter, totalQt
             throw new Error('No print payload generated.');
         }
         
+        if (prnContent.fallback_used) {
+            toast('Warning: Built-in default template was used as a fallback for some items.', 'warning');
+        }
+        
         toast(`Sending print job to local printer '${usbPrinter}' via QZ Tray...`, 'info');
         const config = qz.configs.create(usbPrinter);
         
@@ -4606,7 +4618,7 @@ async function executeDirectUSBPrint(checkedItems, template, usbPrinter, totalQt
             type: 'raw',
             format: 'command',
             flavor: 'plain',
-            data: prnContent
+            data: prnContent.prn || prnContent
         }]);
         
         toast(`Successfully sent ${totalQty} labels to printer '${usbPrinter}'`, 'success');
