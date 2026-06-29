@@ -77,6 +77,13 @@
   --smriti-color-brand-accent:         #b54708;   /* Warning-adjacent accent used by POS cards (was orphaned) */
   --smriti-color-brand-primary-rgb:    105, 65, 198;
   --smriti-color-brand-accent-rgb:     181, 71, 8;
+  --smriti-navy:                       #1A2B5C;
+  --smriti-blue:                       #2563EB;
+  --smriti-blue-dark:                  #1D4ED8;
+
+  --smriti-color-primary:              var(--smriti-blue);
+  --smriti-color-primary-hover:        var(--smriti-blue-dark);
+  --smriti-color-primary-active:       var(--smriti-navy);
 
   /* ── Color: Borders ─────────────────────────────────────────────── */
   --smriti-color-border-default:       #e2e8f0;   /* Standard border */

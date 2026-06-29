@@ -43,30 +43,6 @@
  */
 
 
-/* ═══════════════════════════════════════════════════════════════════
-   SECTION 1 — Z-INDEX CUSTOM PROPERTIES
-   ═══════════════════════════════════════════════════════════════════ */
-:root {
-  /* Namespaced variables */
-  --smriti-z-index-content:      1;
-  --smriti-z-index-card:         10;
-  --smriti-z-index-sticky:       100;
-  --smriti-z-index-topbar:       200;
-  --smriti-z-index-dropdown:     5000;
-  --smriti-z-index-modal:        10000;
-  --smriti-z-index-notification: 15000;
-  --smriti-z-index-devtools:     99999;
-
-  /* Legacy aliases for backward compatibility */
-  --z-content:       var(--smriti-z-index-content);
-  --z-card:          var(--smriti-z-index-card);
-  --z-sticky:        var(--smriti-z-index-sticky);
-  --z-topbar:        var(--smriti-z-index-topbar);
-  --z-dropdown:      var(--smriti-z-index-dropdown);
-  --z-modal:         var(--smriti-z-index-modal);
-  --z-notification:  var(--smriti-z-index-notification);
-  --z-devtools:      var(--smriti-z-index-devtools);
-}
 
 
 /* ═══════════════════════════════════════════════════════════════════

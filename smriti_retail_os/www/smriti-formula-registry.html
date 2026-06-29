@@ -539,7 +539,7 @@
                      data-category="{{ f.formula_category }}"
                      data-name="{{ f.formula_name | lower }}"
                      data-meaning="{{ f.business_meaning | lower }}"
-                     onclick="openDrawer({{ f | as_json | force_escape }})">
+                     onclick="openDrawer({{ f | json | forceescape }})">
                     <div class="card-header">
                         <div class="formula-meta">
                             <span class="formula-id">{{ f.formula_id }}</span>

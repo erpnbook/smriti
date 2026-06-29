@@ -13,8 +13,8 @@
 .navbar.navbar-default,
 .main-bar,
 .navbar-header {
-    background-color: #1A2B5C !important;
-    border-bottom: 2px solid #2563EB !important;
+    background-color: var(--smriti-color-primary-active) !important;
+    border-bottom: 2px solid var(--smriti-color-primary) !important;
 }
 
 .navbar .navbar-nav > li > a,
@@ -44,14 +44,14 @@
 
 /* Module list — SMRITI color accent */
 .module-box:hover {
-    border-color: #2563EB !important;
+    border-color: var(--smriti-color-primary) !important;
 }
 
 /* Primary buttons — SMRITI blue */
 .btn-primary {
-    background-color: #2563EB !important;
-    border-color: #1D4ED8 !important;
+    background-color: var(--smriti-color-primary) !important;
+    border-color: var(--smriti-color-primary-hover) !important;
 }
 .btn-primary:hover {
-    background-color: #1D4ED8 !important;
+    background-color: var(--smriti-color-primary-hover) !important;
 }

@@ -471,13 +471,13 @@ body.popout-mode .popout-toolbar {
 
 /* ── Theme Pill Bar (standalone sidebar) — added v1.9.2 ── */
 .smriti-standalone-theme-bar {
-    display: flex;
-    gap: 4px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
     padding: 6px 8px;
     background: rgba(0, 0, 0, 0.04);
     border-radius: 8px;
     margin: 6px 8px;
-    flex-wrap: wrap;
 }
 
 .smriti-standalone-theme-pill {
@@ -515,8 +515,9 @@ body.popout-mode .popout-toolbar {
 
 /* Hide pill labels in collapsed sidebar — show emoji only */
 #app.sidebar-collapsed .smriti-standalone-theme-bar {
+    display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
     margin: 4px 4px;
     padding: 4px;
 }
@@ -524,6 +525,10 @@ body.popout-mode .popout-toolbar {
 #app.sidebar-collapsed .smriti-standalone-theme-pill {
     padding: 4px;
     font-size: 12px;
+}
+
+#app.sidebar-collapsed .smriti-standalone-theme-pill .theme-label {
+    display: none;
 }
 
 /* Top navigation layout — hide pills (not enough space) */

@@ -708,8 +708,12 @@ body.theme-minimalist .smriti-side-theme-pill.active {
     padding: var(--smriti-spacing-xs) var(--smriti-spacing-xs);
 }
 
-#smriti-sidebar.collapsed .smriti-side-theme-pill span {
+#smriti-sidebar.collapsed .smriti-side-theme-pill .theme-emoji {
     font-size: var(--smriti-font-size-base); /* show only emoji in collapsed state */
+}
+
+#smriti-sidebar.collapsed .smriti-side-theme-pill .theme-label {
+    display: none;
 }
 
 

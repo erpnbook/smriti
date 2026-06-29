@@ -24,8 +24,6 @@
   --smriti-accent:       var(--accent-color, #0e7490);
   --smriti-bg-dark:      var(--bg-color, #f9fafb);
   --smriti-bg-card:      var(--card-bg, #ffffff);
-  --smriti-text:         var(--text-color, var(--smriti-color-text-primary));
-  --smriti-text-muted:   var(--text-muted, var(--smriti-color-text-muted));
   --smriti-border:       var(--border-color, #e4e7ec);
 }
 

@@ -1,7 +1,6 @@
 /* ── Reset & Variables ────────────────────────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 :root {
-    color-scheme: only light;
     --bg:         var(--smriti-color-bg-page);
     --bg2:        var(--smriti-color-bg-secondary);
     --card:       var(--smriti-color-bg-primary);

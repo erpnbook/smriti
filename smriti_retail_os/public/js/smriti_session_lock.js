@@ -439,9 +439,17 @@ const SmritiSessionLock = (() => {
 })();
 
 // Auto-init on billing pages with 5-min default
-if (typeof frappe !== 'undefined') {
+if (typeof frappe !== 'undefined' && typeof frappe.ready === 'function') {
     frappe.ready(() => {
         // Only activate on billing/POS pages, not admin pages
+        const route = window.location.pathname;
+        const isBillingPage = route.includes('/billing') || route.includes('smriti-billing');
+        if (isBillingPage) {
+            SmritiSessionLock.init({ idleMinutes: 5 });
+        }
+    });
+} else {
+    document.addEventListener('DOMContentLoaded', () => {
         const route = window.location.pathname;
         const isBillingPage = route.includes('/billing') || route.includes('smriti-billing');
         if (isBillingPage) {

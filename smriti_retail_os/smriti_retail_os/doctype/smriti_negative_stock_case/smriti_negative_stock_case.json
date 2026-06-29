@@ -1,0 +1,196 @@
+{
+ "actions": [],
+ "creation": "2026-06-29 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "company",
+  "warehouse",
+  "item_code",
+  "negative_qty",
+  "reason_code",
+  "status",
+  "requested_by",
+  "approved_by",
+  "approval_timestamp",
+  "approval_comment",
+  "approval_action",
+  "approval_level",
+  "matched_policy",
+  "matched_scope",
+  "decision",
+  "approval_reference",
+  "psv_checked",
+  "psv_selected",
+  "recovery_reference",
+  "explanation"
+ ],
+ "fields": [
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "label": "Item Code",
+   "options": "Item",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "negative_qty",
+   "fieldtype": "Float",
+   "label": "Negative Qty",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "reason_code",
+   "fieldtype": "Link",
+   "label": "Reason Code",
+   "options": "SMRITI Negative Stock Reason"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Open\nPending Approval\nApproved\nRejected\nRecovered\nClosed",
+   "default": "Open",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "requested_by",
+   "fieldtype": "Link",
+   "label": "Requested By",
+   "options": "User"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User"
+  },
+  {
+   "fieldname": "approval_timestamp",
+   "fieldtype": "Datetime",
+   "label": "Approval Timestamp"
+  },
+  {
+   "fieldname": "approval_comment",
+   "fieldtype": "Small Text",
+   "label": "Approval Comment"
+  },
+  {
+   "fieldname": "approval_action",
+   "fieldtype": "Select",
+   "label": "Approval Action",
+   "options": "Approve\nReject"
+  },
+  {
+   "fieldname": "approval_level",
+   "fieldtype": "Select",
+   "label": "Approval Level",
+   "options": "None\nStore Manager"
+  },
+  {
+   "fieldname": "matched_policy",
+   "fieldtype": "Link",
+   "label": "Matched Policy",
+   "options": "SMRITI Negative Stock Policy"
+  },
+  {
+   "fieldname": "matched_scope",
+   "fieldtype": "Select",
+   "label": "Matched Scope",
+   "options": "Global\nCompany\nWarehouse\nItem Group\nItem"
+  },
+  {
+   "fieldname": "decision",
+   "fieldtype": "Select",
+   "label": "Decision",
+   "options": "Block\nWarn\nAllow + Reason"
+  },
+  {
+   "fieldname": "approval_reference",
+   "fieldtype": "Data",
+   "label": "Approval Reference"
+  },
+  {
+   "default": "0",
+   "fieldname": "psv_checked",
+   "fieldtype": "Check",
+   "label": "PSV Checked"
+  },
+  {
+   "fieldname": "psv_selected",
+   "fieldtype": "Link",
+   "label": "PSV Selected Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "recovery_reference",
+   "fieldtype": "Link",
+   "label": "Recovery Reference",
+   "options": "SMRITI Negative Stock Recovery"
+  },
+  {
+   "fieldname": "explanation",
+   "fieldtype": "Text",
+   "label": "Explanation"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-06-29 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Negative Stock Case",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  },
+  {
+   "role": "SMRITI Store Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1,
+   "share": 1,
+   "export": 1,
+   "print": 1,
+   "email": 1,
+   "report": 1
+  }
+ ],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "custom": 0
+}

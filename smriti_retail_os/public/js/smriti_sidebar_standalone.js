@@ -282,16 +282,16 @@ SMRITI.renderFlexibleSidebar = async function(activePageId) {
 
             <div class="smriti-standalone-theme-bar" id="smriti-standalone-theme-bar">
                 <button class="smriti-standalone-theme-pill ${_pillActive('hybrid-light')}" data-theme="hybrid-light" title="Tactile Hybrid — spacious classic look" onclick="SMRITI.switchThemeFromPill(event)">
-                    <span>🎛️ Hybrid</span>
+                    <span class="theme-emoji">🎛️</span><span class="theme-label">Hybrid</span>
                 </button>
                 <button class="smriti-standalone-theme-pill ${_pillActive('minimalist')}" data-theme="minimalist" title="Clean Minimalist — maximum content focus" onclick="SMRITI.switchThemeFromPill(event)">
-                    <span>🖥️ Minimal</span>
+                    <span class="theme-emoji">🖥️</span><span class="theme-label">Minimal</span>
                 </button>
                 <button class="smriti-standalone-theme-pill ${_pillActive('sleek-compact')}" data-theme="sleek-compact" title="Sleek Compact — high-density operational" onclick="SMRITI.switchThemeFromPill(event)">
-                    <span>⚡ Sleek</span>
+                    <span class="theme-emoji">⚡</span><span class="theme-label">Sleek</span>
                 </button>
                 <button class="smriti-standalone-theme-pill ${_pillActive('hybrid-dark')}" data-theme="hybrid-dark" title="Dark Mode — night-shift & low-light" onclick="SMRITI.switchThemeFromPill(event)">
-                    <span>🌙 Dark</span>
+                    <span class="theme-emoji">🌙</span><span class="theme-label">Dark</span>
                 </button>
             </div>
 

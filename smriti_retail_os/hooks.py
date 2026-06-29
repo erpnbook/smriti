@@ -327,7 +327,8 @@ doc_events = {
         ]
     },
     "Purchase Receipt": {
-        "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details"
+        "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
+        "on_submit": "smriti_retail_os.negative_stock.service.hooks.handle_transaction_submit"
     },
     "Purchase Invoice": {
         "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details"
@@ -352,8 +353,14 @@ doc_events = {
     },
     "Stock Entry": {
         # PSV-F1-FIX: top-level psv_integration module (not the inner smriti_retail_os/smriti_retail_os/ stub)
-        "on_submit": "smriti_retail_os.psv_integration.handle_sales_return_submit",
+        "on_submit": [
+            "smriti_retail_os.psv_integration.handle_sales_return_submit",
+            "smriti_retail_os.negative_stock.service.hooks.handle_transaction_submit"
+        ],
         "on_cancel": "smriti_retail_os.psv_integration.handle_sales_return_cancel"
+    },
+    "Stock Reconciliation": {
+        "on_submit": "smriti_retail_os.negative_stock.service.hooks.handle_transaction_submit"
     },
     "Quotation": {
         "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details"
@@ -442,6 +449,7 @@ scheduler_events = {
         "smriti_retail_os.api.trial_operations_api.check_trial_health",
         "smriti_retail_os.api.trial_operations_api.cleanup_failed_provisioning",
         "smriti_retail_os.tasks.daily_telemetry_cleanup",
+        "smriti_retail_os.negative_stock.service.recovery_service.SMRITINegativeStockRecoveryService.run_scheduler_safety_net"
     ],
     "cron": {
         "*/30 * * * *": [
@@ -588,6 +596,10 @@ website_route_rules = [
     {"from_route": "/item-master",       "to_route": "item_master"},       # www/item_master.html
     {"from_route": "/credit-notes",      "to_route": "sales_invoices"},    # www/sales_invoices.html (credit note mode)
     {"from_route": "/psv-dashboard",     "to_route": "psv-dashboard"},     # www/psv-dashboard.html
+    {"from_route": "/smriti-psv-dashboard", "to_route": "psv-dashboard"},  # www/psv-dashboard.html (SMRITI-branded route)
+    {"from_route": "/smriti-sidebar", "to_route": "smriti-home"},          # redirect sidebar templates
+    {"from_route": "/smriti_sidebar", "to_route": "smriti-home"},          # redirect sidebar templates
+    {"from_route": "/sidebar",        "to_route": "smriti-home"},          # redirect sidebar templates
     {"from_route": "/psv-opening-balance","to_route": "psv-opening-balance"}, # www/psv-opening-balance.html
     {"from_route": "/release-notes",          "to_route": "release_notes"},       # www/release_notes.html
     {"from_route": "/support",                 "to_route": "smriti_support"},       # www/smriti_support.html

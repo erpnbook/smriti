@@ -391,16 +391,16 @@ SMRITI._buildSidebarDOM = function(active_page, shift) {
             
             <div class="smriti-side-theme-toggle-bar">
                 <button class="smriti-side-theme-pill ${pillActive('hybrid-light')}" data-style="hybrid-light" title="Tactile Neumorphic Hybrid — spacious classic look">
-                    <span>🎛️ Hybrid</span>
+                    <span class="theme-emoji">🎛️</span><span class="theme-label">Hybrid</span>
                 </button>
                 <button class="smriti-side-theme-pill ${pillActive('minimalist')}" data-style="minimalist" title="Clean Minimalist — maximum content focus">
-                    <span>🖥️ Minimal</span>
+                    <span class="theme-emoji">🖥️</span><span class="theme-label">Minimal</span>
                 </button>
                 <button class="smriti-side-theme-pill ${pillActive('sleek-compact')}" data-style="sleek-compact" title="Sleek Compact — high-density, benchmark-aligned">
-                    <span>⚡ Sleek</span>
+                    <span class="theme-emoji">⚡</span><span class="theme-label">Sleek</span>
                 </button>
                 <button class="smriti-side-theme-pill ${pillActive('hybrid-dark')}" data-style="hybrid-dark" title="Dark Mode — night-shift & low-light">
-                    <span>🌙 Dark</span>
+                    <span class="theme-emoji">🌙</span><span class="theme-label">Dark</span>
                 </button>
             </div>
  

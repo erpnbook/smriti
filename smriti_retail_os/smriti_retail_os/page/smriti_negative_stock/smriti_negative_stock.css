@@ -1,0 +1,244 @@
+/* SMRITI Negative Stock Management CSS Stylesheet */
+
+.smriti-ns-container {
+    padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1e293b;
+    background-color: #f8fafc;
+    min-height: 100vh;
+}
+
+.smriti-ns-header {
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 16px;
+}
+
+.smriti-ns-header h2 {
+    color: #1A2B5C;
+    margin: 0;
+    font-weight: 700;
+    font-size: 24px;
+}
+
+.smriti-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    border: 1px solid #e2e8f0;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.smriti-card h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #1A2B5C;
+    font-size: 18px;
+    font-weight: 600;
+    border-left: 4px solid #2563EB;
+    padding-left: 8px;
+}
+
+.smriti-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+}
+
+.smriti-form-group {
+    margin-bottom: 16px;
+}
+
+.smriti-form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 14px;
+    color: #475569;
+}
+
+.smriti-form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: #ffffff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.smriti-form-control:focus {
+    outline: none;
+    border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.smriti-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+    border: 1px solid transparent;
+}
+
+.smriti-btn:active {
+    transform: scale(0.98);
+}
+
+.smriti-btn-primary {
+    background-color: #2563EB;
+    color: #ffffff;
+}
+
+.smriti-btn-primary:hover {
+    background-color: #1d4ed8;
+}
+
+.smriti-btn-success {
+    background-color: #10b981;
+    color: #ffffff;
+}
+
+.smriti-btn-success:hover {
+    background-color: #059669;
+}
+
+.smriti-btn-danger {
+    background-color: #ef4444;
+    color: #ffffff;
+}
+
+.smriti-btn-danger:hover {
+    background-color: #dc2626;
+}
+
+.smriti-btn-secondary {
+    background-color: #f1f5f9;
+    color: #334155;
+    border-color: #e2e8f0;
+}
+
+.smriti-btn-secondary:hover {
+    background-color: #e2e8f0;
+}
+
+.smriti-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+}
+
+.smriti-table th, .smriti-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 13px;
+}
+
+.smriti-table th {
+    background-color: #f1f5f9;
+    color: #475569;
+    font-weight: 600;
+}
+
+.smriti-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.smriti-badge-open { background-color: #e0f2fe; color: #0369a1; }
+.smriti-badge-pending { background-color: #fef3c7; color: #92400e; }
+.smriti-badge-approved { background-color: #dcfce7; color: #166534; }
+.smriti-badge-rejected { background-color: #fee2e2; color: #991b1b; }
+.smriti-badge-recovered { background-color: #ecfdf5; color: #047857; }
+.smriti-badge-closed { background-color: #f1f5f9; color: #475569; }
+
+.smriti-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.smriti-metric-card {
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+}
+
+.smriti-metric-val {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1A2B5C;
+    margin-bottom: 4px;
+}
+
+.smriti-metric-label {
+    font-size: 12px;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+/* Detail Drawer Slider */
+.smriti-drawer {
+    position: fixed;
+    top: 0;
+    right: -450px;
+    width: 450px;
+    height: 100vh;
+    background: #ffffff;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+    transition: right 0.3s ease-in-out;
+    z-index: 1050;
+    padding: 24px;
+    overflow-y: auto;
+    border-left: 1px solid #e2e8f0;
+}
+
+.smriti-drawer.open {
+    right: 0;
+}
+
+.smriti-drawer-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.3);
+    z-index: 1040;
+    display: none;
+}
+
+.smriti-drawer-backdrop.open {
+    display: block;
+}
+
+.smriti-explain-markdown {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    color: #334155;
+}

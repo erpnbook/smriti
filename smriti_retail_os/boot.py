@@ -203,7 +203,7 @@ def _map_smriti_path(path):
     elif clean.startswith("smriti_"):
         clean = clean[7:]
 
-    if clean == "desk":
+    if clean in ("desk", "sidebar"):
         return "/smriti"
     if clean == "psv-dashboard":
         return "/smriti-psv-dashboard"
@@ -283,6 +283,10 @@ def check_desk_access():
             raise werkzeug.routing.exceptions.RequestRedirect(_map_smriti_path(path))
         if path.startswith(("/app/smriti-", "/app/smriti_")):
             raise werkzeug.routing.exceptions.RequestRedirect(_map_smriti_path(path))
+
+        # ─── SMRITI Policy: Redirect sidebar template pages direct access to home
+        if path in ("/smriti-sidebar", "/smriti_sidebar", "/sidebar", "/app/sidebar", "/desk/sidebar"):
+            raise werkzeug.routing.exceptions.RequestRedirect("/smriti")
 
         # ─── SMRITI Policy: Redirect PSV Enablement shortcut paths to SMRITI Help Tab
         if path in ("/app/knowledge-center/psv", "/app/enablement/psv", "/knowledge-center/psv", "/enablement/psv") or path.startswith(("/app/knowledge-center/psv/", "/app/enablement/psv/", "/knowledge-center/psv/", "/enablement/psv/")):
