@@ -37,6 +37,18 @@ def get_categories(search_txt=None):
     )
     return categories
 
+def _ensure_root_item_group():
+    if not frappe.db.exists("Item Group", "All Item Groups"):
+        root = frappe.get_doc({
+            "doctype": "Item Group",
+            "item_group_name": "All Item Groups",
+            "is_group": 1,
+            "parent_item_group": ""
+        })
+        root.insert(ignore_permissions=True)
+        frappe.db.commit()
+
+
 @frappe.whitelist()
 def create_category(category_name, parent_category=None, is_group=0):
     """
@@ -44,6 +56,7 @@ def create_category(category_name, parent_category=None, is_group=0):
     Enforces SMRITI Store Manager or System Manager role check.
     """
     check_manager_permission()
+    _ensure_root_item_group()
     
     if not category_name or not category_name.strip():
         frappe.throw(_("Category Name is required."))

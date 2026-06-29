@@ -2036,11 +2036,25 @@ def create_udne_doctypes():
             frappe.log_error(f"Error creating SMRITI Numbering Audit Log DocType: {str(e)}")
 
 
+def _seed_root_item_group():
+    """Ensure ERPNext root Item Group exists for SMRITI Category Master."""
+    if not frappe.db.exists("Item Group", "All Item Groups"):
+        frappe.get_doc({
+            "doctype": "Item Group",
+            "item_group_name": "All Item Groups",
+            "is_group": 1,
+            "parent_item_group": ""
+        }).insert(ignore_permissions=True)
+        frappe.db.commit()
+        print("[SMRITI] Created root Item Group: All Item Groups")
+
+
 def setup_smriti_retail_os():
     """
     Initializes custom fields, roles, and workspaces for standard DocTypes
     to extend ERPNext for SMRITI Retail OS.
     """
+    _seed_root_item_group()
     # 00. Provision SMRITI roles first to prevent dependency issues in custom DocTypes
     for role_name in ["SMRITI Cashier", "SMRITI Store Manager", "SMRITI Administrator", "SMRITI Marketing Manager", "SMRITI Auditor"]:
         if not frappe.db.exists("Role", role_name):

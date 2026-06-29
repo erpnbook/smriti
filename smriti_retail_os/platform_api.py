@@ -169,16 +169,23 @@ def trigger_backup(backup_type="all"):
             backup_files_only = True
             
         if backup_type == "all":
-            odb = new_backup(with_files=True)
+            odb = new_backup(ignore_files=False, force=True)
         elif backup_files_only:
-            odb = new_backup(with_files=True, backup_db=False)
+            odb = new_backup(ignore_files=False, force=True)
         else:
-            odb = new_backup(with_files=False)
+            odb = new_backup(ignore_files=True, force=True)
             
+        data = {
+            "backup_path_db": odb.backup_path_db,
+            "backup_path_files": getattr(odb, "backup_path_files", None),
+            "backup_path_private_files": getattr(odb, "backup_path_private_files", None),
+            "backup_path_conf": getattr(odb, "backup_path_conf", None)
+        }
+        
         return {
             "success": True,
             "message": _("Backup created successfully!"),
-            "data": odb
+            "data": data
         }
     except Exception as e:
         frappe.log_error(f"Platform Center Backup Error: {str(e)}")
@@ -424,8 +431,7 @@ def execute_restore(file_name, confirm_text, password):
     from frappe.utils.backups import new_backup
     pre_backup_path = ""
     try:
-        generator = new_backup(with_files=True, force=True)
-        generator.get_backup(force=True)
+        generator = new_backup(ignore_files=False, force=True)
         pre_backup_path = os.path.basename(generator.backup_path_db)
         print(f"[Platform Center] Pre-restore backup created: {pre_backup_path}")
     except Exception as e:
