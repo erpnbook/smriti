@@ -141,14 +141,14 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         ]
         
         # Generate PRN - should support lookup by either "TEST_ZPL_TEMPLATE" or "Test ZPL Template"
-        prn_data = generate_prn(items=json.dumps(items_payload), template_name="TEST_ZPL_TEMPLATE")
+        prn_data = generate_prn(items=json.dumps(items_payload), template_name="TEST_ZPL_TEMPLATE").get("prn")
         self.assertEqual(prn_data.count("^XA"), 2)
         self.assertEqual(prn_data.count("^XZ"), 2)
         self.assertIn("Bronze Loafer Shoe", prn_data)
         self.assertIn("499", prn_data)
 
         # Verify fallback by template_title
-        prn_data_fallback = generate_prn(items=json.dumps(items_payload), template_name=template_name)
+        prn_data_fallback = generate_prn(items=json.dumps(items_payload), template_name=template_name).get("prn")
         self.assertEqual(prn_data_fallback.count("^XA"), 2)
         self.assertIn("Bronze Loafer Shoe", prn_data_fallback)
 
@@ -179,7 +179,7 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         ]
         
         # Generate PRN
-        prn_data = generate_prn(items=json.dumps(items_payload), template_name="TEST_TSPL_TEMPLATE")
+        prn_data = generate_prn(items=json.dumps(items_payload), template_name="TEST_TSPL_TEMPLATE").get("prn")
         
         self.assertEqual(prn_data.count("SIZE 50 mm, 25 mm"), 1)
         self.assertEqual(prn_data.count("PRINT 1,1"), 1)
@@ -220,7 +220,7 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
             }
         ]
         
-        prn_data = generate_prn(items=json.dumps(items_payload), template_name="TEST_MAPPINGS_TEMPLATE")
+        prn_data = generate_prn(items=json.dumps(items_payload), template_name="TEST_MAPPINGS_TEMPLATE").get("prn")
         self.assertIn("TATTLY BRAND", prn_data)
         self.assertNotIn("{my_custom_token}", prn_data)
 

@@ -438,6 +438,22 @@ def get_item_print_details(item_code, default_print_qty):
 # PRN GENERATION — TEMPLATE-DRIVEN
 # ---------------------------------------------------------------------------
 
+import re
+
+def _safe_template_substitute(template, token_dict):
+    """
+    Replaces only known {placeholder} tokens; leaves any other
+    literal { or } in the template untouched instead of raising.
+    """
+    if not template:
+        return ""
+    def _replace(match):
+        key = match.group(1)
+        return str(token_dict.get(key, match.group(0)))
+    pattern = r"\{(" + "|".join(re.escape(k) for k in token_dict.keys()) + r")\}"
+    return re.sub(pattern, _replace, template)
+
+
 @frappe.whitelist()
 def generate_prn(items, template_name=None):
     """
@@ -466,10 +482,15 @@ def generate_prn(items, template_name=None):
         {purchase_class}— Purchase Class (FW/MFW/LFW etc.)
     """
     if not items:
-        return ""
+        return {
+            "prn": "",
+            "fallback_used": False,
+            "fallback_items": [],
+        }
 
     items_list = frappe.parse_json(items)
     prn_output = []
+    used_fallback_for = []
 
     # --- Try to load custom template from DB ---
     db_template = None
@@ -587,11 +608,12 @@ def generate_prn(items, template_name=None):
                                     
                             token_dict[lbl_f] = str(val) if val is not None else ""
 
-                label_str = raw.format(**token_dict)
+                label_str = _safe_template_substitute(raw, token_dict)
                 for _ in range(qty):
                     prn_output.append(label_str)
                 continue
             except Exception as e:
+                used_fallback_for.append(item_code)
                 frappe.log_error(
                     f"PRN template substitution failed for '{template_name}': {e}",
                     "Barcode API"
@@ -703,7 +725,11 @@ def generate_prn(items, template_name=None):
         for _ in range(qty):
             prn_output.append(label_zpl)
 
-    return "\n".join(prn_output)
+    return {
+        "prn": "\n".join(prn_output),
+        "fallback_used": bool(used_fallback_for),
+        "fallback_items": used_fallback_for,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -728,7 +754,8 @@ def send_to_network_printer(items, template_name=None, printer_ip=None, printer_
     if not printer_ip:
         frappe.throw(_("Printer IP address is required for LAN printing."))
 
-    prn_data = generate_prn(items, template_name=template_name)
+    res = generate_prn(items, template_name=template_name)
+    prn_data = res.get("prn") if isinstance(res, dict) else res
     if not prn_data:
         frappe.throw(_("No PRN data generated. Check items and template."))
 

@@ -497,9 +497,15 @@ class SmritiBarcodeController {
             },
             callback: function(r) {
                 if (r.message) {
+                    if (r.message.fallback_used) {
+                        frappe.show_alert({
+                            message: __('Some labels used the default template — your custom template had an issue.'),
+                            indicator: 'orange'
+                        });
+                    }
                     frappe.msgprint({
                         title: __('Zebra ZPL / PRN Preview'),
-                        message: `<pre style="background:#1f2937; color:#10b981; padding:15px; border-radius:6px; font-family:monospace; max-height:300px; overflow-y:auto;">${r.message}</pre>`,
+                        message: `<pre style="background:#1f2937; color:#10b981; padding:15px; border-radius:6px; font-family:monospace; max-height:300px; overflow-y:auto;">${r.message.prn}</pre>`,
                         wide: true
                     });
                 }
@@ -527,7 +533,13 @@ class SmritiBarcodeController {
             freeze_message: __("Generating ZPL PRN file..."),
             callback: function(r) {
                 if (r.message) {
-                    me.download_prn_file(r.message);
+                    if (r.message.fallback_used) {
+                        frappe.show_alert({
+                            message: __('Some labels used the default template — your custom template had an issue.'),
+                            indicator: 'orange'
+                        });
+                    }
+                    me.download_prn_file(r.message.prn);
                 }
             }
         });
