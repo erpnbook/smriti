@@ -49,7 +49,15 @@ def get_context(context):
 
     context.cashier    = frappe.session.user
     context.show_platform_admin = "System Manager" in roles or frappe.session.user == "Administrator"
-    context.csrf_token = frappe.sessions.get_csrf_token() if getattr(frappe.local, "session_obj", None) else ""
+    csrf_token = None
+    if getattr(frappe.local, "session_obj", None):
+        try:
+            csrf_token = frappe.sessions.get_csrf_token()
+        except Exception:
+            pass
+    if not csrf_token and hasattr(frappe.local, "session") and getattr(frappe.local.session, "data", None):
+        csrf_token = frappe.local.session.data.get("csrf_token")
+    context.csrf_token = csrf_token or ""
     context.app_version = frappe.get_attr("smriti_retail_os.__version__")
 
     return context

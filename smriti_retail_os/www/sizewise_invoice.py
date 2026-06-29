@@ -16,7 +16,15 @@ def get_context(context):
         frappe.local.flags.redirect_location = '/login'
         raise frappe.Redirect
 
-    context.csrf_token = frappe.sessions.get_csrf_token()
+    csrf_token = None
+    if getattr(frappe.local, "session_obj", None):
+        try:
+            csrf_token = frappe.sessions.get_csrf_token()
+        except Exception:
+            pass
+    if not csrf_token and hasattr(frappe.local, "session") and getattr(frappe.local.session, "data", None):
+        csrf_token = frappe.local.session.data.get("csrf_token")
+    context.csrf_token = csrf_token or ""
     context.cashier = frappe.session.user
     context.no_cache = True
     return context

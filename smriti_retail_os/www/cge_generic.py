@@ -78,7 +78,15 @@ def get_context(context):
     context.show_sidebar    = False
     context.base_template_path = "smriti_retail_os/templates/blank.html"
 
-    context.csrf_token = frappe.sessions.get_csrf_token()
+    csrf_token = None
+    if getattr(frappe.local, "session_obj", None):
+        try:
+            csrf_token = frappe.sessions.get_csrf_token()
+        except Exception:
+            pass
+    if not csrf_token and hasattr(frappe.local, "session") and getattr(frappe.local.session, "data", None):
+        csrf_token = frappe.local.session.data.get("csrf_token")
+    context.csrf_token = csrf_token or ""
     context.user = frappe.session.user
     context.is_admin = 1 if (frappe.session.user == "Administrator" or "Administrator" in roles) else 0
     

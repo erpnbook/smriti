@@ -24,7 +24,15 @@ def get_context(context):
 
     context.no_cache = 1
     context.title = "SMRITI Knowledge Studio"
-    context.csrf_token = frappe.sessions.get_csrf_token() if getattr(frappe.local, "session_obj", None) else ""
+    csrf_token = None
+    if getattr(frappe.local, "session_obj", None):
+        try:
+            csrf_token = frappe.sessions.get_csrf_token()
+        except Exception:
+            pass
+    if not csrf_token and hasattr(frappe.local, "session") and getattr(frappe.local.session, "data", None):
+        csrf_token = frappe.local.session.data.get("csrf_token")
+    context.csrf_token = csrf_token or ""
     context.base_template_path = "smriti_retail_os/templates/blank.html"
     context.no_header = True
     context.no_breadcrumbs = True
