@@ -97,7 +97,8 @@ ERPNext handles the transaction engine — accounting, inventory, GST, complianc
 
 ```bash
 # 1. Clone and start
-git clone https://github.com/erpnbook/smriti.git
+git clone https://github.com/erpnbook/smriti-docker.git smriti_retail
+cd smriti_retail
 docker compose up -d
 
 # 2. Install app
