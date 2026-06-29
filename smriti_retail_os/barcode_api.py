@@ -394,10 +394,33 @@ def get_item_print_details(item_code, default_print_qty):
                 color = attr.attribute_value
                 break
 
-    # 5. Style / Article Number (item_code prefix before first hyphen)
-    style = item_code
-    if "-" in style:
-        style = style.split("-")[0]
+    # 5. Style / Article Number — 4-step resolution priority:
+    #    Step 1: variant_of (ERP Variant parent template item)
+    #    Step 2: Explicit custom_style_code field
+    #    Step 3: Explicit style_no field
+    #    Step 4: SKU parsing — prefix before first hyphen (last resort)
+    style = item_doc.get("variant_of") or ""
+
+    if not style:
+        if item_doc.meta.has_field("custom_style_code"):
+            style = item_doc.get("custom_style_code") or ""
+
+    if not style:
+        if item_doc.meta.has_field("style_no"):
+            style = item_doc.get("style_no") or ""
+
+    if not style:
+        style = item_code.split("-")[0] if "-" in item_code else item_code
+
+    # Explicit style_code — stored field value (no resolution chain)
+    style_code = (
+        item_doc.get("custom_style_code")
+        or item_doc.get("style_no")
+        or ""
+    )
+
+    # variant_template — direct ERP variant parent
+    variant_template = item_doc.get("variant_of") or ""
 
     # 6. Packing Date
     pkd_date = datetime.datetime.now().strftime("%m/%y")
@@ -419,6 +442,8 @@ def get_item_print_details(item_code, default_print_qty):
         "size": size,
         "color": color,
         "style": style,
+        "style_code": style_code,
+        "variant_template": variant_template,
         "pkd_date": pkd_date,
         "pack_size": flt(pack_size) if pack_size else None,
         # Custom Footwear Attributes
