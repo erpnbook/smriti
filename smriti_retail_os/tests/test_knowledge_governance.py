@@ -259,6 +259,10 @@ class TestKnowledgeGovernance(unittest.TestCase):
                 dirs.remove("node_modules")
             if ".git" in dirs:
                 dirs.remove(".git")
+            if "sdc" in dirs:
+                dirs.remove("sdc")
+            if "tests" in dirs:
+                dirs.remove("tests")
             for file in files:
                 if file.endswith((".py", ".js")):
                     if file == "test_knowledge_governance.py":

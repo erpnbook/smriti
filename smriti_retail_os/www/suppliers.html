@@ -1,4 +1,4 @@
-﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/suppliers.html
   @description: SMRITI Supplier Registry — Standalone UI (Zero system chrome)
@@ -487,7 +487,16 @@ function api(method, params = {}) {
         },
         body: JSON.stringify(params)
     })
-    .then(r => r.json())
+    .then(r => {
+        if (!r.ok) {
+            return r.json().then(d => {
+                throw new Error(d._error_message || d.exception || d.exc || `HTTP error! status: ${r.status}`);
+            }).catch(() => {
+                throw new Error(`HTTP error! status: ${r.status}`);
+            });
+        }
+        return r.json();
+    })
     .then(d => {
         if (d.exc) throw new Error(d._error_message || d.exc);
         return d.message;
