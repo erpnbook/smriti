@@ -10,14 +10,6 @@
 <head>
 {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
 <!-- SMRITI TOKEN LOADER EXTENSION: page-level overrides -->
-<style>
-:root {
-    --smriti-c1-dark-green: var(--smriti-c1-dark-green);
-    --smriti-c1-dark-red: var(--smriti-c1-dark-red);
-    --smriti-c1-dark-indigo: var(--smriti-c1-dark-indigo);
-    --smriti-c1-gray-400: var(--smriti-c1-gray-400);
-}
-</style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SMRITI Billing Terminal</title>
@@ -524,9 +516,9 @@ tbody tr:last-child td { border-bottom: none; }
     animation: toast-in 0.3s ease;
     box-shadow: 0 8px 24px var(--smriti-color-overlay-sm);
 }
-.toast.success { background: var(--smriti-c1-dark-green); border: 1px solid var(--smriti-color-status-success-glow); }
-.toast.error   { background: var(--smriti-c1-dark-red); border: 1px solid var(--glow-danger-md); }
-.toast.info    { background: var(--smriti-c1-dark-indigo); border: 1px solid var(--glow-brand-lg); }
+.toast.success { background: var(--smriti-color-status-success); border: 1px solid var(--smriti-color-status-success-glow); }
+.toast.error   { background: var(--smriti-color-status-danger); border: 1px solid var(--glow-danger-md); }
+.toast.info    { background: var(--smriti-color-brand-primary); border: 1px solid var(--glow-brand-lg); }
 .toast span { font-size: 20px; }
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 
@@ -2295,7 +2287,7 @@ async function previewPdtImport() {
 function renderPdtPreviewTable(rows) {
     const tbody = document.getElementById('pdt-preview-tbody');
     const srcIcon = { pdt: '†', item_master: '★', default: '○', not_found: '?' };
-    const srcColor = { pdt: 'var(--smriti-color-brand-light)', item_master: 'var(--smriti-color-status-warning)', default: 'var(--smriti-color-status-success-light)', not_found: 'var(--smriti-c1-gray-400)' };
+    const srcColor = { pdt: 'var(--smriti-color-brand-light)', item_master: 'var(--smriti-color-status-warning)', default: 'var(--smriti-color-status-success-light)', not_found: 'var(--smriti-color-border-strong)' };
 
     let validCount = 0, errorCount = 0;
 

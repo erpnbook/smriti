@@ -10,14 +10,7 @@
 <head>
 {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
 <!-- SMRITI TOKEN LOADER EXTENSION: page-level overrides -->
-<style>
-:root {
-    --smriti-c1-dark-green: var(--smriti-c1-dark-green);
-    --smriti-c1-dark-red: var(--smriti-c1-dark-red);
-    --smriti-c1-dark-indigo: var(--smriti-c1-dark-indigo);
-}
-</style>
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SMRITI Product Digital Twin Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -180,9 +173,9 @@
     /* Toast Container */
     .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 99999; }
     .toast { padding: 12px 18px; border-radius: var(--radius); font-size: 0.88rem; font-weight: 600; color: white; min-width: 240px; display: flex; align-items: center; gap: 10px; animation: toast-in 0.3s ease; box-shadow: var(--shadow); }
-    .toast.success { background: var(--smriti-c1-dark-green); border: 1px solid var(--smriti-color-status-success-glow); }
-    .toast.error   { background: var(--smriti-c1-dark-red); border: 1px solid var(--glow-danger-md); }
-    .toast.info    { background: var(--smriti-c1-dark-indigo); border: 1px solid var(--glow-brand-lg); }
+    .toast.success { background: var(--smriti-color-status-success); border: 1px solid var(--smriti-color-status-success-glow); }
+    .toast.error   { background: var(--smriti-color-status-danger); border: 1px solid var(--glow-danger-md); }
+    .toast.info    { background: var(--smriti-color-brand-primary); border: 1px solid var(--glow-brand-lg); }
     @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 
     /* Explain Tooltip Button */
