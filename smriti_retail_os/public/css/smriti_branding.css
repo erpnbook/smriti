@@ -20,7 +20,7 @@
 
 /* ----- Design Tokens mapped to Frappe Native Theme variables ----- */
 :root {
-  --smriti-primary:      var(--primary-color, #6941c6);
+  --smriti-primary:      var(--primary-color, var(--smriti-color-brand-primary));
   --smriti-accent:       var(--accent-color, #0e7490);
   --smriti-bg-dark:      var(--bg-color, #f9fafb);
   --smriti-bg-card:      var(--card-bg, #ffffff);
