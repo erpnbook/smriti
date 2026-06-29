@@ -216,7 +216,7 @@ async function syncPendingInvoices() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Frappe-CSRF-Token': invoice.csrf || 'fetch'
+                    'X-Frappe-CSRF-Token': invoice.csrf || ''
                 },
                 body: JSON.stringify({ payload: invoice.payload })
             });
@@ -244,6 +244,33 @@ async function syncPendingInvoices() {
                         data: { url: '/billing' }
                     });
                 }
+            } else if (response.status === 401 || response.status === 403) {
+                // Session expired or CSRF stale — invoice preserved in queue
+                const logTx = db.transaction('sync_log', 'readwrite');
+                await idbAdd(logTx.objectStore('sync_log'), {
+                    action: 'invoice_sync_auth_failed',
+                    detail: `Invoice ${invoice.id} — session expired (HTTP ${response.status}). Open SMRITI to refresh.`,
+                    timestamp: Date.now()
+                });
+                if (self.registration.showNotification) {
+                    await self.registration.showNotification('SMRITI — Session Expired ⚠️', {
+                        body: 'Pending bills could not sync. Open SMRITI to complete.',
+                        icon: '/assets/smriti_retail_os/images/icon-192.png',
+                        tag: 'csrf-expired',
+                        requireInteraction: true,
+                        data: { url: '/billing' }
+                    });
+                }
+                break; // All subsequent invoices will also fail auth — stop loop
+            } else {
+                // Other server errors (500, 422, etc.) — keep in queue, log
+                const logTx = db.transaction('sync_log', 'readwrite');
+                await idbAdd(logTx.objectStore('sync_log'), {
+                    action: 'invoice_sync_error',
+                    detail: `Invoice ${invoice.id} sync failed — HTTP ${response.status}`,
+                    timestamp: Date.now()
+                });
+                // Continue loop — next invoice may succeed
             }
         } catch (err) {
             console.error('[SMRITI SW v2] Invoice sync failed:', invoice.id, err);
