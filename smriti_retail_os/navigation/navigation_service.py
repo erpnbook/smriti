@@ -23,8 +23,7 @@ CANONICAL_NAV = {
                 { "id": "scheme_creator", "label": "Scheme Creator", "route": "/scheme-creator", "standalone_route": "/scheme-creator", "status": "active" },
                 { "id": "cge_studio", "label": "CGE Studio", "route": "/smriti-cge", "standalone_route": "/smriti-cge", "status": "hidden" },
                 { "id": "customers", "label": "Customers", "route": "/customers", "standalone_route": "/customers", "status": "active" },
-                { "id": "suppliers", "label": "Suppliers", "route": "/suppliers", "standalone_route": "/suppliers", "status": "active" },
-                { "id": "sizewise_item", "label": "Sizewise Item CRUD", "route": "/sizewise_item", "standalone_route": "/sizewise_item", "status": "active" }
+                { "id": "suppliers", "label": "Suppliers", "route": "/suppliers", "standalone_route": "/suppliers", "status": "active" }
             ]
         },
         {
@@ -75,7 +74,6 @@ CANONICAL_NAV = {
                 { "id": "clienteling", "label": "Clienteling Studio", "route": "/smriti-clienteling", "standalone_route": "/smriti-clienteling", "status": "active" },
                 { "id": "sales_orders", "label": "Sales Orders", "route": "/sales-orders", "standalone_route": "/sales-orders", "status": "active" },
                 { "id": "tax_invoice", "label": "Tax Invoice", "route": "/sales-invoices", "standalone_route": "/sales-invoices", "status": "active" },
-                { "id": "sizewise_invoice", "label": "Sizewise Invoice", "route": "/sizewise_invoice", "standalone_route": "/sizewise_invoice", "status": "active" },
                 { "id": "sales_return", "label": "Sales Return", "route": "/sales-returns", "standalone_route": "/sales-returns", "status": "active" },
                 { "id": "delivery_challan", "label": "Delivery Challan", "route": "/delivery-challans", "standalone_route": "/delivery-challans", "status": "active" },
                 { "id": "credit_notes", "label": "Credit Notes", "route": "/sales-invoices", "standalone_route": "/sales-invoices", "status": "active" },
@@ -103,9 +101,18 @@ CANONICAL_NAV = {
                 { "id": "stock_operations", "label": "Stock Operations", "route": "/inventory-ops", "standalone_route": "/inventory-ops", "status": "active" },
                 { "id": "stock_transfer", "label": "Stock Transfer", "route": "/inventory?tab=transfer", "standalone_route": "/inventory?tab=transfer", "status": "active" },
                 { "id": "stock_adjustments", "label": "Stock Adjustments", "route": "/inventory?tab=adjustments", "standalone_route": "/inventory?tab=adjustments", "status": "active" },
-                { "id": "stock_audit", "label": "Stock Audit", "route": "/stock-audit", "standalone_route": "/stock-audit", "status": "active" },
-                { "id": "barcode_center", "label": "Barcode Center", "route": "/barcode-center", "standalone_route": "/barcode-center", "status": "active" },
-                { "id": "print_templates", "label": "Print Templates", "route": "/print-templates", "standalone_route": "/print-templates", "status": "active" }
+                { "id": "stock_audit", "label": "Stock Audit", "route": "/stock-audit", "standalone_route": "/stock-audit", "status": "active" }
+            ]
+        },
+        {
+            "id": "barcode_studio",
+            "label": "Barcode Studio",
+            "status": "active",
+            "items": [
+                { "id": "label_studio", "label": "Label Studio", "route": "/barcode", "standalone_route": "/barcode", "status": "active" },
+                { "id": "print_templates", "label": "Print Templates", "route": "/print-templates", "standalone_route": "/print-templates", "status": "active" },
+                { "id": "sizewise_item", "label": "Sizewise Item CRUD", "route": "/sizewise_item", "standalone_route": "/sizewise_item", "status": "active" },
+                { "id": "sizewise_invoice", "label": "Sizewise Invoice", "route": "/sizewise_invoice", "standalone_route": "/sizewise_invoice", "status": "active" }
             ]
         },
         {
