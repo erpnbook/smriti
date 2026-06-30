@@ -266,7 +266,7 @@
 
         /* Normalize legacy keys */
         if (themeKey === "hybrid")    themeKey = "hybrid-light";
-        if (themeKey === "smriti-default") themeKey = "hybrid-light";
+        if (themeKey === "smriti-default") themeKey = "sleek-compact";
 
         if (validKeys.indexOf(themeKey) === -1) {
             console.warn("[SMRITI Theme Manager] Invalid theme key:", themeKey,
@@ -314,7 +314,7 @@
     /* ═══════════════════════════════════════════════════════════════════
        SMRITI.getCurrentTheme()
        Returns the currently active theme key from localStorage.
-       Defaults to 'hybrid-light' if not set.
+       Defaults to 'sleek-compact' if not set (THEME-005, Founder Approved 2026-06-24).
        Used by sidebar theme pills to sync active state.
     ═══════════════════════════════════════════════════════════════════ */
     SMRITI.getCurrentTheme = function () {
@@ -322,14 +322,14 @@
             /* Fallback reads from resolver's DEFAULT_THEME_PROFILE — single source of truth.
              * SMRITI.getDefaultTheme() is set to "sleek-compact" per THEME-005 (Founder Approved 2026-06-24).
              * If resolver hasn't loaded yet, fall back to "hybrid-light" as a safe guard. */
-            var _default = (SMRITI.getDefaultTheme && SMRITI.getDefaultTheme()) || "hybrid-light";
+            var _default = (SMRITI.getDefaultTheme && SMRITI.getDefaultTheme()) || "sleek-compact";
             var raw = localStorage.getItem("smriti-theme-style") || _default;
             /* Normalise legacy aliases */
             if (raw === "hybrid")         raw = "hybrid-light";
             if (raw === "smriti-default") raw = _default;
             return raw;
         } catch (e) {
-            return (SMRITI.getDefaultTheme && SMRITI.getDefaultTheme()) || "hybrid-light";
+            return (SMRITI.getDefaultTheme && SMRITI.getDefaultTheme()) || "sleek-compact";
         }
     };
 
