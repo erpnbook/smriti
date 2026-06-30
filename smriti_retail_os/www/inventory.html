@@ -64,6 +64,15 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--smriti-c
 .topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--smriti-color-text-muted); }
 .topbar-breadcrumbs span.sep { color:var(--smriti-color-text-subtle); }
 .topbar-breadcrumbs span.active { color:var(--smriti-color-text-primary); }
+.topbar-breadcrumbs a.breadcrumb-link {
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+.topbar-breadcrumbs a.breadcrumb-link:hover {
+    color: var(--smriti-color-brand-primary);
+    text-decoration: underline;
+}
 .topbar-tabs { display:flex; gap:4px; margin-left:24px; }
 .tab-btn { padding:6px 14px; border-radius:var(--smriti-radius-sm); font-size:12px; font-weight:700; border:1px solid var(--smriti-color-border-strong); background:transparent; color:var(--smriti-color-text-muted); cursor:pointer; transition:all var(--smriti-t-base); display:flex; align-items:center; gap:5px; }
 .tab-btn span { font-size:16px; }
@@ -169,7 +178,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--smriti-c
         <!-- Topbar -->
         <div class="topbar">
             <div class="topbar-breadcrumbs">
-                <span>SMRITI</span>
+                <a href="/smriti" class="breadcrumb-link">SMRITI</a>
                 <span class="sep">/</span>
                 <span class="active">Inventory Operations</span>
             </div>

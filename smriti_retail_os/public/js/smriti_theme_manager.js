@@ -341,10 +341,7 @@
     ═══════════════════════════════════════════════════════════════════ */
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", function () {
-            /* Only auto-init if Frappe is not present (standalone pages) */
-            if (!window.frappe) {
-                SMRITI.initUIEngine();
-            }
+            SMRITI.initUIEngine();
         });
     }
 

@@ -70,3 +70,11 @@ body {
     overflow-y: auto;
 }
 </style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        if (window.SMRITI && typeof SMRITI.initUIEngine === "function") {
+            SMRITI.initUIEngine();
+        }
+    });
+</script>
