@@ -31,14 +31,14 @@ DATASET_REGISTRY = {
                 pi.customer,
                 pi.customer_name,
                 pi.company,
-                pi.warehouse,
-                pi.cashier,
+                pi.set_warehouse                AS warehouse,
+                pi.owner                        AS cashier,
                 pi.grand_total,
                 pi.net_total                    AS taxable_amount,
                 pi.total_taxes_and_charges      AS tax_amount,
                 COALESCE(pi.discount_amount, 0) AS discount_amount,
                 pi.total_qty                    AS qty_sold,
-                pi.mode_of_payment,
+                COALESCE(pi.cash_bank_account, 'Cash') AS mode_of_payment,
                 pi.is_return,
                 pi.pos_profile
             FROM `tabPOS Invoice` pi
@@ -46,10 +46,10 @@ DATASET_REGISTRY = {
         """,
         "filter_map": {
             "company":    "pi.company = %(company)s",
-            "warehouse":  "pi.warehouse = %(warehouse)s",
+            "warehouse":  "pi.set_warehouse = %(warehouse)s",
             "from_date":  "pi.posting_date >= %(from_date)s",
             "to_date":    "pi.posting_date <= %(to_date)s",
-            "cashier":    "pi.cashier = %(cashier)s",
+            "cashier":    "pi.owner = %(cashier)s",
             "is_return":  "pi.is_return = %(is_return)s",
         },
         "group_by_candidates": [
@@ -70,8 +70,8 @@ DATASET_REGISTRY = {
             SELECT
                 pi.posting_date,
                 pi.company,
-                pi.warehouse,
-                pi.cashier,
+                pi.set_warehouse                AS warehouse,
+                pi.owner                        AS cashier,
                 ii.item_code,
                 ii.item_name,
                 ii.item_group,
@@ -89,12 +89,12 @@ DATASET_REGISTRY = {
         """,
         "filter_map": {
             "company":     "pi.company = %(company)s",
-            "warehouse":   "pi.warehouse = %(warehouse)s",
+            "warehouse":   "pi.set_warehouse = %(warehouse)s",
             "from_date":   "pi.posting_date >= %(from_date)s",
             "to_date":     "pi.posting_date <= %(to_date)s",
             "item_group":  "ii.item_group = %(item_group)s",
             "brand":       "ii.brand = %(brand)s",
-            "cashier":     "pi.cashier = %(cashier)s",
+            "cashier":     "pi.owner = %(cashier)s",
         },
         "group_by_candidates": [
             "posting_date", "item_code", "item_group", "brand",

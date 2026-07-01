@@ -89,9 +89,11 @@ window.SASGrid = (function () {
               <span ref="eMenu" class="ag-header-icon ag-header-cell-menu-button"></span>
               <div ref="eLabel" class="ag-header-cell-label" role="presentation">
                 <span ref="eText" class="ag-header-cell-text" role="columnheader"></span>
-                <span ref="eSortOrder" class="ag-header-icon ag-sort-order"></span>
-                <span ref="eSortAsc" class="ag-header-icon ag-sort-ascending-icon"></span>
-                <span ref="eSortDesc" class="ag-header-icon ag-sort-descending-icon"></span>
+                <span ref="eFilter" class="ag-header-icon ag-header-label-icon ag-filter-icon ag-hidden"></span>
+                <span ref="eSortOrder" class="ag-header-icon ag-header-label-icon ag-sort-order ag-hidden"></span>
+                <span ref="eSortAsc" class="ag-header-icon ag-header-label-icon ag-sort-ascending-icon ag-hidden"></span>
+                <span ref="eSortDesc" class="ag-header-icon ag-header-label-icon ag-sort-descending-icon ag-hidden"></span>
+                <span ref="eSortNone" class="ag-header-icon ag-header-label-icon ag-sort-none-icon ag-hidden"></span>
                 <span class="sas-explain-btn" title="Explain this field"
                   onclick="SASExplain.open('${col.field}')"
                   style="cursor:pointer;font-size:13px;opacity:0.6;margin-left:4px;color:var(--sas-accent)">ⓘ</span>
@@ -316,17 +318,31 @@ window.SASGrid = (function () {
     container.innerHTML = '';
     const cols = gridApi.getColumns() || [];
     cols.forEach(col => {
-      const colDef = col.getColDef();
-      const item = document.createElement('div');
-      item.className = 'sas-col-chooser-item';
-      item.innerHTML = `
-        <input type="checkbox" id="col-${col.getColId()}" ${col.isVisible() ? 'checked' : ''}>
-        <label for="col-${col.getColId()}">${colDef.headerName || col.getColId()}</label>
-      `;
-      item.querySelector('input').addEventListener('change', (e) => {
-        gridApi.setColumnVisible(col.getColId(), e.target.checked);
-      });
-      container.appendChild(item);
+      try {
+        const colDef = col.getColDef() || {};
+        const colId = col.getColId() || '';
+        const item = document.createElement('div');
+        item.className = 'sas-col-chooser-item';
+        item.innerHTML = `
+          <input type="checkbox" id="col-${colId}" ${col.isVisible() ? 'checked' : ''}>
+          <label for="col-${colId}">${colDef.headerName || colId}</label>
+        `;
+        const input = item.querySelector('input');
+        if (!input) {
+          console.warn('[SASGrid] Column chooser querySelector failed for column:', {
+            id: colId,
+            headerName: colDef.headerName,
+            visible: col.isVisible()
+          });
+          return;
+        }
+        input.addEventListener('change', (e) => {
+          gridApi.setColumnVisible(colId, e.target.checked);
+        });
+        container.appendChild(item);
+      } catch (err) {
+        console.error('[SASGrid] Error processing column in chooser:', err, col);
+      }
     });
   }
 

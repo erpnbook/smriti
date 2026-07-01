@@ -36,4 +36,11 @@ def get_context(context):
     # Available currencies
     context.currency_symbol = frappe.db.get_single_value("System Settings", "currency") or "INR"
 
+    # CSRF token — required by smriti_ui_resolver.js frappe.call() shim
+    # The shim reads window.csrf_token (global.csrf_token) on L71
+    try:
+        context.csrf_token = frappe.local.session.data.csrf_token or ""
+    except Exception as e:
+        context.csrf_token = f"ERROR: {str(e)}"
+
     return context
