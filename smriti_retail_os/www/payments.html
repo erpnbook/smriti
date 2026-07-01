@@ -165,6 +165,7 @@ select.form-control option { background:var(--card); }
 .empty-state .material-symbols-outlined { font-size:48px; margin-bottom:12px; display:block; color:var(--text-sub); }
 </style>
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+<script src="/assets/smriti_retail_os/js/smriti_print_modal.js"></script>
 </head>
 <body>
 <script>
@@ -591,7 +592,7 @@ function closeDrawer() {
 function printPayment() {
     if (!activePaymentDoc) return;
     const url = `/api/method/frappe.utils.print_format.download_pdf?doctype=Payment%20Entry&name=${encodeURIComponent(activePaymentDoc.name)}&format=Standard`;
-    window.open(url, '_blank');
+    SmritiPrint.open(url, 'Payment Entry');
 }
 
 // ─── New Payment Modal ────────────────────────────────────────────────────────
