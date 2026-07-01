@@ -1,0 +1,39 @@
+{
+  "_meta": {
+    "generated_by": "bench --site smriti_retail execute smriti_retail_os.analytics_studio.sas_service.get_srs_report_list_for_sas",
+    "generated_at": "2026-07-01T11:25:40Z",
+    "site": "smriti_retail",
+    "total_categories": 5,
+    "total_reports": 19
+  },
+  "Accounting": [
+    {"report_key": "cash_book",            "report_name": "SMRITI Cash Book",                       "dataset_key": null,       "has_chart": true, "has_kpi": false, "explain_enabled": true},
+    {"report_key": "customer_outstanding", "report_name": "SMRITI Customer Outstanding Book",        "dataset_key": null,       "has_chart": true, "has_kpi": false, "explain_enabled": true},
+    {"report_key": "day_book",             "report_name": "SMRITI Day Book",                         "dataset_key": null,       "has_chart": true, "has_kpi": false, "explain_enabled": true},
+    {"report_key": "payment_register",     "report_name": "SMRITI Payment Register",                 "dataset_key": null,       "has_chart": true, "has_kpi": false, "explain_enabled": true},
+    {"report_key": "receipt_register",     "report_name": "SMRITI Receipt Register",                 "dataset_key": null,       "has_chart": true, "has_kpi": false, "explain_enabled": true},
+    {"report_key": "supplier_outstanding", "report_name": "SMRITI Supplier Outstanding Book",        "dataset_key": null,       "has_chart": true, "has_kpi": false, "explain_enabled": true}
+  ],
+  "Audit": [
+    {"report_key": "address_change_log",   "report_name": "SMRITI Address Change Log",               "dataset_key": null,       "has_chart": true, "has_kpi": false, "explain_enabled": true},
+    {"report_key": "security_audit_log",   "report_name": "SMRITI Security Audit Log",               "dataset_key": null,       "has_chart": true, "has_kpi": false, "explain_enabled": true}
+  ],
+  "Cash": [
+    {"report_key": "cash_reconciliation",  "report_name": "SMRITI Cash Reconciliation Report",       "dataset_key": null,       "has_chart": true, "has_kpi": false, "explain_enabled": true},
+    {"report_key": "cash_z_report",        "report_name": "SMRITI Cash Z-Report",                    "dataset_key": null,       "has_chart": true, "has_kpi": false, "explain_enabled": true},
+    {"report_key": "payment_mode_summary", "report_name": "SMRITI Payment Mode Summary",             "dataset_key": null,       "has_chart": true, "has_kpi": false, "explain_enabled": true}
+  ],
+  "Inventory Analytics": [
+    {"report_key": "current_stock_position",   "report_name": "SMRITI Current Stock Position",                        "dataset_key": "inventory",   "has_chart": true, "has_kpi": true,  "explain_enabled": true},
+    {"report_key": "inventory_productivity",   "report_name": "SMRITI Inventory Productivity & SKU Rationalization",  "dataset_key": null,          "has_chart": true, "has_kpi": false, "explain_enabled": true},
+    {"report_key": "psv_reorder_report",       "report_name": "SMRITI PSV Reorder Report",                           "dataset_key": null,          "has_chart": true, "has_kpi": false, "explain_enabled": true},
+    {"report_key": "style_wise_stock",         "report_name": "SMRITI Style-wise Stock Position",                    "dataset_key": null,          "has_chart": true, "has_kpi": false, "explain_enabled": true},
+    {"report_key": "size_wise_stock",          "report_name": "SMRITI Variant Stock Position",                       "dataset_key": null,          "has_chart": true, "has_kpi": false, "explain_enabled": true}
+  ],
+  "Sales": [
+    {"report_key": "daily_sales_summary",   "report_name": "SMRITI Daily Sales Summary",            "dataset_key": "sales",      "has_chart": true, "has_kpi": true,  "explain_enabled": true},
+    {"report_key": "item_wise_sales",       "report_name": "SMRITI Item-wise Sales Analytics",      "dataset_key": "sales_items","has_chart": true, "has_kpi": true,  "explain_enabled": true},
+    {"report_key": "test_resolution_report","report_name": "Test Resolution Report",                "dataset_key": null,         "has_chart": true, "has_kpi": false, "explain_enabled": true},
+    {"report_key": "test_subquery_report",  "report_name": "Test Subquery Report",                  "dataset_key": null,         "has_chart": true, "has_kpi": false, "explain_enabled": true}
+  ]
+}
