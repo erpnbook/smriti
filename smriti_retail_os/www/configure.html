@@ -397,7 +397,7 @@
     </nav>
     <div class="sidebar-footer">
       <div>SMRITI Retail OS</div>
-      <div style="margin-top:3px;"><a href="/app">Open Desk ↗</a></div>
+      <div style="margin-top:3px; font-size:11px; color:var(--text-muted);">SMRITI Retail OS</div>
     </div>
   </aside>
 
@@ -1355,7 +1355,7 @@ function loadTaxTemplates() {
           <td><span class="hl-tag">${t.company || '-'}</span></td>
           <td><span class="hl-tag hl-green">${t.gst_rate || 0}%</span></td>
           <td>${(t.taxes || []).map(x => `<span class="hl-tag hl-purple">${x.tax_rate}%</span>`).join(' ')}</td>
-          <td><a href="/app/item-tax-template/${encodeURIComponent(t.name)}" target="_blank" class="btn btn-secondary btn-sm">Edit ↗</a></td>
+          <td><span class="hl-tag" style="font-size:11px;color:var(--text-muted);">${t.name}</span></td>
         </tr>`).join('');
       document.getElementById('tax-table').style.display = 'table';
     })

@@ -862,13 +862,8 @@
           </tbody>
         </table>
         <p style="font-size:0.8rem; color:var(--text-2); line-height:1.5;">
-          Promotion rules leverage standard ERPNext pricing engines. To modify pricing ratios or apply new tier exclusions, edit the pricing rule definition.
+          Promotion rules are powered by the SMRITI Pricing Engine. To modify pricing ratios or apply new tier exclusions, contact your system administrator.
         </p>
-        <div style="margin-top: 10px;">
-          <a href="/app/pricing-rule/${promo.name}" class="btn-smriti-action" target="_blank">
-            <span class="material-symbols-outlined" style="font-size:16px;">open_in_new</span> Edit Pricing Rule
-          </a>
-        </div>
       </div>
     `;
   }
@@ -1405,7 +1400,7 @@
         actionBtn = '<span style="font-size:0.75rem; color:var(--text-3);">Reversal</span>';
       }
 
-      const journalLink = l.journal_entry ? `<a href="/app/journal-entry/${l.journal_entry}" target="_blank" style="color:var(--accent-2); font-weight:600; text-decoration:none;">${l.journal_entry}</a>` : '-';
+      const journalLink = l.journal_entry ? `<span style="font-family:monospace; font-size:0.85em; color:var(--text-2);">${l.journal_entry}</span>` : '-';
       const formattedDate = new Date(l.creation).toLocaleString();
 
       return `
