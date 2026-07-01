@@ -1,6 +1,7 @@
 [
   {
     "doctype": "Custom Field",
+    "name": "Purchase Order-smriti_approval_status",
     "dt": "Purchase Order",
     "fieldname": "smriti_approval_status",
     "label": "SMRITI Approval Status",
@@ -13,6 +14,7 @@
   },
   {
     "doctype": "Custom Field",
+    "name": "Purchase Order-smriti_approved_by",
     "dt": "Purchase Order",
     "fieldname": "smriti_approved_by",
     "label": "Approved By",
@@ -23,6 +25,7 @@
   },
   {
     "doctype": "Custom Field",
+    "name": "Purchase Order-smriti_approved_on",
     "dt": "Purchase Order",
     "fieldname": "smriti_approved_on",
     "label": "Approved On",
@@ -33,6 +36,7 @@
   },
   {
     "doctype": "Custom Field",
+    "name": "Purchase Order-smriti_rejection_reason",
     "dt": "Purchase Order",
     "fieldname": "smriti_rejection_reason",
     "label": "Rejection Reason",
@@ -43,6 +47,7 @@
   },
   {
     "doctype": "Custom Field",
+    "name": "Purchase Invoice-smriti_creation_mode",
     "dt": "Purchase Invoice",
     "fieldname": "smriti_creation_mode",
     "label": "SMRITI Creation Mode",
@@ -54,6 +59,7 @@
   },
   {
     "doctype": "Custom Field",
+    "name": "Purchase Receipt-smriti_return_reason",
     "dt": "Purchase Receipt",
     "fieldname": "smriti_return_reason",
     "label": "Return Reason",
