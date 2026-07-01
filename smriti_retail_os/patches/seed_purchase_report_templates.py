@@ -1,0 +1,212 @@
+﻿# -*- coding: utf-8 -*-
+"""
+@patch: smriti_retail_os.patches.seed_purchase_report_templates
+@version: v3.1.0
+@description: Seed 6 SMRITI Report Templates for Purchase Analytics Studio category.
+              Idempotent — safe to re-run.
+"""
+
+import frappe
+import json
+
+
+PURCHASE_TEMPLATES = [
+    {
+        "report_key": "purchase_order_summary",
+        "report_name": "SMRITI Purchase Order Summary",
+        "report_category": "Purchase",
+        "is_public": 1,
+        "cache_minutes": 5,
+        "schema_version": "1.0",
+        "company_restricted": 0,
+        "branch_restricted": 0,
+        "columns_json": json.dumps([
+            {"fieldname": "po_number",      "label": "PO Number",         "fieldtype": "Data",     "width": 160},
+            {"fieldname": "posting_date",   "label": "Date",              "fieldtype": "Date",     "width": 110},
+            {"fieldname": "supplier",       "label": "Supplier",          "fieldtype": "Data",     "width": 130},
+            {"fieldname": "supplier_name",  "label": "Supplier Name",     "fieldtype": "Data",     "width": 180},
+            {"fieldname": "status",         "label": "Status",            "fieldtype": "Data",     "width": 100},
+            {"fieldname": "project",        "label": "Project",           "fieldtype": "Data",     "width": 120},
+            {"fieldname": "total_qty",      "label": "Total Qty",         "fieldtype": "Float",    "width": 100},
+            {"fieldname": "net_total",      "label": "Net Total",         "fieldtype": "Currency", "width": 130},
+            {"fieldname": "tax_amount",     "label": "Tax",               "fieldtype": "Currency", "width": 110},
+            {"fieldname": "grand_total",    "label": "Grand Total",       "fieldtype": "Currency", "width": 130},
+            {"fieldname": "advance_paid",   "label": "Advance Paid",      "fieldtype": "Currency", "width": 130},
+            {"fieldname": "balance_amount", "label": "Balance",           "fieldtype": "Currency", "width": 130},
+        ]),
+        "filters_json": json.dumps([
+            {"fieldname": "from_date", "label": "From Date", "fieldtype": "Date",   "default": ""},
+            {"fieldname": "to_date",   "label": "To Date",   "fieldtype": "Date",   "default": ""},
+            {"fieldname": "supplier",  "label": "Supplier",  "fieldtype": "Link",   "options": "Supplier", "default": ""},
+            {"fieldname": "status",    "label": "Status",    "fieldtype": "Select", "options": "\nDraft\nTo Receive and Bill\nTo Bill\nTo Receive\nCompleted\nCancelled\nClosed", "default": ""},
+            {"fieldname": "project",   "label": "Project",   "fieldtype": "Link",   "options": "Project",  "default": ""},
+            {"fieldname": "company",   "label": "Company",   "fieldtype": "Link",   "options": "Company",  "default": ""},
+        ]),
+    },
+    {
+        "report_key": "grn_register",
+        "report_name": "SMRITI GRN Register",
+        "report_category": "Purchase",
+        "is_public": 1,
+        "cache_minutes": 5,
+        "schema_version": "1.0",
+        "company_restricted": 0,
+        "branch_restricted": 0,
+        "columns_json": json.dumps([
+            {"fieldname": "grn_number",    "label": "GRN Number",    "fieldtype": "Data",     "width": 160},
+            {"fieldname": "posting_date",  "label": "Date",          "fieldtype": "Date",     "width": 110},
+            {"fieldname": "po_reference",  "label": "PO Reference",  "fieldtype": "Data",     "width": 150},
+            {"fieldname": "supplier",      "label": "Supplier",      "fieldtype": "Data",     "width": 130},
+            {"fieldname": "supplier_name", "label": "Supplier Name", "fieldtype": "Data",     "width": 180},
+            {"fieldname": "warehouse",     "label": "Warehouse",     "fieldtype": "Data",     "width": 150},
+            {"fieldname": "status",        "label": "Status",        "fieldtype": "Data",     "width": 100},
+            {"fieldname": "total_qty",     "label": "Total Qty",     "fieldtype": "Float",    "width": 100},
+            {"fieldname": "net_total",     "label": "Net Total",     "fieldtype": "Currency", "width": 130},
+            {"fieldname": "grand_total",   "label": "Grand Total",   "fieldtype": "Currency", "width": 130},
+        ]),
+        "filters_json": json.dumps([
+            {"fieldname": "from_date",  "label": "From Date",  "fieldtype": "Date",   "default": ""},
+            {"fieldname": "to_date",    "label": "To Date",    "fieldtype": "Date",   "default": ""},
+            {"fieldname": "supplier",   "label": "Supplier",   "fieldtype": "Link",   "options": "Supplier",  "default": ""},
+            {"fieldname": "warehouse",  "label": "Warehouse",  "fieldtype": "Link",   "options": "Warehouse", "default": ""},
+            {"fieldname": "status",     "label": "Status",     "fieldtype": "Select", "options": "\nDraft\nReturn Issued\nCompleted\nCancelled", "default": ""},
+            {"fieldname": "company",    "label": "Company",    "fieldtype": "Link",   "options": "Company",   "default": ""},
+        ]),
+    },
+    {
+        "report_key": "purchase_invoice_register",
+        "report_name": "SMRITI Purchase Invoice Register",
+        "report_category": "Purchase",
+        "is_public": 1,
+        "cache_minutes": 5,
+        "schema_version": "1.0",
+        "company_restricted": 0,
+        "branch_restricted": 0,
+        "columns_json": json.dumps([
+            {"fieldname": "invoice",           "label": "Invoice",              "fieldtype": "Data",     "width": 160},
+            {"fieldname": "posting_date",      "label": "Date",                 "fieldtype": "Date",     "width": 110},
+            {"fieldname": "due_date",          "label": "Due Date",             "fieldtype": "Date",     "width": 110},
+            {"fieldname": "supplier",          "label": "Supplier",             "fieldtype": "Data",     "width": 130},
+            {"fieldname": "supplier_name",     "label": "Supplier Name",        "fieldtype": "Data",     "width": 180},
+            {"fieldname": "bill_no",           "label": "Supplier Invoice No",  "fieldtype": "Data",     "width": 140},
+            {"fieldname": "bill_date",         "label": "Supplier Invoice Date","fieldtype": "Date",     "width": 130},
+            {"fieldname": "net_total",         "label": "Net Total",            "fieldtype": "Currency", "width": 130},
+            {"fieldname": "tax_amount",        "label": "Tax",                  "fieldtype": "Currency", "width": 110},
+            {"fieldname": "grand_total",       "label": "Grand Total",          "fieldtype": "Currency", "width": 130},
+            {"fieldname": "outstanding_amount","label": "Outstanding",          "fieldtype": "Currency", "width": 130},
+            {"fieldname": "paid_amount",       "label": "Paid",                 "fieldtype": "Currency", "width": 120},
+            {"fieldname": "status",            "label": "Status",               "fieldtype": "Data",     "width": 100},
+            {"fieldname": "overdue_days",      "label": "Overdue Days",         "fieldtype": "Int",      "width": 110},
+        ]),
+        "filters_json": json.dumps([
+            {"fieldname": "from_date", "label": "From Date", "fieldtype": "Date",   "default": ""},
+            {"fieldname": "to_date",   "label": "To Date",   "fieldtype": "Date",   "default": ""},
+            {"fieldname": "supplier",  "label": "Supplier",  "fieldtype": "Link",   "options": "Supplier", "default": ""},
+            {"fieldname": "status",    "label": "Status",    "fieldtype": "Select", "options": "\nDraft\nReturn\nDebit Note Issued\nSubmitted\nPaid\nUnpaid\nPartly Paid\nOverdue\nCancelled", "default": ""},
+            {"fieldname": "company",   "label": "Company",   "fieldtype": "Link",   "options": "Company",  "default": ""},
+        ]),
+    },
+    {
+        "report_key": "supplier_purchase_summary",
+        "report_name": "SMRITI Supplier Purchase Summary",
+        "report_category": "Purchase",
+        "is_public": 1,
+        "cache_minutes": 10,
+        "schema_version": "1.0",
+        "company_restricted": 0,
+        "branch_restricted": 0,
+        "columns_json": json.dumps([
+            {"fieldname": "supplier",          "label": "Supplier",          "fieldtype": "Data",     "width": 140},
+            {"fieldname": "supplier_name",     "label": "Supplier Name",     "fieldtype": "Data",     "width": 200},
+            {"fieldname": "total_invoices",    "label": "Total Invoices",    "fieldtype": "Int",      "width": 120},
+            {"fieldname": "net_total",         "label": "Net Total",         "fieldtype": "Currency", "width": 140},
+            {"fieldname": "tax_amount",        "label": "Tax",               "fieldtype": "Currency", "width": 120},
+            {"fieldname": "grand_total",       "label": "Grand Total",       "fieldtype": "Currency", "width": 140},
+            {"fieldname": "outstanding_amount","label": "Outstanding",       "fieldtype": "Currency", "width": 140},
+            {"fieldname": "paid_amount",       "label": "Paid",              "fieldtype": "Currency", "width": 130},
+            {"fieldname": "avg_invoice_value", "label": "Avg Invoice Value", "fieldtype": "Currency", "width": 150},
+        ]),
+        "filters_json": json.dumps([
+            {"fieldname": "from_date", "label": "From Date", "fieldtype": "Date", "default": ""},
+            {"fieldname": "to_date",   "label": "To Date",   "fieldtype": "Date", "default": ""},
+            {"fieldname": "company",   "label": "Company",   "fieldtype": "Link", "options": "Company", "default": ""},
+        ]),
+    },
+    {
+        "report_key": "item_wise_purchase",
+        "report_name": "SMRITI Item-wise Purchase Analysis",
+        "report_category": "Purchase",
+        "is_public": 1,
+        "cache_minutes": 10,
+        "schema_version": "1.0",
+        "company_restricted": 0,
+        "branch_restricted": 0,
+        "columns_json": json.dumps([
+            {"fieldname": "item_code",   "label": "Item Code",          "fieldtype": "Data",     "width": 140},
+            {"fieldname": "item_name",   "label": "Item Name",          "fieldtype": "Data",     "width": 200},
+            {"fieldname": "item_group",  "label": "Item Group",         "fieldtype": "Data",     "width": 130},
+            {"fieldname": "brand",       "label": "Brand",              "fieldtype": "Data",     "width": 110},
+            {"fieldname": "total_qty",   "label": "Total Qty",          "fieldtype": "Float",    "width": 110},
+            {"fieldname": "avg_rate",    "label": "Weighted Avg Rate",  "fieldtype": "Currency", "width": 150},
+            {"fieldname": "min_rate",    "label": "Min Rate",           "fieldtype": "Currency", "width": 120},
+            {"fieldname": "max_rate",    "label": "Max Rate",           "fieldtype": "Currency", "width": 120},
+            {"fieldname": "total_value", "label": "Total Value",        "fieldtype": "Currency", "width": 140},
+        ]),
+        "filters_json": json.dumps([
+            {"fieldname": "from_date",  "label": "From Date",  "fieldtype": "Date", "default": ""},
+            {"fieldname": "to_date",    "label": "To Date",    "fieldtype": "Date", "default": ""},
+            {"fieldname": "supplier",   "label": "Supplier",   "fieldtype": "Link", "options": "Supplier",  "default": ""},
+            {"fieldname": "item_group", "label": "Item Group", "fieldtype": "Link", "options": "Item Group","default": ""},
+            {"fieldname": "brand",      "label": "Brand",      "fieldtype": "Link", "options": "Brand",     "default": ""},
+            {"fieldname": "warehouse",  "label": "Warehouse",  "fieldtype": "Link", "options": "Warehouse", "default": ""},
+            {"fieldname": "company",    "label": "Company",    "fieldtype": "Link", "options": "Company",   "default": ""},
+        ]),
+    },
+    {
+        "report_key": "purchase_return_register",
+        "report_name": "SMRITI Purchase Return Register",
+        "report_category": "Purchase",
+        "is_public": 1,
+        "cache_minutes": 5,
+        "schema_version": "1.0",
+        "company_restricted": 0,
+        "branch_restricted": 0,
+        "columns_json": json.dumps([
+            {"fieldname": "date",          "label": "Date",               "fieldtype": "Date",     "width": 110},
+            {"fieldname": "return_no",     "label": "Return / Debit Note","fieldtype": "Data",     "width": 160},
+            {"fieldname": "orig_invoice",  "label": "Against Invoice",    "fieldtype": "Data",     "width": 150},
+            {"fieldname": "supplier_name", "label": "Supplier Name",      "fieldtype": "Data",     "width": 200},
+            {"fieldname": "taxable_value", "label": "Taxable Value",      "fieldtype": "Currency", "width": 130},
+            {"fieldname": "cgst",          "label": "CGST",               "fieldtype": "Currency", "width": 110},
+            {"fieldname": "sgst",          "label": "SGST",               "fieldtype": "Currency", "width": 110},
+            {"fieldname": "igst",          "label": "IGST",               "fieldtype": "Currency", "width": 110},
+            {"fieldname": "total_tax",     "label": "Total Tax",          "fieldtype": "Currency", "width": 120},
+            {"fieldname": "grand_total",   "label": "Grand Total",        "fieldtype": "Currency", "width": 130},
+        ]),
+        "filters_json": json.dumps([
+            {"fieldname": "from_date", "label": "From Date", "fieldtype": "Date", "default": ""},
+            {"fieldname": "to_date",   "label": "To Date",   "fieldtype": "Date", "default": ""},
+        ]),
+    },
+]
+
+
+def execute():
+    """Idempotent seed: upserts 6 Purchase Report Templates."""
+    for tmpl in PURCHASE_TEMPLATES:
+        report_key = tmpl["report_key"]
+        if frappe.db.exists("SMRITI Report Template", report_key):
+            doc = frappe.get_doc("SMRITI Report Template", report_key)
+            for k, v in tmpl.items():
+                if k != "report_key":
+                    doc.set(k, v)
+            doc.save(ignore_permissions=True)
+        else:
+            doc = frappe.new_doc("SMRITI Report Template")
+            doc.name = report_key
+            for k, v in tmpl.items():
+                doc.set(k, v)
+            doc.insert(ignore_permissions=True)
+
+    frappe.db.commit()
+    print(f"[seed_purchase_report_templates] Seeded {len(PURCHASE_TEMPLATES)} Purchase Report Templates.")

@@ -40,3 +40,5 @@ smriti_retail_os.patches.seed_intelligence_terms
 
 # v1.8.7 — UIE-001: Add idempotency key database index
 smriti_retail_os.patches.v1_8_7.add_idempotency_key_index
+# v3.1.0 -- Purchase Analytics Studio: Seed 6 Purchase Report Templates
+smriti_retail_os.patches.seed_purchase_report_templates

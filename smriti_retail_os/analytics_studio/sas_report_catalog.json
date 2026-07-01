@@ -1,10 +1,10 @@
 {
   "_meta": {
     "generated_by": "bench --site smriti_retail execute smriti_retail_os.analytics_studio.sas_service.get_srs_report_list_for_sas",
-    "generated_at": "2026-07-01T11:25:40Z",
+    "generated_at": "2026-07-02T00:00:00Z",
     "site": "smriti_retail",
-    "total_categories": 5,
-    "total_reports": 19
+    "total_categories": 6,
+    "total_reports": 25
   },
   "Accounting": [
     {"report_key": "cash_book",            "report_name": "SMRITI Cash Book",                       "dataset_key": null,       "has_chart": true, "has_kpi": false, "explain_enabled": true},
@@ -35,5 +35,13 @@
     {"report_key": "item_wise_sales",       "report_name": "SMRITI Item-wise Sales Analytics",      "dataset_key": "sales_items","has_chart": true, "has_kpi": true,  "explain_enabled": true},
     {"report_key": "test_resolution_report","report_name": "Test Resolution Report",                "dataset_key": null,         "has_chart": true, "has_kpi": false, "explain_enabled": true},
     {"report_key": "test_subquery_report",  "report_name": "Test Subquery Report",                  "dataset_key": null,         "has_chart": true, "has_kpi": false, "explain_enabled": true}
+  ],
+  "Purchase": [
+    {"report_key": "purchase_order_summary",    "report_name": "SMRITI Purchase Order Summary",     "dataset_key": null, "has_chart": true, "has_kpi": true,  "explain_enabled": true},
+    {"report_key": "grn_register",              "report_name": "SMRITI GRN Register",               "dataset_key": null, "has_chart": true, "has_kpi": true,  "explain_enabled": true},
+    {"report_key": "purchase_invoice_register", "report_name": "SMRITI Purchase Invoice Register",  "dataset_key": null, "has_chart": true, "has_kpi": true,  "explain_enabled": true},
+    {"report_key": "supplier_purchase_summary", "report_name": "SMRITI Supplier Purchase Summary",  "dataset_key": null, "has_chart": true, "has_kpi": true,  "explain_enabled": true},
+    {"report_key": "item_wise_purchase",        "report_name": "SMRITI Item-wise Purchase Analysis","dataset_key": null, "has_chart": true, "has_kpi": true,  "explain_enabled": true},
+    {"report_key": "purchase_return_register",  "report_name": "SMRITI Purchase Return Register",   "dataset_key": null, "has_chart": true, "has_kpi": true,  "explain_enabled": true}
   ]
 }

@@ -1136,6 +1136,118 @@ REPORT_QUERIES = {
         """,
         "group_by": None,
         "order_by": "changed_at DESC"
+    },
+
+    # ── Purchase Reports ─────────────────────────────────────────────────────
+    "purchase_order_summary": {
+        "base_sql": """
+            SELECT
+                po.name AS po_number,
+                po.posting_date,
+                po.supplier,
+                po.supplier_name,
+                po.status,
+                po.project,
+                SUM(poi.qty) AS total_qty,
+                po.net_total,
+                po.total_taxes_and_charges AS tax_amount,
+                po.grand_total,
+                COALESCE(po.advance_paid, 0) AS advance_paid,
+                (po.grand_total - COALESCE(po.advance_paid, 0)) AS balance_amount
+            FROM `tabPurchase Order` po
+            JOIN `tabPurchase Order Item` poi ON poi.parent = po.name
+            WHERE po.docstatus = 1
+        """,
+        "group_by": "po.name",
+        "order_by": "po.posting_date DESC"
+    },
+    "grn_register": {
+        "base_sql": """
+            SELECT
+                pr.name AS grn_number,
+                pr.posting_date,
+                pr.purchase_order AS po_reference,
+                pr.supplier,
+                pr.supplier_name,
+                pr.set_warehouse AS warehouse,
+                pr.status,
+                SUM(pri.qty) AS total_qty,
+                pr.net_total,
+                pr.grand_total
+            FROM `tabPurchase Receipt` pr
+            JOIN `tabPurchase Receipt Item` pri ON pri.parent = pr.name
+            WHERE pr.docstatus = 1 AND pr.is_return = 0
+        """,
+        "group_by": "pr.name",
+        "order_by": "pr.posting_date DESC"
+    },
+    "purchase_invoice_register": {
+        "base_sql": """
+            SELECT
+                name AS invoice,
+                posting_date,
+                due_date,
+                supplier,
+                supplier_name,
+                bill_no,
+                bill_date,
+                net_total,
+                total_taxes_and_charges AS tax_amount,
+                grand_total,
+                outstanding_amount,
+                paid_amount,
+                status,
+                CASE
+                    WHEN due_date < CURRENT_DATE()
+                    THEN DATEDIFF(CURRENT_DATE(), due_date)
+                    ELSE 0
+                END AS overdue_days
+            FROM `tabPurchase Invoice`
+            WHERE docstatus = 1 AND is_return = 0
+        """,
+        "group_by": None,
+        "order_by": "posting_date DESC"
+    },
+    "supplier_purchase_summary": {
+        "base_sql": """
+            SELECT
+                supplier,
+                supplier_name,
+                COUNT(*) AS total_invoices,
+                SUM(net_total) AS net_total,
+                SUM(total_taxes_and_charges) AS tax_amount,
+                SUM(grand_total) AS grand_total,
+                SUM(outstanding_amount) AS outstanding_amount,
+                SUM(paid_amount) AS paid_amount,
+                AVG(grand_total) AS avg_invoice_value
+            FROM `tabPurchase Invoice`
+            WHERE docstatus = 1 AND is_return = 0
+        """,
+        "group_by": "supplier",
+        "order_by": "grand_total DESC"
+    },
+    "item_wise_purchase": {
+        "base_sql": """
+            SELECT
+                pri.item_code,
+                pri.item_name,
+                i.item_group,
+                i.brand,
+                SUM(pri.qty) AS total_qty,
+                SUM(pri.amount) / NULLIF(SUM(pri.qty), 0) AS avg_rate,
+                MIN(pri.rate) AS min_rate,
+                MAX(pri.rate) AS max_rate,
+                SUM(pri.amount) AS total_value
+            FROM `tabPurchase Receipt Item` pri
+            JOIN `tabPurchase Receipt` pr ON pr.name = pri.parent
+            LEFT JOIN `tabItem` i ON i.name = pri.item_code
+            WHERE pr.docstatus = 1 AND pr.is_return = 0
+        """,
+        "group_by": "pri.item_code",
+        "order_by": "total_value DESC"
+    },
+    "purchase_return_register": {
+        "is_custom": True
     }
 }
 
@@ -1209,7 +1321,9 @@ class SMRITIReportEngine:
         """
         bypassed_reports = [
             "payment_register", "receipt_register", "cash_book", "day_book",
-            "customer_outstanding", "supplier_outstanding", "security_audit_log", "address_change_log"
+            "customer_outstanding", "supplier_outstanding", "security_audit_log", "address_change_log",
+            "purchase_invoice_register", "purchase_order_summary", "grn_register",
+            "supplier_purchase_summary", "item_wise_purchase", "purchase_return_register"
         ]
         query_config = REPORT_QUERIES.get(self.report_key)
         if self.report_key in bypassed_reports or (query_config and query_config.get("is_custom")):
@@ -1280,7 +1394,9 @@ class SMRITIReportEngine:
         """
         bypassed_reports = [
             "payment_register", "receipt_register", "cash_book", "day_book",
-            "customer_outstanding", "supplier_outstanding", "security_audit_log", "address_change_log"
+            "customer_outstanding", "supplier_outstanding", "security_audit_log", "address_change_log",
+            "purchase_invoice_register", "purchase_order_summary", "grn_register",
+            "supplier_purchase_summary", "item_wise_purchase", "purchase_return_register"
         ]
         if self.report_key in bypassed_reports:
             return
@@ -1438,7 +1554,18 @@ class SMRITIReportEngine:
             return self._run_psv_reorder_report()
         elif self.report_key == "inventory_productivity":
             return self._run_inventory_productivity()
+        elif self.report_key == "purchase_return_register":
+            return self._run_purchase_return_register()
         return []
+
+    def _run_purchase_return_register(self):
+        """Delegates to the existing get_purchase_return_register() function
+        and normalizes the flat list into the standard {rows, total_count} envelope.
+        """
+        from_date = self.filters.get("from_date")
+        to_date   = self.filters.get("to_date")
+        rows = get_purchase_return_register(from_date=from_date, to_date=to_date)
+        return rows  # SMRITIReportEngine.run() returns the list; SAS wraps it
 
     def _run_inventory_productivity(self):
         company = self.filters.get("company")
@@ -1875,12 +2002,12 @@ class SMRITIReportEngine:
         # Company filter (always applicable if source contains company)
         company = self.filters.get("company")
         if company and table_supports_company_filter(base_sql):
-            where_clauses.append("parent.company = %(company)s" if "parent ON" in base_sql else "b.company = %(company)s" if "tabBin" in base_sql else "ce.company = %(company)s" if "tabPOS Closing Entry" in base_sql else "company = %(company)s")
+            where_clauses.append("parent.company = %(company)s" if "parent ON" in base_sql else "b.company = %(company)s" if "tabBin" in base_sql else "ce.company = %(company)s" if "tabPOS Closing Entry" in base_sql else "pr.company = %(company)s" if "tabPurchase Receipt" in base_sql else "po.company = %(company)s" if "tabPurchase Order" in base_sql else "company = %(company)s")
             params["company"] = company
         elif self.template.company_restricted:
             default_company = frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
             if default_company:
-                where_clauses.append("parent.company = %(company)s" if "parent ON" in base_sql else "b.company = %(company)s" if "tabBin" in base_sql else "ce.company = %(company)s" if "tabPOS Closing Entry" in base_sql else "company = %(company)s")
+                where_clauses.append("parent.company = %(company)s" if "parent ON" in base_sql else "b.company = %(company)s" if "tabBin" in base_sql else "ce.company = %(company)s" if "tabPOS Closing Entry" in base_sql else "pr.company = %(company)s" if "tabPurchase Receipt" in base_sql else "po.company = %(company)s" if "tabPurchase Order" in base_sql else "company = %(company)s")
                 params["company"] = default_company
 
         # Warehouse filter
@@ -1890,6 +2017,8 @@ class SMRITIReportEngine:
                 where_clauses.append("b.warehouse = %(warehouse)s")
             elif "parent ON" in base_sql:
                 where_clauses.append("(items.warehouse = %(warehouse)s OR parent.set_warehouse = %(warehouse)s)")
+            elif "tabPurchase Receipt" in base_sql:
+                where_clauses.append("pr.set_warehouse = %(warehouse)s")
             else:
                 where_clauses.append("set_warehouse = %(warehouse)s")
             params["warehouse"] = warehouse
@@ -1904,6 +2033,8 @@ class SMRITIReportEngine:
                     else "changed_at" if "tabSMRITI Address Audit Log" in base_sql
                     else "pe.posting_date" if "pe." in base_sql
                     else "posting_date" if "tabPayment Entry" in base_sql or "tabSales Invoice" in base_sql or "tabPurchase Invoice" in base_sql
+                    else "pr.posting_date" if "tabPurchase Receipt" in base_sql
+                    else "po.posting_date" if "tabPurchase Order" in base_sql
                     else "parent.posting_date" if "parent ON" in base_sql
                     else "ce.posting_date" if "tabPOS Closing Entry" in base_sql
                     else "posting_date" if "tabPOS Invoice" in base_sql
@@ -1986,6 +2117,18 @@ class SMRITIReportEngine:
         if party:
             where_clauses.append("party = %(party)s")
             params["party"] = party
+
+        # Status filter (Purchase Invoice / Purchase Order / Purchase Receipt)
+        status = self.filters.get("status")
+        if status and any(t in base_sql for t in ("tabPurchase Invoice", "tabPurchase Order", "tabPurchase Receipt")):
+            where_clauses.append("status = %(status)s")
+            params["status"] = status
+
+        # Project filter (Purchase Order)
+        project = self.filters.get("project")
+        if project and "tabPurchase Order" in base_sql:
+            where_clauses.append("po.project = %(project)s")
+            params["project"] = project
 
         # User filter for Activity Log
         user_filter = self.filters.get("user")

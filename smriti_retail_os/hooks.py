@@ -812,6 +812,11 @@ website_route_rules = [
 
 commands = ["smriti_retail_os.commands"]
 
-
-
-
+# Frappe fixture manifest — auto-imported on bench import-fixtures / bench restore
+# Each entry corresponds to fixtures/<doctype_snake_case>.json
+fixtures = [
+    {
+        "dt": "SMRITI Report Template",
+        "filters": [["report_category", "=", "Purchase"]]
+    }
+]

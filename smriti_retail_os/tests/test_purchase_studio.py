@@ -351,3 +351,83 @@ class TestBackwardCompatibility(unittest.TestCase):
             )
 
 
+
+class TestPurchaseReportsSAS(unittest.TestCase):
+    """Regression tests for the 6 Purchase Analytics Studio reports.
+
+    These tests verify structural contract only (no data required).
+    They run in the test environment where no purchase transactions exist,
+    so they verify query structure, filter logic, grouping, and normalization
+    rather than row-count expectations.
+    """
+
+    # ------------------------------------------------------------------ helpers
+    def _engine(self, report_key, filters=None):
+        from smriti_retail_os.reports_api import SMRITIReportEngine
+        return SMRITIReportEngine(report_key, filters or {})
+
+    def _report_queries(self):
+        from smriti_retail_os.reports_api import REPORT_QUERIES
+        return REPORT_QUERIES
+
+    # ------------------------------------------------------------------ L7-01
+    def test_purchase_order_summary_groups_by_po_name(self):
+        """purchase_order_summary must group by po.name — one row per PO."""
+        rq = self._report_queries()
+        self.assertIn("purchase_order_summary", rq)
+        cfg = rq["purchase_order_summary"]
+        self.assertEqual(cfg.get("group_by"), "po.name",
+                         "purchase_order_summary must GROUP BY po.name to avoid fan-out")
+        sql = cfg["base_sql"]
+        self.assertIn("tabPurchase Order", sql)
+        self.assertIn("tabPurchase Order Item", sql)
+        # COALESCE must be used to guard against NULL advance_paid
+        self.assertIn("COALESCE(po.advance_paid", sql)
+
+    # ------------------------------------------------------------------ L7-02
+    def test_grn_register_excludes_return_receipts(self):
+        """grn_register base SQL must include is_return = 0 filter."""
+        rq = self._report_queries()
+        self.assertIn("grn_register", rq)
+        sql = rq["grn_register"]["base_sql"]
+        self.assertIn("tabPurchase Receipt", sql)
+        # Must filter out return receipts at the SQL level
+        self.assertIn("is_return = 0", sql)
+        # Must use pr.status (real field) not a computed CASE expression
+        self.assertIn("pr.status", sql)
+        self.assertNotIn("CASE WHEN pr.docstatus", sql)
+
+    # ------------------------------------------------------------------ L7-03
+    def test_purchase_invoice_register_overdue_days_non_negative(self):
+        """purchase_invoice_register must use CASE to return 0 for non-overdue invoices."""
+        rq = self._report_queries()
+        self.assertIn("purchase_invoice_register", rq)
+        sql = rq["purchase_invoice_register"]["base_sql"]
+        # Must use a CASE guard — not a bare DATEDIFF that returns negatives
+        self.assertIn("CASE", sql)
+        self.assertIn("WHEN due_date < CURRENT_DATE()", sql)
+        self.assertIn("ELSE 0", sql)
+        self.assertIn("DATEDIFF(CURRENT_DATE(), due_date)", sql)
+
+    # ------------------------------------------------------------------ L7-04
+    def test_purchase_return_register_returns_list(self):
+        """_run_purchase_return_register must return a list (empty OK in test env)."""
+        engine = self._engine("purchase_return_register")
+        # Patch the underlying function so the test is self-contained
+        import smriti_retail_os.reports_api as rapi
+        _orig = getattr(rapi, "get_purchase_return_register", None)
+        self.assertIsNotNone(_orig, "get_purchase_return_register must exist in reports_api")
+
+        # Inject a stub that returns the normalized shape
+        def _stub(from_date=None, to_date=None):
+            return [{"return_no": "TEST-001", "grand_total": 100.0}]
+
+        rapi.get_purchase_return_register = _stub
+        try:
+            rows = engine._run_purchase_return_register()
+            self.assertIsInstance(rows, list, "_run_purchase_return_register must return a list")
+            self.assertEqual(len(rows), 1)
+            self.assertIn("grand_total", rows[0])
+        finally:
+            # Restore original
+            rapi.get_purchase_return_register = _orig
