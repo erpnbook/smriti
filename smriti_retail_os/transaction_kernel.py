@@ -416,6 +416,9 @@ def _lookup_item_master(item_code, company):
     try:
         item = frappe.get_cached_doc("Item", item_code)
     except Exception:  # swallow-by-design: item not found → caller handles {} gracefully
+        return {}
+
+    result = {
         "item_name":   item.item_name or "",
         "stock_uom":   item.stock_uom or "Nos",
         "gst_hsn_code": item.gst_hsn_code or "",
