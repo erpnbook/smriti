@@ -328,7 +328,8 @@ class TestBackwardCompatibility(unittest.TestCase):
         self.assertIsInstance(result, list)
 
     def test_new_api_endpoints_are_whitelisted(self):
-        """All 14 SC endpoints must exist and be callable in purchase_api."""
+        """All 14 SC endpoints must exist and be registered in frappe.whitelisted (v16 pattern)."""
+        import frappe as _frappe
         import smriti_retail_os.purchase_studio.api.purchase_api as api_module
         endpoints = [
             "get_purchase_dashboard", "get_purchase_orders", "get_purchase_order_detail",
@@ -342,15 +343,11 @@ class TestBackwardCompatibility(unittest.TestCase):
             fn = getattr(api_module, ep, None)
             self.assertIsNotNone(fn, f"Endpoint {ep} not found in purchase_api")
             self.assertTrue(callable(fn), f"Endpoint {ep} is not callable")
-            # Verify whitelisted — attribute name varies by Frappe version
-            is_whitelisted = (
-                getattr(fn, "whitelisted", False)
-                or getattr(fn, "is_whitelisted", False)
-                or getattr(getattr(fn, "__wrapped__", fn), "whitelisted", False)
+            # Frappe v16: whitelist adds fn to frappe.whitelisted (a module-level set),
+            # NOT as a fn.whitelisted attribute.
+            self.assertIn(
+                fn, _frappe.whitelisted,
+                f"Endpoint {ep} is not in frappe.whitelisted — check @frappe.whitelist() decorator"
             )
-            self.assertTrue(
-                is_whitelisted,
-                f"Endpoint {ep} does not appear to be @frappe.whitelist() decorated "
-                f"(checked: whitelisted, is_whitelisted, __wrapped__.whitelisted)"
-            )
+
 
