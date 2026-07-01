@@ -1,4 +1,4 @@
-{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/suppliers.html
   @description: SMRITI Supplier Registry — Standalone UI (Zero system chrome)
@@ -538,12 +538,7 @@ async function init() {
 
 async function loadSuppliers() {
     try {
-        const data = await api('frappe.client.get_list', {
-            doctype: 'Supplier',
-            fields: ['name', 'supplier_name', 'supplier_group', 'mobile_no', 'custom_credit_days', 'custom_vendor_code'],
-            order_by: 'creation desc',
-            limit_page_length: 200
-        });
+        const data = await api('smriti_retail_os.api.masters_api.get_suppliers', { limit: 200 });
 
         masterSuppliersList = data || [];
         renderTable(masterSuppliersList);

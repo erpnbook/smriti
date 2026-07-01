@@ -1,4 +1,4 @@
-{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/smriti-sfm.html
   @description: SMRITI Sales Force Management (SFM) Studio — Standalone UI
@@ -947,8 +947,7 @@
       target_qty: parseFloat(document.getElementById('target-qty').value) || undefined
     };
 
-    const action = name ? API.call('frappe.client.update', { doctype: 'SMRITI Sales Target', name: name, doc: doc })
-                         : API.call('frappe.client.insert', { doc: doc });
+    const action = API.call('smriti_retail_os.sfm.api.sfm_api.save_sales_target', { target_name: name || null, employee: doc.employee, company: doc.company, fiscal_year: doc.fiscal_year, month: doc.month, target_amount: doc.target_amount, store: doc.store });
                          
     action.then(() => {
       toast('Sales target saved successfully!');
@@ -1033,8 +1032,7 @@
       is_active: parseInt(document.getElementById('ownership-is-active').value)
     };
 
-    const action = name ? API.call('frappe.client.update', { doctype: 'SMRITI Customer Ownership', name: name, doc: doc })
-                         : API.call('frappe.client.insert', { doc: doc });
+    const action = API.call('smriti_retail_os.sfm.api.sfm_api.save_customer_ownership', { ownership_name: name || null, customer: doc.customer, employee: doc.employee, company: doc.company, ownership_type: doc.ownership_type, effective_from: doc.effective_from, effective_to: doc.effective_to, store: doc.store, is_active: doc.is_active });
 
     action.then(() => {
       toast('Customer ownership assignment saved!');
@@ -1048,7 +1046,7 @@
 
   // --- Settings Tab ---
   function loadSettings() {
-    API.call('frappe.client.get_value', { doctype: 'SMRITI SFM Settings', filters: {}, fieldname: ['enable_sfm', 'ownership_precedence', 'primary_split_pct', 'secondary_split_pct', 'walkin_employee'] })
+    API.call('smriti_retail_os.sfm.api.sfm_api.get_sfm_settings', {})
       .then(settings => {
         document.getElementById('settings-enable').value = settings.enable_sfm ? '1' : '0';
         document.getElementById('settings-precedence').value = settings.ownership_precedence ? '1' : '0';
@@ -1068,7 +1066,7 @@
       walkin_employee: document.getElementById('settings-walkin').value || undefined
     };
 
-    API.call('frappe.client.save', { doc: doc })
+    API.call('smriti_retail_os.sfm.api.sfm_api.save_sfm_settings', { enable_sfm: doc.enable_sfm, ownership_precedence: doc.ownership_precedence, primary_split_pct: doc.primary_split_pct, secondary_split_pct: doc.secondary_split_pct, walkin_employee: doc.walkin_employee })
       .then(() => {
         toast('SFM settings saved successfully!');
       })
@@ -1079,12 +1077,7 @@
 
   // --- Attribution Ledger Tab ---
   function loadLedger() {
-    API.call('frappe.client.get_list', {
-      doctype: 'SMRITI Attribution Ledger',
-      fields: ['name', 'posting_date', 'posting_time', 'invoice_reference', 'customer', 'employee', 'ownership_type', 'credit_percentage', 'revenue_credit', 'store', 'ledger_status'],
-      order_by: 'posting_date desc, posting_time desc',
-      limit: 100
-    })
+    API.call('smriti_retail_os.sfm.api.sfm_api.get_attribution_ledger', { company: selectedCompany, limit: 100 })
     .then(list => {
       const tbody = document.getElementById('ledger-tbody');
       if (!list || !list.length) {

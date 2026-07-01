@@ -301,12 +301,7 @@ async function init() {
 
 async function loadAuditsList() {
     try {
-        const data = await api('frappe.client.get_list', {
-            doctype: 'SMRITI Party Physical Snapshot',
-            fields: ['name', 'company', 'party_stock_account', 'audit_date', 'status', 'approved_by', 'approved_on'],
-            order_by: 'creation desc',
-            limit_page_length: 100
-        });
+        const data = await api('smriti_retail_os.psv_api.list_physical_audits', { company: selectedCompany, limit: 100 });
         masterAuditsList = data || [];
         renderTable(masterAuditsList);
     } catch(e) {
@@ -576,9 +571,7 @@ async function submitStockAudit() {
 
     try {
         // Step 1: Create physical stock audit document in DRAFT (status="Pending Approval")
-        const doc = await api('frappe.client.insert', {
-            doc: {
-                doctype: 'SMRITI Party Physical Snapshot',
+        const doc = await api('smriti_retail_os.psv_api.create_physical_audit', { doctype: 'SMRITI Party Physical Snapshot',
                 company: selectedCompany,
                 party_stock_account: selectedPsa,
                 audit_date: selectedDate,
@@ -594,10 +587,7 @@ async function submitStockAudit() {
         });
 
         // Step 2: Submit document
-        await api('frappe.client.submit', {
-            doctype: 'SMRITI Party Physical Snapshot',
-            name: doc.name
-        });
+        await api('smriti_retail_os.psv_api.submit_physical_audit', { name: doc.name });
 
         toast('Stock audit submitted and approved!', 'success');
         closeAuditModal();
@@ -611,7 +601,7 @@ async function submitStockAudit() {
 async function viewAuditDetails(name) {
     toast('Fetching details for ' + name, 'info');
     try {
-        const doc = await api('frappe.client.get', { doctype: 'SMRITI Party Physical Snapshot', name: name });
+        const doc = await api('smriti_retail_os.psv_api.get_physical_audit', { name: name });
         // Present details in simple alert/prompt or modal
         const details = doc.items.map(i => `${i.item_code}: System=${i.system_qty}, Phys=${i.physical_qty}, Var=${i.variance} (${i.variance_reason || 'N/A'})`).join('\n');
         alert(`Audit Details: ${name}\n\n${details}`);

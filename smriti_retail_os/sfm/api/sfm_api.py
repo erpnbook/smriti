@@ -143,3 +143,137 @@ def get_store_performance_center(company, fiscal_year, month, store=None):
         "total_transactions": total_transactions,
         "top_performer": top_performer
     }
+
+
+# ── P4: Service-layer write/read methods (replaces frappe.client.* from smriti-sfm.html) ──
+
+@frappe.whitelist()
+def save_sales_target(
+    target_name=None, employee=None, company=None,
+    fiscal_year=None, month=None, target_amount=None, store=None
+):
+    """
+    Create or update a SMRITI Sales Target.
+    Replaces frappe.client.insert / frappe.client.update from smriti-sfm.html.
+    """
+    roles = frappe.get_roles()
+    if not any(r in roles for r in ["System Manager", "SMRITI Store Manager"]):
+        frappe.throw(_("Not authorized to manage sales targets."), frappe.PermissionError)
+
+    fields = {
+        "employee": employee,
+        "company": company,
+        "fiscal_year": fiscal_year,
+        "month": month,
+        "target_amount": flt(target_amount),
+        "store": store,
+    }
+
+    if target_name and frappe.db.exists("SMRITI Sales Target", target_name):
+        doc = frappe.get_doc("SMRITI Sales Target", target_name)
+        doc.update(fields)
+        doc.save(ignore_permissions=False)
+    else:
+        doc = frappe.get_doc({"doctype": "SMRITI Sales Target", **fields})
+        doc.insert(ignore_permissions=False)
+
+    frappe.db.commit()
+    return {"name": doc.name}
+
+
+@frappe.whitelist()
+def save_customer_ownership(
+    ownership_name=None, customer=None, employee=None,
+    company=None, ownership_type=None, effective_from=None,
+    effective_to=None, store=None, is_active=1
+):
+    """
+    Create or update a SMRITI Customer Ownership record.
+    Replaces frappe.client.insert / frappe.client.update from smriti-sfm.html.
+    """
+    roles = frappe.get_roles()
+    if not any(r in roles for r in ["System Manager", "SMRITI Store Manager"]):
+        frappe.throw(_("Not authorized to manage customer ownership."), frappe.PermissionError)
+
+    fields = {
+        "customer": customer,
+        "employee": employee,
+        "company": company,
+        "ownership_type": ownership_type,
+        "effective_from": effective_from,
+        "effective_to": effective_to,
+        "store": store,
+        "is_active": int(is_active),
+    }
+
+    if ownership_name and frappe.db.exists("SMRITI Customer Ownership", ownership_name):
+        doc = frappe.get_doc("SMRITI Customer Ownership", ownership_name)
+        doc.update(fields)
+        doc.save(ignore_permissions=False)
+    else:
+        doc = frappe.get_doc({"doctype": "SMRITI Customer Ownership", **fields})
+        doc.insert(ignore_permissions=False)
+
+    frappe.db.commit()
+    return {"name": doc.name}
+
+
+@frappe.whitelist()
+def get_sfm_settings():
+    """Read SMRITI SFM Settings — replaces frappe.client.get_value from smriti-sfm.html."""
+    doc = frappe.get_single("SMRITI SFM Settings")
+    return {
+        "enable_sfm": doc.enable_sfm,
+        "ownership_precedence": doc.ownership_precedence,
+        "primary_split_pct": flt(doc.primary_split_pct),
+        "secondary_split_pct": flt(doc.secondary_split_pct),
+        "walkin_employee": doc.walkin_employee,
+    }
+
+
+@frappe.whitelist()
+def save_sfm_settings(
+    enable_sfm=1, ownership_precedence=0,
+    primary_split_pct=70, secondary_split_pct=30,
+    walkin_employee=None
+):
+    """
+    Save SMRITI SFM Settings.
+    Replaces frappe.client.save from smriti-sfm.html.
+    """
+    roles = frappe.get_roles()
+    if not any(r in roles for r in ["System Manager", "SMRITI Store Manager"]):
+        frappe.throw(_("Not authorized to modify SFM settings."), frappe.PermissionError)
+
+    doc = frappe.get_single("SMRITI SFM Settings")
+    doc.enable_sfm           = int(enable_sfm)
+    doc.ownership_precedence = int(ownership_precedence)
+    doc.primary_split_pct    = flt(primary_split_pct)
+    doc.secondary_split_pct  = flt(secondary_split_pct)
+    if walkin_employee is not None:
+        doc.walkin_employee  = walkin_employee
+    doc.save(ignore_permissions=False)
+    frappe.db.commit()
+    return {"saved": True}
+
+
+@frappe.whitelist()
+def get_attribution_ledger(company=None, limit=100):
+    """
+    Return SMRITI Attribution Ledger entries.
+    Replaces frappe.client.get_list from smriti-sfm.html.
+    """
+    filters = {}
+    if company:
+        filters["company"] = company
+
+    rows = frappe.get_list(
+        "SMRITI Attribution Ledger",
+        filters=filters,
+        fields=["name", "posting_date", "posting_time", "invoice_reference",
+                "customer", "employee", "ownership_type", "credit_percentage",
+                "revenue_credit", "store", "ledger_status"],
+        order_by="posting_date desc, posting_time desc",
+        limit_page_length=int(limit),
+    )
+    return rows

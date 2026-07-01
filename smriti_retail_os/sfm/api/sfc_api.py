@@ -105,3 +105,89 @@ def get_monthly_commissions(company, fiscal_year, month):
         })
 
     return summary
+
+
+# ── P4: Service-layer write methods (replaces frappe.client.insert from HTML) ──
+
+@frappe.whitelist()
+def save_commission_settlement(
+    employee, company, fiscal_year, month,
+    status, gross_commission, net_commission,
+    adjustments=None, settlement_name=None
+):
+    """
+    Create or update a SMRITI Commission Settlement.
+    Replaces direct frappe.client.insert / frappe.client.update from smriti-sfc.html.
+    """
+    roles = frappe.get_roles()
+    if not any(r in roles for r in ["System Manager", "SMRITI Store Manager"]):
+        frappe.throw(_("Not authorized to save commission settlements."), frappe.PermissionError)
+
+    import json
+    adjs = json.loads(adjustments) if isinstance(adjustments, str) else (adjustments or [])
+
+    if settlement_name and frappe.db.exists("SMRITI Commission Settlement", settlement_name):
+        doc = frappe.get_doc("SMRITI Commission Settlement", settlement_name)
+        doc.status            = status
+        doc.gross_commission  = flt(gross_commission)
+        doc.net_commission    = flt(net_commission)
+        doc.adjustments       = []
+        for adj in adjs:
+            doc.append("adjustments", adj)
+        doc.save(ignore_permissions=False)
+    else:
+        doc = frappe.get_doc({
+            "doctype": "SMRITI Commission Settlement",
+            "employee": employee,
+            "company": company,
+            "fiscal_year": fiscal_year,
+            "month": month,
+            "status": status,
+            "gross_commission": flt(gross_commission),
+            "net_commission": flt(net_commission),
+        })
+        for adj in adjs:
+            doc.append("adjustments", adj)
+        doc.insert(ignore_permissions=False)
+
+    frappe.db.commit()
+    return {"name": doc.name, "status": doc.status}
+
+
+@frappe.whitelist()
+def save_commission_rule(
+    rule_name=None, company=None, employee=None,
+    rule_type=None, base_rate=None, threshold_amount=None,
+    accelerator_rate=None, effective_from=None, effective_to=None,
+    is_active=1
+):
+    """
+    Create or update a SMRITI Commission Rule.
+    Replaces direct frappe.client.insert / frappe.client.update from smriti-sfc.html.
+    """
+    roles = frappe.get_roles()
+    if not any(r in roles for r in ["System Manager", "SMRITI Store Manager"]):
+        frappe.throw(_("Not authorized to save commission rules."), frappe.PermissionError)
+
+    fields = {
+        "company": company,
+        "employee": employee,
+        "rule_type": rule_type,
+        "base_rate": flt(base_rate),
+        "threshold_amount": flt(threshold_amount),
+        "accelerator_rate": flt(accelerator_rate),
+        "effective_from": effective_from,
+        "effective_to": effective_to,
+        "is_active": int(is_active),
+    }
+
+    if rule_name and frappe.db.exists("SMRITI Commission Rule", rule_name):
+        doc = frappe.get_doc("SMRITI Commission Rule", rule_name)
+        doc.update(fields)
+        doc.save(ignore_permissions=False)
+    else:
+        doc = frappe.get_doc({"doctype": "SMRITI Commission Rule", **fields})
+        doc.insert(ignore_permissions=False)
+
+    frappe.db.commit()
+    return {"name": doc.name}

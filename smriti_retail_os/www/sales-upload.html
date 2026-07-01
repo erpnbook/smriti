@@ -260,12 +260,7 @@ async function init() {
 
 async function loadUploadsList() {
     try {
-        const data = await api('frappe.client.get_list', {
-            doctype: 'SMRITI Party Sales Upload',
-            fields: ['name', 'company', 'party_stock_account', 'period_start_date', 'period_end_date', 'status', 'excel_file', 'creation'],
-            order_by: 'creation desc',
-            limit_page_length: 100
-        });
+        const data = await api('smriti_retail_os.psv_api.list_sales_uploads', { company: company, limit: 100 });
         masterUploadsList = data || [];
         renderTable(masterUploadsList);
     } catch(e) {
@@ -411,22 +406,10 @@ async function submitSalesUpload() {
         const fileUrl = await uploadFile(fileInput.files[0]);
         
         toast('Processing weekly sales file...', 'info');
-        const doc = await api('frappe.client.insert', {
-            doc: {
-                doctype: 'SMRITI Party Sales Upload',
-                company: company,
-                party_stock_account: psa,
-                period_start_date: start,
-                period_end_date: end,
-                excel_file: fileUrl
-            }
-        });
+        const doc = await api('smriti_retail_os.psv_api.create_sales_upload', { company: company, party_stock_account: psa, period_start_date: weekStart, period_end_date: weekEnd, excel_file: fileUrl, items: JSON.stringify(rows) });
 
         // Submit to process stock ledger entries
-        await api('frappe.client.submit', {
-            doctype: 'SMRITI Party Sales Upload',
-            name: doc.name
-        });
+        await api('smriti_retail_os.psv_api.submit_sales_upload', { name: doc.name });
 
         toast('Sales upload processed successfully!', 'success');
         closeUploadModal();
@@ -441,7 +424,7 @@ async function submitDraft(name) {
     if (!confirm('Are you sure you want to process this sales upload?')) return;
     try {
         toast('Processing sales...', 'info');
-        await api('frappe.client.submit', { doctype: 'SMRITI Party Sales Upload', name: name });
+        await api('smriti_retail_os.psv_api.submit_sales_upload', { name: name });
         toast('Sales processed successfully!', 'success');
         await loadUploadsList();
     } catch(e) {

@@ -447,3 +447,162 @@ def get_psv_health():
 		"status": "Healthy" if all_passed else "Unhealthy",
 		"checks": checks
 	}
+
+
+# ── P4: Stock Audit & Sales Upload service layer ──────────────────────────────
+# Replaces frappe.client.insert/submit/get/get_list from stock-audit.html
+# and sales-upload.html. All write operations are here; HTML never touches
+# frappe.client directly.
+
+@frappe.whitelist()
+def list_physical_audits(company=None, limit=100):
+	"""List SMRITI Party Physical Snapshot records. Replaces frappe.client.get_list."""
+	filters = {}
+	if company:
+		filters["company"] = company
+	return frappe.get_list(
+		"SMRITI Party Physical Snapshot",
+		filters=filters,
+		fields=["name", "company", "party_stock_account", "audit_date",
+				"status", "approved_by", "approved_on"],
+		order_by="creation desc",
+		limit_page_length=int(limit),
+	)
+
+
+@frappe.whitelist()
+def list_party_stock_accounts_for_audit(company, active=1):
+	"""List PSAs for a company. Replaces frappe.client.get_list on SMRITI Party Stock Account."""
+	return frappe.get_list(
+		"SMRITI Party Stock Account",
+		filters={"company": company, "active": int(active)},
+		fields=["name", "customer", "location_name"],
+	)
+
+
+@frappe.whitelist()
+def create_physical_audit(company, party_stock_account, audit_date, items):
+	"""
+	Create a SMRITI Party Physical Snapshot in Pending Approval status.
+	Replaces frappe.client.insert from stock-audit.html.
+	items: JSON list of {item_code, system_qty, physical_qty, variance_reason}
+	"""
+	import json
+	if not frappe.has_permission("SMRITI Party Physical Snapshot", "create"):
+		frappe.throw(_("Not authorized to create stock audits."), frappe.PermissionError)
+
+	item_list = json.loads(items) if isinstance(items, str) else items
+
+	doc = frappe.get_doc({
+		"doctype": "SMRITI Party Physical Snapshot",
+		"company": company,
+		"party_stock_account": party_stock_account,
+		"audit_date": audit_date,
+		"status": "Pending Approval",
+	})
+	for item in item_list:
+		doc.append("items", item)
+	doc.insert(ignore_permissions=False)
+	frappe.db.commit()
+	return {"name": doc.name, "status": doc.status}
+
+
+@frappe.whitelist()
+def submit_physical_audit(name):
+	"""
+	Submit a SMRITI Party Physical Snapshot.
+	Replaces frappe.client.submit from stock-audit.html.
+	"""
+	if not frappe.has_permission("SMRITI Party Physical Snapshot", "submit"):
+		frappe.throw(_("Not authorized to submit stock audits."), frappe.PermissionError)
+	doc = frappe.get_doc("SMRITI Party Physical Snapshot", name)
+	doc.submit()
+	frappe.db.commit()
+	return {"name": doc.name, "status": doc.docstatus}
+
+
+@frappe.whitelist()
+def get_physical_audit(name):
+	"""
+	Fetch a SMRITI Party Physical Snapshot with items.
+	Replaces frappe.client.get from stock-audit.html.
+	"""
+	if not frappe.has_permission("SMRITI Party Physical Snapshot", "read"):
+		frappe.throw(_("Not authorized to view stock audits."), frappe.PermissionError)
+	doc = frappe.get_doc("SMRITI Party Physical Snapshot", name)
+	return {
+		"name": doc.name,
+		"company": doc.company,
+		"party_stock_account": doc.party_stock_account,
+		"audit_date": str(doc.audit_date),
+		"status": doc.status,
+		"items": [
+			{
+				"item_code": i.item_code,
+				"system_qty": i.system_qty,
+				"physical_qty": i.physical_qty,
+				"variance": i.variance,
+				"variance_reason": i.variance_reason,
+			} for i in doc.items
+		],
+	}
+
+
+@frappe.whitelist()
+def list_sales_uploads(company=None, limit=100):
+	"""List SMRITI Party Sales Upload records. Replaces frappe.client.get_list."""
+	filters = {}
+	if company:
+		filters["company"] = company
+	return frappe.get_list(
+		"SMRITI Party Sales Upload",
+		filters=filters,
+		fields=["name", "company", "party_stock_account", "period_start_date",
+				"period_end_date", "status", "excel_file", "creation"],
+		order_by="creation desc",
+		limit_page_length=int(limit),
+	)
+
+
+@frappe.whitelist()
+def create_sales_upload(
+	company, party_stock_account, period_start_date,
+	period_end_date, excel_file=None, items=None
+):
+	"""
+	Create a SMRITI Party Sales Upload record in Draft status.
+	Replaces frappe.client.insert from sales-upload.html.
+	"""
+	import json
+	if not frappe.has_permission("SMRITI Party Sales Upload", "create"):
+		frappe.throw(_("Not authorized to create sales uploads."), frappe.PermissionError)
+
+	item_list = json.loads(items) if isinstance(items, str) else (items or [])
+
+	doc = frappe.get_doc({
+		"doctype": "SMRITI Party Sales Upload",
+		"company": company,
+		"party_stock_account": party_stock_account,
+		"period_start_date": period_start_date,
+		"period_end_date": period_end_date,
+		"excel_file": excel_file,
+	})
+	for item in item_list:
+		doc.append("items", item)
+	doc.insert(ignore_permissions=False)
+	frappe.db.commit()
+	return {"name": doc.name}
+
+
+@frappe.whitelist()
+def submit_sales_upload(name):
+	"""
+	Submit a SMRITI Party Sales Upload to trigger PSV ledger processing.
+	Replaces frappe.client.submit from sales-upload.html.
+	"""
+	if not frappe.has_permission("SMRITI Party Sales Upload", "submit"):
+		frappe.throw(_("Not authorized to submit sales uploads."), frappe.PermissionError)
+	doc = frappe.get_doc("SMRITI Party Sales Upload", name)
+	doc.submit()
+	frappe.db.commit()
+	return {"name": doc.name, "status": doc.docstatus}

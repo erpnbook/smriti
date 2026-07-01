@@ -1,4 +1,4 @@
-{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/smriti-sfc.html
   @description: SMRITI Sales Force Commission (SFC) Studio — Standalone UI
@@ -849,8 +849,7 @@
     }
 
     const name = activeCalcItem.settlement_name;
-    const action = name ? API.call('frappe.client.update', { doctype: 'SMRITI Commission Settlement', name: name, doc: doc })
-                         : API.call('frappe.client.insert', { doc: doc });
+    const action = API.call('smriti_retail_os.sfm.api.sfc_api.save_commission_settlement', { employee: doc.employee, company: doc.company, fiscal_year: doc.fiscal_year, month: doc.month, status: doc.status, gross_commission: doc.gross_commission, net_commission: doc.net_commission, adjustments: JSON.stringify(doc.adjustments || []), settlement_name: name || null });
 
     action.then(() => {
       toast(`Commission Settlement status saved as ${targetStatus}!`);
@@ -953,8 +952,7 @@
       return;
     }
 
-    const action = name ? API.call('frappe.client.update', { doctype: 'SMRITI Commission Rule', name: name, doc: doc })
-                         : API.call('frappe.client.insert', { doc: doc });
+    const action = API.call('smriti_retail_os.sfm.api.sfc_api.save_commission_rule', { rule_name: name || null, company: doc.company, employee: doc.employee, rule_type: doc.rule_type, base_rate: doc.base_rate, threshold_amount: doc.threshold_amount, accelerator_rate: doc.accelerator_rate, effective_from: doc.effective_from, effective_to: doc.effective_to, is_active: doc.is_active });
                          
     action.then(() => {
       toast('Commission rule saved successfully!');
