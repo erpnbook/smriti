@@ -122,7 +122,6 @@ def extend_bootinfo(bootinfo):
         # Injects licensing summary for License validation gate (Level 7 check)
         from smriti_retail_os.license.manager import get_license_summary
         bootinfo.smriti_license = get_license_summary()
-
         # SMRITI Navigation Manager (SNM) dynamic resolution
         try:
             from smriti_retail_os.navigation.navigation_service import get_user_navigation
@@ -130,8 +129,9 @@ def extend_bootinfo(bootinfo):
         except Exception as e:
             frappe.log_error(str(e), "SMRITI Navigation Manager Resolution Error")
             try:
+                import json
                 from smriti_retail_os.navigation.navigation_service import CANONICAL_NAV
-                bootinfo.smriti_navigation = CANONICAL_NAV
+                bootinfo.smriti_navigation = json.loads(json.dumps(CANONICAL_NAV))
             except Exception:
                 pass
 

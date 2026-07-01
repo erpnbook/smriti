@@ -46,6 +46,11 @@ class TestClienteling(FrappeTestCase):
             cls.warehouse = frappe.db.get_value("Warehouse", {"warehouse_name": cls.store})
             
         # 3. Create a Test Employee (Executive)
+        if not frappe.db.exists("Gender", "Male"):
+            gender = frappe.new_doc("Gender")
+            gender.gender = "Male"
+            gender.insert(ignore_permissions=True)
+
         cls.employee_name = "_Test Clienteling Executive"
         if not frappe.db.exists("Employee", {"first_name": cls.employee_name}):
             emp = frappe.new_doc("Employee")

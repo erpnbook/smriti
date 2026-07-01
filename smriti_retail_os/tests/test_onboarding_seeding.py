@@ -43,7 +43,7 @@ class TestOnboardingSeeding(unittest.TestCase):
         self.assertGreater(formula_count_1, 0, "Formula definitions were not seeded.")
         self.assertGreater(term_count_1, 0, "Business terms were not seeded.")
         self.assertEqual(formula_count_1, 13, f"Expected 13 formulas, found {formula_count_1}")
-        self.assertEqual(term_count_1, 32, f"Expected 32 terms, found {term_count_1}")
+        self.assertEqual(term_count_1, 52, f"Expected 52 terms, found {term_count_1}")
 
         # Phase 3: Run setup function a second time (simulating a subsequent migration/update)
         setup_smriti_retail_os()

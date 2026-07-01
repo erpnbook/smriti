@@ -15,6 +15,28 @@ class TestTallyIntegration(unittest.TestCase):
 		setup_smriti_retail_os()
 		frappe.db.commit()
 
+	def _ensure_fiscal_year_for_company(self, company):
+		fy_name = "2026-2027"
+		if not frappe.db.exists("Fiscal Year", fy_name):
+			fy = frappe.new_doc("Fiscal Year")
+			fy.year = fy_name
+			fy.year_start_date = "2026-04-01"
+			fy.year_end_date = "2027-03-31"
+			fy.insert(ignore_permissions=True)
+		else:
+			fy = frappe.get_doc("Fiscal Year", fy_name)
+		
+		if fy.companies:
+			company_names = [c.company for c in fy.companies]
+			if company not in company_names:
+				fy.append("companies", {"company": company})
+				fy.save(ignore_permissions=True)
+		else:
+			fy.append("companies", {"company": company})
+			fy.save(ignore_permissions=True)
+			
+		frappe.db.commit()
+
 	def setUp(self):
 		# Provision test Company if it doesn't exist
 		self.company = "Test SMRITI Company"
@@ -25,6 +47,7 @@ class TestTallyIntegration(unittest.TestCase):
 			comp.country = "India"
 			comp.insert(ignore_permissions=True)
 			frappe.db.commit()
+		self._ensure_fiscal_year_for_company(self.company)
 
 		cust_group = frappe.db.get_value("Customer Group", {"is_group": 0}) or "Individual"
 		territory = frappe.db.get_value("Territory", {"is_group": 0}) or "All Territories"

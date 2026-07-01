@@ -1,6 +1,6 @@
 /**
  * @file: smriti_retail_os/public/js/smriti_theme_manager.js
- * @description: Handles user login, registration, and JWT token generation.
+ * @description: SMRITI UI Theme Manager — applies theme styles and configuration.
  * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
  * @date: 2026-05-28
  * @version: 1.8.6
@@ -249,11 +249,11 @@
        Pre-condition 2 (THEME-002): Real-time theme switching without reload.
        Status: IMPLEMENTED — 2026-06-24 (ux_theme_audit_v1.1.md)
 
-       Valid themeKey values:
-         'hybrid-light'    — Neumorphic clay. Default. Premium visual.
-         'hybrid-dark'     — Dark mode. Night-shift / technical users.
-         'sleek-compact'   — High-density flat. Inventory / purchase ops.
-         'minimalist'      — Ultra-clean enterprise white.
+        Valid themeKey values:
+          'hybrid-light'    — Neumorphic clay. Premium visual.
+          'hybrid-dark'     — Dark mode. Night-shift / technical users.
+          'sleek-compact'   — High-density flat. Default. Inventory / purchase ops.
+          'minimalist'      — Ultra-clean enterprise white.
 
        Fires 'smriti-theme-changed' CustomEvent on document.
        Components that render theme-sensitive content should listen for it.
@@ -339,7 +339,9 @@
        For Frappe pages, initUIEngine() should be called from the page's
        frappe.ready() or page init function to ensure frappe.boot is loaded.
     ═══════════════════════════════════════════════════════════════════ */
-    if (document.readyState === "loading") {
+    if (document.readyState !== "loading") {
+        SMRITI.initUIEngine();
+    } else {
         document.addEventListener("DOMContentLoaded", function () {
             SMRITI.initUIEngine();
         });
