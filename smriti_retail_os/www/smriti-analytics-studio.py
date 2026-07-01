@@ -1,0 +1,39 @@
+# -*- coding: utf-8 -*-
+#
+# @file: smriti_retail_os/www/smriti-analytics-studio.py
+# @description: Auth guard + context for SMRITI Analytics Studio page
+# @author: Jawahar R. Mallah
+# @version: 1.0.0
+#
+
+import frappe
+
+
+def get_context(context):
+    """
+    Authentication guard and context injection for SMRITI Analytics Studio.
+    Follows SMRITI Rule 7: every new page must have auth + context.
+    """
+    # Enforce authentication
+    if frappe.session.user == "Guest":
+        frappe.local.flags.redirect_location = "/login?redirect-to=/smriti-analytics-studio"
+        raise frappe.Redirect
+
+    # Page meta
+    context.title = "SMRITI Analytics Studio"
+    context.no_cache = 1
+    context.show_sidebar = False
+
+    # User display info
+    context.user_fullname = frappe.get_cached_value(
+        "User", frappe.session.user, "full_name"
+    ) or frappe.session.user
+
+    # Company (for filter defaults)
+    context.default_company = frappe.defaults.get_user_default("company") or \
+        frappe.db.get_single_value("Global Defaults", "default_company") or ""
+
+    # Available currencies
+    context.currency_symbol = frappe.db.get_single_value("System Settings", "currency") or "INR"
+
+    return context

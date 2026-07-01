@@ -132,6 +132,9 @@ CANONICAL_NAV = {
             "label": "Reports",
             "status": "active",
             "items": [
+                { "id": "sas_hdr", "label": "Analytics Studio", "type": "header" },
+                { "id": "analytics_studio", "label": "Analytics Studio", "route": "/smriti-analytics-studio", "standalone_route": "/smriti-analytics-studio", "status": "active", "badge": "NEW" },
+                { "id": "reports_hdr", "label": "Classic Reports", "type": "header" },
                 { "id": "sales_reports", "label": "Sales Reports", "route": "/reports/sales", "standalone_route": "/reports/sales", "status": "active" },
                 { "id": "inventory_reports", "label": "Inventory Reports", "route": "/reports/inventory", "standalone_route": "/reports/inventory", "status": "active" },
                 { "id": "finance_reports", "label": "Finance Reports", "route": "/reports/finance", "standalone_route": "/reports/finance", "status": "active" },

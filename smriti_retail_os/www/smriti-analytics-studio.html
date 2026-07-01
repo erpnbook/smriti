@@ -1,0 +1,401 @@
+<!--
+ * @file: smriti_retail_os/www/smriti-analytics-studio.html
+ * @description: SMRITI Analytics Studio (SAS) — Enterprise Report Studio
+ *               AG Grid Community Edition + Chart.js v4
+ *               Metadata-driven, Dataset Engine backed, Formula Explain enabled.
+ * @author: Jawahar R. Mallah
+ * @version: 1.0.0
+-->
+
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<html lang="en">
+<head>
+{%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SMRITI Analytics Studio</title>
+<meta name="description" content="Enterprise reporting studio — Browse, build, filter, pivot, export and explain reports across all SMRITI modules."/>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+<!-- AG Grid Community Edition v32 -->
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.3.3/dist/ag-grid-community.min.js"></script>
+
+<!-- Chart.js v4 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+<!-- SAS Stylesheet -->
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/sas.css"/>
+</head>
+
+<body>
+<div class="sas-app" id="sas-app">
+
+  <!-- ══════════════════════════════════════════════════
+       LEFT PANEL — REPORT LIBRARY
+  ══════════════════════════════════════════════════ -->
+  <div class="sas-left-panel" id="sas-left-panel">
+
+    <div class="sas-left-header">
+      <div class="sas-logo-icon">
+        <span class="material-symbols-outlined" style="font-size:18px;color:#fff">analytics</span>
+      </div>
+      <h2>Analytics <span>Studio</span></h2>
+    </div>
+
+    <div class="sas-search-wrap">
+      <input type="text" id="sas-library-search" placeholder="Search reports…" autocomplete="off"/>
+    </div>
+
+    <div class="sas-report-library" id="sas-report-library">
+      <!-- Categories and reports rendered by sas_core.js -->
+      <div class="sas-empty-state" style="padding:24px;font-size:12px;color:var(--sas-text-3)">
+        <div class="sas-spinner"></div>
+        <p style="margin-top:12px">Loading reports…</p>
+      </div>
+    </div>
+
+    <!-- Coming Soon entries -->
+    <div class="sas-left-footer">
+      <div class="sas-coming-soon-label">Coming Soon</div>
+      <div class="sas-cs-item">
+        <span class="material-symbols-outlined" style="font-size:16px">dashboard</span>
+        Dashboard Designer
+        <span class="sas-cs-pill">Q4</span>
+      </div>
+      <div class="sas-cs-item">
+        <span class="material-symbols-outlined" style="font-size:16px">speed</span>
+        KPI Builder
+        <span class="sas-cs-pill">Q4</span>
+      </div>
+      <div class="sas-cs-item">
+        <span class="material-symbols-outlined" style="font-size:16px">schedule_send</span>
+        Scheduled Reports
+        <span class="sas-cs-pill">Q1 '27</span>
+      </div>
+      <div class="sas-cs-item">
+        <span class="material-symbols-outlined" style="font-size:16px">auto_awesome</span>
+        AI Insights
+        <span class="sas-cs-pill">Q1 '27</span>
+      </div>
+    </div>
+
+  </div><!-- /sas-left-panel -->
+
+  <!-- ══════════════════════════════════════════════════
+       MAIN CONTENT AREA
+  ══════════════════════════════════════════════════ -->
+  <div class="sas-main" id="sas-main">
+
+    <!-- Topbar -->
+    <div class="sas-topbar">
+      <button class="sas-toggle-sidebar" id="sas-toggle-sidebar" title="Toggle sidebar">
+        <span class="material-symbols-outlined" style="font-size:20px">menu</span>
+      </button>
+
+      <div class="sas-breadcrumb">
+        <a href="/smriti">SMRITI</a>
+        <span class="sep">/</span>
+        <span>Analytics Studio</span>
+        <span class="sep" id="sas-breadcrumb-sep" style="display:none">/</span>
+        <span class="active" id="sas-breadcrumb-report"></span>
+      </div>
+
+      <span id="sas-report-title" style="font-size:14px;font-weight:700;color:var(--sas-text-1);margin-left:8px"></span>
+
+      <div class="sas-topbar-actions">
+        <!-- KPI Toggle -->
+        <button class="sas-btn-icon active" id="sas-btn-kpi" title="Toggle KPI Cards">
+          <span class="material-symbols-outlined" style="font-size:18px">speed</span>
+        </button>
+
+        <!-- Filter Toggle -->
+        <button class="sas-btn-icon active" id="sas-btn-filter" title="Toggle Filters">
+          <span class="material-symbols-outlined" style="font-size:18px">filter_list</span>
+        </button>
+
+        <!-- Views (Save/Load) -->
+        <button class="sas-btn-icon" id="sas-btn-views" title="Saved Views">
+          <span class="material-symbols-outlined" style="font-size:18px">bookmark</span>
+        </button>
+
+        <!-- Export dropdown -->
+        <div style="position:relative">
+          <button class="sas-btn sas-btn-ghost" id="sas-btn-export-toggle"
+            onclick="document.getElementById('sas-export-menu').classList.toggle('open')">
+            <span class="material-symbols-outlined" style="font-size:16px">download</span>
+            Export
+          </button>
+          <div id="sas-export-menu" style="
+            display:none; position:absolute; right:0; top:38px; z-index:300;
+            background:var(--sas-bg-surface); border:1px solid var(--sas-border);
+            border-radius:10px; box-shadow:var(--sas-shadow);
+            min-width:160px; padding:6px 0;
+          " class="">
+            <div id="sas-btn-export-csv" onclick="document.getElementById('sas-export-menu').classList.remove('open');SASExport.exportCSV()"
+              style="padding:9px 16px;cursor:pointer;font-size:12px;display:flex;gap:10px;align-items:center;color:var(--sas-text-1)">
+              <span class="material-symbols-outlined" style="font-size:16px">description</span> CSV
+            </div>
+            <div id="sas-btn-export-excel" onclick="document.getElementById('sas-export-menu').classList.remove('open');SASExport.exportExcel()"
+              style="padding:9px 16px;cursor:pointer;font-size:12px;display:flex;gap:10px;align-items:center;color:var(--sas-text-1)">
+              <span class="material-symbols-outlined" style="font-size:16px">table_view</span> Excel (.xlsx)
+            </div>
+            <div id="sas-btn-export-pdf" onclick="document.getElementById('sas-export-menu').classList.remove('open');SASExport.exportPDF()"
+              style="padding:9px 16px;cursor:pointer;font-size:12px;display:flex;gap:10px;align-items:center;color:var(--sas-text-1)">
+              <span class="material-symbols-outlined" style="font-size:16px">picture_as_pdf</span> PDF / Print
+            </div>
+          </div>
+        </div><!-- /export dropdown -->
+
+        <!-- Back to SMRITI -->
+        <a href="/smriti" class="sas-btn sas-btn-ghost">
+          <span class="material-symbols-outlined" style="font-size:16px">arrow_back</span>
+          Back
+        </a>
+      </div><!-- /topbar-actions -->
+
+      <!-- Saved Views Panel (positioned relative to topbar) -->
+      <div class="sas-views-panel" id="sas-views-panel">
+        <div class="sas-views-header">
+          <span class="material-symbols-outlined" style="font-size:16px;margin-right:6px">bookmark</span>
+          Saved Views
+          <button onclick="document.getElementById('sas-views-panel').classList.remove('open');document.getElementById('sas-btn-views').classList.remove('active')">✕</button>
+        </div>
+        <div class="sas-views-save-row">
+          <input type="text" id="sas-save-view-name" placeholder="View name…" autocomplete="off"
+            onkeydown="if(event.key==='Enter') SASViews.handleSaveSubmit()"/>
+          <button class="sas-btn sas-btn-primary" style="padding:6px 12px;font-size:11px"
+            onclick="SASViews.handleSaveSubmit()">Save</button>
+        </div>
+        <div class="sas-views-list" id="sas-views-list">
+          <p style="padding:12px 14px;color:var(--sas-text-3);font-size:12px">No saved views.</p>
+        </div>
+      </div>
+
+    </div><!-- /topbar -->
+
+    <!-- KPI Card Row -->
+    <div class="sas-kpi-row" id="sas-kpi-row">
+      <!-- Rendered by sas_kpi.js -->
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="sas-filter-bar" id="sas-filter-bar">
+      <!-- Rendered by sas_filters.js -->
+
+      <!-- Date presets -->
+      <div class="sas-filter-field" id="sas-date-presets" style="justify-content:flex-end">
+        <label style="visibility:hidden">preset</label>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="sas-btn sas-btn-ghost" style="padding:4px 8px;font-size:10px" onclick="SASFilters.applyPreset('today')">Today</button>
+          <button class="sas-btn sas-btn-ghost" style="padding:4px 8px;font-size:10px" onclick="SASFilters.applyPreset('this_month')">MTD</button>
+          <button class="sas-btn sas-btn-ghost" style="padding:4px 8px;font-size:10px" onclick="SASFilters.applyPreset('this_quarter')">QTD</button>
+          <button class="sas-btn sas-btn-ghost" style="padding:4px 8px;font-size:10px" onclick="SASFilters.applyPreset('this_year')">FY</button>
+        </div>
+      </div>
+
+      <div class="sas-filter-actions" id="sas-filter-actions">
+        <button class="sas-btn sas-btn-primary" id="sas-btn-apply">
+          <span class="material-symbols-outlined" style="font-size:15px">refresh</span>
+          Apply
+        </button>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="sas-toolbar" id="sas-toolbar">
+      <!-- Group By -->
+      <button class="sas-btn-icon" id="sas-btn-groupby" title="Group By">
+        <span class="material-symbols-outlined" style="font-size:17px">account_tree</span>
+      </button>
+      <span class="sas-toolbar-label">Group</span>
+
+      <div class="sas-toolbar-sep"></div>
+
+      <!-- Pivot -->
+      <button class="sas-btn-icon" id="sas-btn-pivot" title="Pivot Mode">
+        <span class="material-symbols-outlined" style="font-size:17px">pivot_table_chart</span>
+      </button>
+      <span class="sas-toolbar-label" id="sas-pivot-label">Pivot</span>
+
+      <div class="sas-toolbar-sep"></div>
+
+      <!-- Column Chooser -->
+      <button class="sas-btn-icon" id="sas-btn-cols" title="Column Chooser">
+        <span class="material-symbols-outlined" style="font-size:17px">view_column</span>
+      </button>
+      <span class="sas-toolbar-label">Columns</span>
+
+      <!-- Column Chooser Panel -->
+      <div class="sas-col-chooser" id="sas-col-chooser">
+        <div class="sas-col-chooser-header">
+          Columns
+          <button onclick="document.getElementById('sas-col-chooser').classList.remove('open')">✕</button>
+        </div>
+        <div class="sas-col-chooser-body" id="sas-col-chooser-body"></div>
+      </div>
+
+      <div class="sas-toolbar-sep"></div>
+
+      <!-- Chart Toggle -->
+      <button class="sas-btn-icon" id="sas-btn-chart" title="Toggle Chart Panel">
+        <span class="material-symbols-outlined" style="font-size:17px">bar_chart</span>
+      </button>
+      <span class="sas-toolbar-label">Chart</span>
+
+      <div class="sas-toolbar-sep"></div>
+
+      <!-- Density -->
+      <div id="sas-toolbar-density">
+        <span class="sas-toolbar-label">Density</span>
+        <select class="sas-density-select" id="sas-density-select" title="Row Density">
+          <option value="normal">Normal</option>
+          <option value="compact">Compact</option>
+          <option value="comfortable">Comfortable</option>
+        </select>
+      </div>
+
+      <div class="sas-toolbar-sep"></div>
+
+      <!-- Quick Filter -->
+      <div class="sas-quick-filter-wrap">
+        <input type="text" id="sas-quick-filter" placeholder="Quick filter rows…" autocomplete="off"/>
+      </div>
+
+      <!-- Row Count Badge -->
+      <div class="sas-row-count" id="sas-status-rows">
+        Rows: <strong>—</strong>
+      </div>
+
+      <!-- Fullscreen -->
+      <button class="sas-btn-icon" id="sas-btn-fullscreen" title="Full Screen" style="margin-left:auto">
+        <span class="material-symbols-outlined" style="font-size:17px">fullscreen</span>
+      </button>
+    </div><!-- /toolbar -->
+
+    <!-- Content Area -->
+    <div class="sas-content-area">
+
+      <!-- Loading Overlay -->
+      <div class="sas-loading-overlay hidden" id="sas-loading-overlay">
+        <div class="sas-spinner"></div>
+        <p>Loading report…</p>
+      </div>
+
+      <!-- AG Grid Container -->
+      <div class="sas-grid-container" id="sas-grid-container">
+        <!-- Empty state (shown before any report is selected) -->
+        <div class="sas-empty-state" id="sas-empty-state">
+          <span class="sas-empty-icon material-symbols-outlined">analytics</span>
+          <h3>SMRITI Analytics Studio</h3>
+          <p>Select a report from the library on the left to begin.</p>
+          <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;justify-content:center">
+            <span style="font-size:11px;color:var(--sas-text-3)">✓ AG Grid  &nbsp;·&nbsp; ✓ Formula Explain  &nbsp;·&nbsp; ✓ Export to Excel  &nbsp;·&nbsp; ✓ Saved Views</span>
+          </div>
+        </div>
+      </div><!-- /grid-container -->
+
+      <!-- Chart Panel (collapsible) -->
+      <div class="sas-chart-panel hidden" id="sas-chart-panel">
+        <div class="sas-chart-header">
+          <span class="material-symbols-outlined" style="font-size:16px;color:var(--sas-accent)">bar_chart</span>
+          <h4 id="sas-chart-title">Chart</h4>
+
+          <div class="sas-chart-type-tabs">
+            <button class="sas-chart-tab active" onclick="SASCharts.setType('bar', SASGrid.getCurrentRows(), SAS.getCurrentMeta(), SAS.getCurrentMeta().default_chart)">Bar</button>
+            <button class="sas-chart-tab" onclick="SASCharts.setType('line', SASGrid.getCurrentRows(), SAS.getCurrentMeta(), SAS.getCurrentMeta().default_chart)">Line</button>
+            <button class="sas-chart-tab" onclick="SASCharts.setType('area', SASGrid.getCurrentRows(), SAS.getCurrentMeta(), SAS.getCurrentMeta().default_chart)">Area</button>
+            <button class="sas-chart-tab" onclick="SASCharts.setType('pie', SASGrid.getCurrentRows(), SAS.getCurrentMeta(), SAS.getCurrentMeta().default_chart)">Pie</button>
+            <button class="sas-chart-tab" onclick="SASCharts.setType('donut', SASGrid.getCurrentRows(), SAS.getCurrentMeta(), SAS.getCurrentMeta().default_chart)">Donut</button>
+            <button class="sas-chart-tab" onclick="SASCharts.setType('stacked_bar', SASGrid.getCurrentRows(), SAS.getCurrentMeta(), SAS.getCurrentMeta().default_chart)">Stacked</button>
+          </div>
+
+          <button class="sas-btn-icon" onclick="document.getElementById('sas-btn-chart').click()"
+            style="margin-left:auto" title="Close chart">
+            <span class="material-symbols-outlined" style="font-size:16px">close</span>
+          </button>
+        </div>
+        <div class="sas-chart-body">
+          <canvas id="sas-chart-canvas"></canvas>
+        </div>
+      </div><!-- /chart-panel -->
+
+      <!-- Status Bar -->
+      <div class="sas-status-bar">
+        <div class="sas-status-item" id="sas-status-rows">
+          Rows: <strong>—</strong>
+        </div>
+        <div class="sas-status-sep"></div>
+        <div class="sas-status-item" id="sas-status-report">
+          <span class="material-symbols-outlined" style="font-size:14px">analytics</span>
+          SMRITI Analytics Studio v1.0
+        </div>
+        <div class="sas-status-sep" style="margin-left:auto"></div>
+        <div class="sas-status-item" id="sas-status-user" style="margin-left:auto">
+          <span class="material-symbols-outlined" style="font-size:14px">person</span>
+          {{ frappe.session.user | default('') }}
+        </div>
+      </div>
+
+    </div><!-- /content-area -->
+  </div><!-- /sas-main -->
+
+</div><!-- /sas-app -->
+
+<!-- ═══ Explain Overlay (global, outside app shell) ═══ -->
+<div class="sas-explain-overlay" id="sas-explain-overlay">
+  <div class="sas-explain-modal" id="sas-explain-modal"></div>
+</div>
+
+<!-- Print-only title -->
+<div id="sas-print-title" style="display:none;font-weight:700;font-size:16px;margin-bottom:12px;text-align:center"></div>
+
+<!-- SAS JS Components (order matters) -->
+<script src="/assets/smriti_retail_os/js/sas_filters.js"></script>
+<script src="/assets/smriti_retail_os/js/sas_kpi.js"></script>
+<script src="/assets/smriti_retail_os/js/sas_charts.js"></script>
+<script src="/assets/smriti_retail_os/js/sas_explain.js"></script>
+<script src="/assets/smriti_retail_os/js/sas_export.js"></script>
+<script src="/assets/smriti_retail_os/js/sas_views.js"></script>
+<script src="/assets/smriti_retail_os/js/sas_grid.js"></script>
+<script src="/assets/smriti_retail_os/js/sas_core.js"></script>
+
+<script>
+  // Close export menu on outside click
+  document.addEventListener('click', function(e) {
+    const menu = document.getElementById('sas-export-menu');
+    const btn  = document.getElementById('sas-btn-export-toggle');
+    if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+      menu.classList.remove('open');
+    }
+    // Also close views panel
+    const views = document.getElementById('sas-views-panel');
+    const viewBtn = document.getElementById('sas-btn-views');
+    if (views && viewBtn && !views.contains(e.target) && !viewBtn.contains(e.target)) {
+      views.classList.remove('open');
+      viewBtn.classList.remove('active');
+    }
+    // Close col chooser
+    const cc = document.getElementById('sas-col-chooser');
+    const ccBtn = document.getElementById('sas-btn-cols');
+    if (cc && ccBtn && !cc.contains(e.target) && !ccBtn.contains(e.target)) {
+      cc.classList.remove('open');
+    }
+  });
+
+  // Keyboard shortcut: R = refresh report
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'r' && !e.ctrlKey && !e.metaKey &&
+        !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) {
+      if (SAS.getCurrentReport()) SAS.fetchData();
+    }
+  });
+</script>
+
+</body>
+</html>
+{% endblock %}
