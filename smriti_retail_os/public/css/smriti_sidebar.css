@@ -256,6 +256,28 @@ body.popout-mode #smriti-sidebar-target.sidebar {
   transition: opacity 0.15s ease;
 }
 
+/* ── Nav Item Badge (e.g. "NEW", "BETA") ─────────────────────────────── */
+.smriti-nav-badge {
+  margin-left: auto;
+  padding: 1px 6px;
+  border-radius: 20px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: var(--smriti-color-brand-primary);
+  color: var(--smriti-color-bg-primary, #fff);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 0.15s ease;
+}
+
+/* Hide badge when sidebar is collapsed — no room to show it */
+.smriti-sidebar.collapsed .smriti-nav-badge,
+#smriti-sidebar-target.sidebar.collapsed .smriti-nav-badge {
+  display: none;
+}
+
 .smriti-sidebar.collapsed .smriti-sidebar-item-label,
 #smriti-sidebar-target.sidebar.collapsed .smriti-sidebar-item-label {
   opacity: 0;

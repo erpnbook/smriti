@@ -138,6 +138,9 @@ window.SMRITI = window.SMRITI || {};
                     html.push('<a class="smriti-sidebar-item' + (isItemActive ? ' active' : '') + '" href="' + itemRoute + '">');
                     html.push('  <div class="smriti-sidebar-item-icon">' + iconHtml + '</div>');
                     html.push('  <span class="smriti-sidebar-item-label">' + item.label + '</span>');
+                    if (item.badge) {
+                        html.push('  <span class="smriti-nav-badge">' + item.badge + '</span>');
+                    }
                     html.push('</a>');
                 });
 
