@@ -8,6 +8,7 @@
 import frappe
 import json
 import hashlib
+import os
 
 CANONICAL_NAV = {
     "sections": [
@@ -219,6 +220,12 @@ def get_user_navigation(user=None):
     # 2. Compute navigation tree
     resolved_nav = _resolve_navigation_tree(user, active_company)
     
+    # Add versioning metadata
+    resolved_nav["cache_hash"] = cache_hash
+    resolved_nav["generated_time"] = frappe.utils.now()
+    resolved_nav["navigation_version"] = "2.0.0"
+    resolved_nav["schema_version"] = "1.0.0"
+    
     # 3. Save to cache
     frappe.cache().set_value(cache_key, json.dumps(resolved_nav), expires_in_sec=86400)
     return resolved_nav
@@ -380,3 +387,99 @@ def generate_upgrade_merge_report():
             
     return merge_report
 
+
+@frappe.whitelist()
+def run_navigation_health_check():
+    """
+    Executes the modular SMRITI Navigation Validator Engine.
+    Compiles structured diagnostics across all registered validation rules.
+    """
+    # Import registry to load the rules dynamically
+    from smriti_retail_os.navigation.validator import VALIDATOR_REGISTRY
+    
+    warnings = []
+    for validator in VALIDATOR_REGISTRY:
+        try:
+            rule_warnings = validator.validate(CANONICAL_NAV)
+            if rule_warnings:
+                warnings.extend(rule_warnings)
+        except Exception as e:
+            warnings.append({
+                "rule_id": validator.rule_id,
+                "severity": "CRITICAL",
+                "module": "Validator Engine",
+                "menu": validator.title,
+                "route": "",
+                "source": "navigation_service.py",
+                "file": "navigation_service.py",
+                "line": 0,
+                "recommendation": f"Validation execution failure: {str(e)}",
+                "auto_fix": False
+            })
+            
+    # Track historical snapshot in a JSON log file under public/files for trend tracking
+    log_health_snapshot(warnings)
+    
+    return {
+        "status": "Healthy" if not warnings else "Warnings",
+        "total_warnings": len(warnings),
+        "diagnostics": warnings
+    }
+
+def log_health_snapshot(warnings):
+    """
+    Appends a new diagnostic health snapshot to files/smriti_nav_health_history.json.
+    """
+    log_dir = frappe.get_site_path("public", "files")
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+        
+    log_file = os.path.join(log_dir, "smriti_nav_health_history.json")
+    
+    # Calculate counts by severity
+    critical_count = sum(1 for w in warnings if w["severity"] == "CRITICAL")
+    high_count = sum(1 for w in warnings if w["severity"] == "HIGH")
+    medium_count = sum(1 for w in warnings if w["severity"] == "MEDIUM")
+    low_count = sum(1 for w in warnings if w["severity"] == "LOW")
+    
+    snapshot = {
+        "timestamp": frappe.utils.now(),
+        "total_warnings": len(warnings),
+        "critical": critical_count,
+        "high": high_count,
+        "medium": medium_count,
+        "low": low_count
+    }
+    
+    history = []
+    if os.path.exists(log_file):
+        try:
+            with open(log_file, "r") as f:
+                history = json.load(f)
+        except Exception:
+            pass
+            
+    # Keep only the last 30 runs
+    history.append(snapshot)
+    history = history[-30:]
+    
+    try:
+        with open(log_file, "w") as f:
+            json.dump(history, f, indent=4)
+    except Exception:
+        pass
+
+
+@frappe.whitelist()
+def get_navigation_health_history():
+    """
+    Returns the last 30 navigation health snapshots for trend chart display.
+    """
+    log_file = frappe.get_site_path("public", "files", "smriti_nav_health_history.json")
+    if not os.path.exists(log_file):
+        return []
+    try:
+        with open(log_file, "r") as f:
+            return json.load(f)
+    except Exception:
+        return []

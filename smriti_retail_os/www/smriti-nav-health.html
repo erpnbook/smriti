@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Navigation Health Dashboard — SMRITI Retail OS</title>
+    <meta name="description" content="SMRITI Navigation Governance — Validator Engine diagnostics, route integrity, permission audits, and health trends." />
+    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar.css" />
+    <style>
+        :root {
+            --navy: #1A2B5C;
+            --blue: #2563EB;
+            --blue-light: #3B82F6;
+            --white: #FFFFFF;
+            --surface: #F1F5F9;
+            --surface-2: #E2E8F0;
+            --text: #1E293B;
+            --text-muted: #64748B;
+            --border: #CBD5E1;
+            --critical: #EF4444;
+            --high: #F97316;
+            --medium: #EAB308;
+            --low: #22C55E;
+            --healthy: #10B981;
+            --radius: 10px;
+            --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+            --shadow-md: 0 4px 12px rgba(0,0,0,.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--surface);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ── Layout ── */
+        .nav-health-shell {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .nav-health-main {
+            flex: 1;
+            padding: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* ── Page Header ── */
+        .nav-health-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .nav-health-breadcrumb {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .nav-health-breadcrumb a {
+            color: var(--blue);
+            text-decoration: none;
+        }
+
+        .nav-health-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .nav-health-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .btn-run-check {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, transform .15s;
+        }
+        .btn-run-check:hover { background: var(--navy); transform: translateY(-1px); }
+        .btn-run-check:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+        /* ── KPI Cards ── */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .kpi-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border-top: 4px solid var(--border);
+            transition: box-shadow .2s;
+        }
+        .kpi-card:hover { box-shadow: var(--shadow-md); }
+        .kpi-card.healthy { border-top-color: var(--healthy); }
+        .kpi-card.critical { border-top-color: var(--critical); }
+        .kpi-card.high { border-top-color: var(--high); }
+        .kpi-card.medium { border-top-color: var(--medium); }
+        .kpi-card.low { border-top-color: var(--low); }
+        .kpi-card.total { border-top-color: var(--blue); }
+
+        .kpi-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--navy);
+            line-height: 1;
+        }
+
+        .kpi-status {
+            font-size: 12px;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        /* ── Trend Chart ── */
+        .section-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .section-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--surface-2);
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--navy);
+        }
+
+        .section-card-body { padding: 20px; }
+
+        .trend-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 80px;
+        }
+
+        .trend-bar-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            height: 100%;
+            justify-content: flex-end;
+        }
+
+        .trend-bar {
+            width: 100%;
+            min-height: 4px;
+            border-radius: 4px 4px 0 0;
+            background: var(--blue);
+            transition: height .4s ease;
+        }
+        .trend-bar.has-warnings { background: var(--high); }
+        .trend-bar.critical-warnings { background: var(--critical); }
+
+        .trend-label {
+            font-size: 9px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 32px;
+            text-align: center;
+        }
+
+        /* ── Diagnostics Table ── */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .04em;
+        }
+        .badge.CRITICAL { background: #FEE2E2; color: var(--critical); }
+        .badge.HIGH { background: #FFEDD5; color: #C2410C; }
+        .badge.MEDIUM { background: #FEF9C3; color: #A16207; }
+        .badge.LOW { background: #DCFCE7; color: #15803D; }
+
+        .rule-badge {
+            display: inline-block;
+            background: var(--surface-2);
+            color: var(--text-muted);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: monospace;
+            font-weight: 700;
+        }
+
+        .diagnostics-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .diagnostics-table th {
+            text-align: left;
+            padding: 10px 12px;
+            background: var(--surface);
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .diagnostics-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--surface-2);
+            vertical-align: top;
+        }
+
+        .diagnostics-table tr:last-child td { border-bottom: none; }
+
+        .diagnostics-table tr:hover td { background: var(--surface); }
+
+        .recommendation-text {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: 3px;
+        }
+
+        /* ── Status Banner ── */
+        .status-banner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            border-radius: var(--radius);
+            margin-bottom: 24px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .status-banner.healthy {
+            background: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #6EE7B7;
+        }
+        .status-banner.warnings {
+            background: #FEF3C7;
+            color: #92400E;
+            border: 1px solid #FCD34D;
+        }
+        .status-banner.error {
+            background: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #FCA5A5;
+        }
+
+        /* ── Export buttons ── */
+        .export-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            justify-content: flex-end;
+        }
+
+        .btn-export {
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: white;
+            cursor: pointer;
+            color: var(--text);
+            transition: background .15s;
+        }
+        .btn-export:hover { background: var(--surface-2); }
+
+        /* ── Empty State ── */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state .es-icon { font-size: 40px; margin-bottom: 12px; }
+        .empty-state p { font-size: 14px; }
+
+        /* ── Spinner ── */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner {
+            width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,.4);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            display: none;
+        }
+        .loading .spinner { display: block; }
+        .loading .btn-text { display: none; }
+    </style>
+</head>
+<body>
+<div class="nav-health-shell">
+    <!-- Sidebar -->
+    <div id="smriti-sidebar-target"></div>
+
+    <!-- Main Content -->
+    <div class="nav-health-main">
+        <!-- Header -->
+        <div class="nav-health-header">
+            <div>
+                <div class="nav-health-breadcrumb">
+                    <a href="/smriti">Home</a> &rsaquo; Administration &rsaquo; Navigation Health
+                </div>
+                <h1 class="nav-health-title">Navigation Health Dashboard</h1>
+                <p class="nav-health-subtitle">Validator Engine — NAV-001 through NAV-006 · Governance Framework v2.0</p>
+            </div>
+            <button class="btn-run-check" id="run-check-btn" onclick="runHealthCheck()">
+                <div class="spinner"></div>
+                <span class="btn-text">▶ Run Health Check</span>
+            </button>
+        </div>
+
+        <!-- Status Banner -->
+        <div id="status-banner" class="status-banner" style="display:none;"></div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid" id="kpi-grid">
+            <div class="kpi-card total">
+                <div class="kpi-label">Total Warnings</div>
+                <div class="kpi-value" id="kpi-total">—</div>
+                <div class="kpi-status" style="color:var(--text-muted)">Run check to populate</div>
+            </div>
+            <div class="kpi-card critical">
+                <div class="kpi-label">Critical</div>
+                <div class="kpi-value" id="kpi-critical">—</div>
+                <div class="kpi-status" style="color:var(--critical)">NAV-001, NAV-002</div>
+            </div>
+            <div class="kpi-card high">
+                <div class="kpi-label">High</div>
+                <div class="kpi-value" id="kpi-high">—</div>
+                <div class="kpi-status" style="color:var(--high)">NAV-003, NAV-005</div>
+            </div>
+            <div class="kpi-card medium">
+                <div class="kpi-label">Medium</div>
+                <div class="kpi-value" id="kpi-medium">—</div>
+                <div class="kpi-status" style="color:var(--medium)">NAV-004, Planned Routes</div>
+            </div>
+            <div class="kpi-card low">
+                <div class="kpi-label">Low</div>
+                <div class="kpi-value" id="kpi-low">—</div>
+                <div class="kpi-status" style="color:var(--low)">NAV-006</div>
+            </div>
+        </div>
+
+        <!-- Trend Chart -->
+        <div class="section-card" id="trend-card" style="display:none;">
+            <div class="section-card-header">
+                <span>⚡ Health History (Last 30 Runs)</span>
+                <span id="trend-last-run" style="font-size:12px; color:var(--text-muted); font-weight:400;"></span>
+            </div>
+            <div class="section-card-body">
+                <div class="trend-bars" id="trend-bars"></div>
+            </div>
+        </div>
+
+        <!-- Diagnostics -->
+        <div class="section-card" id="diagnostics-card" style="display:none;">
+            <div class="section-card-header">
+                <span>🔍 Diagnostics</span>
+                <div class="export-bar" style="margin:0;">
+                    <button class="btn-export" onclick="exportCSV()">⬇ CSV</button>
+                    <button class="btn-export" onclick="exportJSON()">⬇ JSON</button>
+                </div>
+            </div>
+            <div class="section-card-body">
+                <div id="diagnostics-body"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/assets/smriti_retail_os/js/smriti_sidebar.js"></script>
+<script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js"></script>
+<script>
+    // ── Sidebar ──
+    if (window.SMRITI && window.SMRITI.renderSidebar) {
+        window.SMRITI.renderSidebar("administration");
+    }
+
+    // ── State ──
+    let _lastDiagnostics = [];
+
+    // ── Run Health Check ──
+    function runHealthCheck() {
+        const btn = document.getElementById("run-check-btn");
+        btn.disabled = true;
+        btn.classList.add("loading");
+
+        frappe.call({
+            method: "smriti_retail_os.navigation.navigation_service.run_navigation_health_check",
+            callback: function(r) {
+                btn.disabled = false;
+                btn.classList.remove("loading");
+
+                if (!r || !r.message) {
+                    showBanner("error", "⚠ Could not fetch health check results.");
+                    return;
+                }
+
+                const result = r.message;
+                _lastDiagnostics = result.diagnostics || [];
+                renderKPIs(result);
+                renderBanner(result);
+                renderDiagnostics(_lastDiagnostics);
+                loadTrend();
+            },
+            error: function(err) {
+                btn.disabled = false;
+                btn.classList.remove("loading");
+                showBanner("error", "⚠ Error running health check: " + (err.message || "Unknown error"));
+            }
+        });
+    }
+
+    // ── Render KPIs ──
+    function renderKPIs(result) {
+        const diags = result.diagnostics || [];
+        const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
+        diags.forEach(d => { if (counts[d.severity] !== undefined) counts[d.severity]++; });
+
+        document.getElementById("kpi-total").textContent = diags.length;
+        document.getElementById("kpi-critical").textContent = counts.CRITICAL;
+        document.getElementById("kpi-high").textContent = counts.HIGH;
+        document.getElementById("kpi-medium").textContent = counts.MEDIUM;
+        document.getElementById("kpi-low").textContent = counts.LOW;
+    }
+
+    // ── Render Status Banner ──
+    function renderBanner(result) {
+        const banner = document.getElementById("status-banner");
+        const isHealthy = result.status === "Healthy" || result.total_warnings === 0;
+        banner.style.display = "flex";
+        if (isHealthy) {
+            banner.className = "status-banner healthy";
+            banner.textContent = "✅ All Navigation Governance rules passed — no warnings detected.";
+        } else {
+            const criticals = (result.diagnostics || []).filter(d => d.severity === "CRITICAL").length;
+            banner.className = "status-banner warnings";
+            banner.textContent = `⚠ ${result.total_warnings} warning${result.total_warnings !== 1 ? "s" : ""} detected${criticals ? " · " + criticals + " CRITICAL" : ""}. Review diagnostics below.`;
+        }
+    }
+
+    function showBanner(type, msg) {
+        const banner = document.getElementById("status-banner");
+        banner.style.display = "flex";
+        banner.className = "status-banner " + type;
+        banner.textContent = msg;
+    }
+
+    // ── Render Diagnostics ──
+    function renderDiagnostics(diags) {
+        const card = document.getElementById("diagnostics-card");
+        const body = document.getElementById("diagnostics-body");
+        card.style.display = "block";
+
+        if (!diags || diags.length === 0) {
+            body.innerHTML = `<div class="empty-state"><div class="es-icon">✅</div><p>No diagnostic warnings. Navigation is healthy.</p></div>`;
+            return;
+        }
+
+        // Sort: CRITICAL first, then HIGH, MEDIUM, LOW
+        const order = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+        const sorted = [...diags].sort((a, b) => (order[a.severity] || 99) - (order[b.severity] || 99));
+
+        const rows = sorted.map(d => `
+            <tr>
+                <td><span class="rule-badge">${d.rule_id || "—"}</span></td>
+                <td><span class="badge ${d.severity}">${d.severity}</span></td>
+                <td><strong>${escHtml(d.menu || "—")}</strong><div class="recommendation-text">${escHtml(d.module || "")}</div></td>
+                <td><code style="font-size:11px;color:var(--text-muted)">${escHtml(d.route || "—")}</code></td>
+                <td><div class="recommendation-text">${escHtml(d.recommendation || "—")}</div></td>
+            </tr>
+        `).join("");
+
+        body.innerHTML = `
+            <table class="diagnostics-table">
+                <thead>
+                    <tr>
+                        <th>Rule</th>
+                        <th>Severity</th>
+                        <th>Menu / Module</th>
+                        <th>Route</th>
+                        <th>Recommendation</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        `;
+    }
+
+    // ── Load Trend from History ──
+    function loadTrend() {
+        frappe.call({
+            method: "smriti_retail_os.navigation.navigation_service.get_navigation_health_history",
+            callback: function(r) {
+                if (!r || !r.message || !r.message.length) return;
+                renderTrend(r.message);
+            }
+        });
+    }
+
+    function renderTrend(history) {
+        const card = document.getElementById("trend-card");
+        const bars = document.getElementById("trend-bars");
+        card.style.display = "block";
+
+        const maxWarnings = Math.max(...history.map(h => h.total_warnings), 1);
+        const lastRun = history[history.length - 1];
+        document.getElementById("trend-last-run").textContent =
+            "Last run: " + (lastRun ? lastRun.timestamp.substring(0, 16).replace("T", " ") : "—");
+
+        bars.innerHTML = history.map(h => {
+            const pct = Math.round((h.total_warnings / maxWarnings) * 100);
+            const heightPx = Math.max(4, Math.round(pct * 0.72));
+            const cls = h.critical > 0 ? "critical-warnings" : h.total_warnings > 0 ? "has-warnings" : "";
+            const dateStr = h.timestamp ? h.timestamp.substring(5, 10) : "";
+            return `<div class="trend-bar-wrap">
+                <div class="trend-bar ${cls}" style="height:${heightPx}px;" title="${h.total_warnings} warnings on ${h.timestamp}"></div>
+                <div class="trend-label">${dateStr}</div>
+            </div>`;
+        }).join("");
+    }
+
+    // ── Export ──
+    function exportCSV() {
+        if (!_lastDiagnostics.length) return alert("Run health check first.");
+        const headers = ["rule_id", "severity", "module", "menu", "route", "recommendation"];
+        const rows = _lastDiagnostics.map(d => headers.map(h => `"${(d[h] || "").toString().replace(/"/g, '""')}"`).join(","));
+        const csv = [headers.join(","), ...rows].join("\n");
+        downloadFile("smriti_nav_health.csv", csv, "text/csv");
+    }
+
+    function exportJSON() {
+        if (!_lastDiagnostics.length) return alert("Run health check first.");
+        downloadFile("smriti_nav_health.json", JSON.stringify(_lastDiagnostics, null, 2), "application/json");
+    }
+
+    function downloadFile(filename, content, type) {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = filename; a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function escHtml(str) {
+        return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+
+    // ── Auto-run on load ──
+    document.addEventListener("DOMContentLoaded", function() {
+        setTimeout(runHealthCheck, 600);
+    });
+</script>
+</body>
+</html>

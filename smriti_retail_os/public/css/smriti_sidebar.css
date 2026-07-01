@@ -461,3 +461,179 @@ body.popout-mode #smriti-sidebar-target.sidebar {
 #smriti-sidebar-target.sidebar.collapsed .smriti-standalone-theme-pill .theme-label {
   display: none;
 }
+
+/* ── Search Button ── */
+.smriti-cmd-search-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: calc(100% - 24px);
+  margin: 8px 12px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.5);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: background .15s, border-color .15s;
+}
+.smriti-cmd-search-btn:hover {
+  background: rgba(255,255,255,.1);
+  border-color: rgba(255,255,255,.18);
+  color: rgba(255,255,255,.8);
+}
+.smriti-cmd-search-btn kbd {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.15);
+  font-family: inherit;
+  color: rgba(255,255,255,.4);
+}
+.smriti-sidebar.collapsed .smriti-cmd-search-btn span,
+.smriti-sidebar.collapsed .smriti-cmd-search-btn kbd { display: none; }
+
+/* ── Star Button (Favorites) ── */
+.smriti-star-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0 2px;
+  margin-left: auto;
+  line-height: 1;
+  opacity: .4;
+  transition: opacity .15s;
+  color: inherit;
+}
+.smriti-sidebar-item:hover .smriti-star-btn,
+.smriti-star-btn.active {
+  display: inline-flex;
+  opacity: 1;
+}
+.smriti-star-btn.active { opacity: 1; }
+
+/* ── Command Palette Overlay ── */
+.smriti-cmd-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+}
+
+.smriti-cmd-panel {
+  position: fixed;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(580px, 92vw);
+  background: #1e2637;
+  border-radius: 14px;
+  box-shadow: 0 24px 64px rgba(0,0,0,.6);
+  border: 1px solid rgba(255,255,255,.1);
+  z-index: 9999;
+  overflow: hidden;
+  animation: cmdSlideIn .15s ease;
+}
+@keyframes cmdSlideIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.smriti-cmd-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.smriti-cmd-search-icon { flex-shrink: 0; color: rgba(255,255,255,.4); }
+.smriti-cmd-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  color: #fff;
+  font-family: inherit;
+}
+.smriti-cmd-input::placeholder { color: rgba(255,255,255,.3); }
+.smriti-cmd-esc-hint {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.35);
+  font-family: inherit;
+}
+
+.smriti-cmd-results {
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+
+.smriti-cmd-result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .1s;
+  border-left: 3px solid transparent;
+}
+.smriti-cmd-result-item:hover,
+.smriti-cmd-result-item.active {
+  background: rgba(37, 99, 235, .18);
+  border-left-color: var(--smriti-color-primary, #2563EB);
+}
+.smriti-cmd-result-label {
+  font-size: 14px;
+  color: rgba(255,255,255,.9);
+  font-weight: 500;
+}
+.smriti-cmd-result-section {
+  font-size: 11px;
+  color: rgba(255,255,255,.35);
+}
+.smriti-cmd-empty {
+  padding: 24px;
+  text-align: center;
+  color: rgba(255,255,255,.35);
+  font-size: 13px;
+}
+
+/* ── Breadcrumbs ── */
+.smriti-breadcrumbs {
+  padding: 8px 0 12px;
+}
+.smriti-breadcrumb-list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+}
+.smriti-breadcrumb-item {
+  display: flex;
+  align-items: center;
+  color: #94A3B8;
+}
+.smriti-breadcrumb-item a {
+  color: #3B82F6;
+  text-decoration: none;
+  transition: color .15s;
+}
+.smriti-breadcrumb-item a:hover { color: #1A2B5C; }
+.smriti-breadcrumb-item.active { color: #1E293B; font-weight: 500; }
+.smriti-breadcrumb-sep { margin: 0 6px; color: #CBD5E1; }

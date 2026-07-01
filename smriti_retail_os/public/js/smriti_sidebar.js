@@ -101,8 +101,46 @@ window.SMRITI = window.SMRITI || {};
             html.push('  </button>');
             html.push('</div>');
 
+            // ── FAVORITES / PINNED ──
+            var favorites = JSON.parse(localStorage.getItem("smriti-sidebar-favorites") || "[]");
+            var pinnedItems = [];
+            if (favorites.length > 0) {
+                navData.sections.forEach(function(sec) {
+                    (sec.items || []).forEach(function(item) {
+                        if (favorites.indexOf(item.id) !== -1) {
+                            pinnedItems.push({ item: item, sec: sec });
+                        }
+                    });
+                });
+            }
+
+            // ── SEARCH BUTTON ──
+            html.push('<button class="smriti-cmd-search-btn" id="smriti-cmd-trigger" title="Search (Ctrl+K)">');
+            html.push('  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>');
+            html.push('  <span>Search</span>');
+            html.push('  <kbd>⌘K</kbd>');
+            html.push('</button>');
+
             // ── CONTENT GROUPS ──
             html.push('<div class="smriti-sidebar-content">');
+
+            // Pinned group
+            if (pinnedItems.length > 0) {
+                html.push('<div class="smriti-sidebar-group" data-group-id="__pinned__">');
+                html.push('  <div class="smriti-sidebar-group-header"><span>⭐ Pinned</span>' + ICONS.chevron + '</div>');
+                html.push('  <div class="smriti-sidebar-group-items"><div class="smriti-sidebar-group-items-inner">');
+                pinnedItems.forEach(function(p) {
+                    var item = p.item;
+                    var isItemActive = (item.id === activePageId || item.route === activeRoute);
+                    html.push('<a class="smriti-sidebar-item' + (isItemActive ? ' active' : '') + '" href="' + (item.route || "#") + '">');
+                    html.push('  <div class="smriti-sidebar-item-icon">' + (ICONS[p.sec.id] || ICONS.default) + '</div>');
+                    html.push('  <span class="smriti-sidebar-item-label">' + item.label + '</span>');
+                    html.push('  <button class="smriti-star-btn active" data-item-id="' + item.id + '" title="Unpin">⭐</button>');
+                    html.push('</a>');
+                });
+                html.push('  </div></div></div>');
+            }
+
             
             navData.sections.forEach(function (sec) {
                 if (sec.status === "hidden" || !sec.items || sec.items.length === 0) return;
@@ -138,11 +176,14 @@ window.SMRITI = window.SMRITI || {};
                     var isItemActive = (item.id === activePageId || item.route === activeRoute || item.standalone_route === activeRoute);
                     var iconHtml = ICONS[sec.id] || ICONS.default;
                     var itemRoute = item.route || "#";
+                    var isFav = favorites.indexOf(item.id) !== -1;
 
                     html.push('<a class="smriti-sidebar-item' + (isItemActive ? ' active' : '') + '" href="' + itemRoute + '">');
                     html.push('  <div class="smriti-sidebar-item-icon">' + iconHtml + '</div>');
                     html.push('  <span class="smriti-sidebar-item-label">' + item.label + '</span>');
+                    html.push('  <button class="smriti-star-btn' + (isFav ? ' active' : '') + '" data-item-id="' + item.id + '" title="' + (isFav ? 'Unpin' : 'Pin to Favorites') + '">' + (isFav ? '⭐' : '☆') + '</button>');
                     html.push('</a>');
+
                 });
 
                 html.push('    </div>');
@@ -242,17 +283,173 @@ window.SMRITI = window.SMRITI || {};
                 });
             });
 
-            // 4. Handle explain button injection if relevant
+            // 4. Favorites — Star button handler
+            var starBtns = target.querySelectorAll(".smriti-star-btn");
+            starBtns.forEach(function(btn) {
+                btn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var itemId = btn.getAttribute("data-item-id");
+                    if (!itemId) return;
+                    var favs = JSON.parse(localStorage.getItem("smriti-sidebar-favorites") || "[]");
+                    var idx = favs.indexOf(itemId);
+                    if (idx === -1) {
+                        favs.push(itemId);
+                    } else {
+                        favs.splice(idx, 1);
+                    }
+                    localStorage.setItem("smriti-sidebar-favorites", JSON.stringify(favs));
+                    // Rebuild sidebar to reflect change
+                    buildTree(navData);
+                });
+            });
+
+            // 5. Command Palette (Ctrl+K) trigger button
+            var cmdBtn = target.querySelector("#smriti-cmd-trigger");
+            if (cmdBtn) {
+                cmdBtn.addEventListener("click", function() {
+                    SMRITI.openCommandPalette(navData);
+                });
+            }
+
+            // 6. Handle explain button injection if relevant
             if (window.SMRITI.injectExplainScreenButton) {
                 window.SMRITI.injectExplainScreenButton(activePageId);
             }
         }
     };
 
+
     // Alias renderSidebar for backward compatibility and global inclusion
     SMRITI.renderSidebar = function (activePageId) {
         return SMRITI.renderFlexibleSidebar(activePageId);
     };
+
+    // ── Command Palette (Ctrl+K) ──
+    SMRITI.openCommandPalette = function(navData) {
+        // Remove existing if open
+        var existing = document.getElementById("smriti-cmd-overlay");
+        if (existing) { existing.remove(); return; }
+
+        // Flatten all nav items into a searchable list
+        var allItems = [];
+        if (navData && navData.sections) {
+            navData.sections.forEach(function(sec) {
+                (sec.items || []).forEach(function(item) {
+                    if (item.type === "header" || item.status === "hidden") return;
+                    allItems.push({
+                        id: item.id,
+                        label: item.label,
+                        section: sec.label,
+                        route: item.route || "#"
+                    });
+                });
+            });
+        }
+
+        // Overlay DOM
+        var overlay = document.createElement("div");
+        overlay.id = "smriti-cmd-overlay";
+        overlay.setAttribute("role", "dialog");
+        overlay.setAttribute("aria-modal", "true");
+        overlay.setAttribute("aria-label", "Command Palette");
+        overlay.innerHTML = [
+            '<div class="smriti-cmd-backdrop"></div>',
+            '<div class="smriti-cmd-panel">',
+            '  <div class="smriti-cmd-input-row">',
+            '    <svg class="smriti-cmd-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+            '    <input type="text" id="smriti-cmd-input" class="smriti-cmd-input" placeholder="Search menus, pages, reports…" autocomplete="off" autofocus />',
+            '    <kbd class="smriti-cmd-esc-hint">ESC</kbd>',
+            '  </div>',
+            '  <div class="smriti-cmd-results" id="smriti-cmd-results" role="listbox" aria-label="Search results"></div>',
+            '</div>'
+        ].join("");
+        document.body.appendChild(overlay);
+
+        var input = overlay.querySelector("#smriti-cmd-input");
+        var results = overlay.querySelector("#smriti-cmd-results");
+        var activeIdx = -1;
+
+        function renderResults(query) {
+            var q = (query || "").trim().toLowerCase();
+            var filtered = q ? allItems.filter(function(it) {
+                return it.label.toLowerCase().indexOf(q) !== -1 ||
+                    it.section.toLowerCase().indexOf(q) !== -1;
+            }) : allItems.slice(0, 12);
+
+            activeIdx = -1;
+            if (!filtered.length) {
+                results.innerHTML = '<div class="smriti-cmd-empty">No results for "' + _escHtml(query) + '"</div>';
+                return;
+            }
+
+            results.innerHTML = filtered.map(function(it, i) {
+                return '<a class="smriti-cmd-result-item" href="' + _escHtml(it.route) + '" role="option" data-idx="' + i + '">' +
+                    '<span class="smriti-cmd-result-label">' + _escHtml(it.label) + '</span>' +
+                    '<span class="smriti-cmd-result-section">' + _escHtml(it.section) + '</span>' +
+                    '</a>';
+            }).join("");
+
+            // Click handlers
+            results.querySelectorAll(".smriti-cmd-result-item").forEach(function(el) {
+                el.addEventListener("click", function() { overlay.remove(); });
+            });
+        }
+
+        function setActive(idx) {
+            var items = results.querySelectorAll(".smriti-cmd-result-item");
+            items.forEach(function(el, i) {
+                el.classList.toggle("active", i === idx);
+            });
+            if (items[idx]) {
+                items[idx].scrollIntoView({ block: "nearest" });
+            }
+        }
+
+        input.addEventListener("input", function() { renderResults(input.value); });
+
+        input.addEventListener("keydown", function(e) {
+            var items = results.querySelectorAll(".smriti-cmd-result-item");
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                activeIdx = Math.min(activeIdx + 1, items.length - 1);
+                setActive(activeIdx);
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                activeIdx = Math.max(activeIdx - 1, 0);
+                setActive(activeIdx);
+            } else if (e.key === "Enter") {
+                if (activeIdx >= 0 && items[activeIdx]) {
+                    window.location.href = items[activeIdx].getAttribute("href");
+                    overlay.remove();
+                }
+            } else if (e.key === "Escape") {
+                overlay.remove();
+            }
+        });
+
+        overlay.querySelector(".smriti-cmd-backdrop").addEventListener("click", function() { overlay.remove(); });
+
+        renderResults("");
+        setTimeout(function() { if (input) input.focus(); }, 50);
+    };
+
+    function _escHtml(str) {
+        return String(str || "")
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    // ── Global Ctrl+K keyboard listener ──
+    document.addEventListener("keydown", function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+            e.preventDefault();
+            var navData = window.frappe && window.frappe.boot && window.frappe.boot.smriti_navigation;
+            SMRITI.openCommandPalette(navData || { sections: [] });
+        }
+    });
+
+
 
     // ── Listen to theme changes globally to highlight correct sidebar theme pill ──
     document.addEventListener("smriti-theme-changed", function (e) {
