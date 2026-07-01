@@ -491,25 +491,40 @@ body.theme-minimalist {
 }
 
 body.theme-minimalist .neu-float,
+body.theme-sleek-compact .neu-float,
 body.theme-minimalist .btn-default,
+body.theme-sleek-compact .btn-default,
 body.theme-minimalist .btn.btn-default,
+body.theme-sleek-compact .btn.btn-default,
 body.theme-minimalist .smriti-tab-btn.active,
+body.theme-sleek-compact .smriti-tab-btn.active,
 body.theme-minimalist .btn-report,
+body.theme-sleek-compact .btn-report,
 body.theme-minimalist .btn-purchase-ghost,
+body.theme-sleek-compact .btn-purchase-ghost,
 body.theme-minimalist .btn-backup-ghost,
-body.theme-minimalist .btn-add-item {
+body.theme-sleek-compact .btn-backup-ghost,
+body.theme-minimalist .btn-add-item,
+body.theme-sleek-compact .btn-add-item {
   background: var(--smriti-card-bg) !important;
   border: 1px solid var(--smriti-card-border) !important;
   box-shadow: var(--shadow-sm) !important;
 }
 
 body.theme-minimalist .neu-float:hover,
+body.theme-sleek-compact .neu-float:hover,
 body.theme-minimalist .btn-default:hover,
+body.theme-sleek-compact .btn-default:hover,
 body.theme-minimalist .btn.btn-default:hover,
+body.theme-sleek-compact .btn.btn-default:hover,
 body.theme-minimalist .btn-report:hover,
+body.theme-sleek-compact .btn-report:hover,
 body.theme-minimalist .btn-purchase-ghost:hover,
+body.theme-sleek-compact .btn-purchase-ghost:hover,
 body.theme-minimalist .btn-backup-ghost:hover,
-body.theme-minimalist .btn-add-item:hover {
+body.theme-sleek-compact .btn-backup-ghost:hover,
+body.theme-minimalist .btn-add-item:hover,
+body.theme-sleek-compact .btn-add-item:hover {
   background: var(--smriti-card-bg-2) !important;
   border-color: var(--smriti-primary) !important;
   transform: none !important;
@@ -517,39 +532,64 @@ body.theme-minimalist .btn-add-item:hover {
 }
 
 body.theme-minimalist .neu-float:active,
+body.theme-sleek-compact .neu-float:active,
 body.theme-minimalist .btn-default:active,
-body.theme-minimalist .btn.btn-default:active {
+body.theme-sleek-compact .btn-default:active,
+body.theme-minimalist .btn.btn-default:active,
+body.theme-sleek-compact .btn.btn-default:active {
   background: var(--smriti-card-bg-2) !important;
   box-shadow: none !important;
 }
 
 body.theme-minimalist .neu-pressed,
+body.theme-sleek-compact .neu-pressed,
 body.theme-minimalist .neu-input-field,
+body.theme-sleek-compact .neu-input-field,
 body.theme-minimalist .s-input,
+body.theme-sleek-compact .s-input,
 body.theme-minimalist #smriti-inv-barcode-input,
+body.theme-sleek-compact #smriti-inv-barcode-input,
 body.theme-minimalist .grid-qty-input,
+body.theme-sleek-compact .grid-qty-input,
 body.theme-minimalist .grid-rate-input,
+body.theme-sleek-compact .grid-rate-input,
 body.theme-minimalist .grid-expiry-input,
+body.theme-sleek-compact .grid-expiry-input,
 body.theme-minimalist .reports-filter-bar input,
+body.theme-sleek-compact .reports-filter-bar input,
 body.theme-minimalist .reports-filter-bar select,
+body.theme-sleek-compact .reports-filter-bar select,
 body.theme-minimalist .purchase-input,
+body.theme-sleek-compact .purchase-input,
 body.theme-minimalist .purchase-table input,
-body.theme-minimalist .backup-progress-track {
+body.theme-sleek-compact .purchase-table input,
+body.theme-minimalist .backup-progress-track,
+body.theme-sleek-compact .backup-progress-track {
   background: var(--smriti-card-bg) !important;
   border: 1px solid var(--smriti-card-border) !important;
   box-shadow: none !important;
 }
 
 body.theme-minimalist .neu-input-field:focus,
+body.theme-sleek-compact .neu-input-field:focus,
 body.theme-minimalist .s-input:focus,
+body.theme-sleek-compact .s-input:focus,
 body.theme-minimalist #smriti-inv-barcode-input:focus,
+body.theme-sleek-compact #smriti-inv-barcode-input:focus,
 body.theme-minimalist .grid-qty-input:focus,
+body.theme-sleek-compact .grid-qty-input:focus,
 body.theme-minimalist .grid-rate-input:focus,
+body.theme-sleek-compact .grid-rate-input:focus,
 body.theme-minimalist .grid-expiry-input:focus,
+body.theme-sleek-compact .grid-expiry-input:focus,
 body.theme-minimalist .reports-filter-bar input:focus,
+body.theme-sleek-compact .reports-filter-bar input:focus,
 body.theme-minimalist .reports-filter-bar select:focus,
+body.theme-sleek-compact .reports-filter-bar select:focus,
 body.theme-minimalist .purchase-input:focus,
-body.theme-minimalist .purchase-table input:focus {
+body.theme-sleek-compact .purchase-input:focus,
+body.theme-minimalist .purchase-table input:focus,
+body.theme-sleek-compact .purchase-table input:focus {
   border-color: var(--smriti-primary) !important;
   box-shadow: 0 0 0 3px var(--smriti-primary-glow) !important;
 }
@@ -569,19 +609,29 @@ body.dark-mode.theme-minimalist {
 }
 
 body.theme-minimalist .btn-primary,
+body.theme-sleek-compact .btn-primary,
 body.theme-minimalist .btn-checkout-save,
+body.theme-sleek-compact .btn-checkout-save,
 body.theme-minimalist .btn-report-primary,
+body.theme-sleek-compact .btn-report-primary,
 body.theme-minimalist .btn-purchase-primary,
-body.theme-minimalist .btn-backup-primary {
+body.theme-sleek-compact .btn-purchase-primary,
+body.theme-minimalist .btn-backup-primary,
+body.theme-sleek-compact .btn-backup-primary {
   background: var(--smriti-primary) !important;
   box-shadow: none !important;
 }
 
 body.theme-minimalist .btn-primary:hover,
+body.theme-sleek-compact .btn-primary:hover,
 body.theme-minimalist .btn-checkout-save:hover,
+body.theme-sleek-compact .btn-checkout-save:hover,
 body.theme-minimalist .btn-report-primary:hover,
+body.theme-sleek-compact .btn-report-primary:hover,
 body.theme-minimalist .btn-purchase-primary:hover,
-body.theme-minimalist .btn-backup-primary:hover {
+body.theme-sleek-compact .btn-purchase-primary:hover,
+body.theme-minimalist .btn-backup-primary:hover,
+body.theme-sleek-compact .btn-backup-primary:hover {
   background: var(--smriti-primary-dark) !important;
   box-shadow: 0 0 0 3px var(--smriti-primary-glow) !important;
   transform: none !important;
