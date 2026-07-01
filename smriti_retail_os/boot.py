@@ -129,6 +129,11 @@ def extend_bootinfo(bootinfo):
             bootinfo.smriti_navigation = get_user_navigation(user)
         except Exception as e:
             frappe.log_error(str(e), "SMRITI Navigation Manager Resolution Error")
+            try:
+                from smriti_retail_os.navigation.navigation_service import CANONICAL_NAV
+                bootinfo.smriti_navigation = CANONICAL_NAV
+            except Exception:
+                pass
 
         # Injects site config for Store defaults (Level 6 resolution)
         from smriti_retail_os.company_api import get_company_settings, get_active_company

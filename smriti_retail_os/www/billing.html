@@ -2715,9 +2715,13 @@ checkAuth();
     /* Activate pos-dark profile for Billing Terminal.
        Called after all sidebar scripts run so SMRITI global is stable. */
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('[DEBUG] SMRITI exists:', !!window.SMRITI);
+        console.log('[DEBUG] initUIEngine exists:', typeof SMRITI?.initUIEngine);
         if (window.SMRITI && typeof SMRITI.initUIEngine === 'function') {
             SMRITI.initUIEngine();
         }
+        console.log('[DEBUG] style tag after init:', 
+            document.getElementById('smriti-engine-style')?.textContent?.substring(0,200));
     });
 </script>
 </body>

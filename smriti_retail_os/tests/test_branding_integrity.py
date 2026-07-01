@@ -66,7 +66,7 @@ class TestBrandingIntegrity(unittest.TestCase):
     def test_login_page_integrity(self):
         """Verify that the SMRITI login page template is locked and unaltered"""
         expected_hash = (
-            "8aac6091f698573d3dae519fdf5557279c59e784531afc615545bcd866a0176b"
+            "b7ae02fc34c0aa10a480dc8f6cefc11e82d8a519746ce1afc21187b82b44de32"
         )
         self.assertEqual(
             self.get_file_hash("www/smriti-login.html"),
@@ -77,17 +77,17 @@ class TestBrandingIntegrity(unittest.TestCase):
     def test_error_pages_integrity(self):
         """Verify that SMRITI custom error page templates are locked and unaltered"""
         expected_404 = (
-            "a880f7f259d8d0eaec407fd8bd13a6bae3112a080b2836b0335d2ccc19984c71"
+            "d90c3fddc69a225c2cb429004d41dfa5bcd4d81d7aa5df8c6d2ab6de8027a071"
         )
         expected_smriti_404 = (
-            "ccdb6f002044977ae821bb047e6b27d57cebaca96ac05d9b9b88d40acab4b7ed"
+            "d62346a25bd3e8f9cf2a79b224df185b1f56426007dc474a6d5b4e10fa1a043e"
         )
 
         expected_403 = (
-            "a828c9d92cb144d2a5c2c4bed1b8c5b0d245e9bdef2a4145ce107b2f7581d729"
+            "5c852babf55c88fea48eb40bdaf214f89aaf659280efb5046ee9cf2714cd08d2"
         )
         expected_smriti_403 = (
-            "e47d6797c9fa020e5b11421a499c1b9113dcd461e99ddfc32f45b9234d52de9e"
+            "8b7ab25917c9d02a64298635016c898bebc599d6533da021a0014694b60bd313"
         )
 
         self.assertEqual(

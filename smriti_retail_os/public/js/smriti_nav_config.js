@@ -27,7 +27,7 @@ const SMRITI_ROUTE_MAP = {
   "customers":              "/customers",           // www/customers.html ✅
   "suppliers":              "/suppliers",           // www/suppliers.html ✅
   "sales_invoice":          "/sales-invoices",      // www/sales_invoices.html ✅
-  "sales_return":           "/sales-return",        // www/sales_return.html ✅
+  "sales_return":           "/sales-returns",        // www/sales_return.html ✅
   "credit_note":            "/sales-invoices",      // same as sales_invoice
   "delivery_note":          "/delivery-challan",    // www/delivery_challan.html ✅
   "purchase_receipt":       "/purchase-receipt",    // www/purchase_receipt.html ✅
