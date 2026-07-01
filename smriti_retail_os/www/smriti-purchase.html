@@ -1,0 +1,1872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SMRITI Purchase Studio</title>
+<meta name="description" content="SMRITI Purchase Studio — unified purchase operations: orders, GRN, invoices, returns, supplier ledger, analytics."/>
+<meta name="robots" content="noindex,nofollow"/>
+<link rel="icon" type="image/x-icon" href="/assets/smriti_retail_os/images/smriti-favicon.ico"/>
+<style>
+/* ─── SMRITI DESIGN SYSTEM ─────────────────────────────────────────────────── */
+:root {
+  --ps-bg:         #0a0f1e;
+  --ps-surface:    #131d35;
+  --ps-surface-2:  #172040;
+  --ps-surface-3:  #1c2650;
+  --ps-border:     rgba(255,255,255,0.07);
+  --ps-primary:    #2563EB;
+  --ps-primary-h:  #3b74f7;
+  --ps-navy:       #1A2B5C;
+  --ps-success:    #10b981;
+  --ps-warning:    #f59e0b;
+  --ps-danger:     #ef4444;
+  --ps-info:       #38bdf8;
+  --ps-text:       #e2e8f0;
+  --ps-muted:      #94a3b8;
+  --ps-nav-w:      240px;
+  --ps-top-h:      56px;
+  --ps-radius:     10px;
+  --ps-shadow:     0 4px 24px rgba(0,0,0,0.4);
+  font-family: Arial, sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--ps-bg);color:var(--ps-text);font-size:14px;overflow:hidden;}
+a{color:var(--ps-primary);text-decoration:none;}
+button{cursor:pointer;font-family:Arial,sans-serif;}
+input,select,textarea{font-family:Arial,sans-serif;}
+
+/* ─── LAYOUT ────────────────────────────────────────────────────────────────── */
+#ps-shell{display:flex;height:100vh;overflow:hidden;}
+
+/* ─── LEFT NAV ──────────────────────────────────────────────────────────────── */
+#ps-nav{
+  width:var(--ps-nav-w);flex-shrink:0;
+  background:linear-gradient(180deg,#0e1628 0%,#0a0f1e 100%);
+  border-right:1px solid var(--ps-border);
+  display:flex;flex-direction:column;overflow:hidden;
+  z-index:50;
+}
+#ps-logo{
+  padding:16px 18px 14px;border-bottom:1px solid var(--ps-border);
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+#ps-logo img{width:28px;height:28px;border-radius:6px;}
+#ps-logo-title{font-size:13px;font-weight:700;color:var(--ps-text);line-height:1.2;}
+#ps-logo-sub{font-size:10px;color:var(--ps-muted);letter-spacing:0.5px;}
+#ps-nav-links{flex:1;overflow-y:auto;padding:8px 0;}
+#ps-nav-links::-webkit-scrollbar{width:3px;}
+#ps-nav-links::-webkit-scrollbar-track{background:transparent;}
+#ps-nav-links::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px;}
+.nav-section-label{
+  font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--ps-muted);padding:12px 18px 4px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 18px;cursor:pointer;border-radius:0;
+  color:var(--ps-muted);font-size:13px;font-weight:500;
+  transition:all 0.15s;border-left:3px solid transparent;
+  user-select:none;
+}
+.nav-item:hover{background:rgba(37,99,235,0.08);color:var(--ps-text);}
+.nav-item.active{
+  background:rgba(37,99,235,0.15);color:var(--ps-primary);
+  border-left-color:var(--ps-primary);font-weight:600;
+}
+.nav-item .nav-icon{font-size:16px;width:20px;text-align:center;}
+.nav-badge{
+  margin-left:auto;background:var(--ps-danger);color:#fff;
+  font-size:10px;font-weight:700;border-radius:10px;
+  padding:1px 6px;min-width:18px;text-align:center;
+}
+#ps-nav-footer{
+  padding:12px 16px;border-top:1px solid var(--ps-border);
+  font-size:11px;color:var(--ps-muted);flex-shrink:0;
+}
+
+/* ─── MAIN AREA ─────────────────────────────────────────────────────────────── */
+#ps-main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ─── TOPBAR ────────────────────────────────────────────────────────────────── */
+#ps-topbar{
+  height:var(--ps-top-h);background:var(--ps-surface);
+  border-bottom:1px solid var(--ps-border);
+  display:flex;align-items:center;padding:0 20px;gap:12px;
+  flex-shrink:0;z-index:40;
+}
+#ps-breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ps-muted);flex:1;}
+#ps-breadcrumb .bc-sep{color:var(--ps-border);}
+#ps-breadcrumb .bc-active{color:var(--ps-text);font-weight:600;}
+#ps-search-wrap{position:relative;}
+#ps-global-search{
+  background:var(--ps-surface-2);border:1px solid var(--ps-border);
+  border-radius:8px;padding:7px 12px 7px 32px;font-size:13px;
+  color:var(--ps-text);width:220px;outline:none;
+  transition:border-color 0.2s,width 0.2s;
+}
+#ps-global-search:focus{border-color:var(--ps-primary);width:280px;}
+#ps-global-search::placeholder{color:var(--ps-muted);}
+.search-icon-abs{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--ps-muted);font-size:14px;}
+.topbar-btn{
+  background:var(--ps-surface-2);border:1px solid var(--ps-border);
+  color:var(--ps-muted);border-radius:8px;padding:7px 12px;
+  font-size:12px;display:flex;align-items:center;gap:5px;
+  transition:all 0.15s;
+}
+.topbar-btn:hover{border-color:var(--ps-primary);color:var(--ps-primary);}
+.topbar-btn.primary-btn{
+  background:var(--ps-primary);border-color:var(--ps-primary);
+  color:#fff;font-weight:600;
+}
+.topbar-btn.primary-btn:hover{background:var(--ps-primary-h);}
+
+/* ─── CONTENT AREA ──────────────────────────────────────────────────────────── */
+#ps-content{flex:1;overflow-y:auto;padding:24px;position:relative;}
+#ps-content::-webkit-scrollbar{width:5px;}
+#ps-content::-webkit-scrollbar-track{background:transparent;}
+#ps-content::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:3px;}
+
+/* ─── SECTION HEADER ────────────────────────────────────────────────────────── */
+.section-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;}
+.section-hdr-left h1{font-size:22px;font-weight:700;color:var(--ps-text);}
+.section-hdr-left p{font-size:12px;color:var(--ps-muted);margin-top:2px;}
+.section-hdr-actions{display:flex;gap:8px;align-items:center;}
+
+/* ─── KPI CARDS ─────────────────────────────────────────────────────────────── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.kpi-card{
+  background:var(--ps-surface);border:1px solid var(--ps-border);
+  border-radius:var(--ps-radius);padding:16px 18px;
+  transition:border-color 0.2s,transform 0.15s;cursor:default;
+}
+.kpi-card:hover{border-color:rgba(37,99,235,0.3);transform:translateY(-1px);}
+.kpi-label{font-size:11px;color:var(--ps-muted);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;}
+.kpi-value{font-size:26px;font-weight:700;color:var(--ps-text);margin:6px 0 2px;line-height:1;}
+.kpi-trend{font-size:11px;color:var(--ps-muted);}
+.kpi-trend.up{color:var(--ps-success);}
+.kpi-trend.down{color:var(--ps-danger);}
+
+/* ─── FILTER BAR ────────────────────────────────────────────────────────────── */
+.filter-bar{
+  display:flex;align-items:center;gap:10px;
+  background:var(--ps-surface);border:1px solid var(--ps-border);
+  border-radius:var(--ps-radius);padding:12px 16px;margin-bottom:16px;
+  flex-wrap:wrap;
+}
+.filter-search{
+  flex:1;min-width:180px;background:var(--ps-surface-2);
+  border:1px solid var(--ps-border);border-radius:7px;
+  padding:7px 12px;font-size:13px;color:var(--ps-text);outline:none;
+}
+.filter-search:focus{border-color:var(--ps-primary);}
+.filter-search::placeholder{color:var(--ps-muted);}
+.filter-select{
+  background:var(--ps-surface-2);border:1px solid var(--ps-border);
+  border-radius:7px;padding:7px 10px;font-size:13px;color:var(--ps-text);
+  outline:none;cursor:pointer;
+}
+.filter-select:focus{border-color:var(--ps-primary);}
+.filter-date{
+  background:var(--ps-surface-2);border:1px solid var(--ps-border);
+  border-radius:7px;padding:7px 10px;font-size:13px;color:var(--ps-text);
+  outline:none;color-scheme:dark;
+}
+.filter-btn{
+  background:var(--ps-primary);border:none;color:#fff;
+  border-radius:7px;padding:7px 14px;font-size:12px;font-weight:600;
+}
+.filter-btn-ghost{
+  background:transparent;border:1px solid var(--ps-border);color:var(--ps-muted);
+  border-radius:7px;padding:7px 12px;font-size:12px;
+}
+.filter-btn-ghost:hover{border-color:var(--ps-primary);color:var(--ps-primary);}
+
+/* ─── DATA GRID ─────────────────────────────────────────────────────────────── */
+.grid-wrap{
+  background:var(--ps-surface);border:1px solid var(--ps-border);
+  border-radius:var(--ps-radius);overflow:hidden;
+}
+.grid-table{width:100%;border-collapse:collapse;}
+.grid-table thead th{
+  background:var(--ps-surface-2);font-size:11px;font-weight:700;
+  color:var(--ps-muted);text-transform:uppercase;letter-spacing:0.5px;
+  padding:10px 14px;text-align:left;border-bottom:1px solid var(--ps-border);
+  white-space:nowrap;
+}
+.grid-table tbody tr{
+  border-bottom:1px solid var(--ps-border);
+  transition:background 0.1s;cursor:pointer;
+}
+.grid-table tbody tr:last-child{border-bottom:none;}
+.grid-table tbody tr:hover{background:rgba(37,99,235,0.06);}
+.grid-table tbody td{padding:10px 14px;font-size:13px;color:var(--ps-text);}
+.grid-table tbody td.muted{color:var(--ps-muted);}
+.grid-empty{
+  text-align:center;padding:48px 20px;
+  font-size:13px;color:var(--ps-muted);
+}
+.grid-empty .empty-icon{font-size:36px;margin-bottom:8px;opacity:0.4;}
+.grid-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-top:1px solid var(--ps-border);
+  font-size:12px;color:var(--ps-muted);
+}
+.pagination{display:flex;gap:4px;}
+.pg-btn{
+  background:var(--ps-surface-2);border:1px solid var(--ps-border);
+  color:var(--ps-muted);border-radius:5px;padding:4px 9px;font-size:12px;
+}
+.pg-btn:hover,.pg-btn.active{background:var(--ps-primary);border-color:var(--ps-primary);color:#fff;}
+.pg-btn:disabled{opacity:0.35;cursor:not-allowed;}
+
+/* ─── STATUS BADGE ──────────────────────────────────────────────────────────── */
+.badge{
+  display:inline-block;font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:0.4px;
+}
+.badge-submitted,.badge-approved,.badge-paid{background:rgba(16,185,129,0.15);color:var(--ps-success);}
+.badge-draft,.badge-pending{background:rgba(245,158,11,0.15);color:var(--ps-warning);}
+.badge-cancelled,.badge-rejected{background:rgba(239,68,68,0.15);color:var(--ps-danger);}
+.badge-overdue{background:rgba(239,68,68,0.25);color:#fca5a5;}
+.badge-completed,.badge-closed{background:rgba(56,189,248,0.15);color:var(--ps-info);}
+.badge-grn_linked{background:rgba(37,99,235,0.15);color:#93c5fd;}
+.badge-standalone{background:rgba(139,92,246,0.15);color:#c4b5fd;}
+
+/* ─── DETAIL DRAWER ─────────────────────────────────────────────────────────── */
+#detail-drawer{
+  position:fixed;top:0;right:-520px;width:520px;height:100vh;
+  background:var(--ps-surface);border-left:1px solid var(--ps-border);
+  z-index:200;display:flex;flex-direction:column;
+  transition:right 0.3s cubic-bezier(0.4,0,0.2,1);
+  box-shadow:-8px 0 32px rgba(0,0,0,0.5);
+}
+#detail-drawer.open{right:0;}
+#drawer-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;border-bottom:1px solid var(--ps-border);flex-shrink:0;
+}
+#drawer-title{font-size:15px;font-weight:700;color:var(--ps-text);}
+#drawer-close{
+  background:var(--ps-surface-2);border:1px solid var(--ps-border);
+  color:var(--ps-muted);border-radius:6px;padding:5px 10px;font-size:13px;
+}
+#drawer-close:hover{color:var(--ps-danger);border-color:var(--ps-danger);}
+#drawer-body{flex:1;overflow-y:auto;padding:20px;}
+#drawer-body::-webkit-scrollbar{width:3px;}
+#drawer-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+#drawer-actions{
+  padding:14px 20px;border-top:1px solid var(--ps-border);
+  display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;
+}
+.drawer-btn{
+  border-radius:7px;padding:8px 14px;font-size:12px;font-weight:600;
+  border:1px solid var(--ps-border);color:var(--ps-text);background:var(--ps-surface-2);
+  transition:all 0.15s;
+}
+.drawer-btn:hover{border-color:var(--ps-primary);color:var(--ps-primary);}
+.drawer-btn.danger{border-color:var(--ps-danger);color:var(--ps-danger);}
+.drawer-btn.danger:hover{background:rgba(239,68,68,0.1);}
+.drawer-btn.success{background:var(--ps-success);border-color:var(--ps-success);color:#fff;}
+.drawer-btn.success:hover{background:#0da272;}
+.drawer-btn.primary{background:var(--ps-primary);border-color:var(--ps-primary);color:#fff;}
+.drawer-btn.primary:hover{background:var(--ps-primary-h);}
+.detail-field{margin-bottom:14px;}
+.detail-label{font-size:10px;color:var(--ps-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;}
+.detail-value{font-size:13px;color:var(--ps-text);font-weight:500;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.detail-section-title{
+  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;
+  color:var(--ps-muted);border-bottom:1px solid var(--ps-border);
+  padding-bottom:6px;margin:16px 0 12px;
+}
+.items-mini-table{width:100%;border-collapse:collapse;font-size:12px;}
+.items-mini-table th{
+  color:var(--ps-muted);font-size:10px;text-transform:uppercase;
+  padding:4px 8px;text-align:left;background:var(--ps-surface-2);
+}
+.items-mini-table td{padding:6px 8px;border-bottom:1px solid var(--ps-border);color:var(--ps-text);}
+.items-mini-table tr:last-child td{border-bottom:none;}
+
+/* ─── MODAL ─────────────────────────────────────────────────────────────────── */
+#modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:300;
+  display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);
+}
+#modal-overlay.open{display:flex;}
+.modal-box{
+  background:var(--ps-surface);border:1px solid var(--ps-border);
+  border-radius:14px;width:680px;max-width:96vw;max-height:90vh;
+  display:flex;flex-direction:column;box-shadow:var(--ps-shadow);
+  animation:modalIn 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes modalIn{from{opacity:0;transform:scale(0.95);}to{opacity:1;transform:scale(1);}}
+.modal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 22px;border-bottom:1px solid var(--ps-border);flex-shrink:0;
+}
+.modal-title{font-size:16px;font-weight:700;color:var(--ps-text);}
+.modal-step-indicator{display:flex;gap:6px;align-items:center;}
+.step-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--ps-border);transition:background 0.2s;
+}
+.step-dot.active{background:var(--ps-primary);}
+.step-dot.done{background:var(--ps-success);}
+.modal-body{flex:1;overflow-y:auto;padding:22px;}
+.modal-body::-webkit-scrollbar{width:3px;}
+.modal-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);}
+.modal-footer{
+  padding:16px 22px;border-top:1px solid var(--ps-border);
+  display:flex;justify-content:space-between;align-items:center;flex-shrink:0;
+}
+.modal-close-btn{
+  background:transparent;border:1px solid var(--ps-border);
+  color:var(--ps-muted);border-radius:7px;padding:8px 16px;font-size:13px;
+}
+.modal-close-btn:hover{border-color:var(--ps-danger);color:var(--ps-danger);}
+.modal-next-btn{
+  background:var(--ps-primary);border:none;color:#fff;
+  border-radius:7px;padding:8px 20px;font-size:13px;font-weight:600;
+}
+.modal-next-btn:hover{background:var(--ps-primary-h);}
+.modal-next-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.modal-back-btn{
+  background:transparent;border:1px solid var(--ps-border);
+  color:var(--ps-muted);border-radius:7px;padding:8px 16px;font-size:13px;
+}
+
+/* ─── FORM FIELDS ───────────────────────────────────────────────────────────── */
+.form-group{margin-bottom:16px;}
+.form-label{font-size:12px;color:var(--ps-muted);font-weight:600;margin-bottom:5px;display:block;}
+.form-label span.req{color:var(--ps-danger);}
+.form-input{
+  width:100%;background:var(--ps-surface-2);border:1px solid var(--ps-border);
+  border-radius:8px;padding:9px 12px;font-size:13px;color:var(--ps-text);outline:none;
+  transition:border-color 0.2s;
+}
+.form-input:focus{border-color:var(--ps-primary);}
+.form-input::placeholder{color:var(--ps-muted);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-select{
+  width:100%;background:var(--ps-surface-2);border:1px solid var(--ps-border);
+  border-radius:8px;padding:9px 12px;font-size:13px;color:var(--ps-text);outline:none;
+}
+.typeahead-wrap{position:relative;}
+.typeahead-results{
+  position:absolute;top:100%;left:0;right:0;z-index:400;
+  background:var(--ps-surface-3);border:1px solid var(--ps-primary);
+  border-top:none;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;
+}
+.typeahead-item{
+  padding:9px 12px;font-size:13px;color:var(--ps-text);cursor:pointer;
+  border-bottom:1px solid var(--ps-border);
+}
+.typeahead-item:hover{background:rgba(37,99,235,0.15);}
+.typeahead-item:last-child{border-bottom:none;}
+
+/* ─── ITEM LINE EDITOR ──────────────────────────────────────────────────────── */
+.line-editor-table{width:100%;border-collapse:collapse;font-size:12px;}
+.line-editor-table th{
+  color:var(--ps-muted);font-size:10px;text-transform:uppercase;
+  padding:6px 8px;text-align:left;background:var(--ps-surface-2);
+  border-bottom:1px solid var(--ps-border);
+}
+.line-editor-table td{padding:5px 4px;}
+.line-input{
+  width:100%;background:var(--ps-surface-2);border:1px solid var(--ps-border);
+  border-radius:5px;padding:5px 7px;font-size:12px;color:var(--ps-text);outline:none;
+}
+.line-input:focus{border-color:var(--ps-primary);}
+.line-del-btn{
+  background:transparent;border:none;color:var(--ps-danger);
+  font-size:16px;padding:4px 6px;border-radius:4px;
+}
+.line-del-btn:hover{background:rgba(239,68,68,0.1);}
+.add-line-btn{
+  background:transparent;border:1px dashed var(--ps-border);color:var(--ps-muted);
+  border-radius:7px;padding:8px;font-size:12px;width:100%;margin-top:8px;
+  transition:all 0.15s;
+}
+.add-line-btn:hover{border-color:var(--ps-primary);color:var(--ps-primary);}
+.line-total{
+  margin-top:12px;text-align:right;font-size:13px;font-weight:600;color:var(--ps-text);
+}
+
+/* ─── POLICY GATE / BANNERS ─────────────────────────────────────────────────── */
+.banner{
+  display:flex;align-items:center;gap:10px;
+  border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;
+}
+.banner.warning{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#fcd34d;}
+.banner.info{background:rgba(37,99,235,0.1);border:1px solid rgba(37,99,235,0.3);color:#93c5fd;}
+.banner.danger{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;}
+.banner.success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7;}
+.banner-icon{font-size:18px;flex-shrink:0;}
+
+/* ─── TOAST ─────────────────────────────────────────────────────────────────── */
+#toast-container{
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  display:flex;flex-direction:column;gap:8px;
+}
+.toast{
+  background:var(--ps-surface-3);border:1px solid var(--ps-border);
+  border-radius:10px;padding:12px 16px;
+  font-size:13px;color:var(--ps-text);min-width:260px;max-width:360px;
+  display:flex;align-items:flex-start;gap:10px;
+  box-shadow:var(--ps-shadow);
+  animation:toastIn 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);}}
+.toast.success{border-left:3px solid var(--ps-success);}
+.toast.error{border-left:3px solid var(--ps-danger);}
+.toast.warning{border-left:3px solid var(--ps-warning);}
+.toast-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+.toast-msg{flex:1;}
+.toast-title{font-weight:700;margin-bottom:2px;}
+.toast-body{font-size:12px;color:var(--ps-muted);}
+
+/* ─── SETTINGS FORM ─────────────────────────────────────────────────────────── */
+.settings-card{
+  background:var(--ps-surface);border:1px solid var(--ps-border);
+  border-radius:var(--ps-radius);padding:24px;max-width:720px;margin-bottom:20px;
+}
+.settings-card h3{font-size:14px;font-weight:700;color:var(--ps-text);margin-bottom:16px;}
+.radio-group{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+.radio-opt{
+  display:flex;align-items:center;gap:8px;
+  background:var(--ps-surface-2);border:1px solid var(--ps-border);
+  border-radius:8px;padding:8px 14px;cursor:pointer;transition:all 0.15s;
+  font-size:13px;color:var(--ps-muted);
+}
+.radio-opt:has(input:checked){border-color:var(--ps-primary);color:var(--ps-primary);background:rgba(37,99,235,0.1);}
+.radio-opt input{accent-color:var(--ps-primary);}
+.toggle-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;border-bottom:1px solid var(--ps-border);
+}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-label{font-size:13px;color:var(--ps-text);}
+.toggle-sub{font-size:11px;color:var(--ps-muted);margin-top:2px;}
+.toggle-switch{
+  position:relative;display:inline-block;width:44px;height:24px;
+}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-switch .slider{
+  position:absolute;cursor:pointer;inset:0;background:var(--ps-surface-3);
+  border-radius:24px;border:1px solid var(--ps-border);transition:all 0.2s;
+}
+.toggle-switch .slider::before{
+  content:"";position:absolute;height:18px;width:18px;
+  left:2px;bottom:2px;background:var(--ps-muted);
+  border-radius:50%;transition:all 0.2s;
+}
+.toggle-switch input:checked + .slider{background:var(--ps-primary);border-color:var(--ps-primary);}
+.toggle-switch input:checked + .slider::before{transform:translateX(20px);background:#fff;}
+
+/* ─── LOADING ────────────────────────────────────────────────────────────────── */
+.loading-wrap{display:flex;align-items:center;justify-content:center;padding:60px;gap:12px;color:var(--ps-muted);}
+.spinner{width:24px;height:24px;border:2px solid var(--ps-border);border-top-color:var(--ps-primary);border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ─── ACTIVITY FEED ─────────────────────────────────────────────────────────── */
+.activity-feed{display:flex;flex-direction:column;gap:0;}
+.activity-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;border-bottom:1px solid var(--ps-border);
+  cursor:pointer;transition:background 0.1s;
+}
+.activity-item:hover{background:rgba(37,99,235,0.06);}
+.activity-item:last-child{border-bottom:none;}
+.activity-type-badge{
+  width:32px;height:32px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;
+}
+.activity-type-badge.PO{background:rgba(37,99,235,0.2);color:#93c5fd;}
+.activity-type-badge.GRN{background:rgba(16,185,129,0.2);color:#6ee7b7;}
+.activity-type-badge.PI{background:rgba(245,158,11,0.2);color:#fcd34d;}
+.activity-meta{flex:1;min-width:0;}
+.activity-name{font-size:13px;font-weight:600;color:var(--ps-text);}
+.activity-sub{font-size:11px;color:var(--ps-muted);}
+.activity-right{text-align:right;flex-shrink:0;}
+.activity-amount{font-size:13px;font-weight:600;color:var(--ps-text);}
+.activity-date{font-size:11px;color:var(--ps-muted);}
+
+/* ─── SUPPLIER LEDGER ────────────────────────────────────────────────────────── */
+.ledger-summary{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;
+}
+.ledger-entry-dr{color:var(--ps-danger);}
+.ledger-entry-cr{color:var(--ps-success);}
+
+/* ─── RESPONSIVE ─────────────────────────────────────────────────────────────── */
+@media(max-width:900px){
+  :root{--ps-nav-w:200px;}
+  .kpi-row{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:640px){
+  #ps-nav{display:none;}
+  .kpi-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<!-- ─── MAIN SHELL ──────────────────────────────────────────────────────────── -->
+<div id="ps-shell">
+
+  <!-- LEFT NAV -->
+  <nav id="ps-nav">
+    <div id="ps-logo">
+      <img src="/assets/smriti_retail_os/images/smriti-logo.png" alt="SMRITI" onerror="this.style.display='none'"/>
+      <div>
+        <div id="ps-logo-title">SMRITI</div>
+        <div id="ps-logo-sub">PURCHASE STUDIO</div>
+      </div>
+    </div>
+    <div id="ps-nav-links">
+      <div class="nav-section-label">Overview</div>
+      <div class="nav-item active" data-section="dashboard"  onclick="PS.nav('dashboard')">
+        <span class="nav-icon">📊</span> Dashboard
+      </div>
+      <div class="nav-section-label">Transactions</div>
+      <div class="nav-item" data-section="orders"   onclick="PS.nav('orders')">
+        <span class="nav-icon">📋</span> Purchase Orders
+        <span class="nav-badge" id="badge-orders" style="display:none"></span>
+      </div>
+      <div class="nav-item" data-section="grn"      onclick="PS.nav('grn')">
+        <span class="nav-icon">📦</span> GRN / Receipts
+      </div>
+      <div class="nav-item" data-section="invoices" onclick="PS.nav('invoices')">
+        <span class="nav-icon">🧾</span> Invoices
+        <span class="nav-badge" id="badge-invoices" style="display:none"></span>
+      </div>
+      <div class="nav-item" data-section="returns"  onclick="PS.nav('returns')">
+        <span class="nav-icon">↩️</span> Returns
+      </div>
+      <div class="nav-section-label">Finance</div>
+      <div class="nav-item" data-section="supplier-ledger" onclick="PS.nav('supplier-ledger')">
+        <span class="nav-icon">📒</span> Supplier Ledger
+      </div>
+      <div class="nav-section-label">Intelligence</div>
+      <div class="nav-item" data-section="analytics" onclick="PS.nav('analytics')">
+        <span class="nav-icon">📈</span> Analytics
+      </div>
+      <div class="nav-section-label" id="settings-nav-section" style="display:none">System</div>
+      <div class="nav-item" data-section="settings" onclick="PS.nav('settings')" id="nav-settings" style="display:none">
+        <span class="nav-icon">⚙️</span> Settings
+      </div>
+    </div>
+    <div id="ps-nav-footer">
+      <div id="ps-user-label" style="font-size:12px;color:var(--ps-muted);"></div>
+    </div>
+  </nav>
+
+  <!-- MAIN AREA -->
+  <div id="ps-main">
+    <!-- TOPBAR -->
+    <div id="ps-topbar">
+      <div id="ps-breadcrumb">
+        <span>Purchase Studio</span>
+        <span class="bc-sep">›</span>
+        <span class="bc-active" id="ps-bc-section">Dashboard</span>
+      </div>
+      <div id="ps-search-wrap">
+        <span class="search-icon-abs">🔍</span>
+        <input type="text" id="ps-global-search" placeholder="Search documents…" oninput="PS.globalSearch(this.value)"/>
+      </div>
+      <button class="topbar-btn" onclick="PS.exportCurrent()" id="btn-export">⬇ Export</button>
+      <button class="topbar-btn primary-btn" onclick="PS.primaryAction()" id="btn-primary" style="display:none">+ New</button>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="ps-content">
+      <!-- Sections rendered here by PS.render() -->
+      <div class="loading-wrap" id="ps-init-loader"><div class="spinner"></div> Loading Purchase Studio…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── DETAIL DRAWER ──────────────────────────────────────────────────────── -->
+<div id="detail-drawer">
+  <div id="drawer-topbar">
+    <div id="drawer-title">Document Detail</div>
+    <button id="drawer-close" onclick="PS.closeDrawer()">✕ Close</button>
+  </div>
+  <div id="drawer-body"></div>
+  <div id="drawer-actions"></div>
+</div>
+
+<!-- ─── MODAL ──────────────────────────────────────────────────────────────── -->
+<div id="modal-overlay" onclick="PS.modalOverlayClick(event)">
+  <div class="modal-box" id="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Create</div>
+      <div class="modal-step-indicator" id="modal-steps"></div>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <div style="display:flex;gap:8px;">
+        <button class="modal-close-btn" onclick="PS.closeModal()">Cancel</button>
+        <button class="modal-back-btn" id="modal-back" onclick="PS.modalBack()" style="display:none">← Back</button>
+      </div>
+      <button class="modal-next-btn" id="modal-next" onclick="PS.modalNext()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── TOAST CONTAINER ────────────────────────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<!-- ─── SCRIPTS ────────────────────────────────────────────────────────────── -->
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   SMRITI Purchase Studio — Runtime
+   All API calls route through: smriti_retail_os.purchase_studio.api.purchase_api.*
+   No direct frappe.client.get or frappe.client.insert calls permitted.
+══════════════════════════════════════════════════════════════════════════ */
+
+// ── Context injected by smriti-purchase.py ──────────────────────────────────
+const USER          = "{{ cashier }}";
+const USER_ROLES    = {{ user_roles | tojson }};
+const CSRF_TOKEN    = "{{ csrf_token }}";
+const PX_SETTINGS   = {{ purchase_settings | tojson }};
+const API_PFX       = "smriti_retail_os.purchase_studio.api.purchase_api";
+
+const IS_MANAGER    = USER_ROLES.includes("SMRITI Store Manager") || USER_ROLES.includes("System Manager");
+const IS_ACCOUNTS   = USER_ROLES.includes("SMRITI Accounts") || USER_ROLES.includes("System Manager");
+const IS_SYS_MGR    = USER_ROLES.includes("System Manager");
+
+// ── API Helper ────────────────────────────────────────────────────────────────
+function api(method, args={}) {
+  return new Promise((resolve, reject) => {
+    frappe.call({
+      method: method,
+      args: args,
+      headers: { "X-Frappe-CSRF-Token": CSRF_TOKEN },
+      callback: r => resolve(r.message || r),
+      error: e => reject(e)
+    });
+  });
+}
+
+// ── Format helpers ────────────────────────────────────────────────────────────
+const fmt = {
+  currency: v => "₹" + parseFloat(v||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2}),
+  pct:      v => parseFloat(v||0).toFixed(1) + "%",
+  date:     v => v ? new Date(v).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : "—",
+  num:      v => (v||0).toLocaleString("en-IN"),
+  short:    (v,n=24) => v ? (v.length>n ? v.substring(0,n)+"…" : v) : "—"
+};
+
+function badge(status) {
+  const s = (status||"").toLowerCase().replace(/\s/g,"-");
+  return `<span class="badge badge-${s}">${status||"—"}</span>`;
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(type, title, msg, ms=4000) {
+  const icons = { success:"✅", error:"❌", warning:"⚠️", info:"ℹ️" };
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.innerHTML = `<div class="toast-icon">${icons[type]||"ℹ️"}</div>
+    <div class="toast-msg"><div class="toast-title">${title}</div>
+    ${msg?`<div class="toast-body">${msg}</div>`:""}`;
+  document.getElementById("toast-container").appendChild(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const STATE = {
+  section: "dashboard",
+  page: 1,
+  filters: {},
+  modal: { type: null, step: 1, maxStep: 3, data: {} },
+  dashboard: null
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PS — Main Controller
+// ─────────────────────────────────────────────────────────────────────────────
+const PS = {
+
+  init() {
+    // Show settings nav for System Manager
+    if (IS_SYS_MGR) {
+      document.getElementById("nav-settings").style.display = "flex";
+      document.getElementById("settings-nav-section").style.display = "block";
+    }
+    document.getElementById("ps-user-label").textContent = USER.split("@")[0];
+
+    // Route to URL hash
+    const hash = (window.location.hash||"#dashboard").replace("#","").trim()||"dashboard";
+    window.addEventListener("hashchange", () => {
+      const h = (window.location.hash||"#dashboard").replace("#","").trim()||"dashboard";
+      PS.nav(h, false);
+    });
+    PS.nav(hash, false);
+    PS.loadDashboardBadges();
+  },
+
+  nav(section, pushHash=true) {
+    STATE.section = section;
+    STATE.page = 1;
+    STATE.filters = {};
+    if (pushHash) window.location.hash = section;
+
+    // Update nav active
+    document.querySelectorAll(".nav-item").forEach(el => {
+      el.classList.toggle("active", el.dataset.section === section);
+    });
+
+    // Update breadcrumb
+    const labels = {
+      dashboard: "Dashboard", orders: "Purchase Orders", grn: "GRN / Receipts",
+      invoices: "Invoices", returns: "Returns", "supplier-ledger": "Supplier Ledger",
+      analytics: "Analytics", settings: "Settings"
+    };
+    document.getElementById("ps-bc-section").textContent = labels[section] || section;
+
+    // Primary action button
+    const primaryMap = {
+      orders: IS_MANAGER ? "+ New PO" : null,
+      grn:    IS_MANAGER ? "+ New GRN" : null,
+      invoices: IS_ACCOUNTS ? "+ New Invoice" : null,
+      returns: IS_MANAGER ? "+ New Return" : null
+    };
+    const pBtn = document.getElementById("btn-primary");
+    const pLabel = primaryMap[section];
+    pBtn.style.display = pLabel ? "flex" : "none";
+    pBtn.textContent   = pLabel || "";
+
+    PS.render(section);
+  },
+
+  async render(section) {
+    const content = document.getElementById("ps-content");
+    content.innerHTML = `<div class="loading-wrap"><div class="spinner"></div> Loading…</div>`;
+    PS.closeDrawer();
+    try {
+      switch(section) {
+        case "dashboard":      await PS.renderDashboard(content); break;
+        case "orders":         await PS.renderOrders(content); break;
+        case "grn":            await PS.renderGrn(content); break;
+        case "invoices":       await PS.renderInvoices(content); break;
+        case "returns":        await PS.renderReturns(content); break;
+        case "supplier-ledger": await PS.renderLedger(content); break;
+        case "analytics":      PS.renderAnalytics(content); break;
+        case "settings":       await PS.renderSettings(content); break;
+        default: content.innerHTML = `<div class="loading-wrap">Section not found.</div>`;
+      }
+    } catch(e) {
+      content.innerHTML = `<div class="banner danger" style="margin:20px;">
+        <span class="banner-icon">❌</span>
+        <span>Error loading section: ${e.message || "Unknown error"}</span></div>`;
+    }
+  },
+
+  primaryAction() {
+    const map = { orders:"po", grn:"grn", invoices:"invoice", returns:"return" };
+    const type = map[STATE.section];
+    if (type) PS.openModal(type);
+  },
+
+  globalSearch(q) {
+    clearTimeout(PS._searchTimer);
+    PS._searchTimer = setTimeout(() => {
+      STATE.filters.search_term = q;
+      STATE.page = 1;
+      PS.render(STATE.section);
+    }, 400);
+  },
+
+  exportCurrent() {
+    toast("info","Export","CSV export will be available in the next release.",3000);
+  },
+
+  // ── DASHBOARD ─────────────────────────────────────────────────────────────
+  async renderDashboard(el) {
+    const data = await api(`${API_PFX}.get_purchase_dashboard`);
+    STATE.dashboard = data;
+
+    // Update badges
+    if (data.open_pos>0) { document.getElementById("badge-orders").textContent=data.open_pos; document.getElementById("badge-orders").style.display=""; }
+    if (data.unpaid_invoices_amt>0) { document.getElementById("badge-invoices").textContent="!"; document.getElementById("badge-invoices").style.display=""; }
+
+    el.innerHTML = `
+    <div class="section-hdr">
+      <div class="section-hdr-left">
+        <h1>Purchase Dashboard</h1>
+        <p>Real-time purchase operations overview</p>
+      </div>
+      <div class="section-hdr-actions">
+        ${IS_MANAGER ? `<button class="topbar-btn primary-btn" onclick="PS.openModal('po')">+ New PO</button>` : ""}
+      </div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">Open POs</div>
+        <div class="kpi-value">${fmt.num(data.open_pos)}</div>
+        <div class="kpi-trend">Awaiting receipt</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Pending GRNs</div>
+        <div class="kpi-value">${fmt.num(data.pending_grns)}</div>
+        <div class="kpi-trend">Not yet invoiced</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Outstanding Payables</div>
+        <div class="kpi-value" style="font-size:18px;">${fmt.currency(data.unpaid_invoices_amt)}</div>
+        <div class="kpi-trend ${data.unpaid_invoices_amt>0?'down':''}">${data.unpaid_invoices_amt>0?"Requires payment":""}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Month Spend</div>
+        <div class="kpi-value" style="font-size:18px;">${fmt.currency(data.month_spend)}</div>
+        <div class="kpi-trend">This calendar month</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div class="section-hdr" style="margin-bottom:12px;">
+          <div class="section-hdr-left"><h1 style="font-size:14px;">Recent Activity</h1></div>
+        </div>
+        <div class="grid-wrap">
+          <div class="activity-feed" id="activity-feed">
+            ${(data.recent_activity||[]).length===0?`<div class="grid-empty"><div class="empty-icon">📭</div>No recent activity</div>`:""}
+            ${(data.recent_activity||[]).map(a=>`
+              <div class="activity-item" onclick="PS.openActivityDoc('${a.doctype}','${a.name}')">
+                <div class="activity-type-badge ${a.doctype}">${a.doctype}</div>
+                <div class="activity-meta">
+                  <div class="activity-name">${a.name}</div>
+                  <div class="activity-sub">${fmt.short(a.supplier,28)}</div>
+                </div>
+                <div class="activity-right">
+                  <div class="activity-amount">${fmt.currency(a.amount)}</div>
+                  <div class="activity-date">${fmt.date(a.date)}</div>
+                </div>
+              </div>`).join("")}
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-hdr" style="margin-bottom:12px;">
+          <div class="section-hdr-left"><h1 style="font-size:14px;">Quick Actions</h1></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${IS_MANAGER?`<button class="topbar-btn primary-btn" style="justify-content:flex-start;padding:12px 16px;" onclick="PS.openModal('po')">📋 New Purchase Order</button>`:""}
+          ${IS_MANAGER?`<button class="topbar-btn" style="justify-content:flex-start;padding:12px 16px;" onclick="PS.openModal('grn')">📦 New GRN / Receipt</button>`:""}
+          ${IS_ACCOUNTS?`<button class="topbar-btn" style="justify-content:flex-start;padding:12px 16px;" onclick="PS.openModal('invoice')">🧾 New Purchase Invoice</button>`:""}
+          <button class="topbar-btn" style="justify-content:flex-start;padding:12px 16px;" onclick="PS.nav('supplier-ledger')">📒 View Supplier Ledger</button>
+        </div>
+        ${PX_SETTINGS.approval_threshold>0?`
+        <div class="banner info" style="margin-top:16px;">
+          <span class="banner-icon">🔐</span>
+          <span>Approval required for POs above ${fmt.currency(PX_SETTINGS.approval_threshold)}</span>
+        </div>`:""}
+        <div class="banner ${PX_SETTINGS.purchase_invoice_policy==='grn_only'?'warning':PX_SETTINGS.purchase_invoice_policy==='standalone'?'info':'success'}" style="margin-top:${PX_SETTINGS.approval_threshold>0?'0':'16px'};">
+          <span class="banner-icon">📑</span>
+          <span>Invoice Policy: <strong>${PX_SETTINGS.purchase_invoice_policy==='grn_only'?'GRN Only':PX_SETTINGS.purchase_invoice_policy==='standalone'?'Standalone Only':'Both Allowed'}</strong></span>
+        </div>
+      </div>
+    </div>`;
+  },
+
+  openActivityDoc(dtype, name) {
+    if (dtype==="PO") PS.loadPoDetail(name);
+    else if (dtype==="GRN") PS.loadGrnDetail(name);
+    else if (dtype==="PI") PS.loadPiDetail(name);
+  },
+
+  // ── PURCHASE ORDERS ───────────────────────────────────────────────────────
+  async renderOrders(el) {
+    const f = STATE.filters;
+    const data = await api(`${API_PFX}.get_purchase_orders`, {
+      status: f.status||"", supplier: f.supplier||"",
+      from_date: f.from_date||"", to_date: f.to_date||"",
+      search_term: f.search_term||"", page: STATE.page, page_size: 50
+    });
+
+    el.innerHTML = `
+    <div class="section-hdr">
+      <div class="section-hdr-left">
+        <h1>Purchase Orders</h1>
+        <p>${fmt.num(data.total||0)} orders found</p>
+      </div>
+      <div class="section-hdr-actions">
+        ${IS_MANAGER?`<button class="topbar-btn primary-btn" onclick="PS.openModal('po')">+ New PO</button>`:""}
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input class="filter-search" placeholder="🔍 Search PO or supplier…" value="${f.search_term||""}" oninput="STATE.filters.search_term=this.value" onkeydown="if(event.key==='Enter')PS.render('orders')"/>
+      <select class="filter-select" onchange="STATE.filters.status=this.value">
+        <option value="">All Status</option>
+        <option value="Draft">Draft</option>
+        <option value="Submitted">Submitted</option>
+        <option value="Completed">Completed</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+      <input type="date" class="filter-date" title="From Date" onchange="STATE.filters.from_date=this.value"/>
+      <input type="date" class="filter-date" title="To Date" onchange="STATE.filters.to_date=this.value"/>
+      <button class="filter-btn" onclick="STATE.page=1;PS.render('orders')">Apply</button>
+      <button class="filter-btn-ghost" onclick="STATE.filters={};STATE.page=1;PS.render('orders')">Clear</button>
+    </div>
+    <div class="grid-wrap">
+      <table class="grid-table">
+        <thead><tr>
+          <th>PO No</th><th>Date</th><th>Supplier</th>
+          <th>Total</th><th>Received%</th><th>Status</th><th>Approval</th>
+        </tr></thead>
+        <tbody>
+        ${(data.items||[]).length===0?`<tr><td colspan="7"><div class="grid-empty"><div class="empty-icon">📋</div>No purchase orders found</div></td></tr>`:""}
+        ${(data.items||[]).map(po=>`
+          <tr onclick="PS.loadPoDetail('${po.name}')">
+            <td><strong>${po.name}</strong></td>
+            <td class="muted">${fmt.date(po.transaction_date)}</td>
+            <td>${fmt.short(po.supplier_name||po.supplier,26)}</td>
+            <td>${fmt.currency(po.grand_total)}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div style="flex:1;height:4px;background:var(--ps-surface-3);border-radius:2px;">
+                  <div style="width:${po.per_received||0}%;height:100%;background:var(--ps-success);border-radius:2px;"></div>
+                </div>
+                ${fmt.pct(po.per_received)}
+              </div>
+            </td>
+            <td>${badge(po.status)}</td>
+            <td>${po.smriti_approval_status?badge(po.smriti_approval_status):""}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+      <div class="grid-footer">
+        <span>${data.total||0} total records</span>
+        ${PS.pagination(data.total, STATE.page, 50, p=>{STATE.page=p;PS.render('orders');})}
+      </div>
+    </div>`;
+  },
+
+  async loadPoDetail(poName) {
+    document.getElementById("drawer-body").innerHTML = `<div class="loading-wrap"><div class="spinner"></div></div>`;
+    document.getElementById("drawer-actions").innerHTML = "";
+    document.getElementById("drawer-title").textContent = poName;
+    document.getElementById("detail-drawer").classList.add("open");
+
+    const po = await api(`${API_PFX}.get_purchase_order_detail`, { po_name: poName });
+
+    const needsApproval = po.smriti_approval_status === "Pending" && IS_SYS_MGR;
+
+    document.getElementById("drawer-body").innerHTML = `
+      ${po.smriti_approval_status==="Pending"?`<div class="banner warning"><span class="banner-icon">🔐</span><span>This PO requires approval before submission.</span></div>`:""}
+      <div class="detail-grid">
+        <div class="detail-field"><div class="detail-label">Supplier</div><div class="detail-value">${po.supplier_name||po.supplier}</div></div>
+        <div class="detail-field"><div class="detail-label">Date</div><div class="detail-value">${fmt.date(po.transaction_date)}</div></div>
+        <div class="detail-field"><div class="detail-label">Schedule Date</div><div class="detail-value">${fmt.date(po.schedule_date)}</div></div>
+        <div class="detail-field"><div class="detail-label">Status</div><div class="detail-value">${badge(po.status)}</div></div>
+        <div class="detail-field"><div class="detail-label">Grand Total</div><div class="detail-value" style="color:var(--ps-primary);font-size:16px;">${fmt.currency(po.grand_total)}</div></div>
+        <div class="detail-field"><div class="detail-label">Received</div><div class="detail-value">${fmt.pct(po.per_received)}</div></div>
+      </div>
+      ${po.terms?`<div class="detail-field"><div class="detail-label">Remarks</div><div class="detail-value">${po.terms}</div></div>`:""}
+      ${po.smriti_approved_by?`<div class="detail-field"><div class="detail-label">Approved By</div><div class="detail-value">${po.smriti_approved_by} on ${fmt.date(po.smriti_approved_on)}</div></div>`:""}
+      <div class="detail-section-title">Items (${po.items.length})</div>
+      <table class="items-mini-table">
+        <thead><tr><th>Item</th><th>Qty</th><th>Pending</th><th>Rate</th><th>Amount</th></tr></thead>
+        <tbody>
+        ${po.items.map(i=>`<tr>
+          <td>${fmt.short(i.item_name||i.item_code,22)}</td>
+          <td>${fmt.num(i.qty)}</td>
+          <td style="color:${i.pending_qty>0?'var(--ps-warning)':'var(--ps-success)'};">${fmt.num(i.pending_qty)}</td>
+          <td>${fmt.currency(i.rate)}</td>
+          <td>${fmt.currency(i.amount)}</td>
+        </tr>`).join("")}
+        </tbody>
+      </table>`;
+
+    const acts = document.getElementById("drawer-actions");
+    acts.innerHTML = "";
+    if (needsApproval) {
+      acts.innerHTML += `<button class="drawer-btn success" onclick="PS.approveRejectPo('${poName}','approve')">✓ Approve</button>
+        <button class="drawer-btn danger" onclick="PS.approveRejectPo('${poName}','reject')">✗ Reject</button>`;
+    }
+    if ((po.status==="Submitted"||po.status==="Submitted") && po.per_received<100 && IS_MANAGER) {
+      acts.innerHTML += `<button class="drawer-btn primary" onclick="PS.openModal('grn','${poName}')">📦 Create GRN</button>`;
+    }
+    acts.innerHTML += `<button class="drawer-btn" onclick="window.print()">🖨 Print PO</button>`;
+  },
+
+  async approveRejectPo(poName, action) {
+    let reason = null;
+    if (action==="reject") {
+      reason = prompt("Enter rejection reason (required):");
+      if (!reason) return;
+    }
+    try {
+      const res = await api(`${API_PFX}.resolve_po_approval`, { po_name:poName, action, reason });
+      toast("success", action==="approve"?"PO Approved":"PO Rejected", res.message);
+      PS.closeDrawer();
+      PS.render("orders");
+    } catch(e) {
+      toast("error","Error", e.message||"Action failed");
+    }
+  },
+
+  // ── GRN / RECEIPTS ────────────────────────────────────────────────────────
+  async renderGrn(el) {
+    const f = STATE.filters;
+    const data = await api(`${API_PFX}.get_grns`, {
+      supplier:f.supplier||"", from_date:f.from_date||"",
+      to_date:f.to_date||"", page:STATE.page, page_size:50
+    });
+
+    el.innerHTML = `
+    <div class="section-hdr">
+      <div class="section-hdr-left">
+        <h1>GRN / Receipts</h1>
+        <p>${fmt.num(data.total||0)} receipts found</p>
+      </div>
+      <div class="section-hdr-actions">
+        ${IS_MANAGER?`<button class="topbar-btn primary-btn" onclick="PS.openModal('grn')">+ New GRN</button>`:""}
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input class="filter-search" placeholder="🔍 Search GRN or supplier…" oninput="STATE.filters.search_term=this.value" onkeydown="if(event.key==='Enter')PS.render('grn')"/>
+      <input type="date" class="filter-date" title="From Date" onchange="STATE.filters.from_date=this.value"/>
+      <input type="date" class="filter-date" title="To Date" onchange="STATE.filters.to_date=this.value"/>
+      <button class="filter-btn" onclick="STATE.page=1;PS.render('grn')">Apply</button>
+      <button class="filter-btn-ghost" onclick="STATE.filters={};STATE.page=1;PS.render('grn')">Clear</button>
+    </div>
+    <div class="grid-wrap">
+      <table class="grid-table">
+        <thead><tr>
+          <th>GRN No</th><th>Date</th><th>Supplier</th>
+          <th>Total</th><th>Billed%</th><th>Status</th>
+        </tr></thead>
+        <tbody>
+        ${(data.items||[]).length===0?`<tr><td colspan="6"><div class="grid-empty"><div class="empty-icon">📦</div>No receipts found</div></td></tr>`:""}
+        ${(data.items||[]).map(g=>`
+          <tr onclick="PS.loadGrnDetail('${g.name}')">
+            <td><strong>${g.name}</strong></td>
+            <td class="muted">${fmt.date(g.posting_date)}</td>
+            <td>${fmt.short(g.supplier_name||g.supplier,26)}</td>
+            <td>${fmt.currency(g.grand_total)}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div style="flex:1;height:4px;background:var(--ps-surface-3);border-radius:2px;">
+                  <div style="width:${g.per_billed||0}%;height:100%;background:${(g.per_billed||0)>=100?'var(--ps-success)':'var(--ps-warning)'};border-radius:2px;"></div>
+                </div>
+                ${fmt.pct(g.per_billed)}
+              </div>
+            </td>
+            <td>${badge(g.status)}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+      <div class="grid-footer">
+        <span>${data.total||0} total records</span>
+        ${PS.pagination(data.total, STATE.page, 50, p=>{STATE.page=p;PS.render('grn');})}
+      </div>
+    </div>`;
+  },
+
+  async loadGrnDetail(grnName) {
+    document.getElementById("drawer-body").innerHTML = `<div class="loading-wrap"><div class="spinner"></div></div>`;
+    document.getElementById("drawer-actions").innerHTML = "";
+    document.getElementById("drawer-title").textContent = grnName;
+    document.getElementById("detail-drawer").classList.add("open");
+
+    const grn = await api(`${API_PFX}.get_grn_detail`, { grn_name: grnName });
+    const uninvoiced = (grn.per_billed||0) < 100;
+
+    document.getElementById("drawer-body").innerHTML = `
+      <div class="detail-grid">
+        <div class="detail-field"><div class="detail-label">Supplier</div><div class="detail-value">${grn.supplier_name||grn.supplier}</div></div>
+        <div class="detail-field"><div class="detail-label">Posting Date</div><div class="detail-value">${fmt.date(grn.posting_date)}</div></div>
+        <div class="detail-field"><div class="detail-label">Grand Total</div><div class="detail-value" style="color:var(--ps-primary);font-size:16px;">${fmt.currency(grn.grand_total)}</div></div>
+        <div class="detail-field"><div class="detail-label">Billed</div><div class="detail-value">${fmt.pct(grn.per_billed)}</div></div>
+      </div>
+      <div class="detail-section-title">Items (${grn.items.length})</div>
+      <table class="items-mini-table">
+        <thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Batch</th><th>Amount</th></tr></thead>
+        <tbody>
+        ${grn.items.map(i=>`<tr>
+          <td>${fmt.short(i.item_name||i.item_code,22)}</td>
+          <td>${fmt.num(i.qty)}</td>
+          <td>${fmt.currency(i.rate)}</td>
+          <td class="muted">${i.batch_no||"—"}</td>
+          <td>${fmt.currency(i.amount)}</td>
+        </tr>`).join("")}
+        </tbody>
+      </table>`;
+
+    const acts = document.getElementById("drawer-actions");
+    const canInvoice = IS_ACCOUNTS && uninvoiced && (PX_SETTINGS.purchase_invoice_policy!=="standalone");
+    acts.innerHTML = `
+      ${canInvoice?`<button class="drawer-btn primary" onclick="PS.createInvoiceFromGrn('${grnName}')">🧾 Create Invoice</button>`:""}
+      ${IS_MANAGER?`<button class="drawer-btn" onclick="PS.openReturnModal('${grnName}')">↩️ Create Return</button>`:""}
+      <button class="drawer-btn" onclick="window.print()">🖨 Print GRN</button>`;
+  },
+
+  async createInvoiceFromGrn(grnName) {
+    if (!confirm(`Create Purchase Invoice from GRN ${grnName}?`)) return;
+    try {
+      const res = await api(`${API_PFX}.create_invoice`, { mode:"grn_linked", grn_name:grnName });
+      toast("success","Invoice Created", res.name);
+      PS.closeDrawer();
+      PS.render("invoices");
+    } catch(e) { toast("error","Error",e.message||"Invoice creation failed"); }
+  },
+
+  // ── INVOICES ──────────────────────────────────────────────────────────────
+  async renderInvoices(el) {
+    const f = STATE.filters;
+    const data = await api(`${API_PFX}.get_invoices`, {
+      status:f.status||"", supplier:f.supplier||"",
+      from_date:f.from_date||"", to_date:f.to_date||"",
+      page:STATE.page, page_size:50
+    });
+
+    const policyBanner = PX_SETTINGS.purchase_invoice_policy==="grn_only"
+      ? `<div class="banner warning"><span class="banner-icon">⚠️</span><span>Policy: GRN Only. Standalone invoices are disabled. Use "Create from GRN" on a receipt.</span></div>`
+      : PX_SETTINGS.purchase_invoice_policy==="standalone"
+      ? `<div class="banner info"><span class="banner-icon">ℹ️</span><span>Policy: Standalone Only. GRN-linked invoices are disabled.</span></div>` : "";
+
+    el.innerHTML = `
+    <div class="section-hdr">
+      <div class="section-hdr-left">
+        <h1>Purchase Invoices</h1>
+        <p>${fmt.num(data.total||0)} invoices</p>
+      </div>
+      <div class="section-hdr-actions">
+        ${IS_ACCOUNTS && PX_SETTINGS.purchase_invoice_policy!=="grn_only"?`<button class="topbar-btn primary-btn" onclick="PS.openModal('invoice')">+ New Invoice</button>`:""}
+      </div>
+    </div>
+    ${policyBanner}
+    <div class="filter-bar">
+      <input class="filter-search" placeholder="🔍 Search invoice or supplier…" oninput="STATE.filters.search_term=this.value" onkeydown="if(event.key==='Enter')PS.render('invoices')"/>
+      <select class="filter-select" onchange="STATE.filters.status=this.value">
+        <option value="">All Status</option>
+        <option value="Unpaid">Unpaid</option>
+        <option value="Partly Paid">Partly Paid</option>
+        <option value="Paid">Paid</option>
+        <option value="Overdue">Overdue</option>
+      </select>
+      <input type="date" class="filter-date" title="From Date" onchange="STATE.filters.from_date=this.value"/>
+      <input type="date" class="filter-date" title="To Date" onchange="STATE.filters.to_date=this.value"/>
+      <button class="filter-btn" onclick="STATE.page=1;PS.render('invoices')">Apply</button>
+      <button class="filter-btn-ghost" onclick="STATE.filters={};STATE.page=1;PS.render('invoices')">Clear</button>
+    </div>
+    <div class="grid-wrap">
+      <table class="grid-table">
+        <thead><tr>
+          <th>Invoice No</th><th>Date</th><th>Supplier</th>
+          <th>Total</th><th>Outstanding</th><th>Mode</th><th>Status</th>
+        </tr></thead>
+        <tbody>
+        ${(data.items||[]).length===0?`<tr><td colspan="7"><div class="grid-empty"><div class="empty-icon">🧾</div>No invoices found</div></td></tr>`:""}
+        ${(data.items||[]).map(pi=>`
+          <tr onclick="PS.loadPiDetail('${pi.name}')">
+            <td><strong>${pi.name}</strong></td>
+            <td class="muted">${fmt.date(pi.posting_date)}</td>
+            <td>${fmt.short(pi.supplier_name||pi.supplier,24)}</td>
+            <td>${fmt.currency(pi.grand_total)}</td>
+            <td style="color:${(pi.outstanding_amount||0)>0?'var(--ps-warning)':'var(--ps-success)'};">${fmt.currency(pi.outstanding_amount)}</td>
+            <td>${badge(pi.smriti_creation_mode||"")}</td>
+            <td>${badge(pi.status)}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+      <div class="grid-footer">
+        <span>${data.total||0} total records</span>
+        ${PS.pagination(data.total, STATE.page, 50, p=>{STATE.page=p;PS.render('invoices');})}
+      </div>
+    </div>`;
+  },
+
+  async loadPiDetail(piName) {
+    document.getElementById("drawer-body").innerHTML = `<div class="loading-wrap"><div class="spinner"></div></div>`;
+    document.getElementById("drawer-actions").innerHTML = "";
+    document.getElementById("drawer-title").textContent = piName;
+    document.getElementById("detail-drawer").classList.add("open");
+
+    const pi = await api(`${API_PFX}.get_invoice_detail`, { pi_name: piName });
+
+    document.getElementById("drawer-body").innerHTML = `
+      <div class="detail-grid">
+        <div class="detail-field"><div class="detail-label">Supplier</div><div class="detail-value">${pi.supplier_name||pi.supplier}</div></div>
+        <div class="detail-field"><div class="detail-label">Date</div><div class="detail-value">${fmt.date(pi.posting_date)}</div></div>
+        <div class="detail-field"><div class="detail-label">Grand Total</div><div class="detail-value" style="color:var(--ps-primary);font-size:16px;">${fmt.currency(pi.grand_total)}</div></div>
+        <div class="detail-field"><div class="detail-label">Outstanding</div><div class="detail-value" style="color:${(pi.outstanding_amount||0)>0?'var(--ps-warning)':'var(--ps-success)'};">${fmt.currency(pi.outstanding_amount)}</div></div>
+        <div class="detail-field"><div class="detail-label">Mode</div><div class="detail-value">${badge(pi.smriti_creation_mode||"")}</div></div>
+        <div class="detail-field"><div class="detail-label">GRN Ref</div><div class="detail-value">${pi.grn_reference||"—"}</div></div>
+      </div>
+      ${(pi.taxes||[]).length?`
+        <div class="detail-section-title">Taxes</div>
+        ${pi.taxes.map(t=>`<div class="detail-field" style="display:flex;justify-content:space-between;">
+          <span class="detail-label">${t.description}</span>
+          <span class="detail-value">${fmt.currency(t.tax_amount)}</span></div>`).join("")}`:""}
+      <div class="detail-section-title">Items (${pi.items.length})</div>
+      <table class="items-mini-table">
+        <thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead>
+        <tbody>
+        ${pi.items.map(i=>`<tr>
+          <td>${fmt.short(i.item_name||i.item_code,22)}</td>
+          <td>${fmt.num(i.qty)}</td>
+          <td>${fmt.currency(i.rate)}</td>
+          <td>${fmt.currency(i.amount)}</td>
+        </tr>`).join("")}
+        </tbody>
+      </table>`;
+
+    document.getElementById("drawer-actions").innerHTML = `
+      <button class="drawer-btn" onclick="window.print()">🖨 Print Invoice</button>`;
+  },
+
+  // ── RETURNS ───────────────────────────────────────────────────────────────
+  async renderReturns(el) {
+    const data = await api(`${API_PFX}.get_returns`, { page:STATE.page, page_size:50 });
+
+    el.innerHTML = `
+    <div class="section-hdr">
+      <div class="section-hdr-left"><h1>Purchase Returns</h1><p>${fmt.num(data.total||0)} returns</p></div>
+      <div class="section-hdr-actions">
+        ${IS_MANAGER?`<button class="topbar-btn primary-btn" onclick="PS.openReturnModal()">+ New Return</button>`:""}
+      </div>
+    </div>
+    <div class="grid-wrap">
+      <table class="grid-table">
+        <thead><tr><th>Return No</th><th>Date</th><th>Supplier</th><th>Value</th><th>Status</th></tr></thead>
+        <tbody>
+        ${(data.items||[]).length===0?`<tr><td colspan="5"><div class="grid-empty"><div class="empty-icon">↩️</div>No returns found</div></td></tr>`:""}
+        ${(data.items||[]).map(r=>`
+          <tr>
+            <td><strong>${r.name}</strong></td>
+            <td class="muted">${fmt.date(r.posting_date)}</td>
+            <td>${fmt.short(r.supplier_name||r.supplier,26)}</td>
+            <td style="color:var(--ps-danger);">${fmt.currency(r.grand_total)}</td>
+            <td>${badge(r.status)}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+      <div class="grid-footer"><span>${data.total||0} total records</span></div>
+    </div>`;
+  },
+
+  openReturnModal(grnName=null) {
+    PS.openModal("return", grnName||"");
+  },
+
+  // ── SUPPLIER LEDGER ────────────────────────────────────────────────────────
+  async renderLedger(el) {
+    el.innerHTML = `
+    <div class="section-hdr">
+      <div class="section-hdr-left"><h1>Supplier Ledger</h1><p>GL entries — read from ERPNext</p></div>
+    </div>
+    <div class="settings-card">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Supplier <span class="req">*</span></label>
+          <div class="typeahead-wrap">
+            <input class="form-input" id="ledger-supplier" placeholder="Search supplier…" autocomplete="off" oninput="PS.supplierTypeahead(this,'ledger-supplier-res')" onblur="setTimeout(()=>document.getElementById('ledger-supplier-res').innerHTML='',200)"/>
+            <div class="typeahead-results" id="ledger-supplier-res"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date Range <span class="req">*</span></label>
+          <div style="display:flex;gap:8px;">
+            <input type="date" class="form-input" id="ledger-from" placeholder="From"/>
+            <input type="date" class="form-input" id="ledger-to" placeholder="To"/>
+          </div>
+        </div>
+      </div>
+      <button class="filter-btn" style="margin-top:4px;" onclick="PS.loadLedger()">Load Ledger</button>
+    </div>
+    <div id="ledger-results"></div>`;
+  },
+
+  async loadLedger() {
+    const supplier = document.getElementById("ledger-supplier").dataset.value||"";
+    const from_date = document.getElementById("ledger-from").value;
+    const to_date = document.getElementById("ledger-to").value;
+    if (!supplier) { toast("warning","Select Supplier","Please select a supplier first."); return; }
+    if (!from_date||!to_date) { toast("warning","Date Required","Please select a date range."); return; }
+    const el = document.getElementById("ledger-results");
+    el.innerHTML = `<div class="loading-wrap"><div class="spinner"></div></div>`;
+    try {
+      const data = await api(`${API_PFX}.get_supplier_ledger`, { supplier, from_date, to_date });
+      el.innerHTML = `
+        <div class="ledger-summary">
+          <div class="kpi-card"><div class="kpi-label">Total Payable</div><div class="kpi-value" style="font-size:18px;color:var(--ps-danger);">${fmt.currency(data.total_payable)}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Overdue</div><div class="kpi-value" style="font-size:18px;color:var(--ps-danger);">${fmt.currency(data.overdue)}</div></div>
+          <div class="kpi-card"><div class="kpi-label">Supplier</div><div class="kpi-value" style="font-size:14px;">${data.supplier_name}</div><div class="kpi-trend">${supplier}</div></div>
+        </div>
+        <div class="grid-wrap">
+          <table class="grid-table">
+            <thead><tr><th>Date</th><th>Type</th><th>Voucher</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead>
+            <tbody>
+            ${(data.entries||[]).length===0?`<tr><td colspan="6"><div class="grid-empty">No GL entries found for this period</div></td></tr>`:""}
+            ${(data.entries||[]).map(e=>`<tr>
+              <td class="muted">${fmt.date(e.posting_date)}</td>
+              <td>${e.voucher_type}</td>
+              <td><strong>${e.voucher_no}</strong></td>
+              <td class="ledger-entry-dr">${e.debit>0?fmt.currency(e.debit):""}</td>
+              <td class="ledger-entry-cr">${e.credit>0?fmt.currency(e.credit):""}</td>
+              <td style="font-weight:600;">${fmt.currency(e.balance)}</td>
+            </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>`;
+    } catch(e) { el.innerHTML=`<div class="banner danger"><span class="banner-icon">❌</span><span>${e.message||"Failed to load ledger"}</span></div>`; }
+  },
+
+  // ── ANALYTICS ─────────────────────────────────────────────────────────────
+  renderAnalytics(el) {
+    el.innerHTML = `
+    <div class="section-hdr">
+      <div class="section-hdr-left"><h1>Purchase Analytics</h1><p>Spend analysis and vendor performance</p></div>
+    </div>
+    <div class="banner info" style="max-width:600px;">
+      <span class="banner-icon">🚧</span>
+      <span>Purchase Analytics charts are being built. Dashboard KPIs are available on the Dashboard section.</span>
+    </div>
+    <div class="kpi-row" style="max-width:800px;">
+      ${STATE.dashboard?`
+      <div class="kpi-card"><div class="kpi-label">Open POs</div><div class="kpi-value">${fmt.num(STATE.dashboard.open_pos)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Pending GRNs</div><div class="kpi-value">${fmt.num(STATE.dashboard.pending_grns)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Outstanding</div><div class="kpi-value" style="font-size:16px;">${fmt.currency(STATE.dashboard.unpaid_invoices_amt)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Month Spend</div><div class="kpi-value" style="font-size:16px;">${fmt.currency(STATE.dashboard.month_spend)}</div></div>
+      `:`<div style="color:var(--ps-muted);font-size:13px;">Load dashboard first</div>`}
+    </div>`;
+  },
+
+  // ── SETTINGS ──────────────────────────────────────────────────────────────
+  async renderSettings(el) {
+    if (!IS_SYS_MGR) { el.innerHTML=`<div class="banner danger"><span class="banner-icon">🔒</span><span>Settings are restricted to System Managers.</span></div>`; return; }
+    const s = await api(`${API_PFX}.get_purchase_settings`);
+    el.innerHTML = `
+    <div class="section-hdr">
+      <div class="section-hdr-left"><h1>Purchase Settings</h1><p>System Manager only — changes take effect immediately</p></div>
+    </div>
+    <div class="settings-card">
+      <h3>Invoice Policy</h3>
+      <div class="form-group">
+        <label class="form-label">Purchase Invoice Creation Mode</label>
+        <div class="radio-group">
+          <label class="radio-opt"><input type="radio" name="pi_policy" value="grn_only" ${s.purchase_invoice_policy==="grn_only"?"checked":""}> GRN Only</label>
+          <label class="radio-opt"><input type="radio" name="pi_policy" value="standalone" ${s.purchase_invoice_policy==="standalone"?"checked":""}> Standalone Only</label>
+          <label class="radio-opt"><input type="radio" name="pi_policy" value="both" ${s.purchase_invoice_policy==="both"?"checked":""}> Both Allowed (default)</label>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Approval Threshold (₹) <span style="font-size:10px;color:var(--ps-muted);">0 = disabled</span></label>
+          <input class="form-input" type="number" id="set-threshold" value="${s.approval_threshold||0}" min="0"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tolerance %</label>
+          <input class="form-input" type="number" id="set-tolerance" value="${s.tolerance_percent||0}" min="0" max="100"/>
+        </div>
+      </div>
+    </div>
+    <div class="settings-card">
+      <h3>Receiving Options</h3>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Allow Over-Receipt</div><div class="toggle-sub">Permit receiving more than PO quantity</div></div>
+        <label class="toggle-switch"><input type="checkbox" id="set-over-receipt" ${s.allow_over_receipt?"checked":""}><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Auto-Create Items</div><div class="toggle-sub">Auto-create Item master if not found during PO creation</div></div>
+        <label class="toggle-switch"><input type="checkbox" id="set-auto-items" ${s.auto_create_items?"checked":""}><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">GRN Mandatory</div><div class="toggle-sub">Override policy — require GRN for all invoices</div></div>
+        <label class="toggle-switch"><input type="checkbox" id="set-grn-mand" ${s.grn_mandatory?"checked":""}><span class="slider"></span></label>
+      </div>
+    </div>
+    <div class="settings-card">
+      <h3>Landed Cost Rule</h3>
+      <div class="radio-group">
+        <label class="radio-opt"><input type="radio" name="lc_rule" value="manual" ${(s.landed_cost_rule||"manual")==="manual"?"checked":""}> Manual</label>
+        <label class="radio-opt"><input type="radio" name="lc_rule" value="proportional" ${s.landed_cost_rule==="proportional"?"checked":""}> Proportional</label>
+        <label class="radio-opt"><input type="radio" name="lc_rule" value="disabled" ${s.landed_cost_rule==="disabled"?"checked":""}> Disabled</label>
+      </div>
+    </div>
+    <div style="max-width:720px;">
+      <button class="topbar-btn primary-btn" style="padding:10px 24px;font-size:14px;" onclick="PS.saveSettings()">💾 Save Settings</button>
+    </div>`;
+  },
+
+  async saveSettings() {
+    const fields = {
+      purchase_invoice_policy: document.querySelector("input[name='pi_policy']:checked")?.value||"both",
+      approval_threshold: parseFloat(document.getElementById("set-threshold").value||0),
+      tolerance_percent:  parseFloat(document.getElementById("set-tolerance").value||0),
+      allow_over_receipt: document.getElementById("set-over-receipt").checked,
+      auto_create_items:  document.getElementById("set-auto-items").checked,
+      grn_mandatory:      document.getElementById("set-grn-mand").checked,
+      landed_cost_rule:   document.querySelector("input[name='lc_rule']:checked")?.value||"manual"
+    };
+    try {
+      await api(`${API_PFX}.save_purchase_settings`, { fields: JSON.stringify(fields) });
+      toast("success","Settings Saved","Purchase policy updated. Changes take effect immediately.");
+      Object.assign(PX_SETTINGS, fields);
+    } catch(e) { toast("error","Save Failed", e.message||"Could not save settings"); }
+  },
+
+  // ── MODAL ENGINE ──────────────────────────────────────────────────────────
+  openModal(type, prefill="") {
+    STATE.modal = { type, step:1, maxStep:3, data:{ prefill }, lines:[] };
+    document.getElementById("modal-overlay").classList.add("open");
+    PS.renderModalStep();
+  },
+
+  closeModal() {
+    document.getElementById("modal-overlay").classList.remove("open");
+    STATE.modal = { type:null, step:1, maxStep:3, data:{}, lines:[] };
+  },
+
+  modalOverlayClick(e) {
+    if (e.target.id==="modal-overlay") PS.closeModal();
+  },
+
+  modalNext() {
+    if (!PS.validateModalStep()) return;
+    if (STATE.modal.step >= STATE.modal.maxStep) {
+      PS.submitModal();
+    } else {
+      STATE.modal.step++;
+      PS.renderModalStep();
+    }
+  },
+
+  modalBack() {
+    if (STATE.modal.step > 1) { STATE.modal.step--; PS.renderModalStep(); }
+  },
+
+  renderModalStep() {
+    const { type, step, maxStep, data } = STATE.modal;
+    const titles = { po:"New Purchase Order", grn:"New GRN / Receipt", invoice:"New Purchase Invoice", return:"New Purchase Return" };
+    document.getElementById("modal-title").textContent = `${titles[type]||"Create"} — Step ${step} of ${maxStep}`;
+    document.getElementById("modal-back").style.display = step > 1 ? "" : "none";
+    document.getElementById("modal-next").textContent = step >= maxStep ? "Submit ✓" : "Next →";
+
+    // Render step dots
+    let dots = "";
+    for (let i=1;i<=maxStep;i++) {
+      const cls = i<step?"done":i===step?"active":"";
+      dots += `<div class="step-dot ${cls}"></div>`;
+    }
+    document.getElementById("modal-steps").innerHTML = dots;
+
+    const body = document.getElementById("modal-body");
+
+    if (type === "po") {
+      if (step===1) {
+        body.innerHTML = `
+          <div class="form-group">
+            <label class="form-label">Supplier <span class="req">*</span></label>
+            <div class="typeahead-wrap">
+              <input class="form-input" id="po-supplier" placeholder="Search supplier name…" autocomplete="off" oninput="PS.supplierTypeahead(this,'po-supp-res')" onblur="setTimeout(()=>document.getElementById('po-supp-res').innerHTML='',200)"/>
+              <div class="typeahead-results" id="po-supp-res"></div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Schedule Date</label>
+              <input class="form-input" type="date" id="po-schedule"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Remarks</label>
+              <input class="form-input" id="po-remarks" placeholder="Optional notes…"/>
+            </div>
+          </div>`;
+        if (STATE.modal.data.po_supplier) {
+          document.getElementById("po-supplier").value = STATE.modal.data.po_supplier_name||STATE.modal.data.po_supplier;
+          document.getElementById("po-supplier").dataset.value = STATE.modal.data.po_supplier;
+        }
+      } else if (step===2) {
+        body.innerHTML = `
+          <div class="form-group"><label class="form-label">Items <span class="req">*</span></label></div>
+          <table class="line-editor-table" id="po-lines-table">
+            <thead><tr><th style="width:35%">Item Code</th><th>Qty</th><th>Rate (₹)</th><th>Amount</th><th></th></tr></thead>
+            <tbody id="po-lines-body"></tbody>
+          </table>
+          <button class="add-line-btn" onclick="PS.addPoLine()">＋ Add Item</button>
+          <div class="line-total" id="po-total">Total: ₹0.00</div>
+          ${PX_SETTINGS.approval_threshold>0?`<div class="banner warning" style="margin-top:12px;"><span class="banner-icon">🔐</span><span>POs above ${fmt.currency(PX_SETTINGS.approval_threshold)} require approval.</span></div>`:""}`;
+        (STATE.modal.lines||[]).forEach(l => PS.addPoLine(l));
+        if (!STATE.modal.lines||STATE.modal.lines.length===0) PS.addPoLine();
+      } else if (step===3) {
+        const lines = PS.getPoLines();
+        const total = lines.reduce((s,l)=>s+l.qty*l.rate,0);
+        body.innerHTML = `
+          <div class="banner success"><span class="banner-icon">✅</span><span>Review Purchase Order before submission.</span></div>
+          <div class="detail-grid" style="margin-top:12px;">
+            <div class="detail-field"><div class="detail-label">Supplier</div><div class="detail-value">${STATE.modal.data.po_supplier_name||STATE.modal.data.po_supplier}</div></div>
+            <div class="detail-field"><div class="detail-label">Items</div><div class="detail-value">${lines.length}</div></div>
+            <div class="detail-field"><div class="detail-label">Grand Total</div><div class="detail-value" style="font-size:18px;color:var(--ps-primary);">${fmt.currency(total)}</div></div>
+            ${PX_SETTINGS.approval_threshold>0&&total>PX_SETTINGS.approval_threshold?`<div class="detail-field"><div class="detail-label">Approval</div><div class="detail-value" style="color:var(--ps-warning);">⚠️ Pending</div></div>`:""}
+          </div>
+          <table class="items-mini-table"><thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody>
+          ${lines.map(l=>`<tr><td>${l.item_code}</td><td>${l.qty}</td><td>${fmt.currency(l.rate)}</td><td>${fmt.currency(l.qty*l.rate)}</td></tr>`).join("")}
+          </tbody></table>`;
+      }
+    } else if (type === "grn") {
+      if (step===1) {
+        body.innerHTML = `
+          <div class="form-group">
+            <label class="form-label">Mode</label>
+            <div class="radio-group">
+              <label class="radio-opt" onclick="PS.toggleGrnMode('po')"><input type="radio" name="grn-mode" value="po" checked> Against PO</label>
+              <label class="radio-opt" onclick="PS.toggleGrnMode('standalone')"><input type="radio" name="grn-mode" value="standalone"> Standalone</label>
+            </div>
+          </div>
+          <div id="grn-po-field">
+            <div class="form-group">
+              <label class="form-label">Purchase Order</label>
+              <input class="form-input" id="grn-po" placeholder="PO name e.g. PUR-ORD-2026-00001" value="${STATE.modal.data.prefill||""}"/>
+            </div>
+          </div>
+          <div id="grn-supplier-field" style="display:none;">
+            <div class="form-group">
+              <label class="form-label">Supplier <span class="req">*</span></label>
+              <div class="typeahead-wrap">
+                <input class="form-input" id="grn-supplier" placeholder="Search supplier…" autocomplete="off" oninput="PS.supplierTypeahead(this,'grn-supp-res')" onblur="setTimeout(()=>document.getElementById('grn-supp-res').innerHTML='',200)"/>
+                <div class="typeahead-results" id="grn-supp-res"></div>
+              </div>
+            </div>
+          </div>`;
+      } else if (step===2) {
+        body.innerHTML = `
+          <div class="form-group"><label class="form-label">Items Received <span class="req">*</span></label></div>
+          <table class="line-editor-table">
+            <thead><tr><th>Item Code</th><th>Qty</th><th>Rate (₹)</th><th>Batch No</th><th></th></tr></thead>
+            <tbody id="grn-lines-body"></tbody>
+          </table>
+          <button class="add-line-btn" onclick="PS.addGrnLine()">＋ Add Item</button>`;
+        if (!STATE.modal.lines||STATE.modal.lines.length===0) PS.addGrnLine();
+      } else if (step===3) {
+        const lines = PS.getGrnLines();
+        const mode = document.querySelector("input[name='grn-mode']:checked")?.value||"po";
+        const total = lines.reduce((s,l)=>s+(l.qty||0)*(l.rate||0),0);
+        body.innerHTML = `
+          <div class="banner success"><span class="banner-icon">✅</span><span>Review GRN before submission. Stock will be updated on submit.</span></div>
+          <div class="detail-grid" style="margin-top:12px;">
+            <div class="detail-field"><div class="detail-label">Mode</div><div class="detail-value">${mode==="po"?"Against PO":"Standalone"}</div></div>
+            <div class="detail-field"><div class="detail-label">Items</div><div class="detail-value">${lines.length}</div></div>
+            <div class="detail-field"><div class="detail-label">Total Value</div><div class="detail-value" style="font-size:18px;color:var(--ps-primary);">${fmt.currency(total)}</div></div>
+          </div>
+          <table class="items-mini-table"><thead><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Batch</th></tr></thead><tbody>
+          ${lines.map(l=>`<tr><td>${l.item_code}</td><td>${l.qty}</td><td>${fmt.currency(l.rate)}</td><td>${l.batch_no||"—"}</td></tr>`).join("")}
+          </tbody></table>`;
+      }
+    } else if (type === "invoice") {
+      if (step===1) {
+        body.innerHTML = `
+          <div class="form-group">
+            <label class="form-label">Mode</label>
+            <div class="radio-group">
+              ${PX_SETTINGS.purchase_invoice_policy!=="standalone"?`<label class="radio-opt"><input type="radio" name="inv-mode" value="grn_linked" checked> From GRN</label>`:""}
+              ${PX_SETTINGS.purchase_invoice_policy!=="grn_only"?`<label class="radio-opt"><input type="radio" name="inv-mode" value="standalone"> Standalone</label>`:""}
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">GRN Reference</label>
+            <input class="form-input" id="inv-grn" placeholder="GRN No (e.g. MAT-PRE-2026-00001)"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Posting Date</label>
+            <input class="form-input" type="date" id="inv-date"/>
+          </div>`;
+        STATE.modal.maxStep = 2;
+      } else if (step===2) {
+        const mode = document.querySelector("input[name='inv-mode']:checked")?.value||"grn_linked";
+        const grn  = document.getElementById("inv-grn")?.value||"";
+        const dt   = document.getElementById("inv-date")?.value||"";
+        body.innerHTML = `
+          <div class="banner success"><span class="banner-icon">✅</span><span>Confirm Purchase Invoice creation.</span></div>
+          <div class="detail-grid" style="margin-top:12px;">
+            <div class="detail-field"><div class="detail-label">Mode</div><div class="detail-value">${badge(mode)}</div></div>
+            ${grn?`<div class="detail-field"><div class="detail-label">GRN</div><div class="detail-value">${grn}</div></div>`:""}
+            ${dt?`<div class="detail-field"><div class="detail-label">Date</div><div class="detail-value">${fmt.date(dt)}</div></div>`:""}
+          </div>
+          <p style="font-size:12px;color:var(--ps-muted);margin-top:8px;">ERPNext will calculate GST/taxes automatically from the item tax templates.</p>`;
+        STATE.modal.data.inv_mode = mode;
+        STATE.modal.data.inv_grn  = grn;
+        STATE.modal.data.inv_date = dt;
+      }
+    } else if (type === "return") {
+      if (step===1) {
+        body.innerHTML = `
+          <div class="form-group">
+            <label class="form-label">GRN to Return Against <span class="req">*</span></label>
+            <input class="form-input" id="ret-grn" placeholder="GRN No e.g. MAT-PRE-2026-00001" value="${STATE.modal.data.prefill||""}"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Return Reason <span class="req">*</span></label>
+            <textarea class="form-input" id="ret-reason" rows="3" placeholder="Reason is mandatory (SPC Rule 13)…"></textarea>
+          </div>`;
+        STATE.modal.maxStep = 2;
+      } else if (step===2) {
+        const grn = document.getElementById("ret-grn")?.value||"";
+        const reason = document.getElementById("ret-reason")?.value||"";
+        body.innerHTML = `
+          <div class="banner warning"><span class="banner-icon">⚠️</span><span>Return will reverse stock. If the GRN was invoiced, a Debit Note will be created automatically.</span></div>
+          <div class="detail-grid" style="margin-top:12px;">
+            <div class="detail-field"><div class="detail-label">GRN</div><div class="detail-value">${grn}</div></div>
+            <div class="detail-field"><div class="detail-label">Reason</div><div class="detail-value">${reason}</div></div>
+          </div>`;
+        STATE.modal.data.ret_grn = grn;
+        STATE.modal.data.ret_reason = reason;
+      }
+    }
+  },
+
+  validateModalStep() {
+    const { type, step, data } = STATE.modal;
+    if (type==="po" && step===1) {
+      const supp = document.getElementById("po-supplier")?.dataset.value||"";
+      if (!supp) { toast("warning","Required","Please select a supplier."); return false; }
+      STATE.modal.data.po_supplier = supp;
+      STATE.modal.data.po_supplier_name = document.getElementById("po-supplier")?.value||supp;
+      STATE.modal.data.po_schedule = document.getElementById("po-schedule")?.value||"";
+      STATE.modal.data.po_remarks  = document.getElementById("po-remarks")?.value||"";
+    }
+    if (type==="po" && step===2) {
+      const lines = PS.getPoLines();
+      STATE.modal.lines = lines;
+      if (lines.length===0) { toast("warning","Required","Add at least one item."); return false; }
+      for (const l of lines) {
+        if (!l.item_code) { toast("warning","Required","All items must have an item code."); return false; }
+        if (l.qty<=0)     { toast("warning","Required","All quantities must be > 0."); return false; }
+      }
+    }
+    if (type==="grn" && step===1) {
+      const mode = document.querySelector("input[name='grn-mode']:checked")?.value||"po";
+      STATE.modal.data.grn_mode = mode;
+      if (mode==="po") {
+        STATE.modal.data.grn_po = document.getElementById("grn-po")?.value||"";
+      } else {
+        const supp = document.getElementById("grn-supplier")?.dataset.value||"";
+        if (!supp) { toast("warning","Required","Please select a supplier."); return false; }
+        STATE.modal.data.grn_supplier = supp;
+      }
+    }
+    if (type==="grn" && step===2) {
+      const lines = PS.getGrnLines();
+      STATE.modal.lines = lines;
+      if (lines.length===0) { toast("warning","Required","Add at least one item."); return false; }
+    }
+    if (type==="invoice" && step===1) {
+      const mode = document.querySelector("input[name='inv-mode']:checked")?.value||"grn_linked";
+      if (mode==="grn_linked") {
+        const grn = document.getElementById("inv-grn")?.value||"";
+        if (!grn) { toast("warning","Required","Enter GRN reference."); return false; }
+      }
+    }
+    if (type==="return" && step===1) {
+      const grn = document.getElementById("ret-grn")?.value||"";
+      const reason = document.getElementById("ret-reason")?.value||"";
+      if (!grn) { toast("warning","Required","Enter GRN name."); return false; }
+      if (!reason.trim()) { toast("warning","Required","Return reason is mandatory."); return false; }
+    }
+    return true;
+  },
+
+  async submitModal() {
+    const { type, data } = STATE.modal;
+    const btn = document.getElementById("modal-next");
+    btn.disabled = true;
+    btn.textContent = "Submitting…";
+    try {
+      let res;
+      if (type==="po") {
+        res = await api(`${API_PFX}.create_purchase_order`, {
+          supplier: data.po_supplier,
+          items: JSON.stringify(PS.getPoLines()),
+          schedule_date: data.po_schedule||"",
+          remarks: data.po_remarks||""
+        });
+        toast("success", res.status==="pending_approval"?"PO Sent for Approval":"PO Submitted", res.name);
+        PS.closeModal(); PS.render("orders");
+      } else if (type==="grn") {
+        const lines = STATE.modal.lines || PS.getGrnLines();
+        res = await api(`${API_PFX}.create_grn`, {
+          supplier: data.grn_supplier||"",
+          items: JSON.stringify(lines),
+          po_name: data.grn_po||""
+        });
+        toast("success","GRN Submitted", res.name + " — Stock updated.");
+        PS.closeModal(); PS.render("grn");
+      } else if (type==="invoice") {
+        res = await api(`${API_PFX}.create_invoice`, {
+          mode: data.inv_mode||"grn_linked",
+          grn_name: data.inv_grn||"",
+          posting_date: data.inv_date||""
+        });
+        toast("success","Invoice Submitted", res.name);
+        PS.closeModal(); PS.render("invoices");
+      } else if (type==="return") {
+        res = await api(`${API_PFX}.create_purchase_return`, {
+          grn_name: data.ret_grn,
+          return_reason: data.ret_reason
+        });
+        toast("success","Return Submitted", res.return_name + (res.debit_note?` — Debit Note: ${res.debit_note}`:""));
+        PS.closeModal(); PS.render("returns");
+      }
+    } catch(e) {
+      toast("error","Submission Failed", e.message||e.exc||"Unknown error");
+      btn.disabled = false;
+      btn.textContent = "Submit ✓";
+    }
+  },
+
+  // ── LINE EDITORS ──────────────────────────────────────────────────────────
+  addPoLine(data={}) {
+    const tbody = document.getElementById("po-lines-body");
+    if (!tbody) return;
+    const id = "pl-" + Date.now() + Math.random().toString(36).substr(2,4);
+    const tr = document.createElement("tr");
+    tr.id = id;
+    tr.innerHTML = `
+      <td><input class="line-input" placeholder="Item code" value="${data.item_code||""}" onblur="PS.updatePoTotal()"/></td>
+      <td><input class="line-input" type="number" placeholder="0" min="0.01" step="0.01" value="${data.qty||1}" oninput="PS.updatePoTotal()"/></td>
+      <td><input class="line-input" type="number" placeholder="0.00" min="0" step="0.01" value="${data.rate||""}" oninput="PS.updatePoTotal()"/></td>
+      <td class="po-line-amt" style="text-align:right;color:var(--ps-muted);">—</td>
+      <td><button class="line-del-btn" onclick="document.getElementById('${id}').remove();PS.updatePoTotal()">✕</button></td>`;
+    tbody.appendChild(tr);
+    PS.updatePoTotal();
+  },
+
+  getPoLines() {
+    const rows = document.querySelectorAll("#po-lines-body tr");
+    const lines = [];
+    rows.forEach(row => {
+      const inputs = row.querySelectorAll(".line-input");
+      const item_code = inputs[0]?.value?.trim();
+      const qty = parseFloat(inputs[1]?.value||0);
+      const rate = parseFloat(inputs[2]?.value||0);
+      if (item_code) lines.push({ item_code, qty, rate });
+    });
+    return lines;
+  },
+
+  updatePoTotal() {
+    const lines = PS.getPoLines();
+    const total = lines.reduce((s,l)=>s+l.qty*l.rate,0);
+    const el = document.getElementById("po-total");
+    if (el) el.textContent = `Total: ${fmt.currency(total)}`;
+    document.querySelectorAll("#po-lines-body tr").forEach((row,i) => {
+      const l = lines[i];
+      if (l) {
+        const amtCell = row.querySelector(".po-line-amt");
+        if (amtCell) amtCell.textContent = fmt.currency(l.qty*l.rate);
+      }
+    });
+  },
+
+  addGrnLine(data={}) {
+    const tbody = document.getElementById("grn-lines-body");
+    if (!tbody) return;
+    const id = "gl-" + Date.now() + Math.random().toString(36).substr(2,4);
+    const tr = document.createElement("tr");
+    tr.id = id;
+    tr.innerHTML = `
+      <td><input class="line-input" placeholder="Item code" value="${data.item_code||""}"/></td>
+      <td><input class="line-input" type="number" placeholder="0" min="0.01" step="0.01" value="${data.qty||1}"/></td>
+      <td><input class="line-input" type="number" placeholder="0.00" min="0" step="0.01" value="${data.rate||""}"/></td>
+      <td><input class="line-input" placeholder="Batch (if reqd)"/></td>
+      <td><button class="line-del-btn" onclick="document.getElementById('${id}').remove()">✕</button></td>`;
+    tbody.appendChild(tr);
+  },
+
+  getGrnLines() {
+    const rows = document.querySelectorAll("#grn-lines-body tr");
+    const lines = [];
+    rows.forEach(row => {
+      const inputs = row.querySelectorAll(".line-input");
+      const item_code = inputs[0]?.value?.trim();
+      const qty  = parseFloat(inputs[1]?.value||0);
+      const rate = parseFloat(inputs[2]?.value||0);
+      const batch_no = inputs[3]?.value?.trim()||"";
+      if (item_code) lines.push({ item_code, qty, rate, batch_no });
+    });
+    return lines;
+  },
+
+  toggleGrnMode(mode) {
+    const poField   = document.getElementById("grn-po-field");
+    const suppField = document.getElementById("grn-supplier-field");
+    if (!poField||!suppField) return;
+    if (mode==="po") { poField.style.display=""; suppField.style.display="none"; }
+    else             { poField.style.display="none"; suppField.style.display=""; }
+  },
+
+  // ── SUPPLIER TYPEAHEAD ────────────────────────────────────────────────────
+  async supplierTypeahead(inputEl, resultsDivId) {
+    const q = inputEl.value?.trim();
+    if (!q || q.length < 2) return;
+    try {
+      const results = await api(`${API_PFX}.search_suppliers`, { query: q });
+      const div = document.getElementById(resultsDivId);
+      if (!div) return;
+      div.innerHTML = results.map(s =>
+        `<div class="typeahead-item" data-value="${s.name}" onclick="PS.selectSupplier(event,'${resultsDivId}')">
+          <strong>${s.supplier_name}</strong>
+          <span style="color:var(--ps-muted);font-size:11px;margin-left:8px;">${s.name}</span></div>`
+      ).join("") || `<div class="typeahead-item" style="color:var(--ps-muted);">No results</div>`;
+    } catch {}
+  },
+
+  selectSupplier(e, resultsDivId) {
+    const item = e.currentTarget;
+    const val = item.dataset.value;
+    const label = item.querySelector("strong").textContent;
+    const input = item.closest(".typeahead-wrap")?.querySelector("input");
+    if (input) { input.value = label; input.dataset.value = val; }
+    document.getElementById(resultsDivId).innerHTML = "";
+  },
+
+  // ── DRAWER ────────────────────────────────────────────────────────────────
+  closeDrawer() {
+    document.getElementById("detail-drawer").classList.remove("open");
+  },
+
+  // ── PAGINATION ────────────────────────────────────────────────────────────
+  pagination(total, page, pageSize, onPage) {
+    const pages = Math.ceil((total||0)/pageSize);
+    if (pages <= 1) return "";
+    let html = `<div class="pagination">`;
+    html += `<button class="pg-btn" ${page<=1?"disabled":""} onclick="(${onPage})(${page-1})">‹</button>`;
+    for (let i=Math.max(1,page-2); i<=Math.min(pages,page+2); i++) {
+      html += `<button class="pg-btn ${i===page?"active":""}" onclick="(${onPage})(${i})">${i}</button>`;
+    }
+    html += `<button class="pg-btn" ${page>=pages?"disabled":""} onclick="(${onPage})(${page+1})">›</button>`;
+    html += `</div>`;
+    return html;
+  },
+
+  // ── BADGE LOADER ──────────────────────────────────────────────────────────
+  async loadDashboardBadges() {
+    try {
+      const data = await api(`${API_PFX}.get_purchase_dashboard`);
+      STATE.dashboard = data;
+      if (data.open_pos>0) {
+        document.getElementById("badge-orders").textContent = data.open_pos;
+        document.getElementById("badge-orders").style.display = "";
+      }
+    } catch {}
+  }
+};
+
+// ── Keyboard shortcuts ───────────────────────────────────────────────────────
+document.addEventListener("keydown", e => {
+  if (e.key==="Escape") { PS.closeModal(); PS.closeDrawer(); }
+  if (e.key==="/" && !e.target.matches("input,textarea")) {
+    e.preventDefault(); document.getElementById("ps-global-search").focus();
+  }
+});
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => PS.init());
+</script>
+</body>
+</html>
