@@ -4,20 +4,14 @@
  "docstatus": 0,
  "doctype": "Page",
  "idx": 0,
- "modified": "2026-06-17 10:10:00",
+ "modified": "2026-07-02 01:46:00",
  "modified_by": "Administrator",
  "module": "SMRITI Retail OS",
  "name": "smriti-purchase-invoice",
  "owner": "Administrator",
  "page_name": "smriti-purchase-invoice",
- "roles": [
-  {
-   "role": "SMRITI Store Manager"
-  },
-  {
-   "role": "System Manager"
-  }
- ],
+ "roles": [],
  "standard": "Yes",
  "title": "Purchase Invoices Tracker"
 }
+

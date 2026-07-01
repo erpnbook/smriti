@@ -11,6 +11,16 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2026, Smriti Retail OS and contributors
 # For license information, please see license.txt
+#
+# DEPRECATED — 2026-07-02
+# This DocType ("PSV Reorder Rule") is superseded by "SMRITI PSV Reorder Rule"
+# (smriti_retail_os/doctype/smriti_psv_reorder_rule/).
+# All active service code (psv_analysis_service.py, balance_engine.py) was
+# migrated in BUG-005 to reference "SMRITI PSV Reorder Rule".
+# This file is kept to avoid migration errors if any historical DB records exist.
+# Action: Run `frappe.db.count("PSV Reorder Rule")` on staging. If zero, remove
+# this folder and add a migration patch in v2.1.
+#
 
 import frappe
 from frappe.model.document import Document
@@ -18,3 +28,4 @@ from frappe.model.document import Document
 
 class PSVReorderRule(Document):
 	pass
+

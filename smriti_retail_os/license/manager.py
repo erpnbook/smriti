@@ -18,11 +18,22 @@ from frappe.utils import getdate, date_diff, now_datetime, get_datetime, nowdate
 
 
 
+# Sentinel returned when the license record fails to load due to an infrastructure
+# error (DB unavailable, PermissionError, corrupt doc). Distinct from None, which
+# means "not yet installed" (pre-migration). check_feature() treats LOAD_ERROR as
+# blocked to prevent accidental feature unlocking during outages.
+_LICENSE_LOAD_ERROR = "LOAD_ERROR"
+
+
 def _load_license():
     """
     Loads the SMRITI License Single DocType.
     Cached for the duration of the current request (frappe.local scope).
-    Returns None if the DocType doesn't exist yet (pre-migration state).
+
+    Returns:
+        Document  — the loaded license doc (normal case)
+        None      — DocType not yet installed (pre-migration: allow all features)
+        "LOAD_ERROR" sentinel — infrastructure failure (fail-closed: block all)
     """
     if hasattr(frappe.local, "_smriti_license_cache"):
         return frappe.local._smriti_license_cache
@@ -31,8 +42,24 @@ def _load_license():
         doc = frappe.get_cached_doc("SMRITI License")
         frappe.local._smriti_license_cache = doc
         return doc
-    except Exception:
+    except frappe.DoesNotExistError:
+        # DocType not yet created — genuine pre-migration state.
+        # Allow all features through so fresh installs work before setup.
+        frappe.local._smriti_license_cache = None
         return None
+    except Exception:
+        # Infrastructure failure: DB hiccup, PermissionError, corrupt doc.
+        # Fail CLOSED — do not silently unlock all licensed features.
+        frappe.log_error(
+            title="SMRITI License: Failed to load license record",
+            message=(
+                "License could not be loaded due to an infrastructure error.\n"
+                "All licensed features will be blocked until this is resolved.\n\n"
+                + frappe.get_traceback()
+            ),
+        )
+        frappe.local._smriti_license_cache = _LICENSE_LOAD_ERROR
+        return _LICENSE_LOAD_ERROR
 
 
 def _evaluate_status_lightweight(doc):
@@ -97,13 +124,27 @@ def check_feature(feature_code: str) -> dict:
     """
     doc = _load_license()
 
-    # Pre-migration or DocType not yet created
+    # Pre-migration — DocType not yet installed. Allow all features.
     if doc is None:
         return {
             "allowed": True,
             "mode": "none",
             "reason": None,
             "status": "Active",
+            "days_remaining": None,
+        }
+
+    # Infrastructure failure loading license record — fail CLOSED.
+    # This prevents an unrelated DB error from silently unlocking all features.
+    if doc is _LICENSE_LOAD_ERROR:
+        return {
+            "allowed": False,
+            "mode": "blocked",
+            "reason": (
+                "License system is temporarily unavailable due to an infrastructure error. "
+                "Please contact support@erpnbook.com if this persists."
+            ),
+            "status": "Error",
             "days_remaining": None,
         }
 
@@ -201,6 +242,9 @@ def get_license_summary() -> dict:
     doc = _load_license()
     if doc is None:
         return {"status": "Active", "health": "Healthy", "days_remaining": None, "features": []}
+    if doc is _LICENSE_LOAD_ERROR:
+        # Infrastructure failure — surface Error state to the frontend badge.
+        return {"status": "Error", "health": "Error", "days_remaining": None, "features": []}
 
     status, health, days_remaining = _evaluate_status_lightweight(doc)
     features = [
@@ -225,7 +269,16 @@ def _get_feature_restriction(doc, feature_code: str) -> str:
     for f in (doc.features or []):
         if f.feature_code == feature_code:
             return f.restriction_level or "NONE"
-    return "NONE"  # Unknown features default to unrestricted
+    # Unknown feature code — log so typos become visible. Default: unrestricted.
+    frappe.log_error(
+        title=f"SMRITI License: Unknown feature code in grace check — '{feature_code}'",
+        message=(
+            f"_get_feature_restriction() was called with feature_code='{feature_code}' "
+            f"which is not registered in the SMRITI License features table. "
+            f"Defaulting to NONE (unrestricted). Register this code to enforce grace-period gating."
+        ),
+    )
+    return "NONE"  # Deliberate forward-compat default — see Finding #5 in audit
 
 
 def _feature_enabled_for_tier(doc, feature_code: str) -> bool:
@@ -239,4 +292,17 @@ def _feature_enabled_for_tier(doc, feature_code: str) -> bool:
                 return False
             required_tier = TIER_ORDER.get(f.tier_minimum or "Starter", 0)
             return current_tier >= required_tier
-    return True  # Unknown features default to allowed
+
+    # Unknown feature code — log so typos become visible. Default: allowed.
+    # Deliberate forward-compat choice: new features can be deployed before
+    # their license registry entry is seeded. See audit Finding #5.
+    frappe.log_error(
+        title=f"SMRITI License: Unknown feature code in tier check — '{feature_code}'",
+        message=(
+            f"_feature_enabled_for_tier() was called with feature_code='{feature_code}' "
+            f"which is not registered in the SMRITI License features table. "
+            f"Defaulting to allowed (True). Register this code in the license DocType "
+            f"to enforce per-tier gating."
+        ),
+    )
+    return True  # Deliberate forward-compat default — see Finding #5 in audit

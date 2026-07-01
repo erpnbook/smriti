@@ -585,7 +585,7 @@ def create_invoice(mode, supplier=None, grn_name=None, items_list=None, posting_
     policy    = settings_svc.check_invoice_policy()
     grn_mand  = settings_svc.is_grn_mandatory()
 
-    # Policy gate enforcement
+    # ── Layer 1: Company-wide policy gate ────────────────────────────────────
     if grn_mand and mode == "standalone":
         frappe.throw(_(
             "Standalone Purchase Invoices are disabled. "
@@ -601,6 +601,36 @@ def create_invoice(mode, supplier=None, grn_name=None, items_list=None, posting_
             "GRN-linked Purchase Invoices are disabled. "
             "Policy is set to 'Standalone Only' in Purchase Settings."
         ))
+
+    # ── Layer 2: Per-supplier compliance flags ────────────────────────────────
+    # These flags can only RESTRICT — they cannot widen beyond company-wide policy.
+    # Use case: company policy = "both", but specific supplier requires GRN (e.g.
+    # regulated categories, brand compliance, distributor audit requirements).
+    if supplier and mode == "standalone":
+        try:
+            supplier_doc = frappe.get_cached_doc("Supplier", supplier)
+        except frappe.DoesNotExistError:
+            frappe.throw(_("Supplier '{0}' not found.").format(supplier))
+
+        # Flag 1: Supplier requires a Purchase Order before any invoice
+        allow_without_po = cint(
+            getattr(supplier_doc, "allow_purchase_invoice_creation_without_purchase_order", 1)
+        )
+        if not allow_without_po:
+            frappe.throw(_(
+                "Supplier '{0}' requires a Purchase Order before invoicing. "
+                "Please create a PO and GRN first, then use GRN-linked invoicing."
+            ).format(supplier))
+
+        # Flag 2: Supplier requires a GRN (Purchase Receipt) before standalone invoice
+        allow_without_receipt = cint(
+            getattr(supplier_doc, "allow_purchase_invoice_creation_without_purchase_receipt", 1)
+        )
+        if not allow_without_receipt:
+            frappe.throw(_(
+                "Supplier '{0}' requires a Goods Receipt Note before invoicing. "
+                "Please raise a GRN first, then use GRN-linked invoicing."
+            ).format(supplier))
 
     if mode == "grn_linked":
         return _create_invoice_from_grn(grn_name, posting_date)

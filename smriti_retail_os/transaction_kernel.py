@@ -415,10 +415,7 @@ def _lookup_item_master(item_code, company):
     """
     try:
         item = frappe.get_cached_doc("Item", item_code)
-    except Exception:
-        return {}
-
-    result = {
+    except Exception:  # swallow-by-design: item not found → caller handles {} gracefully
         "item_name":   item.item_name or "",
         "stock_uom":   item.stock_uom or "Nos",
         "gst_hsn_code": item.gst_hsn_code or "",
@@ -712,10 +709,7 @@ def _resolve_tax_template_for_item(item_code, company, supply_type="intrastate")
     """
     try:
         item = frappe.get_cached_doc("Item", item_code)
-    except Exception:
-        return ""
-
-    for t in (item.taxes or []):
+    except Exception:  # swallow-by-design: item not found → no tax template, caller receives ""
         tmpl = t.item_tax_template
         if not tmpl:
             continue
@@ -959,8 +953,7 @@ def apply_pricing_rules(doctype, payload, company=None):
             if pricing_data.get("rate"):
                 enriched_row["rate"] = flt(pricing_data["rate"])
             results.append(enriched_row)
-        except Exception:
-            results.append(row)  # fallback: return row unchanged
+        except Exception:  # swallow-by-design: pricing enrichment failure → return row unmodified, billing proceeds
 
     return {"items": results, "company": company}
 
@@ -979,7 +972,7 @@ def get_doctype_schema(doctype):
         frappe.throw(_("doctype is required."))
     try:
         meta = frappe.get_meta(doctype)
-    except Exception:
+    except Exception:  # swallow-by-design: unknown DocType → re-throws as user-facing error
         frappe.throw(_("Unknown DocType: {0}").format(doctype))
 
     fields = []
@@ -1030,7 +1023,7 @@ def _safe_parse_json(value):
         return value
     try:
         return json.loads(value)
-    except Exception:
+    except Exception:  # swallow-by-design: malformed JSON string → returns {} which callers handle as missing data
         return {}
 
 

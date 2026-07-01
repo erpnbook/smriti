@@ -616,6 +616,13 @@ website_route_rules = [
     {"from_route": "/psv-exception-analysis",  "to_route": "psv_exception_analysis"}, # www/psv_exception_analysis.html
     {"from_route": "/exception-analysis",      "to_route": "psv_exception_analysis"}, # alias
 
+    # ─── Retired Desk Pages → SMRITI www Routes ──────────────────────────────
+    # smriti-purchase-invoice Desk page retired 2026-07-02 (Rule 9: No Desk Elements).
+    # All purchase invoice UI is now served from www/purchase_invoice.html.
+    # These redirects catch any bookmarked /app/* or /desk/page/* URLs.
+    {"from_route": "/app/smriti-purchase-invoice",          "to_route": "purchase_invoice"},
+    {"from_route": "/desk/page/smriti-purchase-invoice",    "to_route": "purchase_invoice"},
+
     # ─── Report Sub-Routes (tab aliases) ────────────────────────────
     {"from_route": "/reports/sales",      "to_route": "reports"},  # www/reports.html?tab=sales
     {"from_route": "/reports/inventory",  "to_route": "reports"},  # www/reports.html?tab=inventory
