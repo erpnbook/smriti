@@ -331,13 +331,19 @@ doc_events = {
     },
     "Purchase Receipt": {
         "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
-        "on_submit": "smriti_retail_os.negative_stock.service.hooks.handle_transaction_submit"
+        "on_submit": "smriti_retail_os.negative_stock.service.hooks.handle_transaction_submit",
+        # SSDL Purchase Studio — Phase 7 audit gap resolution
+        "on_cancel": "smriti_retail_os.purchase_studio.service.audit_service.log_grn_cancel"
     },
     "Purchase Invoice": {
-        "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details"
+        "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
+        # SSDL Purchase Studio — Phase 7 audit gap resolution
+        "on_cancel": "smriti_retail_os.purchase_studio.service.audit_service.log_pi_cancel"
     },
     "Purchase Order": {
-        "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details"
+        "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
+        # SSDL Purchase Studio — Phase 7 audit gap resolution
+        "on_cancel": "smriti_retail_os.purchase_studio.service.audit_service.log_po_cancel"
     },
     "Sales Order": {
         "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details"

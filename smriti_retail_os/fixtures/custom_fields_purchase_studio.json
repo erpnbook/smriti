@@ -1,0 +1,64 @@
+[
+  {
+    "doctype": "Custom Field",
+    "dt": "Purchase Order",
+    "fieldname": "smriti_approval_status",
+    "label": "SMRITI Approval Status",
+    "fieldtype": "Select",
+    "options": "\nDraft\nPending\nApproved\nRejected",
+    "default": "Draft",
+    "read_only": 1,
+    "insert_after": "status",
+    "module": "Smriti Retail OS"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Purchase Order",
+    "fieldname": "smriti_approved_by",
+    "label": "Approved By",
+    "fieldtype": "Data",
+    "read_only": 1,
+    "insert_after": "smriti_approval_status",
+    "module": "Smriti Retail OS"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Purchase Order",
+    "fieldname": "smriti_approved_on",
+    "label": "Approved On",
+    "fieldtype": "Datetime",
+    "read_only": 1,
+    "insert_after": "smriti_approved_by",
+    "module": "Smriti Retail OS"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Purchase Order",
+    "fieldname": "smriti_rejection_reason",
+    "label": "Rejection Reason",
+    "fieldtype": "Text",
+    "read_only": 1,
+    "insert_after": "smriti_approved_on",
+    "module": "Smriti Retail OS"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Purchase Invoice",
+    "fieldname": "smriti_creation_mode",
+    "label": "SMRITI Creation Mode",
+    "fieldtype": "Select",
+    "options": "\ngrn_linked\nstandalone",
+    "read_only": 1,
+    "insert_after": "status",
+    "module": "Smriti Retail OS"
+  },
+  {
+    "doctype": "Custom Field",
+    "dt": "Purchase Receipt",
+    "fieldname": "smriti_return_reason",
+    "label": "Return Reason",
+    "fieldtype": "Text",
+    "insert_after": "status",
+    "module": "Smriti Retail OS"
+  }
+]

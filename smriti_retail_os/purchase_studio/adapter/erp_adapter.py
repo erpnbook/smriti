@@ -1,0 +1,369 @@
+# -*- coding: utf-8 -*-
+#
+# @file:    smriti_retail_os/purchase_studio/adapter/erp_adapter.py
+# @desc:    ALL ERPNext DocType interactions for Purchase Studio.
+#           No other file in purchase_studio may call frappe DocType APIs directly.
+#           If ERPNext upgrades a field or function, only this file changes.
+# @author:  Jawahar R. Mallah <jawahar.mallah@gmail.com>
+# @std:     AES-002 SSDL v1.0.0 — Layer 1 (ERPNext Adapter)
+# @license: MIT
+# * Copyright (c) 2026 AITDL NETWORK. All rights reserved.
+#
+
+import frappe
+from frappe.utils import flt, cint, nowdate, now_datetime
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# WAREHOUSE UTILITIES
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_default_warehouse(company):
+    """
+    Resolves the best available warehouse for a given company.
+    Priority: 'Stores' warehouse → any non-group warehouse → any warehouse.
+    Returns None if no warehouse found.
+    """
+    if not company:
+        return None
+    wh = frappe.db.get_value(
+        "Warehouse",
+        {"company": company, "is_group": 0, "warehouse_name": "Stores"},
+        "name"
+    )
+    if not wh:
+        wh = frappe.db.get_value(
+            "Warehouse",
+            {"company": company, "is_group": 0},
+            "name",
+            order_by="creation asc"
+        )
+    if not wh:
+        wh = frappe.db.get_value("Warehouse", {"company": company}, "name")
+    if wh and frappe.db.get_value("Warehouse", wh, "company") == company:
+        return wh
+    return None
+
+
+def resolve_company(po_name=None, warehouse=None):
+    """
+    Returns the active company from: PO → user default → global default → first company.
+    """
+    company = None
+    if po_name:
+        company = frappe.db.get_value("Purchase Order", po_name, "company")
+    if not company:
+        company = frappe.defaults.get_user_default("company")
+    if not company:
+        company = frappe.db.get_single_value("Global Defaults", "default_company")
+    if not company:
+        all_cos = frappe.get_all("Company", limit=1, fields=["name"])
+        company = all_cos[0].name if all_cos else None
+    return company
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PURCHASE ORDER OPERATIONS
+# ─────────────────────────────────────────────────────────────────────────────
+
+def list_purchase_orders(filters, fields, page=1, page_size=50):
+    """
+    Returns paginated list of Purchase Orders matching filters.
+    """
+    limit_start = (page - 1) * page_size
+    total = frappe.db.count("Purchase Order", filters)
+    items = frappe.get_all(
+        "Purchase Order",
+        filters=filters,
+        fields=fields,
+        order_by="transaction_date desc",
+        limit_start=limit_start,
+        limit_page_length=page_size
+    )
+    return {"total": total, "items": items}
+
+
+def get_po(po_name):
+    """
+    Returns a fully loaded Purchase Order document.
+    Raises 404 if not found.
+    # ERPNext v14+: frappe.get_doc("Purchase Order", name)
+    """
+    if not frappe.db.exists("Purchase Order", po_name):
+        frappe.throw(f"Purchase Order '{po_name}' not found.", frappe.DoesNotExistError)
+    return frappe.get_doc("Purchase Order", po_name)
+
+
+def insert_and_submit_po(po_doc):
+    """
+    Persists and submits a Purchase Order through the correct Frappe lifecycle.
+    NEVER use docstatus=1 + save() — that bypasses before_submit/on_submit hooks
+    which means stock reservation, GL entries, and status updates are skipped.
+
+    Returns the submitted PO name.
+    Rolls back and re-raises on any exception.
+    """
+    try:
+        po_doc.insert(ignore_permissions=True)
+        po_doc.submit()
+        frappe.db.commit()
+        return po_doc.name
+    except Exception:
+        frappe.db.rollback()
+        raise
+
+
+def get_item_flags(item_codes_list):
+    """
+    Batch-fetches item flags (has_batch_no, stock_uom) for a list of item codes.
+    Eliminates N+1 queries in item loops.
+    Returns dict: {item_code: row}
+    """
+    if not item_codes_list:
+        return {}
+    rows = frappe.db.get_all(
+        "Item",
+        filters={"name": ["in", item_codes_list]},
+        fields=["name", "has_batch_no", "stock_uom"]
+    )
+    return {r.name: r for r in rows}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# BATCH OPERATIONS
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_or_create_batch(item_code, expiry_date=None):
+    """
+    Returns an existing batch or creates a new one.
+    Optionally associates an expiry date.
+    """
+    if expiry_date:
+        existing = frappe.db.get_value(
+            "Batch",
+            {"item": item_code, "expiry_date": expiry_date, "disabled": 0},
+            "name"
+        )
+    else:
+        existing = frappe.db.get_value(
+            "Batch",
+            {"item": item_code, "disabled": 0},
+            "name",
+            order_by="creation desc"
+        )
+    if existing:
+        return existing
+
+    batch = frappe.new_doc("Batch")
+    batch.item = item_code
+    if expiry_date:
+        batch.expiry_date = expiry_date
+    batch.insert(ignore_permissions=True)
+    return batch.name
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GRN / PURCHASE RECEIPT OPERATIONS
+# ─────────────────────────────────────────────────────────────────────────────
+
+def list_grns(filters, fields, page=1, page_size=50):
+    """Returns paginated list of Purchase Receipts."""
+    limit_start = (page - 1) * page_size
+    total = frappe.db.count("Purchase Receipt", filters)
+    items = frappe.get_all(
+        "Purchase Receipt",
+        filters=filters,
+        fields=fields,
+        order_by="posting_date desc",
+        limit_start=limit_start,
+        limit_page_length=page_size
+    )
+    return {"total": total, "items": items}
+
+
+def get_grn(grn_name):
+    """
+    Returns a fully loaded Purchase Receipt document.
+    # ERPNext v14+: frappe.get_doc("Purchase Receipt", name)
+    """
+    if not frappe.db.exists("Purchase Receipt", grn_name):
+        frappe.throw(f"Purchase Receipt '{grn_name}' not found.", frappe.DoesNotExistError)
+    return frappe.get_doc("Purchase Receipt", grn_name)
+
+
+def insert_and_submit_grn(pr_doc):
+    """
+    Persists and submits a Purchase Receipt.
+    ERPNext on_submit creates Stock Ledger Entries — SMRITI never creates SLE directly.
+
+    Returns the submitted GRN name.
+    """
+    try:
+        pr_doc.insert(ignore_permissions=True)
+        pr_doc.submit()
+        frappe.db.commit()
+        return pr_doc.name
+    except Exception:
+        frappe.db.rollback()
+        raise
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PURCHASE INVOICE OPERATIONS
+# ─────────────────────────────────────────────────────────────────────────────
+
+def list_purchase_invoices(filters, fields, page=1, page_size=50):
+    """Returns paginated list of Purchase Invoices."""
+    limit_start = (page - 1) * page_size
+    total = frappe.db.count("Purchase Invoice", filters)
+    items = frappe.get_all(
+        "Purchase Invoice",
+        filters=filters,
+        fields=fields,
+        order_by="posting_date desc",
+        limit_start=limit_start,
+        limit_page_length=page_size
+    )
+    return {"total": total, "items": items}
+
+
+def get_pi(pi_name):
+    """
+    Returns a fully loaded Purchase Invoice document.
+    # ERPNext v14+: frappe.get_doc("Purchase Invoice", name)
+    """
+    if not frappe.db.exists("Purchase Invoice", pi_name):
+        frappe.throw(f"Purchase Invoice '{pi_name}' not found.", frappe.DoesNotExistError)
+    return frappe.get_doc("Purchase Invoice", pi_name)
+
+
+def insert_and_submit_pi(pi_doc):
+    """
+    Persists and submits a Purchase Invoice.
+    ERPNext on_submit creates GL Entries — SMRITI never creates GL directly.
+
+    Returns the submitted PI name.
+    """
+    try:
+        pi_doc.insert(ignore_permissions=True)
+        pi_doc.submit()
+        frappe.db.commit()
+        return pi_doc.name
+    except Exception:
+        frappe.db.rollback()
+        raise
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PURCHASE RETURN OPERATIONS
+# ─────────────────────────────────────────────────────────────────────────────
+
+def make_purchase_return(grn_name):
+    """
+    Builds a Purchase Return document from an existing submitted GRN.
+    # ERPNext v14+: erpnext.stock.doctype.purchase_receipt.purchase_receipt.make_purchase_return
+    # Verify function signature on ERPNext major version upgrade.
+    Returns the return document (not yet inserted).
+    """
+    from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_return
+    return make_purchase_return(grn_name)
+
+
+def insert_and_submit_return(ret_doc):
+    """
+    Persists and submits a Purchase Return (negative Purchase Receipt).
+    ERPNext on_submit creates reversing Stock Ledger Entries.
+
+    Returns the submitted return name.
+    """
+    try:
+        ret_doc.insert(ignore_permissions=True)
+        ret_doc.submit()
+        # Note: commit is deferred to the caller (purchase_service) which
+        # wraps return + debit note in a single transaction.
+        return ret_doc.name
+    except Exception:
+        frappe.db.rollback()
+        raise
+
+
+def make_purchase_return_pi(pi_name):
+    """
+    Builds a Debit Note (Purchase Invoice return) from an existing submitted PI.
+    # ERPNext v14+: erpnext.accounts.doctype.purchase_invoice.purchase_invoice.make_return_doc
+    # Verify function signature on ERPNext major version upgrade.
+    Returns the debit note document (not yet inserted).
+    """
+    from erpnext.accounts.doctype.purchase_invoice.purchase_invoice import make_return_doc
+    return make_return_doc("Purchase Invoice", pi_name)
+
+
+def insert_and_submit_debit_note(dn_doc):
+    """
+    Persists and submits a Debit Note (Purchase Invoice return).
+    ERPNext on_submit creates reversing GL Entries.
+
+    Returns the submitted debit note name.
+    """
+    try:
+        dn_doc.insert(ignore_permissions=True)
+        dn_doc.submit()
+        # commit is deferred to purchase_service (single transaction with return)
+        return dn_doc.name
+    except Exception:
+        frappe.db.rollback()
+        raise
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SUPPLIER LEDGER (READ-ONLY — GL is ERPNext property)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_supplier_gl_entries(supplier, from_date, to_date, company):
+    """
+    Reads GL Entries for a supplier from ERPNext.
+    SMRITI reads GL — never writes. GL is ERPNext's domain.
+
+    Returns list of dicts: posting_date, voucher_type, voucher_no,
+                           debit, credit, remarks
+    """
+    rows = frappe.db.sql("""
+        SELECT
+            posting_date,
+            voucher_type,
+            voucher_no,
+            debit,
+            credit,
+            remarks
+        FROM `tabGL Entry`
+        WHERE
+            party_type = 'Supplier'
+            AND party = %(supplier)s
+            AND posting_date BETWEEN %(from_date)s AND %(to_date)s
+            AND company = %(company)s
+            AND is_cancelled = 0
+        ORDER BY posting_date ASC, creation ASC
+    """, {
+        "supplier": supplier,
+        "from_date": from_date,
+        "to_date": to_date,
+        "company": company
+    }, as_dict=True)
+    return rows
+
+
+def get_supplier_outstanding(supplier, company):
+    """
+    Returns total outstanding payable for a supplier from ERPNext GL.
+    """
+    result = frappe.db.sql("""
+        SELECT
+            SUM(debit - credit) AS outstanding
+        FROM `tabGL Entry`
+        WHERE
+            party_type = 'Supplier'
+            AND party = %(supplier)s
+            AND company = %(company)s
+            AND is_cancelled = 0
+    """, {"supplier": supplier, "company": company}, as_dict=True)
+    return flt(result[0].outstanding) if result else 0.0

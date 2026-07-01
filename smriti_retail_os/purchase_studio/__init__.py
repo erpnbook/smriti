@@ -1,0 +1,1 @@
+# SMRITI Purchase Studio package

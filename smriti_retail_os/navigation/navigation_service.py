@@ -83,13 +83,17 @@ CANONICAL_NAV = {
         },
         {
             "id": "purchase",
-            "label": "Purchase",
+            "label": "Purchase Studio",
             "status": "active",
             "items": [
-                { "id": "purchase_orders", "label": "Purchase Orders", "route": "/purchase?tab=new-po", "standalone_route": "/purchase?tab=new-po", "status": "active" },
-                { "id": "grn_receipts", "label": "GRN / Receipts", "route": "/purchase-receipt", "standalone_route": "/purchase-receipt", "status": "active" },
-                { "id": "purchase_invoice", "label": "Purchase Invoice", "route": "/purchase-invoice", "standalone_route": "/purchase-invoice", "status": "active" },
-                { "id": "supplier_returns", "label": "Supplier Returns", "route": "/supplier-returns", "standalone_route": "/supplier-returns", "status": "active" }
+                { "id": "purchase_dashboard",  "label": "Dashboard",        "route": "/smriti-purchase",                  "standalone_route": "/smriti-purchase",                  "status": "active" },
+                { "id": "purchase_orders",     "label": "Purchase Orders",  "route": "/smriti-purchase#orders",           "standalone_route": "/smriti-purchase#orders",           "status": "active" },
+                { "id": "grn_receipts",        "label": "GRN / Receipts",   "route": "/smriti-purchase#grn",              "standalone_route": "/smriti-purchase#grn",              "status": "active" },
+                { "id": "purchase_invoice",    "label": "Invoices",         "route": "/smriti-purchase#invoices",         "standalone_route": "/smriti-purchase#invoices",         "status": "active" },
+                { "id": "purchase_returns",    "label": "Returns",          "route": "/smriti-purchase#returns",          "standalone_route": "/smriti-purchase#returns",          "status": "active" },
+                { "id": "supplier_ledger",     "label": "Supplier Ledger",  "route": "/smriti-purchase#supplier-ledger",  "standalone_route": "/smriti-purchase#supplier-ledger",  "status": "active" },
+                { "id": "purchase_analytics",  "label": "Analytics",        "route": "/smriti-purchase#analytics",        "standalone_route": "/smriti-purchase#analytics",        "status": "active" },
+                { "id": "purchase_settings",   "label": "Settings",         "route": "/smriti-purchase#settings",         "standalone_route": "/smriti-purchase#settings",         "status": "active" }
             ]
         },
         {
