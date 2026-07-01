@@ -87,8 +87,8 @@ CANONICAL_NAV = {
             "status": "active",
             "items": [
                 { "id": "purchase_orders", "label": "Purchase Orders", "route": "/purchase?tab=new-po", "standalone_route": "/purchase?tab=new-po", "status": "active" },
-                { "id": "grn_receipts", "label": "GRN / Receipts", "route": "/grn-receipts", "standalone_route": "/grn-receipts", "status": "active" },
-                { "id": "purchase_invoice", "label": "Purchase Invoice", "route": "/purchase-invoices", "standalone_route": "/purchase-invoices", "status": "active" },
+                { "id": "grn_receipts", "label": "GRN / Receipts", "route": "/purchase-receipt", "standalone_route": "/purchase-receipt", "status": "active" },
+                { "id": "purchase_invoice", "label": "Purchase Invoice", "route": "/purchase-invoice", "standalone_route": "/purchase-invoice", "status": "active" },
                 { "id": "supplier_returns", "label": "Supplier Returns", "route": "/supplier-returns", "standalone_route": "/supplier-returns", "status": "active" }
             ]
         },
