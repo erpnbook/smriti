@@ -1,0 +1,118 @@
+{
+ "actions": [],
+ "autoname": "",
+ "creation": "2026-07-01 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "purchase_invoice_policy",
+  "approval_threshold",
+  "col_break_1",
+  "grn_mandatory",
+  "allow_over_receipt",
+  "section_break_1",
+  "auto_create_items",
+  "default_warehouse",
+  "col_break_2",
+  "tolerance_percent",
+  "landed_cost_rule"
+ ],
+ "fields": [
+  {
+   "default": "both",
+   "fieldname": "purchase_invoice_policy",
+   "fieldtype": "Select",
+   "label": "Purchase Invoice Policy",
+   "options": "grn_only\nstandalone\nboth",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "description": "Set to 0 to disable approval workflow",
+   "fieldname": "approval_threshold",
+   "fieldtype": "Currency",
+   "label": "Approval Threshold (\u20b9)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "If enabled, all Purchase Invoices must reference a GRN regardless of policy",
+   "fieldname": "grn_mandatory",
+   "fieldtype": "Check",
+   "label": "GRN Mandatory for All Invoices"
+  },
+  {
+   "default": "0",
+   "description": "Allow receiving more than the ordered quantity on a Purchase Order",
+   "fieldname": "allow_over_receipt",
+   "fieldtype": "Check",
+   "label": "Allow Over-Receipt"
+  },
+  {
+   "fieldname": "section_break_1",
+   "fieldtype": "Section Break",
+   "label": "Item & Warehouse Defaults"
+  },
+  {
+   "default": "1",
+   "description": "Automatically create Item master if item_code not found during PO creation",
+   "fieldname": "auto_create_items",
+   "fieldtype": "Check",
+   "label": "Auto-Create Items on PO"
+  },
+  {
+   "description": "Default receiving warehouse for GRNs",
+   "fieldname": "default_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Warehouse",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "col_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Acceptable over/under receipt percentage (0 = strict)",
+   "fieldname": "tolerance_percent",
+   "fieldtype": "Float",
+   "label": "Tolerance %"
+  },
+  {
+   "default": "manual",
+   "fieldname": "landed_cost_rule",
+   "fieldtype": "Select",
+   "label": "Landed Cost Rule",
+   "options": "manual\nproportional\ndisabled"
+  }
+ ],
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-07-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Purchase Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "read": 1,
+   "report": 0,
+   "role": "System Manager",
+   "share": 0,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
