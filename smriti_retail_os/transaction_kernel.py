@@ -957,6 +957,7 @@ def apply_pricing_rules(doctype, payload, company=None):
                 enriched_row["rate"] = flt(pricing_data["rate"])
             results.append(enriched_row)
         except Exception:  # swallow-by-design: pricing enrichment failure → return row unmodified, billing proceeds
+            results.append(row)
 
     return {"items": results, "company": company}
 
