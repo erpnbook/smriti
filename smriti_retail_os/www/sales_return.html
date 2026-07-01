@@ -134,6 +134,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 </style>
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+<script src="/assets/smriti_retail_os/js/smriti_print_modal.js"></script>
 </head>
 <body>
 <script>
@@ -596,7 +597,7 @@ async function loadReturnDetails(returnId) {
 function printReceipt() {
     if (!activeReturnDoc) return;
     const url = `/printview?doctype=Sales%20Invoice&name=${encodeURIComponent(activeReturnDoc.name)}`;
-    window.open(url, '_blank');
+    SmritiPrint.open(url, 'Sales Return');
 }
 
 function closeDrawer() {

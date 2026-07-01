@@ -1,6 +1,6 @@
-<!--
+﻿<!--
   @file: smriti_retail_os/www/supplier_returns.html
-  @description: SMRITI Supplier Returns & Debit Notes — Standalone UI (Zero system chrome)
+  @description: SMRITI Supplier Returns & Debit Notes â€” Standalone UI (Zero system chrome)
   @author: Jawahar R. Mallah
   @version: 1.8.6
   @license: MIT
@@ -133,6 +133,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 </style>
 <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+<script src="/assets/smriti_retail_os/js/smriti_print_modal.js"></script>
 </head>
 <body>
 
@@ -323,7 +324,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
         </div>
         <div class="drawer-body" style="padding:20px; text-align:center;">
             <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;" id="pin-modal-message">Enter SMRITI Manager PIN to authorize this action.</div>
-            <input type="password" class="form-input" id="manager-pin-input" placeholder="••••" style="width:120px; text-align:center; font-size:20px; letter-spacing:8px; padding:10px;" maxlength="8" onkeydown="if(event.key==='Enter') submitPinOverride()">
+            <input type="password" class="form-input" id="manager-pin-input" placeholder="â€¢â€¢â€¢â€¢" style="width:120px; text-align:center; font-size:20px; letter-spacing:8px; padding:10px;" maxlength="8" onkeydown="if(event.key==='Enter') submitPinOverride()">
         </div>
         <div class="drawer-footer" style="padding:12px 20px;">
             <button class="topbtn" style="flex:1; justify-content:center;" onclick="closePinModal()">Cancel</button>
@@ -514,7 +515,7 @@ async function loadReturnDetails(returnId) {
 function printReceipt() {
     if (!activeReturnDoc) return;
     const url = `/printview?doctype=Purchase%20Receipt&name=${encodeURIComponent(activeReturnDoc.name)}`;
-    window.open(url, '_blank');
+    SmritiPrint.open(url, 'Supplier Return');
 }
 
 function closeDrawer() {

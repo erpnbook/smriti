@@ -152,7 +152,8 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
 @keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
 </style>
 
-<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"><script src="/assets/smriti_retail_os/js/smriti_print_modal.js"></script>
+</head>
 <body>
 <script>
     if (new URLSearchParams(window.location.search).get('popout') === 'true') {
@@ -396,7 +397,7 @@ async function loadInvoices() {
         const data = await api('frappe.client.get_list', {
             doctype: 'Sales Invoice',
             fields: ['name', 'posting_date', 'posting_time', 'customer_name', 'grand_total', 'ewaybill', 'vehicle_no', 'distance', 'status'],
-            filters: [['grand_total', '>=', 50000]], // E-way bill legal threshold is ₹50,000
+            filters: [['grand_total', '>=', 50000]], // E-way bill legal threshold is ?50,000
             order_by: 'posting_date desc, posting_time desc',
             limit_page_length: 200
         });
@@ -632,7 +633,7 @@ async function generateEWayBill() {
 function printTaxInvoice(invoiceId) {
     // Open the print layout in a new tab/window matching the verified Tattly Threads Tax Invoice
     const url = `/printview?doctype=Sales%20Invoice&name=${encodeURIComponent(invoiceId)}&format=Tattly%20Threads%20Tax%20Invoice`;
-    window.open(url, '_blank');
+    SmritiPrint.open(url, 'Tax Invoice');
 }
 
 function openPopout(e, url) {
