@@ -292,13 +292,12 @@ async function init() {
 
 async function loadInvoices() {
     try {
-        const data = await api('frappe.client.get_list', {
-            doctype: 'Purchase Invoice',
-            fields: ['name', 'posting_date', 'posting_time', 'supplier_name', 'grand_total', 'outstanding_amount', 'status'],
-            order_by: 'posting_date desc, posting_time desc',
-            limit_page_length: 150
-        });
-        masterInvoicesList = data || [];
+        // SPC Rule 6: route through purchase_studio service layer, not frappe.client directly
+        const data = await api(
+            'smriti_retail_os.purchase_studio.api.purchase_api.get_invoices',
+            { page: 1, page_size: 150 }
+        );
+        masterInvoicesList = (data && data.items) ? data.items : (data || []);
         renderTable(masterInvoicesList);
     } catch(e) {
         toast('Failed to load purchase invoices: ' + e.message, 'error');
@@ -354,10 +353,11 @@ function applyFilters() {
 
 async function loadInvoiceDetails(invoiceId) {
     try {
-        const doc = await api('frappe.client.get', {
-            doctype: 'Purchase Invoice',
-            name: invoiceId
-        });
+        // SPC Rule 6: route through purchase_studio service layer, not frappe.client directly
+        const doc = await api(
+            'smriti_retail_os.purchase_studio.api.purchase_api.get_invoice_detail',
+            { invoice_name: invoiceId }
+        );
         activeInvoiceDoc = doc;
         
         document.getElementById('drw-id').textContent = doc.name;

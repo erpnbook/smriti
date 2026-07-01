@@ -234,3 +234,27 @@ def get_open_purchase_orders(supplier=None):
 def get_po_details(po_name):
     """Legacy endpoint used by purchase.html. Delegates to service."""
     return svc.get_purchase_order_detail(po_name)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SC-15 — Warehouse List (used by supplier_returns.html return-form picker)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_warehouses(company=None):
+    """Returns non-group warehouses for use in return-form warehouse picker.
+
+    Routes through the adapter layer rather than direct frappe.client calls,
+    satisfying SPC Rule 6 (service-first design).
+    """
+    filters = {"is_group": 0}
+    if company:
+        filters["company"] = company
+    rows = frappe.get_all(
+        "Warehouse",
+        filters=filters,
+        fields=["name", "warehouse_name"],
+        order_by="warehouse_name asc",
+        limit=200
+    )
+    return rows

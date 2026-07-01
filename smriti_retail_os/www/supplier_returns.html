@@ -390,14 +390,12 @@ async function init() {
 
 async function loadReturns() {
     try {
-        const data = await api('frappe.client.get_list', {
-            doctype: 'Purchase Receipt',
-            filters: { is_return: 1 },
-            fields: ['name', 'posting_date', 'posting_time', 'supplier_name', 'grand_total', 'status', 'docstatus'],
-            order_by: 'posting_date desc, posting_time desc',
-            limit_page_length: 150
-        });
-        masterReturnsList = data || [];
+        // SPC Rule 6: route through purchase_studio service layer, not frappe.client directly
+        const data = await api(
+            'smriti_retail_os.purchase_studio.api.purchase_api.get_returns',
+            { page: 1, page_size: 150 }
+        );
+        masterReturnsList = (data && data.items) ? data.items : (data || []);
         renderTable(masterReturnsList);
     } catch(e) {
         toast('Failed to load supplier returns: ' + e.message, 'error');
@@ -406,12 +404,11 @@ async function loadReturns() {
 
 async function loadWarehouses() {
     try {
-        const data = await api('frappe.client.get_list', {
-            doctype: 'Warehouse',
-            filters: { is_group: 0 },
-            fields: ['name', 'warehouse_name'],
-            limit_page_length: 100
-        });
+        // SPC Rule 6: route through purchase_studio service layer, not frappe.client directly
+        const data = await api(
+            'smriti_retail_os.purchase_studio.api.purchase_api.get_warehouses',
+            {}
+        );
         warehousesList = data || [];
         if (warehousesList.length) {
             defaultWarehouse = warehousesList[0].name;
@@ -477,10 +474,11 @@ function applyFilters() {
 
 async function loadReturnDetails(returnId) {
     try {
-        const doc = await api('frappe.client.get', {
-            doctype: 'Purchase Receipt',
-            name: returnId
-        });
+        // SPC Rule 6: route through purchase_studio service layer, not frappe.client directly
+        const doc = await api(
+            'smriti_retail_os.purchase_studio.api.purchase_api.get_grn_detail',
+            { grn_name: returnId }
+        );
         activeReturnDoc = doc;
         
         document.getElementById('drw-id').textContent = doc.name;

@@ -287,13 +287,12 @@ async function init() {
 
 async function loadReceipts() {
     try {
-        const data = await api('frappe.client.get_list', {
-            doctype: 'Purchase Receipt',
-            fields: ['name', 'posting_date', 'posting_time', 'supplier_name', 'grand_total', 'status', 'docstatus'],
-            order_by: 'posting_date desc, posting_time desc',
-            limit_page_length: 150
-        });
-        masterReceiptsList = data || [];
+        // SPC Rule 6: route through purchase_studio service layer, not frappe.client directly
+        const data = await api(
+            'smriti_retail_os.purchase_studio.api.purchase_api.get_grns',
+            { page: 1, page_size: 150 }
+        );
+        masterReceiptsList = (data && data.items) ? data.items : (data || []);
         renderTable(masterReceiptsList);
     } catch(e) {
         toast('Failed to load purchase receipts: ' + e.message, 'error');
@@ -352,10 +351,11 @@ function applyFilters() {
 
 async function loadReceiptDetails(receiptId) {
     try {
-        const doc = await api('frappe.client.get', {
-            doctype: 'Purchase Receipt',
-            name: receiptId
-        });
+        // SPC Rule 6: route through purchase_studio service layer, not frappe.client directly
+        const doc = await api(
+            'smriti_retail_os.purchase_studio.api.purchase_api.get_grn_detail',
+            { grn_name: receiptId }
+        );
         activeReceiptDoc = doc;
         
         document.getElementById('drw-id').textContent = doc.name;
