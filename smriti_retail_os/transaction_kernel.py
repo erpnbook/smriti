@@ -713,6 +713,9 @@ def _resolve_tax_template_for_item(item_code, company, supply_type="intrastate")
     try:
         item = frappe.get_cached_doc("Item", item_code)
     except Exception:  # swallow-by-design: item not found → no tax template, caller receives ""
+        return ""
+
+    for t in (item.taxes or []):
         tmpl = t.item_tax_template
         if not tmpl:
             continue
