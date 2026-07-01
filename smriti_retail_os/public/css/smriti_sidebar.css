@@ -1,828 +1,463 @@
 /**
  * @file: smriti_retail_os/public/css/smriti_sidebar.css
- * @description: Styles for SMRITI responsive Left/Right sidebar..
- * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
- * @date: 2026-05-28
- * @version: 1.8.6
- * @license: MIT
- * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
+ * @description: SMRITI Retail OS — Unified Sidebar Stylesheet (shadcn/ui-style)
+ * @author: Jawahar R Mallah
+ * @version: 2.0.0
+ * Copyright (c) 2026 AITDL NETWORK. All rights reserved.
  */
 
-/* ============================================================
-   SMRITI Sidebar Stylesheet — Clean Themed Sidebar
-   ============================================================ */
-
-#smriti-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: var(--smriti-dimension-sidebar-width);
-    background: var(--smriti-color-bg-page) !important;
-    border-right: 1px solid var(--smriti-color-border-default) !important;
-    display: flex;
-    flex-direction: column;
-    transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    color: var(--smriti-color-text-primary) !important;
-    z-index: 1041;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-#smriti-sidebar.collapsed {
-    width: var(--smriti-dimension-sidebar-collapsed-width);
-}
-
-/* --- Brand Header --- */
-.smriti-side-brand {
-    padding: var(--smriti-spacing-xl) var(--smriti-spacing-lg);
-    display: flex;
-    align-items: center;
-    gap: var(--smriti-spacing-gap);
-    border-bottom: 1px solid var(--smriti-color-border-default) !important;
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-.smriti-side-logo {
-    width: var(--smriti-spacing-2xl);
-    height: var(--smriti-spacing-2xl);
-    flex-shrink: 0;
-}
-
-.smriti-side-title {
-    font-weight: 700;
-    font-size: var(--smriti-font-size-lg);
-    color: var(--smriti-color-brand-primary) !important;
-}
-
-#smriti-sidebar.collapsed .smriti-side-title {
-    display: none;
-}
-
-/* --- Toggle Button --- */
-.smriti-side-toggle {
-    margin-left: auto;
-    background: none;
-    border: none;
-    color: var(--smriti-color-text-muted);
-    cursor: pointer;
-    padding: var(--smriti-spacing-xs);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--smriti-radius-sm);
-    transition: all 0.2s;
-}
-.smriti-side-toggle:hover {
-    background: var(--smriti-color-bg-secondary);
-    color: var(--smriti-color-text-primary);
-}
-
-#smriti-sidebar.collapsed .smriti-side-toggle {
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 0;
-    margin-bottom: 0;
-}
-
-/* --- Navigation Menu --- */
-.smriti-side-menu {
-    flex: 1;
-    padding: var(--smriti-spacing-lg) var(--smriti-spacing-sm);
-    display: flex;
-    flex-direction: column;
-    gap: var(--smriti-spacing-xs);
-    overflow-y: auto;
-}
-
-.smriti-side-item {
-    display: flex;
-    align-items: center;
-    gap: var(--smriti-spacing-gap);
-    padding: var(--smriti-spacing-sm) var(--smriti-spacing-md);
-    color: var(--smriti-color-text-muted) !important;
-    text-decoration: none !important;
-    border-radius: var(--smriti-radius-md);
-    font-weight: 500;
-    font-size: var(--smriti-font-size-base);
-    min-height: 44px;
-    transition: background 0.15s, color 0.15s;
-    cursor: pointer;
-    overflow: hidden;
-    white-space: nowrap;
+:root {
+  --sidebar-width: var(--smriti-dimension-sidebar-width, 260px);
+  --sidebar-collapsed-width: var(--smriti-dimension-sidebar-collapsed-width, 68px);
+}
+
+.smriti-sidebar,
+#smriti-sidebar-target.sidebar {
+  width: var(--sidebar-width) !important;
+  height: 100vh !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  z-index: var(--smriti-z-index-sidebar, 1041) !important;
+  background: var(--smriti-color-bg-primary, #111827) !important;
+  border-right: 1px solid var(--smriti-color-border-default, #1e293b) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* Right alignment support */
+#app.sidebar-position-right .smriti-sidebar,
+#app.sidebar-position-right #smriti-sidebar-target.sidebar {
+  left: auto !important;
+  right: 0 !important;
+  border-right: none !important;
+  border-left: 1px solid var(--smriti-color-border-default, #1e293b) !important;
+}
+
+/* Collapsed state */
+.smriti-sidebar.collapsed,
+#smriti-sidebar-target.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width) !important;
+}
+
+/* Popout mode support */
+body.popout-mode .smriti-sidebar,
+body.popout-mode #smriti-sidebar-target.sidebar {
+  display: none !important;
+}
+
+/* Header section */
+.smriti-sidebar-header {
+  padding: var(--smriti-spacing-md, 12px) var(--smriti-spacing-lg, 16px);
+  height: var(--smriti-card-header-height, 48px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--smriti-color-border-default, #1e293b);
+  box-sizing: border-box;
+}
+
+.smriti-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--smriti-spacing-sm, 8px);
+  font-family: var(--smriti-font-family-display, 'Outfit', sans-serif);
+  font-weight: var(--smriti-font-weight-bold, 700);
+  font-size: var(--smriti-font-size-md, 1rem);
+  color: var(--smriti-color-text-primary, #f1f5f9);
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+.smriti-sidebar.collapsed .smriti-sidebar-brand,
+#smriti-sidebar-target.sidebar.collapsed .smriti-sidebar-brand {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.smriti-sidebar-brand-logo {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, var(--smriti-color-brand-primary, #2563eb), var(--smriti-color-brand-light, #3b82f6));
+  border-radius: var(--radius-sm, 4px);
+  flex-shrink: 0;
+}
+
+.smriti-sidebar-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--smriti-color-text-muted, #94a3b8);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-xs, 4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
 }
 
-.smriti-side-item:hover {
-    background: var(--smriti-color-bg-secondary) !important;
-    color: var(--smriti-color-text-primary) !important;
+.smriti-sidebar-toggle-btn:hover {
+  background: var(--smriti-color-bg-secondary, #1a2236);
+  color: var(--smriti-color-text-primary, #f1f5f9);
+}
+
+/* Menu content */
+.smriti-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--smriti-spacing-sm, 8px) 0;
+  box-sizing: border-box;
+}
+
+.smriti-sidebar-content::-webkit-scrollbar {
+  width: 4px;
 }
+.smriti-sidebar-content::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 2px;
+}
+.smriti-sidebar-content:hover::-webkit-scrollbar-thumb {
+  background: var(--smriti-color-border-strong, #3f3f46);
+}
+
+/* Category groups */
+.smriti-sidebar-group {
+  margin-bottom: var(--smriti-spacing-sm, 8px);
+}
+
+.smriti-sidebar-group-header {
+  padding: 6px var(--smriti-spacing-lg, 16px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--smriti-font-size-xs, 0.70rem);
+  font-weight: var(--smriti-font-weight-semibold, 600);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--smriti-color-text-subtle, #475569);
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
+  box-sizing: border-box;
+}
+
+.smriti-sidebar-group-header:hover {
+  color: var(--smriti-color-text-muted, #94a3b8);
+}
+
+.smriti-sidebar.collapsed .smriti-sidebar-group-header,
+#smriti-sidebar-target.sidebar.collapsed .smriti-sidebar-group-header {
+  padding: 6px 0;
+  justify-content: center;
+}
+.smriti-sidebar.collapsed .smriti-sidebar-group-header span,
+.smriti-sidebar.collapsed .smriti-sidebar-group-header svg,
+#smriti-sidebar-target.sidebar.collapsed .smriti-sidebar-group-header span,
+#smriti-sidebar-target.sidebar.collapsed .smriti-sidebar-group-header svg {
+  display: none;
+}
+.smriti-sidebar.collapsed .smriti-sidebar-group-header::after,
+#smriti-sidebar-target.sidebar.collapsed .smriti-sidebar-group-header::after {
+  content: "•••";
+  font-size: 8px;
+  color: var(--smriti-color-text-subtle, #475569);
+}
+
+.smriti-sidebar-group-chevron {
+  transition: transform 0.2s ease;
+  width: 12px;
+  height: 12px;
+  color: inherit;
+}
+
+.smriti-sidebar-group.collapsed .smriti-sidebar-group-chevron {
+  transform: rotate(-90deg);
+}
+
+/* Category items container transition using Grid Template Rows */
+.smriti-sidebar-group-items {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.smriti-sidebar-group.collapsed .smriti-sidebar-group-items {
+  grid-template-rows: 0fr;
+}
 
-.smriti-side-item.active {
-    background: var(--smriti-color-status-info-bg) !important;
-    color: var(--smriti-color-brand-primary) !important;
-    font-weight: 600;
+.smriti-sidebar-group-items-inner {
+  overflow: hidden;
+  padding: 0 var(--smriti-spacing-sm, 8px);
 }
 
-.smriti-side-item .icon,
-.smriti-side-item .side-item-emoji {
-    font-size: var(--smriti-font-size-lg);
-    flex-shrink: 0;
-    width: 24px;
-    text-align: center;
-    display: inline-block;
+/* Menu items */
+.smriti-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: var(--smriti-spacing-md, 12px);
+  padding: 8px var(--smriti-spacing-md, 12px);
+  margin: 2px 0;
+  border-radius: var(--radius-sm, 4px);
+  text-decoration: none !important;
+  color: var(--smriti-color-text-muted, #94a3b8) !important;
+  font-size: var(--smriti-font-size-base, 0.88rem);
+  font-weight: var(--smriti-font-weight-medium, 500);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s, color 0.2s;
+  user-select: none;
+  box-sizing: border-box;
 }
 
-#smriti-sidebar.collapsed .smriti-side-item {
-    justify-content: center;
-    padding: var(--smriti-spacing-sm) 0;
+.smriti-sidebar-item:hover {
+  background: var(--smriti-color-bg-secondary, #1a2236) !important;
+  color: var(--smriti-color-text-primary, #f1f5f9) !important;
 }
 
-#smriti-sidebar.collapsed .smriti-side-item span:not(.icon):not(.side-item-emoji) {
-    display: none;
+.smriti-sidebar-item.active {
+  background: var(--smriti-color-bg-elevated, #1e293b) !important;
+  color: var(--smriti-color-brand-primary, #2563eb) !important;
+  font-weight: var(--smriti-font-weight-semibold, 600) !important;
 }
 
-/* --- Bottom Section --- */
-.smriti-side-footer {
-    border-top: 1px solid var(--smriti-color-border-default) !important;
-    padding: var(--smriti-spacing-lg) var(--smriti-spacing-md);
-    background: var(--smriti-color-bg-primary) !important;
-    display: flex;
-    flex-direction: column;
-    gap: var(--smriti-spacing-gap);
-    overflow: hidden;
+.smriti-sidebar-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  background: var(--smriti-color-brand-primary, #2563eb);
+  border-radius: 0 var(--radius-xs, 2px) var(--radius-xs, 2px) 0;
 }
+
+.smriti-sidebar-item-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+.smriti-sidebar-item-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.smriti-sidebar-item-label {
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.smriti-sidebar.collapsed .smriti-sidebar-item-label,
+#smriti-sidebar-target.sidebar.collapsed .smriti-sidebar-item-label {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.smriti-sidebar.collapsed .smriti-sidebar-item,
+#smriti-sidebar-target.sidebar.collapsed .smriti-sidebar-item {
+  justify-content: center;
+  padding: 8px 0;
+  gap: 0;
+}
+
+.smriti-sidebar.collapsed .smriti-sidebar-item.active::before,
+#smriti-sidebar-target.sidebar.collapsed .smriti-sidebar-item.active::before {
+  left: 6px;
+  top: 8px;
+  bottom: 8px;
+}
 
-#smriti-sidebar.collapsed .smriti-side-footer {
-    align-items: center;
-    padding: var(--smriti-spacing-lg) 0;
+/* sub-headers inside menus */
+.smriti-sidebar-item-header {
+  padding: 6px var(--smriti-spacing-md, 12px);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--smriti-color-text-subtle, #475569);
+  white-space: nowrap;
+  letter-spacing: 0.05em;
 }
+.smriti-sidebar.collapsed .smriti-sidebar-item-header,
+#smriti-sidebar-target.sidebar.collapsed .smriti-sidebar-item-header {
+  display: none;
+}
+
+/* Footer section */
+.smriti-sidebar-footer {
+  padding: var(--smriti-spacing-md, 12px) var(--smriti-spacing-md, 12px);
+  border-top: 1px solid var(--smriti-color-border-default, #1e293b);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--smriti-color-bg-secondary, #1a2236);
+  box-sizing: border-box;
+}
+
+.smriti-sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: var(--smriti-spacing-sm, 8px);
+  overflow: hidden;
+  transition: opacity 0.2s;
+}
 
-.smriti-side-cashier {
-    display: flex;
-    align-items: center;
-    gap: var(--smriti-spacing-sm);
-    white-space: nowrap;
+.smriti-sidebar.collapsed .smriti-sidebar-user,
+#smriti-sidebar-target.sidebar.collapsed .smriti-sidebar-user {
+  opacity: 0;
+  pointer-events: none;
+  width: 0;
+  padding: 0;
 }
 
-.smriti-side-avatar {
-    width: var(--smriti-spacing-2xl);
-    height: var(--smriti-spacing-2xl);
-    border-radius: var(--smriti-radius-full);
-    background: var(--smriti-color-brand-primary);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: var(--smriti-font-size-base);
-    flex-shrink: 0;
+.smriti-sidebar-user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--smriti-color-brand-secondary, #6941C6);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: var(--smriti-font-size-sm, 0.82rem);
+  flex-shrink: 0;
 }
 
-.smriti-side-info {
-    display: flex;
-    flex-direction: column;
+.smriti-sidebar-user-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.smriti-side-name {
-    font-weight: 600;
-    font-size: var(--smriti-font-size-base);
-    color: var(--smriti-color-text-primary) !important;
+.smriti-sidebar-user-name {
+  font-size: var(--smriti-font-size-sm, 0.82rem);
+  font-weight: 600;
+  color: var(--smriti-color-text-primary, #f1f5f9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.smriti-side-role {
-    font-size: var(--smriti-font-size-xs);
-    color: var(--smriti-color-text-muted) !important;
+.smriti-sidebar-user-role {
+  font-size: var(--smriti-font-size-xs, 0.70rem);
+  color: var(--smriti-color-text-muted, #94a3b8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-#smriti-sidebar.collapsed .smriti-side-info {
-    display: none;
+.smriti-sidebar-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* --- Shift Status --- */
-.smriti-side-shift {
-    display: flex;
-    align-items: center;
-    gap: var(--smriti-spacing-sm);
-    font-size: var(--smriti-font-size-sm);
-    font-weight: 600;
-    color: var(--smriti-color-text-muted) !important;
-    white-space: nowrap;
+.smriti-sidebar.collapsed .smriti-sidebar-footer,
+#smriti-sidebar-target.sidebar.collapsed .smriti-sidebar-footer {
+  justify-content: center;
+  padding: var(--smriti-spacing-sm, 8px) 0;
 }
 
-.smriti-side-shift-badge {
-    padding: var(--smriti-spacing-xs) var(--smriti-spacing-sm);
-    border-radius: var(--smriti-radius-full);
-    font-size: var(--smriti-font-size-xs);
-    font-weight: 700;
-    text-transform: uppercase;
+.smriti-sidebar.collapsed .smriti-sidebar-footer-actions,
+#smriti-sidebar-target.sidebar.collapsed .smriti-sidebar-footer-actions {
+  flex-direction: column;
 }
+
 
-.smriti-side-shift-badge.open {
-    background: var(--smriti-color-status-success-bg) !important;
-    color: var(--smriti-color-status-success) !important;
+/* ── Standalone Layout Shifting ── */
+.smriti-main,
+.main-wrapper {
+  margin-left: var(--sidebar-width) !important;
+  transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  min-height: 100vh;
 }
 
-.smriti-side-shift-badge.closed {
-    background: var(--smriti-color-status-danger-bg) !important;
-    color: var(--smriti-color-status-danger) !important;
+.smriti-main.sidebar-collapsed,
+.main-wrapper.sidebar-collapsed {
+  margin-left: var(--sidebar-collapsed-width) !important;
 }
 
-#smriti-sidebar.collapsed .smriti-side-shift {
-    display: none;
+#app.sidebar-position-right .smriti-main,
+#app.sidebar-position-right .main-wrapper {
+  margin-left: 0 !important;
+  margin-right: var(--sidebar-width) !important;
 }
 
-/* --- Logout Button --- */
-.smriti-side-logout {
-    display: flex;
-    align-items: center;
-    gap: var(--smriti-spacing-sm);
-    padding: var(--smriti-spacing-sm) var(--smriti-spacing-md);
-    color: var(--smriti-color-status-danger) !important;
-    text-decoration: none !important;
-    border-radius: var(--smriti-radius-sm);
-    font-weight: 600;
-    font-size: var(--smriti-font-size-base);
-    transition: background 0.15s;
-    background: none;
-    border: none;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-    min-height: calc(var(--smriti-spacing-2xl) + var(--smriti-spacing-sm));
+#app.sidebar-position-right .smriti-main.sidebar-collapsed,
+#app.sidebar-position-right .main-wrapper.sidebar-collapsed {
+  margin-left: 0 !important;
+  margin-right: var(--sidebar-collapsed-width) !important;
 }
 
-.smriti-side-logout:hover {
-    background: var(--smriti-color-status-danger-bg) !important;
+/* ── Theme Pill Bar (standalone sidebar) ── */
+.smriti-standalone-theme-bar {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  margin: 6px 8px;
 }
 
-#smriti-sidebar.collapsed .smriti-side-logout {
-    justify-content: center;
-    padding: var(--smriti-spacing-sm) 0;
-    color: var(--smriti-color-status-danger) !important;
+.smriti-standalone-theme-pill {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid var(--smriti-color-border-default, #e2e8f0);
+  border-radius: 6px;
+  background: var(--smriti-color-bg-primary, #fff);
+  color: var(--smriti-color-text-muted, #475467);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-#smriti-sidebar.collapsed .smriti-side-logout span:not(.icon) {
-    display: none;
+.smriti-standalone-theme-pill:hover {
+  background: var(--smriti-color-bg-secondary, #f1f5f9);
+  border-color: var(--smriti-color-brand-primary, #2563eb);
+  color: var(--smriti-color-brand-primary, #2563eb);
 }
 
-/* ============================================================
-   Body Layout Shifting Rules (Custom Independent Sidebar)
-   ============================================================ */
-body.smriti-sidebar-active {
-    padding-left: var(--smriti-sidebar-width) !important;
-    transition: padding-left 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-body.smriti-sidebar-active.smriti-sidebar-collapsed {
-    padding-left: var(--smriti-sidebar-collapsed-width) !important;
-}
-
-/* Shift Top Navbar and Header elements */
-body.smriti-sidebar-active .navbar,
-body.smriti-sidebar-active header,
-body.smriti-sidebar-active .navbar-default {
-    left: var(--smriti-sidebar-width) !important;
-    width: calc(100% - var(--smriti-sidebar-width)) !important;
-    transition: left 0.25s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-body.smriti-sidebar-active.smriti-sidebar-collapsed .navbar,
-body.smriti-sidebar-active.smriti-sidebar-collapsed header,
-body.smriti-sidebar-active.smriti-sidebar-collapsed .navbar-default {
-    left: var(--smriti-sidebar-collapsed-width) !important;
-    width: calc(100% - var(--smriti-sidebar-collapsed-width)) !important;
-}
-
-/* Hide standard Frappe sidebars completely when SMRITI sidebar is active */
-body.smriti-sidebar-active .layout-side-section,
-body.smriti-sidebar-active .desk-sidebar,
-body.smriti-sidebar-active .body-sidebar,
-body.smriti-sidebar-active .body-sidebar-container .sidebar-left,
-body.smriti-sidebar-active .layout-side-section.sidebar-left {
-    display: none !important;
-}
-
-/* Hamburger button hidden by default on desktop */
-.smriti-mobile-hamburger {
-    display: none;
-}
-
-/* Backdrop Overlay */
-.smriti-sidebar-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--smriti-color-bg-overlay);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    z-index: 1040;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-}
-
-body.smriti-mobile-sidebar-open .smriti-sidebar-backdrop {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-/* --- Mobile Responsiveness --- */
-@media (max-width: 768px) {
-    #smriti-sidebar {
-        position: fixed;
-        left: calc(-1 * var(--smriti-sidebar-width));
-        top: 0;
-        bottom: 0;
-        box-shadow: var(--smriti-shadow-lg) !important;
-        transition: left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    
-    #smriti-sidebar.open-mobile {
-        left: 0;
-    }
-
-    /* Reset offsets on mobile screen */
-    body.smriti-sidebar-active {
-        padding-left: 0 !important;
-    }
-    body.smriti-sidebar-active.smriti-sidebar-collapsed {
-        padding-left: 0 !important;
-    }
-    body.smriti-sidebar-active .navbar,
-    body.smriti-sidebar-active header,
-    body.smriti-sidebar-active .navbar-default {
-        left: 0 !important;
-        width: 100% !important;
-    }
-
-    /* Mobile hamburger styling */
-    .smriti-mobile-hamburger {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        width: calc(var(--smriti-spacing-2xl) + var(--smriti-spacing-sm));
-        height: calc(var(--smriti-spacing-2xl) + var(--smriti-spacing-sm));
-        margin-right: var(--smriti-spacing-lg);
-        background: transparent;
-        border: none;
-        color: var(--smriti-color-text-primary);
-        cursor: pointer;
-        border-radius: var(--smriti-radius-full);
-        transition: background 0.2s;
-        z-index: 1001; /* Above normal navbar items but below modals */
-    }
-    .smriti-mobile-hamburger:hover {
-        background: var(--smriti-color-bg-secondary);
-    }
-}
-
-/* Sidebar Popout Button Styling */
-.smriti-side-item {
-    position: relative;
-    padding-right: var(--smriti-spacing-2xl) !important; /* Make room for popout button */
-}
-
-.smriti-side-item-popout {
-    position: absolute;
-    right: var(--smriti-spacing-sm);
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: var(--smriti-color-text-muted);
-    cursor: pointer;
-    padding: var(--smriti-spacing-xs);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--smriti-radius-xs);
-    opacity: 0; /* Hidden by default, show on hover */
-    transition: opacity 0.2s, background 0.2s, color 0.2s;
-    z-index: 2;
-}
-
-.smriti-side-item:hover .smriti-side-item-popout {
-    opacity: 1;
-}
-
-.smriti-side-item-popout:hover {
-    background: var(--smriti-color-border-default) !important;
-    color: var(--smriti-color-brand-primary) !important;
-}
-
-.smriti-side-item-popout span {
-    font-size: var(--smriti-font-size-md) !important;
-}
-
-/* Hide popout button when sidebar is collapsed */
-#smriti-sidebar.collapsed .smriti-side-item-popout {
-    display: none !important;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
-   SMRITI Popout Window — Nuclear Full-Viewport Reset v4.0
-   ROOT CAUSE: Frappe v16 uses body-sidebar-container as a FLEX ROW
-     with sidebar-left (width:280px) + layout-main-section-wrapper.
-     Even with sidebar hidden via display:none, the flex container
-     still allocates column space → huge gray dead zone on the left.
-   FIX: Force flex collapse on the container + display:block on wrapper.
-   ═══════════════════════════════════════════════════════════════════════ */
-
-/* ── 1. KILL ALL CHROME ELEMENTS ── */
-body.smriti-popout-active .navbar,
-body.smriti-popout-active .navbar-expand,
-body.smriti-popout-active #navbar,
-body.smriti-popout-active .navbar-container,
-body.smriti-popout-active #smriti-sidebar,
-body.smriti-popout-active .desk-sidebar,
-body.smriti-popout-active .body-sidebar,
-body.smriti-popout-active .sidebar-left,
-body.smriti-popout-active .sticky-top-bar {
-    display: none !important;
-    width: 0 !important;
-    min-width: 0 !important;
-    max-width: 0 !important;
-    height: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border: none !important;
-    opacity: 0 !important;
-    overflow: hidden !important;
-    pointer-events: none !important;
-    flex: 0 0 0 !important;
-}
-
-/* ── 2. RESET BODY ── */
-body.smriti-popout-active {
-    padding: 0 !important;
-    margin: 0 !important;
-    padding-left: 0 !important;
-    padding-top: 0 !important;
-    overflow-x: visible !important;
-    overflow-y: auto !important;
-    --sidebar-width: 0px !important;
-    --page-sidebar-width: 0px !important;
-    --sidebar-left: 0px !important;
-    --navbar-height: 0px !important;
-    --desk-sidebar-width: 0px !important;
-}
-
-/* ── 3. THE CRITICAL FIX: body-sidebar-container FLEX ROW ──
-   Frappe's body-sidebar-container is:
-     display: flex; flex-direction: row;
-     children: .sidebar-left + .layout-main-section-wrapper
-   When sidebar-left is hidden, layout-main-section-wrapper
-   still only gets flex: 1 (not 100% width) due to flex behavior.
-   FIX: collapse the flex container itself to a plain block. */
-body.smriti-popout-active .body-sidebar-container {
-    display: block !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: 100vh !important;
-    height: auto !important;
-    position: static !important;
-    box-sizing: border-box !important;
-    overflow: visible !important;
-    flex: none !important;
-}
-
-/* ── 4. EXPAND ALL FRAPPE LAYOUT WRAPPERS ── */
-body.smriti-popout-active .page-container,
-body.smriti-popout-active .page-body,
-body.smriti-popout-active .layout-main-section-wrapper,
-body.smriti-popout-active .layout-main,
-body.smriti-popout-active .page-content,
-body.smriti-popout-active .layout-main-section {
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    min-height: 100vh !important;
-    height: auto !important;
-    left: 0 !important;
-    top: 0 !important;
-    transform: none !important;
-    display: block !important;
-    box-sizing: border-box !important;
-    overflow: visible !important;
-    position: static !important;
-    flex: none !important;
-    flex-basis: auto !important;
-    flex-grow: 1 !important;
-    flex-shrink: 1 !important;
-}
-
-/* ── 5. KILL FRAPPE SIDEBAR WIDTH VARIABLES ── */
-body.smriti-popout-active [id^="page-"],
-body.smriti-popout-active .container-fluid {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    box-sizing: border-box !important;
-}
-
-/* ── 6. MODULE CONTAINERS FILL FULL WIDTH ── */
-body.smriti-popout-active .smriti-billing-container,
-body.smriti-popout-active .smriti-inventory-container,
-body.smriti-popout-active #smriti-shift-root,
-body.smriti-popout-active .smriti-purchase-container,
-body.smriti-popout-active .smriti-reports-container,
-body.smriti-popout-active .smriti-barcode-container,
-body.smriti-popout-active .smriti-backup-container {
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    min-height: 100vh !important;
-    height: auto !important;
-    padding: var(--smriti-spacing-lg) !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-    overflow: visible !important;
-}
-
-body.smriti-popout-active .shift-main {
-    max-width: 100% !important;
-    width: 100% !important;
-    padding: var(--smriti-spacing-lg) !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-}
-
-/* ── 7. MODALS AND DIALOGS — NEVER CLIP ── */
-body.smriti-popout-active .modal,
-body.smriti-popout-active .frappe-dialog,
-body.smriti-popout-active [role="dialog"],
-body.smriti-popout-active .dropdown-menu,
-body.smriti-popout-active .popover,
-body.smriti-popout-active .tooltip {
-    z-index: 1050 !important;
-    overflow: visible !important;
-}
-
-body.smriti-popout-active .modal-dialog {
-    margin: var(--smriti-spacing-2xl) auto !important;
-    width: auto !important;
-    max-width: 90vw !important;
-    max-height: 90vh !important;
-}
-
-body.smriti-popout-active .modal-content {
-    max-height: 85vh !important;
-    overflow-y: auto !important;
-    overflow-x: visible !important;
-}
-
-body.smriti-popout-active .modal-body {
-    max-height: calc(85vh - 120px) !important;
-    overflow-y: auto !important;
-    overflow-x: visible !important;
-}
-
-/* Global Floating Controls for Popout windows */
-.smriti-popout-controls-floating {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    display: flex;
-    gap: var(--smriti-spacing-sm);
-    z-index: 999999;
-    background: var(--smriti-color-bg-primary);
-    backdrop-filter: blur(8px);
-    border: 1px solid var(--smriti-color-border-default);
-    padding: var(--smriti-spacing-sm);
-    border-radius: var(--smriti-radius-full);
-    box-shadow: var(--smriti-shadow-md);
-    transition: opacity 0.2s, transform 0.2s;
-}
-
-body.dark-mode .smriti-popout-controls-floating,
-body[data-theme="dark"] .smriti-popout-controls-floating {
-    background: var(--smriti-color-bg-secondary);
-    border-color: var(--smriti-color-border-default);
-    box-shadow: var(--smriti-shadow-xl);
-}
-
-.smriti-popout-controls-floating .smriti-popout-btn {
-    width: var(--smriti-spacing-2xl);
-    height: var(--smriti-spacing-2xl);
-    border-radius: var(--smriti-radius-full);
-    border: none;
-    background: none;
-    color: var(--smriti-color-text-muted);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-
-body.dark-mode .smriti-popout-controls-floating .smriti-popout-btn,
-body[data-theme="dark"] .smriti-popout-controls-floating .smriti-popout-btn {
-    color: var(--smriti-color-text-subtle);
-}
-
-.smriti-popout-controls-floating .smriti-popout-btn:hover {
-    background: var(--smriti-color-bg-secondary);
-    color: var(--smriti-color-text-primary);
-}
-
-body.dark-mode .smriti-popout-controls-floating .smriti-popout-btn:hover,
-body[data-theme="dark"] .smriti-popout-controls-floating .smriti-popout-btn:hover {
-    background: var(--smriti-color-bg-primary);
-    color: var(--smriti-color-bg-primary);
-}
-
-.smriti-popout-controls-floating .smriti-popout-close:hover {
-    background: var(--smriti-color-status-danger-bg) !important;
-    color: var(--smriti-color-status-danger) !important;
-}
-@media print {
-    .smriti-popout-controls-floating {
-        display: none !important;
-    }
-}
-
-/* --- SMRITI Sidebar Theme Style Toggle Pill Bar --- */
-.smriti-side-theme-toggle-bar {
-    display: flex;
-    background: var(--smriti-bg);
-    border-radius: var(--smriti-radius-md);
-    box-shadow: var(--neu-pressed-sm);
-    padding: var(--smriti-spacing-xs);
-    margin: var(--smriti-spacing-sm) 0;
-    gap: var(--smriti-spacing-xs);
-}
-
-body.theme-minimalist .smriti-side-theme-toggle-bar {
-    background: var(--smriti-card-bg-2);
-    border: 1px solid var(--smriti-card-border);
-    box-shadow: none;
-}
-
-.smriti-side-theme-pill {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    padding: var(--smriti-spacing-xs) var(--smriti-spacing-xs);
-    border-radius: calc(var(--smriti-radius-md) - 2px);
-    font-size: var(--smriti-font-size-xs);
-    font-weight: 700;
-    color: var(--smriti-text-muted);
-    cursor: pointer;
-    transition: all var(--t-base) var(--ease);
-    outline: none;
-}
-
-.smriti-side-theme-pill:hover {
-    color: var(--smriti-text);
-}
-
-.smriti-side-theme-pill.active {
-    background: var(--smriti-card-bg);
-    color: var(--smriti-primary);
-    box-shadow: var(--neu-float);
-}
-
-body.theme-minimalist .smriti-side-theme-pill.active {
-    background: var(--smriti-card-bg);
-    color: var(--smriti-primary);
-    border: 1px solid var(--smriti-card-border);
-    box-shadow: var(--shadow-sm) !important;
-}
-
-/* Hide labels in collapsed sidebar */
-#smriti-sidebar.collapsed .smriti-side-theme-toggle-bar {
-    flex-direction: column;
-    padding: var(--smriti-spacing-xs) var(--smriti-spacing-xs);
-}
-
-#smriti-sidebar.collapsed .smriti-side-theme-pill .theme-emoji {
-    font-size: var(--smriti-font-size-base); /* show only emoji in collapsed state */
-}
-
-#smriti-sidebar.collapsed .smriti-side-theme-pill .theme-label {
-    display: none;
-}
-
-
-
-
-/* Targeted Chrome Cleanup for Popout Mode */
-body.smriti-popout-active .page-head .flex-column,
-body.smriti-popout-active .page-head .sidebar-toggle-btn {
-    display: none !important;
-}
-
-/* Accordion Folders for SMRITI Sidebar */
-.smriti-side-category {
-    display: flex;
-    flex-direction: column;
-    gap: var(--smriti-spacing-xs);
-    margin-bottom: var(--smriti-spacing-xs);
-}
-.smriti-side-category-header {
-    display: flex;
-    align-items: center;
-    gap: var(--smriti-spacing-gap);
-    padding: var(--smriti-spacing-sm) var(--smriti-spacing-md);
-    border-radius: var(--smriti-radius-md);
-    color: var(--smriti-color-text-muted) !important;
-    font-weight: 700;
-    font-size: var(--smriti-font-size-base);
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-    user-select: none;
-}
-.smriti-side-category-header span.side-item-emoji {
-    font-size: var(--smriti-font-size-lg);
-    flex-shrink: 0;
-    width: 24px;
-    text-align: center;
-    display: inline-block;
-}
-.smriti-side-category-header:hover {
-    background: var(--smriti-color-bg-secondary) !important;
-    color: var(--smriti-color-text-primary) !important;
-}
-.smriti-side-category-header .arrow {
-    margin-left: auto;
-    font-size: var(--smriti-font-size-md) !important;
-    transition: transform 0.2s ease;
-}
-.smriti-side-category.open .smriti-side-category-header .arrow {
-    transform: rotate(90deg);
-}
-.smriti-side-category-body {
-    display: none;
-    flex-direction: column;
-    gap: var(--smriti-spacing-xs);
-    padding-left: var(--smriti-spacing-2xl);
-    overflow: hidden;
-}
-.smriti-side-category.open .smriti-side-category-body {
-    display: flex;
-}
-.smriti-side-sub-item {
-    display: flex;
-    align-items: center;
-    padding: var(--smriti-spacing-sm) var(--smriti-spacing-sm);
-    color: var(--smriti-color-text-muted) !important;
-    text-decoration: none !important;
-    font-size: var(--smriti-font-size-sm);
-    font-weight: 500;
-    border-radius: var(--smriti-radius-sm);
-    transition: background 0.15s, color 0.15s;
-    min-height: 36px;
-}
-.smriti-side-sub-item:hover, .smriti-side-sub-item.active {
-    color: var(--smriti-color-text-primary) !important;
-    background: var(--smriti-color-bg-secondary) !important;
-}
-.smriti-side-sub-item.active {
-    color: var(--smriti-color-brand-primary) !important;
-    font-weight: 700;
-}
-.sidebar-sub-header,
-.smriti-side-sub-header {
-    font-size: var(--smriti-font-size-xs);
-    font-weight: 800;
-    text-transform: uppercase;
-    color: var(--smriti-color-text-muted);
-    padding: var(--smriti-spacing-sm) var(--smriti-spacing-sm) var(--smriti-spacing-xs) var(--smriti-spacing-sm);
-    letter-spacing: 0.8px;
-    pointer-events: none;
-    user-select: none;
-    opacity: 0.75;
-    border-top: 1px dashed var(--smriti-color-border-default);
-    margin-top: var(--smriti-spacing-sm);
-}
-.sidebar-sub-header:first-child,
-.smriti-side-sub-header:first-child {
-    border-top: none;
-    margin-top: 0;
-}
-
-/* Collapsed state overrides for categories */
-#smriti-sidebar.collapsed .smriti-side-category-header span:not(.side-item-emoji),
-#smriti-sidebar.collapsed .smriti-side-category-header .arrow,
-#smriti-sidebar.collapsed .smriti-side-category-body {
-    display: none !important;
-}
-#smriti-sidebar.collapsed .smriti-side-category-header {
-    justify-content: center;
+.smriti-standalone-theme-pill.active {
+  background: var(--smriti-color-brand-primary, #2563eb);
+  border-color: var(--smriti-color-brand-primary, #2563eb);
+  color: #ffffff;
 }
 
+.smriti-sidebar.collapsed .smriti-standalone-theme-bar,
+#smriti-sidebar-target.sidebar.collapsed .smriti-standalone-theme-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 4px;
+  padding: 4px;
+}
 
+.smriti-sidebar.collapsed .smriti-standalone-theme-pill,
+#smriti-sidebar-target.sidebar.collapsed .smriti-standalone-theme-pill {
+  padding: 4px;
+  font-size: 12px;
+}
 
+.smriti-sidebar.collapsed .smriti-standalone-theme-pill .theme-label,
+#smriti-sidebar-target.sidebar.collapsed .smriti-standalone-theme-pill .theme-label {
+  display: none;
+}

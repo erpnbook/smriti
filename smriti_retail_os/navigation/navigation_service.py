@@ -199,10 +199,13 @@ CANONICAL_NAV = {
     ]
 }
 
-def get_user_navigation(user):
+@frappe.whitelist()
+def get_user_navigation(user=None):
     """
     Computes user specific navigation structure with override priority and redis caching.
     """
+    if not user:
+        user = frappe.session.user
     active_company = frappe.defaults.get_user_default("Company") or ""
     
     # 1. Resolve cache keys
