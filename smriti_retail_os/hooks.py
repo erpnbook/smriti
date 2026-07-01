@@ -90,11 +90,14 @@ app_include_js = [
     "/assets/smriti_retail_os/js/smriti_ui_resolver.js",
     "/assets/smriti_retail_os/js/smriti_theme_manager.js",
     "/assets/smriti_retail_os/js/smriti-ui-hardening.js",
-    "/assets/smriti_retail_os/js/smriti_nav_config.js",
+    # smriti_nav_config.js removed 2026-07-01 — zero consumers confirmed (grep: no calls to
+    # SMRITI_NAV, resolveSmritiRoute, or SMRITI_NAV_META anywhere in repo). renderFlexibleSidebar
+    # reads window.frappe.boot.smriti_navigation or calls get_user_navigation API directly.
     "/assets/smriti_retail_os/js/smriti_sidebar.js",
     "/assets/smriti_retail_os/js/smriti_reports.js",
     "/assets/smriti_retail_os/js/main.js",
     "/assets/smriti_retail_os/js/smriti_payload_bridge.js",
+
     # PWA — Service Worker registration, install prompt, offline detection
     "/assets/smriti_retail_os/js/smriti_offline_store.js",
     "/assets/smriti_retail_os/js/smriti_pwa.js",

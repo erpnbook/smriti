@@ -50,15 +50,37 @@ window.SMRITI = window.SMRITI || {};
         if (bootNav) {
             buildTree(bootNav);
         } else {
-            window.frappe.call({
-                method: "smriti_retail_os.navigation.navigation_service.get_user_navigation",
-                args: { user: user },
-                callback: function (r) {
-                    if (r && r.message) {
-                        buildTree(r.message);
-                    }
+            // Use fetch() — works on both standalone www pages and Frappe Desk.
+            // frappe.call requires a full Frappe boot; www pages only have a partial
+            // frappe object with no boot, causing silent empty sidebars.
+            var user = (window.frappe && window.frappe.session && window.frappe.session.user) || "Administrator";
+            var csrfToken = (window.frappe && window.frappe.csrf_token) || getCsrfFromCookie();
+            fetch("/api/method/smriti_retail_os.navigation.navigation_service.get_user_navigation"
+                + "?user=" + encodeURIComponent(user), {
+                method: "GET",
+                headers: {
+                    "X-Frappe-CSRF-Token": csrfToken || "fetch",
+                    "Accept": "application/json"
+                },
+                credentials: "same-origin"
+            })
+            .then(function(resp) {
+                if (!resp.ok) throw new Error("Navigation API " + resp.status);
+                return resp.json();
+            })
+            .then(function(data) {
+                if (data && data.message) {
+                    buildTree(data.message);
                 }
+            })
+            .catch(function(err) {
+                console.error("[SMRITI Sidebar] Failed to load navigation:", err);
             });
+        }
+
+        function getCsrfFromCookie() {
+            var match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
+            return match ? decodeURIComponent(match[1]) : null;
         }
 
         function buildTree(navData) {
@@ -276,6 +298,10 @@ window.SMRITI = window.SMRITI || {};
     };
 
     // ── Popout Window Logic ──
+    // @deprecated 2026-07-01 — zero call sites found anywhere in repo.
+    // triggerPopout is fully implemented but unreachable: no button, link, or
+    // menu item invokes it. Do NOT remove — keep for future UX wiring.
+    // To enable: add a button with onclick="SMRITI.triggerPopout(event, '/target-page')"
     SMRITI.triggerPopout = function (e, url) {
         if (e) {
             e.preventDefault();

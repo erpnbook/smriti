@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   @file: smriti_retail_os/www/smriti-go-live.html
   @author: Jawahar R. Mallah
 -->
@@ -46,7 +46,7 @@ body{font-family:'Inter',sans-serif;background:var(--surface);color:var(--text);
 
 /* ── Layout ── */
 #app{display:flex;width:100%;min-height:100vh}
-#sidebar-container{width:240px;flex-shrink:0}
+#smriti-sidebar-target{width:240px;flex-shrink:0}
 .main-wrapper{flex:1;display:flex;flex-direction:column;min-width:0;padding:28px 32px;gap:24px;overflow-y:auto}
 
 /* ── Topbar ── */
@@ -136,7 +136,7 @@ body{font-family:'Inter',sans-serif;background:var(--surface);color:var(--text);
 </head>
 <body>
 <div id="app">
-    <div id="sidebar-container"></div>
+    <div id="smriti-sidebar-target" class="sidebar"></div>
     <div class="main-wrapper">
 
         <!-- Topbar -->
@@ -317,11 +317,8 @@ async function loadChecklist() {
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', () => {
-    if (typeof initSmritiSidebar === 'function') {
-        initSmritiSidebar({
-            activePage: 'go-live',
-            pageTitle: 'Go-Live Readiness',
-        });
+    if (typeof SMRITI !== 'undefined' && SMRITI.renderFlexibleSidebar) {
+        SMRITI.renderFlexibleSidebar();
     }
     loadChecklist();
 });
