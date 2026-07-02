@@ -55,7 +55,7 @@
       "fieldname": "formula_category",
       "fieldtype": "Select",
       "label": "Formula Category",
-      "options": "\nInventory\nForecasting\nOutlet Health\nTransfer Optimization\nAudit\nSales Analytics\nPDT\nPSV\nCGE\nSPM",
+      "options": "\nInventory\nForecasting\nOutlet Health\nTransfer Optimization\nAudit\nSales Analytics\nPDT\nPSV\nCGE\nSPM\nTrial Operations",
       "reqd": 1,
       "in_list_view": 1
     },

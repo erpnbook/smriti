@@ -59,10 +59,17 @@ KEY_PREFIX   = "SMRT"
 VALID_TIERS  = frozenset({"Starter", "Professional", "Enterprise"})
 ISSUER_TAG   = "ERPNBOOK"
 
-# Fallback secret — used ONLY when frappe.conf has no smriti_license_secret.
-# This allows development/demo activations with the well-known test key.
-# NEVER use this in production without setting the real secret in site_config.json.
-_FALLBACK_SECRET = "SMRITI-DEV-SECRET-DO-NOT-USE-IN-PRODUCTION"
+def _load_dev_fallback_secret() -> str:
+    try:
+        config_path = os.path.join(os.path.dirname(__file__), "..", "config", "dev_defaults.json")
+        if os.path.exists(config_path):
+            with open(config_path, "r", encoding="utf-8") as f:
+                return json.load(f).get("license_fallback_secret", "")
+    except Exception:
+        pass
+    return ""
+
+_FALLBACK_SECRET = _load_dev_fallback_secret()
 
 _KEY_PATTERN = re.compile(
     r"^SMRT-(?P<version>\d+)-(?P<payload>[A-Za-z0-9_\-]+={0,2})-(?P<sig>[0-9a-f]{16})$"

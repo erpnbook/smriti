@@ -24,6 +24,27 @@ def _get_smriti_admin_email():
     return frappe.conf.get("smriti_admin_email") or f"admin@{frappe.local.site}"
 
 
+def get_allowed_manager_roles() -> set[str]:
+    """Returns the set of roles authorized to perform manager operations."""
+    configured_roles = frappe.conf.get("smriti_manager_roles")
+    if configured_roles:
+        if isinstance(configured_roles, str):
+            roles = {r.strip() for r in configured_roles.split(",") if r.strip()}
+        else:
+            roles = set(configured_roles)
+    else:
+        roles = {"SMRITI Store Manager", "System Manager"}
+    
+    # Always include Administrator for safety
+    roles.add("Administrator")
+    return roles
+
+
+def get_allowed_cashier_role() -> str:
+    """Returns the name of the SMRITI Cashier role."""
+    return frappe.conf.get("smriti_cashier_role") or "SMRITI Cashier"
+
+
 # ─── Security Governance Guards ──────────────────────────────────────────────
 
 def check_administrator_only():
@@ -47,7 +68,7 @@ def check_store_manager_or_admin():
     if frappe.session.user == "Administrator":
         return
     roles = set(frappe.get_roles())
-    allowed = {"SMRITI Store Manager", "System Manager", "Administrator"}
+    allowed = get_allowed_manager_roles()
     if not (roles & allowed):
         frappe.throw(
             _("Access Denied: You do not have permissions to access SMRITI Security Center."),
@@ -211,8 +232,9 @@ def reset_user_password(email, password):
 
         # Block if target has any desk-access roles other than SMRITI Cashier
         desk_roles = frappe.get_all("Role", filters={"desk_access": 1}, pluck="name")
+        cashier_role = get_allowed_cashier_role()
         for role in target_roles:
-            if role in desk_roles and role != "SMRITI Cashier":
+            if role in desk_roles and role != cashier_role:
                 frappe.throw(
                     _("Access Denied: Store Managers can only reset passwords for Cashiers (users without administrative Desk access)."),
                     frappe.PermissionError
@@ -250,8 +272,8 @@ def set_user_pin(email, pin):
         frappe.throw(_("PIN must be 4 to 6 numeric digits only (e.g. 1234 or 123456)."))
 
     # Ensure target user is a manager (PINs are only for manager override accounts)
-    target_roles = frappe.get_roles(email)
-    if "SMRITI Store Manager" not in target_roles and "System Manager" not in target_roles:
+    target_roles = set(frappe.get_roles(email))
+    if not (target_roles & get_allowed_manager_roles()):
         frappe.throw(
             _("POS Override PIN can only be set for users with SMRITI Store Manager or System Manager role."),
             frappe.PermissionError
@@ -300,7 +322,7 @@ def get_user_metrics():
     """
     # Access Check: Allow Admin (Business Owner) as well as standard Store Manager, System Manager, Administrator
     roles = set(frappe.get_roles())
-    allowed = {"SMRITI Store Manager", "System Manager", "Administrator"}
+    allowed = get_allowed_manager_roles()
     _admin_email = _get_smriti_admin_email()
     is_allowed = bool(roles & allowed) or frappe.session.user in ("Admin", _admin_email)
     if not is_allowed:
@@ -322,9 +344,10 @@ def get_user_metrics():
     # Python silently discards the first key, so the "not in exclude_users" filter
     # was being dropped, causing Administrator to be included in the count.
     # Fix: resolve eligible users first, then filter by role membership.
+    mgr_roles = list(get_allowed_manager_roles() - {"System Manager", "Administrator"})
     store_manager_users = frappe.get_all(
         "Has Role",
-        filters={"role": "SMRITI Store Manager", "parenttype": "User"},
+        filters={"role": ["in", mgr_roles] if mgr_roles else "SMRITI Store Manager", "parenttype": "User"},
         pluck="parent"
     )
     eligible_sm = [u for u in store_manager_users if u not in exclude_users]
@@ -337,9 +360,10 @@ def get_user_metrics():
     ) if eligible_sm else 0
     
     # Count SMRITI Cashier
+    cashier_role = get_allowed_cashier_role()
     cashier_users = frappe.get_all(
         "Has Role",
-        filters={"role": "SMRITI Cashier", "parenttype": "User"},
+        filters={"role": cashier_role, "parenttype": "User"},
         pluck="parent"
     )
     eligible_cashier = [u for u in cashier_users if u not in exclude_users]

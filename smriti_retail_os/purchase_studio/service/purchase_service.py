@@ -27,8 +27,9 @@ from smriti_retail_os.purchase_studio.service import (
 
 def check_manager_role():
     """Enforces Store Manager or System Manager."""
-    roles = frappe.get_roles(frappe.session.user)
-    if "SMRITI Store Manager" not in roles and "System Manager" not in roles:
+    from smriti_retail_os.security_api import get_allowed_manager_roles
+    roles = set(frappe.get_roles(frappe.session.user))
+    if not (roles & get_allowed_manager_roles()):
         frappe.throw(
             _("Access Denied: Only Store Managers or System Managers can perform this action."),
             frappe.PermissionError
@@ -37,8 +38,9 @@ def check_manager_role():
 
 def check_any_purchase_role():
     """Allows Cashier, Store Manager, or System Manager (view access)."""
-    roles = frappe.get_roles(frappe.session.user)
-    allowed = {"SMRITI Cashier", "SMRITI Store Manager", "System Manager"}
+    from smriti_retail_os.security_api import get_allowed_manager_roles, get_allowed_cashier_role
+    roles = set(frappe.get_roles(frappe.session.user))
+    allowed = get_allowed_manager_roles() | {get_allowed_cashier_role()}
     if not allowed.intersection(roles):
         frappe.throw(_("Access Denied: Purchase Studio requires a SMRITI role."), frappe.PermissionError)
 

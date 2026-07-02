@@ -800,11 +800,13 @@ def validate_manager_override(pin, action_type, invoice_name=None):
         frappe.throw(_("Too many failed PIN attempts. Please try again in 10 minutes."), frappe.PermissionError)
 
     from frappe.utils.password import check_password as check_smriti_pin
+    from smriti_retail_os.security_api import get_allowed_manager_roles
+    manager_roles = list(get_allowed_manager_roles())
 
     # Find users with manager roles
     managers = frappe.db.get_all(
         "Has Role",
-        filters={"role": ["in", ["SMRITI Store Manager", "System Manager"]]},
+        filters={"role": ["in", manager_roles]},
         pluck="parent"
     )
 
@@ -821,8 +823,8 @@ def validate_manager_override(pin, action_type, invoice_name=None):
                 try:
                     check_smriti_pin(mgr, pin, fieldname="custom_smriti_pin")
                     # Verify manager role after auth
-                    roles = frappe.get_roles(mgr)
-                    if "SMRITI Store Manager" in roles or "System Manager" in roles:
+                    roles = set(frappe.get_roles(mgr))
+                    if roles & get_allowed_manager_roles():
                         authenticated = True
                         auth_manager = mgr
                         break
