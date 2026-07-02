@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SMRITI — New Purchase Order</title>
+<meta name="description" content="SMRITI Purchase Order Form — create and submit purchase orders."/>
+<meta name="robots" content="noindex,nofollow"/>
+<link rel="icon" type="image/x-icon" href="/assets/smriti_retail_os/images/smriti-favicon.ico"/>
+<style>
+:root {
+  --bg:       #080e1c;
+  --surface:  #0f1729;
+  --s2:       #131e35;
+  --s3:       #1a2847;
+  --border:   rgba(255,255,255,0.07);
+  --bh:       rgba(37,99,235,0.4);
+  --primary:  #2563EB;
+  --ph:       #3b74f7;
+  --pg:       linear-gradient(135deg,#2563EB,#7c3aed);
+  --navy:     #1A2B5C;
+  --success:  #10b981;
+  --warning:  #f59e0b;
+  --danger:   #ef4444;
+  --text:     #e2e8f0;
+  --muted:    #64748b;
+  --mh:       #94a3b8;
+  --radius:   12px;
+  --shadow:   0 8px 32px rgba(0,0,0,0.5);
+  font-family: Arial, Helvetica, sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-size:14px;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px;}
+button{cursor:pointer;font-family:inherit;border:none;outline:none;}
+input,select,textarea{font-family:inherit;outline:none;}
+
+/* TOPBAR */
+#topbar{
+  background:rgba(15,23,41,0.95);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;gap:12px;height:56px;
+  position:sticky;top:0;z-index:50;
+}
+#topbar-logo{display:flex;align-items:center;gap:10px;}
+#topbar-logo img{width:28px;height:28px;border-radius:7px;}
+#topbar-title{font-size:14px;font-weight:700;color:var(--text);}
+#topbar-title span{color:var(--muted);font-weight:400;}
+.tb-spacer{flex:1;}
+.tb-btn{
+  background:var(--s2);border:1px solid var(--border);color:var(--mh);
+  border-radius:8px;padding:7px 14px;font-size:12px;font-weight:500;
+  display:flex;align-items:center;gap:5px;transition:all 0.15s;
+}
+.tb-btn:hover{border-color:var(--bh);color:var(--primary);}
+.tb-btn.primary{background:var(--pg);border-color:transparent;color:#fff;font-weight:600;
+  box-shadow:0 2px 8px rgba(37,99,235,0.3);}
+.tb-btn.primary:hover{box-shadow:0 4px 16px rgba(37,99,235,0.5);transform:translateY(-1px);}
+.tb-btn.success{background:var(--success);border-color:var(--success);color:#fff;}
+.tb-btn.success:hover{background:#0da272;}
+
+/* STEPS BAR */
+#steps-bar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;gap:0;padding:0;
+}
+.step{
+  display:flex;align-items:center;gap:8px;padding:14px 24px;
+  font-size:12px;font-weight:600;color:var(--muted);
+  border-bottom:3px solid transparent;transition:all 0.2s;
+}
+.step.active{color:var(--primary);border-bottom-color:var(--primary);}
+.step.done{color:var(--success);border-bottom-color:var(--success);}
+.step-num{
+  width:22px;height:22px;border-radius:50%;border:2px solid currentColor;
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;
+}
+.step.done .step-num{background:var(--success);border-color:var(--success);color:#fff;}
+.step.active .step-num{background:var(--primary);border-color:var(--primary);color:#fff;}
+.step-arrow{color:var(--border);padding:0 4px;font-size:16px;}
+
+/* CONTENT */
+#page-content{max-width:900px;margin:0 auto;padding:32px 24px 80px;}
+
+/* CARD */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;margin-bottom:20px;
+}
+.card-title{
+  font-size:13px;font-weight:700;color:var(--text);margin-bottom:18px;
+  display:flex;align-items:center;gap:8px;
+}
+.card-title .ct-ico{font-size:16px;}
+
+/* FORM */
+.fg{margin-bottom:16px;}
+.fl{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:5px;display:block;}
+.fl .req{color:var(--danger);}
+.fi{
+  width:100%;background:var(--s2);border:1px solid var(--border);
+  border-radius:8px;padding:10px 13px;font-size:13px;color:var(--text);
+  transition:border-color 0.2s;
+}
+.fi:focus{border-color:var(--bh);}
+.fi::placeholder{color:var(--muted);}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+
+/* TYPEAHEAD */
+.typeahead{position:relative;}
+.ta-results{
+  position:absolute;top:100%;left:0;right:0;z-index:400;
+  background:var(--s3);border:1px solid var(--bh);
+  border-top:none;border-radius:0 0 8px 8px;max-height:220px;overflow-y:auto;
+  box-shadow:var(--shadow);
+}
+.ta-item{
+  padding:10px 13px;font-size:13px;color:var(--text);cursor:pointer;
+  border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;
+}
+.ta-item:hover{background:rgba(37,99,235,0.1);}
+.ta-item:last-child{border-bottom:none;}
+.ta-sub{font-size:11px;color:var(--muted);}
+
+/* ITEM TABLE */
+.items-wrap{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.items-table{width:100%;border-collapse:collapse;}
+.items-table thead th{
+  background:var(--s2);font-size:10px;font-weight:700;
+  color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;
+  padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);
+}
+.items-table tbody td{padding:6px 6px;}
+.items-table tbody tr{border-bottom:1px solid var(--border);}
+.items-table tbody tr:last-child{border-bottom:none;}
+.items-table tbody tr:hover{background:rgba(37,99,235,0.03);}
+.cell-in{
+  width:100%;background:var(--s2);border:1px solid var(--border);
+  border-radius:6px;padding:7px 10px;font-size:12px;color:var(--text);
+}
+.cell-in:focus{border-color:var(--bh);}
+.cell-readonly{
+  width:100%;background:transparent;border:none;
+  padding:7px 4px;font-size:12px;color:var(--mh);font-weight:600;
+}
+.btn-del{
+  background:transparent;border:none;color:var(--muted);
+  font-size:16px;padding:5px 7px;border-radius:5px;line-height:1;
+}
+.btn-del:hover{color:var(--danger);background:rgba(239,68,68,0.08);}
+.items-add-row{
+  padding:10px 12px;border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.btn-add-row{
+  background:transparent;border:1px dashed var(--border);color:var(--muted);
+  border-radius:7px;padding:7px 14px;font-size:12px;transition:all 0.15s;
+  display:flex;align-items:center;gap:6px;
+}
+.btn-add-row:hover{border-color:var(--primary);color:var(--primary);}
+
+/* TOTALS */
+.totals-row{display:flex;justify-content:flex-end;gap:0;margin-top:16px;}
+.total-box{
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:10px;padding:16px 22px;min-width:220px;text-align:right;
+}
+.total-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;}
+.total-value{font-size:28px;font-weight:700;color:var(--primary);margin-top:4px;}
+
+/* REVIEW TABLE */
+.review-table{width:100%;border-collapse:collapse;}
+.review-table th{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
+.review-table td{padding:9px 12px;font-size:13px;color:var(--text);border-bottom:1px solid var(--border);}
+.review-table tr:last-child td{border-bottom:none;}
+
+/* BANNER */
+.banner{display:flex;align-items:center;gap:10px;border-radius:8px;padding:11px 14px;margin-bottom:14px;font-size:13px;}
+.banner.warn{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);color:#fcd34d;}
+.banner.info{background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.25);color:#93c5fd;}
+.banner.success{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);color:#6ee7b7;}
+.banner.danger{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#fca5a5;}
+
+/* BOTTOM ACTIONS */
+#bottom-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--surface);border-top:1px solid var(--border);
+  padding:14px 24px;display:flex;justify-content:space-between;align-items:center;
+  backdrop-filter:blur(12px);z-index:100;
+}
+#step-info{font-size:12px;color:var(--muted);}
+
+/* SPINNER */
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* TOAST */
+#toasts{position:fixed;bottom:80px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:12px 16px;
+  font-size:13px;color:var(--text);min-width:240px;display:flex;gap:10px;align-items:flex-start;
+  box-shadow:var(--shadow);animation:tIn 0.3s ease;}
+@keyframes tIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+.toast.success{border-left:3px solid var(--success);}
+.toast.error{border-left:3px solid var(--danger);}
+.toast.warn{border-left:3px solid var(--warning);}
+.toast-title{font-weight:700;margin-bottom:2px;}
+.toast-sub{font-size:11px;color:var(--muted);}
+
+/* RESULT */
+#result-card{display:none;text-align:center;padding:48px 20px;}
+.result-ico{font-size:56px;margin-bottom:16px;}
+.result-title{font-size:24px;font-weight:700;margin-bottom:8px;}
+.result-sub{font-size:14px;color:var(--muted);margin-bottom:24px;}
+.result-doc{font-size:16px;color:var(--primary);font-weight:700;margin-bottom:24px;}
+
+@media(max-width:640px){.fr{grid-template-columns:1fr;}.fr3{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div id="topbar-logo">
+    <img src="/assets/smriti_retail_os/images/smriti-logo.png" alt="SMRITI" onerror="this.style.display='none'"/>
+    <div id="topbar-title">SMRITI <span>/ New Purchase Order</span></div>
+  </div>
+  <div class="tb-spacer"></div>
+  <button class="tb-btn" onclick="history.back()">← Back</button>
+  <button class="tb-btn" onclick="window.location.href='/smriti-purchase'">📊 Purchase Studio</button>
+</div>
+
+<!-- STEPS BAR -->
+<div id="steps-bar">
+  <div class="step active" id="step-1"><div class="step-num">1</div> Supplier &amp; Details</div>
+  <span class="step-arrow">›</span>
+  <div class="step" id="step-2"><div class="step-num">2</div> Add Items</div>
+  <span class="step-arrow">›</span>
+  <div class="step" id="step-3"><div class="step-num">3</div> Review &amp; Submit</div>
+</div>
+
+<!-- PAGE CONTENT -->
+<div id="page-content">
+
+  <!-- STEP 1 -->
+  <div id="s1">
+    <div class="card">
+      <div class="card-title"><span class="ct-ico">🏭</span>Supplier Information</div>
+      <div class="fr">
+        <div class="fg">
+          <label class="fl">Supplier <span class="req">*</span></label>
+          <div class="typeahead">
+            <input type="text" class="fi" id="sup-input" placeholder="Type supplier name to search…" oninput="PO.supplierSearch(this.value)" autocomplete="off"/>
+            <div class="ta-results" id="sup-results" style="display:none;"></div>
+            <input type="hidden" id="sup-val"/>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl">Schedule Date <span class="req">*</span></label>
+          <input type="date" class="fi" id="sched-date" style="color-scheme:dark;" value=""/>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Terms / Remarks</label>
+        <textarea class="fi" id="remarks" rows="3" placeholder="Payment terms, special instructions, or notes for this purchase order…"></textarea>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-ico">📦</span>Warehouse</div>
+      <div class="fr">
+        <div class="fg">
+          <label class="fl">Delivery Warehouse</label>
+          <select class="fi" id="warehouse">
+            <option value="">— Auto (use settings default) —</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Currency</label>
+          <input type="text" class="fi" value="INR" disabled/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div id="s2" style="display:none;">
+    <div class="card">
+      <div class="card-title"><span class="ct-ico">🔍</span>Search &amp; Add Items</div>
+      <div class="typeahead">
+        <input type="text" class="fi" id="item-search" placeholder="Search by item code or name… (min 2 chars)" oninput="PO.itemSearch(this.value)" autocomplete="off"/>
+        <div class="ta-results" id="item-results" style="display:none;"></div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;">💡 Tip: You can also manually type item codes below and press Tab to move to the next field.</div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div class="items-wrap">
+        <table class="items-table" id="items-table">
+          <thead>
+            <tr>
+              <th style="width:30%;">Item Code</th>
+              <th style="width:25%;">Item Name</th>
+              <th style="width:10%;">Qty</th>
+              <th style="width:10%;">UOM</th>
+              <th style="width:12%;">Rate (₹)</th>
+              <th style="width:10%;">Amount</th>
+              <th style="width:3%;"></th>
+            </tr>
+          </thead>
+          <tbody id="items-tbody">
+            <!-- rows rendered by JS -->
+          </tbody>
+        </table>
+        <div class="items-add-row">
+          <button class="btn-add-row" onclick="PO.addBlankRow()">+ Add Item Row</button>
+          <div style="flex:1;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="totals-row">
+      <div class="total-box">
+        <div class="total-label">Grand Total</div>
+        <div class="total-value" id="grand-total">₹0.00</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 — REVIEW -->
+  <div id="s3" style="display:none;">
+    <div id="s3-content"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result-card">
+    <div class="result-ico" id="result-ico">✅</div>
+    <div class="result-title" id="result-title">Purchase Order Created</div>
+    <div class="result-doc" id="result-doc"></div>
+    <div class="result-sub" id="result-sub"></div>
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:8px;">
+      <button class="tb-btn primary" onclick="window.location.href='/smriti-purchase#orders'">📋 View All POs</button>
+      <button class="tb-btn success" onclick="PO.newPO()">+ Another PO</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div id="bottom-bar">
+  <div id="step-info">Step 1 of 3</div>
+  <div style="display:flex;gap:10px;">
+    <button class="tb-btn" id="btn-back" onclick="PO.back()" style="display:none;">← Back</button>
+    <button class="tb-btn primary" id="btn-next" onclick="PO.next()">Next →</button>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   SMRITI — Purchase Order Form
+   API: smriti_retail_os.purchase_studio.api.purchase_api
+════════════════════════════════════════════════════════ */
+const USER      = "{{ cashier }}";
+const USER_ROLES= {{ user_roles | tojson }};
+const CSRF_TOKEN= "{{ csrf_token }}";
+const PX_SET    = {{ purchase_settings | tojson }};
+const API       = "smriti_retail_os.purchase_studio.api.purchase_api";
+
+function apiCall(method, args={}) {
+  return new Promise((res, rej) => {
+    frappe.call({
+      method, args, headers: {"X-Frappe-CSRF-Token": CSRF_TOKEN},
+      callback: r => res(r.message !== undefined ? r.message : r),
+      error: e => rej(e)
+    });
+  });
+}
+const fmt = {
+  cur: v => "₹" + parseFloat(v||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2}),
+  dt:  v => v ? new Date(v).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : "—"
+};
+function toast(type, title, sub, ms=4000) {
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${type==="success"?"✅":type==="error"?"❌":"⚠️"}</span><div><div class="toast-title">${title}</div>${sub?`<div class="toast-sub">${sub}</div>`:""}</div>`;
+  document.getElementById("toasts").appendChild(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+// ── State ────────────────────────────────────────────────
+const D = {
+  step: 1,
+  supplier: "",
+  supplier_name: "",
+  schedule_date: "",
+  remarks: "",
+  warehouse: "",
+  items: []
+};
+
+// ── PO Controller ────────────────────────────────────────
+const PO = {
+  init() {
+    // Set today + 7 days as default schedule date
+    const d = new Date(); d.setDate(d.getDate()+7);
+    document.getElementById("sched-date").value = d.toISOString().slice(0,10);
+
+    // Load warehouses
+    apiCall(`${API}.get_warehouses`).then(rows => {
+      const sel = document.getElementById("warehouse");
+      (rows||[]).forEach(w => {
+        const opt = document.createElement("option");
+        opt.value = w.name; opt.textContent = w.warehouse_name||w.name;
+        sel.appendChild(opt);
+      });
+    }).catch(()=>{});
+
+    // Start with one blank row
+    PO.addBlankRow();
+    PO.renderItems();
+  },
+
+  // ── STEP NAVIGATION ─────────────────────────────────────
+  next() {
+    if (D.step===1) {
+      D.supplier      = document.getElementById("sup-val").value || document.getElementById("sup-input").value;
+      D.supplier_name = document.getElementById("sup-input").value;
+      D.schedule_date = document.getElementById("sched-date").value;
+      D.remarks       = document.getElementById("remarks").value;
+      D.warehouse     = document.getElementById("warehouse").value;
+      if (!D.supplier) { toast("warn","Required","Please select a supplier."); return; }
+      if (!D.schedule_date) { toast("warn","Required","Please set a schedule date."); return; }
+      PO.goStep(2);
+    } else if (D.step===2) {
+      PO.collectItems();
+      const valid = D.items.filter(i=>i.item_code&&(parseFloat(i.qty)||0)>0);
+      if (!valid.length) { toast("warn","Required","Add at least one item with qty > 0."); return; }
+      D.items = valid;
+      PO.renderReview();
+      PO.goStep(3);
+    } else if (D.step===3) {
+      PO.submit();
+    }
+  },
+
+  back() {
+    if (D.step > 1) PO.goStep(D.step - 1);
+  },
+
+  goStep(n) {
+    D.step = n;
+    ["s1","s2","s3"].forEach((id,idx) => document.getElementById(id).style.display = idx+1===n ? "block" : "none");
+    document.getElementById("step-info").textContent = `Step ${n} of 3`;
+    document.getElementById("btn-back").style.display = n>1 ? "inline-flex" : "none";
+    document.getElementById("btn-next").textContent = n===3 ? "Submit PO" : "Next →";
+    // Step indicator
+    [1,2,3].forEach(i => {
+      const el = document.getElementById(`step-${i}`);
+      el.className = "step" + (i===n?" active":i<n?" done":"");
+    });
+    if (n===2) document.getElementById("item-search").focus();
+    window.scrollTo({top:0,behavior:"smooth"});
+  },
+
+  // ── ITEMS ────────────────────────────────────────────────
+  addBlankRow() { D.items.push({item_code:"",item_name:"",qty:1,rate:0,uom:"Nos",warehouse:""}); PO.renderItems(); },
+
+  addItemFromSearch(item) {
+    D.items.push({item_code:item.item_code, item_name:item.item_name||"", qty:1, rate:parseFloat(item.standard_rate||0), uom:item.stock_uom||"Nos", warehouse:D.warehouse});
+    PO.renderItems();
+    document.getElementById("item-search").value = "";
+    document.getElementById("item-results").style.display = "none";
+  },
+
+  removeRow(idx) { D.items.splice(idx,1); PO.renderItems(); },
+
+  collectItems() {
+    D.items.forEach((it,idx) => {
+      const codeEl = document.getElementById(`r-code-${idx}`);
+      const nameEl = document.getElementById(`r-name-${idx}`);
+      const qtyEl  = document.getElementById(`r-qty-${idx}`);
+      const rateEl = document.getElementById(`r-rate-${idx}`);
+      const uomEl  = document.getElementById(`r-uom-${idx}`);
+      if (codeEl) it.item_code  = codeEl.value;
+      if (nameEl) it.item_name  = nameEl.value;
+      if (qtyEl)  it.qty        = parseFloat(qtyEl.value)||0;
+      if (rateEl) it.rate       = parseFloat(rateEl.value)||0;
+      if (uomEl)  it.uom        = uomEl.value;
+    });
+  },
+
+  renderItems() {
+    const tbody = document.getElementById("items-tbody");
+    if (!D.items.length) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">No items yet — search above or click "Add Item Row"</td></tr>`; PO.updateTotal(); return; }
+    tbody.innerHTML = D.items.map((it,idx)=>`
+    <tr>
+      <td><input type="text" class="cell-in" id="r-code-${idx}" value="${it.item_code||""}" placeholder="Item code…" onchange="D.items[${idx}].item_code=this.value"/></td>
+      <td><input type="text" class="cell-in" id="r-name-${idx}" value="${it.item_name||""}" placeholder="Item name…" onchange="D.items[${idx}].item_name=this.value"/></td>
+      <td><input type="number" class="cell-in" id="r-qty-${idx}" value="${it.qty||1}" min="0.001" step="1" onchange="D.items[${idx}].qty=parseFloat(this.value)||0;PO.updateTotal()"/></td>
+      <td><input type="text" class="cell-in" id="r-uom-${idx}" value="${it.uom||'Nos'}" style="width:60px;"/></td>
+      <td><input type="number" class="cell-in" id="r-rate-${idx}" value="${it.rate||0}" min="0" step="0.01" onchange="D.items[${idx}].rate=parseFloat(this.value)||0;PO.updateTotal()"/></td>
+      <td><div class="cell-readonly" id="r-amt-${idx}">${fmt.cur((it.qty||0)*(it.rate||0))}</div></td>
+      <td><button class="btn-del" onclick="PO.removeRow(${idx})" title="Remove row">✕</button></td>
+    </tr>`).join("");
+    PO.updateTotal();
+  },
+
+  updateTotal() {
+    const t = D.items.reduce((s,it)=>s+(parseFloat(it.qty)||0)*(parseFloat(it.rate)||0),0);
+    document.getElementById("grand-total").textContent = fmt.cur(t);
+    D.items.forEach((it,idx)=>{
+      const el = document.getElementById(`r-amt-${idx}`);
+      if (el) el.textContent = fmt.cur((parseFloat(it.qty)||0)*(parseFloat(it.rate)||0));
+    });
+  },
+
+  // ── REVIEW ───────────────────────────────────────────────
+  renderReview() {
+    const total = D.items.reduce((s,it)=>s+(parseFloat(it.qty)||0)*(parseFloat(it.rate)||0),0);
+    const needsApproval = PX_SET.approval_threshold>0 && total>PX_SET.approval_threshold;
+    document.getElementById("s3-content").innerHTML = `
+    ${needsApproval?`<div class="banner warn"><span>🔐</span><span>This PO (${fmt.cur(total)}) exceeds the approval threshold of ${fmt.cur(PX_SET.approval_threshold)}. It will be saved as <strong>Pending Approval</strong> and must be approved by a System Manager before submission.</span></div>`:`<div class="banner success"><span>✅</span><span>This PO is ready to submit immediately.</span></div>`}
+    <div class="card">
+      <div class="card-title"><span class="ct-ico">📋</span>Order Summary</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:3px;">Supplier</div><div style="font-size:14px;font-weight:600;">${D.supplier_name||D.supplier}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:3px;">Schedule Date</div><div style="font-size:14px;font-weight:600;">${fmt.dt(D.schedule_date)}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:3px;">Grand Total</div><div style="font-size:20px;font-weight:700;color:var(--primary);">${fmt.cur(total)}</div></div>
+      </div>
+      ${D.remarks?`<div style="font-size:12px;color:var(--muted);padding:10px 14px;background:var(--s2);border-radius:8px;">📝 ${D.remarks}</div>`:""}
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="review-table">
+        <thead><tr><th>#</th><th>Item Code</th><th>Item Name</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead>
+        <tbody>
+          ${D.items.map((it,i)=>`<tr>
+            <td style="color:var(--muted);">${i+1}</td>
+            <td style="font-weight:600;color:var(--primary);">${it.item_code}</td>
+            <td style="color:var(--mh);">${it.item_name||"—"}</td>
+            <td>${parseFloat(it.qty).toLocaleString()} ${it.uom||""}</td>
+            <td>${fmt.cur(it.rate)}</td>
+            <td style="font-weight:600;">${fmt.cur((parseFloat(it.qty)||0)*(parseFloat(it.rate)||0))}</td>
+          </tr>`).join("")}
+          <tr style="background:var(--s2);">
+            <td colspan="5" style="text-align:right;font-weight:700;padding:10px 12px;">Grand Total</td>
+            <td style="font-weight:700;font-size:15px;color:var(--primary);">${fmt.cur(total)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+  },
+
+  // ── SUBMIT ────────────────────────────────────────────────
+  async submit() {
+    const btn = document.getElementById("btn-next");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span> Submitting…`;
+    try {
+      const r = await apiCall(`${API}.create_purchase_order`, {
+        supplier:      D.supplier,
+        items:         JSON.stringify(D.items.filter(i=>i.item_code&&(parseFloat(i.qty)||0)>0)),
+        schedule_date: D.schedule_date,
+        remarks:       D.remarks,
+        warehouse:     D.warehouse
+      });
+      // Show result
+      document.getElementById("page-content").style.display = "none";
+      document.getElementById("result-card").style.display  = "block";
+      document.getElementById("bottom-bar").style.display   = "none";
+      if (r.status==="pending_approval") {
+        document.getElementById("result-ico").textContent   = "🔐";
+        document.getElementById("result-title").textContent = "Pending Approval";
+        document.getElementById("result-doc").textContent   = r.name;
+        document.getElementById("result-sub").textContent   = r.message;
+      } else {
+        document.getElementById("result-ico").textContent   = "✅";
+        document.getElementById("result-title").textContent = "Purchase Order Created";
+        document.getElementById("result-doc").textContent   = r.name;
+        document.getElementById("result-sub").textContent   = r.message;
+      }
+    } catch(e) {
+      toast("error","Submission Failed", e.exc||e.message||"Unknown error");
+    } finally {
+      btn.disabled = false; btn.textContent = "Submit PO";
+    }
+  },
+
+  newPO() {
+    document.getElementById("result-card").style.display   = "none";
+    document.getElementById("page-content").style.display  = "block";
+    document.getElementById("bottom-bar").style.display    = "flex";
+    D.step=1; D.supplier=""; D.supplier_name=""; D.schedule_date=""; D.remarks=""; D.warehouse=""; D.items=[];
+    document.getElementById("sup-input").value  = "";
+    document.getElementById("sup-val").value    = "";
+    document.getElementById("remarks").value    = "";
+    const dd = new Date(); dd.setDate(dd.getDate()+7);
+    document.getElementById("sched-date").value = dd.toISOString().slice(0,10);
+    PO.addBlankRow();
+    PO.goStep(1);
+  },
+
+  // ── SEARCH ───────────────────────────────────────────────
+  async supplierSearch(q) {
+    const res = document.getElementById("sup-results");
+    if (q.length < 2) { res.style.display="none"; return; }
+    try {
+      const rows = await apiCall(`${API}.search_suppliers`, {query:q});
+      if (!rows||!rows.length) { res.style.display="none"; return; }
+      res.style.display = "block";
+      res.innerHTML = rows.map(r=>`
+        <div class="ta-item" onclick="document.getElementById('sup-val').value='${r.name}';document.getElementById('sup-input').value='${(r.supplier_name||r.name).replace(/'/g,"\\'")}';document.getElementById('sup-results').style.display='none';">
+          <div>
+            <div style="font-weight:600;">${r.supplier_name||r.name}</div>
+            <div class="ta-sub">${r.supplier_group||""}</div>
+          </div>
+          <div class="ta-sub">${r.name}</div>
+        </div>`).join("");
+      document.addEventListener("click", function h(e) {
+        if (!res.contains(e.target) && e.target!==document.getElementById("sup-input")) {
+          res.style.display="none"; document.removeEventListener("click",h);
+        }
+      });
+    } catch(e) { res.style.display="none"; }
+  },
+
+  async itemSearch(q) {
+    const res = document.getElementById("item-results");
+    if (q.length < 2) { res.style.display="none"; return; }
+    try {
+      const rows = await apiCall(`${API}.search_items`, {query:q});
+      if (!rows||!rows.length) { res.style.display="none"; return; }
+      res.style.display = "block";
+      res.innerHTML = rows.map(r=>`
+        <div class="ta-item" onclick="PO.addItemFromSearch(${JSON.stringify(r).replace(/"/g,'&quot;')});document.getElementById('item-results').style.display='none';">
+          <div>
+            <div style="font-weight:600;">${r.item_code}</div>
+            <div class="ta-sub">${r.item_name||""} · ${r.stock_uom||"Nos"}</div>
+          </div>
+          <div class="ta-sub" style="text-align:right;">₹${parseFloat(r.standard_rate||0).toFixed(2)}</div>
+        </div>`).join("");
+      document.addEventListener("click", function h(e) {
+        if (!res.contains(e.target) && e.target!==document.getElementById("item-search")) {
+          res.style.display="none"; document.removeEventListener("click",h);
+        }
+      });
+    } catch(e) { res.style.display="none"; }
+  }
+};
+
+document.addEventListener("DOMContentLoaded", () => PO.init());
+</script>
+</body>
+</html>

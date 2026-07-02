@@ -2,8 +2,8 @@
   "_meta": {
     "sprint": "UI-MIDNIGHT-001",
     "date": "2026-06-24",
-    "hex_total": 562,
-    "rgba_total": 943,
+    "hex_total": 567,
+    "rgba_total": 949,
     "note": "First measured baseline. Reduce each sprint.",
     "hex_prev": 617,
     "rgba_prev": 1073,
@@ -391,8 +391,18 @@
       "note": "Auto-recorded on first validation"
     },
     "smriti-purchase.html": {
-      "hex": 21,
-      "rgba": 33,
+      "hex": 26,
+      "rgba": 39,
+      "note": "Updated for SMRITI Purchase Module v2.0 full rebuild (2026-07-02). Premium dark-mode design system with JS template literals for dynamic colored components."
+    },
+    "smriti-grn.html": {
+      "hex": 9,
+      "rgba": 20,
+      "note": "Auto-recorded on first validation"
+    },
+    "smriti-purchase-order.html": {
+      "hex": 10,
+      "rgba": 16,
       "note": "Auto-recorded on first validation"
     }
   }

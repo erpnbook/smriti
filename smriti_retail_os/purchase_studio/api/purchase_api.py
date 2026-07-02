@@ -237,16 +237,12 @@ def get_po_details(po_name):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SC-15 — Warehouse List (used by supplier_returns.html return-form picker)
+# SC-15 — Warehouse List
 # ─────────────────────────────────────────────────────────────────────────────
 
 @frappe.whitelist()
 def get_warehouses(company=None):
-    """Returns non-group warehouses for use in return-form warehouse picker.
-
-    Routes through the adapter layer rather than direct frappe.client calls,
-    satisfying SPC Rule 6 (service-first design).
-    """
+    """Returns non-group warehouses for use in return-form warehouse picker."""
     filters = {"is_group": 0}
     if company:
         filters["company"] = company
@@ -258,3 +254,73 @@ def get_warehouses(company=None):
         limit=200
     )
     return rows
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SC-16 — Purchase Analytics
+# ─────────────────────────────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_purchase_analytics(company=None, from_date=None, to_date=None):
+    """Returns spend analytics: by supplier, by month, by item group."""
+    return svc.get_purchase_analytics(company, from_date, to_date)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SC-17 — Supplier Performance
+# ─────────────────────────────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_supplier_performance(company=None, from_date=None, to_date=None, top_n=10):
+    """Returns supplier-wise on-time delivery rate, fill rate, and spend."""
+    return svc.get_supplier_performance(company, from_date, to_date, frappe.utils.cint(top_n))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SC-18 — Items for GRN (pending items from a PO)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_items_for_grn(po_name):
+    """Returns pending (not yet received) items from a Purchase Order for GRN entry."""
+    return svc.get_items_for_grn(po_name)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SC-19 — Landed Cost Vouchers
+# ─────────────────────────────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_landed_cost_vouchers(company=None, from_date=None, to_date=None, page=1, page_size=50):
+    """Returns paginated Landed Cost Vouchers."""
+    return svc.list_landed_cost_vouchers(
+        company=company, from_date=from_date, to_date=to_date,
+        page=frappe.utils.cint(page), page_size=frappe.utils.cint(page_size)
+    )
+
+
+@frappe.whitelist()
+def create_landed_cost_voucher(grn_name, charges):
+    """Creates a Landed Cost Voucher linked to a GRN."""
+    charges_list = frappe.parse_json(charges) if isinstance(charges, str) else charges
+    return svc.create_landed_cost_voucher(grn_name, charges_list)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SC-20 — Purchase Return Detail
+# ─────────────────────────────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_return_detail(return_name):
+    """Returns full detail of a Purchase Return (negative Purchase Receipt)."""
+    return svc.get_return_detail(return_name)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SC-21 — Supplier List (for dropdowns)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_suppliers(company=None, search=None, limit=50):
+    """Returns list of suppliers for dropdown selection."""
+    return svc.get_suppliers(company, search, frappe.utils.cint(limit))

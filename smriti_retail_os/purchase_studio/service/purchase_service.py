@@ -1011,3 +1011,351 @@ def _auto_create_item_if_missing(item_code, rate, file_url=None):
             ip.currency         = "INR"
             ip.uom              = "Nos"
             ip.insert(ignore_permissions=True)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ANALYTICS
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_purchase_analytics(company=None, from_date=None, to_date=None):
+    """
+    Returns spend analytics for the Purchase Studio analytics section.
+    Aggregates Purchase Invoice data (ERPNext read-only) by:
+      - Supplier (top 10 by spend)
+      - Month (last 12 months trend)
+      - Item Group (spend distribution)
+    """
+    check_any_purchase_role()
+    company = company or erp_adapter.resolve_company()
+
+    date_filter = ""
+    params = {"company": company}
+    if from_date:
+        date_filter += " AND pi.posting_date >= %(from_date)s"
+        params["from_date"] = from_date
+    if to_date:
+        date_filter += " AND pi.posting_date <= %(to_date)s"
+        params["to_date"] = to_date
+
+    # Spend by supplier
+    by_supplier = frappe.db.sql(f"""
+        SELECT
+            pi.supplier,
+            pi.supplier_name,
+            SUM(pi.grand_total) AS total_spend,
+            COUNT(pi.name)      AS invoice_count
+        FROM `tabPurchase Invoice` pi
+        WHERE pi.docstatus = 1
+          AND pi.company   = %(company)s
+          AND pi.is_return  = 0
+          {date_filter}
+        GROUP BY pi.supplier, pi.supplier_name
+        ORDER BY total_spend DESC
+        LIMIT 10
+    """, params, as_dict=True)
+
+    # Spend by month (last 12 months)
+    by_month = frappe.db.sql(f"""
+        SELECT
+            DATE_FORMAT(pi.posting_date, '%%Y-%%m') AS month,
+            SUM(pi.grand_total) AS total_spend,
+            COUNT(pi.name)      AS invoice_count
+        FROM `tabPurchase Invoice` pi
+        WHERE pi.docstatus = 1
+          AND pi.company   = %(company)s
+          AND pi.is_return  = 0
+          AND pi.posting_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+          {date_filter}
+        GROUP BY month
+        ORDER BY month ASC
+    """, params, as_dict=True)
+
+    # Spend by item group
+    by_item_group = frappe.db.sql(f"""
+        SELECT
+            i.item_group,
+            SUM(pii.amount) AS total_spend
+        FROM `tabPurchase Invoice Item` pii
+        JOIN `tabPurchase Invoice` pi ON pii.parent = pi.name
+        JOIN `tabItem` i ON pii.item_code = i.name
+        WHERE pi.docstatus = 1
+          AND pi.company   = %(company)s
+          AND pi.is_return  = 0
+          {date_filter}
+        GROUP BY i.item_group
+        ORDER BY total_spend DESC
+        LIMIT 8
+    """, params, as_dict=True)
+
+    # Monthly PO count
+    po_trend = frappe.db.sql("""
+        SELECT
+            DATE_FORMAT(transaction_date, '%%Y-%%m') AS month,
+            COUNT(name)      AS po_count,
+            SUM(grand_total) AS po_value
+        FROM `tabPurchase Order`
+        WHERE docstatus = 1
+          AND company    = %(company)s
+          AND transaction_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+        GROUP BY month
+        ORDER BY month ASC
+    """, {"company": company}, as_dict=True)
+
+    return {
+        "by_supplier":   [dict(r) for r in by_supplier],
+        "by_month":      [dict(r) for r in by_month],
+        "by_item_group": [dict(r) for r in by_item_group],
+        "po_trend":      [dict(r) for r in po_trend]
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SUPPLIER PERFORMANCE
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_supplier_performance(company=None, from_date=None, to_date=None, top_n=10):
+    """
+    Returns supplier-wise performance scorecard:
+      - Total PO value
+      - Received value (GRN)
+      - Fill rate % (received / ordered)
+      - Invoice count
+      - Overdue amount
+    """
+    check_any_purchase_role()
+    company = company or erp_adapter.resolve_company()
+
+    date_filter = ""
+    params = {"company": company}
+    if from_date:
+        date_filter += " AND po.transaction_date >= %(from_date)s"
+        params["from_date"] = from_date
+    if to_date:
+        date_filter += " AND po.transaction_date <= %(to_date)s"
+        params["to_date"] = to_date
+    params["top_n"] = cint(top_n)
+
+    rows = frappe.db.sql(f"""
+        SELECT
+            po.supplier,
+            po.supplier_name,
+            COUNT(DISTINCT po.name)              AS po_count,
+            SUM(po.grand_total)                  AS po_value,
+            SUM(po.grand_total * po.per_received / 100) AS received_value,
+            AVG(po.per_received)                 AS avg_fill_rate
+        FROM `tabPurchase Order` po
+        WHERE po.docstatus = 1
+          AND po.company   = %(company)s
+          {date_filter}
+        GROUP BY po.supplier, po.supplier_name
+        ORDER BY po_value DESC
+        LIMIT %(top_n)s
+    """, params, as_dict=True)
+
+    # Attach overdue amounts from PI
+    for row in rows:
+        overdue = frappe.db.sql("""
+            SELECT SUM(outstanding_amount) as amt
+            FROM `tabPurchase Invoice`
+            WHERE docstatus=1 AND supplier=%(supplier)s
+              AND company=%(company)s
+              AND outstanding_amount > 0
+              AND due_date < CURDATE()
+        """, {"supplier": row.supplier, "company": company}, as_dict=True)
+        row["overdue_amount"] = flt(overdue[0].amt) if overdue else 0.0
+        row["fill_rate"]      = round(flt(row.avg_fill_rate), 1)
+        row["po_value"]       = flt(row.po_value)
+        row["received_value"] = flt(row.received_value)
+
+    return [dict(r) for r in rows]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ITEMS FOR GRN
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_items_for_grn(po_name):
+    """
+    Returns pending (not-yet-fully-received) items from a Purchase Order.
+    Used by the dedicated GRN form to pre-populate item lines.
+    """
+    check_any_purchase_role()
+    if not po_name or not frappe.db.exists("Purchase Order", po_name):
+        frappe.throw(_("Purchase Order '{0}' not found.").format(po_name))
+
+    po = erp_adapter.get_po(po_name)
+    items = []
+    for item in po.items:
+        pending = flt(item.qty) - flt(item.received_qty)
+        if pending <= 0:
+            continue
+        has_batch = frappe.db.get_value("Item", item.item_code, "has_batch_no")
+        items.append({
+            "item_code":     item.item_code,
+            "item_name":     item.item_name,
+            "qty":           flt(item.qty),
+            "received_qty":  flt(item.received_qty),
+            "pending_qty":   flt(pending),
+            "rate":          flt(item.rate),
+            "uom":           item.uom,
+            "warehouse":     item.warehouse,
+            "has_batch_no":  cint(has_batch),
+            "po_item_name":  item.name
+        })
+    return {
+        "po_name":       po.name,
+        "supplier":      po.supplier,
+        "supplier_name": po.supplier_name,
+        "company":       po.company,
+        "items":         items
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LANDED COST VOUCHERS
+# ─────────────────────────────────────────────────────────────────────────────
+
+def list_landed_cost_vouchers(company=None, from_date=None, to_date=None, page=1, page_size=50):
+    """Lists Landed Cost Vouchers (read-only from ERPNext)."""
+    check_any_purchase_role()
+    company = company or erp_adapter.resolve_company()
+    filters = {"docstatus": 1}
+    if company:
+        filters["company"] = company
+    if from_date:
+        filters["posting_date"] = [">=", from_date]
+    if to_date:
+        filters.setdefault("posting_date", ["<=", to_date])
+
+    limit_start = (page - 1) * page_size
+    total = frappe.db.count("Landed Cost Voucher", filters)
+    items = frappe.get_all(
+        "Landed Cost Voucher",
+        filters=filters,
+        fields=["name", "posting_date", "company", "total_taxes_and_charges", "status"],
+        order_by="posting_date desc",
+        limit_start=limit_start,
+        limit_page_length=page_size
+    )
+    return {"total": total, "items": items}
+
+
+def create_landed_cost_voucher(grn_name, charges_list):
+    """
+    Creates a Landed Cost Voucher linked to a submitted GRN.
+    charges_list: [{description, amount, expense_account}]
+    Business logic: SMRITI creates the LCV structure;
+                    ERPNext on_submit distributes costs to stock valuation.
+    """
+    check_manager_role()
+
+    if not grn_name or not frappe.db.exists("Purchase Receipt", grn_name):
+        frappe.throw(_("GRN '{0}' not found.").format(grn_name))
+    if frappe.db.get_value("Purchase Receipt", grn_name, "docstatus") != 1:
+        frappe.throw(_("GRN '{0}' must be submitted before adding Landed Costs.").format(grn_name))
+    if not charges_list:
+        frappe.throw(_("At least one charge is required for a Landed Cost Voucher."))
+
+    company = erp_adapter.resolve_company()
+    grn = erp_adapter.get_grn(grn_name)
+
+    lcv = frappe.new_doc("Landed Cost Voucher")
+    lcv.company      = company
+    lcv.posting_date = nowdate()
+    lcv.append("purchase_receipts", {
+        "receipt_document_type": "Purchase Receipt",
+        "receipt_document":      grn_name,
+        "supplier":              grn.supplier,
+        "posting_date":          str(grn.posting_date or ""),
+        "grand_total":           flt(grn.grand_total)
+    })
+
+    total_charges = 0.0
+    for ch in charges_list:
+        amt = flt(ch.get("amount", 0))
+        if amt <= 0:
+            continue
+        lcv.append("taxes", {
+            "description":      ch.get("description", "Freight / Other Charges"),
+            "amount":           amt,
+            "expense_account":  ch.get("expense_account", "")
+        })
+        total_charges += amt
+
+    if total_charges <= 0:
+        frappe.throw(_("Total landed cost charges must be greater than zero."))
+
+    try:
+        lcv.insert(ignore_permissions=True)
+        lcv.submit()
+        frappe.db.commit()
+        audit_service.log(
+            event_type="LCV_SUBMITTED",
+            payload={
+                "doctype":        "Landed Cost Voucher",
+                "name":           lcv.name,
+                "grn_ref":        grn_name,
+                "total_charges":  total_charges
+            }
+        )
+        return {
+            "status":  "submitted",
+            "name":    lcv.name,
+            "message": _("Landed Cost Voucher {0} submitted.").format(lcv.name)
+        }
+    except Exception:
+        frappe.db.rollback()
+        raise
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PURCHASE RETURN DETAIL
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_return_detail(return_name):
+    """Returns full detail of a Purchase Return (negative Purchase Receipt)."""
+    check_any_purchase_role()
+    pr = erp_adapter.get_grn(return_name)
+    items = []
+    for item in pr.items:
+        items.append({
+            "item_code":  item.item_code,
+            "item_name":  item.item_name,
+            "qty":        flt(item.qty),   # will be negative for returns
+            "rate":       flt(item.rate),
+            "amount":     flt(item.amount),
+            "warehouse":  item.warehouse,
+            "batch_no":   item.batch_no or ""
+        })
+    return {
+        "name":               pr.name,
+        "supplier":           pr.supplier,
+        "supplier_name":      pr.supplier_name,
+        "posting_date":       str(pr.posting_date or ""),
+        "return_against":     pr.return_against or "",
+        "smriti_return_reason": getattr(pr, "smriti_return_reason", ""),
+        "grand_total":        flt(pr.grand_total),
+        "status":             pr.status,
+        "items":              items
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SUPPLIER LIST (for dropdowns)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_suppliers(company=None, search=None, limit=50):
+    """Returns list of suppliers for dropdown selection in forms."""
+    check_any_purchase_role()
+    filters = []
+    if search:
+        filters.append(["supplier_name", "like", f"%{search}%"])
+    rows = frappe.get_all(
+        "Supplier",
+        filters=filters if filters else {},
+        fields=["name", "supplier_name", "supplier_group", "country"],
+        order_by="supplier_name asc",
+        limit_page_length=limit
+    )
+    return rows
+

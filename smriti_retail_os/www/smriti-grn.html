@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SMRITI — GRN / Goods Receipt</title>
+<meta name="description" content="SMRITI GRN Receiving Workflow — receive goods against Purchase Orders."/>
+<meta name="robots" content="noindex,nofollow"/>
+<link rel="icon" type="image/x-icon" href="/assets/smriti_retail_os/images/smriti-favicon.ico"/>
+<style>
+:root {
+  --bg:       #080e1c;
+  --surface:  #0f1729;
+  --s2:       #131e35;
+  --s3:       #1a2847;
+  --border:   rgba(255,255,255,0.07);
+  --bh:       rgba(37,99,235,0.4);
+  --primary:  #2563EB;
+  --pg:       linear-gradient(135deg,#2563EB,#7c3aed);
+  --navy:     #1A2B5C;
+  --success:  #10b981;
+  --warning:  #f59e0b;
+  --danger:   #ef4444;
+  --text:     #e2e8f0;
+  --muted:    #64748b;
+  --mh:       #94a3b8;
+  --radius:   12px;
+  --shadow:   0 8px 32px rgba(0,0,0,0.5);
+  font-family: Arial, Helvetica, sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-size:14px;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px;}
+button{cursor:pointer;font-family:inherit;border:none;outline:none;}
+input,select,textarea{font-family:inherit;outline:none;}
+
+/* TOPBAR */
+#topbar{
+  background:rgba(15,23,41,0.95);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;gap:12px;height:56px;
+  position:sticky;top:0;z-index:50;
+}
+#topbar-title{font-size:14px;font-weight:700;color:var(--text);}
+#topbar-title span{color:var(--muted);font-weight:400;}
+.tb-spacer{flex:1;}
+.tb-btn{background:var(--s2);border:1px solid var(--border);color:var(--mh);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px;transition:all 0.15s;}
+.tb-btn:hover{border-color:var(--bh);color:var(--primary);}
+.tb-btn.primary{background:var(--pg);border-color:transparent;color:#fff;font-weight:600;box-shadow:0 2px 8px rgba(37,99,235,0.3);}
+.tb-btn.primary:hover{box-shadow:0 4px 16px rgba(37,99,235,0.5);}
+.tb-btn.success{background:var(--success);border-color:var(--success);color:#fff;}
+
+/* STEPS */
+#steps-bar{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:0;padding:0;}
+.step{display:flex;align-items:center;gap:8px;padding:14px 24px;font-size:12px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;transition:all 0.2s;}
+.step.active{color:var(--primary);border-bottom-color:var(--primary);}
+.step.done{color:var(--success);border-bottom-color:var(--success);}
+.step-num{width:22px;height:22px;border-radius:50%;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+.step.done .step-num{background:var(--success);border-color:var(--success);color:#fff;}
+.step.active .step-num{background:var(--primary);border-color:var(--primary);color:#fff;}
+.step-arrow{color:var(--border);padding:0 4px;font-size:16px;}
+
+/* CONTENT */
+#page-content{max-width:960px;margin:0 auto;padding:32px 24px 100px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px;}
+.card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.ct-ico{font-size:16px;}
+
+/* FORM */
+.fg{margin-bottom:16px;}
+.fl{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:5px;display:block;}
+.fl .req{color:var(--danger);}
+.fi{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 13px;font-size:13px;color:var(--text);transition:border-color 0.2s;}
+.fi:focus{border-color:var(--bh);}
+.fi::placeholder{color:var(--muted);}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* TYPEAHEAD */
+.typeahead{position:relative;}
+.ta-results{position:absolute;top:100%;left:0;right:0;z-index:400;background:var(--s3);border:1px solid var(--bh);border-top:none;border-radius:0 0 8px 8px;max-height:220px;overflow-y:auto;box-shadow:var(--shadow);}
+.ta-item{padding:10px 13px;font-size:13px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.ta-item:hover{background:rgba(37,99,235,0.1);}
+.ta-item:last-child{border-bottom:none;}
+.ta-sub{font-size:11px;color:var(--muted);}
+
+/* RECEIVE TABLE */
+.recv-table{width:100%;border-collapse:collapse;}
+.recv-table thead th{background:var(--s2);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);}
+.recv-table tbody td{padding:8px 6px;border-bottom:1px solid var(--border);font-size:13px;}
+.recv-table tbody tr:last-child td{border-bottom:none;}
+.recv-table tbody tr:hover{background:rgba(37,99,235,0.03);}
+.cell-in{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:7px 9px;font-size:13px;color:var(--text);}
+.cell-in:focus{border-color:var(--bh);}
+.qty-over{border-color:var(--danger)!important;color:var(--danger)!important;}
+.qty-ok{border-color:var(--success)!important;}
+
+/* DISCREPANCY */
+.disc-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;}
+.disc-none{background:rgba(16,185,129,0.12);color:var(--success);}
+.disc-under{background:rgba(245,158,11,0.12);color:var(--warning);}
+.disc-over{background:rgba(239,68,68,0.12);color:var(--danger);}
+.disc-full{background:rgba(16,185,129,0.12);color:var(--success);}
+
+/* BANNER */
+.banner{display:flex;align-items:center;gap:10px;border-radius:8px;padding:11px 14px;margin-bottom:14px;font-size:13px;}
+.banner.warn{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);color:#fcd34d;}
+.banner.info{background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.25);color:#93c5fd;}
+.banner.success{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);color:#6ee7b7;}
+.banner.danger{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:#fca5a5;}
+
+/* SUMMARY CARDS */
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
+.kpi-label{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:0.7px;text-transform:uppercase;}
+.kpi-value{font-size:22px;font-weight:700;color:var(--text);margin:5px 0 2px;}
+.kpi-sub{font-size:11px;color:var(--muted);}
+
+/* BOTTOM BAR */
+#bottom-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;z-index:100;backdrop-filter:blur(12px);}
+#step-info{font-size:12px;color:var(--muted);}
+
+/* SPINNER */
+.spinner{width:17px;height:17px;border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* TOAST */
+#toasts{position:fixed;bottom:80px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
+.toast{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--text);min-width:240px;display:flex;gap:10px;align-items:flex-start;box-shadow:var(--shadow);animation:tIn 0.3s ease;}
+@keyframes tIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+.toast.success{border-left:3px solid var(--success);}
+.toast.error{border-left:3px solid var(--danger);}
+.toast.warn{border-left:3px solid var(--warning);}
+.toast-title{font-weight:700;margin-bottom:2px;}
+.toast-sub{font-size:11px;color:var(--muted);}
+
+/* RESULT */
+#result-card{display:none;text-align:center;padding:60px 20px;}
+.result-ico{font-size:56px;margin-bottom:16px;}
+.result-title{font-size:24px;font-weight:700;margin-bottom:8px;}
+.result-sub{font-size:14px;color:var(--muted);margin-bottom:24px;}
+.result-doc{font-size:18px;color:var(--success);font-weight:700;margin-bottom:24px;}
+
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;padding:48px;gap:12px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <img src="/assets/smriti_retail_os/images/smriti-logo.png" alt="" width="28" height="28" style="border-radius:7px;" onerror="this.style.display='none'"/>
+  <div id="topbar-title">SMRITI <span>/ New GRN — Goods Receipt</span></div>
+  <div class="tb-spacer"></div>
+  <button class="tb-btn" onclick="history.back()">← Back</button>
+  <button class="tb-btn" onclick="window.location.href='/smriti-purchase#grn'">📊 Purchase Studio</button>
+</div>
+
+<!-- STEPS BAR -->
+<div id="steps-bar">
+  <div class="step active" id="step-1"><div class="step-num">1</div> Source</div>
+  <span class="step-arrow">›</span>
+  <div class="step" id="step-2"><div class="step-num">2</div> Receive Quantities</div>
+  <span class="step-arrow">›</span>
+  <div class="step" id="step-3"><div class="step-num">3</div> Quality &amp; Review</div>
+</div>
+
+<!-- PAGE CONTENT -->
+<div id="page-content">
+
+  <!-- STEP 1 — SOURCE -->
+  <div id="s1">
+    <div class="card">
+      <div class="card-title"><span class="ct-ico">📋</span>GRN Source</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+        <button class="tb-btn primary" id="mode-po" onclick="GRN.setMode('po')">📋 Against Purchase Order</button>
+        <button class="tb-btn" id="mode-direct" onclick="GRN.setMode('direct')">📦 Direct Receipt (No PO)</button>
+      </div>
+
+      <!-- PO MODE -->
+      <div id="po-mode-form">
+        <div class="fg">
+          <label class="fl">Purchase Order Number <span class="req">*</span></label>
+          <div class="typeahead">
+            <input type="text" class="fi" id="po-search" placeholder="Enter PO number or search…" oninput="GRN.searchPO(this.value)" autocomplete="off"/>
+            <div class="ta-results" id="po-results" style="display:none;"></div>
+          </div>
+        </div>
+        <div id="po-preview" style="display:none;"></div>
+      </div>
+
+      <!-- DIRECT MODE -->
+      <div id="direct-mode-form" style="display:none;">
+        <div class="fr">
+          <div class="fg">
+            <label class="fl">Supplier <span class="req">*</span></label>
+            <div class="typeahead">
+              <input type="text" class="fi" id="sup-input" placeholder="Type supplier name…" oninput="GRN.searchSupplier(this.value)" autocomplete="off"/>
+              <div class="ta-results" id="sup-results" style="display:none;"></div>
+              <input type="hidden" id="sup-val"/>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl">Warehouse</label>
+            <select class="fi" id="wh-direct">
+              <option value="">— Select Warehouse —</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 — RECEIVE QUANTITIES -->
+  <div id="s2" style="display:none;">
+    <div id="s2-summary"></div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:13px;font-weight:700;">📦 Enter Received Quantities</div>
+        <button class="tb-btn" onclick="GRN.receiveAll()" title="Set received = ordered for all items">✅ Receive All</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="recv-table">
+          <thead>
+            <tr>
+              <th style="width:22%;">Item</th>
+              <th style="width:14%;">Ordered</th>
+              <th style="width:12%;">Previously Received</th>
+              <th style="width:14%;">Pending</th>
+              <th style="width:14%;">Now Receiving <span style="color:var(--danger);">*</span></th>
+              <th style="width:12%;">Rate</th>
+              <th style="width:12%;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="recv-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="kpi-row" id="qty-summary" style="margin-top:14px;"></div>
+  </div>
+
+  <!-- STEP 3 — QUALITY & REVIEW -->
+  <div id="s3" style="display:none;">
+    <div id="s3-content"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result-card">
+    <div class="result-ico">✅</div>
+    <div class="result-title">GRN Submitted</div>
+    <div class="result-doc" id="result-doc"></div>
+    <div class="result-sub" id="result-sub"></div>
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:8px;">
+      <button class="tb-btn primary" onclick="window.location.href='/smriti-purchase#grn'">📦 View All GRNs</button>
+      <button class="tb-btn success" onclick="window.location.reload()">+ New GRN</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div id="bottom-bar">
+  <div id="step-info">Step 1 of 3</div>
+  <div style="display:flex;gap:10px;">
+    <button class="tb-btn" id="btn-back" onclick="GRN.back()" style="display:none;">← Back</button>
+    <button class="tb-btn primary" id="btn-next" onclick="GRN.next()">Next →</button>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   SMRITI — GRN (Goods Receipt) Dedicated Form
+   API: smriti_retail_os.purchase_studio.api.purchase_api
+════════════════════════════════════════════════════════ */
+const USER      = "{{ cashier }}";
+const USER_ROLES= {{ user_roles | tojson }};
+const CSRF_TOKEN= "{{ csrf_token }}";
+const PX_SET    = {{ purchase_settings | tojson }};
+const API       = "smriti_retail_os.purchase_studio.api.purchase_api";
+
+function apiCall(method, args={}) {
+  return new Promise((res, rej) => {
+    frappe.call({
+      method, args, headers: {"X-Frappe-CSRF-Token": CSRF_TOKEN},
+      callback: r => res(r.message !== undefined ? r.message : r),
+      error: e => rej(e)
+    });
+  });
+}
+const fmt = {
+  cur: v => "₹" + parseFloat(v||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2}),
+  num: v => parseFloat(v||0).toLocaleString("en-IN"),
+  dt:  v => v ? new Date(v).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : "—"
+};
+function toast(type, title, sub, ms=4200) {
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${type==="success"?"✅":type==="error"?"❌":"⚠️"}</span><div><div class="toast-title">${title}</div>${sub?`<div class="toast-sub">${sub}</div>`:""}</div>`;
+  document.getElementById("toasts").appendChild(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+// State
+const D = {
+  step: 1,
+  mode: "po",           // "po" | "direct"
+  po_name: "",
+  supplier: "",
+  supplier_name: "",
+  warehouse: "",
+  items: [],            // [{item_code, item_name, qty, received_qty, pending_qty, rate, uom, now_receiving, batch_no, quality_note}]
+  notes: ""
+};
+
+const GRN = {
+  init() {
+    // Pre-fill PO from query string
+    const params = new URLSearchParams(window.location.search);
+    const po = params.get("po");
+    if (po) {
+      document.getElementById("po-search").value = po;
+      GRN.loadPO(po);
+    }
+
+    // Load warehouses for direct mode
+    apiCall(`${API}.get_warehouses`).then(rows => {
+      const sel = document.getElementById("wh-direct");
+      (rows||[]).forEach(w => {
+        const opt = document.createElement("option");
+        opt.value = w.name; opt.textContent = w.warehouse_name||w.name;
+        sel.appendChild(opt);
+      });
+    }).catch(()=>{});
+
+    GRN.setMode("po");
+  },
+
+  setMode(mode) {
+    D.mode = mode;
+    document.getElementById("po-mode-form").style.display    = mode==="po"     ? "block" : "none";
+    document.getElementById("direct-mode-form").style.display= mode==="direct" ? "block" : "none";
+    document.getElementById("mode-po").className     = "tb-btn" + (mode==="po"     ? " primary" : "");
+    document.getElementById("mode-direct").className = "tb-btn" + (mode==="direct" ? " primary" : "");
+  },
+
+  // ── STEP NAV ──────────────────────────────────────────────
+  async next() {
+    if (D.step===1) {
+      if (D.mode==="po") {
+        if (!D.po_name) { toast("warn","Required","Please load a Purchase Order first."); return; }
+        if (!D.items.length) { toast("warn","No Items","This PO has no pending items to receive."); return; }
+      } else {
+        D.supplier = document.getElementById("sup-val").value || document.getElementById("sup-input").value;
+        D.supplier_name = document.getElementById("sup-input").value;
+        D.warehouse = document.getElementById("wh-direct").value;
+        if (!D.supplier) { toast("warn","Required","Please select a supplier."); return; }
+        if (!D.items.length) GRN.addDirectRow();
+      }
+      GRN.renderReceiveTable();
+      GRN.goStep(2);
+    } else if (D.step===2) {
+      GRN.collectQtys();
+      const valid = D.items.filter(i=>(parseFloat(i.now_receiving)||0)>0);
+      if (!valid.length) { toast("warn","Required","At least one item must have receiving quantity > 0."); return; }
+      // Over-receipt check
+      if (!PX_SET.allow_over_receipt) {
+        const over = D.items.find(i=>parseFloat(i.now_receiving||0)>parseFloat(i.pending_qty||i.qty||0));
+        if (over) { toast("error","Over Receipt","Over-receipt is not allowed. Receiving qty cannot exceed pending qty."); return; }
+      }
+      GRN.renderReview();
+      GRN.goStep(3);
+    } else if (D.step===3) {
+      await GRN.submit();
+    }
+  },
+
+  back() {
+    if (D.step>1) GRN.goStep(D.step-1);
+  },
+
+  goStep(n) {
+    D.step = n;
+    ["s1","s2","s3"].forEach((id,i) => document.getElementById(id).style.display = i+1===n ? "block" : "none");
+    document.getElementById("step-info").textContent = `Step ${n} of 3`;
+    document.getElementById("btn-back").style.display = n>1 ? "inline-flex" : "none";
+    document.getElementById("btn-next").textContent = n===3 ? "Submit GRN" : "Next →";
+    [1,2,3].forEach(i => {
+      const el = document.getElementById(`step-${i}`);
+      el.className = "step" + (i===n?" active":i<n?" done":"");
+    });
+    window.scrollTo({top:0,behavior:"smooth"});
+  },
+
+  // ── PO LOADING ────────────────────────────────────────────
+  async searchPO(q) {
+    const res = document.getElementById("po-results");
+    if (q.length < 2) { res.style.display="none"; return; }
+    // Direct match try
+    if (/^PO-/.test(q.toUpperCase())) { GRN.loadPO(q.trim()); return; }
+    // Search via PO list
+    try {
+      const rows = await apiCall(`${API}.get_purchase_orders`, {search_term:q, status:"To Receive and Bill", page:1, page_size:10});
+      if (!(rows.items||[]).length) { res.style.display="none"; return; }
+      res.style.display = "block";
+      res.innerHTML = (rows.items||[]).map(r=>`
+        <div class="ta-item" onclick="GRN.loadPO('${r.name}');document.getElementById('po-results').style.display='none';">
+          <div>
+            <div style="font-weight:600;">${r.name}</div>
+            <div class="ta-sub">${r.supplier_name||r.supplier}</div>
+          </div>
+          <div class="ta-sub">${fmt.cur(r.grand_total)}</div>
+        </div>`).join("");
+    } catch(e) { res.style.display="none"; }
+  },
+
+  async loadPO(poName) {
+    document.getElementById("po-search").value = poName;
+    document.getElementById("po-results").style.display="none";
+    const prev = document.getElementById("po-preview");
+    prev.style.display = "block";
+    prev.innerHTML = `<div class="loading" style="padding:20px;"><div class="spinner" style="border-color:rgba(255,255,255,0.2);border-top-color:var(--primary);width:18px;height:18px;"></div> Loading PO…</div>`;
+    try {
+      const d = await apiCall(`${API}.get_items_for_grn`, {po_name: poName});
+      D.po_name      = d.po_name;
+      D.supplier     = d.supplier;
+      D.supplier_name= d.supplier_name;
+      D.items        = (d.items||[]).map(it=>({...it, now_receiving: it.pending_qty, batch_no:"", quality_note:""}));
+      prev.innerHTML = `
+      <div class="banner success"><span>✅</span><span>PO <strong>${d.po_name}</strong> loaded — ${d.items.length} pending item(s) from <strong>${d.supplier_name||d.supplier}</strong>.</span></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+        ${d.items.slice(0,3).map(i=>`<div style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:2px;">${i.item_code}</div>
+          <div style="font-size:13px;font-weight:600;">${i.item_name||i.item_code}</div>
+          <div style="font-size:12px;color:var(--warning);margin-top:3px;">Pending: ${fmt.num(i.pending_qty)} ${i.uom}</div>
+        </div>`).join("")}
+        ${d.items.length>3?`<div style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;">+${d.items.length-3} more items</div>`:""}
+      </div>`;
+    } catch(e) {
+      D.po_name = ""; D.items = [];
+      prev.innerHTML = `<div class="banner danger"><span>❌</span><span>${e.exc||e.message}</span></div>`;
+    }
+  },
+
+  // ── RECEIVE TABLE ─────────────────────────────────────────
+  addDirectRow() {
+    D.items.push({item_code:"",item_name:"",qty:0,received_qty:0,pending_qty:999999,rate:0,uom:"Nos",warehouse:D.warehouse,has_batch_no:0,now_receiving:1,batch_no:"",quality_note:""});
+  },
+
+  renderReceiveTable() {
+    const tbody = document.getElementById("recv-tbody");
+    tbody.innerHTML = D.items.map((it,idx)=>{
+      const pend = parseFloat(it.pending_qty||it.qty||0);
+      const recv = parseFloat(it.now_receiving||0);
+      let discClass = "disc-none", discText = "—";
+      if (recv<=0) { discClass="disc-under"; discText="Not set"; }
+      else if (recv<pend) { discClass="disc-under"; discText="Under"; }
+      else if (recv>pend) { discClass="disc-over";  discText="Over"; }
+      else { discClass="disc-full"; discText="Full"; }
+
+      return `<tr>
+        <td>
+          <div style="font-weight:600;font-size:13px;">${it.item_code}</div>
+          <div style="font-size:11px;color:var(--muted);">${it.item_name||""}</div>
+        </td>
+        <td style="color:var(--mh);">${fmt.num(it.qty)} ${it.uom}</td>
+        <td style="color:var(--muted);">${fmt.num(it.received_qty)}</td>
+        <td style="color:var(--warning);font-weight:600;">${fmt.num(pend)}</td>
+        <td>
+          <input type="number" class="cell-in" id="recv-qty-${idx}"
+            value="${it.now_receiving||0}" min="0" step="1"
+            onchange="GRN.updateRow(${idx}, parseFloat(this.value)||0)"
+            style="width:90px;"/>
+        </td>
+        <td style="color:var(--mh);">${fmt.cur(it.rate)}</td>
+        <td><span class="disc-badge ${discClass}" id="disc-${idx}">${discText}</span></td>
+      </tr>`;
+    }).join("");
+    GRN.updateQtySummary();
+  },
+
+  updateRow(idx, val) {
+    D.items[idx].now_receiving = val;
+    const pend = parseFloat(D.items[idx].pending_qty||D.items[idx].qty||0);
+    const el   = document.getElementById(`disc-${idx}`);
+    if (val<=0)    { el.className="disc-badge disc-under"; el.textContent="Not set"; }
+    else if (val<pend) { el.className="disc-badge disc-under"; el.textContent="Under"; }
+    else if (val>pend) { el.className="disc-badge disc-over";  el.textContent="Over"; }
+    else               { el.className="disc-badge disc-full";  el.textContent="Full"; }
+    const inp = document.getElementById(`recv-qty-${idx}`);
+    if (inp) inp.className = "cell-in" + (val>pend?" qty-over":(val>0&&val<=pend?" qty-ok":""));
+    GRN.updateQtySummary();
+  },
+
+  receiveAll() {
+    D.items.forEach((it,idx)=>{
+      it.now_receiving = parseFloat(it.pending_qty||it.qty||0);
+      const inp = document.getElementById(`recv-qty-${idx}`);
+      if (inp) { inp.value = it.now_receiving; GRN.updateRow(idx, it.now_receiving); }
+    });
+    toast("success","Receive All","All items set to full pending quantity.");
+  },
+
+  collectQtys() {
+    D.items.forEach((it,idx)=>{
+      const qEl = document.getElementById(`recv-qty-${idx}`);
+      if (qEl) it.now_receiving = parseFloat(qEl.value)||0;
+    });
+  },
+
+  updateQtySummary() {
+    const total     = D.items.reduce((s,i)=>s+(parseFloat(i.now_receiving)||0)*(parseFloat(i.rate)||0),0);
+    const receiving = D.items.filter(i=>(parseFloat(i.now_receiving)||0)>0).length;
+    const over      = D.items.filter(i=>(parseFloat(i.now_receiving)||0)>(parseFloat(i.pending_qty)||parseFloat(i.qty)||0)).length;
+    document.getElementById("qty-summary").innerHTML = `
+      <div class="kpi-card"><div class="kpi-label">Items Receiving</div><div class="kpi-value">${receiving} / ${D.items.length}</div></div>
+      <div class="kpi-card ${over>0?'danger':''}"><div class="kpi-label">Over Receipts</div><div class="kpi-value" style="${over>0?'color:var(--danger);':''}">${over}</div><div class="kpi-sub">${over>0?'⚠️ Review needed':''}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Receipt Value</div><div class="kpi-value" style="font-size:18px;">${fmt.cur(total)}</div></div>`;
+  },
+
+  // ── REVIEW ────────────────────────────────────────────────
+  renderReview() {
+    const activeItems = D.items.filter(i=>(parseFloat(i.now_receiving)||0)>0);
+    const total = activeItems.reduce((s,i)=>(s+(parseFloat(i.now_receiving)||0)*(parseFloat(i.rate)||0)),0);
+    document.getElementById("s3-content").innerHTML = `
+    <div class="card">
+      <div class="card-title"><span class="ct-ico">📝</span>Quality Notes &amp; Review</div>
+      <div class="fg">
+        <label class="fl">Overall Receipt Notes (Optional)</label>
+        <textarea class="fi" id="grn-notes" rows="3" placeholder="Condition of goods, carrier details, inspection notes…"></textarea>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-ico">📋</span>Receipt Summary</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;">
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:3px;">Supplier</div><div style="font-size:14px;font-weight:600;">${D.supplier_name||D.supplier}</div></div>
+        ${D.po_name?`<div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:3px;">Against PO</div><div style="font-size:14px;font-weight:600;color:var(--primary);">${D.po_name}</div></div>`:""}
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:3px;">Receipt Value</div><div style="font-size:20px;font-weight:700;color:var(--success);">${fmt.cur(total)}</div></div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr>
+          <th style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">Item</th>
+          <th style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">Receiving Qty</th>
+          <th style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">Rate</th>
+          <th style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">Amount</th>
+          <th style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);">Status</th>
+        </tr></thead>
+        <tbody>
+          ${activeItems.map(it=>{
+            const pend = parseFloat(it.pending_qty||it.qty||0);
+            const recv = parseFloat(it.now_receiving||0);
+            const status = recv>=pend?"Full Receipt":recv<pend?"Partial":"";
+            return `<tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:9px 12px;font-weight:600;">${it.item_code}<br/><span style="font-size:11px;color:var(--muted);">${it.item_name||""}</span></td>
+              <td style="padding:9px 12px;font-weight:600;color:var(--success);">${fmt.num(recv)} ${it.uom}</td>
+              <td style="padding:9px 12px;">${fmt.cur(it.rate)}</td>
+              <td style="padding:9px 12px;font-weight:600;">${fmt.cur(recv*parseFloat(it.rate||0))}</td>
+              <td style="padding:9px 12px;"><span class="disc-badge ${status==="Full Receipt"?"disc-full":"disc-under"}">${status}</span></td>
+            </tr>`;
+          }).join("")}
+          <tr style="background:var(--s2);">
+            <td colspan="3" style="padding:10px 12px;text-align:right;font-weight:700;">Grand Total</td>
+            <td style="padding:10px 12px;font-weight:700;font-size:15px;color:var(--success);">${fmt.cur(total)}</td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+  },
+
+  // ── SUBMIT ────────────────────────────────────────────────
+  async submit() {
+    const btn = document.getElementById("btn-next");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span> Submitting…`;
+
+    // Collect notes
+    const notesEl = document.getElementById("grn-notes");
+    D.notes = notesEl ? notesEl.value : "";
+
+    const items = D.items
+      .filter(i=>(parseFloat(i.now_receiving)||0)>0)
+      .map(it=>({
+        item_code: it.item_code,
+        qty:       parseFloat(it.now_receiving)||0,
+        rate:      parseFloat(it.rate)||0,
+        uom:       it.uom||"Nos",
+        warehouse: it.warehouse||D.warehouse||""
+      }));
+
+    try {
+      const r = await apiCall(`${API}.create_grn`, {
+        supplier:  D.supplier,
+        items:     JSON.stringify(items),
+        po_name:   D.po_name||"",
+        warehouse: D.warehouse||""
+      });
+      document.getElementById("page-content").style.display = "none";
+      document.getElementById("result-card").style.display  = "block";
+      document.getElementById("bottom-bar").style.display   = "none";
+      document.getElementById("result-doc").textContent     = r.name;
+      document.getElementById("result-sub").textContent     = r.message||"Goods Receipt submitted successfully.";
+    } catch(e) {
+      toast("error","Submission Failed", e.exc||e.message||"Unknown error");
+    } finally {
+      btn.disabled = false; btn.textContent = "Submit GRN";
+    }
+  },
+
+  // ── SEARCH HELPERS ────────────────────────────────────────
+  async searchSupplier(q) {
+    const res = document.getElementById("sup-results");
+    if (q.length<2) { res.style.display="none"; return; }
+    try {
+      const rows = await apiCall(`${API}.search_suppliers`, {query:q});
+      if (!(rows||[]).length) { res.style.display="none"; return; }
+      res.style.display="block";
+      res.innerHTML = rows.map(r=>`
+        <div class="ta-item" onclick="document.getElementById('sup-val').value='${r.name}';document.getElementById('sup-input').value='${(r.supplier_name||r.name).replace(/'/g,"\\'")}';document.getElementById('sup-results').style.display='none';">
+          <div><div style="font-weight:600;">${r.supplier_name||r.name}</div><div class="ta-sub">${r.supplier_group||""}</div></div>
+          <div class="ta-sub">${r.name}</div>
+        </div>`).join("");
+      document.addEventListener("click", function h(e) {
+        if (!res.contains(e.target)) { res.style.display="none"; document.removeEventListener("click",h); }
+      });
+    } catch(e) { res.style.display="none"; }
+  }
+};
+
+document.addEventListener("DOMContentLoaded", () => GRN.init());
+</script>
+</body>
+</html>
