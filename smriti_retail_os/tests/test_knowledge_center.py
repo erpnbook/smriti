@@ -31,8 +31,22 @@ class TestKnowledgeCenter(unittest.TestCase):
         frappe.db.delete("SMRITI Knowledge Asset", {"asset_code": ["in", ["TST-T-001", "TST-T-002", "TST-F-001", "TST-F-002", "TST-TERM-RANK-MATCH", "TST-FORM-RANK-MATCH"]]})
         frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": ["in", ["TST-T-001", "TST-F-001"]]})
         frappe.db.delete("SMRITI PSV Exam Attempt", {"user": ["in", ["test@example.com", "Administrator"]]})
+        frappe.db.delete("SMRITI Certification Exam", {"exam_id": "level_1"})
         frappe.db.commit()
         frappe.cache().delete_value(REDIS_INDEX_KEY)
+
+        # Seed test exam level_1
+        doc = frappe.get_doc({
+            "doctype": "SMRITI Certification Exam",
+            "exam_id": "level_1",
+            "title": "PSV Certified Planner Exam",
+            "source_document": "psv_certified_planner_guide",
+            "passing_score": 80.0,
+            "duration_minutes": 60,
+            "active": 1
+        })
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
 
     def tearDown(self):
         frappe.db.delete("SMRITI Business Term", {"term_id": ["in", ["TST-T-001", "TST-T-002", "TST-TERM-RANK-MATCH"]]})
@@ -40,6 +54,7 @@ class TestKnowledgeCenter(unittest.TestCase):
         frappe.db.delete("SMRITI Knowledge Asset", {"asset_code": ["in", ["TST-T-001", "TST-T-002", "TST-F-001", "TST-F-002", "TST-TERM-RANK-MATCH", "TST-FORM-RANK-MATCH"]]})
         frappe.db.delete("SMRITI PSV Activity Log", {"reference_name": ["in", ["TST-T-001", "TST-F-001"]]})
         frappe.db.delete("SMRITI PSV Exam Attempt", {"user": ["in", ["test@example.com", "Administrator"]]})
+        frappe.db.delete("SMRITI Certification Exam", {"exam_id": "level_1"})
         frappe.db.commit()
         frappe.cache().delete_value(REDIS_INDEX_KEY)
 
