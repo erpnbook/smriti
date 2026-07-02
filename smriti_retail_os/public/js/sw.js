@@ -53,7 +53,7 @@ const CACHE_STRATEGIES = {
     // Stale While Revalidate — SMRITI pages: serve cached instantly, update in background
     // POLICY: /desk is NOT a SMRITI route and must NOT be cached by the service worker.
     staleWhileRevalidate: [
-        '/billing', '/sizewise_invoice', '/purchase', '/sizewise_item',
+        '/billing', '/sizewise_invoice', '/smriti-purchase', '/smriti-purchase-order', '/smriti-grn', '/sizewise_item',
         '/smriti', '/inventory', '/eway_bill', '/customers', '/suppliers',
         '/item-master', '/security', '/platform_center', '/shift', '/barcode-center',
         '/products', '/sales-invoices', '/config-portal', '/sales-returns', '/delivery-challan',
