@@ -829,3 +829,87 @@ def get_managers_list():
     result.sort(key=lambda x: x["full_name"])
     return result
 
+
+@frappe.whitelist()
+def check_page_access(page_name):
+    """
+    Centralized access policy validator for SMRITI pages.
+    Resolves page_name to allowed roles and verifies the current session user.
+    Raises PermissionError if access is denied.
+    """
+    if frappe.session.user == "Guest":
+        frappe.throw(_("Not authenticated."), frappe.PermissionError)
+
+    if frappe.session.user == "Administrator" or "Administrator" in frappe.get_roles():
+        return True
+
+    _admin_email = _get_smriti_admin_email()
+    if frappe.session.user in ("Admin", _admin_email) and page_name in ("security", "user_administration"):
+        frappe.throw(
+            _("Access Denied: The Admin account is blocked from security administration."),
+            frappe.PermissionError
+        )
+
+    manager_roles = get_allowed_manager_roles()
+    cashier_role = get_allowed_cashier_role()
+
+    policies = {
+        # Manager-only pages
+        "suppliers": manager_roles,
+        "stock-audit": manager_roles,
+        "smriti-purchase-order": manager_roles,
+        "smriti-grn": manager_roles,
+        "psv-opening-balance": manager_roles,
+        "psv-dashboard": manager_roles,
+        "psa": manager_roles,
+        "print_templates": manager_roles,
+        "sizewise_item": manager_roles,
+        "sales-upload": manager_roles,
+        "security": manager_roles,
+        "scheme_creator": manager_roles,
+        "smriti-sfc": manager_roles,
+        "smriti-pdt": manager_roles,
+        "smriti-cge": manager_roles,
+        "cge_generic": manager_roles,
+        "category_master": manager_roles,
+        "brand_master": manager_roles,
+        
+        # Cashier + Manager pages
+        "supplier_returns": manager_roles | {cashier_role},
+        "smriti-purchase": manager_roles | {cashier_role},
+        "sales_return": manager_roles | {cashier_role},
+        "sales_invoices": manager_roles | {cashier_role},
+        "purchase_receipt": manager_roles | {cashier_role},
+        "purchase_invoice": manager_roles | {cashier_role},
+        "products": manager_roles | {cashier_role},
+        "payments": manager_roles | {cashier_role},
+        "item_master": manager_roles | {cashier_role},
+        "eway_bill": manager_roles | {cashier_role},
+        "delivery_challan": manager_roles | {cashier_role},
+        "customers": manager_roles | {cashier_role},
+        "barcode": manager_roles | {cashier_role},
+        "shift": manager_roles | {cashier_role},
+        
+        # Dashboard / home / reports
+        "smriti-home": manager_roles,
+        "analytics": manager_roles,
+        "inventory": manager_roles,
+        "purchase": manager_roles,
+        "sales_orders": manager_roles,
+        "reports": manager_roles | {"Accountant"},
+        "smriti-sfm": manager_roles | {"Sales Manager"},
+        "smriti-uie": manager_roles | {"Accountant"}
+    }
+
+    allowed_roles = policies.get(page_name)
+    if not allowed_roles:
+        allowed_roles = manager_roles
+
+    user_roles = set(frappe.get_roles())
+    if not (user_roles & set(allowed_roles)):
+        frappe.throw(
+            _("Access Denied: You do not have permissions to access {0}.").format(page_name),
+            frappe.PermissionError
+        )
+    return True
+

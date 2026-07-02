@@ -301,12 +301,15 @@ def check_desk_access():
         if path == "/desk" or path.startswith("/desk/"):
             raise werkzeug.routing.exceptions.RequestRedirect("/smriti")
 
-        # ─── SMRITI Policy: Block Frappe-owned paths unconditionally ─────────────
-        # Any path in SMRITI_BLOCKED_DESK_PATHS → redirect to /smriti.
-        # Applies to ALL users including Administrator. No exceptions.
-        # Policy: if setup-wizard appears, create a SMRITI page — never expose it.
+        # ─── SMRITI Policy: Block Frappe-owned paths for non-administrative users ─
+        # For business users, any path in SMRITI_BLOCKED_DESK_PATHS → redirect to /smriti.
+        # This preserves legitimate administrative workflows for Administrator / System Manager.
+        user = getattr(frappe.session, "user", "Guest")
+        user_roles = frappe.get_roles(user) if user else []
+        is_admin_or_sys_mgr = (user == "Administrator" or "System Manager" in user_roles)
+
         for blocked in SMRITI_BLOCKED_DESK_PATHS:
-            if path.startswith(blocked):
+            if path.startswith(blocked) and not is_admin_or_sys_mgr:
                 raise werkzeug.routing.exceptions.RequestRedirect("/smriti")
 
         # ─── Desk-access guard for remaining /desk and /app routes ────────────────
