@@ -2778,6 +2778,15 @@ def setup_smriti_retail_os():
                 "in_list_view": 1,
                 "module": "SMRITI Retail OS"
             }
+        ],
+        "User": [
+            {
+                "fieldname": "custom_pos_override_pin",
+                "label": "POS Override PIN",
+                "fieldtype": "Data",
+                "insert_after": "password",
+                "module": "SMRITI Retail OS"
+            }
         ]
     })
 
