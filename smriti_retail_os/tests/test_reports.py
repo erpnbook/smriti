@@ -658,7 +658,7 @@ class TestSmritiReports(unittest.TestCase):
         # 3. Query Security Audit Log
         filters = {
             "from_date": "2026-06-01",
-            "to_date": frappe.utils.today(),
+            "to_date": frappe.utils.add_days(frappe.utils.today(), 1),
             "user": "Administrator"
         }
         res_sec = get_smriti_report_data("security_audit_log", filters)
@@ -670,7 +670,7 @@ class TestSmritiReports(unittest.TestCase):
         filters2 = {
             "company": self.company_name,
             "from_date": "2026-06-01",
-            "to_date": frappe.utils.today(),
+            "to_date": frappe.utils.add_days(frappe.utils.today(), 1),
             "changed_by": "Administrator"
         }
         res_addr = get_smriti_report_data("address_change_log", filters2)

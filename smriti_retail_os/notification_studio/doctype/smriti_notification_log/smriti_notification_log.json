@@ -1,0 +1,124 @@
+{
+ "actions": [],
+ "creation": "2026-07-02 07:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "for_user",
+  "notif_type",
+  "title",
+  "message",
+  "is_read",
+  "reference_doctype",
+  "reference_name",
+  "action_url",
+  "created_at"
+ ],
+ "fields": [
+  {
+   "fieldname": "for_user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "For User",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "notif_type",
+   "fieldtype": "Select",
+   "label": "Type",
+   "options": "system\nuser\npurchase_approval\ngrn_received\nlow_stock\ninvoice_due\nsales",
+   "reqd": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "message",
+   "fieldtype": "Small Text",
+   "label": "Message"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_read",
+   "fieldtype": "Check",
+   "label": "Read"
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Data",
+   "label": "Reference DocType"
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Data",
+   "label": "Reference Name"
+  },
+  {
+   "fieldname": "action_url",
+   "fieldtype": "Data",
+   "label": "Action URL"
+  },
+  {
+   "fieldname": "created_at",
+   "fieldtype": "Datetime",
+   "label": "Created At"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-07-02 07:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "SMRITI Retail OS",
+ "name": "SMRITI Notification Log",
+ "naming_rule": "Expression",
+ "autoname": "format:SMRITI-NOTIF-{YYYY}-{#####}",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "read": 1,
+   "report": 0,
+   "role": "System Manager",
+   "share": 0,
+   "submit": 0,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "read": 1,
+   "report": 0,
+   "role": "SMRITI Store Manager",
+   "share": 0,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 0,
+   "export": 0,
+   "print": 0,
+   "read": 1,
+   "report": 0,
+   "role": "SMRITI Cashier",
+   "share": 0,
+   "write": 1
+  }
+ ],
+ "sort_field": "created_at",
+ "sort_order": "DESC",
+ "track_changes": 0
+}

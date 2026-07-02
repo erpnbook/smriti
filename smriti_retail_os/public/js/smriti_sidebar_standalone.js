@@ -283,18 +283,35 @@ window.SMRITI = window.SMRITI || {};
         });
     });
 
-    // ── Swapping & Toggling settings (backward compatibility API) ──
+    // ── Position toggle — supports left/right/top/bottom ──
+    SMRITI.setSidebarPosition = SMRITI.setSidebarPosition || function (pos) {
+        var targets = [
+            document.getElementById("app"),
+            document.getElementById("smriti-app"),
+            document.body
+        ].filter(Boolean);
+        var allCls = ["sidebar-position-right", "sidebar-position-top", "sidebar-position-bottom"];
+        targets.forEach(function(el) {
+            allCls.forEach(function(cls) { el.classList.remove(cls); });
+            if (pos === "right")  el.classList.add("sidebar-position-right");
+            if (pos === "top")    el.classList.add("sidebar-position-top");
+            if (pos === "bottom") el.classList.add("sidebar-position-bottom");
+        });
+        localStorage.setItem("smriti-sidebar-position", pos);
+        document.querySelectorAll(".smriti-pos-btn").forEach(function(btn) {
+            btn.classList.toggle("active", btn.getAttribute("data-pos") === pos);
+        });
+    };
+
+    // Backward compat — left/right only
     SMRITI.toggleSidebarPosition = function () {
-        var app = document.getElementById("app") || document.body;
-        var isRight = app.classList.toggle("sidebar-position-right");
-        localStorage.setItem("smriti-sidebar-position", isRight ? "right" : "left");
+        var cur = localStorage.getItem("smriti-sidebar-position") || "left";
+        SMRITI.setSidebarPosition(cur === "left" ? "right" : "left");
     };
 
     SMRITI.toggleSidebarCollapse = function () {
         var toggleBtn = document.getElementById("smriti-sidebar-toggle");
-        if (toggleBtn) {
-            toggleBtn.click();
-        }
+        if (toggleBtn) toggleBtn.click();
     };
 
     // ── Popout Window Logic ──

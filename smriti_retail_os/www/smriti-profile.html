@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SMRITI — My Profile</title>
+<meta name="description" content="SMRITI User Profile — manage your account, preferences and security."/>
+<meta name="robots" content="noindex,nofollow"/>
+<style>
+:root{
+  --bg:#080e1c;--surface:#0f1729;--s2:#131e35;--s3:#1a2847;
+  --border:rgba(255,255,255,0.07);--bh:rgba(37,99,235,0.4);
+  --primary:#2563EB;--pg:linear-gradient(135deg,#2563EB,#7c3aed);
+  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;
+  --text:#e2e8f0;--muted:#64748b;--mh:#94a3b8;--radius:12px;
+  font-family:Arial,Helvetica,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-size:14px;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px;}
+button{cursor:pointer;font-family:inherit;border:none;outline:none;}
+input,select{font-family:inherit;}
+
+/* TOPBAR */
+#topbar{background:rgba(15,23,41,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;height:56px;position:sticky;top:0;z-index:50;}
+#topbar-title{font-size:15px;font-weight:700;color:var(--text);}
+#topbar-title span{color:var(--muted);font-weight:400;}
+.tb-spacer{flex:1;}
+.tb-btn{background:var(--s2);border:1px solid var(--border);color:var(--mh);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px;transition:all 0.15s;}
+.tb-btn:hover{border-color:var(--bh);color:var(--primary);}
+.tb-btn.danger{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.25);color:var(--danger);}
+.tb-btn.danger:hover{background:rgba(239,68,68,0.2);}
+.tb-btn.primary{background:var(--primary);border-color:var(--primary);color:#fff;}
+
+/* LAYOUT */
+#layout{display:grid;grid-template-columns:260px 1fr;gap:24px;max-width:1000px;margin:0 auto;padding:28px 24px 80px;}
+
+/* PROFILE HERO */
+.profile-hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;text-align:center;margin-bottom:16px;}
+.hero-avatar{width:80px;height:80px;border-radius:50%;background:var(--pg);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;margin:0 auto 12px;border:3px solid rgba(37,99,235,0.3);}
+.hero-name{font-size:16px;font-weight:700;margin-bottom:4px;}
+.hero-role{font-size:12px;color:var(--muted);margin-bottom:8px;}
+.hero-email{font-size:12px;color:var(--primary);}
+.hero-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;background:rgba(37,99,235,0.12);color:var(--primary);margin-top:10px;}
+.last-login{font-size:11px;color:var(--muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+
+/* NAV TABS */
+.profile-nav{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.pnav-item{display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:13px;color:var(--muted);cursor:pointer;transition:all 0.15s;border-left:3px solid transparent;border-bottom:1px solid var(--border);}
+.pnav-item:last-child{border-bottom:none;}
+.pnav-item:hover{background:var(--s2);color:var(--text);}
+.pnav-item.active{background:rgba(37,99,235,0.08);color:var(--primary);border-left-color:var(--primary);font-weight:600;}
+.pnav-ico{font-size:16px;width:20px;text-align:center;}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);}
+.card-title{font-size:14px;font-weight:700;}
+.card-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+.card-body{padding:20px;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-group.full{grid-column:1/-1;}
+label{font-size:12px;font-weight:600;color:var(--mh);text-transform:uppercase;letter-spacing:0.5px;}
+input[type=text],input[type=email],input[type=password],input[type=tel],select{
+  background:var(--s2);border:1px solid var(--border);color:var(--text);
+  border-radius:8px;padding:10px 12px;font-size:13px;width:100%;
+  transition:border-color 0.15s;}
+input:focus,select:focus{border-color:var(--primary);outline:none;}
+input[readonly]{opacity:0.6;cursor:not-allowed;}
+
+.form-actions{margin-top:20px;display:flex;gap:10px;}
+.btn-save{background:var(--primary);color:#fff;border-radius:8px;padding:10px 22px;font-size:13px;font-weight:600;transition:opacity 0.15s;}
+.btn-save:hover{opacity:0.85;}
+.btn-cancel{background:var(--s2);border:1px solid var(--border);color:var(--mh);border-radius:8px;padding:10px 18px;font-size:13px;transition:all 0.15s;}
+.btn-cancel:hover{border-color:var(--bh);color:var(--text);}
+
+/* SECURITY */
+.security-info{background:rgba(37,99,235,0.05);border:1px solid rgba(37,99,235,0.15);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--mh);line-height:1.6;}
+.pw-strength{height:4px;border-radius:2px;background:var(--s3);margin-top:6px;overflow:hidden;}
+.pw-bar{height:100%;border-radius:2px;width:0%;transition:width 0.3s,background 0.3s;}
+
+/* ACTIVITY */
+.activity-list{display:flex;flex-direction:column;gap:1px;}
+.activity-row{display:flex;align-items:center;gap:14px;padding:11px 16px;border-radius:8px;font-size:12px;transition:background 0.15s;}
+.activity-row:hover{background:var(--s2);}
+.act-ico{width:32px;height:32px;border-radius:8px;background:rgba(37,99,235,0.12);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.act-subject{color:var(--text);font-weight:500;}
+.act-meta{color:var(--muted);font-size:11px;margin-top:2px;}
+.act-time{margin-left:auto;color:var(--muted);font-size:11px;white-space:nowrap;}
+
+/* ROLE CHIPS */
+.role-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.role-chip{background:rgba(37,99,235,0.1);color:var(--primary);border:1px solid rgba(37,99,235,0.2);border-radius:10px;padding:3px 10px;font-size:11px;font-weight:500;}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:13px;display:none;align-items:center;gap:10px;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+#toast.ok{border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.1);color:var(--success);}
+#toast.err{border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);color:var(--danger);}
+
+/* LOGOUT */
+.logout-card{background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius);padding:20px;}
+.logout-title{font-size:14px;font-weight:700;color:var(--danger);margin-bottom:6px;}
+.logout-sub{font-size:12px;color:var(--muted);margin-bottom:16px;}
+.btn-logout{background:var(--danger);color:#fff;border-radius:8px;padding:10px 24px;font-size:13px;font-weight:600;transition:opacity 0.15s;}
+.btn-logout:hover{opacity:0.85;}
+
+@media(max-width:700px){#layout{grid-template-columns:1fr;} .form-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <img src="/assets/smriti_retail_os/images/smriti-logo.png" alt="" width="28" height="28" style="border-radius:7px;" onerror="this.style.display='none'"/>
+  <div id="topbar-title">SMRITI <span>/ My Profile</span></div>
+  <div class="tb-spacer"></div>
+  <button class="tb-btn" onclick="window.location.href='/smriti-notifications'">🔔 Notifications</button>
+  <button class="tb-btn" onclick="window.location.href='/smriti'">← Dashboard</button>
+</div>
+
+<div id="layout">
+  <!-- LEFT PANEL -->
+  <div>
+    <!-- PROFILE HERO -->
+    <div class="profile-hero" id="profile-hero">
+      <div class="hero-avatar" id="hero-avatar">?</div>
+      <div class="hero-name" id="hero-name">Loading…</div>
+      <div class="hero-role" id="hero-role"></div>
+      <div class="hero-email" id="hero-email"></div>
+      <div class="hero-badge" id="hero-badge">User</div>
+      <div class="last-login" id="last-login"></div>
+    </div>
+
+    <!-- NAV -->
+    <div class="profile-nav">
+      <div class="pnav-item active" data-tab="profile"   onclick="UP.setTab('profile')">  <span class="pnav-ico">👤</span> My Profile</div>
+      <div class="pnav-item"        data-tab="security"  onclick="UP.setTab('security')"> <span class="pnav-ico">🔐</span> Security</div>
+      <div class="pnav-item"        data-tab="prefs"     onclick="UP.setTab('prefs')">    <span class="pnav-ico">⚙️</span> Preferences</div>
+      <div class="pnav-item"        data-tab="activity"  onclick="UP.setTab('activity')"> <span class="pnav-ico">📋</span> My Activity</div>
+      <div class="pnav-item"        data-tab="logout"    onclick="UP.setTab('logout')">   <span class="pnav-ico">🚪</span> Logout</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div>
+    <!-- PROFILE TAB -->
+    <div class="tab-content active" id="tab-profile">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">👤 My Profile</div>
+          <div class="card-sub">Update your personal information</div>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group"><label>First Name</label><input id="f-first" type="text" placeholder="First name"/></div>
+            <div class="form-group"><label>Last Name</label><input id="f-last" type="text" placeholder="Last name"/></div>
+            <div class="form-group full"><label>Email Address</label><input id="f-email" type="email" readonly/></div>
+            <div class="form-group full"><label>Phone / Mobile</label><input id="f-phone" type="tel" placeholder="Mobile number"/></div>
+            <div class="form-group">
+              <label>Language</label>
+              <select id="f-lang">
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Time Zone</label>
+              <select id="f-tz">
+                <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                <option value="UTC">UTC</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:16px;">
+            <label>My Roles</label>
+            <div class="role-chips" id="role-chips"></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn-save" onclick="UP.saveProfile()">💾 Save Profile</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECURITY TAB -->
+    <div class="tab-content" id="tab-security">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🔐 Change Password</div>
+          <div class="card-sub">Keep your account secure</div>
+        </div>
+        <div class="card-body">
+          <div class="security-info">🛡️ Password must be at least 8 characters. Use a mix of uppercase, numbers and symbols for a strong password.</div>
+          <div class="form-grid">
+            <div class="form-group full"><label>Current Password</label><input id="pw-old" type="password" placeholder="Enter current password"/></div>
+            <div class="form-group"><label>New Password</label>
+              <input id="pw-new" type="password" placeholder="New password" oninput="UP.checkPwStrength(this.value)"/>
+              <div class="pw-strength"><div class="pw-bar" id="pw-bar"></div></div>
+            </div>
+            <div class="form-group"><label>Confirm New Password</label><input id="pw-conf" type="password" placeholder="Confirm new password"/></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn-save" onclick="UP.changePassword()">🔐 Change Password</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREFERENCES TAB -->
+    <div class="tab-content" id="tab-prefs">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⚙️ SMRITI Preferences</div>
+          <div class="card-sub">UI, display and notification preferences</div>
+        </div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Theme</label>
+              <select id="pref-theme" onchange="UP.applyTheme(this.value)">
+                <option value="sleek-compact">⚡ Sleek Compact</option>
+                <option value="hybrid-light">🎨 Hybrid Light</option>
+                <option value="hybrid-dark">🌙 Hybrid Dark</option>
+                <option value="minimalist">🏢 Minimalist</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Default Landing Page</label>
+              <select id="pref-landing">
+                <option value="/smriti">Dashboard</option>
+                <option value="/billing">POS Billing</option>
+                <option value="/smriti-purchase">Purchase Studio</option>
+                <option value="/inventory">Inventory</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn-save" onclick="UP.savePrefs()">💾 Save Preferences</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY TAB -->
+    <div class="tab-content" id="tab-activity">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 My Activity</div>
+          <div class="card-sub">Recent logins and actions</div>
+        </div>
+        <div class="card-body" id="activity-body">
+          <div style="color:var(--muted);font-size:13px;">Loading activity…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGOUT TAB -->
+    <div class="tab-content" id="tab-logout">
+      <div class="logout-card">
+        <div class="logout-title">🚪 Sign Out</div>
+        <div class="logout-sub">You will be redirected to the SMRITI login page. Any unsaved work will be lost.</div>
+        <button class="btn-logout" onclick="UP.logout()">Sign Out of SMRITI</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const USER  = "{{ cashier }}";
+const CSRF  = "{{ csrf_token }}";
+const API_U = "smriti_retail_os.user_studio.api.smriti_user_api";
+
+function apiCall(method, args={}) {
+  return new Promise((res,rej) => {
+    frappe.call({ method, args, headers:{"X-Frappe-CSRF-Token":CSRF},
+      callback: r => res(r.message !== undefined ? r.message : r),
+      error: e => rej(e)
+    });
+  });
+}
+
+function toast(msg, type="ok") {
+  const t = document.getElementById("toast");
+  t.textContent = type === "ok" ? "✓ " + msg : "✕ " + msg;
+  t.className = type;
+  t.style.display = "flex";
+  setTimeout(() => t.style.display = "none", 3500);
+}
+
+function relTime(dt) {
+  if (!dt) return "";
+  const d = new Date(dt), now = new Date(), diff = Math.floor((now-d)/1000);
+  if (diff < 60) return "just now";
+  if (diff < 3600) return Math.floor(diff/60) + "m ago";
+  if (diff < 86400) return Math.floor(diff/3600) + "h ago";
+  return d.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
+}
+
+const UP = {
+  profile: null,
+
+  async init() {
+    try {
+      const p = await apiCall(`${API_U}.get_my_profile`);
+      UP.profile = p;
+      UP.renderHero(p);
+      UP.renderForm(p);
+    } catch(e) { toast("Failed to load profile", "err"); }
+    UP.loadPrefsUI();
+  },
+
+  renderHero(p) {
+    const initials = (p.full_name || "U").charAt(0).toUpperCase();
+    document.getElementById("hero-avatar").textContent = initials;
+    document.getElementById("hero-name").textContent = p.full_name || p.user;
+    document.getElementById("hero-role").textContent = p.display_role || "";
+    document.getElementById("hero-email").textContent = p.email || "";
+    document.getElementById("hero-badge").textContent = p.display_role || "User";
+    document.getElementById("last-login").innerHTML = p.last_login
+      ? `Last login: ${relTime(p.last_login)}${p.last_ip ? ` · IP: ${p.last_ip}` : ""}`
+      : "No previous login recorded";
+  },
+
+  renderForm(p) {
+    document.getElementById("f-first").value = p.first_name || "";
+    document.getElementById("f-last").value = p.last_name || "";
+    document.getElementById("f-email").value = p.email || "";
+    document.getElementById("f-phone").value = p.phone || "";
+    document.getElementById("f-lang").value = p.language || "en";
+    document.getElementById("f-tz").value = p.time_zone || "Asia/Kolkata";
+    // Roles
+    const chips = document.getElementById("role-chips");
+    chips.innerHTML = (p.roles||[]).filter(r=>r!=="Guest"&&r!=="All").map(r =>
+      `<span class="role-chip">${r}</span>`).join("");
+  },
+
+  setTab(tab) {
+    document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".pnav-item").forEach(n => n.classList.remove("active"));
+    document.getElementById(`tab-${tab}`).classList.add("active");
+    document.querySelector(`[data-tab="${tab}"]`).classList.add("active");
+    if (tab === "activity") UP.loadActivity();
+  },
+
+  async saveProfile() {
+    const data = {
+      first_name: document.getElementById("f-first").value,
+      last_name:  document.getElementById("f-last").value,
+      phone:      document.getElementById("f-phone").value,
+      language:   document.getElementById("f-lang").value,
+      time_zone:  document.getElementById("f-tz").value
+    };
+    const r = await apiCall(`${API_U}.update_my_profile`, data);
+    if (r.status === "ok") toast("Profile updated successfully");
+    else toast(r.message || "Failed to update profile", "err");
+  },
+
+  async changePassword() {
+    const old = document.getElementById("pw-old").value;
+    const nw  = document.getElementById("pw-new").value;
+    const cf  = document.getElementById("pw-conf").value;
+    if (!old || !nw) { toast("Please fill all fields", "err"); return; }
+    if (nw !== cf)   { toast("Passwords do not match", "err"); return; }
+    if (nw.length < 8) { toast("Password must be at least 8 characters", "err"); return; }
+    const r = await apiCall(`${API_U}.change_password`, {old_password: old, new_password: nw});
+    if (r.status === "ok") { toast("Password changed successfully"); document.getElementById("pw-old").value=document.getElementById("pw-new").value=document.getElementById("pw-conf").value=""; }
+    else toast(r.message || "Failed to change password", "err");
+  },
+
+  checkPwStrength(pw) {
+    const bar = document.getElementById("pw-bar");
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    const pct = (score / 4) * 100;
+    const colors = ["#ef4444","#f59e0b","#10b981","#2563eb"];
+    bar.style.width = pct + "%";
+    bar.style.background = colors[score - 1] || "#ef4444";
+  },
+
+  loadPrefsUI() {
+    const theme = localStorage.getItem("smriti-theme-style") || "sleek-compact";
+    const landing = localStorage.getItem("smriti-landing") || "/smriti";
+    document.getElementById("pref-theme").value = theme;
+    document.getElementById("pref-landing").value = landing;
+  },
+
+  applyTheme(key) {
+    localStorage.setItem("smriti-theme-style", key);
+    if (window.SMRITI && window.SMRITI.switchTheme) window.SMRITI.switchTheme(key);
+  },
+
+  savePrefs() {
+    localStorage.setItem("smriti-theme-style", document.getElementById("pref-theme").value);
+    localStorage.setItem("smriti-landing", document.getElementById("pref-landing").value);
+    toast("Preferences saved");
+  },
+
+  async loadActivity() {
+    const body = document.getElementById("activity-body");
+    body.innerHTML = '<div style="color:var(--muted);">Loading…</div>';
+    try {
+      const rows = await apiCall(`${API_U}.get_my_activity`, {limit: 25});
+      if (!rows.length) { body.innerHTML='<div style="color:var(--muted);">No activity yet.</div>'; return; }
+      body.innerHTML = `<div class="activity-list">${rows.map(r => `
+        <div class="activity-row">
+          <div class="act-ico">📋</div>
+          <div>
+            <div class="act-subject">${r.subject||'Activity'}</div>
+            <div class="act-meta">${r.reference_doctype||''}${r.reference_name?' · '+r.reference_name:''}</div>
+          </div>
+          <div class="act-time">${relTime(r.creation)}</div>
+        </div>`).join("")}</div>`;
+    } catch(e) { body.innerHTML='<div style="color:var(--danger);">Failed to load activity.</div>'; }
+  },
+
+  async logout() {
+    try {
+      await apiCall(`${API_U}.logout`);
+    } catch(e) {}
+    window.location.href = "/smriti-login";
+  }
+};
+
+document.addEventListener("DOMContentLoaded", () => UP.init());
+</script>
+</body>
+</html>

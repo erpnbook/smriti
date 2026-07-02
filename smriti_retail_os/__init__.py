@@ -85,3 +85,20 @@ except Exception as e:
     import logging
     logging.getLogger("frappe").warning(f"Failed to register barcode queue: {e}")
 
+
+# Regional Round-off Patch: Support 3 arguments from india_compliance
+try:
+    import erpnext.controllers.taxes_and_totals
+    from erpnext.controllers.taxes_and_totals import get_regional_round_off_accounts
+    from erpnext.utilities.regional import temporary_flag
+
+    def patched_get_round_off_applicable_accounts(company, account_list, doc=None):
+        with temporary_flag("company", company):
+            return get_regional_round_off_accounts(company, account_list, doc)
+
+    erpnext.controllers.taxes_and_totals.get_round_off_applicable_accounts = patched_get_round_off_applicable_accounts
+except Exception as e:
+    import logging
+    logging.getLogger("frappe").warning(f"Failed to apply SMRITI Round-off patch: {e}")
+
+

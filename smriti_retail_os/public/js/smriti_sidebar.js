@@ -210,7 +210,20 @@ window.SMRITI = window.SMRITI || {};
             html.push('  </div>');
             html.push('</div>');
 
-            // ── FOOTER USER PROFILE ──
+            // ── SIDEBAR POSITION PICKER ──
+            var currentPos = localStorage.getItem("smriti-sidebar-position") || "left";
+            var posOptions = [
+                { key: "left",   icon: "◁", label: "Left"   },
+                { key: "right",  icon: "▷", label: "Right"  },
+                { key: "top",    icon: "△", label: "Top"    },
+                { key: "bottom", icon: "▽", label: "Bottom" }
+            ];
+            html.push('<div class="smriti-pos-bar" title="Sidebar Position">');
+            posOptions.forEach(function(p) {
+                html.push('<button class="smriti-pos-btn' + (currentPos === p.key ? " active" : "") + '" data-pos="' + p.key + '" title="Sidebar: ' + p.label + '">' + p.icon + '<span class="pos-label">' + p.label + '</span></button>');
+            });
+            html.push('</div>');
+            // ── FOOTER USER PROFILE + NOTIFICATION BELL ──
             var userFullName = (window.frappe && window.frappe.session && window.frappe.session.user_fullname) || user;
             var firstChar = userFullName.charAt(0).toUpperCase();
             var userRole = "Retail Operator";
@@ -218,16 +231,24 @@ window.SMRITI = window.SMRITI || {};
                 userRole = "Administrator";
             } else if (window.frappe && window.frappe.user_roles && window.frappe.user_roles.indexOf("SMRITI Cashier") !== -1) {
                 userRole = "Cashier";
+            } else if (window.frappe && window.frappe.user_roles && window.frappe.user_roles.indexOf("SMRITI Store Manager") !== -1) {
+                userRole = "Store Manager";
             }
 
             html.push('<div class="smriti-sidebar-footer">');
-            html.push('  <div class="smriti-sidebar-user">');
+            // Notification Bell
+            html.push('  <a class="smriti-notif-bell" href="/smriti-notifications" id="smriti-notif-bell" title="Notification Center">');
+            html.push('    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>');
+            html.push('    <span class="smriti-notif-badge" id="smriti-notif-badge" style="display:none;">0</span>');
+            html.push('  </a>');
+            // User Avatar → Profile
+            html.push('  <a class="smriti-sidebar-user" href="/smriti-profile" title="My Profile" style="text-decoration:none;cursor:pointer;">');
             html.push('    <div class="smriti-sidebar-user-avatar">' + firstChar + '</div>');
             html.push('    <div class="smriti-sidebar-user-info">');
             html.push('      <span class="smriti-sidebar-user-name">' + userFullName + '</span>');
             html.push('      <span class="smriti-sidebar-user-role">' + userRole + '</span>');
             html.push('    </div>');
-            html.push('  </div>');
+            html.push('  </a>');
             html.push('</div>');
 
             target.innerHTML = html.join("\n");
@@ -316,6 +337,22 @@ window.SMRITI = window.SMRITI || {};
             if (window.SMRITI.injectExplainScreenButton) {
                 window.SMRITI.injectExplainScreenButton(activePageId);
             }
+
+            // 7. Notification Bell Badge — hydrate on render + real-time
+            SMRITI._hydrateNotifBadge();
+
+            // 8. Position Picker — click handlers
+            target.querySelectorAll(".smriti-pos-btn").forEach(function(btn) {
+                btn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var pos = btn.getAttribute("data-pos");
+                    if (pos) SMRITI.setSidebarPosition(pos);
+                });
+            });
+
+            // 9. Restore saved position on every render
+            SMRITI.setSidebarPosition(localStorage.getItem("smriti-sidebar-position") || "left");
         }
     };
 
@@ -464,18 +501,41 @@ window.SMRITI = window.SMRITI || {};
         });
     });
 
-    // ── Swapping & Toggling settings (backward compatibility API) ──
+    // ── Position toggle handler — supports left/right/top/bottom ──
+    SMRITI.setSidebarPosition = function (pos) {
+        // Apply to both #app and body — works on all SMRITI page types
+        var targets = [
+            document.getElementById("app"),
+            document.getElementById("smriti-app"),
+            document.body
+        ].filter(Boolean);
+
+        var allCls = ["sidebar-position-right", "sidebar-position-top", "sidebar-position-bottom"];
+
+        targets.forEach(function(el) {
+            allCls.forEach(function(cls) { el.classList.remove(cls); });
+            if (pos === "right")  el.classList.add("sidebar-position-right");
+            if (pos === "top")    el.classList.add("sidebar-position-top");
+            if (pos === "bottom") el.classList.add("sidebar-position-bottom");
+        });
+
+        localStorage.setItem("smriti-sidebar-position", pos);
+
+        // Update the active state on position buttons
+        document.querySelectorAll(".smriti-pos-btn").forEach(function(btn) {
+            btn.classList.toggle("active", btn.getAttribute("data-pos") === pos);
+        });
+    };
+
+    // Backward compat — left/right binary toggle
     SMRITI.toggleSidebarPosition = function () {
-        var app = document.getElementById("app") || document.body;
-        var isRight = app.classList.toggle("sidebar-position-right");
-        localStorage.setItem("smriti-sidebar-position", isRight ? "right" : "left");
+        var cur = localStorage.getItem("smriti-sidebar-position") || "left";
+        SMRITI.setSidebarPosition(cur === "left" ? "right" : "left");
     };
 
     SMRITI.toggleSidebarCollapse = function () {
         var toggleBtn = document.getElementById("smriti-sidebar-toggle");
-        if (toggleBtn) {
-            toggleBtn.click();
-        }
+        if (toggleBtn) toggleBtn.click();
     };
 
     // ── Popout Window Logic ──
@@ -546,5 +606,64 @@ window.SMRITI = window.SMRITI || {};
         });
         topbarRight.appendChild(btn);
     };
+
+    // ── Notification Bell Badge Hydration ──────────────────────────────────
+    SMRITI._notifBadgeInterval = null;
+
+    SMRITI._hydrateNotifBadge = function () {
+        if (!window.frappe || !frappe.call) return;
+
+        function updateBadge() {
+            frappe.call({
+                method: "smriti_retail_os.notification_studio.api.smriti_notifications_api.get_unread_badge",
+                callback: function (r) {
+                    if (!r || !r.message) return;
+                    var cnt = r.message.count || 0;
+                    var badge = document.getElementById("smriti-notif-badge");
+                    if (badge) {
+                        badge.textContent = cnt > 99 ? "99+" : cnt;
+                        badge.style.display = cnt > 0 ? "inline-flex" : "none";
+                    }
+                }
+            });
+        }
+
+        // Initial fetch
+        updateBadge();
+
+        // Real-time — update badge when a new notification arrives
+        if (frappe.realtime) {
+            frappe.realtime.on("smriti_notification", function () {
+                updateBadge();
+            });
+        }
+
+        // Polling fallback every 60s (in case realtime is not available)
+        if (SMRITI._notifBadgeInterval) clearInterval(SMRITI._notifBadgeInterval);
+        SMRITI._notifBadgeInterval = setInterval(updateBadge, 60000);
+    };
+
+    // ── Inject Bell + User Avatar CSS (once) ──────────────────────────────
+    (function injectSidebarExtCSS() {
+        if (document.getElementById("smriti-sidebar-ext-css")) return;
+        var style = document.createElement("style");
+        style.id = "smriti-sidebar-ext-css";
+        style.textContent = [
+            ".smriti-sidebar-footer { display:flex; align-items:center; gap:8px; padding:12px 14px; border-top:1px solid rgba(255,255,255,0.07); }",
+            ".smriti-notif-bell { position:relative; display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:9px; color:rgba(148,163,184,0.8); transition:all 0.15s; text-decoration:none; flex-shrink:0; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); }",
+            ".smriti-notif-bell:hover { background:rgba(37,99,235,0.12); color:#2563EB; border-color:rgba(37,99,235,0.3); }",
+            ".smriti-notif-badge { position:absolute; top:-4px; right:-4px; min-width:16px; height:16px; background:#ef4444; color:#fff; border-radius:8px; font-size:9px; font-weight:700; padding:0 3px; display:inline-flex; align-items:center; justify-content:center; border:2px solid var(--sidebar-bg,#0f1729); animation:smriti-badge-pop 0.2s ease; }",
+            "@keyframes smriti-badge-pop { from{transform:scale(0.5);opacity:0;} to{transform:scale(1);opacity:1;} }",
+            ".smriti-sidebar-user { display:flex; align-items:center; gap:8px; flex:1; min-width:0; padding:6px 8px; border-radius:9px; transition:background 0.15s; text-decoration:none; color:inherit; }",
+            ".smriti-sidebar-user:hover { background:rgba(37,99,235,0.08); }",
+            ".smriti-sidebar-user-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#2563EB,#7c3aed); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0; }",
+            ".smriti-sidebar-user-info { display:flex; flex-direction:column; overflow:hidden; }",
+            ".smriti-sidebar-user-name { font-size:12px; font-weight:600; color:#e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }",
+            ".smriti-sidebar-user-role { font-size:10px; color:#64748b; }",
+            ".smriti-sidebar.collapsed .smriti-sidebar-user-info { display:none; }",
+            ".smriti-sidebar.collapsed .smriti-notif-bell { width:32px; height:32px; }",
+        ].join("\n");
+        document.head.appendChild(style);
+    })();
 
 }(window.SMRITI));

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SMRITI — Notification Center</title>
+<meta name="description" content="SMRITI Notification Center — all your alerts, approvals and system messages."/>
+<meta name="robots" content="noindex,nofollow"/>
+<style>
+:root {
+  --bg:       #080e1c;
+  --surface:  #0f1729;
+  --s2:       #131e35;
+  --s3:       #1a2847;
+  --border:   rgba(255,255,255,0.07);
+  --bh:       rgba(37,99,235,0.4);
+  --primary:  #2563EB;
+  --pg:       linear-gradient(135deg,#2563EB,#7c3aed);
+  --success:  #10b981;
+  --warning:  #f59e0b;
+  --danger:   #ef4444;
+  --text:     #e2e8f0;
+  --muted:    #64748b;
+  --mh:       #94a3b8;
+  --radius:   12px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-size:14px;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px;}
+button{cursor:pointer;font-family:inherit;border:none;outline:none;}
+
+/* TOPBAR */
+#topbar{background:rgba(15,23,41,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;height:56px;position:sticky;top:0;z-index:50;}
+#topbar-title{font-size:15px;font-weight:700;color:var(--text);}
+#topbar-title span{color:var(--muted);font-weight:400;}
+.tb-spacer{flex:1;}
+.tb-btn{background:var(--s2);border:1px solid var(--border);color:var(--mh);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:5px;transition:all 0.15s;}
+.tb-btn:hover{border-color:var(--bh);color:var(--primary);}
+.tb-btn.danger{background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.25);color:var(--danger);}
+.tb-btn.danger:hover{background:rgba(239,68,68,0.2);}
+
+/* LAYOUT */
+#layout{display:flex;max-width:1100px;margin:0 auto;padding:28px 24px 80px;gap:24px;}
+#left-panel{width:220px;flex-shrink:0;}
+#right-panel{flex:1;min-width:0;}
+
+/* FILTER TABS */
+.filter-group{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column;gap:4px;margin-bottom:16px;}
+.filter-tab{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13px;color:var(--muted);cursor:pointer;transition:all 0.15s;border:none;background:transparent;width:100%;text-align:left;}
+.filter-tab:hover{background:var(--s2);color:var(--text);}
+.filter-tab.active{background:rgba(37,99,235,0.12);color:var(--primary);font-weight:600;}
+.filter-tab .tab-ico{font-size:15px;width:20px;text-align:center;}
+.filter-tab .tab-badge{margin-left:auto;background:var(--primary);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;display:none;}
+.filter-tab.active .tab-badge{display:inline-block;}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:16px;}
+.card-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;}
+
+/* NOTIF LIST */
+.notif-list{display:flex;flex-direction:column;}
+.notif-item{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:14px;cursor:pointer;transition:background 0.15s;position:relative;}
+.notif-item:last-child{border-bottom:none;}
+.notif-item:hover{background:rgba(37,99,235,0.04);}
+.notif-item.unread{background:rgba(37,99,235,0.06);}
+.notif-item.unread::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--primary);border-radius:0 2px 2px 0;}
+.notif-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.notif-ico.purchase_approval{background:rgba(245,158,11,0.12);}
+.notif-ico.grn_received{background:rgba(16,185,129,0.12);}
+.notif-ico.low_stock{background:rgba(239,68,68,0.12);}
+.notif-ico.invoice_due{background:rgba(124,58,237,0.12);}
+.notif-ico.system{background:rgba(100,116,139,0.12);}
+.notif-ico.user{background:rgba(37,99,235,0.12);}
+.notif-ico.sales{background:rgba(16,185,129,0.12);}
+.notif-body{flex:1;min-width:0;}
+.notif-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.notif-msg{font-size:12px;color:var(--muted);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.notif-time{font-size:11px;color:var(--muted);margin-top:4px;}
+.notif-actions{display:flex;gap:6px;opacity:0;transition:opacity 0.15s;}
+.notif-item:hover .notif-actions{opacity:1;}
+.notif-act-btn{background:var(--s2);border:1px solid var(--border);color:var(--mh);border-radius:6px;padding:4px 9px;font-size:11px;transition:all 0.15s;}
+.notif-act-btn:hover{border-color:var(--bh);color:var(--primary);}
+.notif-act-btn.del:hover{border-color:rgba(239,68,68,0.4);color:var(--danger);}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-ico{font-size:48px;margin-bottom:12px;}
+.empty-msg{font-size:14px;}
+
+/* PAGINATION */
+.pager{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;}
+.pager-btn{background:var(--s2);border:1px solid var(--border);color:var(--mh);border-radius:7px;padding:7px 14px;font-size:12px;transition:all 0.15s;}
+.pager-btn:hover:not(:disabled){border-color:var(--bh);color:var(--primary);}
+.pager-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.pager-info{font-size:12px;color:var(--muted);}
+
+/* SPINNER */
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.1);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;gap:10px;color:var(--muted);}
+
+/* TYPE BADGES */
+.type-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase;margin-right:6px;}
+.tb-purchase_approval{background:rgba(245,158,11,0.12);color:var(--warning);}
+.tb-grn_received{background:rgba(16,185,129,0.12);color:var(--success);}
+.tb-low_stock{background:rgba(239,68,68,0.12);color:var(--danger);}
+.tb-invoice_due{background:rgba(124,58,237,0.12);color:#a78bfa;}
+.tb-system{background:rgba(100,116,139,0.12);color:var(--muted);}
+.tb-user{background:rgba(37,99,235,0.12);color:var(--primary);}
+.tb-sales{background:rgba(16,185,129,0.12);color:var(--success);}
+
+/* SETTINGS CARD */
+.pref-row{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);}
+.pref-row:last-child{border-bottom:none;}
+.pref-label{font-size:13px;font-weight:500;}
+.pref-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.toggle{width:40px;height:22px;background:var(--s3);border:1px solid var(--border);border-radius:11px;position:relative;cursor:pointer;transition:background 0.2s;}
+.toggle.on{background:var(--primary);border-color:var(--primary);}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.3);}
+.toggle.on::after{transform:translateX(18px);}
+
+@media(max-width:640px){#layout{flex-direction:column;} #left-panel{width:100%;} .filter-group{flex-direction:row;flex-wrap:wrap;gap:6px;} .filter-tab{flex:1;min-width:120px;}}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <img src="/assets/smriti_retail_os/images/smriti-logo.png" alt="" width="28" height="28" style="border-radius:7px;" onerror="this.style.display='none'"/>
+  <div id="topbar-title">SMRITI <span>/ Notification Center</span></div>
+  <div class="tb-spacer"></div>
+  <button class="tb-btn" onclick="window.location.href='/smriti'">← Dashboard</button>
+  <button class="tb-btn danger" onclick="NC.markAllRead()">✓ Mark All Read</button>
+</div>
+
+<div id="layout">
+  <!-- LEFT: FILTER TABS -->
+  <div id="left-panel">
+    <div class="filter-group" id="filter-tabs">
+      <button class="filter-tab active" data-type="all"      onclick="NC.setFilter('all')">      <span class="tab-ico">🔔</span> All             <span class="tab-badge" id="badge-all">0</span></button>
+      <button class="filter-tab"        data-type="unread"   onclick="NC.setFilter('unread')">   <span class="tab-ico">🔵</span> Unread          <span class="tab-badge" id="badge-unread">0</span></button>
+      <button class="filter-tab"        data-type="purchase_approval" onclick="NC.setFilter('purchase_approval')"><span class="tab-ico">🔐</span> Approvals</button>
+      <button class="filter-tab"        data-type="grn_received"      onclick="NC.setFilter('grn_received')">     <span class="tab-ico">📦</span> GRN Received</button>
+      <button class="filter-tab"        data-type="low_stock"         onclick="NC.setFilter('low_stock')">        <span class="tab-ico">⚠️</span> Low Stock</button>
+      <button class="filter-tab"        data-type="invoice_due"       onclick="NC.setFilter('invoice_due')">      <span class="tab-ico">💳</span> Invoice Due</button>
+      <button class="filter-tab"        data-type="sales"             onclick="NC.setFilter('sales')">            <span class="tab-ico">💰</span> Sales</button>
+      <button class="filter-tab"        data-type="system"            onclick="NC.setFilter('system')">           <span class="tab-ico">⚙️</span> System</button>
+    </div>
+
+    <!-- Notification Prefs -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">⚙️ Preferences</div></div>
+      <div class="pref-row">
+        <div><div class="pref-label">GRN Alerts</div><div class="pref-sub">When goods are received</div></div>
+        <div class="toggle on" id="pref-grn" onclick="NC.togglePref('grn', this)"></div>
+      </div>
+      <div class="pref-row">
+        <div><div class="pref-label">Low Stock</div><div class="pref-sub">Reorder level alerts</div></div>
+        <div class="toggle on" id="pref-stock" onclick="NC.togglePref('stock', this)"></div>
+      </div>
+      <div class="pref-row">
+        <div><div class="pref-label">PO Approvals</div><div class="pref-sub">Pending PO approval alerts</div></div>
+        <div class="toggle on" id="pref-po" onclick="NC.togglePref('po', this)"></div>
+      </div>
+      <div class="pref-row">
+        <div><div class="pref-label">System Alerts</div><div class="pref-sub">Bench and system events</div></div>
+        <div class="toggle" id="pref-system" onclick="NC.togglePref('system', this)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: NOTIFICATION LIST -->
+  <div id="right-panel">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title" id="list-title">🔔 All Notifications</div>
+        <div style="font-size:12px;color:var(--muted);" id="list-count"></div>
+      </div>
+      <div class="notif-list" id="notif-list">
+        <div class="loading"><div class="spinner"></div> Loading…</div>
+      </div>
+    </div>
+    <div class="pager" id="pager" style="display:none;">
+      <button class="pager-btn" id="btn-prev" onclick="NC.prevPage()">← Prev</button>
+      <div class="pager-info" id="pager-info"></div>
+      <button class="pager-btn" id="btn-next" onclick="NC.nextPage()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const USER      = "{{ cashier }}";
+const CSRF      = "{{ csrf_token }}";
+const API_N     = "smriti_retail_os.notification_studio.api.smriti_notifications_api";
+
+function apiCall(method, args={}) {
+  return new Promise((res,rej) => {
+    frappe.call({ method, args, headers:{"X-Frappe-CSRF-Token": CSRF},
+      callback: r => res(r.message !== undefined ? r.message : r),
+      error: e => rej(e)
+    });
+  });
+}
+
+const TYPE_ICONS = {
+  purchase_approval: "🔐", grn_received: "📦", low_stock: "⚠️",
+  invoice_due: "💳", system: "⚙️", user: "👤", sales: "💰"
+};
+const TYPE_LABELS = {
+  purchase_approval: "Approval", grn_received: "GRN", low_stock: "Low Stock",
+  invoice_due: "Invoice Due", system: "System", user: "User", sales: "Sales"
+};
+
+function relTime(dt) {
+  if (!dt) return "";
+  const d = new Date(dt), now = new Date(), diff = Math.floor((now-d)/1000);
+  if (diff < 60) return "just now";
+  if (diff < 3600) return Math.floor(diff/60) + "m ago";
+  if (diff < 86400) return Math.floor(diff/3600) + "h ago";
+  return d.toLocaleDateString("en-IN",{day:"2-digit",month:"short"});
+}
+
+const NC = {
+  filter: "all",
+  page: 1,
+  total: 0,
+  limit: 20,
+
+  async init() {
+    await NC.load();
+    await NC.loadBadge();
+    NC.loadPrefs();
+    // Real-time
+    if (window.frappe && frappe.realtime) {
+      frappe.realtime.on("smriti_notification", d => {
+        NC.load(); NC.loadBadge();
+      });
+    }
+  },
+
+  setFilter(type) {
+    NC.filter = type;
+    NC.page = 1;
+    document.querySelectorAll(".filter-tab").forEach(t => {
+      t.classList.toggle("active", t.dataset.type === type);
+    });
+    const titles = {all:"All Notifications", unread:"Unread", purchase_approval:"Approvals",
+      grn_received:"GRN Received", low_stock:"Low Stock Alerts",
+      invoice_due:"Invoice Due", sales:"Sales", system:"System"};
+    document.getElementById("list-title").textContent = "🔔 " + (titles[type]||type);
+    NC.load();
+  },
+
+  async load() {
+    const list = document.getElementById("notif-list");
+    list.innerHTML = '<div class="loading"><div class="spinner"></div> Loading…</div>';
+    try {
+      const type = NC.filter === "unread" ? "all" : NC.filter;
+      const data = await apiCall(`${API_N}.get_my_notifications`, {
+        notif_type: type, limit: NC.limit, page: NC.page
+      });
+      NC.total = data.total || 0;
+      let items = data.items || [];
+      if (NC.filter === "unread") items = items.filter(i => !i.is_read);
+      NC.render(items, NC.total);
+    } catch(e) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-ico">❌</div><div class="empty-msg">Failed to load notifications.</div></div>';
+    }
+  },
+
+  render(items, total) {
+    const list = document.getElementById("notif-list");
+    document.getElementById("list-count").textContent = total + " total";
+    if (!items.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-ico">🔔</div><div class="empty-msg">No notifications here yet.</div></div>';
+      document.getElementById("pager").style.display = "none";
+      return;
+    }
+    list.innerHTML = items.map(n => `
+    <div class="notif-item ${n.is_read?'':'unread'}" id="ni-${n.name}" onclick="NC.open('${n.name}','${n.action_url||''}')">
+      <div class="notif-ico ${n.notif_type}">${TYPE_ICONS[n.notif_type]||'🔔'}</div>
+      <div class="notif-body">
+        <div class="notif-title">
+          <span class="type-badge tb-${n.notif_type}">${TYPE_LABELS[n.notif_type]||n.notif_type}</span>
+          ${n.title}
+        </div>
+        <div class="notif-msg">${n.message||''}</div>
+        <div class="notif-time">${relTime(n.created_at)}</div>
+      </div>
+      <div class="notif-actions">
+        ${n.action_url?`<button class="notif-act-btn" onclick="event.stopPropagation();window.location.href='${n.action_url}'">View →</button>`:''}
+        ${!n.is_read?`<button class="notif-act-btn" onclick="event.stopPropagation();NC.markRead('${n.name}')">✓ Read</button>`:''}
+        <button class="notif-act-btn del" onclick="event.stopPropagation();NC.dismiss('${n.name}')">✕</button>
+      </div>
+    </div>`).join("");
+
+    const pages = Math.ceil(total / NC.limit);
+    const pager = document.getElementById("pager");
+    if (pages > 1) {
+      pager.style.display = "flex";
+      document.getElementById("pager-info").textContent = `Page ${NC.page} of ${pages}`;
+      document.getElementById("btn-prev").disabled = NC.page <= 1;
+      document.getElementById("btn-next").disabled = NC.page >= pages;
+    } else {
+      pager.style.display = "none";
+    }
+  },
+
+  open(name, url) {
+    NC.markRead(name);
+    if (url) window.location.href = url;
+  },
+
+  async markRead(name) {
+    const el = document.getElementById(`ni-${name}`);
+    if (el) el.classList.remove("unread");
+    await apiCall(`${API_N}.mark_notification_read`, {name});
+    NC.loadBadge();
+  },
+
+  async markAllRead() {
+    await apiCall(`${API_N}.mark_all_notifications_read`);
+    NC.load(); NC.loadBadge();
+  },
+
+  async dismiss(name) {
+    const el = document.getElementById(`ni-${name}`);
+    if (el) el.style.display="none";
+    await apiCall(`${API_N}.delete_notification`, {name});
+    NC.loadBadge();
+  },
+
+  async loadBadge() {
+    const data = await apiCall(`${API_N}.get_unread_badge`);
+    const cnt = data.count || 0;
+    document.getElementById("badge-all").textContent = cnt;
+    document.getElementById("badge-unread").textContent = cnt;
+    document.getElementById("badge-all").style.display = cnt > 0 ? "inline-block" : "none";
+    document.getElementById("badge-unread").style.display = cnt > 0 ? "inline-block" : "none";
+  },
+
+  prevPage() { if (NC.page > 1) { NC.page--; NC.load(); } },
+  nextPage() { NC.page++; NC.load(); },
+
+  loadPrefs() {
+    const prefs = JSON.parse(localStorage.getItem("smriti-notif-prefs") || "{}");
+    ["grn","stock","po","system"].forEach(k => {
+      const el = document.getElementById(`pref-${k}`);
+      if (el && prefs[k] === false) el.classList.remove("on");
+    });
+  },
+  togglePref(key, el) {
+    el.classList.toggle("on");
+    const prefs = JSON.parse(localStorage.getItem("smriti-notif-prefs") || "{}");
+    prefs[key] = el.classList.contains("on");
+    localStorage.setItem("smriti-notif-prefs", JSON.stringify(prefs));
+  }
+};
+
+document.addEventListener("DOMContentLoaded", () => NC.init());
+</script>
+</body>
+</html>

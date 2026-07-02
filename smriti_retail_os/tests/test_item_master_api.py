@@ -1509,10 +1509,12 @@ class TestIdempotentImport(unittest.TestCase):
         # Ensure brand/supplier exist
         if not frappe.db.exists("Brand", "Nike"):
             frappe.get_doc({"doctype": "Brand", "brand_name": "Nike"}).insert(ignore_permissions=True)
-        if not frappe.db.exists("Supplier", "Test Supplier"):
+        if not frappe.db.exists("Supplier", {"custom_vendor_code": "VND-TEST-1"}):
+            # Delete conflicting Test Supplier name if it has no vendor code, or use a unique name
+            frappe.db.delete("Supplier", {"supplier_name": "Test Idempotent Supplier"})
             frappe.get_doc({
                 "doctype": "Supplier",
-                "supplier_name": "Test Supplier",
+                "supplier_name": "Test Idempotent Supplier",
                 "supplier_group": "Local",
                 "custom_vendor_code": "VND-TEST-1"
             }).insert(ignore_permissions=True)
