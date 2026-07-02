@@ -34,7 +34,12 @@ def _locate_sdc_and_repo():
     try:
         import frappe
         app_path = frappe.get_app_path("smriti_retail_os")
-        repo_root = os.path.dirname(os.path.dirname(os.path.dirname(app_path)))
+        # Try topmost repo root first
+        parent_repo_root = os.path.dirname(os.path.dirname(os.path.dirname(app_path)))
+        if os.path.exists(os.path.join(parent_repo_root, "sdc", "discovery.py")):
+            repo_root = parent_repo_root
+        else:
+            repo_root = os.path.dirname(app_path)
     except Exception:
         # Standalone: walk up from this test file and collect ALL ancestors
         # that contain sdc/discovery.py — then pick the highest-level one.
