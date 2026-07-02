@@ -312,19 +312,180 @@
 
 <script>
 (function() {
-    /* ── Set page title from data attribute or document.title ── */
-    var el = document.getElementById('topbar-page-title');
-    var pageTitle = document.body.dataset.pageTitle || document.title.split(' — ')[0] || 'Dashboard';
-    el.textContent = pageTitle;
+    'use strict';
 
-    /* ── Populate user chip from frappe session ── */
-    try {
-        if (window.frappe && window.frappe.session) {
-            var name = window.frappe.session.user_fullname || window.frappe.session.user || 'User';
-            var initials = name.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0,2);
-            document.getElementById('topbar-username').textContent = name.split(' ')[0];
-            document.getElementById('topbar-avatar').textContent   = initials || 'U';
+    /* ── 1. Set page title ── */
+    var titleEl = document.getElementById('topbar-page-title');
+    if (titleEl) {
+        titleEl.textContent = document.body.dataset.pageTitle
+            || document.title.split(' — ')[0]
+            || document.title.split(' - ')[0]
+            || 'Dashboard';
+    }
+
+    /* ── 2. Populate user chip ── */
+    function _hydrateUser() {
+        try {
+            var session = window.frappe && window.frappe.session;
+            if (!session) return;
+            var name     = session.user_fullname || session.user || 'User';
+            var initials = name.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0, 2) || 'U';
+            var nameEl   = document.getElementById('topbar-username');
+            var avatarEl = document.getElementById('topbar-avatar');
+            if (nameEl)   nameEl.textContent   = name.split(' ')[0];
+            if (avatarEl) avatarEl.textContent  = initials;
+        } catch(e) {}
+    }
+    _hydrateUser();
+    /* Retry once Frappe session is fully ready */
+    document.addEventListener('DOMContentLoaded', _hydrateUser);
+
+    /* ── 3. Notification badge hydration ── */
+    function _hydrateBadge() {
+        var badge = document.getElementById('notif-badge');
+        if (!badge) return;
+        try {
+            frappe.call({
+                method: 'smriti_retail_os.notification_studio.api.smriti_notifications_api.get_unread_count',
+                callback: function(r) {
+                    if (r && r.message && r.message.count > 0) {
+                        badge.textContent = r.message.count > 9 ? '9+' : String(r.message.count);
+                        badge.style.display = 'flex';
+                        badge.style.alignItems = 'center';
+                        badge.style.justifyContent = 'center';
+                        badge.style.fontSize = '9px';
+                        badge.style.width = '16px';
+                        badge.style.height = '16px';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            });
+        } catch(e) {}
+    }
+    setTimeout(_hydrateBadge, 1200);
+
+    /* ── 4. Notification bell → /smriti-notifications ── */
+    var notifBtn = document.getElementById('topbar-notif-btn');
+    if (notifBtn) {
+        notifBtn.addEventListener('click', function() {
+            window.location.href = '/smriti-notifications';
+        });
+        notifBtn.style.cursor = 'pointer';
+    }
+
+    /* ── 5. User chip → /smriti-profile ── */
+    var userChip = document.getElementById('topbar-user-chip');
+    if (userChip) {
+        userChip.addEventListener('click', function() {
+            window.location.href = '/smriti-profile';
+        });
+        userChip.style.cursor = 'pointer';
+    }
+
+    /* ── 6. Help button → /smriti-help ── */
+    var helpBtns = document.querySelectorAll('.topbar-btn[aria-label="Help"]');
+    helpBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            window.location.href = '/smriti-help';
+        });
+    });
+
+    /* ── 7. Search box — open SMRITI search modal ── */
+    var searchBox = document.getElementById('topbar-search');
+    function _openSearch() {
+        /* If smriti_topbar.js is loaded and has a search modal, trigger it */
+        if (window.SMRITI_TOPBAR && window.SMRITI_TOPBAR.openSearch) {
+            window.SMRITI_TOPBAR.openSearch();
+            return;
         }
-    } catch(e) {}
+        /* Fallback: open a lightweight search modal inline */
+        var existing = document.getElementById('smriti-search-modal-overlay');
+        if (existing) { existing.style.display = 'flex'; return; }
+        var overlay = document.createElement('div');
+        overlay.id = 'smriti-search-modal-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-start;justify-content:center;padding-top:80px;background:var(--smriti-overlay-bg,rgba(0,0,0,0.65));backdrop-filter:blur(4px);';
+        overlay.innerHTML = [
+            '<div style="width:560px;max-width:94vw;background:var(--smriti-color-bg-elevated);border:1px solid var(--smriti-color-border-default);border-radius:14px;box-shadow:0 32px 80px var(--smriti-shadow-heavy,rgba(0,0,0,0.7));overflow:hidden;">',
+            '  <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--smriti-color-border-subtle);">',
+            '    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--smriti-color-text-subtle)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+            '    <input id="smriti-search-field" placeholder="Search pages, items, customers..." autocomplete="off" style="flex:1;background:none;border:none;outline:none;color:var(--smriti-color-text-primary);font-size:14px;font-family:Arial,sans-serif;">',
+            '    <kbd style="background:var(--smriti-color-bg-secondary);border:1px solid var(--smriti-color-border-default);border-radius:4px;color:var(--smriti-color-text-subtle);font-size:10px;padding:2px 6px;">Esc</kbd>',
+            '  </div>',
+            '  <div id="smriti-search-results-list" style="max-height:360px;overflow-y:auto;padding:8px 0;">',
+            '    <div style="padding:20px;text-align:center;color:var(--smriti-color-text-subtle);font-size:13px;">Type to search SMRITI...</div>',
+            '  </div>',
+            '</div>'
+        ].join('');
+
+        /* Close on overlay click or Escape */
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) overlay.style.display = 'none';
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') overlay.style.display = 'none';
+        });
+
+        document.body.appendChild(overlay);
+
+        var field = document.getElementById('smriti-search-field');
+        var resultsList = document.getElementById('smriti-search-results-list');
+        field.focus();
+
+        /* Quick nav items */
+        var NAV_SHORTCUTS = [
+            { label: 'Control Center',   icon: '🏠', url: '/smriti' },
+            { label: 'Retail Billing',   icon: '🧾', url: '/billing' },
+            { label: 'Inventory Ops',    icon: '📦', url: '/inventory' },
+            { label: 'Purchase Manager', icon: '🛒', url: '/purchase' },
+            { label: 'Reports',          icon: '📊', url: '/reports' },
+            { label: 'Customers',        icon: '👥', url: '/customers' },
+            { label: 'Suppliers',        icon: '🏭', url: '/suppliers' },
+            { label: 'Notifications',    icon: '🔔', url: '/smriti-notifications' },
+            { label: 'My Profile',       icon: '👤', url: '/smriti-profile' },
+            { label: 'Help',             icon: '❓', url: '/smriti-help' },
+        ];
+
+        function _renderQuickNav(query) {
+            var items = query
+                ? NAV_SHORTCUTS.filter(function(n){ return n.label.toLowerCase().includes(query.toLowerCase()); })
+                : NAV_SHORTCUTS;
+            if (!items.length) {
+                resultsList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--smriti-color-text-subtle);font-size:13px;">No results found</div>';
+                return;
+            }
+            resultsList.innerHTML = items.map(function(n) {
+                return '<div onclick="window.location.href=\'' + n.url + '\'" style="display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background 0.1s;" onmouseover="this.style.background=\'var(--smriti-color-brand-muted,rgba(37,99,235,0.1))\'" onmouseout="this.style.background=\'\'"><span style="font-size:18px;">' + n.icon + '</span><span style="font-size:13px;color:var(--smriti-color-text-primary);">' + n.label + '</span></div>';
+            }).join('');
+        }
+        _renderQuickNav('');
+
+        field.addEventListener('input', function() { _renderQuickNav(field.value); });
+        field.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') overlay.style.display = 'none';
+            if (e.key === 'Enter') {
+                var first = resultsList.querySelector('[onclick]');
+                if (first) first.click();
+            }
+        });
+    }
+
+    if (searchBox) {
+        searchBox.addEventListener('click', _openSearch);
+        searchBox.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') _openSearch();
+        });
+        searchBox.style.cursor = 'pointer';
+    }
+
+    /* ── 8. Global Ctrl+G shortcut → open search ── */
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'g') {
+            e.preventDefault();
+            _openSearch();
+        }
+    });
+
 })();
 </script>
+
