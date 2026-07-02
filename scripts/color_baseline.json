@@ -404,6 +404,16 @@
       "hex": 10,
       "rgba": 16,
       "note": "Auto-recorded on first validation"
+    },
+    "smriti-notifications.html": {
+      "hex": 3,
+      "rgba": 25,
+      "note": "Auto-recorded on first validation"
+    },
+    "smriti-profile.html": {
+      "hex": 8,
+      "rgba": 20,
+      "note": "Auto-recorded on first validation"
     }
   }
 }

@@ -659,3 +659,215 @@ body.popout-mode #smriti-sidebar-target.sidebar {
 .smriti-breadcrumb-item a:hover { color: #1A2B5C; }
 .smriti-breadcrumb-item.active { color: #1E293B; font-weight: 500; }
 .smriti-breadcrumb-sep { margin: 0 6px; color: #CBD5E1; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SIDEBAR POSITION PICKER BAR
+   Allows user to switch sidebar between Left / Right / Top / Bottom
+════════════════════════════════════════════════════════════════════ */
+.smriti-pos-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--smriti-color-border-default, #1e293b);
+  background: rgba(0,0,0,0.05);
+}
+
+.smriti-pos-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 5px 4px;
+  border-radius: 6px;
+  border: 1px solid var(--smriti-color-border-default, #1e293b);
+  background: var(--smriti-color-bg-secondary, #1a2236);
+  color: var(--smriti-color-text-muted, #94a3b8);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.smriti-pos-btn .pos-label {
+  font-size: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  opacity: 0.7;
+}
+.smriti-pos-btn:hover {
+  background: var(--smriti-color-bg-elevated, #1e293b);
+  color: var(--smriti-color-text-primary, #f1f5f9);
+  border-color: var(--smriti-color-border-strong, #3f3f46);
+}
+.smriti-pos-btn.active {
+  background: rgba(37,99,235,0.15);
+  color: var(--smriti-color-brand-primary, #2563eb);
+  border-color: rgba(37,99,235,0.4);
+}
+/* Hide labels when sidebar is collapsed */
+.smriti-sidebar.collapsed .smriti-pos-bar,
+#smriti-sidebar-target.sidebar.collapsed .smriti-pos-bar {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RIGHT POSITION — scoped to both #app and body (for standalone pages)
+════════════════════════════════════════════════════════════════════ */
+#app.sidebar-position-right .smriti-sidebar,
+#app.sidebar-position-right #smriti-sidebar-target.sidebar,
+body.sidebar-position-right .smriti-sidebar,
+body.sidebar-position-right #smriti-sidebar-target.sidebar {
+  left: auto !important;
+  right: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  height: 100vh !important;
+  width: var(--sidebar-width) !important;
+  border-right: none !important;
+  border-left: 1px solid var(--smriti-color-border-default, #1e293b) !important;
+  flex-direction: column;
+}
+#app.sidebar-position-right .smriti-main,
+#app.sidebar-position-right .main-wrapper,
+body.sidebar-position-right .smriti-main,
+body.sidebar-position-right .main-wrapper {
+  margin-left: 0 !important;
+  margin-right: var(--sidebar-width) !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+#app.sidebar-position-right .smriti-main.sidebar-collapsed,
+#app.sidebar-position-right .main-wrapper.sidebar-collapsed,
+body.sidebar-position-right .smriti-main.sidebar-collapsed,
+body.sidebar-position-right .main-wrapper.sidebar-collapsed {
+  margin-left: 0 !important;
+  margin-right: var(--sidebar-collapsed-width) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TOP POSITION — sidebar becomes a horizontal top bar
+════════════════════════════════════════════════════════════════════ */
+#app.sidebar-position-top .smriti-sidebar,
+#app.sidebar-position-top #smriti-sidebar-target.sidebar,
+body.sidebar-position-top .smriti-sidebar,
+body.sidebar-position-top #smriti-sidebar-target.sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: auto !important;
+  width: 100% !important;
+  height: 56px !important;
+  min-height: 0 !important;
+  flex-direction: row !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  border-right: none !important;
+  border-bottom: 1px solid var(--smriti-color-border-default, #1e293b) !important;
+  z-index: 1000 !important;
+}
+#app.sidebar-position-top .smriti-sidebar-content,
+body.sidebar-position-top .smriti-sidebar-content {
+  display: flex !important;
+  flex-direction: row !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  flex: 1 !important;
+  padding: 0 !important;
+}
+#app.sidebar-position-top .smriti-sidebar-group,
+body.sidebar-position-top .smriti-sidebar-group {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  margin-bottom: 0 !important;
+}
+#app.sidebar-position-top .smriti-sidebar-group-items,
+body.sidebar-position-top .smriti-sidebar-group-items {
+  display: flex !important;
+  flex-direction: row !important;
+  grid-template-rows: none !important;
+}
+#app.sidebar-position-top .smriti-sidebar-group-items-inner,
+body.sidebar-position-top .smriti-sidebar-group-items-inner {
+  display: flex !important;
+  flex-direction: row !important;
+}
+#app.sidebar-position-top .smriti-sidebar-item,
+body.sidebar-position-top .smriti-sidebar-item {
+  white-space: nowrap !important;
+  padding: 6px 10px !important;
+}
+#app.sidebar-position-top .smriti-sidebar-footer,
+#app.sidebar-position-top .smriti-pos-bar,
+#app.sidebar-position-top .smriti-standalone-theme-bar,
+#app.sidebar-position-top .smriti-cmd-search-btn,
+body.sidebar-position-top .smriti-sidebar-footer,
+body.sidebar-position-top .smriti-pos-bar,
+body.sidebar-position-top .smriti-standalone-theme-bar,
+body.sidebar-position-top .smriti-cmd-search-btn {
+  display: none !important;
+}
+#app.sidebar-position-top .smriti-main,
+#app.sidebar-position-top .main-wrapper,
+body.sidebar-position-top .smriti-main,
+body.sidebar-position-top .main-wrapper {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  margin-top: 56px !important;
+  padding-top: 0 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BOTTOM POSITION — sidebar becomes a horizontal bottom bar
+════════════════════════════════════════════════════════════════════ */
+#app.sidebar-position-bottom .smriti-sidebar,
+#app.sidebar-position-bottom #smriti-sidebar-target.sidebar,
+body.sidebar-position-bottom .smriti-sidebar,
+body.sidebar-position-bottom #smriti-sidebar-target.sidebar {
+  position: fixed !important;
+  bottom: 0 !important;
+  top: auto !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: 56px !important;
+  min-height: 0 !important;
+  flex-direction: row !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  border-right: none !important;
+  border-top: 1px solid var(--smriti-color-border-default, #1e293b) !important;
+  z-index: 1000 !important;
+}
+#app.sidebar-position-bottom .smriti-sidebar-content,
+body.sidebar-position-bottom .smriti-sidebar-content { display:flex !important; flex-direction:row !important; overflow-x:auto !important; overflow-y:hidden !important; flex:1 !important; padding:0 !important; }
+#app.sidebar-position-bottom .smriti-sidebar-group,
+body.sidebar-position-bottom .smriti-sidebar-group { display:flex !important; flex-direction:row !important; align-items:center !important; margin-bottom:0 !important; }
+#app.sidebar-position-bottom .smriti-sidebar-group-items,
+body.sidebar-position-bottom .smriti-sidebar-group-items { display:flex !important; flex-direction:row !important; grid-template-rows:none !important; }
+#app.sidebar-position-bottom .smriti-sidebar-group-items-inner,
+body.sidebar-position-bottom .smriti-sidebar-group-items-inner { display:flex !important; flex-direction:row !important; }
+#app.sidebar-position-bottom .smriti-sidebar-item,
+body.sidebar-position-bottom .smriti-sidebar-item { white-space:nowrap !important; padding:6px 10px !important; }
+#app.sidebar-position-bottom .smriti-sidebar-footer,
+#app.sidebar-position-bottom .smriti-pos-bar,
+#app.sidebar-position-bottom .smriti-standalone-theme-bar,
+#app.sidebar-position-bottom .smriti-cmd-search-btn,
+body.sidebar-position-bottom .smriti-sidebar-footer,
+body.sidebar-position-bottom .smriti-pos-bar,
+body.sidebar-position-bottom .smriti-standalone-theme-bar,
+body.sidebar-position-bottom .smriti-cmd-search-btn { display:none !important; }
+#app.sidebar-position-bottom .smriti-main,
+#app.sidebar-position-bottom .main-wrapper,
+body.sidebar-position-bottom .smriti-main,
+body.sidebar-position-bottom .main-wrapper {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  margin-bottom: 56px !important;
+  margin-top: 0 !important;
+}
+

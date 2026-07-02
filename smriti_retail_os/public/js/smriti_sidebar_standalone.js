@@ -190,7 +190,21 @@ window.SMRITI = window.SMRITI || {};
             html.push('  </div>');
             html.push('</div>');
 
-            // ── FOOTER USER PROFILE ──
+            // ── SIDEBAR POSITION PICKER ──
+            var currentPos = localStorage.getItem("smriti-sidebar-position") || "left";
+            var posOptions = [
+                { key: "left",   icon: "◁", label: "Left"   },
+                { key: "right",  icon: "▷", label: "Right"  },
+                { key: "top",    icon: "△", label: "Top"    },
+                { key: "bottom", icon: "▽", label: "Bottom" }
+            ];
+            html.push('<div class="smriti-pos-bar" title="Sidebar Position">');
+            posOptions.forEach(function(p) {
+                html.push('<button class="smriti-pos-btn' + (currentPos === p.key ? " active" : "") + '" data-pos="' + p.key + '" title="Sidebar: ' + p.label + '">' + p.icon + '<span class="pos-label">' + p.label + '</span></button>');
+            });
+            html.push('</div>');
+
+            // ── FOOTER USER PROFILE + NOTIFICATION BELL ──
             var userFullName = (window.frappe && window.frappe.session && window.frappe.session.user_fullname) || user;
             var firstChar = userFullName.charAt(0).toUpperCase();
             var userRole = "Retail Operator";
@@ -201,12 +215,18 @@ window.SMRITI = window.SMRITI || {};
             }
 
             html.push('<div class="smriti-sidebar-footer">');
-            html.push('  <div class="smriti-sidebar-user">');
-            html.push('    <div class="smriti-sidebar-user-avatar">' + firstChar + '</div>');
+            html.push('  <a href="/smriti-profile" class="smriti-sidebar-user" title="My Profile" style="text-decoration:none;cursor:pointer;">');
+            html.push('    <div class="smriti-sidebar-user-avatar" id="smriti-user-avatar">' + firstChar + '</div>');
             html.push('    <div class="smriti-sidebar-user-info">');
             html.push('      <span class="smriti-sidebar-user-name">' + userFullName + '</span>');
             html.push('      <span class="smriti-sidebar-user-role">' + userRole + '</span>');
             html.push('    </div>');
+            html.push('  </a>');
+            html.push('  <div class="smriti-sidebar-footer-actions">');
+            html.push('    <a href="/smriti-notifications" id="smriti-notif-bell" class="smriti-footer-icon-btn" title="Notifications" style="position:relative;text-decoration:none;">');
+            html.push('      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>');
+            html.push('      <span id="smriti-notif-badge" class="smriti-notif-badge" style="display:none;"></span>');
+            html.push('    </a>');
             html.push('  </div>');
             html.push('</div>');
 
@@ -267,6 +287,42 @@ window.SMRITI = window.SMRITI || {};
             if (window.SMRITI.injectExplainScreenButton) {
                 window.SMRITI.injectExplainScreenButton(activePageId);
             }
+
+            // 5. Position Picker — click handlers
+            target.querySelectorAll(".smriti-pos-btn").forEach(function(btn) {
+                btn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var pos = btn.getAttribute("data-pos");
+                    if (pos && window.SMRITI.setSidebarPosition) {
+                        SMRITI.setSidebarPosition(pos);
+                    }
+                });
+            });
+
+            // 6. Restore saved position on every render
+            if (window.SMRITI.setSidebarPosition) {
+                SMRITI.setSidebarPosition(localStorage.getItem("smriti-sidebar-position") || "left");
+            }
+
+            // 7. Notification Badge — hydrate
+            (function() {
+                var badge = document.getElementById("smriti-notif-badge");
+                if (!badge) return;
+                try {
+                    frappe.call({
+                        method: "smriti_retail_os.notification_studio.api.smriti_notifications_api.get_unread_count",
+                        callback: function(r) {
+                            if (r && r.message && r.message.count > 0) {
+                                badge.textContent = r.message.count > 9 ? "9+" : r.message.count;
+                                badge.style.display = "flex";
+                            } else {
+                                badge.style.display = "none";
+                            }
+                        }
+                    });
+                } catch(e) {}
+            })();
         }
     };
 
