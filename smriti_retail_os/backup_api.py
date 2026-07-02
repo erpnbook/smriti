@@ -161,10 +161,18 @@ DEFAULT_SETTINGS = {
 }
 
 
+def check_backup_permission():
+    """Validates that the user has manager or admin roles authorized to configure backups."""
+    from smriti_retail_os.security_api import get_allowed_manager_roles
+    roles = set(frappe.get_roles())
+    allowed = get_allowed_manager_roles()
+    if not (roles & allowed):
+        frappe.throw(_("Not authorized"), frappe.PermissionError)
+
+
 @frappe.whitelist()
 def get_settings():
-    if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
-        frappe.throw(_("Not authorized"), frappe.PermissionError)
+    check_backup_permission()
 
     settings_str = frappe.db.get_default("smriti_backup_settings")
     if settings_str:
@@ -187,8 +195,7 @@ def get_settings():
 
 @frappe.whitelist()
 def save_settings(settings):
-    if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
-        frappe.throw(_("Not authorized"), frappe.PermissionError)
+    check_backup_permission()
 
     if isinstance(settings, str):
         settings = json.loads(settings)
@@ -245,8 +252,7 @@ def save_settings(settings):
 
 @frappe.whitelist()
 def get_backup_status():
-    if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
-        frappe.throw(_("Not authorized"), frappe.PermissionError)
+    check_backup_permission()
         
     backups_dir = os.path.join(get_site_path(), "private", "backups")
     if not os.path.exists(backups_dir):
@@ -277,8 +283,7 @@ def get_backup_status():
 
 @frappe.whitelist()
 def get_backup_history():
-    if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
-        frappe.throw(_("Not authorized"), frappe.PermissionError)
+    check_backup_permission()
         
     backups_dir = os.path.join(get_site_path(), "private", "backups")
     if not os.path.exists(backups_dir):
@@ -439,8 +444,7 @@ def rotate_encryption_key(new_key):
 
 @frappe.whitelist()
 def take_backup_now(backup_type="Database Only"):
-    if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
-        frappe.throw(_("Not authorized"), frappe.PermissionError)
+    check_backup_permission()
         
     ignore_files = True
     if backup_type == "Database & Files":
@@ -545,8 +549,7 @@ def take_backup_now(backup_type="Database Only"):
 
 @frappe.whitelist()
 def delete_backup(file_name):
-    if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
-        frappe.throw(_("Not authorized"), frappe.PermissionError)
+    check_backup_permission()
 
     _validate_backup_file_path(file_name)
         
@@ -567,8 +570,7 @@ def delete_backup(file_name):
 
 @frappe.whitelist()
 def restore_backup(file_name):
-    if "SMRITI Store Manager" not in frappe.get_roles() and "System Manager" not in frappe.get_roles():
-        frappe.throw(_("Not authorized"), frappe.PermissionError)
+    check_backup_permission()
 
     _validate_backup_file_path(file_name)
         
