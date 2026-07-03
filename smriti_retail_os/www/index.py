@@ -33,5 +33,6 @@ def get_context(context):
         raise frappe.Redirect
 
     from smriti_retail_os.boot import _get_smriti_route
+    roles = frappe.get_roles()
     frappe.local.flags.redirect_location = _get_smriti_route(roles)
     raise frappe.Redirect

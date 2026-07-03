@@ -46,6 +46,7 @@ def get_context(context):
 
     # ── User context ──────────────────────────────────────────────────────────
     context.cashier    = frappe.session.user
+    roles = frappe.get_roles(frappe.session.user)
     context.user_roles = list(roles)
 
     # ── CSRF token ────────────────────────────────────────────────────────────
