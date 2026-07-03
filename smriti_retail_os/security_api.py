@@ -897,15 +897,15 @@ def check_page_access(page_name):
         "inventory": manager_roles,
         "purchase": manager_roles,
         "sales_orders": manager_roles,
-        "reports": manager_roles | {"Accountant"},
-        "smriti-sfm": manager_roles | {"Sales Manager"},
-        "smriti-uie": manager_roles | {"Accountant"},
+        "reports": manager_roles | {Roles.ACCOUNTANT},
+        "smriti-sfm": manager_roles | {Roles.SALES_MANAGER},
+        "smriti-uie": manager_roles | {Roles.ACCOUNTANT},
         
         # New page registrations
         "configure": manager_roles,
         "smriti-go-live": {Roles.SYSTEM_ADMIN, Roles.SYSTEM_MANAGER, Roles.ADMIN},
         "smriti-license": {Roles.SYSTEM_ADMIN, Roles.SYSTEM_MANAGER, Roles.ADMIN},
-        "smriti-trial-leads": manager_roles | {"SMRITI Team"}
+        "smriti-trial-leads": manager_roles | {Roles.SMRITI_TEAM}
     }
 
     allowed_roles = policies.get(page_name)

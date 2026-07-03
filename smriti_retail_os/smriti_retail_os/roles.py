@@ -13,3 +13,6 @@ class Roles:
     STORE_MANAGER   = "SMRITI Store Manager"
     CASHIER         = "SMRITI Cashier"
     SYSTEM_ADMIN    = "SMRITI System Admin"
+    ACCOUNTANT      = "Accountant"
+    SALES_MANAGER   = "Sales Manager"
+    SMRITI_TEAM     = "SMRITI Team"
