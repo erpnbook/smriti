@@ -580,4 +580,52 @@ def get_po_item_lines(po_name):
     )
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# GRN / PURCHASE RECEIPT OPERATIONS (Batch 4 Persistence Migration)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def create_purchase_receipt_document():
+    """
+    Instantiates an unsaved Purchase Receipt document.
+    """
+    return frappe.new_doc("Purchase Receipt")
+
+
+def lock_and_get_grn_status(grn_name):
+    """
+    Locks the Purchase Receipt row and returns status, per_billed, and supplier.
+    """
+    result = frappe.db.sql(
+        "SELECT docstatus, per_billed, supplier FROM `tabPurchase Receipt` WHERE name=%s FOR UPDATE",
+        grn_name, as_dict=True
+    )
+    return result[0] if result else None
+
+
+def get_grn_item_qty(grn_name, item_code):
+    """
+    Returns originally received qty for a GRN item line.
+    """
+    return frappe.db.get_value(
+        "Purchase Receipt Item",
+        {"parent": grn_name, "item_code": item_code},
+        "qty"
+    ) or 0.0
+
+
+def grn_exists(grn_name):
+    """
+    Returns True if the Purchase Receipt exists in the database.
+    """
+    return bool(frappe.db.exists("Purchase Receipt", grn_name))
+
+
+def get_grn_docstatus(grn_name):
+    """
+    Returns the docstatus of a Purchase Receipt.
+    """
+    return frappe.db.get_value("Purchase Receipt", grn_name, "docstatus")
+
+
+
 

@@ -376,7 +376,7 @@ def create_grn(supplier, items_list, po_name=None, warehouse=None):
     validate_grn_lines(items_list, po_name, settings_svc.is_over_receipt_allowed())
 
     # Build PR document
-    pr = frappe.new_doc("Purchase Receipt")
+    pr = erp_adapter.create_purchase_receipt_document()
     pr.supplier     = supplier
     pr.posting_date = nowdate()
     pr.company      = company
@@ -594,13 +594,9 @@ def create_invoice(mode, supplier=None, grn_name=None, items_list=None, posting_
 def _create_invoice_from_grn(grn_name, posting_date=None):
     """Builds and submits a Purchase Invoice linked to a submitted GRN."""
     # Lock GRN row to prevent concurrent invoicing
-    result = frappe.db.sql(
-        "SELECT docstatus, per_billed, supplier FROM `tabPurchase Receipt` WHERE name=%s FOR UPDATE",
-        grn_name, as_dict=True
-    )
-    if not result:
+    row = erp_adapter.lock_and_get_grn_status(grn_name)
+    if not row:
         frappe.throw(_("GRN '{0}' not found.").format(grn_name), frappe.DoesNotExistError)
-    row = result[0]
     if row.docstatus != 1:
         frappe.throw(_("GRN '{0}' must be in submitted state.").format(grn_name))
     if flt(row.per_billed) >= 100:
@@ -720,13 +716,9 @@ def create_purchase_return(grn_name, items_list=None, return_reason=None):
         frappe.throw(_("Return reason is mandatory (SPC Rule 13: auditability)."))
 
     # Verify GRN is submitted
-    grn_data = frappe.db.sql(
-        "SELECT docstatus, per_billed, supplier FROM `tabPurchase Receipt` WHERE name=%s FOR UPDATE",
-        grn_name, as_dict=True
-    )
-    if not grn_data:
+    grn_row = erp_adapter.lock_and_get_grn_status(grn_name)
+    if not grn_row:
         frappe.throw(_("GRN '{0}' not found.").format(grn_name), frappe.DoesNotExistError)
-    grn_row = grn_data[0]
     if grn_row.docstatus != 1:
         frappe.throw(_("GRN '{0}' must be submitted to create a return.").format(grn_name))
 
@@ -784,11 +776,7 @@ def _adjust_return_quantities(return_doc, items_list, grn_name):
     qty_map = {it.get("item_code"): flt(it.get("qty")) for it in items_list}
     for item in return_doc.items:
         requested_return = qty_map.get(item.item_code, 0)
-        original_received = frappe.db.get_value(
-            "Purchase Receipt Item",
-            {"parent": grn_name, "item_code": item.item_code},
-            "qty"
-        ) or 0
+        original_received = erp_adapter.get_grn_item_qty(grn_name, item.item_code)
         if abs(requested_return) > flt(original_received):
             frappe.throw(_(
                 "Item '{0}': return qty {1} exceeds originally received qty {2}."
@@ -1195,9 +1183,9 @@ def create_landed_cost_voucher(grn_name, charges_list):
     """
     check_manager_role()
 
-    if not grn_name or not frappe.db.exists("Purchase Receipt", grn_name):
+    if not grn_name or not erp_adapter.grn_exists(grn_name):
         frappe.throw(_("GRN '{0}' not found.").format(grn_name))
-    if frappe.db.get_value("Purchase Receipt", grn_name, "docstatus") != 1:
+    if erp_adapter.get_grn_docstatus(grn_name) != 1:
         frappe.throw(_("GRN '{0}' must be submitted before adding Landed Costs.").format(grn_name))
     if not charges_list:
         frappe.throw(_("At least one charge is required for a Landed Cost Voucher."))
