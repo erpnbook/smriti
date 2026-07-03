@@ -54,17 +54,25 @@ def quick_create_item(item_name, barcode, rate, mrp, gst_percentage, style_code=
         if _frappe: _frappe.logger().warning(f"SMRITI Warning: exception setting custom_style_code in master_api.py: {sys.exc_info()[1]}")
 
     # Set default HSN code for India Compliance
+    # Domain-neutral: reads from SMRITI Settings.default_hsn_code (C-2 remediation 2026-07-03)
     try:
-        default_hsn = "641590"
-        if not frappe.db.exists("GST HSN Code", default_hsn):
-            hsn_doc = frappe.new_doc("GST HSN Code")
-            hsn_doc.name = default_hsn
-            hsn_doc.hsn_code = default_hsn
-            hsn_doc.description = "Auto-created Footwear HSN"
-            hsn_doc.insert(ignore_permissions=True)
-        item.gst_hsn_code = default_hsn
-        try: item.gn_hsn_code = default_hsn
-        except Exception: pass
+        default_hsn = frappe.db.get_single_value("SMRITI Settings", "default_hsn_code") or ""
+        if not default_hsn:
+            # No domain-specific HSN configured — skip HSN assignment rather than use a wrong default
+            frappe.logger().warning(
+                "SMRITI: default_hsn_code not set in SMRITI Settings. "
+                "Configure it to auto-assign HSN codes on item creation."
+            )
+        else:
+            if not frappe.db.exists("GST HSN Code", default_hsn):
+                hsn_doc = frappe.new_doc("GST HSN Code")
+                hsn_doc.name = default_hsn
+                hsn_doc.hsn_code = default_hsn
+                hsn_doc.description = "Auto-created default HSN"
+                hsn_doc.insert(ignore_permissions=True)
+            item.gst_hsn_code = default_hsn
+            try: item.gn_hsn_code = default_hsn
+            except Exception: pass
     except Exception:
         import sys
         _frappe = sys.modules.get('frappe')

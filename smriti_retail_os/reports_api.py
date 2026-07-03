@@ -2613,11 +2613,16 @@ def invalidate_glossary_cache(doc, method=None):
 
 def execute_audit_retention_archival():
     """
-    Daily scheduler task to archive/delete SMRITI Audit Event logs older than 365 days.
+    Daily scheduler task to archive/delete SMRITI Audit Event logs older than
+    the configured retention period (SMRITI Settings.audit_log_retention_days, default 365).
+    M-3 remediation (hardcoding audit 2026-07-03)
     """
     try:
-        from frappe.utils import add_days, nowdate
-        cutoff_date = add_days(nowdate(), -365)
+        from frappe.utils import add_days, nowdate, cint
+        retention_days = cint(frappe.db.get_single_value("SMRITI Settings", "audit_log_retention_days") or 365)
+        if retention_days <= 0:
+            retention_days = 365  # safety floor — never delete everything
+        cutoff_date = add_days(nowdate(), -retention_days)
         frappe.db.sql("""
             DELETE FROM `tabSMRITI Audit Event`
             WHERE timestamp < %s

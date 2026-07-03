@@ -3501,7 +3501,8 @@ def seed_retail_defaults():
             frappe.log_error(f"Error seeding Walk-In Customer: {str(e)}", "SMRITI Setup Error")
 
     # 2. UPI and other payment modes
-    mops = ["Cash", "Bank", "UPI", "Card"]
+    from smriti_retail_os.config.business_defaults import DEFAULT_PAYMENT_MODES
+    mops = DEFAULT_PAYMENT_MODES
     for mop in mops:
         if not frappe.db.exists("Mode of Payment", mop):
             try:

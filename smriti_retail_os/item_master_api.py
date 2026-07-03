@@ -698,8 +698,12 @@ def _ensure_hsn_code(hsn_code):
 
 def _resolve_hsn_code(hsn_code):
     """Clean, validate length against GST settings, and determine if it can be safely set.
-    If the HSN code is empty, invalid, or non-numeric, fallbacks to the standard footwear default '641590'.
+    If the HSN code is empty or invalid, reads the default from SMRITI Settings.default_hsn_code.
+    Returns None if no valid HSN can be resolved (caller must handle this — never silently
+    assign a domain-specific fallback like '641590' to a non-footwear tenant).
     Also ensures the resolved HSN code is created in the database.
+
+    Architecture: C-2 remediation (hardcoding audit 2026-07-03)
     """
     import re
     # Extract only digits from the input HSN code
@@ -707,9 +711,22 @@ def _resolve_hsn_code(hsn_code):
     if hsn_code:
         hsn_digits = "".join(re.findall(r"\d+", str(hsn_code)))
 
-    # Fallback if empty or invalid
+    # If empty or non-numeric — try configured default, never a domain-specific literal
     if not hsn_digits:
-        hsn_digits = "641590"
+        configured_default = frappe.db.get_single_value("SMRITI Settings", "default_hsn_code") or ""
+        if not configured_default:
+            frappe.logger().warning(
+                "SMRITI _resolve_hsn_code: HSN code is missing and no default_hsn_code is "
+                "configured in SMRITI Settings. HSN will not be set for this item."
+            )
+            return None
+        hsn_digits = "".join(re.findall(r"\d+", str(configured_default)))
+        if not hsn_digits:
+            frappe.logger().warning(
+                f"SMRITI _resolve_hsn_code: default_hsn_code '{configured_default}' in SMRITI Settings "
+                "contains no numeric digits. HSN will not be set for this item."
+            )
+            return None
 
     # Format length according to valid HSN length settings or default to (6, 8)
     try:

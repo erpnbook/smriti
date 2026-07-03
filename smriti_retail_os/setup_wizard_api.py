@@ -497,7 +497,8 @@ def run_setup_wizard(setup_data):
                     log(f"Created default Bank ledger: {acc.name}")
 
         # Ensure standard Modes of Payments exist and are mapped
-        mops = ["Cash", "Bank", "UPI", "Card"]
+        from smriti_retail_os.config.business_defaults import DEFAULT_PAYMENT_MODES
+        mops = DEFAULT_PAYMENT_MODES
         for mop in mops:
             if not frappe.db.exists("Mode of Payment", mop):
                 doc = frappe.new_doc("Mode of Payment")

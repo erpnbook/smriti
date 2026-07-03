@@ -22,8 +22,12 @@ import frappe
 def run_backup():
     print("[SMRITI Backup Runner] Starting backup process...")
     try:
-        # Initialize frappe site context
-        frappe.init(site="frontend", sites_path="/home/frappe/frappe-bench/sites")
+        # Initialize frappe site context — configurable via environment variables
+        # H-1 remediation (hardcoding audit 2026-07-03): never assume a fixed site name or bench path
+        site = os.environ.get("SMRITI_SITE", "frontend")
+        bench_path = os.environ.get("BENCH_PATH", "/home/frappe/frappe-bench")
+        sites_path = os.path.join(bench_path, "sites")
+        frappe.init(site=site, sites_path=sites_path)
         frappe.connect()
         
         # Read SMRITI backup settings from DB
@@ -46,8 +50,8 @@ def run_backup():
         files_path = generator.backup_path_files
         private_path = generator.backup_path_private_files
         
-        # Copy to host-mounted backups directory
-        host_backups_dir = "/home/frappe/frappe-bench/backups"
+        # Copy to host-mounted backups directory — configurable via env var
+        host_backups_dir = os.environ.get("SMRITI_BACKUPS_DIR", os.path.join(bench_path, "backups"))
         if os.path.exists(host_backups_dir):
             print("  - Copying backups to host backups folder...")
             for path in [db_path, files_path, private_path]:
@@ -55,7 +59,7 @@ def run_backup():
                     shutil.copy2(path, host_backups_dir)
                     print(f"    + Copied {os.path.basename(path)}")
         else:
-            print("  - Host backups directory '/home/frappe/frappe-bench/backups' not found. Skipping copy to host.")
+            print(f"  - Host backups directory '{host_backups_dir}' not found. Skipping copy to host.")
                     
         # Email backup
         enable_email = settings.get("enable_email_backup") or os.environ.get("SMTP_HOST")
