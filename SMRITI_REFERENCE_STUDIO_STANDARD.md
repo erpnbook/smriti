@@ -45,10 +45,16 @@ Any new business module (e.g., Sales, Inventory, CRM) must strictly satisfy the 
 ### 10. UX Constitution
 * **Requirement:** Adhere to the SMRITI UX styling system (Navy `#1A2B5C` + Blue `#2563EB` + Arial), displaying SMRITI logo and layout standards.
 
+### 11. Verify Before Create
+* **Requirement:** Before creating a new Page, API, Service, Persistence Adapter, DocType, Report, Dashboard, or Integration, the developer (or AI agent) MUST:
+  1. Search the repository.
+  2. Reuse the existing implementation wherever possible.
+  3. Only create a new artifact if no suitable implementation exists.
+
 ---
 
 ## 🏆 Certified Studios
 
-| Module | Architecture Status | Operational Status | Reference Standard Version |
-| :--- | :---: | :---: | :---: |
-| **Purchase Studio** | **PASS** | **Pending GA Validation** | SMRITI Reference Studio v1.0 |
+| Module | Architecture Status | Operational Status | Reference Standard Version | Frozen Commit |
+| :--- | :---: | :---: | :---: | :---: |
+| **Purchase Studio** | **PASS** | **Pending GA Validation** | SMRITI Reference Studio v1.0 | `8472afd11f0b1e15e40131804cf5fc5a798e53cf` |
