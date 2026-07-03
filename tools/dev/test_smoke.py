@@ -26,7 +26,7 @@ def run_tests():
 
     # 2. Dashboard context verification
     try:
-        sh = importlib.import_module('smriti_retail_os.www.smriti-home')
+        sh = importlib.import_module('smriti_retail_os.www.smriti_home')
         ctx = frappe._dict()
         sh.get_context(ctx)
         results['dashboard'] = {'status': 'PASS', 'message': 'Dashboard context compiled successfully.'}
