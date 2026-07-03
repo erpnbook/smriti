@@ -44,6 +44,7 @@ def get_context(context):
         csrf_token = frappe.local.session.data.get("csrf_token")
     context.csrf_token = csrf_token or ""
     context.user = frappe.session.user
+    roles = frappe.get_roles(frappe.session.user)
     context.show_platform_admin = "System Manager" in roles or frappe.session.user == "Administrator"
 
     return context

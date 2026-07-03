@@ -46,6 +46,7 @@ def get_context(context):
     context.user = frappe.session.user
     
     # Determine if user is Security Architect
+    roles = frappe.get_roles(frappe.session.user)
     context.is_admin = 1 if (frappe.session.user == "Administrator" or "Administrator" in roles) else 0
 
     # Fetch reference options for User Permission selectors

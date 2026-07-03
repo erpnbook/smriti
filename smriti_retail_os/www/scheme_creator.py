@@ -53,6 +53,7 @@ def get_context(context):
         csrf_token = frappe.local.session.data.get("csrf_token")
     context.csrf_token = csrf_token or ""
     context.user = frappe.session.user
+    roles = frappe.get_roles(frappe.session.user)
     context.is_admin = 1 if (frappe.session.user == "Administrator" or "Administrator" in roles) else 0
     context.title = "SMRITI Scheme Creator"
 
