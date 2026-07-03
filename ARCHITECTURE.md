@@ -596,3 +596,61 @@ Every AI agent, developer, and contributor working on SMRITI must read `SMRITI_P
 *SMRITI Retail OS™ — Architecture & Technical Reference*
 *Authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL*
 *Version: 1.3.0 — LOCKED*
+
+---
+
+## 17. Feature Category Framework
+
+Every feature, page, and tool belongs to exactly one category.
+Apply the Golden Rule first:
+
+> If a feature exists only to operate the Platform Engine, keep it in the Platform Engine.
+> If a feature is part of the business experience, SMRITI owns it.
+
+| Category | Owner | Rule |
+|---|---|---|
+| A -- Business Experience | SMRITI | Replace all Platform Engine UI with SMRITI Studio pages |
+| B -- Platform Administration | Platform Engine | Keep. Never wrap in SMRITI UI. |
+| C -- Platform Services | Platform Engine | Never replace (ORM, Workflow, Scheduler, Print) |
+| D -- SMRITI Innovation | SMRITI | Exclusive SMRITI IP (PSV, CGE, AI, Formula) |
+| E1 -- Statutory Compliance | Platform Engine computes, SMRITI wraps view | Never recompute GST/E-Way |
+| E2 -- Accounting Integration | Accounting Adapter | SMRITI -> Adapter -> TallyPrime / Busy / Zoho |
+
+Category A migration states:
+- A1: SMRITI-owned URL, frappe.client.* direct (transitional, unacceptable final state)
+- A2: SMRITI-owned URL, data routed through API -> Service -> Repository (required final state)
+
+Category B Protection Rule: Never build a SMRITI UI page for a Category B tool.
+If a business user needs information from a Category B context, build a Category A
+page that surfaces the specific business information -- not the raw admin tool.
+
+Full specification: SMRITI_PLATFORM_VISION.md (v2.0.0, LOCKED)
+
+---
+
+## 18. Experience Constitution
+
+The SMRITI_EXPERIENCE_CONSTITUTION.md defines how SMRITI behaves and feels.
+It governs:
+
+- User Personas (5 personas: Owner, Manager, Cashier, Purchase Manager, CA)
+- Navigation (Sidebar, Breadcrumb, Back, No Platform Engine Navigation)
+- Page Structure (Title, Search, Primary Action, Empty/Loading/Error states)
+- Forms (Save/Cancel, Ctrl+S, validation before save, human-language errors)
+- Buttons (One primary action, verb labels, destructive confirmation, loading states)
+- Vocabulary (forbidden words: DocType, Frappe, Workspace, Desk, Master, Party, Submit, Amend)
+- Keyboard Shortcuts (Ctrl+S, Ctrl+N, Ctrl+F, Escape, F2, F12)
+- Search (instant, debounced, retailer-aware fields)
+- Dashboard (Owner persona, KPI Explain buttons, no frappe.client direct calls)
+- AI Behavior (recommends only, explainable, retail language, feature-flagged)
+- Constitution Checklist (mandatory checklist before any page is declared A2 complete)
+
+Every new page and every A1->A2 migration must pass the Constitution Checklist.
+
+Full specification: SMRITI_EXPERIENCE_CONSTITUTION.md (v1.0.0, LOCKED)
+
+---
+
+*SMRITI Retail OS™ — Architecture & Technical Reference*
+*Authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL*
+*Version: 1.4.0 — LOCKED*
