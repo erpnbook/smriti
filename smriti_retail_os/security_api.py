@@ -14,7 +14,7 @@ import secrets
 from frappe import _
 from frappe.utils import cint
 from frappe.utils.password import update_password
-from smriti_retail_os.roles import Roles
+from smriti_retail_os.smriti_retail_os.roles import Roles
 
 
 def _get_smriti_admin_email():
