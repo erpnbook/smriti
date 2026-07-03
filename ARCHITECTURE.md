@@ -684,3 +684,22 @@ Full specification: SMRITI_CONNECT_ARCHITECTURE.md (v1.0.0, LOCKED)
 *SMRITI Retail OS™ — Architecture & Technical Reference*
 *Authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL*
 *Version: 1.5.0 — LOCKED*
+
+---
+
+## 20. Platform Roadmap
+
+The roadmap establishes the execution phases of SMRITI components:
+
+- **Phase 1: Repository Migration (P0)** (Security, License, Trial, Billing, Payment data layer re-routing)
+- **Phase 2: Complete SMRITI Experience** (URL cleanups and Category E1 statutory wrappers)
+- **Phase 3: Operational Hardening** (Deduplication, metrics, HTTPS transport encryption)
+- **Phase 4: GA Readiness** (Load tests, security penetration audits, UAT validation)
+
+Full specification: SMRITI_ROADMAP.md (v1.0.0, LOCKED)
+
+---
+
+*SMRITI Retail OS™ — Architecture & Technical Reference*
+*Authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL*
+*Version: 1.6.0 — LOCKED*
