@@ -627,5 +627,28 @@ def get_grn_docstatus(grn_name):
     return frappe.db.get_value("Purchase Receipt", grn_name, "docstatus")
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# PURCHASE INVOICE OPERATIONS (Batch 5 Persistence Migration)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def create_purchase_invoice_document():
+    """
+    Instantiates an unsaved Purchase Invoice document.
+    """
+    return frappe.new_doc("Purchase Invoice")
+
+
+def get_grn_linked_invoice(grn_name):
+    """
+    Returns the name of a submitted Purchase Invoice linked to the GRN.
+    """
+    return frappe.db.get_value(
+        "Purchase Invoice Item",
+        {"purchase_receipt": grn_name, "docstatus": 1},
+        "parent"
+    )
+
+
+
 
 

@@ -6,7 +6,7 @@ SMRITI Platform Architecture Guard.
 
 Enforces the layered architecture defined in ARCHITECTURE.md §9:
 
-    UI -> api -> service -> repository -> Platform Engine
+    UI -> api -> service -> Persistence Adapter -> Platform Engine
 
 Rules:
   - api/*.py, www/*.py, and flat *_api.py files
@@ -185,7 +185,7 @@ def print_report(current: dict, baseline: dict) -> None:
     print("=" * 64)
     print("  SMRITI Architecture Guard — Progress Report")
     print("=" * 64)
-    print(f"  Layer: UI -> api -> service -> repository -> Platform Engine")
+    print(f"  Layer: UI -> api -> service -> Persistence Adapter -> Platform Engine")
     print()
     print(f"  Baseline   {total_baseline_files:>4} files  {total_baseline_calls:>5} persistence calls")
     print(f"  Current    {total_current_files:>4} files  {total_current_calls:>5} persistence calls")

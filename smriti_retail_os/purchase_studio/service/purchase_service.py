@@ -605,7 +605,7 @@ def _create_invoice_from_grn(grn_name, posting_date=None):
     grn = erp_adapter.get_grn(grn_name)
     company = erp_adapter.resolve_company()
 
-    pi = frappe.new_doc("Purchase Invoice")
+    pi = erp_adapter.create_purchase_invoice_document()
     pi.supplier          = grn.supplier
     pi.company           = company
     pi.posting_date      = posting_date or nowdate()
@@ -646,7 +646,7 @@ def _create_standalone_invoice(supplier, items_list, posting_date=None):
         frappe.throw(_("Cannot create Purchase Invoice with an empty items list."))
 
     company = erp_adapter.resolve_company()
-    pi = frappe.new_doc("Purchase Invoice")
+    pi = erp_adapter.create_purchase_invoice_document()
     pi.supplier             = supplier
     pi.company              = company
     pi.posting_date         = posting_date or nowdate()
@@ -786,11 +786,7 @@ def _adjust_return_quantities(return_doc, items_list, grn_name):
 
 def _find_pi_for_grn(grn_name):
     """Finds the Purchase Invoice linked to this GRN (if any)."""
-    pi = frappe.db.get_value(
-        "Purchase Invoice Item",
-        {"purchase_receipt": grn_name, "docstatus": 1},
-        "parent"
-    )
+    pi = erp_adapter.get_grn_linked_invoice(grn_name)
     return pi
 
 
