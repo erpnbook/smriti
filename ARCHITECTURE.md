@@ -703,3 +703,23 @@ Full specification: SMRITI_ROADMAP.md (v1.0.0, LOCKED)
 *SMRITI Retail OS™ — Architecture & Technical Reference*
 *Authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL*
 *Version: 1.6.0 — LOCKED*
+
+---
+
+## 21. SMRITI Rule 21 — Verify Before Create
+
+Before creating any new file, document, DocType, page, API, service, repository, integration, report, or configuration, the repository must first be searched to determine whether an equivalent implementation or section already exists.
+
+### Priority Order:
+
+1. **REUSE** existing implementation or document.
+2. **EXTEND** existing implementation or document.
+3. **CREATE** a new implementation only if no suitable equivalent can be found.
+
+**Every creation request must include repository evidence for why a new artifact is necessary.**
+
+---
+
+*SMRITI Retail OS™ — Architecture & Technical Reference*
+*Authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL*
+*Version: 1.7.0 — LOCKED*
