@@ -2,12 +2,14 @@
 
 ---
 **DOCUMENT METADATA**
-- **Author & Chief Architect**: Jawahar R. Mallah
-- **Designation**: Founder & Chief Architect
+- **Document Owner**: Jawahar R. Mallah
 - **Organization**: AITDL – AI Technology & Development Lab
-- **Document Generation**: Prepared by SMRITI Engineering Agent
-- **Review Status**: Draft – Pending Human Review
-- **Approval Status**: Pending Human Approval
+- **Prepared By**: SMRITI Engineering Team
+- **Reviewed By**: —
+- **Approved By**: —
+- **Status**: Draft
+- **Version**: 1.0
+- **Last Updated**: 04-Jul-2026
 ---
 
 ## 1. Executive Summary
@@ -43,8 +45,8 @@ To prevent exposing the native ERPNext/Frappe `/desk` or `/app` interfaces to st
 22. `smriti_suppliers`
 
 ---
-**SIGN-OFF & STATUS**
-- **Prepared By**: SMRITI Engineering Agent
-- **Human Reviewer**: Pending Assignment
-- **Approval Date**: Pending
+**REVISION HISTORY**
+- **Prepared By**: SMRITI Engineering Team
+- **Reviewed By**: —
+- **Approved By**: —
 - **Status**: Draft
