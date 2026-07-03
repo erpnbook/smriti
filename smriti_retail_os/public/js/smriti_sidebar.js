@@ -67,8 +67,9 @@ window.SMRITI = window.SMRITI || {};
 
         function buildTree(navData) {
             if (!navData || !navData.sections) return;
+            window.SMRITI_NAV_DATA = navData;
 
-            var activeRoute = window.location.pathname;
+            var activeRoute = window.location.pathname + window.location.hash;
             var collapsedGroupIds = JSON.parse(localStorage.getItem("smriti-sidebar-collapsed-groups") || "[]");
             var isSidebarCollapsed = localStorage.getItem("smriti-sidebar-collapsed") === "true";
 
@@ -181,7 +182,10 @@ window.SMRITI = window.SMRITI || {};
                     html.push('<a class="smriti-sidebar-item' + (isItemActive ? ' active' : '') + '" href="' + itemRoute + '">');
                     html.push('  <div class="smriti-sidebar-item-icon">' + iconHtml + '</div>');
                     html.push('  <span class="smriti-sidebar-item-label">' + item.label + '</span>');
-                    html.push('  <button class="smriti-star-btn' + (isFav ? ' active' : '') + '" data-item-id="' + item.id + '" title="' + (isFav ? 'Unpin' : 'Pin to Favorites') + '">' + (isFav ? '⭐' : '☆') + '</button>');
+                    html.push('  <div class="smriti-sidebar-item-actions">');
+                    html.push('    <button class="smriti-popout-icon-btn" onclick="SMRITI.triggerPopout(event, \'' + itemRoute + '\')" title="Open in Popout Window">📺</button>');
+                    html.push('    <button class="smriti-star-btn' + (isFav ? ' active' : '') + '" data-item-id="' + item.id + '" title="' + (isFav ? 'Unpin' : 'Pin to Favorites') + '">' + (isFav ? '⭐' : '☆') + '</button>');
+                    html.push('  </div>');
                     html.push('</a>');
 
                 });
@@ -560,6 +564,12 @@ window.SMRITI = window.SMRITI || {};
     }
     
     document.addEventListener('DOMContentLoaded', _initPopoutMode);
+
+    window.addEventListener('hashchange', function() {
+        if (window.SMRITI_NAV_DATA) {
+            buildTree(window.SMRITI_NAV_DATA);
+        }
+    });
 
     // ── Topbar Shortcuts & Explanations ──
     SMRITI.injectLabelStudioShortcut = function () {

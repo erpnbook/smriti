@@ -22,58 +22,7 @@
 <body>
     <div id="shell">
       <!-- LEFT NAV -->
-      <nav id="nav">
-        <div id="nav-logo">
-          <img src="/assets/smriti_retail_os/images/smriti-logo.png" alt="SMRITI" onerror="this.style.display='none'"/>
-          <div id="logo-text">
-            <div id="logo-title">SMRITI</div>
-            <div id="logo-sub">Purchase Studio</div>
-          </div>
-        </div>
-        <div id="nav-links">
-          <div class="nav-sep">Overview</div>
-          <div class="nav-item active" data-section="dashboard" onclick="PS.nav('dashboard')">
-            <span class="ni">📊</span> Dashboard
-          </div>
-          <div class="nav-sep">Transactions</div>
-          <div class="nav-item" data-section="orders" onclick="PS.nav('orders')">
-            <span class="ni">📋</span> Purchase Orders
-            <span class="nav-badge" id="badge-orders" style="display:none"></span>
-          </div>
-          <div class="nav-item" data-section="grn" onclick="PS.nav('grn')">
-            <span class="ni">📦</span> GRN / Receipts
-          </div>
-          <div class="nav-item" data-section="invoices" onclick="PS.nav('invoices')">
-            <span class="ni">🧾</span> Invoices
-            <span class="nav-badge" id="badge-inv" style="display:none">!</span>
-          </div>
-          <div class="nav-item" data-section="returns" onclick="PS.nav('returns')">
-            <span class="ni">↩️</span> Returns
-          </div>
-          <div class="nav-sep">Finance</div>
-          <div class="nav-item" data-section="supplier-ledger" onclick="PS.nav('supplier-ledger')">
-            <span class="ni">📒</span> Supplier Ledger
-          </div>
-          <div class="nav-item" data-section="landed-cost" onclick="PS.nav('landed-cost')">
-            <span class="ni">🚚</span> Landed Cost
-          </div>
-          <div class="nav-sep">Intelligence</div>
-          <div class="nav-item" data-section="analytics" onclick="PS.nav('analytics')">
-            <span class="ni">📈</span> Analytics
-          </div>
-          <div class="nav-item" data-section="suppliers" onclick="PS.nav('suppliers')">
-            <span class="ni">🏭</span> Supplier Performance
-          </div>
-          <div class="nav-sep" id="sys-sep" style="display:none">System</div>
-          <div class="nav-item" data-section="settings" onclick="PS.nav('settings')" id="nav-settings" style="display:none">
-            <span class="ni">⚙️</span> Settings
-          </div>
-        </div>
-        <div id="nav-footer">
-          <div id="nav-user-avatar" id="nav-av"></div>
-          <div id="nav-user-name"></div>
-        </div>
-      </nav>
+      {%- include "smriti_retail_os/templates/includes/smriti_sidebar.html" -%}
 
       <!-- MAIN -->
       <div id="main">

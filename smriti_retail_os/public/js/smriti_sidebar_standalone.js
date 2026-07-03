@@ -85,9 +85,11 @@ window.SMRITI = window.SMRITI || {};
 
         function buildTree(navData) {
             if (!navData || !navData.sections) return;
+            window.SMRITI_NAV_DATA = navData;
 
-            var activeRoute = window.location.pathname;
+            var activeRoute = window.location.pathname + window.location.hash;
             var collapsedGroupIds = JSON.parse(localStorage.getItem("smriti-sidebar-collapsed-groups") || "[]");
+            var favorites = JSON.parse(localStorage.getItem("smriti-sidebar-favorites") || "[]");
             var isSidebarCollapsed = localStorage.getItem("smriti-sidebar-collapsed") === "true";
 
             // Apply sidebar layout controls from localStorage
@@ -163,6 +165,11 @@ window.SMRITI = window.SMRITI || {};
                     if (item.badge) {
                         html.push('  <span class="smriti-nav-badge">' + item.badge + '</span>');
                     }
+                    var isFav = favorites.indexOf(item.id) !== -1;
+                    html.push('  <div class="smriti-sidebar-item-actions">');
+                    html.push('    <button class="smriti-popout-icon-btn" onclick="SMRITI.triggerPopout(event, \'' + itemRoute + '\')" title="Open in Popout Window">📺</button>');
+                    html.push('    <button class="smriti-star-btn' + (isFav ? ' active' : '') + '" data-item-id="' + item.id + '" title="' + (isFav ? 'Unpin' : 'Pin to Favorites') + '">' + (isFav ? '⭐' : '☆') + '</button>');
+                    html.push('  </div>');
                     html.push('</a>');
                 });
 
@@ -288,6 +295,26 @@ window.SMRITI = window.SMRITI || {};
                 window.SMRITI.injectExplainScreenButton(activePageId);
             }
 
+            // Favorites — Star button handler
+            var starBtns = target.querySelectorAll(".smriti-star-btn");
+            starBtns.forEach(function(btn) {
+                btn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var itemId = btn.getAttribute("data-item-id");
+                    if (!itemId) return;
+                    var favs = JSON.parse(localStorage.getItem("smriti-sidebar-favorites") || "[]");
+                    var idx = favs.indexOf(itemId);
+                    if (idx === -1) {
+                        favs.push(itemId);
+                    } else {
+                        favs.splice(idx, 1);
+                    }
+                    localStorage.setItem("smriti-sidebar-favorites", JSON.stringify(favs));
+                    buildTree(navData);
+                });
+            });
+
             // 5. Position Picker — click handlers
             target.querySelectorAll(".smriti-pos-btn").forEach(function(btn) {
                 btn.addEventListener("click", function(e) {
@@ -396,6 +423,12 @@ window.SMRITI = window.SMRITI || {};
     }
     
     document.addEventListener('DOMContentLoaded', _initPopoutMode);
+
+    window.addEventListener('hashchange', function() {
+        if (window.SMRITI_NAV_DATA) {
+            buildTree(window.SMRITI_NAV_DATA);
+        }
+    });
 
     // ── Topbar Shortcuts & Explanations ──
     SMRITI.injectLabelStudioShortcut = function () {

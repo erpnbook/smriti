@@ -520,25 +520,39 @@ body.popout-mode #smriti-sidebar-target.sidebar {
 .smriti-sidebar.collapsed .smriti-cmd-search-btn kbd { display: none; }
 
 /* ── Star Button (Favorites) ── */
-.smriti-star-btn {
+.smriti-sidebar-item-actions {
   display: none;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  line-height: 1;
+}
+.smriti-sidebar-item:hover .smriti-sidebar-item-actions {
+  display: inline-flex;
+}
+.smriti-popout-icon-btn,
+.smriti-star-btn {
   background: none;
   border: none;
   cursor: pointer;
   font-size: 13px;
-  padding: 0 2px;
-  margin-left: auto;
-  line-height: 1;
-  opacity: .4;
-  transition: opacity .15s;
+  padding: 0;
+  opacity: .5;
+  transition: opacity .15s, transform 0.15s;
   color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
-.smriti-sidebar-item:hover .smriti-star-btn,
+.smriti-popout-icon-btn:hover,
+.smriti-star-btn:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
 .smriti-star-btn.active {
   display: inline-flex;
   opacity: 1;
 }
-.smriti-star-btn.active { opacity: 1; }
 
 /* ── Command Palette Overlay ── */
 .smriti-cmd-backdrop {

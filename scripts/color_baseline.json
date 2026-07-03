@@ -424,6 +424,16 @@
       "hex": 5,
       "rgba": 16,
       "note": "Auto-recorded on first validation"
+    },
+    "purchase_layout.html": {
+      "hex": 0,
+      "rgba": 0,
+      "note": "Auto-recorded on first validation"
+    },
+    "smriti_layout.html": {
+      "hex": 0,
+      "rgba": 0,
+      "note": "Auto-recorded on first validation"
     }
   }
 }
