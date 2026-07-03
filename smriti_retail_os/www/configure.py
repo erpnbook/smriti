@@ -12,16 +12,21 @@ from frappe import _
 from smriti_retail_os.company_api import (
     get_active_company,
     get_company_settings,
-    _check_manager_permission,
 )
+from smriti_retail_os.security_api import check_page_access
 
 no_cache = 1
 
 def get_context(context):
     if frappe.session.user == "Guest":
-        frappe.throw(_("Please log in to access the configuration portal."), frappe.AuthenticationError)
+        frappe.local.flags.redirect_location = "/login"
+        raise frappe.Redirect
 
-    _check_manager_permission()
+    try:
+        check_page_access("configure")
+    except frappe.PermissionError:
+        frappe.local.flags.redirect_location = "/smriti"
+        raise frappe.Redirect
 
     context.no_cache = 1
     context.title = "SMRITI Config Portal"

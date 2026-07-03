@@ -136,7 +136,7 @@ function _smriti_pr_refresh(frm) {
     }, __("SMRITI"));
 
     frm.add_custom_button(__("📋 Purchase Orders"), function () {
-        frappe.set_route("List", "Purchase Order");
+        frappe.set_route("smriti-purchase-order");
     }, __("SMRITI"));
 
     // GRN summary headline

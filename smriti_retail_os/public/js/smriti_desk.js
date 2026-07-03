@@ -131,7 +131,7 @@ class SmritiDeskPage {
                         <div class="action-desc" style="margin-bottom: 12px; flex: 1;">Open cashier shift or count cash for Day Close.</div>
                         <div class="action-buttons" style="display: flex; gap: 8px; width: 100%; margin-top: auto;">
                             <button class="btn btn-primary btn-xs btn-desk-shift-std" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px;">🌅 Standard</button>
-                            <button class="btn btn-default btn-xs btn-desk-shift-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/app/smriti-shift')">📺 Popout</button>
+                            <button class="btn btn-default btn-xs btn-desk-shift-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/shift')">📺 Popout</button>
                         </div>
                     </div>
 
@@ -142,7 +142,7 @@ class SmritiDeskPage {
                         <div class="action-desc" style="margin-bottom: 12px; flex: 1;">Check current item stock counts and sync ledger.</div>
                         <div class="action-buttons" style="display: flex; gap: 8px; width: 100%; margin-top: auto;">
                             <button class="btn btn-primary btn-xs btn-desk-inventory-std" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px;">📦 Standard</button>
-                            <button class="btn btn-default btn-xs btn-desk-inventory-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/app/smriti-inventory')">📺 Popout</button>
+                            <button class="btn btn-default btn-xs btn-desk-inventory-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/inventory')">📺 Popout</button>
                         </div>
                     </div>
 
@@ -153,7 +153,7 @@ class SmritiDeskPage {
                         <div class="action-desc" style="margin-bottom: 12px; flex: 1;">Manage Purchase Orders and record simple purchases.</div>
                         <div class="action-buttons" style="display: flex; gap: 8px; width: 100%; margin-top: auto;">
                             <button class="btn btn-primary btn-xs btn-desk-purchase-std" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px;">🛒 Standard</button>
-                            <button class="btn btn-default btn-xs btn-desk-purchase-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/app/smriti-purchase')">📺 Popout</button>
+                            <button class="btn btn-default btn-xs btn-desk-purchase-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/smriti-purchase')">📺 Popout</button>
                         </div>
                     </div>
 
@@ -164,7 +164,7 @@ class SmritiDeskPage {
                         <div class="action-desc" style="margin-bottom: 12px; flex: 1;">Generate, inspect, and print retail price tags.</div>
                         <div class="action-buttons" style="display: flex; gap: 8px; width: 100%; margin-top: auto;">
                             <button class="btn btn-primary btn-xs btn-desk-barcode-std" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px;">🏷️ Standard</button>
-                            <button class="btn btn-default btn-xs btn-desk-barcode-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/app/smriti-barcode')">📺 Popout</button>
+                            <button class="btn btn-default btn-xs btn-desk-barcode-popout" style="flex: 1; font-size: 11px; padding: 6px 12px; border-radius: 6px; background: #6366f1 !important; color: white !important; border-color: #6366f1 !important;" onclick="SMRITI.openPopout('/barcode')">📺 Popout</button>
                         </div>
                     </div>
                 </div>

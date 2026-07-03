@@ -236,6 +236,18 @@ def _map_smriti_path(path):
         "purchase_receipt": "/purchase_receipt",
         "delivery-challan": "/delivery_challan",
         "delivery_challan": "/delivery_challan",
+        "grn": "/smriti-grn",
+        "purchase-order": "/smriti-purchase-order",
+        "cge": "/smriti-cge",
+        "sfm": "/smriti-sfm",
+        "sfc": "/smriti-sfc",
+        "pdt": "/smriti-pdt",
+        "uie": "/smriti-uie",
+        "pos-profiles": "/smriti-pos-profiles",
+        "pos_profiles": "/smriti-pos-profiles",
+        "loyalty": "/smriti-cge",
+        "negative-stock": "/inventory",
+        "negative_stock": "/inventory",
     }
 
     if clean in mapping:

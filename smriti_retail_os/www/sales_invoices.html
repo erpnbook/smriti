@@ -359,6 +359,12 @@ async function init() {
     }
 
     await loadInvoices();
+
+    // Auto-open deep-linked invoice if present in query parameters
+    const invoiceId = params.get('invoice');
+    if (invoiceId) {
+        loadInvoiceDetails(invoiceId);
+    }
 }
 
 async function loadInvoices() {

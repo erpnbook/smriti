@@ -623,11 +623,52 @@ website_route_rules = [
     {"from_route": "/exception-analysis",      "to_route": "psv_exception_analysis"}, # alias
 
     # ─── Retired Desk Pages → SMRITI www Routes ──────────────────────────────
-    # smriti-purchase-invoice Desk page retired 2026-07-02 (Rule 9: No Desk Elements).
-    # All purchase invoice UI is now served from www/purchase_invoice.html.
+    # All legacy desk pages are retired (Rule 9: No Desk Elements).
     # These redirects catch any bookmarked /app/* or /desk/page/* URLs.
     {"from_route": "/app/smriti-purchase-invoice",          "to_route": "purchase_invoice"},
     {"from_route": "/desk/page/smriti-purchase-invoice",    "to_route": "purchase_invoice"},
+    {"from_route": "/app/smriti-billing",                   "to_route": "billing"},
+    {"from_route": "/desk/page/smriti-billing",             "to_route": "billing"},
+    {"from_route": "/app/smriti-customers",                 "to_route": "customers"},
+    {"from_route": "/desk/page/smriti-customers",           "to_route": "customers"},
+    {"from_route": "/app/smriti-cge",                       "to_route": "smriti-cge"},
+    {"from_route": "/desk/page/smriti-cge",                 "to_route": "smriti-cge"},
+    {"from_route": "/app/smriti-inventory",                 "to_route": "inventory"},
+    {"from_route": "/desk/page/smriti-inventory",           "to_route": "inventory"},
+    {"from_route": "/app/smriti-reports",                   "to_route": "reports"},
+    {"from_route": "/desk/page/smriti-reports",             "to_route": "reports"},
+    {"from_route": "/app/smriti-sales-invoices",            "to_route": "sales_invoices"},
+    {"from_route": "/desk/page/smriti-sales-invoices",      "to_route": "sales_invoices"},
+    {"from_route": "/app/smriti-purchase",                  "to_route": "smriti-purchase"},
+    {"from_route": "/desk/page/smriti-purchase",            "to_route": "smriti-purchase"},
+    {"from_route": "/app/smriti-purchase-receipt",          "to_route": "purchase_receipt"},
+    {"from_route": "/desk/page/smriti-purchase-receipt",    "to_route": "purchase_receipt"},
+    {"from_route": "/app/smriti-delivery-challan",          "to_route": "delivery_challan"},
+    {"from_route": "/desk/page/smriti-delivery-challan",    "to_route": "delivery_challan"},
+    {"from_route": "/app/smriti-supplier-returns",          "to_route": "supplier_returns"},
+    {"from_route": "/desk/page/smriti-supplier-returns",    "to_route": "supplier_returns"},
+    {"from_route": "/app/smriti-suppliers",                 "to_route": "suppliers"},
+    {"from_route": "/desk/page/smriti-suppliers",           "to_route": "suppliers"},
+    {"from_route": "/app/smriti-shift",                     "to_route": "shift"},
+    {"from_route": "/desk/page/smriti-shift",               "to_route": "shift"},
+    {"from_route": "/app/smriti-backup",                    "to_route": "backup"},
+    {"from_route": "/desk/page/smriti-backup",              "to_route": "backup"},
+    {"from_route": "/app/smriti-barcode",                   "to_route": "barcode"},
+    {"from_route": "/desk/page/smriti-barcode",             "to_route": "barcode"},
+    {"from_route": "/app/smriti-desk",                      "to_route": "smriti-home"},
+    {"from_route": "/desk/page/smriti-desk",                "to_route": "smriti-home"},
+    {"from_route": "/app/smriti-item-master",               "to_route": "item_master"},
+    {"from_route": "/desk/page/smriti-item-master",         "to_route": "item_master"},
+    {"from_route": "/app/smriti-loyalty",                   "to_route": "smriti-cge"},
+    {"from_route": "/desk/page/smriti-loyalty",             "to_route": "smriti-cge"},
+    {"from_route": "/app/smriti-negative-stock",            "to_route": "inventory"},
+    {"from_route": "/desk/page/smriti-negative-stock",      "to_route": "inventory"},
+    {"from_route": "/app/smriti-payments",                  "to_route": "payments"},
+    {"from_route": "/desk/page/smriti-payments",            "to_route": "payments"},
+    {"from_route": "/app/smriti-sales-return",              "to_route": "sales_return"},
+    {"from_route": "/desk/page/smriti-sales-return",        "to_route": "sales_return"},
+    {"from_route": "/app/psv-opening-balance",              "to_route": "psv-opening-balance"},
+    {"from_route": "/desk/page/psv-opening-balance",        "to_route": "psv-opening-balance"},
 
     # ─── Report Sub-Routes (tab aliases) ────────────────────────────
     {"from_route": "/reports/sales",      "to_route": "reports"},  # www/reports.html?tab=sales

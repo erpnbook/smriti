@@ -14,6 +14,7 @@ import secrets
 from frappe import _
 from frappe.utils import cint
 from frappe.utils.password import update_password
+from smriti_retail_os.roles import Roles
 
 
 def _get_smriti_admin_email():
@@ -33,23 +34,23 @@ def get_allowed_manager_roles() -> set[str]:
         else:
             roles = set(configured_roles)
     else:
-        roles = {"SMRITI Store Manager", "System Manager"}
+        roles = {Roles.STORE_MANAGER, Roles.SYSTEM_MANAGER}
     
     # Always include Administrator for safety
-    roles.add("Administrator")
+    roles.add(Roles.ADMIN)
     return roles
 
 
 def get_allowed_cashier_role() -> str:
     """Returns the name of the SMRITI Cashier role."""
-    return frappe.conf.get("smriti_cashier_role") or "SMRITI Cashier"
+    return frappe.conf.get("smriti_cashier_role") or Roles.CASHIER
 
 
 # ─── Security Governance Guards ──────────────────────────────────────────────
 
 def check_administrator_only():
     """Raises PermissionError if caller is not the system Administrator."""
-    if frappe.session.user != "Administrator" and "Administrator" not in frappe.get_roles():
+    if frappe.session.user != Roles.ADMIN and Roles.ADMIN not in frappe.get_roles():
         frappe.throw(
             _("Access Denied: This operation is restricted to the Security Architect (Administrator)."),
             frappe.PermissionError
@@ -65,7 +66,7 @@ def check_store_manager_or_admin():
             frappe.PermissionError
         )
 
-    if frappe.session.user == "Administrator":
+    if frappe.session.user == Roles.ADMIN:
         return
     roles = set(frappe.get_roles())
     allowed = get_allowed_manager_roles()
@@ -77,14 +78,14 @@ def check_store_manager_or_admin():
 
 def check_administrator_protection(email):
     """Raises PermissionError if trying to modify the Administrator account or any System Manager by a non-Administrator/System Manager."""
-    if frappe.session.user == "Administrator" or "System Manager" in frappe.get_roles(frappe.session.user):
+    if frappe.session.user == Roles.ADMIN or Roles.SYSTEM_MANAGER in frappe.get_roles(frappe.session.user):
         return
 
     is_admin_target = False
-    if email == "Administrator":
+    if email == Roles.ADMIN:
         is_admin_target = True
     else:
-        admin_email = frappe.db.get_value("User", "Administrator", "email")
+        admin_email = frappe.db.get_value("User", Roles.ADMIN, "email")
         if admin_email and email == admin_email:
             is_admin_target = True
 
@@ -92,7 +93,7 @@ def check_administrator_protection(email):
     if frappe.db.exists("User", email):
         target_roles = frappe.get_roles(email)
 
-    if is_admin_target or "System Manager" in target_roles or "Administrator" in target_roles:
+    if is_admin_target or Roles.SYSTEM_MANAGER in target_roles or Roles.ADMIN in target_roles:
         frappe.throw(
             _("Access Denied: Store Managers cannot modify System Manager or Administrator accounts."),
             frappe.PermissionError
@@ -106,9 +107,9 @@ def list_users():
     check_store_manager_or_admin()
     
     exclude_users = ["Guest"]
-    if frappe.session.user != "Administrator" and "Administrator" not in frappe.get_roles():
-        exclude_users.append("Administrator")
-        admin_email = frappe.db.get_value("User", "Administrator", "email")
+    if frappe.session.user != Roles.ADMIN and Roles.ADMIN not in frappe.get_roles():
+        exclude_users.append(Roles.ADMIN)
+        admin_email = frappe.db.get_value("User", Roles.ADMIN, "email")
         if admin_email:
             exclude_users.append(admin_email)
             
@@ -840,7 +841,7 @@ def check_page_access(page_name):
     if frappe.session.user == "Guest":
         frappe.throw(_("Not authenticated."), frappe.PermissionError)
 
-    if frappe.session.user == "Administrator" or "Administrator" in frappe.get_roles():
+    if frappe.session.user == Roles.ADMIN or Roles.ADMIN in frappe.get_roles():
         return True
 
     _admin_email = _get_smriti_admin_email()
@@ -898,7 +899,13 @@ def check_page_access(page_name):
         "sales_orders": manager_roles,
         "reports": manager_roles | {"Accountant"},
         "smriti-sfm": manager_roles | {"Sales Manager"},
-        "smriti-uie": manager_roles | {"Accountant"}
+        "smriti-uie": manager_roles | {"Accountant"},
+        
+        # New page registrations
+        "configure": manager_roles,
+        "smriti-go-live": {Roles.SYSTEM_ADMIN, Roles.SYSTEM_MANAGER, Roles.ADMIN},
+        "smriti-license": {Roles.SYSTEM_ADMIN, Roles.SYSTEM_MANAGER, Roles.ADMIN},
+        "smriti-trial-leads": manager_roles | {"SMRITI Team"}
     }
 
     allowed_roles = policies.get(page_name)

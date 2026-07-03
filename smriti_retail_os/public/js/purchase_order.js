@@ -106,7 +106,7 @@ function _smriti_po_refresh(frm) {
     }, __("SMRITI"));
 
     frm.add_custom_button(__("📦 Purchase Receipt"), function () {
-        frappe.set_route("List", "Purchase Receipt");
+        frappe.set_route("smriti-grn");
     }, __("SMRITI"));
 
     // Status indicator

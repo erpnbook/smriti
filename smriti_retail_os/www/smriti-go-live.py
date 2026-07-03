@@ -13,11 +13,15 @@ import frappe
 
 def get_context(context):
     if frappe.session.user == "Guest":
-        frappe.throw("Not permitted", frappe.PermissionError)
+        frappe.local.flags.redirect_location = "/login"
+        raise frappe.Redirect
 
-    roles = set(frappe.get_roles(frappe.session.user))
-    if not ({"SMRITI System Admin", "System Manager", "Administrator"} & roles):
-        frappe.throw("Access restricted to System Manager.", frappe.PermissionError)
+    from smriti_retail_os.security_api import check_page_access
+    try:
+        check_page_access("smriti-go-live")
+    except frappe.PermissionError:
+        frappe.local.flags.redirect_location = "/smriti"
+        raise frappe.Redirect
 
     context.no_cache = 1
     csrf_token = None

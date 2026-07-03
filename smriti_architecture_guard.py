@@ -130,7 +130,7 @@ def scan(root: Path) -> dict:
             continue
         hits = len(PERSIST_RE.findall(text))
         if hits > 0:
-            violations[str(rel)] = hits
+            violations[str(rel).replace("\\", "/")] = hits
     return violations
 
 
@@ -140,9 +140,8 @@ def load_baseline() -> dict:
     if BASELINE_FILE.exists():
         data = json.loads(BASELINE_FILE.read_text())
         # Support both legacy flat format and new versioned format
-        if "violations" in data:
-            return data["violations"]
-        return data
+        raw_violations = data["violations"] if "violations" in data else data
+        return {k.replace("\\", "/"): v for k, v in raw_violations.items()}
     return {}
 
 
