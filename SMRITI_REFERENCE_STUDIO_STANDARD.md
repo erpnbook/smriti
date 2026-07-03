@@ -4,6 +4,13 @@ This document outlines the mandatory requirements that every business module (St
 
 ---
 
+## 📖 Reference Studio Definition
+
+Officially, a **Reference Studio** within SMRITI Retail OS is defined as:
+$$\text{Reference Studio} \equiv \text{Canonical Implementation} \equiv \text{Gold Standard} \equiv \text{Blueprint for all future studios}$$
+
+---
+
 ## 📋 Certification Checklist
 
 Any new business module (e.g., Sales, Inventory, CRM) must strictly satisfy the following criteria:
@@ -53,8 +60,21 @@ Any new business module (e.g., Sales, Inventory, CRM) must strictly satisfy the 
 
 ---
 
+## 🤖 AI Compliance Rules
+
+Every AI agent modifying a SMRITI Reference Studio must strictly adhere to the following sequence before declaring a task complete:
+
+1. **Search Repository First:** Verify existing patterns, classes, methods, and functions. Never duplicate logic.
+2. **Preserve Architecture Layers:** Never allow persistence calls to leak into UI, API, or Service layers.
+3. **Preserve API Contracts:** Ensure backward compatibility of all public APIs and endpoints.
+4. **Preserve UI Ownership:** Never introduce direct native Frappe / ERPNext dashboard paths or routes.
+5. **Pass Architecture Guard:** Run the SMRITI Architecture Guard script and verify zero regressions.
+6. **Pass Tests:** Run the full module test suites inside the test environment container.
+
+---
+
 ## 🏆 Certified Studios
 
 | Module | Architecture Status | Operational Status | Reference Standard Version | Frozen Commit |
 | :--- | :---: | :---: | :---: | :---: |
-| **Purchase Studio** | **PASS** | **Pending GA Validation** | SMRITI Reference Studio v1.0 | `8472afd11f0b1e15e40131804cf5fc5a798e53cf` |
+| **Purchase Studio** | **PASS** | **Pending GA Validation** | SMRITI Reference Studio v1.0 | `1b3758079a0cf55883ef4a67eeb3564ea53e9fe7` |
