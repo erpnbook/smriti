@@ -183,7 +183,7 @@ def create_purchase_order(supplier, items_list, schedule_date=None,
             )
 
     # Build PO document
-    po = frappe.new_doc("Purchase Order")
+    po = erp_adapter.create_purchase_order_document()
     po.supplier      = supplier
     po.transaction_date = nowdate()
     po.schedule_date = schedule_date or nowdate()
@@ -257,13 +257,9 @@ def resolve_po_approval(po_name, action, reason=None):
         frappe.throw(_("Rejection reason is mandatory."))
 
     # Row-level lock to prevent concurrent approval
-    result = frappe.db.sql(
-        "SELECT smriti_approval_status FROM `tabPurchase Order` WHERE name=%s FOR UPDATE",
-        po_name, as_dict=True
-    )
-    if not result:
+    current_status = erp_adapter.lock_and_get_po_status(po_name)
+    if not current_status:
         frappe.throw(_("Purchase Order '{0}' not found.").format(po_name), frappe.DoesNotExistError)
-    current_status = result[0].smriti_approval_status
     if current_status != "Pending":
         frappe.throw(
             _("Purchase Order '{0}' is not in Pending Approval state (current: {1}).").format(
@@ -289,10 +285,7 @@ def resolve_po_approval(po_name, action, reason=None):
         return {"status": "approved", "name": po_name,
                 "message": _("Purchase Order {0} approved and submitted.").format(po_name)}
     else:
-        frappe.db.set_value("Purchase Order", po_name, {
-            "smriti_approval_status":  "Rejected",
-            "smriti_rejection_reason": reason
-        })
+        erp_adapter.set_po_approval_status(po_name, "Rejected", reason)
         frappe.db.commit()
         audit_service.log(
             event_type=audit_service.PO_REJECTED,
@@ -371,9 +364,9 @@ def create_grn(supplier, items_list, po_name=None, warehouse=None):
 
     # Validate against PO if provided
     if po_name:
-        if not frappe.db.exists("Purchase Order", po_name):
+        if not erp_adapter.purchase_order_exists(po_name):
             frappe.throw(_("Purchase Order '{0}' not found.").format(po_name))
-        po_supplier = frappe.db.get_value("Purchase Order", po_name, "supplier")
+        po_supplier = erp_adapter.get_po_supplier(po_name)
         if po_supplier != supplier:
             frappe.throw(_(
                 "Supplier mismatch: GRN supplier '{0}' does not match PO supplier '{1}'."
@@ -388,7 +381,7 @@ def create_grn(supplier, items_list, po_name=None, warehouse=None):
     pr.posting_date = nowdate()
     pr.company      = company
 
-    if po_name and frappe.db.exists("Purchase Order", po_name):
+    if po_name and erp_adapter.purchase_order_exists(po_name):
         po_doc = erp_adapter.get_po(po_name)
         pr.buying_price_list = po_doc.buying_price_list
         pr.currency          = po_doc.currency
@@ -462,17 +455,10 @@ def validate_grn_lines(items_list, po_name, allow_over_receipt):
         return  # standalone GRN — no PO validation needed
 
     # Lock the PO row
-    frappe.db.sql(
-        "SELECT per_received FROM `tabPurchase Order` WHERE name=%s FOR UPDATE",
-        po_name
-    )
+    erp_adapter.lock_and_get_po_received_qty(po_name)
 
     # Build pending qty map from PO
-    po_items = frappe.db.get_all(
-        "Purchase Order Item",
-        filters={"parent": po_name},
-        fields=["item_code", "qty", "received_qty", "name"]
-    )
+    po_items = erp_adapter.get_po_item_lines(po_name)
     pending_map = {
         r.name: flt(r.qty) - flt(r.received_qty)
         for r in po_items
@@ -482,7 +468,7 @@ def validate_grn_lines(items_list, po_name, allow_over_receipt):
         item_pending[r.item_code] = flt(r.qty) - flt(r.received_qty)
 
     if not allow_over_receipt:
-        tol = flt(frappe.db.get_single_value("SMRITI Purchase Settings", "tolerance_percent") or 0)
+        tol = flt(settings_svc.get_settings().get("tolerance_percent") or 0)
         for it in items_list:
             item_code = it.get("item_code")
             recv_qty  = flt(it.get("qty"))
@@ -1140,7 +1126,7 @@ def get_items_for_grn(po_name):
     Used by the dedicated GRN form to pre-populate item lines.
     """
     check_any_purchase_role()
-    if not po_name or not frappe.db.exists("Purchase Order", po_name):
+    if not po_name or not erp_adapter.purchase_order_exists(po_name):
         frappe.throw(_("Purchase Order '{0}' not found.").format(po_name))
 
     po = erp_adapter.get_po(po_name)

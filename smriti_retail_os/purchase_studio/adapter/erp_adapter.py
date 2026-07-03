@@ -512,3 +512,72 @@ def search_suppliers(query, limit=20):
     )
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# PURCHASE ORDER OPERATIONS (Batch 3 Persistence Migration)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def create_purchase_order_document():
+    """
+    Instantiates an unsaved Purchase Order document.
+    """
+    return frappe.new_doc("Purchase Order")
+
+
+def lock_and_get_po_status(po_name):
+    """
+    Locks the Purchase Order row and returns its smriti_approval_status.
+    """
+    result = frappe.db.sql(
+        "SELECT smriti_approval_status FROM `tabPurchase Order` WHERE name=%s FOR UPDATE",
+        po_name, as_dict=True
+    )
+    return result[0].smriti_approval_status if result else None
+
+
+def set_po_approval_status(po_name, status, reason=None):
+    """
+    Updates the smriti_approval_status and rejection reason for a PO.
+    """
+    values = {"smriti_approval_status": status}
+    if reason is not None:
+        values["smriti_rejection_reason"] = reason
+    frappe.db.set_value("Purchase Order", po_name, values)
+
+
+def purchase_order_exists(po_name):
+    """
+    Returns True if the Purchase Order exists in the database.
+    """
+    return bool(frappe.db.exists("Purchase Order", po_name))
+
+
+def get_po_supplier(po_name):
+    """
+    Returns the supplier field of a Purchase Order.
+    """
+    return frappe.db.get_value("Purchase Order", po_name, "supplier")
+
+
+def lock_and_get_po_received_qty(po_name):
+    """
+    Locks the Purchase Order row and returns its per_received percentage.
+    """
+    result = frappe.db.sql(
+        "SELECT per_received FROM `tabPurchase Order` WHERE name=%s FOR UPDATE",
+        po_name, as_dict=True
+    )
+    return flt(result[0].per_received) if result else 0.0
+
+
+def get_po_item_lines(po_name):
+    """
+    Returns item lines for a Purchase Order.
+    """
+    return frappe.get_all(
+        "Purchase Order Item",
+        filters={"parent": po_name},
+        fields=["item_code", "qty", "received_qty", "name"]
+    )
+
+
+
