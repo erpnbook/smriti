@@ -599,10 +599,8 @@
     ═══════════════════════════════════════════════════════════════════ */
     function _isFullResolutionAllowed() {
         try {
-            /* Developer bypass: always allow full theme resolution on localhost/127.0.0.1 for testing */
-            if (window.location.hostname === "localhost" ||
-                window.location.hostname === "127.0.0.1" ||
-                window.location.hostname === "0.0.0.0") {
+            /* Developer bypass: check server-injected flag */
+            if (window.SMRITI_DEVELOPER_MODE) {
                 return true;
             }
 
