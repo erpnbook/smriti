@@ -90,6 +90,17 @@ class ProductRepository:
             if hasattr(item, field) or frappe.db.has_column("Item", field):
                 item.set(field, item_data.get(key))
 
+        # Set default HSN code for India Compliance
+        hsn = item_data.get("hsn_code") or frappe.db.get_single_value("SMRITI Settings", "default_hsn_code") or "64029990"
+        if hsn:
+            if not frappe.db.exists("GST HSN Code", hsn):
+                hsn_doc = frappe.new_doc("GST HSN Code")
+                hsn_doc.name = hsn
+                hsn_doc.hsn_code = hsn
+                hsn_doc.description = "Auto-created HSN"
+                hsn_doc.insert(ignore_permissions=True)
+            item.gst_hsn_code = hsn
+
         item.insert(ignore_permissions=True)
 
         # Set selling price list rate

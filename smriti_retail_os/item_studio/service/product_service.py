@@ -61,7 +61,10 @@ class ProductService:
             item_data["item_group"] = frappe.db.get_single_value("SMRITI Settings", "default_item_group") or "Products"
 
         if not item_data.get("gst_percentage"):
-            item_data["gst_percentage"] = frappe.db.get_single_value("SMRITI Settings", "default_hsn_code") or "18"
+            item_data["gst_percentage"] = "18"
+
+        if not item_data.get("hsn_code"):
+            item_data["hsn_code"] = frappe.db.get_single_value("SMRITI Settings", "default_hsn_code") or "64029990"
 
         # 2. Invoke persistence layer
         if item_code:

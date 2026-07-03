@@ -414,6 +414,11 @@
       "hex": 8,
       "rgba": 20,
       "note": "Auto-recorded on first validation"
+    },
+    "smriti_ui_loader.html": {
+      "hex": 0,
+      "rgba": 0,
+      "note": "Auto-recorded on first validation"
     }
   }
 }
