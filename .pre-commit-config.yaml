@@ -71,6 +71,13 @@ repos:
         language: python
         files: '\.html$'
 
+      - id: smriti-architecture-guard
+        name: SMRITI Architecture Guard (Persistence Boundary Hook)
+        entry: python smriti_architecture_guard.py
+        language: python
+        files: '\.py$'
+        pass_filenames: false
+
 ci:
     autoupdate_schedule: weekly
     skip: []
