@@ -542,3 +542,57 @@ New API added:         verify @frappe.whitelist() + role check + unit test
 *SMRITI Retail OS™ — Architecture & Technical Reference*
 *Authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL*
 *Version: 1.2.10 — LOCKED*
+
+---
+
+## 15. Persistence Boundary Guard
+
+**Rule:** The Repository/Adapter layer is the **only** layer permitted to call Platform Engine persistence APIs.
+
+```
+UI -> api -> service -> repository -> Platform Engine
+                             ^
+                    ONLY HERE may these calls appear:
+                      frappe.get_doc(
+                      frappe.new_doc(
+                      frappe.db.sql(
+                      frappe.db.set_value(
+                      frappe.db.commit(
+                      frappe.db.delete(
+                      frappe.delete_doc(
+```
+
+**Allowed in service layers** (framework utilities, not persistence):
+`frappe.throw`, `frappe.db.exists`, `frappe.get_cached_doc`, `frappe.permissions`, `frappe.utils`, `frappe._`
+
+**Enforcement:** `smriti_architecture_guard.py` at the repo root enforces this rule in CI and pre-commit.
+
+- **Ratchet mode** (default): passes against the current baseline, fails only on new violations or regressions.
+- **Report mode** (`--report`): prints sprint-by-sprint progress, always exits 0.
+- **Strict mode** (`--strict`): fails on any violation; switch to this once the backlog is cleared.
+
+Baseline snapshot: `architecture_baseline.json` (versioned, ROOT-relative paths).
+
+Migration backlog: `ARCHITECTURE_MIGRATION_BACKLOG.md` — 88 files, 858 calls, sequenced P0 to P3.
+
+Reference implementation: `api/pos_profile_api.py` -> `services/pos_profile_service.py` -> `repositories/pos_profile_repository.py`
+
+---
+
+## 16. Platform Vision
+
+See `SMRITI_PLATFORM_VISION.md` at the repo root for the full statement of:
+
+- **Rule 0 — Business Experience Boundary** (Business User -> SMRITI -> Platform Engine, never directly to Platform Engine)
+- **Domain ownership** (what SMRITI owns vs. what the Platform Engine owns)
+- **Terminology standard** ("Platform Engine (currently ERPNext + Frappe)" not "ERPNext")
+- **Studio model**
+- **Architecture Guards roadmap** (Guards 1–5)
+
+Every AI agent, developer, and contributor working on SMRITI must read `SMRITI_PLATFORM_VISION.md` before making architecture decisions.
+
+---
+
+*SMRITI Retail OS™ — Architecture & Technical Reference*
+*Authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL*
+*Version: 1.3.0 — LOCKED*
