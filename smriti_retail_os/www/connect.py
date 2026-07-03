@@ -67,15 +67,8 @@ def get_queue_statistics() -> dict:
     if not frappe.db.exists("DocType", "SMRITI Integration Queue"):
         return stats
         
-    # Group query
-    data = frappe.db.sql(
-        """
-        select status, count(*) as count 
-        from `tabSMRITI Integration Queue` 
-        group by status
-        """, 
-        as_dict=True
-    )
+    # Delegate to Repository
+    data = QueueRepository.get_queue_statistics()
     
     for row in data:
         status_key = row.get("status").lower().replace("-", "_")
@@ -116,12 +109,8 @@ def trigger_manual_retry(queue_id):
     if not frappe.db.exists("SMRITI Integration Queue", queue_id):
         frappe.throw(_("Queue entry {0} not found.").format(queue_id))
         
-    # Reset status to Pending to trigger processing in next run
-    frappe.db.set_value("SMRITI Integration Queue", queue_id, {
-        "status": "Pending",
-        "retry_count": 0,
-        "error_details": ""
-    })
+    # Delegate to Repository
+    QueueRepository.reset_queue_item(queue_id)
     
     # Process immediately synchronously
     from smriti_retail_os.integration.core.engine import IntegrationEngine

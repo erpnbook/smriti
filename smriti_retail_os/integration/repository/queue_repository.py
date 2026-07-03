@@ -151,3 +151,25 @@ class QueueRepository:
             "sync_timestamp": frappe.utils.now_datetime()
         })
         log_doc.insert(ignore_permissions=True)
+
+    @staticmethod
+    def get_queue_statistics() -> list[dict]:
+        """Runs group query to summarize queue totals by status."""
+        return frappe.db.sql(
+            """
+            select status, count(*) as count 
+            from `tabSMRITI Integration Queue` 
+            group by status
+            """, 
+            as_dict=True
+        )
+
+    @staticmethod
+    def reset_queue_item(queue_id: str):
+        """Resets the state of a queue item to allow immediate retry."""
+        frappe.db.set_value("SMRITI Integration Queue", queue_id, {
+            "status": "Pending",
+            "retry_count": 0,
+            "error_details": ""
+        })
+
