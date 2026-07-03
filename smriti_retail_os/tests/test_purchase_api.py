@@ -105,7 +105,13 @@ class TestSmritiRetailPurchaseAPI(unittest.TestCase):
             else:
                 sup = frappe.new_doc("Supplier")
                 sup.supplier_name = "Test Supplier"
-                sup.supplier_group = frappe.db.get_value("Supplier Group", {}, "name") or "All Supplier Groups"
+                sup_group = frappe.db.get_value("Supplier Group", {}, "name")
+                if not sup_group:
+                    sg = frappe.new_doc("Supplier Group")
+                    sg.supplier_group_name = "All Supplier Groups"
+                    sg.insert(ignore_permissions=True)
+                    sup_group = sg.name
+                sup.supplier_group = sup_group
                 sup.insert(ignore_permissions=True)
                 self.supplier = sup.name
 
