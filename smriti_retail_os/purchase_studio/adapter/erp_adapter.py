@@ -443,3 +443,72 @@ def get_recent_activities(company, limit=4):
             })
     return recent
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SUPPLIER & MASTER DATA READ OPERATIONS (Batch 2 Persistence Migration)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def supplier_exists(supplier):
+    """
+    Returns True if the supplier exists in the database.
+    """
+    return bool(frappe.db.exists("Supplier", supplier))
+
+
+def get_supplier_doc(supplier):
+    """
+    Returns the cached Supplier document.
+    Raises DoesNotExistError if supplier doesn't exist.
+    """
+    return frappe.get_cached_doc("Supplier", supplier)
+
+
+def get_supplier_name(supplier):
+    """
+    Returns the supplier_name field for a supplier.
+    """
+    return frappe.db.get_value("Supplier", supplier, "supplier_name")
+
+
+def get_supplier_overdue_payable(supplier, company):
+    """
+    Returns the sum of outstanding overdue payable amounts for a supplier.
+    """
+    overdue = frappe.db.sql("""
+        SELECT SUM(outstanding_amount) as overdue
+        FROM `tabPurchase Invoice`
+        WHERE docstatus=1 AND supplier=%s AND company=%s
+              AND outstanding_amount > 0 AND due_date < CURDATE()
+    """, (supplier, company), as_dict=True)
+    return flt(overdue[0].overdue) if overdue else 0.0
+
+
+def get_suppliers_list(search_term=None, limit=50):
+    """
+    Queries the list of suppliers filtered by search_term.
+    """
+    filters = []
+    if search_term:
+        filters.append(["supplier_name", "like", f"%{search_term}%"])
+    rows = frappe.get_all(
+        "Supplier",
+        filters=filters if filters else {},
+        fields=["name", "supplier_name", "supplier_group", "country"],
+        order_by="supplier_name asc",
+        limit_page_length=limit
+    )
+    return rows
+
+
+def search_suppliers(query, limit=20):
+    """
+    Returns list of suppliers matching query for search utility.
+    """
+    return frappe.get_all(
+        "Supplier",
+        filters=[["supplier_name", "like", f"%{query}%"]],
+        fields=["name", "supplier_name", "supplier_group"],
+        limit_page_length=limit
+    )
+
+

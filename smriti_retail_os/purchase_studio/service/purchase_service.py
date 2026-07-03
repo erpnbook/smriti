@@ -165,7 +165,7 @@ def create_purchase_order(supplier, items_list, schedule_date=None,
 
     if not items_list:
         frappe.throw(_("Cannot create Purchase Order with an empty items list."))
-    if not supplier or not frappe.db.exists("Supplier", supplier):
+    if not supplier or not erp_adapter.supplier_exists(supplier):
         frappe.throw(_("Supplier '{0}' not found.").format(supplier))
 
     company = erp_adapter.resolve_company()
@@ -362,7 +362,7 @@ def create_grn(supplier, items_list, po_name=None, warehouse=None):
 
     if not items_list:
         frappe.throw(_("Cannot create GRN with an empty items list."))
-    if not supplier or not frappe.db.exists("Supplier", supplier):
+    if not supplier or not erp_adapter.supplier_exists(supplier):
         frappe.throw(_("Supplier '{0}' not found.").format(supplier))
 
     company = erp_adapter.resolve_company(po_name)
@@ -575,7 +575,7 @@ def create_invoice(mode, supplier=None, grn_name=None, items_list=None, posting_
     # regulated categories, brand compliance, distributor audit requirements).
     if supplier and mode == "standalone":
         try:
-            supplier_doc = frappe.get_cached_doc("Supplier", supplier)
+            supplier_doc = erp_adapter.get_supplier_doc(supplier)
         except frappe.DoesNotExistError:
             frappe.throw(_("Supplier '{0}' not found.").format(supplier))
 
@@ -658,7 +658,7 @@ def _create_invoice_from_grn(grn_name, posting_date=None):
 
 def _create_standalone_invoice(supplier, items_list, posting_date=None):
     """Builds and submits a standalone Purchase Invoice."""
-    if not supplier or not frappe.db.exists("Supplier", supplier):
+    if not supplier or not erp_adapter.supplier_exists(supplier):
         frappe.throw(_("Supplier '{0}' not found.").format(supplier))
     if not items_list:
         frappe.throw(_("Cannot create Purchase Invoice with an empty items list."))
@@ -831,13 +831,13 @@ def get_supplier_ledger(supplier, from_date, to_date, company=None):
         frappe.throw(_("Supplier is required."))
     if not from_date or not to_date:
         frappe.throw(_("Date range is required for Supplier Ledger."))
-    if not frappe.db.exists("Supplier", supplier):
+    if not erp_adapter.supplier_exists(supplier):
         frappe.throw(_("Supplier '{0}' not found.").format(supplier), frappe.DoesNotExistError)
 
     company   = company or erp_adapter.resolve_company()
     entries   = erp_adapter.get_supplier_gl_entries(supplier, from_date, to_date, company)
     outstanding = erp_adapter.get_supplier_outstanding(supplier, company)
-    supplier_name = frappe.db.get_value("Supplier", supplier, "supplier_name")
+    supplier_name = erp_adapter.get_supplier_name(supplier)
 
     # Compute running balance
     balance = 0.0
@@ -845,13 +845,7 @@ def get_supplier_ledger(supplier, from_date, to_date, company=None):
         balance += flt(entry.get("debit", 0)) - flt(entry.get("credit", 0))
         entry["balance"] = balance
 
-    overdue = frappe.db.sql("""
-        SELECT SUM(outstanding_amount) as overdue
-        FROM `tabPurchase Invoice`
-        WHERE docstatus=1 AND supplier=%s AND company=%s
-              AND outstanding_amount > 0 AND due_date < CURDATE()
-    """, (supplier, company), as_dict=True)
-    overdue_amt = flt(overdue[0].overdue) if overdue else 0.0
+    overdue_amt = erp_adapter.get_supplier_overdue_payable(supplier, company)
 
     return {
         "supplier":      supplier,
@@ -870,13 +864,7 @@ def search_suppliers(query, company=None):
     check_any_purchase_role()
     if not query or len(query) < 2:
         return []
-    results = frappe.get_all(
-        "Supplier",
-        filters=[["supplier_name", "like", f"%{query}%"]],
-        fields=["name", "supplier_name", "supplier_group"],
-        limit_page_length=20
-    )
-    return results
+    return erp_adapter.search_suppliers(query, limit=20)
 
 
 def search_items(query):
@@ -1319,15 +1307,5 @@ def get_return_detail(return_name):
 def get_suppliers(company=None, search=None, limit=50):
     """Returns list of suppliers for dropdown selection in forms."""
     check_any_purchase_role()
-    filters = []
-    if search:
-        filters.append(["supplier_name", "like", f"%{search}%"])
-    rows = frappe.get_all(
-        "Supplier",
-        filters=filters if filters else {},
-        fields=["name", "supplier_name", "supplier_group", "country"],
-        order_by="supplier_name asc",
-        limit_page_length=limit
-    )
-    return rows
+    return erp_adapter.get_suppliers_list(search_term=search, limit=limit)
 
