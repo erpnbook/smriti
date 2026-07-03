@@ -654,3 +654,33 @@ Full specification: SMRITI_EXPERIENCE_CONSTITUTION.md (v1.0.0, LOCKED)
 *SMRITI Retail OS™ — Architecture & Technical Reference*
 *Authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL*
 *Version: 1.4.0 — LOCKED*
+
+---
+
+## 19. SMRITI Connect™ — Integration Platform
+
+SMRITI Connect is the enterprise-grade integration framework for SMRITI Retail OS. It decouples business modules from external APIs via an event-driven outbox queue and dynamic adapter registry.
+
+### 19.1 Event Flow
+
+```
+Billing -> Business Event -> Policy Engine -> Event Bus -> Outbox Queue -> Engine Worker -> Registry -> Adapter -> Transport -> External API
+```
+
+### 19.2 Platform Specifications
+
+1. **SMRITI Integration Provider (Registry):** DocType managing active adapters. Fields include: `provider_id`, `provider_type`, `version`, `min_platform_version`, `status`, `enabled`, `adapter_class`, `health_status`, `last_check`.
+2. **SMRITI Event Definition (Schema Registry):** DocType managing schemas. Fields include: `event_name`, `version`, `producer`, `consumers` (dependency graph), `required_fields` (JSON validation).
+3. **SMRITI Integration Policy (Policy Engine):** Rules engine deciding whether an event should route to specific adapters per company/location settings.
+4. **Outbox Pattern:** Events are inserted into the database queue (`SMRITI Integration Queue`) inside the source document's active SQL transaction. If the transaction rolls back, the event rolls back.
+5. **Adapter Lifecycle Hooks:** Every adapter must inherit from `BaseIntegrationAdapter` and implement: `connect()`, `disconnect()`, `health_check()`, and `handle_event()`.
+6. **Queue Partitioning:** Supports `Critical`, `Normal`, and `Low` priorities, executed progressively by the engine worker.
+7. **SMRITI Connect Admin Console:** Replaces individual plugin pages with a unified interface at `/connect` showing a health dashboard, latency metrics, provider configuration toggles, queue monitors, and audit logs.
+
+Full specification: SMRITI_CONNECT_ARCHITECTURE.md (v1.0.0, LOCKED)
+
+---
+
+*SMRITI Retail OS™ — Architecture & Technical Reference*
+*Authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL*
+*Version: 1.5.0 — LOCKED*
