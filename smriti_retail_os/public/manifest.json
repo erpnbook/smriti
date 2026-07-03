@@ -50,9 +50,9 @@
       "icons": [{ "src": "/assets/smriti_retail_os/images/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Purchase Manager",
+      "name": "Purchase Studio",
       "short_name": "Purchase",
-      "url": "/purchase",
+      "url": "/smriti-purchase",
       "description": "Purchase Orders & GRN",
       "icons": [{ "src": "/assets/smriti_retail_os/images/icon-192.png", "sizes": "192x192" }]
     }

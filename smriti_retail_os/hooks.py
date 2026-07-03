@@ -722,10 +722,9 @@ website_route_rules = [
         "to_route": "billing"
     },
     {
-        # Standalone Purchase Manager — served from www/purchase.html + www/purchase.py
-        # Zero Frappe chrome. GRN, New PO, all via REST API.
+        # Standalone Purchase Manager — legacy route now redirects to SMRITI Purchase Studio
         "from_route": "/purchase",
-        "to_route": "purchase"
+        "to_route": "smriti-purchase"
     },
     {
         # Standalone Inventory Operations — served from www/inventory.html + www/inventory.py
