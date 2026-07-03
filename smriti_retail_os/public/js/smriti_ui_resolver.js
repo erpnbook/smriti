@@ -319,24 +319,24 @@
         ────────────────────────────────────────────────────────────────── */
         "sleek-compact": {
             /* ── Background ── */
-            "--smriti-color-bg-page":              "#0a0f1e",
-            "--smriti-color-bg-primary":           "#111827",
-            "--smriti-color-bg-secondary":         "#1a2236",
-            "--smriti-color-bg-elevated":          "#1e293b",
+            "--smriti-color-bg-page":              "#080e1c",
+            "--smriti-color-bg-primary":           "#0f1729",
+            "--smriti-color-bg-secondary":         "#131e35",
+            "--smriti-color-bg-elevated":          "#1a2847",
             "--smriti-color-bg-overlay":           "rgba(0,0,0,0.72)",
             /* ── Text ── */
-            "--smriti-color-text-primary":         "#f1f5f9",
+            "--smriti-color-text-primary":         "#e2e8f0",
             "--smriti-color-text-muted":           "#94a3b8",
-            "--smriti-color-text-subtle":          "#475569",
-            /* ── Brand — Teal Primary, Purple Secondary ── */
-            "--smriti-color-brand-primary":        "#14B8A6",
-            "--smriti-color-brand-light":          "#2dd4bf",
-            "--smriti-color-brand-dark":           "#0d9488",
-            "--smriti-color-brand-secondary":      "#6941C6",
-            "--smriti-color-brand-secondary-light":"#9e77ed",
+            "--smriti-color-text-subtle":          "#64748b",
+            /* ── Brand — Blue Primary, Purple Secondary ── */
+            "--smriti-color-brand-primary":        "#2563EB",
+            "--smriti-color-brand-light":          "#3b74f7",
+            "--smriti-color-brand-dark":           "#1A2B5C",
+            "--smriti-color-brand-secondary":      "#8b5cf6",
+            "--smriti-color-brand-secondary-light":"#a78bfa",
             /* ── Borders ── */
-            "--smriti-color-border-default":       "#1e293b",
-            "--smriti-color-border-strong":        "#2d3748",
+            "--smriti-color-border-default":       "rgba(255,255,255,0.07)",
+            "--smriti-color-border-strong":        "rgba(255,255,255,0.12)",
             /* ── Status Colors (dark-optimised) ── */
             "--smriti-color-status-success":       "#10b981",
             "--smriti-color-status-success-bg":    "rgba(16,185,129,0.12)",
