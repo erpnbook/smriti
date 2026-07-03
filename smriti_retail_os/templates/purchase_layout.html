@@ -1,0 +1,139 @@
+{#
+ # * @file: smriti_retail_os/templates/purchase_layout.html
+ # * @description: Dedicated studio layout base template for SMRITI Purchase Studio.
+ # * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ # * @version: 2.0.5
+ # * @license: MIT
+ # * Copyright (c) 2026 AITDL NETWORK. All rights reserved.
+ #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{% block title %}SMRITI Purchase Studio{% endblock %}</title>
+    <meta name="description" content="SMRITI Purchase Studio — unified purchase operations: orders, GRN, invoices, returns, supplier ledger, analytics."/>
+    <meta name="robots" content="noindex,nofollow"/>
+    <link rel="icon" type="image/x-icon" href="/assets/smriti_retail_os/images/smriti-favicon.ico"/>
+    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_purchase.css?v=2.0.5"/>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div id="shell">
+      <!-- LEFT NAV -->
+      <nav id="nav">
+        <div id="nav-logo">
+          <img src="/assets/smriti_retail_os/images/smriti-logo.png" alt="SMRITI" onerror="this.style.display='none'"/>
+          <div id="logo-text">
+            <div id="logo-title">SMRITI</div>
+            <div id="logo-sub">Purchase Studio</div>
+          </div>
+        </div>
+        <div id="nav-links">
+          <div class="nav-sep">Overview</div>
+          <div class="nav-item active" data-section="dashboard" onclick="PS.nav('dashboard')">
+            <span class="ni">📊</span> Dashboard
+          </div>
+          <div class="nav-sep">Transactions</div>
+          <div class="nav-item" data-section="orders" onclick="PS.nav('orders')">
+            <span class="ni">📋</span> Purchase Orders
+            <span class="nav-badge" id="badge-orders" style="display:none"></span>
+          </div>
+          <div class="nav-item" data-section="grn" onclick="PS.nav('grn')">
+            <span class="ni">📦</span> GRN / Receipts
+          </div>
+          <div class="nav-item" data-section="invoices" onclick="PS.nav('invoices')">
+            <span class="ni">🧾</span> Invoices
+            <span class="nav-badge" id="badge-inv" style="display:none">!</span>
+          </div>
+          <div class="nav-item" data-section="returns" onclick="PS.nav('returns')">
+            <span class="ni">↩️</span> Returns
+          </div>
+          <div class="nav-sep">Finance</div>
+          <div class="nav-item" data-section="supplier-ledger" onclick="PS.nav('supplier-ledger')">
+            <span class="ni">📒</span> Supplier Ledger
+          </div>
+          <div class="nav-item" data-section="landed-cost" onclick="PS.nav('landed-cost')">
+            <span class="ni">🚚</span> Landed Cost
+          </div>
+          <div class="nav-sep">Intelligence</div>
+          <div class="nav-item" data-section="analytics" onclick="PS.nav('analytics')">
+            <span class="ni">📈</span> Analytics
+          </div>
+          <div class="nav-item" data-section="suppliers" onclick="PS.nav('suppliers')">
+            <span class="ni">🏭</span> Supplier Performance
+          </div>
+          <div class="nav-sep" id="sys-sep" style="display:none">System</div>
+          <div class="nav-item" data-section="settings" onclick="PS.nav('settings')" id="nav-settings" style="display:none">
+            <span class="ni">⚙️</span> Settings
+          </div>
+        </div>
+        <div id="nav-footer">
+          <div id="nav-user-avatar" id="nav-av"></div>
+          <div id="nav-user-name"></div>
+        </div>
+      </nav>
+
+      <!-- MAIN -->
+      <div id="main">
+        <!-- TOPBAR -->
+        <div id="topbar">
+          <div id="breadcrumb">
+            <span>Purchase Studio</span>
+            <span class="bc-sep">›</span>
+            <span class="bc-cur" id="bc-cur">Dashboard</span>
+          </div>
+          <div class="tb-search">
+            <span class="tb-search-icon">🔍</span>
+            <input type="text" id="global-search" placeholder="Search… (Ctrl+K)" oninput="PS.globalSearch(this.value)"/>
+          </div>
+          <button class="tb-btn" onclick="PS.exportCurrent()" id="btn-export" title="Export CSV">⬇ Export</button>
+          <button class="tb-btn" onclick="PS.openDedicatedGrn()" id="btn-grn-new" style="display:none" title="Open dedicated GRN page">📦 New GRN</button>
+          <button class="tb-btn primary" onclick="PS.primaryAction()" id="btn-primary" style="display:none">+ New</button>
+        </div>
+
+        <!-- CONTENT -->
+        <div id="content">
+            {% block content %}{% endblock %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ DETAIL DRAWER ════════════════════════════════════════ -->
+    <div id="drawer">
+      <div id="drawer-top">
+        <div id="drawer-title">Document</div>
+        <button id="drawer-close" onclick="PS.closeDrawer()">✕ Close</button>
+      </div>
+      <div id="drawer-body"></div>
+      <div id="drawer-actions"></div>
+    </div>
+
+    <!-- ════ MODAL ═══════════════════════════════════════════════ -->
+    <div id="overlay" onclick="PS.overlayClick(event)">
+      <div class="modal" id="modal">
+        <div class="modal-hdr">
+          <div class="modal-title" id="modal-title">Create</div>
+          <div class="modal-steps" id="modal-steps"></div>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-ftr">
+          <div style="display:flex;gap:8px;">
+            <button class="m-close" onclick="PS.closeModal()">Cancel</button>
+            <button class="m-back" id="m-back" onclick="PS.modalBack()" style="display:none">← Back</button>
+          </div>
+          <button class="m-next" id="m-next" onclick="PS.modalNext()">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ TOASTS ══════════════════════════════════════════════ -->
+    <div id="toasts"></div>
+
+    <!-- Core UIE engine scripts -->
+    <script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js?v=2.0.5"></script>
+    <script src="/assets/smriti_retail_os/js/smriti_theme_manager.js?v=2.0.5"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

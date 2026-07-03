@@ -1,0 +1,46 @@
+{#
+ # * @file: smriti_retail_os/templates/smriti_layout.html
+ # * @description: Core standard layout template for all SMRITI pages.
+ # *               Provides the standard HTML head, token loader, UI loader,
+ # *               and the unified layout shell (sidebar, main main-wrapper, topbar).
+ # * @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+ # * @version: 2.0.5
+ # * @license: MIT
+ # * Copyright (c) 2026 AITDL NETWORK. All rights reserved.
+ #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+    {%- include "smriti_retail_os/templates/includes/smriti_ui_loader.html" -%}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ title or "SMRITI Retail OS" }}{% endblock %}</title>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="smriti-shell">
+        {%- include "smriti_retail_os/templates/includes/smriti_sidebar.html" -%}
+        
+        <div class="smriti-main">
+            {%- include "smriti_retail_os/templates/includes/smriti_topbar.html" -%}
+            
+            <div class="smriti-content">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- SMRITI UI Configuration Engine — loaded last to merge safely -->
+    <script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js?v=2.0.5"></script>
+    <script src="/assets/smriti_retail_os/js/smriti_theme_manager.js?v=2.0.5"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.SMRITI && typeof SMRITI.initUIEngine === 'function') {
+                SMRITI.initUIEngine();
+            }
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
