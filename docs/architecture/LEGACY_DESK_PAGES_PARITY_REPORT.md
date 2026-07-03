@@ -2,14 +2,15 @@
 
 ---
 **DOCUMENT METADATA**
+- **Document Title**: SMRITI Legacy Desk Pages Parity Report
 - **Document Owner**: Jawahar R. Mallah
 - **Organization**: AITDL – AI Technology & Development Lab
 - **Prepared By**: SMRITI Engineering Team
 - **Reviewed By**: —
 - **Approved By**: —
 - **Status**: Draft
-- **Version**: 1.0
-- **Last Updated**: 04-Jul-2026
+- **Version**: 1.0.0
+- **Revision Date**: 04-Jul-2026
 ---
 
 ## 1. Context and Objective

@@ -2,14 +2,15 @@
 
 ---
 **DOCUMENT METADATA**
+- **Document Title**: SMRITI Master Blueprint v1.1
 - **Document Owner**: Jawahar R. Mallah
 - **Organization**: AITDL – AI Technology & Development Lab
 - **Prepared By**: SMRITI Engineering Team
 - **Reviewed By**: —
 - **Approved By**: —
 - **Status**: Draft
-- **Version**: 1.1
-- **Last Updated**: 04-Jul-2026
+- **Version**: 1.1.0
+- **Revision Date**: 04-Jul-2026
 ---
 
 ## 1. Target State

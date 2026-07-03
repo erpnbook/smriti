@@ -2,6 +2,7 @@
 
 ---
 **DOCUMENT METADATA**
+- **Document Title**: SMRITI Retail OS Release Notes (v2.0.1)
 - **Document Owner**: Jawahar R. Mallah
 - **Organization**: AITDL – AI Technology & Development Lab
 - **Prepared By**: SMRITI Engineering Team
@@ -9,7 +10,7 @@
 - **Approved By**: —
 - **Status**: Draft
 - **Version**: 2.0.1
-- **Last Updated**: 04-Jul-2026
+- **Revision Date**: 04-Jul-2026
 ---
 
 ## Release Highlights
