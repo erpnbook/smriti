@@ -125,7 +125,7 @@ def get_purchase_order_detail(po_name):
     items = []
     for item in po.items:
         pending = flt(item.qty) - flt(item.received_qty)
-        has_batch = frappe.db.get_value("Item", item.item_code, "has_batch_no")
+        has_batch = erp_adapter.check_item_has_batch(item.item_code)
         items.append({
             "item_code":    item.item_code,
             "item_name":    item.item_name,
@@ -929,7 +929,7 @@ def get_items_for_grn(po_name):
         pending = flt(item.qty) - flt(item.received_qty)
         if pending <= 0:
             continue
-        has_batch = frappe.db.get_value("Item", item.item_code, "has_batch_no")
+        has_batch = erp_adapter.check_item_has_batch(item.item_code)
         items.append({
             "item_code":     item.item_code,
             "item_name":     item.item_name,

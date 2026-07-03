@@ -908,6 +908,14 @@ def insert_and_submit_lcv(lcv):
     return lcv.name
 
 
+def check_item_has_batch(item_code):
+    """
+    Returns True if the item has a batch number.
+    """
+    return bool(frappe.db.get_value("Item", item_code, "has_batch_no"))
+
+
+
 
 
 
