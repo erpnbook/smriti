@@ -316,14 +316,16 @@ doc_events = {
             "smriti_retail_os.cge.service.cge_service.process_invoice_submit",
             "smriti_retail_os.sfm.service.attribution_service.process_invoice_submit",
             "smriti_retail_os.clienteling.service.clienteling_service.on_invoice_submit",
-            "smriti_retail_os.smriti_retail_os.uie.services.dispatcher.enqueue_document_sync"
+            "smriti_retail_os.smriti_retail_os.uie.services.dispatcher.enqueue_document_sync",
+            "smriti_retail_os.integration.core.event_hooks.handle_sales_invoice_submit"
         ],
         "on_cancel": [
             "smriti_retail_os.psv_service.process_sales_invoice_cancel",
             "smriti_retail_os.cge.service.cge_service.process_invoice_cancel",
             "smriti_retail_os.sfm.service.attribution_service.process_invoice_cancel",
             "smriti_retail_os.clienteling.service.clienteling_service.on_invoice_cancel",
-            "smriti_retail_os.smriti_retail_os.uie.services.dispatcher.enqueue_document_sync"
+            "smriti_retail_os.smriti_retail_os.uie.services.dispatcher.enqueue_document_sync",
+            "smriti_retail_os.integration.core.event_hooks.handle_sales_invoice_cancel"
         ],
         "on_trash": [
             "smriti_retail_os.hooks_logic.release_reserved_budget_on_trash"
@@ -337,8 +339,12 @@ doc_events = {
     },
     "Purchase Invoice": {
         "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
+        "on_submit": "smriti_retail_os.integration.core.event_hooks.handle_purchase_invoice_submit",
         # SSDL Purchase Studio — Phase 7 audit gap resolution
-        "on_cancel": "smriti_retail_os.purchase_studio.service.audit_service.log_pi_cancel"
+        "on_cancel": [
+            "smriti_retail_os.purchase_studio.service.audit_service.log_pi_cancel",
+            "smriti_retail_os.integration.core.event_hooks.handle_purchase_invoice_cancel"
+        ]
     },
     "Purchase Order": {
         "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
