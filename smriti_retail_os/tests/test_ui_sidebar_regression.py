@@ -76,7 +76,7 @@ class TestUISidebarRegression(unittest.TestCase):
     def test_page_access_registry_policy(self):
         """Verify that security policies require proper role check for restricted SMRITI pages."""
         # Simple import validation
-        from smriti_retail_os.smriti_retail_os.api.security_api import check_page_access
+        from smriti_retail_os.api.security_api import check_page_access
         
         # Test anonymous access failure
         original_user = frappe.session.user
