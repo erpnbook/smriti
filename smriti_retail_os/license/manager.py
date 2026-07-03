@@ -43,10 +43,23 @@ def _load_license():
         frappe.local._smriti_license_cache = doc
         return doc
     except frappe.DoesNotExistError:
-        # DocType not yet created — genuine pre-migration state.
-        # Allow all features through so fresh installs work before setup.
-        frappe.local._smriti_license_cache = None
-        return None
+        if not frappe.db.table_exists("SMRITI License"):
+            # Genuine pre-migration state — DocType not yet created via bench migrate.
+            # Allow all features through so fresh installs work before setup.
+            frappe.local._smriti_license_cache = None
+            return None
+        # Table exists but the singleton row is missing — that is corruption, not pre-migration.
+        # Fail CLOSED: do not silently unlock all licensed features.
+        frappe.log_error(
+            title="SMRITI License: singleton row missing on existing table",
+            message=(
+                "The 'SMRITI License' singleton row was not found even though the table exists.\n"
+                "This may indicate accidental deletion or a failed migration.\n"
+                "All licensed features will be blocked until the license record is restored."
+            )
+        )
+        frappe.local._smriti_license_cache = _LICENSE_LOAD_ERROR
+        return _LICENSE_LOAD_ERROR
     except Exception:
         # Infrastructure failure: DB hiccup, PermissionError, corrupt doc.
         # Fail CLOSED — do not silently unlock all licensed features.

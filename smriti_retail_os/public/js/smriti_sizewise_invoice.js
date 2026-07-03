@@ -1754,7 +1754,7 @@ function populatePrintLayout(grand = 0) {
     const cAddr = c.address || {};
     
     // 1. Company Info
-    document.getElementById('p-company-name').textContent = c.company_name || 'TATTLY THREADS';
+    document.getElementById('p-company-name').textContent = c.company_name || '';
     let metaLines = [];
     if (cAddr.line1) metaLines.push(cAddr.line1);
     if (cAddr.line2) metaLines.push(cAddr.line2);
@@ -1773,6 +1773,19 @@ function populatePrintLayout(grand = 0) {
         logoImg.style.display = 'block';
     } else {
         logoImg.style.display = 'none';
+    }
+
+    // Signature company name (dynamically set — never hardcoded)
+    const sigForEl = document.getElementById('p-sig-for-company');
+    if (sigForEl) sigForEl.textContent = 'For: ' + (c.company_name || '');
+
+    // Signature image (company-specific, loaded from company settings)
+    const sigImg = document.getElementById('p-sig-img');
+    if (sigImg && c.company_signature) {
+        sigImg.src = c.company_signature;
+        sigImg.style.display = 'block';
+    } else if (sigImg) {
+        sigImg.style.display = 'none';
     }
     
     // 2. Bill To & Ship To
@@ -1832,25 +1845,29 @@ function populatePrintLayout(grand = 0) {
     const bankBranch = document.getElementById('bank-branch').value || '';
     
     if (bankName || bankAc) {
-        const branchStr = bankBranch ? bankBranch.toUpperCase() : 'WARDHMAN NAGAR NAGPUR';
+        const branchStr = bankBranch ? bankBranch.toUpperCase() : '';
         document.getElementById('p-bank-name-branch').innerHTML = `Bank Name: ${bankName.toUpperCase()},<br>${branchStr}`;
         
         document.getElementById('p-bank-details-block').innerHTML = `
             <br>
             Bank Account No.: ${bankAc}<br>
             Bank IFSC code: ${bankIFSC}<br>
-            Account Holder's Name: ${(c.company_name || 'TATTLY THREADS').toUpperCase()}
+            Account Holder's Name: ${(c.company_name || '').toUpperCase()}
         `;
         
         if (document.getElementById('p-payto')) {
             document.getElementById('p-payto').innerHTML = `Bank Name: <strong>${bankName}</strong><br>Account No.: <strong>${bankAc}</strong><br>IFSC: <strong>${bankIFSC}</strong>`;
         }
         
-        // UPI QR Code
-        const upiId = c.phone ? `${c.phone}@upi` : "9604990390@upi";
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=${c.company_name || 'TATTLY THREADS'}&am=${grand}&cu=INR`)}`;
-        document.getElementById('p-qr-img').src = qrUrl;
-        document.getElementById('p-qr-container').style.display = 'block';
+        // UPI QR Code — only render if phone is configured; never synthesize a fallback payee
+        if (c.phone) {
+            const upiId = `${c.phone}@upi`;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=${encodeURIComponent(c.company_name || '')}&am=${grand}&cu=INR`)}`;
+            document.getElementById('p-qr-img').src = qrUrl;
+            document.getElementById('p-qr-container').style.display = 'block';
+        } else {
+            document.getElementById('p-qr-container').style.display = 'none';
+        }
     } else {
         document.getElementById('p-bank-name-branch').textContent = 'Bank details not configured';
         document.getElementById('p-bank-details-block').textContent = '';

@@ -64,9 +64,12 @@ def _load_dev_fallback_secret() -> str:
         config_path = os.path.join(os.path.dirname(__file__), "..", "config", "dev_defaults.json")
         if os.path.exists(config_path):
             with open(config_path, "r", encoding="utf-8") as f:
-                return json.load(f).get("license_fallback_secret", "")
+                secret = json.load(f).get("license_fallback_secret", "")
+                if secret:
+                    return secret
     except Exception:
         pass
+    # No JSON secret configured — return empty to trigger per-request random generation.
     return ""
 
 _FALLBACK_SECRET = _load_dev_fallback_secret()
@@ -131,7 +134,15 @@ def _get_secret() -> bytes:
             "site_config.json before going to production."
         ),
     )
+    import secrets as _secrets
+    if not _FALLBACK_SECRET:
+        # No dev_defaults.json secret — use a per-process random key so HMAC
+        # output is unpredictable even in developer_mode. Rotates on worker restart.
+        if not hasattr(frappe.local, "_smriti_dev_hmac_key"):
+            frappe.local._smriti_dev_hmac_key = _secrets.token_bytes(32)
+        return frappe.local._smriti_dev_hmac_key
     return _FALLBACK_SECRET.encode("utf-8")
+
 
 
 def _compute_sig(version: str, payload_b64: str) -> str:

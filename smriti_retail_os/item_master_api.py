@@ -15,6 +15,31 @@ from frappe import _
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  SECURITY: TRUNCATE ALLOWLISTS
+#  Raw SQL TRUNCATE is used only in admin factory-reset operations.
+#  Table names MUST come from one of these allowlists — never from user input.
+#  Architecture: H-7 remediation (hardcoding audit 2026-07-03)
+# ─────────────────────────────────────────────────────────────────────────────
+
+_FACTORY_RESET_TRANSACTION_DOCTYPES = frozenset([
+    "Sales Invoice", "Sales Invoice Item",
+    "POS Invoice", "POS Invoice Item", "POS Invoice Reference",
+    "Payment Entry", "Payment Entry Reference", "Payment Entry Deduction",
+    "GL Entry", "Stock Ledger Entry", "Stock Entry", "Stock Entry Detail",
+    "Purchase Order", "Purchase Order Item",
+    "Purchase Receipt", "Purchase Receipt Item",
+    "Payment Ledger Entry", "Serial No", "Batch",
+])
+
+_FACTORY_RESET_ITEM_DOCTYPES = frozenset([
+    "Item", "Item Barcode", "Item Price", "Item Supplier",
+    "Item Tax", "Item Attribute Value", "Item Variant Attribute",
+    "Brand", "GST HSN Code",
+])
+
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  COLUMN DEFINITIONS
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -1656,6 +1681,9 @@ def reset_all_transactions():
     
     deleted = []
     for doctype in tables:
+        if doctype not in _FACTORY_RESET_TRANSACTION_DOCTYPES:
+            frappe.log_error(title="SMRITI: Rejected unexpected TRUNCATE", message=f"Refused to truncate unlisted doctype: {doctype}")
+            continue
         table_name = f"tab{doctype}"
         try:
             frappe.db.sql(f"TRUNCATE `{table_name}`")
@@ -1736,6 +1764,9 @@ def reset_all_items():
     
     deleted = []
     for doctype in tables:
+        if doctype not in _FACTORY_RESET_ITEM_DOCTYPES:
+            frappe.log_error(title="SMRITI: Rejected unexpected TRUNCATE", message=f"Refused to truncate unlisted doctype: {doctype}")
+            continue
         table_name = f"tab{doctype}"
         try:
             frappe.db.sql(f"TRUNCATE `{table_name}`")

@@ -15,6 +15,22 @@ from frappe import _
 from smriti_retail_os.utils.invoice_utils import get_barcode_candidates
 from smriti_retail_os.security_api import check_administrator_only
 
+# Security: allowlist for admin-only factory-reset TRUNCATE operations.
+# Table names in reset_db MUST come from this set — never from user input.
+# Architecture: H-7 remediation (hardcoding audit 2026-07-03)
+_RESET_DB_SAFE_TABLES = frozenset([
+    "tabStock Reconciliation", "tabStock Reconciliation Item",
+    "tabStock Entry", "tabStock Entry Detail",
+    "tabPurchase Receipt", "tabPurchase Receipt Item",
+    "tabPurchase Invoice", "tabPurchase Invoice Item",
+    "tabPurchase Order", "tabPurchase Order Item",
+    "tabSales Invoice", "tabSales Invoice Item",
+    "tabPOS Invoice", "tabPOS Invoice Item",
+    "tabPayment Entry", "tabPayment Entry Reference", "tabPayment Entry Deduction",
+    "tabGL Entry", "tabStock Ledger Entry", "tabPayment Ledger Entry",
+    "tabBin", "tabSeries",
+])
+
 def _get_default_warehouse(company):
     """Company ke saath matching warehouse lo."""
     if not company:
@@ -482,6 +498,10 @@ def reset_db(confirmation_token=None):
 
     failed_tables = []
     for t in tables:
+        if t not in _RESET_DB_SAFE_TABLES:
+            frappe.log_error(title="SMRITI: Rejected unexpected TRUNCATE", message=f"Refused to truncate unlisted table: {t}")
+            failed_tables.append(t)
+            continue
         try:
             frappe.db.sql(f"TRUNCATE TABLE `{t}`")
         except Exception:
