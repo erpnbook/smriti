@@ -310,6 +310,7 @@ class TestSmritiRetailPurchaseAPI(unittest.TestCase):
                 pl_doc = frappe.new_doc("Price List")
                 pl_doc.price_list_name = pl
                 pl_doc.enabled = 1
+                pl_doc.selling = 1
                 pl_doc.insert(ignore_permissions=True)
 
         variant_code = "TESTSTYLE-BLACK-38"
