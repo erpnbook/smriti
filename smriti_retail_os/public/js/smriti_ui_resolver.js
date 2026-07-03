@@ -599,6 +599,13 @@
     ═══════════════════════════════════════════════════════════════════ */
     function _isFullResolutionAllowed() {
         try {
+            /* Developer bypass: always allow full theme resolution on localhost/127.0.0.1 for testing */
+            if (window.location.hostname === "localhost" ||
+                window.location.hostname === "127.0.0.1" ||
+                window.location.hostname === "0.0.0.0") {
+                return true;
+            }
+
             /* Own-defined source (www page Python controller injects this) */
             if (window.SMRITI_LICENSE) {
                 var s = window.SMRITI_LICENSE.status || window.SMRITI_LICENSE.license_status || "Unregistered";
