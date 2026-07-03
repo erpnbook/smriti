@@ -367,3 +367,79 @@ def get_supplier_outstanding(supplier, company):
             AND is_cancelled = 0
     """, {"supplier": supplier, "company": company}, as_dict=True)
     return flt(result[0].outstanding) if result else 0.0
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DASHBOARD READ OPERATIONS (Batch 1 Persistence Migration)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def count_open_purchase_orders(company):
+    """
+    Returns the number of submitted, uncompleted/unclosed POs for a company.
+    """
+    return frappe.db.count(
+        "Purchase Order",
+        {"docstatus": 1, "status": ["not in", ["Closed", "Completed", "Cancelled"]], "company": company}
+    )
+
+
+def count_pending_grns(company):
+    """
+    Returns the count of submitted GRNs with per_billed < 100%.
+    """
+    return frappe.db.count(
+        "Purchase Receipt",
+        {"docstatus": 1, "per_billed": ["<", 100], "is_return": 0, "company": company}
+    )
+
+
+def get_outstanding_payables_total(company):
+    """
+    Returns the total outstanding amount for all submitted Purchase Invoices.
+    """
+    result = frappe.db.sql("""
+        SELECT SUM(outstanding_amount) as total
+        FROM `tabPurchase Invoice`
+        WHERE docstatus=1 AND outstanding_amount > 0 AND company=%s
+    """, company, as_dict=True)
+    return flt(result[0].total) if result else 0.0
+
+
+def get_monthly_spend_total(company, start_date):
+    """
+    Returns the total grand_total sum of submitted PIs posted since start_date.
+    """
+    result = frappe.db.sql("""
+        SELECT SUM(grand_total) as total
+        FROM `tabPurchase Invoice`
+        WHERE docstatus=1 AND posting_date >= %s AND company=%s
+    """, (start_date, company), as_dict=True)
+    return flt(result[0].total) if result else 0.0
+
+
+def get_recent_activities(company, limit=4):
+    """
+    Fetches recent submitted records for PO, GRN, and PI.
+    Returns a unified sorted list of activity dicts.
+    """
+    recent = []
+    for doctype, label in [("Purchase Order", "PO"), ("Purchase Receipt", "GRN"), ("Purchase Invoice", "PI")]:
+        date_field = "transaction_date" if doctype == "Purchase Order" else "posting_date"
+        rows = frappe.get_all(
+            doctype,
+            filters={"docstatus": 1, "company": company},
+            fields=["name", "supplier", "supplier_name", date_field, "grand_total", "status"],
+            order_by=f"{date_field} desc",
+            limit_page_length=limit
+        )
+        for r in rows:
+            recent.append({
+                "doctype": label,
+                "name": r.name,
+                "supplier": r.supplier_name or r.supplier,
+                "date": str(r.get(date_field, "")),
+                "amount": flt(r.grand_total),
+                "status": r.status or ""
+            })
+    return recent
+

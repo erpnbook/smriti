@@ -60,53 +60,17 @@ def get_dashboard_data(company=None):
     check_any_purchase_role()
     company = company or erp_adapter.resolve_company()
 
-    open_pos = frappe.db.count(
-        "Purchase Order",
-        {"docstatus": 1, "status": ["not in", ["Closed", "Completed", "Cancelled"]], "company": company}
-    )
-    pending_grns = frappe.db.count(
-        "Purchase Receipt",
-        {"docstatus": 1, "per_billed": ["<", 100], "is_return": 0, "company": company}
-    )
-
-    unpaid_result = frappe.db.sql("""
-        SELECT SUM(outstanding_amount) as total
-        FROM `tabPurchase Invoice`
-        WHERE docstatus=1 AND outstanding_amount > 0 AND company=%s
-    """, company, as_dict=True)
-    unpaid_amt = flt(unpaid_result[0].total) if unpaid_result else 0.0
+    open_pos = erp_adapter.count_open_purchase_orders(company)
+    pending_grns = erp_adapter.count_pending_grns(company)
+    unpaid_amt = erp_adapter.get_outstanding_payables_total(company)
 
     from datetime import date
     today = date.today()
     month_start = today.replace(day=1).isoformat()
-    month_spend_result = frappe.db.sql("""
-        SELECT SUM(grand_total) as total
-        FROM `tabPurchase Invoice`
-        WHERE docstatus=1 AND posting_date >= %s AND company=%s
-    """, (month_start, company), as_dict=True)
-    month_spend = flt(month_spend_result[0].total) if month_spend_result else 0.0
+    month_spend = erp_adapter.get_monthly_spend_total(company, month_start)
 
     # Recent activity — last 10 docs across PO, GRN, PI
-    recent = []
-    for doctype, label in [("Purchase Order", "PO"), ("Purchase Receipt", "GRN"), ("Purchase Invoice", "PI")]:
-        date_field = "transaction_date" if doctype == "Purchase Order" else "posting_date"
-        rows = frappe.get_all(
-            doctype,
-            filters={"docstatus": 1, "company": company},
-            fields=["name", "supplier", "supplier_name", date_field, "grand_total", "status"],
-            order_by=f"{date_field} desc",
-            limit_page_length=4
-        )
-        for r in rows:
-            recent.append({
-                "doctype": label,
-                "name": r.name,
-                "supplier": r.supplier_name or r.supplier,
-                "date": str(r.get(date_field, "")),
-                "amount": flt(r.grand_total),
-                "status": r.status or ""
-            })
-
+    recent = erp_adapter.get_recent_activities(company, limit=4)
     recent.sort(key=lambda x: x["date"], reverse=True)
     return {
         "open_pos":            open_pos,
@@ -115,6 +79,7 @@ def get_dashboard_data(company=None):
         "month_spend":         month_spend,
         "recent_activity":     recent[:10]
     }
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
