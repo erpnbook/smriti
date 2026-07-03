@@ -1489,9 +1489,8 @@ class SMRITIReportEngine:
 
         # Log to SMRITI PSV Activity Log for Explainability & Audit
         try:
-            ip_addr = "127.0.0.1"
-            if hasattr(frappe.local, "request_ip") and frappe.local.request_ip:
-                ip_addr = frappe.local.request_ip
+            from smriti_retail_os.utils import get_client_ip
+            ip_addr = get_client_ip()
             
             columns = []
             if self.template.columns_json:
@@ -2313,9 +2312,8 @@ def get_smriti_cashiers():
 
 def log_explain_audit_event(event_type, report, fieldname, recovered_expression):
     try:
-        ip_addr = "127.0.0.1"
-        if hasattr(frappe.local, "request_ip") and frappe.local.request_ip:
-            ip_addr = frappe.local.request_ip
+        from smriti_retail_os.utils import get_client_ip
+        ip_addr = get_client_ip()
             
         company = frappe.defaults.get_user_default("Company") or ""
         
@@ -2505,9 +2503,8 @@ def export_smriti_report(report_key, filters=None, format_type="csv"):
     
     # Log export audit event
     company = filters.get("company") or frappe.defaults.get_user_default("Company") or ""
-    ip_addr = "127.0.0.1"
-    if hasattr(frappe.local, "request_ip") and frappe.local.request_ip:
-        ip_addr = frappe.local.request_ip
+    from smriti_retail_os.utils import get_client_ip
+    ip_addr = get_client_ip()
         
     audit_payload = {
         "report_key": report_key,

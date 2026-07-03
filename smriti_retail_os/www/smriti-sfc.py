@@ -20,10 +20,12 @@ def get_context(context):
     if frappe.session.user == "Guest":
         frappe.throw(_("Please log in to access the SMRITI SFC Studio."), frappe.AuthenticationError)
 
-    roles = frappe.get_roles(frappe.session.user)
-    allowed = {"SMRITI Store Manager", "System Manager", "Administrator"}
-    if not (allowed & set(roles)) and frappe.session.user != "Administrator":
-        frappe.throw(_("Access Denied: Only Store Managers and Administrators can access this page."), frappe.PermissionError)
+    from smriti_retail_os.security_api import check_page_access
+    try:
+        check_page_access("smriti-sfc")
+    except frappe.PermissionError:
+        frappe.local.flags.redirect_location = "/smriti-home"
+        raise frappe.Redirect
 
     # Cleanse default web templates to enforce standalone SMRITI presentation
     context.web_include_js  = []

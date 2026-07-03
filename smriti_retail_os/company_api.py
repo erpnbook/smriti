@@ -642,7 +642,8 @@ def save_item_attributes(company=None, attributes=None):
     if not isinstance(attributes, list):
         frappe.throw(_("Attributes must be a list of dicts/objects."))
 
-    ip_address = frappe.local.request_ip if hasattr(frappe.local, "request_ip") else "127.0.0.1"
+    from smriti_retail_os.utils import get_client_ip
+    ip_address = get_client_ip()
 
     try:
         # Step 1: Capture before_state
@@ -726,7 +727,8 @@ def reset_item_attributes(company=None):
     if not company:
         frappe.throw(_("Company is required."))
         
-    ip_address = frappe.local.request_ip if hasattr(frappe.local, "request_ip") else "127.0.0.1"
+    from smriti_retail_os.utils import get_client_ip
+    ip_address = get_client_ip()
     
     try:
         # Capture before_state

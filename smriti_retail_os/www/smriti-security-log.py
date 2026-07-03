@@ -31,12 +31,12 @@ def get_context(context):
         frappe.local.flags.redirect_location = "/smriti-login"
         raise frappe.Redirect
 
-    roles = frappe.get_roles(user)
-    if "System Manager" not in roles and user != "Administrator":
-        frappe.throw(
-            "Access Denied: SMRITI Security Audit Log requires System Manager role.",
-            frappe.PermissionError,
-        )
+    from smriti_retail_os.security_api import check_page_access
+    try:
+        check_page_access("smriti-security-log")
+    except frappe.PermissionError:
+        frappe.local.flags.redirect_location = "/smriti-home"
+        raise frappe.Redirect
 
     # Strip all Frappe web chrome — render as pure SMRITI page
     context.web_include_js  = []

@@ -23,10 +23,12 @@ def get_context(context):
         frappe.local.flags.redirect_location = "/login"
         raise frappe.Redirect
 
-    roles = frappe.get_roles(user)
-
-    companies = frappe.get_all("Company", limit=1)
-    if not companies:
+    from smriti_retail_os.security_api import check_page_access
+    try:
+        check_page_access("index")
+    except frappe.PermissionError:
+        frappe.local.flags.redirect_location = "/smriti-home"
+        raise frappe.Redirect
         frappe.local.flags.redirect_location = "/setup-wizard"
         raise frappe.Redirect
 

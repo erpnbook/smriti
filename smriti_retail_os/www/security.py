@@ -25,10 +25,12 @@ def get_context(context):
     if frappe.session.user in ("Admin", _admin_email):
         frappe.throw(_("Access Denied: The Admin (Business Owner) account is blocked from Security Center."), frappe.PermissionError)
 
-    roles = frappe.get_roles(frappe.session.user)
-    allowed = {"SMRITI Store Manager", "System Manager", "Administrator"}
-    if not (allowed & set(roles)) and frappe.session.user != "Administrator":
-        frappe.throw(_("Access Denied: Only Store Managers and Administrators can access this page."), frappe.PermissionError)
+    from smriti_retail_os.security_api import check_page_access
+    try:
+        check_page_access("security")
+    except frappe.PermissionError:
+        frappe.local.flags.redirect_location = "/smriti-home"
+        raise frappe.Redirect
 
     context.no_cache = 1
     context.title = "SMRITI Security Center"

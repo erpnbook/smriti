@@ -196,9 +196,8 @@ def log_dictionary_access(term_id, version, category):
     """
     Writes an entry to SMRITI PSV Activity Log for auditing.
     """
-    ip_addr = "127.0.0.1"
-    if hasattr(frappe.local, "request_ip") and frappe.local.request_ip:
-        ip_addr = frappe.local.request_ip
+    from smriti_retail_os.utils import get_client_ip
+    ip_addr = get_client_ip()
 
     log = frappe.get_doc({
         "doctype": "SMRITI PSV Activity Log",

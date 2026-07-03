@@ -21,8 +21,10 @@ def get_context(context):
     # Already logged in — redirect to SMRITI home
     if frappe.session.user != "Guest":
         from smriti_retail_os.boot import _get_smriti_route
-        roles = frappe.get_roles(frappe.session.user)
-        frappe.local.flags.redirect_location = _get_smriti_route(roles)
-        raise frappe.Redirect
-    context.no_cache = 1
+        from smriti_retail_os.security_api import check_page_access
+        try:
+            check_page_access("smriti-login")
+        except frappe.PermissionError:
+            frappe.local.flags.redirect_location = "/smriti-home"
+            raise frappe.Redirect
     context.title    = "SMRITI Retail OS — Sign In"

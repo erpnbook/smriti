@@ -27,14 +27,12 @@ def get_context(context):
         frappe.local.flags.redirect_location = "/login"
         raise frappe.Redirect
 
-    # Role guard — Cashiers, Store Managers, System Managers allowed
-    roles = frappe.get_roles(frappe.session.user)
-    allowed = ["SMRITI Cashier", "SMRITI Store Manager", "System Manager"]
-    if not any(r in roles for r in allowed):
-        frappe.throw(
-            "Access Denied: Shift Management is restricted to Cashiers and Managers.",
-            frappe.PermissionError
-        )
+    from smriti_retail_os.security_api import check_page_access
+    try:
+        check_page_access("shift")
+    except frappe.PermissionError:
+        frappe.local.flags.redirect_location = "/smriti-home"
+        raise frappe.Redirect
 
     # Strip ALL Frappe web includes — this page is 100% standalone
     context.web_include_js  = []

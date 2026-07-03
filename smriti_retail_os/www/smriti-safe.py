@@ -23,10 +23,12 @@ def get_context(context):
         frappe.local.flags.redirect_location = "/login"
         raise frappe.Redirect
 
-    # Only System Manager / Administrator allowed
-    roles = frappe.get_roles(frappe.session.user)
-    if "System Manager" not in roles and frappe.session.user != "Administrator":
-        frappe.local.flags.redirect_location = "/smriti"
+    from smriti_retail_os.security_api import check_page_access
+    try:
+        check_page_access("smriti-safe")
+    except frappe.PermissionError:
+        frappe.local.flags.redirect_location = "/smriti-home"
+        raise frappe.Redirect
         raise frappe.Redirect
 
     context.no_cache = 1

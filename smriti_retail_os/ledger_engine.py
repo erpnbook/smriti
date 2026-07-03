@@ -77,14 +77,8 @@ def log_activity(action_type, party_stock_account=None, reference_doctype=None, 
     """
     Creates an entry in the SMRITI PSV Activity Log.
     """
-    ip_addr = "127.0.0.1"
-    try:
-        if frappe.local and frappe.local.request_ip:
-            ip_addr = frappe.local.request_ip
-    except Exception:
-        import sys
-        _frappe = sys.modules.get('frappe')
-        if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in ledger_engine.py:82: {sys.exc_info()[1]}")
+    from smriti_retail_os.utils import get_client_ip
+    ip_addr = get_client_ip()
 
     log = frappe.get_doc({
         "doctype": "SMRITI PSV Activity Log",

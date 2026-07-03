@@ -7,6 +7,10 @@ Author: Jawahar R. Mallah <jawahar.mallah@gmail.com>
 import frappe
 from frappe.utils import now_datetime
 
+# Cache TTL constants
+ONE_YEAR_SECONDS = 60 * 60 * 24 * 365
+
+
 
 @frappe.whitelist()
 def get_my_profile():
@@ -138,7 +142,7 @@ def save_smriti_preferences(preferences):
         if isinstance(preferences, str):
             preferences = json.loads(preferences)
         pref_key = f"smriti_prefs_{user.replace('@', '_').replace('.', '_')}"
-        frappe.cache().set_value(pref_key, preferences, expires_in_sec=60 * 60 * 24 * 365)
+        frappe.cache().set_value(pref_key, preferences, expires_in_sec=ONE_YEAR_SECONDS)
         return {"status": "ok"}
     except Exception as e:
         return {"status": "error", "message": str(e)}

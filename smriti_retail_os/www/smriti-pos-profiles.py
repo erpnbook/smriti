@@ -18,10 +18,12 @@ def get_context(context):
     if frappe.session.user == "Guest":
         frappe.throw(_("Authentication Required: Please log in to access SMRITI POS Profiles."), frappe.AuthenticationError)
 
-    roles = frappe.get_roles(frappe.session.user)
-    allowed = {"System Manager", "Administrator"}
-    if not (allowed & set(roles)) and frappe.session.user != "Administrator":
-        frappe.throw(_("Access Denied: Only Administrators and System Managers can access this page."), frappe.PermissionError)
+    from smriti_retail_os.security_api import check_page_access
+    try:
+        check_page_access("smriti-pos-profiles")
+    except frappe.PermissionError:
+        frappe.local.flags.redirect_location = "/smriti-home"
+        raise frappe.Redirect
 
     # Standalone SMRITI styling setup
     context.web_include_js  = []

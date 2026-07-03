@@ -27,14 +27,12 @@ def get_context(context):
         frappe.local.flags.redirect_location = "/login"
         raise frappe.Redirect
 
-    # Role guard
-    roles = frappe.get_roles(frappe.session.user)
-    allowed_roles = ["SMRITI Store Manager", "System Manager"]
-    if not any(r in roles for r in allowed_roles):
-        frappe.throw(
-            "Access Denied: Sizewise Item Master is restricted to Store Managers and System Managers.",
-            frappe.PermissionError
-        )
+    from smriti_retail_os.security_api import check_page_access
+    try:
+        check_page_access("sizewise_item")
+    except frappe.PermissionError:
+        frappe.local.flags.redirect_location = "/smriti-home"
+        raise frappe.Redirect
 
     # Strip ALL Frappe web includes
     context.web_include_js  = []

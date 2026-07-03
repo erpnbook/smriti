@@ -321,13 +321,17 @@ def check_feature_access(feature_code):
 
 @frappe.whitelist()
 def generate_test_key(customer_id="CUST-DEMO-001", tier="Professional",
-                      expiry_date="2027-06-17", installation_id="*"):
+                      expiry_date=None, installation_id="*"):
     """
     Generates a signed SMRITI license key for testing/demo purposes.
     Restricted to Administrator only — never exposed to end users.
     """
     if frappe.session.user != "Administrator":
         frappe.throw(_("Only Administrator can generate test keys."), frappe.PermissionError)
+
+    if not expiry_date:
+        from frappe.utils import add_days, nowdate
+        expiry_date = add_days(nowdate(), 90)
 
     from smriti_retail_os.license.key_validator import generate_license_key
     key = generate_license_key(customer_id, tier, expiry_date, installation_id)

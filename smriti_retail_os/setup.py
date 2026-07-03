@@ -1423,6 +1423,37 @@ def create_smriti_loyalty_rule_doctype():
     except Exception as e:
         frappe.log_error(f"Error creating SMRITI Loyalty Rule DocType: {str(e)}")
 
+def create_smriti_settings_doctype():
+    """Creates the SMRITI Settings single DocType for global configurations."""
+    if frappe.db.exists("DocType", "SMRITI Settings"):
+        return
+    try:
+        doc = frappe.new_doc("DocType")
+        doc.name = "SMRITI Settings"
+        doc.module = "SMRITI Retail OS"
+        doc.custom = 1
+        doc.editable_grid = 0
+        doc.quick_entry = 0
+        doc.track_changes = 1
+        doc.issingle = 1
+
+        fields = [
+            {"fieldname": "default_hsn_code", "fieldtype": "Data", "label": "Default HSN Code", "default": "641590"},
+            {"fieldname": "default_item_group", "fieldtype": "Link", "options": "Item Group", "label": "Default Item Group", "default": "Footwear"},
+            {"fieldname": "audit_log_retention_days", "fieldtype": "Int", "label": "Audit Log Retention Days", "default": 365}
+        ]
+        for f in fields:
+            doc.append("fields", f)
+
+        doc.append("permissions", {"role": "System Manager", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+        doc.append("permissions", {"role": "SMRITI Administrator", "read": 1, "write": 1, "create": 1, "delete": 1, "share": 1})
+
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+        print("[SMRITI] Created SMRITI Settings DocType")
+    except Exception as e:
+        frappe.log_error(f"Error creating SMRITI Settings DocType: {str(e)}")
+
 
 def create_smriti_cge_settings_doctype():
     """Creates the SMRITI CGE Settings single DocType."""
@@ -2070,6 +2101,7 @@ def setup_smriti_retail_os():
 
     # 0. Provision SMRITI Company Settings DocType
     create_smriti_company_settings_doctype()
+    create_smriti_settings_doctype()
     create_smriti_audit_event_doctype()
     create_smriti_attribute_layout_doctype()
 

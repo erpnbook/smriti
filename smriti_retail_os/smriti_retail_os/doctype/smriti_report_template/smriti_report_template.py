@@ -24,9 +24,8 @@ class SMRITIReportTemplate(Document):
             before_state = db_doc.as_dict()
             after_state = self.as_dict()
             
-            ip_addr = "127.0.0.1"
-            if hasattr(frappe.local, "request_ip") and frappe.local.request_ip:
-                ip_addr = frappe.local.request_ip
+            from smriti_retail_os.utils import get_client_ip
+            ip_addr = get_client_ip()
                 
             company = frappe.defaults.get_user_default("Company") or ""
             

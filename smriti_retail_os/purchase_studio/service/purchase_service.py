@@ -970,7 +970,8 @@ def _auto_create_item_if_missing(item_code, rate, file_url=None):
     item = frappe.new_doc("Item")
     item.item_code            = item_code
     item.item_name            = f"{style} {color} {size}"
-    item.item_group           = "Footwear" if frappe.db.exists("Item Group", "Footwear") else "Products"
+    default_group = frappe.db.get_single_value("SMRITI Settings", "default_item_group") or "Products"
+    item.item_group           = default_group if frappe.db.exists("Item Group", default_group) else "Products"
     item.stock_uom            = "Nos"
     item.is_stock_item        = 1
     item.standard_rate        = rate
@@ -988,10 +989,14 @@ def _auto_create_item_if_missing(item_code, rate, file_url=None):
         if existing_img:
             item.image = existing_img
 
-    hsn_code = (frappe.db.get_value("GST HSN Code", {"name": ["like", "64%"]}, "name")
-                or frappe.db.get_value("GST HSN Code", {}, "name"))
-    if hsn_code:
-        item.gst_hsn_code = hsn_code
+    # Retrieve default GST HSN code from SMRITI Settings
+    default_hsn = frappe.db.get_single_value("SMRITI Settings", "default_hsn_code")
+    if default_hsn and frappe.db.exists("GST HSN Code", default_hsn):
+        item.gst_hsn_code = default_hsn
+    else:
+        hsn_code = frappe.db.get_value("GST HSN Code", {}, "name")
+        if hsn_code:
+            item.gst_hsn_code = hsn_code
 
     template_name = frappe.db.get_value("Item Tax Template", {"name": ["like", "%18%"]}, "name")
     if template_name:

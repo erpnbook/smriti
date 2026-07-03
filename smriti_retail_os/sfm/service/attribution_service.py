@@ -212,10 +212,8 @@ def process_invoice_submit(doc, method=None):
                     emp.employee_name = "Walk-In Employee"
                     emp.first_name = "Walk-In"
                     emp.company = doc.company
-                    emp.gender = "Male"
                     emp.status = "Active"
-                    emp.date_of_joining = "2026-01-01"
-                    emp.date_of_birth = "1990-01-01"
+                    emp.date_of_joining = nowdate()
                     emp.insert(ignore_permissions=True)
                     walkin = emp.name
                     

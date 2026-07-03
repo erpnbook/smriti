@@ -26,13 +26,12 @@ def get_context(context):
         frappe.local.flags.redirect_location = "/login"
         raise frappe.Redirect
 
-    # Role guard
-    roles = frappe.get_roles(frappe.session.user)
-    if "System Manager" not in roles:
-        frappe.throw(
-            "Access Denied: Backup & Restore Center is restricted to System Managers.",
-            frappe.PermissionError
-        )
+    from smriti_retail_os.security_api import check_page_access
+    try:
+        check_page_access("backup")
+    except frappe.PermissionError:
+        frappe.local.flags.redirect_location = "/smriti-home"
+        raise frappe.Redirect
 
     # Strip ALL Frappe web includes
     context.web_include_js  = []

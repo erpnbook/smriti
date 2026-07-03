@@ -27,13 +27,12 @@ def get_context(context):
         frappe.local.flags.redirect_location = "/login"
         raise frappe.Redirect
 
-    # Role guard — Inventory is manager-only
-    roles = frappe.get_roles(frappe.session.user)
-    if "SMRITI Store Manager" not in roles and "System Manager" not in roles:
-        frappe.throw(
-            "Access Denied: Inventory Operations is restricted to Store Managers and System Managers.",
-            frappe.PermissionError
-        )
+    from smriti_retail_os.security_api import check_page_access
+    try:
+        check_page_access("inventory")
+    except frappe.PermissionError:
+        frappe.local.flags.redirect_location = "/smriti-home"
+        raise frappe.Redirect
 
     # Strip ALL Frappe web includes — this page is 100% standalone
     context.web_include_js  = []

@@ -21,10 +21,12 @@ def get_context(context):
         frappe.local.flags.redirect_location = "/login"
         raise frappe.Redirect
 
-    roles = frappe.get_roles(user)
-    allowed = {"SMRITI Store Manager", "SMRITI Admin", "System Manager", "Administrator"}
-    if not allowed.intersection(set(roles)):
-        frappe.throw(_("Access Denied"), frappe.PermissionError)
+    from smriti_retail_os.security_api import check_page_access
+    try:
+        check_page_access("reports")
+    except frappe.PermissionError:
+        frappe.local.flags.redirect_location = "/smriti-home"
+        raise frappe.Redirect
 
     context.web_include_js  = []
     context.web_include_css = []

@@ -19,12 +19,12 @@ def get_context(context):
         frappe.local.flags.redirect_location = "/login"
         raise frappe.Redirect
 
-    roles = frappe.get_roles(frappe.session.user)
-    if "SMRITI Store Manager" not in roles and "System Manager" not in roles:
-        frappe.throw(
-            "Access Denied: Analytics Dashboard is restricted to Store Managers and System Managers.",
-            frappe.PermissionError
-        )
+    from smriti_retail_os.security_api import check_page_access
+    try:
+        check_page_access("analytics")
+    except frappe.PermissionError:
+        frappe.local.flags.redirect_location = "/smriti-home"
+        raise frappe.Redirect
 
     context.web_include_js  = []
     context.web_include_css = []

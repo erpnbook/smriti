@@ -28,10 +28,10 @@ def get_context(context):
         frappe.local.flags.redirect_location = "/login"
         raise frappe.Redirect
 
-    # ── Role guard: PO creation is manager-only ───────────────────────────────
-    roles = frappe.get_roles(frappe.session.user)
-    allowed_roles = {"SMRITI Store Manager", "System Manager"}
-    if not allowed_roles.intersection(roles):
+    from smriti_retail_os.security_api import check_page_access
+    try:
+        check_page_access("smriti-purchase-order")
+    except frappe.PermissionError:
         frappe.local.flags.redirect_location = "/smriti-purchase"
         raise frappe.Redirect
 

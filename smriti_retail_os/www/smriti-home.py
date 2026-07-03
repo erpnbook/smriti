@@ -31,12 +31,8 @@ def get_context(context):
         frappe.local.flags.redirect_location = "/login"
         raise frappe.Redirect
 
-    roles = frappe.get_roles(frappe.session.user)
-    if "SMRITI Store Manager" not in roles and "System Manager" not in roles:
-        frappe.throw(
-            "Access Denied: Control Center is restricted to Store Managers and System Managers.",
-            frappe.PermissionError
-        )
+    from smriti_retail_os.security_api import check_page_access
+    check_page_access("smriti-home")
 
     context.web_include_js  = []
     context.web_include_css = []

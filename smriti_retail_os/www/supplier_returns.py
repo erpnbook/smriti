@@ -37,14 +37,12 @@ def get_context(context):
         frappe.local.flags.redirect_location = "/login"
         raise frappe.Redirect
 
-    # Role guard
-    roles = frappe.get_roles(frappe.session.user)
-    allowed_roles = ["SMRITI Cashier", "SMRITI Store Manager", "System Manager"]
-    if not any(r in roles for r in allowed_roles):
-        frappe.throw(
-            _("Access Denied: Supplier Returns portal is restricted to Cashiers, Store Managers, and System Managers."),
-            frappe.PermissionError
-        )
+    from smriti_retail_os.security_api import check_page_access
+    try:
+        check_page_access("supplier_returns")
+    except frappe.PermissionError:
+        frappe.local.flags.redirect_location = "/smriti-home"
+        raise frappe.Redirect
 
     # Strip ALL Frappe web includes
     context.web_include_js  = []

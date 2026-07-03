@@ -192,7 +192,8 @@ def create_purchase_order(supplier, items, schedule_date=None, remarks=None, ima
             item = frappe.new_doc("Item")
             item.item_code = item_code
             item.item_name = f"{style} {color} {size}"
-            item.item_group = "Footwear" if frappe.db.exists("Item Group", "Footwear") else "Products"
+            default_group = frappe.db.get_single_value("SMRITI Settings", "default_item_group") or "Products"
+            item.item_group = default_group if frappe.db.exists("Item Group", default_group) else "Products"
             item.stock_uom = "Nos"
             item.is_stock_item = 1
             item.standard_rate = rate
@@ -207,12 +208,14 @@ def create_purchase_order(supplier, items, schedule_date=None, remarks=None, ima
                 if existing_img:
                     item.image = existing_img
 
-            # Retrieve default GST HSN code for Footwear or any active HSN code
-            hsn_code = frappe.db.get_value("GST HSN Code", {"name": ["like", "64%"]}, "name")
-            if not hsn_code:
+            # Retrieve default GST HSN code from SMRITI Settings
+            default_hsn = frappe.db.get_single_value("SMRITI Settings", "default_hsn_code")
+            if default_hsn and frappe.db.exists("GST HSN Code", default_hsn):
+                item.gst_hsn_code = default_hsn
+            else:
                 hsn_code = frappe.db.get_value("GST HSN Code", {}, "name")
-            if hsn_code:
-                item.gst_hsn_code = hsn_code
+                if hsn_code:
+                    item.gst_hsn_code = hsn_code
             
             # Resolve GST Tax template (use standard 18% as default or try to match)
             template_name = frappe.db.get_value(

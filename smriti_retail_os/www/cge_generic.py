@@ -27,10 +27,12 @@ def get_context(context):
     if frappe.session.user == "Guest":
         frappe.throw(_("Please log in to access SMRITI CGE Explorers."), frappe.AuthenticationError)
 
-    roles = frappe.get_roles(frappe.session.user)
-    allowed = {"SMRITI Store Manager", "System Manager", "Administrator"}
-    if not (allowed & set(roles)) and frappe.session.user != "Administrator":
-        frappe.throw(_("Access Denied: Only Store Managers and Administrators can access this page."), frappe.PermissionError)
+    from smriti_retail_os.security_api import check_page_access
+    try:
+        check_page_access("cge_generic")
+    except frappe.PermissionError:
+        frappe.local.flags.redirect_location = "/smriti-home"
+        raise frappe.Redirect
 
     # 1. Resolve path to target DocType
     path = ""

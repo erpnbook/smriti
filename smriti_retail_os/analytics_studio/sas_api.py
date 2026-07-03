@@ -24,6 +24,15 @@ from smriti_retail_os.analytics_studio.sas_service import (
 )
 
 
+def _check_authenticated():
+    """
+    Central authentication checker for SAS endpoints.
+    M-7/Translation-wrap remediation (hardcoding audit 2026-07-03)
+    """
+    if frappe.session.user == "Guest":
+        frappe.throw(frappe._("Authentication required."), frappe.AuthenticationError)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # HELPER: Parse JSON parameter safely
 # ─────────────────────────────────────────────────────────────────────────────
@@ -61,8 +70,7 @@ def _check_report_permission(report_key):
 @frappe.whitelist()
 def sas_get_datasets():
     """Returns the full dataset registry for the SAS UI."""
-    if frappe.session.user == "Guest":
-        frappe.throw("Authentication required.", frappe.AuthenticationError)
+    _check_authenticated()
     return get_dataset_list()
 
 
@@ -76,8 +84,7 @@ def sas_get_categories():
     Returns report categories from Navigation Manager (CANONICAL_NAV).
     Used to build the left panel report library.
     """
-    if frappe.session.user == "Guest":
-        frappe.throw("Authentication required.", frappe.AuthenticationError)
+    _check_authenticated()
 
     # First try navigation-driven categories
     nav_cats = get_report_categories_from_nav()
@@ -117,8 +124,7 @@ def sas_get_report_metadata(report_key):
     columns (as AG Grid columnDefs), filters, dataset_key,
     chart defaults, KPI fields, conditional format rules, etc.
     """
-    if frappe.session.user == "Guest":
-        frappe.throw("Authentication required.", frappe.AuthenticationError)
+    _check_authenticated()
 
     _check_report_permission(report_key)
 
@@ -143,8 +149,7 @@ def sas_fetch_data(report_key, filters=None, page=1, page_size=500,
     for dataset-backed reports, or delegates to SmritiReportEngine for
     custom/legacy reports.
     """
-    if frappe.session.user == "Guest":
-        frappe.throw("Authentication required.", frappe.AuthenticationError)
+    _check_authenticated()
 
     _check_report_permission(report_key)
 
@@ -213,8 +218,7 @@ def sas_get_grand_totals(report_key, filters=None):
     """
     Computes server-side grand totals for pinned bottom row in AG Grid.
     """
-    if frappe.session.user == "Guest":
-        frappe.throw("Authentication required.", frappe.AuthenticationError)
+    _check_authenticated()
 
     filters = _parse_json(filters, {})
 
@@ -265,8 +269,7 @@ def sas_get_kpi_summary(report_key, filters=None, compare_filters=None):
     Returns KPI card data for the top panel.
     Supports optional compare_filters for period comparison.
     """
-    if frappe.session.user == "Guest":
-        frappe.throw("Authentication required.", frappe.AuthenticationError)
+    _check_authenticated()
 
     filters = _parse_json(filters, {})
     compare_filters = _parse_json(compare_filters, None)
@@ -320,8 +323,7 @@ def sas_save_view(view_name, report_key, state_json):
     Saves a complete SAS view state (column state, filters, sort, group,
     chart, theme, density, page size, etc.) for the current user.
     """
-    if frappe.session.user == "Guest":
-        frappe.throw("Authentication required.", frappe.AuthenticationError)
+    _check_authenticated()
 
     state = _parse_json(state_json, {})
 
@@ -403,8 +405,7 @@ def sas_export_excel(report_key, filters=None, state_json=None):
     Generates and streams an Excel file server-side via openpyxl.
     Called by Export Center when user clicks 'Export Excel'.
     """
-    if frappe.session.user == "Guest":
-        frappe.throw("Authentication required.", frappe.AuthenticationError)
+    _check_authenticated()
 
     _check_report_permission(report_key)
 
@@ -446,8 +447,7 @@ def sas_get_formula_explain(report_key, fieldname):
     interpretation guide, related KPIs, related reports, source.
     Delegates to existing get_report_glossary() in reports_api.
     """
-    if frappe.session.user == "Guest":
-        frappe.throw("Authentication required.", frappe.AuthenticationError)
+    _check_authenticated()
 
     try:
         from smriti_retail_os.reports_api import get_report_glossary
