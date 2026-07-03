@@ -1,0 +1,30 @@
+/**
+ * @file:    public/css/ui/tokens.css
+ * @desc:    SMRITI visual variable tokens.
+ * @author:  Jawahar R. Mallah
+ */
+
+:root {
+    --smriti-color-bg-page: #080e1c;
+    --smriti-color-bg-primary: #0f1729;
+    --smriti-color-bg-secondary: #131e35;
+    --smriti-color-bg-elevated: #1e293b;
+    --smriti-color-border-default: rgba(255, 255, 255, 0.08);
+    --smriti-color-border-strong: rgba(255, 255, 255, 0.15);
+    --smriti-color-brand-primary: #2563EB;
+    --smriti-color-brand-light: #3b82f6;
+    
+    --smriti-color-success: #10b981;
+    --smriti-color-warning: #f59e0b;
+    --smriti-color-danger: #ef4444;
+    
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-sub: #64748b;
+    
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}

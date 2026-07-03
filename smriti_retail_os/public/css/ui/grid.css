@@ -1,0 +1,62 @@
+/**
+ * @file:    public/css/ui/grid.css
+ * @desc:    SMRITI Grid and table styling.
+ * @author:  Jawahar R. Mallah
+ */
+
+.smriti-grid-wrapper {
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--smriti-color-border-default);
+    background-color: var(--smriti-color-bg-primary);
+}
+
+.smriti-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.smriti-table th {
+    background-color: var(--smriti-color-bg-secondary);
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--smriti-color-border-default);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.smriti-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--smriti-color-border-default);
+    color: var(--text-muted);
+    vertical-align: middle;
+}
+
+.smriti-table tr.grid-row {
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.smriti-table tr.grid-row:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.grid-action-btn {
+    background: transparent;
+    border: 1px solid var(--smriti-color-border-default);
+    color: var(--text-muted);
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    transition: var(--transition-fast);
+}
+
+.grid-action-btn:hover {
+    border-color: var(--smriti-color-brand-primary);
+    color: var(--text);
+}

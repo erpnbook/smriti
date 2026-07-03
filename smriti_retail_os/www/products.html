@@ -1,135 +1,76 @@
-﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/products.html
-  @description: SMRITI Products Catalog — Standalone UI (Zero system chrome)
+  @description: SMRITI Product Studio Reference Implementation.
+                Adheres fully to SMRITI UI Architecture v1.0.
   @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-  @version: 1.8.6
-  @license: MIT
+  @version: 1.0.0
 -->
 <html lang="en">
 <head>
-{%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SMRITI Products catalog</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-<style>
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-:root {
-    --bg:         #0a0f1e;
-    --bg2:        #0f1629;
-    --card:       #131d35;
-    --card2:      #172040;
-    --border:     rgba(255,255,255,0.07);
-    --border2:    rgba(255,255,255,0.12);
-    --primary:    #6366f1;
-    --primary-lt: #818cf8;
-    --accent:     #f59e0b;
-    --success:    #10b981;
-    --warning:    #f59e0b;
-    --danger:     #ef4444;
-    --text:       #e2e8f0;
-    --text-muted: #94a3b8;
-    --text-sub:   #475569;
-    --radius:     12px;
-    --radius-sm:  8px;
-    --radius-lg:  16px;
-    --t:          0.2s ease;
-}
-
-html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
-
-/* Ambient background grid */
-.bg-grid {
-    position: fixed;
-    inset: 0;
-    background-image:
-        linear-gradient(rgba(99,102,241,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99,102,241,0.015) 1px, transparent 1px);
-    background-size: 50px 50px;
-    z-index: 0;
-}
-
-#app { position:relative; z-index:1; width:100vw; height:100vh; display:flex; overflow:hidden; }
-
-/* Main Wrapper */
-.main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-
-/* Topbar */
-.topbar { height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:14px; flex-shrink:0; }
-.topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--text-muted); }
-.topbar-breadcrumbs span.sep { color:var(--text-sub); }
-.topbar-breadcrumbs span.active { color:var(--text); }
-.topbar-breadcrumbs a.breadcrumb-link {
-    color: inherit;
-    text-decoration: none;
-    cursor: pointer;
-}
-.topbar-breadcrumbs a.breadcrumb-link:hover {
-    color: var(--smriti-color-brand-primary);
-    text-decoration: underline;
-}
-.topbar-right { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
-.topbtn { display:inline-flex; align-items:center; gap:4px; padding:6px 12px; border-radius:var(--radius-sm); font-size:12px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); white-space:nowrap; }
-.topbtn span { font-size:16px; }
-.topbtn:hover { border-color:var(--primary); color:var(--primary-lt); }
-
-/* Filter Bar */
-.filter-bar { padding:14px 24px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; gap:16px; align-items:center; flex-shrink:0; }
-.form-input { padding:8px 12px; background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.88rem; outline:none; transition:all var(--t); font-family:inherit; }
-.form-input:focus { border-color:var(--primary); }
-.search-input { width:300px; }
-.filter-select { width:200px; }
-
-/* Content Table Area */
-.table-wrap { flex:1; overflow:auto; padding:16px 24px; }
-.smriti-table { width:100%; border-collapse:collapse; text-align:left; }
-.smriti-table th { padding:10px 14px; background:var(--card2); color:var(--text-muted); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1; }
-.smriti-table td { padding:12px 14px; border-bottom:1px solid var(--border); font-size:0.88rem; vertical-align:middle; }
-.smriti-table tbody tr:hover td { background:rgba(99,102,241,0.04); }
-.smriti-table tbody tr:last-child td { border-bottom:none; }
-
-.item-code-badge { font-family:monospace; font-size:0.75rem; color:var(--text-muted); background:rgba(255,255,255,0.04); padding:2px 6px; border-radius:4px; border:1px solid var(--border); }
-.gst-badge { display:inline-block; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:700; background:rgba(99,102,241,0.15); color:var(--primary-lt); }
-
-/* Modals */
-.modal-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(3,7,18,0.85); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
-.modal-backdrop.open { opacity:1; pointer-events:all; }
-.modal { background:var(--card2); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px; width:100%; max-width:480px; transform:translateY(20px); transition:transform 0.2s; display:flex; flex-direction:column; }
-.modal-backdrop.open .modal { transform:translateY(0); }
-.modal-header { display:flex; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:12px; }
-.modal-title { font-family:'Outfit',sans-serif; font-size:1.15rem; font-weight:800; display:flex; align-items:center; gap:8px; }
-.modal-title span { color:var(--primary-lt); font-size:22px; }
-.modal-close { margin-left:auto; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:22px; display:flex; align-items:center; }
-.modal-close:hover { color:var(--text); }
-.modal-body { display:flex; flex-direction:column; gap:14px; }
-
-.form-group { display:flex; flex-direction:column; gap:5px; }
-.form-label { font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
-.btn-submit { width:100%; padding:11px; background:linear-gradient(135deg,var(--accent),#d97706); border:none; border-radius:var(--radius-sm); color:white; font-weight:700; font-size:0.92rem; cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 12px rgba(245,158,11,0.2); margin-top:10px; }
-.btn-submit:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(245,158,11,0.35); }
-.btn-submit:disabled { opacity:0.4; cursor:not-allowed; transform:none !important; }
-
-/* Toast Container */
-#toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
-.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
-.toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
-.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
-.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
-.toast span { font-size:20px; }
-@keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
-</style>
-
-<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
+    {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+    {%- include "smriti_retail_os/templates/includes/smriti_ui_loader.html" -%}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMRITI Product Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/assets/smriti_retail_os/js/ui/repository/product_repository.js"></script>
+    <script src="/assets/smriti_retail_os/js/ui/service/product_service.js"></script>
+    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+    
+    <style>
+        /* Modal extensions and tweaks */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 9000;
+            background: rgba(3, 7, 18, 0.85);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .modal-backdrop.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .modal {
+            background: var(--smriti-color-bg-primary);
+            border: 1px solid var(--smriti-color-border-strong);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            width: 100%;
+            max-width: 480px;
+            transform: translateY(20px);
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-backdrop.open .modal {
+            transform: translateY(0);
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--smriti-color-border-default);
+            padding-bottom: 12px;
+        }
+        .modal-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 22px;
+        }
+    </style>
+</head>
 <body>
-<script>
-    if (new URLSearchParams(window.location.search).get('popout') === 'true') {
-        document.body.classList.add('popout-mode');
-    }
-</script>
-
 <div class="bg-grid"></div>
 
 <div id="app">
@@ -143,7 +84,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
             <div class="topbar-breadcrumbs">
                 <a href="/smriti" class="breadcrumb-link">SMRITI</a>
                 <span class="sep">/</span>
-                <span class="active">Products Catalog</span>
+                <span class="active">Product Studio</span>
             </div>
 
             <div class="topbar-right">
@@ -153,333 +94,231 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                 <button class="topbtn" onclick="history.forward()" title="Go Forward">
                     <span class="material-symbols-outlined">arrow_forward</span>
                 </button>
-                <button class="topbtn" onclick="openAddProductModal()" style="border-color:var(--primary);color:var(--primary-lt);"><span class="material-symbols-outlined">add</span> Quick Add Product</button>
+                <button class="topbtn" onclick="openAddProductModal()" style="border-color:var(--smriti-color-brand-primary);color:var(--smriti-color-brand-light);">
+                    <span class="material-symbols-outlined">add</span> Add Product
+                </button>
             </div>
         </div>
 
-        <!-- Filter Bar -->
-        <div class="filter-bar">
-            <input type="text" class="form-input search-input" id="search-box" placeholder="Search by name, code or barcode..." oninput="handleSearch(this.value)">
-            <select class="form-input filter-select" id="filter-brand" onchange="applyFilters()">
-                <option value="">All Brands</option>
-            </select>
-            <select class="form-input filter-select" id="filter-category" onchange="applyFilters()">
-                <option value="">All Categories</option>
-            </select>
+        <!-- Filter and Search Toolbar -->
+        <div class="studio-card" style="margin: 24px 24px 0 24px; padding: 12px 20px;">
+            <div id="products-toolbar"></div>
         </div>
 
-        <!-- Catalog Table -->
-        <div class="table-wrap">
-            <table class="smriti-table">
-                <thead>
-                    <tr>
-                        <th>Item Details</th>
-                        <th>Style / Article No</th>
-                        <th>Brand / Category</th>
-                        <th style="text-align:right;">MRP Price</th>
-                        <th style="text-align:right;">Purchase Cost</th>
-                        <th style="text-align:center;">Tax %</th>
-                        <th style="text-align:center;">Barcode</th>
-                    </tr>
-                </thead>
-                <tbody id="products-tbody">
-                    <tr><td colspan="7" style="text-align:center;color:var(--text-sub);padding:40px 0;">Loading items...</td></tr>
-                </tbody>
-            </table>
+        <!-- Catalog Grid -->
+        <div class="table-wrap" style="padding: 20px 24px;">
+            <div id="products-grid"></div>
         </div>
     </div>
 </div>
 
-<!-- Quick Add Modal -->
-<div class="modal-backdrop" id="add-modal" onclick="closeAddProductModal()">
+<!-- Product Form Modal -->
+<div class="modal-backdrop" id="product-modal" onclick="closeProductFormModal()">
     <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-header">
-            <div class="modal-title"><span class="material-symbols-outlined">inventory_2</span> Quick Add Product</div>
-            <button class="modal-close" onclick="closeAddProductModal()">&times;</button>
+            <h3 id="modal-title">Product Details</h3>
+            <button class="modal-close" onclick="closeProductFormModal()">&times;</button>
         </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label class="form-label">Item Description / Name *</label>
-                <input type="text" class="form-input" id="add-name" placeholder="e.g. Leather Boots Vintage">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Barcode / Item Code *</label>
-                <input type="text" class="form-input" id="add-barcode" placeholder="e.g. 890103001">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Style / Article No (Optional)</label>
-                <input type="text" class="form-input" id="add-style" placeholder="e.g. D-20001-SND">
-            </div>
-            <div style="display: flex; gap: 12px;">
-                <div class="form-group" style="flex: 1;">
-                    <label class="form-label">Cost Price *</label>
-                    <input type="number" class="form-input" id="add-cost" placeholder="0">
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label class="form-label">MRP Price *</label>
-                    <input type="number" class="form-input" id="add-mrp" placeholder="0">
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">GST Tax Percentage (%)</label>
-                <select class="form-input" id="add-gst">
-                    <option value="0">0% (Nil)</option>
-                    <option value="5">5% (Footwear / Apparels)</option>
-                    <option value="12">12%</option>
-                    <option value="18" selected>18% (Standard)</option>
-                    <option value="28">28%</option>
-                </select>
-            </div>
-            <button class="btn-submit" id="btn-save" onclick="saveProduct()">
-                <span class="material-symbols-outlined">save</span> Save Product
-            </button>
-        </div>
+        <div id="product-form-container"></div>
     </div>
 </div>
 
-<div id="toast-container"></div>
-
 <script>
-const CSRF_TOKEN = '{{ csrf_token }}';
-let loggedUser = '{{ cashier }}';
+let catalogGrid = null;
+let catalogToolbar = null;
+let productForm = null;
+let currentItemCode = null;
 let masterItemsList = [];
 
-// REST API
-function api(method, params = {}) {
-    return fetch(`/api/method/${method}`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-frappe-csrf-token': CSRF_TOKEN
-        },
-        body: JSON.stringify(params)
-    })
-    .then(r => {
-        if (!r.ok) {
-            return r.json().then(d => {
-                throw new Error(d._error_message || d.exception || d.exc || `HTTP error! status: ${r.status}`);
-            }).catch(() => {
-                throw new Error(`HTTP error! status: ${r.status}`);
-            });
+// Register Product Studio
+SMRITI.registerStudio({
+    id: "product-catalog",
+    title: "Product Catalog",
+    entity: "Item",
+    route: "/products",
+    lifecycle: {
+        afterLoad: function(studio) {
+            initProductStudio();
         }
-        return r.json();
-    })
-    .then(d => {
-        if (d.exc) throw new Error(d._error_message || d.exc);
-        return d.message;
+    }
+});
+
+async function initProductStudio() {
+    // Render sidebar
+    if (window.SMRITI && typeof SMRITI.renderFlexibleSidebar === "function") {
+        SMRITI.renderFlexibleSidebar("products");
+    }
+
+    // Load filter options
+    let brands = [];
+    let categories = [];
+    try {
+        const brandList = await frappe.db.get_list("Brand", { limit: 100 });
+        brands = brandList.map(b => ({ value: b.name, label: b.name }));
+        const categoryList = await frappe.db.get_list("Item Group", { limit: 100 });
+        categories = categoryList.map(c => ({ value: c.name, label: c.name }));
+    } catch (e) {
+        console.error("Failed to load filter metadata:", e);
+    }
+
+    // 1. Initialize Toolbar
+    catalogToolbar = new SMRITI.Toolbar("products-toolbar", {
+        searchPlaceholder: "Search description, style, or code...",
+        filters: [
+            { id: "brand", label: "Brands", options: brands },
+            { id: "category", label: "Categories", options: categories }
+        ],
+        onChange: function(filters) {
+            applyClientFilters(filters);
+        }
+    });
+
+    // 2. Initialize Grid
+    catalogGrid = new SMRITI.Grid("products-grid", {
+        columns: [
+            { field: "item_name", label: "Description", bold: true, width: "30%" },
+            { field: "custom_style_code", label: "Style Code", width: "15%" },
+            { field: "brand", label: "Brand", width: "15%" },
+            { field: "item_group", label: "Category", width: "15%" },
+            { field: "custom_mrp", label: "MRP Price", formatter: "currency", align: "right", width: "15%" },
+            { field: "valuation_rate", label: "Cost Price", formatter: "currency", align: "right", width: "15%" },
+            { field: "custom_gst_percentage", label: "GST%", formatter: "percent", align: "center", width: "10%" }
+        ],
+        dataSource: async function() {
+            const list = await SMRITI.Service.ProductService.getProducts();
+            masterItemsList = list || [];
+            return masterItemsList;
+        },
+        actions: [
+            { id: "edit", label: "Edit Product", icon: "edit", callback: (row) => openEditProductModal(row.name) },
+            { id: "delete", label: "Delete Product", icon: "delete", callback: (row) => confirmDeleteProduct(row.name) }
+        ],
+        onRowClick: function(row) {
+            openDetailDrawer(row);
+        }
     });
 }
 
-function doLogout() {
-    fetch('/api/method/logout', { credentials: 'include' })
-    .then(() => { window.location.href = '/login'; });
-}
-
-function toast(msg, type = 'success') {
-    const cont = document.getElementById('toast-container');
-    const t = document.createElement('div');
-    t.className = `toast ${type}`;
-    const icon = type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info';
-    t.innerHTML = `<span class="material-symbols-outlined">${icon}</span> <span>${msg}</span>`;
-    cont.appendChild(t);
-    setTimeout(() => { t.remove(); }, 4000);
-}
-
-async function init() {
-    // Set user avatar info (sidebar renders these dynamically — guard against null)
-    const _sbu = document.getElementById('sb-user'); if (_sbu) _sbu.textContent = loggedUser.split('@')[0];
-    const _sba = document.getElementById('sb-avatar'); if (_sba) _sba.textContent = loggedUser.charAt(0).toUpperCase();
-
-    await loadProducts();
-    await loadFilterOptions();
-    SMRITI.injectLabelStudioShortcut();
-}
-
-async function loadProducts() {
-    try {
-        const items = await api('frappe.client.get_list', {
-            doctype: 'Item',
-            filters: { disabled: 0 },
-            fields: ['name', 'item_name', 'brand', 'item_group', 'custom_mrp', 'valuation_rate', 'custom_gst_percentage', 'stock_uom', 'custom_style_code', 'variant_of'],
-            order_by: 'creation desc',
-            limit_page_length: 200
-        });
-
-        masterItemsList = items || [];
-        renderTable(masterItemsList);
-    } catch(e) {
-        toast('Failed to load products list: ' + e.message, 'error');
-    }
-}
-
-async function loadFilterOptions() {
-    try {
-        const brands = await api('frappe.client.get_list', {
-            doctype: 'Brand',
-            fields: ['name'],
-            order_by: 'name asc',
-            limit_page_length: 100
-        });
-        const categories = await api('frappe.client.get_list', {
-            doctype: 'Item Group',
-            fields: ['name'],
-            order_by: 'name asc',
-            limit_page_length: 100
-        });
-
-        const brandSel = document.getElementById('filter-brand');
-        brands.forEach(b => {
-            const opt = document.createElement('option');
-            opt.value = b.name;
-            opt.textContent = b.name;
-            brandSel.appendChild(opt);
-        });
-
-        const catSel = document.getElementById('filter-category');
-        categories.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.name;
-            opt.textContent = c.name;
-            catSel.appendChild(opt);
-        });
-    } catch(e) {
-        console.error(e);
-    }
-}
-
-function renderTable(list) {
-    const tbody = document.getElementById('products-tbody');
-    if (!list.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-sub);padding:40px 0;">No products found.</td></tr>';
-        return;
-    }
-    tbody.innerHTML = list.map(item => `
-        <tr>
-            <td>
-                <div style="font-weight:600; color:var(--text);">${item.item_name}</div>
-                <div style="margin-top:4px;"><span class="item-code-badge">${item.name}</span></div>
-            </td>
-            <td>
-                <div style="font-weight:600; color:var(--primary-lt); font-family:monospace;">${item.custom_style_code || item.variant_of || '-'}</div>
-            </td>
-            <td>
-                <div style="font-weight:500;">${item.brand || 'No Brand'}</div>
-                <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${item.item_group}</div>
-            </td>
-            <td style="text-align:right; font-weight:700; color:var(--success);">Rs. ${parseFloat(item.custom_mrp || 0).toFixed(2)}</td>
-            <td style="text-align:right; font-weight:600; color:var(--text-muted);">Rs. ${parseFloat(item.valuation_rate || 0).toFixed(2)}</td>
-            <td style="text-align:center;"><span class="gst-badge">${item.custom_gst_percentage || 0}% GST</span></td>
-            <td style="text-align:center; font-family:monospace; color:var(--primary-lt);">${item.name}</td>
-        </tr>
-    `).join('');
-}
-
-function handleSearch(q) {
-    applyFilters();
-}
-
-function applyFilters() {
-    const q = document.getElementById('search-box').value.toLowerCase();
-    const brand = document.getElementById('filter-brand').value;
-    const cat = document.getElementById('filter-category').value;
-
-    let filtered = masterItemsList;
-
-    if (q) {
-        filtered = filtered.filter(item => 
-            item.item_name.toLowerCase().includes(q) ||
-            item.name.toLowerCase().includes(q) ||
-            (item.custom_style_code && item.custom_style_code.toLowerCase().includes(q)) ||
-            (item.variant_of && item.variant_of.toLowerCase().includes(q))
+function applyClientFilters(filters) {
+    let list = masterItemsList;
+    if (filters.search) {
+        list = list.filter(item => 
+            (item.item_name && item.item_name.toLowerCase().includes(filters.search)) ||
+            (item.name && item.name.toLowerCase().includes(filters.search)) ||
+            (item.custom_style_code && item.custom_style_code.toLowerCase().includes(filters.search))
         );
     }
-    if (brand) {
-        filtered = filtered.filter(item => item.brand === brand);
+    if (filters.brand) {
+        list = list.filter(item => item.brand === filters.brand);
     }
-    if (cat) {
-        filtered = filtered.filter(item => item.item_group === cat);
+    if (filters.category) {
+        list = list.filter(item => item.item_group === filters.category);
     }
+    catalogGrid.setData(list);
+}
 
-    renderTable(filtered);
+function openDetailDrawer(row) {
+    const html = `
+        <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="text-align:center; padding:20px 0; border-bottom:1px solid var(--smriti-color-border-default);">
+                <span class="material-symbols-outlined" style="font-size:48px; color:var(--smriti-color-brand-light);">inventory_2</span>
+                <h3 style="margin-top:10px;">${row.item_name}</h3>
+                <span class="item-code-badge" style="margin-top:6px; display:inline-block;">${row.name}</span>
+            </div>
+            <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                <tr style="border-bottom:1px solid var(--smriti-color-border-default);"><td style="padding:10px 0; color:var(--text-muted);">Style / Article No</td><td style="padding:10px 0; text-align:right; font-weight:600;">${row.custom_style_code || "-"}</td></tr>
+                <tr style="border-bottom:1px solid var(--smriti-color-border-default);"><td style="padding:10px 0; color:var(--text-muted);">Brand</td><td style="padding:10px 0; text-align:right; font-weight:600;">${row.brand || "No Brand"}</td></tr>
+                <tr style="border-bottom:1px solid var(--smriti-color-border-default);"><td style="padding:10px 0; color:var(--text-muted);">Category</td><td style="padding:10px 0; text-align:right; font-weight:600;">${row.item_group}</td></tr>
+                <tr style="border-bottom:1px solid var(--smriti-color-border-default);"><td style="padding:10px 0; color:var(--text-muted);">MRP Price</td><td style="padding:10px 0; text-align:right; font-weight:700; color:var(--smriti-color-success);">Rs. ${parseFloat(row.custom_mrp || 0).toFixed(2)}</td></tr>
+                <tr style="border-bottom:1px solid var(--smriti-color-border-default);"><td style="padding:10px 0; color:var(--text-muted);">Purchase Cost</td><td style="padding:10px 0; text-align:right; font-weight:600; color:var(--text-muted);">Rs. ${parseFloat(row.valuation_rate || 0).toFixed(2)}</td></tr>
+                <tr style="border-bottom:1px solid var(--smriti-color-border-default);"><td style="padding:10px 0; color:var(--text-muted);">Tax Rate</td><td style="padding:10px 0; text-align:right; font-weight:600;">${row.custom_gst_percentage || 0}% GST</td></tr>
+            </table>
+        </div>
+    `;
+    SMRITI.Drawer.open({
+        title: "Product Overview",
+        content: html
+    });
 }
 
 function openAddProductModal() {
-    document.getElementById('add-modal').classList.add('open');
-    document.getElementById('add-name').focus();
+    currentItemCode = null;
+    document.getElementById("modal-title").textContent = "Add New Product";
+    renderForm();
+    document.getElementById("product-modal").classList.add("open");
 }
 
-function closeAddProductModal() {
-    document.getElementById('add-modal').classList.remove('open');
-    // Clear fields
-    document.getElementById('add-name').value = '';
-    document.getElementById('add-barcode').value = '';
-    document.getElementById('add-style').value = '';
-    document.getElementById('add-cost').value = '';
-    document.getElementById('add-mrp').value = '';
-}
-
-async function saveProduct() {
-    const name = document.getElementById('add-name').value.trim();
-    const barcode = document.getElementById('add-barcode').value.trim();
-    const style = document.getElementById('add-style').value.trim();
-    const cost = parseFloat(document.getElementById('add-cost').value) || 0;
-    const mrp = parseFloat(document.getElementById('add-mrp').value) || 0;
-    const gst = parseInt(document.getElementById('add-gst').value) || 0;
-
-    if (!name || !barcode || !mrp) {
-        toast('Please fill in Item Description, Barcode, and MRP Price.', 'error');
-        return;
-    }
-
-    const btn = document.getElementById('btn-save');
-    btn.disabled = true;
-
+async function openEditProductModal(itemCode) {
+    currentItemCode = itemCode;
+    document.getElementById("modal-title").textContent = "Edit Product Details";
+    
     try {
-        await api('smriti_retail_os.master_api.quick_create_item', {
-            item_name: name,
-            barcode: barcode,
-            rate: cost,
-            mrp: mrp,
-            gst_percentage: gst,
-            style_code: style
-        });
-
-        toast('Product added to catalog successfully!', 'success');
-        closeAddProductModal();
-        await loadProducts();
-    } catch(e) {
-        toast(e.message, 'error');
-    }
-    btn.disabled = false;
-}
-
-function openPopout(e, url) {
-    e.preventDefault();
-    e.stopPropagation();
-    let popout_url = url;
-    if (popout_url.indexOf('?') === -1) {
-        popout_url += '?popout=true';
-    } else if (popout_url.indexOf('popout=true') === -1) {
-        popout_url += '&popout=true';
-    }
-    const w = screen.width - 60;
-    const h = screen.height - 60;
-    const left = 30;
-    const top = 30;
-    const win = window.open(popout_url, "smriti-popout-window", `width=${w},height=${h},top=${top},left=${left},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`);
-    if (win) {
-        win.focus();
+        const detail = await SMRITI.Service.ProductService.getProductDetail(itemCode);
+        renderForm(detail);
+        document.getElementById("product-modal").classList.add("open");
+    } catch (e) {
+        SMRITI.toast.error("Failed to fetch product details: " + e.message);
     }
 }
 
-window.onload = init;
+function renderForm(initialValues = {}) {
+    productForm = new SMRITI.Form("product-form-container", {
+        fields: [
+            { id: "item_name", label: "Product Description / Name", type: "Data", required: true, value: initialValues.item_name || "" },
+            { id: "item_code", label: "Barcode / Item Code", type: "Data", required: true, value: initialValues.item_code || "", placeholder: "e.g. 890103001" },
+            { id: "style_code", label: "Style / Article No (Optional)", type: "Data", value: initialValues.style_code || "" },
+            { id: "cost_price", label: "Cost Price", type: "Currency", required: true, value: initialValues.cost_price || 0 },
+            { id: "mrp", label: "MRP Price", type: "Currency", required: true, value: initialValues.mrp || 0 },
+            { id: "gst_percentage", label: "GST Tax Percentage (%)", type: "Select", required: true, value: initialValues.gst_percentage || "18", options: [
+                { value: "0", label: "0% (Nil)" },
+                { value: "5", label: "5% (Footwear/Apparel)" },
+                { value: "12", label: "12%" },
+                { value: "18", label: "18% (Standard)" },
+                { value: "28", label: "28%" }
+            ]}
+        ],
+        submitLabel: currentItemCode ? "Update Product" : "Create Product",
+        onSubmit: async function(values) {
+            await SMRITI.Service.ProductService.saveProduct(values, currentItemCode);
+            SMRITI.toast.success(currentItemCode ? "Product updated successfully!" : "Product created successfully!");
+            closeProductFormModal();
+            catalogGrid.refresh();
+        },
+        onCancel: function() {
+            closeProductFormModal();
+        }
+    });
+
+    // If editing, disable the barcode edit field (DocName cannot change in ERPNext)
+    if (currentItemCode) {
+        const codeInput = document.getElementById("field-item_code");
+        if (codeInput) {
+            codeInput.disabled = true;
+            codeInput.style.opacity = "0.5";
+        }
+    }
+}
+
+function closeProductFormModal() {
+    document.getElementById("product-modal").classList.remove("open");
+}
+
+function confirmDeleteProduct(itemCode) {
+    new SMRITI.Dialog({
+        title: "Confirm Deletion",
+        content: `<p style="color:var(--text-muted); line-height:1.5;">Are you sure you want to disable/delete the product with code <strong>${itemCode}</strong>? This action cannot be undone.</p>`,
+        onConfirm: async function() {
+            try {
+                await SMRITI.Service.ProductService.deleteProduct(itemCode);
+                SMRITI.toast.success("Product disabled successfully!");
+                catalogGrid.refresh();
+            } catch (e) {
+                SMRITI.toast.error("Failed to disable product: " + e.message);
+            }
+        }
+    });
+}
 </script>
-
-<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
-<script>SMRITI.renderFlexibleSidebar("products");</script></body>
+</body>
 </html>
 {% endblock %}
-
-
-

@@ -1,0 +1,68 @@
+/**
+ * @file:    public/css/ui/form.css
+ * @desc:    SMRITI Form controls and inputs styling.
+ * @author:  Jawahar R. Mallah
+ */
+
+.form-group {
+    margin-bottom: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.form-input {
+    background-color: var(--smriti-color-bg-secondary);
+    border: 1px solid var(--smriti-color-border-default);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 10px 14px;
+    font-size: 14px;
+    outline: none;
+    transition: var(--transition-fast);
+}
+
+.form-input:focus {
+    border-color: var(--smriti-color-brand-primary);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.btn-submit {
+    background-color: var(--smriti-color-brand-primary);
+    border: none;
+    color: #fff;
+    padding: 10px 20px;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--transition-fast);
+}
+
+.btn-submit:hover {
+    background-color: var(--smriti-color-brand-light);
+}
+
+.btn-cancel {
+    background: transparent;
+    border: 1px solid var(--smriti-color-border-default);
+    color: var(--text-muted);
+    padding: 10px 20px;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.btn-cancel:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+    color: var(--text);
+}
