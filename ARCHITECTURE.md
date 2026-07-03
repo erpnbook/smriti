@@ -704,22 +704,26 @@ Full specification: SMRITI_ROADMAP.md (v1.0.0, LOCKED)
 *Authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL*
 *Version: 1.6.0 — LOCKED*
 
----
-
 ## 21. SMRITI Rule 21 — Verify Before Create
 
-Before creating any new file, document, DocType, page, API, service, repository, integration, report, or configuration, the repository must first be searched to determine whether an equivalent implementation or section already exists.
+Before creating any new artifact (including documents, pages, APIs, services, repositories, DocTypes, reports, settings, integrations, tests, CSS, JavaScript, or Python modules), the repository **must** first be searched to determine whether an equivalent implementation, document, or section already exists.
+
+> **Principle:** Creation is the last option. Reuse is the default.
 
 ### Priority Order:
 
-1. **REUSE** existing implementation or document.
-2. **EXTEND** existing implementation or document.
-3. **CREATE** a new implementation only if no suitable equivalent can be found.
+1. **SEARCH** — Search the entire repository for equivalent artifacts.
+2. **VERIFY** — Confirm whether a match or partial match exists.
+3. **REUSE** — Reuse the existing artifact if fully suitable.
+4. **EXTEND** — Extend the existing artifact if partially suitable.
+5. **JUSTIFY** — If creating new, explain why reuse or extension is not appropriate.
+6. **CREATE** — Create the new artifact only after justification is documented.
 
-**Every creation request must include repository evidence for why a new artifact is necessary.**
+**Every proposal to create a new artifact must include repository evidence demonstrating why a new file is necessary.**
 
 ---
 
 *SMRITI Retail OS™ — Architecture & Technical Reference*
 *Authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL*
-*Version: 1.7.0 — LOCKED*
+*Version: 1.7.1 — LOCKED*
+
