@@ -319,3 +319,41 @@ def _feature_enabled_for_tier(doc, feature_code: str) -> bool:
         ),
     )
     return True  # Deliberate forward-compat default — see Finding #5 in audit
+
+
+def get_license_summary() -> dict:
+    """
+    Read-only public accessor for license state summary.
+
+    This is the ONLY sanctioned external interface for modules that need to
+    display or report on license status without performing feature gating.
+    All other modules MUST use check_feature() for gating decisions.
+
+    Returns a dict with keys:
+        status   — "Active", "Expired", "Tampered", "Unregistered", "Error"
+        health   — "Healthy", "Expiring Soon", "Expired", "Tampered", "Unregistered", "Error"
+        type     — license tier string or None
+        expiry   — expiry date string (YYYY-MM-DD) or None
+        days_remaining — int or None
+
+    Architecture: H-3 remediation (hardcoding audit 2026-07-03)
+    Authority: manager.py module docstring §7
+    """
+    doc = _load_license()
+
+    if doc is None:
+        # Pre-migration or fresh install
+        return {"status": "Unregistered", "health": "Unregistered", "type": None, "expiry": None, "days_remaining": None}
+
+    if doc is _LICENSE_LOAD_ERROR:
+        # Infrastructure failure — already logged by _load_license()
+        return {"status": "Error", "health": "Error", "type": None, "expiry": None, "days_remaining": None}
+
+    status, health, days_remaining = _evaluate_status_lightweight(doc)
+    return {
+        "status": status,
+        "health": health,
+        "type": doc.license_type,
+        "expiry": str(doc.expiry_date) if doc.expiry_date else None,
+        "days_remaining": days_remaining,
+    }

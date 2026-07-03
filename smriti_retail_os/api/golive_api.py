@@ -32,13 +32,22 @@ def _require_admin():
 # ── Individual check functions ────────────────────────────────────────────────
 
 def _check_license():
+    """
+    Reports license status for the go-live checklist.
+    Routes through get_license_summary() — the ONLY sanctioned external interface
+    to license state. Direct reads of the SMRITI License singleton are prohibited
+    outside of license/manager.py (H-3 remediation, hardcoding audit 2026-07-03).
+    """
     try:
-        doc = frappe.get_single("SMRITI License")
-        status = doc.license_status or "Unregistered"
-        health  = doc.license_health or "Unregistered"
+        from smriti_retail_os.license.manager import get_license_summary
+        summary = get_license_summary()
+        status = summary["status"]
+        health  = summary["health"]
+        tier    = summary["type"] or "Unknown"
+        expiry  = summary["expiry"] or "N/A"
         if status == "Active" and health == "Healthy":
             return {"id": "license", "label": "License Activated",
-                    "status": "PASS", "message": f"Active — {doc.license_type or 'Unknown'} tier. Expires {doc.expiry_date or 'N/A'}.",
+                    "status": "PASS", "message": f"Active — {tier} tier. Expires {expiry}.",
                     "action": "/smriti-license"}
         elif status in ("Active",):
             return {"id": "license", "label": "License Activated",
