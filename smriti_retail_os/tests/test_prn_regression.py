@@ -44,7 +44,7 @@ class TestPRNRegression(unittest.TestCase):
         # Substituted values check
         self.assertIn("8901234567890", prn)
         self.assertIn("Antigravity Running Shoes", prn)
-        self.assertIn("Rs. 2999", prn)
+        self.assertIn("Rs.2999.00", prn)
         self.assertIn("SMRITI SPORT", prn)
         self.assertIn("Midnight Black", prn)
 
