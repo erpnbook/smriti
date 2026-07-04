@@ -19,7 +19,21 @@ This dashboard tracks the status, metrics, and health indices of SMRITI Retail O
 
 ---
 
-## 2. Test Execution Details
+## 2. Architecture Guard Roadmap & Milestones
+
+To systematically reduce architectural debt across subsequent releases, SMRITI enforces structured progress targets:
+
+| Milestone / Phase | Version Target | Required Max Violations | Current Status / Result |
+|---|---|---|---|
+| **Baseline** | v2.0.0 | 836 violations (88 files) | 836 violations |
+| **Phase 1 (Stabilize)** | v2.1.1 (Current) | 800 violations | **770 violations (87 files) — PASS** |
+| **Phase 2 (Consolidate)** | v2.2.0 | 500 violations | *Scheduled* |
+| **Phase 3 (Refactor)** | v2.3.0 | 250 violations | *Scheduled* |
+| **General Availability (GA)** | v3.0.0 | 0 violations | *Target GA Gate* |
+
+---
+
+## 3. Test Execution Details
 
 ### UI Integration Regression Suite (`test_ui_sidebar_regression.py`)
 ```
@@ -51,7 +65,7 @@ OK
 
 ---
 
-## 3. Reference Test Environment Specifications
+## 4. Reference Test Environment Specifications
 * **Operating System**: Windows 11 / WSL2
 * **Container Environment**: Docker (Frappe/ERPNext Backend v16)
 * **Target Web Browser**: Chrome v138+
@@ -59,7 +73,7 @@ OK
 
 ---
 
-## 4. Release History & Quality Ledger
+## 5. Release History & Quality Ledger
 * **SMRITI v2.1.1** (Current Build):
   * **Status**: Stable
   * **Automated Guard Run**: Successful
