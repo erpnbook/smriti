@@ -122,7 +122,7 @@ window.SMRITI = window.SMRITI || {};
             html.push('</div>');
 
             // ── CONTENT GROUPS ──
-            html.push('<div class="smriti-sidebar-content">');
+            html.push('<div class="smriti-sidebar-content" role="tree">');
             
             navData.sections.forEach(function (sec) {
                 if (sec.status === "hidden" || !sec.items || sec.items.length === 0) return;
@@ -139,19 +139,19 @@ window.SMRITI = window.SMRITI || {};
                     if (idx !== -1) collapsedGroupIds.splice(idx, 1);
                 }
 
-                html.push('<div class="smriti-sidebar-group' + (isCollapsed ? ' collapsed' : '') + '" data-group-id="' + sec.id + '">');
-                html.push('  <div class="smriti-sidebar-group-header">');
+                html.push('<div class="smriti-sidebar-group' + (isCollapsed ? ' collapsed' : '') + '" data-group-id="' + sec.id + '" role="none">');
+                html.push('  <div class="smriti-sidebar-group-header" role="treeitem" aria-expanded="' + (isCollapsed ? 'false' : 'true') + '" tabindex="0">');
                 html.push('    <span>' + sec.label + '</span>');
                 html.push(ICONS.chevron);
                 html.push('  </div>');
-                html.push('  <div class="smriti-sidebar-group-items">');
+                html.push('  <div class="smriti-sidebar-group-items" role="group">');
                 html.push('    <div class="smriti-sidebar-group-items-inner">');
 
                 sec.items.forEach(function (item) {
                     if (item.status === "hidden") return;
 
                     if (item.type === "header") {
-                        html.push('<div class="smriti-sidebar-item-header">' + item.label + '</div>');
+                        html.push('<div class="smriti-sidebar-item-header" role="presentation">' + item.label + '</div>');
                         return;
                     }
 
@@ -159,7 +159,7 @@ window.SMRITI = window.SMRITI || {};
                     var iconHtml = ICONS[sec.id] || ICONS.default;
                     var itemRoute = item.route || "#";
 
-                    html.push('<a class="smriti-sidebar-item' + (isItemActive ? ' active' : '') + '" href="' + itemRoute + '">');
+                    html.push('<a class="smriti-sidebar-item' + (isItemActive ? ' active' : '') + '" href="' + itemRoute + '" role="treeitem" tabindex="0"' + (isItemActive ? ' aria-current="page"' : '') + '>');
                     html.push('  <div class="smriti-sidebar-item-icon">' + iconHtml + '</div>');
                     html.push('  <span class="smriti-sidebar-item-label">' + item.label + '</span>');
                     if (item.badge) {
@@ -265,6 +265,7 @@ window.SMRITI = window.SMRITI || {};
                     var groupEl = hdr.parentElement;
                     var groupId = groupEl.getAttribute("data-group-id");
                     var isCollapsedNow = groupEl.classList.toggle("collapsed");
+                    hdr.setAttribute("aria-expanded", isCollapsedNow ? "false" : "true");
 
                     var collapsedGroups = JSON.parse(localStorage.getItem("smriti-sidebar-collapsed-groups") || "[]");
                     if (isCollapsedNow) {
@@ -278,6 +279,44 @@ window.SMRITI = window.SMRITI || {};
                     localStorage.setItem("smriti-sidebar-collapsed-groups", JSON.stringify(collapsedGroups));
                 });
             });
+
+            // Keyboard Navigation (ArrowUp / ArrowDown)
+            var contentContainer = target.querySelector(".smriti-sidebar-content");
+            if (contentContainer) {
+                contentContainer.addEventListener("keydown", function (e) {
+                    if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "Enter" && e.key !== " ") return;
+
+                    var activeEl = document.activeElement;
+                    if (!activeEl || !contentContainer.contains(activeEl)) return;
+
+                    // Find all visible focusable treeitems
+                    var items = Array.prototype.slice.call(contentContainer.querySelectorAll('[role="treeitem"]')).filter(function (el) {
+                        var parentGroup = el.closest(".smriti-sidebar-group");
+                        if (parentGroup && parentGroup.classList.contains("collapsed") && el.classList.contains("smriti-sidebar-item")) {
+                            return false;
+                        }
+                        return el.offsetWidth > 0 || el.offsetHeight > 0;
+                    });
+
+                    var index = items.indexOf(activeEl);
+                    if (index === -1) return;
+
+                    if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        var nextIndex = (index + 1) % items.length;
+                        items[nextIndex].focus();
+                    } else if (e.key === "ArrowUp") {
+                        e.preventDefault();
+                        var prevIndex = (index - 1 + items.length) % items.length;
+                        items[prevIndex].focus();
+                    } else if (e.key === "Enter" || e.key === " ") {
+                        if (activeEl.classList.contains("smriti-sidebar-group-header")) {
+                            e.preventDefault();
+                            activeEl.click();
+                        }
+                    }
+                });
+            }
 
             // 3. Theme switching pills click
             var themePills = target.querySelectorAll(".smriti-standalone-theme-pill");
