@@ -53,3 +53,15 @@ def delete_product(item_code):
     if not item_code:
         frappe.throw(_("Item Code parameter is required."))
     return ProductService.delete_product(item_code)
+
+
+@frappe.whitelist()
+def get_catalog_metadata():
+    """Retrieves list of brands and item groups for filters."""
+    _check_access()
+    brands = [b.name for b in frappe.get_list("Brand", fields=["name"], limit_page_length=100)]
+    categories = [c.name for c in frappe.get_list("Item Group", fields=["name"], limit_page_length=100)]
+    return {
+        "brands": brands,
+        "categories": categories
+    }

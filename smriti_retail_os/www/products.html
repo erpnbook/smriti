@@ -73,6 +73,8 @@
 </div>
 
 <script>
+window.csrf_token = "{{ csrf_token }}";
+window.csrfToken = "{{ csrf_token }}";
 let catalogGrid = null;
 let catalogToolbar = null;
 let productForm = null;
@@ -102,10 +104,18 @@ async function initProductStudio() {
     let brands = [];
     let categories = [];
     try {
-        const brandList = await frappe.db.get_list("Brand", { limit: 100 });
-        brands = brandList.map(b => ({ value: b.name, label: b.name }));
-        const categoryList = await frappe.db.get_list("Item Group", { limit: 100 });
-        categories = categoryList.map(c => ({ value: c.name, label: c.name }));
+        const metadata = await new Promise((resolve, reject) => {
+            frappe.call({
+                method: "smriti_retail_os.item_studio.api.product_api.get_catalog_metadata",
+                callback: function(r) {
+                    if (r.exc) reject(new Error(r.exc));
+                    else resolve(r.message);
+                },
+                error: reject
+            });
+        });
+        brands = (metadata.brands || []).map(b => ({ value: b, label: b }));
+        categories = (metadata.categories || []).map(c => ({ value: c, label: c }));
     } catch (e) {
         console.error("Failed to load filter metadata:", e);
     }
