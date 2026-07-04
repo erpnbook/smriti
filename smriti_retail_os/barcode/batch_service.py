@@ -149,7 +149,15 @@ def _process_print_job(job_id=None, print_job_id=None):
             )
             raise RuntimeError("Print payload integrity validation failed.")
 
-        _send_to_printer_sync(payload, doc.printer_ip, doc.printer_port)
+        # Resolve _send_to_printer_sync dynamically to support legacy unittest mocking on barcode_api
+        send_fn = None
+        try:
+            import smriti_retail_os.barcode_api as barcode_api
+            send_fn = getattr(barcode_api, "_send_to_printer_sync", _send_to_printer_sync)
+        except Exception:
+            send_fn = _send_to_printer_sync
+
+        send_fn(payload, doc.printer_ip, doc.printer_port)
 
         doc.status       = "Success"
         doc.completed_on = frappe.utils.now_datetime()
