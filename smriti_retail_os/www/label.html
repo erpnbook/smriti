@@ -1,6 +1,12 @@
-<!DOCTYPE html>
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/label.html
+  @description: SMRITI Label Studio (Zero system chrome)
+  @author: Jawahar R Mallah
+-->
 <html lang="en">
 <head>
+    {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMRITI Label Studio</title>
@@ -8,25 +14,24 @@
     
     <!-- SMRITI Standard Theme Variables -->
     <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_tokens.css">
-    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_theme.css">
-    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar.css">
-    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_branding.css">
-    <link rel="stylesheet" href="/assets/smriti_retail_os/css/ui/form.css">
     <link rel="stylesheet" href="/assets/smriti_retail_os/css/label_studio.css">
+    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
 </head>
 <body class="smriti-theme-navy">
-    <div class="smriti-layout-wrapper">
-        <!-- Sidebar Navigation -->
-        {% include "smriti_retail_os/templates/includes/sidebar.html" %}
+    <div class="bg-grid"></div>
 
-        <div class="smriti-main-content">
+    <div id="app">
+        <!-- Sidebar Target -->
+        <div id="smriti-sidebar-target" class="sidebar"></div>
+
+        <!-- Main Wrapper -->
+        <div class="main-wrapper">
             <!-- SMRITI Standard Topbar -->
-            <div class="smriti-topbar">
-                <div class="topbar-left">
-                    <button class="sidebar-toggle-btn" id="sidebarToggle">
-                        <img src="/assets/smriti_retail_os/images/smriti_logo.svg" alt="SMRITI Logo" class="brand-logo-icon">
-                    </button>
-                    <span class="page-title">Label Studio</span>
+            <div class="topbar">
+                <div class="topbar-breadcrumbs">
+                    <a href="/smriti" class="breadcrumb-link">SMRITI</a>
+                    <span class="sep">/</span>
+                    <span class="active">Label Studio</span>
                 </div>
                 <div class="topbar-right">
                     <span class="user-badge" id="userBadge">Cashier</span>
@@ -132,10 +137,22 @@
     </div>
 
     <!-- SMRITI Standard Scripts -->
-    <script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js"></script>
-    <script src="/assets/smriti_retail_os/js/smriti_sidebar.js"></script>
     <script src="/assets/smriti_retail_os/js/label/label_core.js"></script>
     <script src="/assets/smriti_retail_os/js/label/label_designer.js"></script>
+    
+    <!-- Sidebar injection -->
+    <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+    <script>SMRITI.renderFlexibleSidebar("barcode");</script>
+
+    <script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js"></script>
+    <script src="/assets/smriti_retail_os/js/smriti_theme_manager.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.SMRITI && typeof SMRITI.initUIEngine === 'function') {
+                SMRITI.initUIEngine();
+            }
+        });
+    </script>
     
     <!-- Local UI Binding Orchestration -->
     <script>
@@ -235,3 +252,4 @@
     </script>
 </body>
 </html>
+{% endblock %}
