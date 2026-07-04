@@ -66,3 +66,52 @@
     background-color: rgba(255, 255, 255, 0.02);
     color: var(--text);
 }
+
+/* SMRITI Toolbar search input and dropdown filter select styling */
+.search-input {
+    height: 38px;
+    background-color: var(--smriti-card-bg-2, #18181b);
+    border: 1px solid var(--smriti-card-border, #27272a);
+    border-radius: var(--radius-sm, 6px);
+    color: var(--smriti-text, #f4f4f5);
+    padding: 8px 12px 8px 36px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color var(--t-fast, 0.12s) ease, box-shadow var(--t-fast, 0.12s) ease;
+    box-sizing: border-box;
+}
+
+.search-input:focus {
+    border-color: var(--smriti-primary, #6941c6);
+    box-shadow: 0 0 0 2px rgba(105, 65, 198, 0.2);
+}
+
+.filter-select {
+    height: 38px;
+    background-color: var(--smriti-card-bg-2, #18181b);
+    border: 1px solid var(--smriti-card-border, #27272a);
+    border-radius: var(--radius-sm, 6px);
+    color: var(--smriti-text, #f4f4f5);
+    padding: 8px 32px 8px 12px;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+    transition: border-color var(--t-fast, 0.12s) ease, box-shadow var(--t-fast, 0.12s) ease;
+    box-sizing: border-box;
+}
+
+.filter-select:focus {
+    border-color: var(--smriti-primary, #6941c6);
+    box-shadow: 0 0 0 2px rgba(105, 65, 198, 0.2);
+}
+
+.filter-select option {
+    background-color: var(--smriti-card-bg, #18181b);
+    color: var(--smriti-text, #f4f4f5);
+}
