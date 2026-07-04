@@ -6,8 +6,19 @@ Author: Jawahar R. Mallah <jawahar.mallah@gmail.com>
 """
 import frappe
 from smriti_retail_os.notification_studio.service.notification_service import (
-    get_notifications, get_unread_count, mark_as_read, mark_all_read
+    get_notifications,
+    get_unread_count as _get_unread_count,
+    mark_as_read,
+    mark_all_read
 )
+
+
+@frappe.whitelist()
+def get_unread_count():
+    """Whitelisted API wrapper for legacy/sidebar callers fetching unread notification counts."""
+    user = frappe.session.user
+    count = _get_unread_count(user)
+    return {"count": count}
 
 
 @frappe.whitelist()
@@ -21,7 +32,7 @@ def get_my_notifications(notif_type="all", limit=50, page=1):
 def get_unread_badge():
     """Get unread notification count for sidebar bell badge."""
     user = frappe.session.user
-    count = get_unread_count(user)
+    count = _get_unread_count(user)
     return {"count": count, "has_unread": count > 0}
 
 
@@ -46,7 +57,7 @@ def get_notification_summary():
     Called on page load to hydrate the bell badge.
     """
     user = frappe.session.user
-    count = get_unread_count(user)
+    count = _get_unread_count(user)
     recent = get_notifications(user, limit=8, page=1)
     return {
         "unread_count": count,
