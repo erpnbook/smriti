@@ -62,9 +62,9 @@ class TestNotificationStudio(unittest.TestCase):
         trigger_purchase_approval(po, "on_submit")
         
         # Verify notification was generated for purchase_approval
-        logs = frappe.get_all("SMRITI Notification Log", filters={"notif_type": "purchase_approval"})
+        logs = frappe.get_all("SMRITI Notification Log", filters={"notif_type": "purchase_approval"}, fields=["message"])
         self.assertTrue(len(logs) > 0)
-        self.assertIn("Test Notification Supplier", logs[0].message or "")
+        self.assertIn("Test Notification Supplier", logs[0].get("message") or "")
 
     def test_trigger_grn_received(self):
         pr = frappe.get_doc({
