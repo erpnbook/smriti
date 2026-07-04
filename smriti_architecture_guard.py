@@ -192,7 +192,7 @@ def print_report(current: dict, baseline: dict) -> None:
         print(f"  Progress   {cleared_files:>4} files cleared  "
               f"({pct_files:.1f}%)   {cleared_calls:>5} calls removed  ({pct_calls:.1f}%)")
     elif cleared_calls == 0 and cleared_files == 0:
-        print(f"  New Violations:    0 \u2705")
+        print(f"  New Violations:    0 [OK]")
         print(f"  Legacy Violations: {total_current_calls}")
         print(f"  Status:            Boundary Maintained")
     else:
