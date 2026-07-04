@@ -9,6 +9,8 @@
   "job_id",
   "module",
   "printer",
+  "printer_ip",
+  "printer_port",
   "payload_hash",
   "payload_file",
   "status",
@@ -38,6 +40,18 @@
    "fieldtype": "Data",
    "label": "Printer ID",
    "in_list_view": 1
+  },
+  {
+   "fieldname": "printer_ip",
+   "fieldtype": "Data",
+   "label": "Printer IP",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "printer_port",
+   "fieldtype": "Int",
+   "label": "Printer Port",
+   "default": "9100"
   },
   {
    "fieldname": "payload_hash",
