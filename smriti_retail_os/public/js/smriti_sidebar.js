@@ -274,6 +274,23 @@ window.SMRITI = window.SMRITI || {};
                 });
             }
 
+            // Global Keyboard Shortcut: Toggle Sidebar with Ctrl+B / Cmd+B
+            function handleGlobalKeyDown(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+                    var activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
+                    if (activeTag === "input" || activeTag === "textarea") return;
+
+                    e.preventDefault();
+                    var btn = target.querySelector("#smriti-sidebar-toggle");
+                    if (btn) btn.click();
+                }
+            }
+            if (target._smritiSidebarShortcutHandler) {
+                document.removeEventListener("keydown", target._smritiSidebarShortcutHandler);
+            }
+            target._smritiSidebarShortcutHandler = handleGlobalKeyDown;
+            document.addEventListener("keydown", handleGlobalKeyDown);
+
             // 2. Expand/Collapse Section Groups
             var headers = target.querySelectorAll(".smriti-sidebar-group-header");
             headers.forEach(function (hdr) {
