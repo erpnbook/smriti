@@ -41,7 +41,7 @@ HOOK_DICT_NAMES = {"doc_events", "scheduler_events"}
 
 try:
 	import frappe
-	from frappe.utils import get_attr as frappe_get_attr
+	from frappe import get_attr as frappe_get_attr
 	FRAPPE_AVAILABLE = True
 except ImportError:
 	FRAPPE_AVAILABLE = False
