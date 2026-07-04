@@ -213,6 +213,11 @@ def get_cge_liability_metrics():
     }
 
 @frappe.whitelist()
+def get_dashboard_data():
+    """Alias for get_cge_liability_metrics to support client CGE studio calls."""
+    return get_cge_liability_metrics()
+
+@frappe.whitelist()
 def get_campaigns_with_utilization():
     """
     Returns campaigns with utilization calculations.
