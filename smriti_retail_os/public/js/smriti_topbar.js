@@ -308,7 +308,7 @@ body.smriti-topbar-active .smriti-sidebar { top: 48px !important; height: calc(1
     function hydrateBadge() {
         if (!window.frappe || !frappe.call) return;
         frappe.call({
-            method: "smriti_retail_os.notification_studio.api.smriti_notifications_api.get_unread_badge",
+            method: "smriti_retail_os.notification_studio.api.notifications.get_unread_badge",
             callback: function (r) {
                 if (!r || !r.message) return;
                 const cnt = r.message.count || 0;

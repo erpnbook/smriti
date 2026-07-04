@@ -39,7 +39,6 @@
     "negative_stock/service/approval_service.py": 4,
     "negative_stock/service/explain_service.py": 1,
     "negative_stock/service/recovery_service.py": 3,
-    "notification_studio/api/smriti_notifications_api.py": 3,
     "notification_studio/service/notification_service.py": 6,
     "platform_api.py": 9,
     "psv_analytics_service.py": 23,

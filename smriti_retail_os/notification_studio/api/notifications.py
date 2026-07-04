@@ -32,13 +32,63 @@ def get_unread_count():
     return {"count": count}
 
 @frappe.whitelist()
+def get_my_notifications(notif_type="all", limit=50, page=1):
+    """Get paginated notifications for the current session user."""
+    user = frappe.session.user
+    return _get_notifications(user, notif_type=notif_type, limit=int(limit), page=int(page))
+
+@frappe.whitelist()
+def get_unread_badge():
+    """Get unread notification count for sidebar bell badge."""
+    user = frappe.session.user
+    count = _get_unread_count(user)
+    return {"count": count, "has_unread": count > 0}
+
+@frappe.whitelist()
+def mark_notification_read(name):
+    """Mark a single notification as read."""
+    user = frappe.session.user
+    return _mark_as_read(name, user)
+
+@frappe.whitelist()
+def mark_all_notifications_read():
+    """Mark all notifications as read for current user."""
+    user = frappe.session.user
+    return _mark_all_read(user)
+
+@frappe.whitelist()
+def get_notification_summary():
+    """Get notification summary for sidebar dropdown (last 8 + unread count)."""
+    user = frappe.session.user
+    count = _get_unread_count(user)
+    recent = _get_notifications(user, limit=8, page=1)
+    return {
+        "unread_count": count,
+        "notifications": recent.get("items", [])
+    }
+
+@frappe.whitelist()
+def delete_notification(name):
+    """Soft delete (dismiss) a notification."""
+    user = frappe.session.user
+    try:
+        doc = frappe.get_doc("SMRITI Notification Log", name)
+        if doc.for_user == user:
+            frappe.delete_doc("SMRITI Notification Log", name, ignore_permissions=True)
+            frappe.db.commit()
+        return {"status": "ok"}
+    except Exception as e:
+        frappe.log_error(str(e), "delete_notification")
+        return {"status": "error", "message": str(e)}
+
+@frappe.whitelist()
 def mark_as_read(name):
-    """Mark a notification as read."""
+    """Mark a notification as read (alias for compatibility)."""
     user = frappe.session.user
     return _mark_as_read(name, user)
 
 @frappe.whitelist()
 def mark_all_read():
-    """Mark all notifications as read."""
+    """Mark all notifications as read (alias for compatibility)."""
     user = frappe.session.user
     return _mark_all_read(user)

@@ -394,7 +394,7 @@ window.SMRITI = window.SMRITI || {};
                 if (!badge) return;
                 try {
                     frappe.call({
-                        method: "smriti_retail_os.notification_studio.api.smriti_notifications_api.get_unread_count",
+                        method: "smriti_retail_os.notification_studio.api.notifications.get_unread_count",
                         callback: function(r) {
                             if (r && r.message && r.message.count > 0) {
                                 badge.textContent = r.message.count > 9 ? "9+" : r.message.count;

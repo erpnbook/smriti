@@ -681,7 +681,7 @@ window.SMRITI = window.SMRITI || {};
 
         function updateBadge() {
             frappe.call({
-                method: "smriti_retail_os.notification_studio.api.smriti_notifications_api.get_unread_badge",
+                method: "smriti_retail_os.notification_studio.api.notifications.get_unread_badge",
                 callback: function (r) {
                     if (!r || !r.message) return;
                     var cnt = r.message.count || 0;
