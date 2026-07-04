@@ -15,6 +15,7 @@ from frappe import _
 from frappe.utils import cint
 from frappe.utils.password import update_password
 from smriti_retail_os.smriti_retail_os.roles import Roles
+from smriti_retail_os.repositories.security_repository import SecurityRepository
 
 
 def _get_smriti_admin_email():
@@ -154,7 +155,7 @@ def save_user(email, first_name, last_name=None, roles=None, role_profile=None):
     is_new = not frappe.db.exists("User", email)
     
     if is_new:
-        user = frappe.new_doc("User")
+        user = SecurityRepository.new_doc("User")
         user.email = email
         user.send_welcome_email = 0
         user.first_name = first_name
@@ -182,7 +183,7 @@ def save_user(email, first_name, last_name=None, roles=None, role_profile=None):
             )
         )
     else:
-        user = frappe.get_doc("User", email)
+        user = SecurityRepository.get_doc("User", email)
         user.first_name = first_name
         user.last_name = last_name
         user.role_profile_name = role_profile
@@ -192,7 +193,7 @@ def save_user(email, first_name, last_name=None, roles=None, role_profile=None):
             
         user.save(ignore_permissions=True)
         
-    frappe.db.commit()
+    SecurityRepository.commit()
     return {"success": True, "message": _("User saved successfully."), "email": email}
 
 @frappe.whitelist()
@@ -204,8 +205,8 @@ def set_user_status(email, enabled):
     if not frappe.db.exists("User", email):
         frappe.throw(_("User {0} not found.").format(email))
         
-    frappe.db.set_value("User", email, "enabled", cint(enabled))
-    frappe.db.commit()
+    SecurityRepository.set_value("User", email, "enabled", cint(enabled))
+    SecurityRepository.commit()
     
     status_str = _("activated") if cint(enabled) else _("deactivated")
     return {"success": True, "message": _("User {0} successfully {1}.").format(email, status_str)}
@@ -245,7 +246,7 @@ def reset_user_password(email, password):
         frappe.throw(_("Password must be at least 8 characters long."))
 
     update_password(email, password)
-    frappe.db.commit()
+    SecurityRepository.commit()
     return {"success": True, "message": _("Password reset successfully for {0}.").format(email)}
 
 @frappe.whitelist()
@@ -282,7 +283,7 @@ def set_user_pin(email, pin):
 
     from frappe.utils.password import update_password as _update_pw
     _update_pw(email, pin, fieldname="custom_smriti_pin")
-    frappe.db.commit()
+    SecurityRepository.commit()
 
     frappe.log_error(
         title="SMRITI: Manager PIN Set",
@@ -304,8 +305,8 @@ def clear_user_pin(email):
         frappe.throw(_("User {0} not found.").format(email))
 
     # Clear the password hash by setting an empty sentinel value via DB
-    frappe.db.set_value("User", email, "custom_smriti_pin", "")
-    frappe.db.commit()
+    SecurityRepository.set_value("User", email, "custom_smriti_pin", "")
+    SecurityRepository.commit()
 
     frappe.log_error(
         title="SMRITI: Manager PIN Cleared",
@@ -401,10 +402,10 @@ def create_role(role_name):
     if frappe.db.exists("Role", role_name):
         frappe.throw(_("Role {0} already exists.").format(role_name))
         
-    doc = frappe.new_doc("Role")
+    doc = SecurityRepository.new_doc("Role")
     doc.role_name = role_name
     doc.insert(ignore_permissions=True)
-    frappe.db.commit()
+    SecurityRepository.commit()
     return {"success": True, "role": role_name}
 
 @frappe.whitelist()
@@ -415,8 +416,8 @@ def delete_role(role_name):
     if not frappe.db.exists("Role", role_name):
         frappe.throw(_("Role {0} not found.").format(role_name))
         
-    frappe.delete_doc("Role", role_name, ignore_permissions=True)
-    frappe.db.commit()
+    SecurityRepository.delete_doc("Role", role_name, ignore_permissions=True)
+    SecurityRepository.commit()
     return {"success": True, "message": _("Role {0} deleted successfully.").format(role_name)}
 
 @frappe.whitelist()
@@ -458,14 +459,14 @@ def save_role_profile(name, roles):
     is_new = not frappe.db.exists("Role Profile", name)
     
     if is_new:
-        doc = frappe.new_doc("Role Profile")
+        doc = SecurityRepository.new_doc("Role Profile")
         doc.role_profile = name
     else:
-        doc = frappe.get_doc("Role Profile", name)
+        doc = SecurityRepository.get_doc("Role Profile", name)
         
     doc.set("roles", [{"role": r} for r in (roles or [])])
     doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    SecurityRepository.commit()
     return {"success": True, "name": name}
 
 @frappe.whitelist()
@@ -476,8 +477,8 @@ def delete_role_profile(name):
     if not frappe.db.exists("Role Profile", name):
         frappe.throw(_("Role Profile {0} not found.").format(name))
         
-    frappe.delete_doc("Role Profile", name, ignore_permissions=True)
-    frappe.db.commit()
+    SecurityRepository.delete_doc("Role Profile", name, ignore_permissions=True)
+    SecurityRepository.commit()
     return {"success": True, "message": _("Role Profile {0} deleted successfully.").format(name)}
 
 # ─── User Permission Management ──────────────────────────────────────────────
@@ -531,7 +532,7 @@ def add_user_permission(user, doctype, docname, is_default=0):
             
     from frappe.permissions import add_user_permission as frappe_add_perm
     frappe_add_perm(doctype, docname, user, is_default=cint(is_default))
-    frappe.db.commit()
+    SecurityRepository.commit()
     return {"success": True}
 
 @frappe.whitelist()
@@ -561,7 +562,7 @@ def remove_user_permission(name):
             
     from frappe.permissions import remove_user_permission as frappe_remove_perm
     frappe_remove_perm(perm.allow, perm.for_value, perm.user)
-    frappe.db.commit()
+    SecurityRepository.commit()
     return {"success": True}
 
 # ─── Workflow Engine & States ────────────────────────────────────────────────
@@ -580,7 +581,7 @@ def get_workflow_details(workflow_name):
     if not frappe.db.exists("Workflow", workflow_name):
         frappe.throw(_("Workflow {0} not found.").format(workflow_name))
         
-    doc = frappe.get_doc("Workflow", workflow_name)
+    doc = SecurityRepository.get_doc("Workflow", workflow_name)
     return {
         "name": doc.name,
         "document_type": doc.document_type,
@@ -605,13 +606,13 @@ def save_workflow(name, document_type, is_active, states, transitions):
         frappe.throw(_("Workflow Name and Target Document Type are mandatory."))
         
     if frappe.db.exists("Workflow", name):
-        doc = frappe.get_doc("Workflow", name)
+        doc = SecurityRepository.get_doc("Workflow", name)
         doc.document_type = document_type
         doc.is_active = cint(is_active)
         doc.states = []
         doc.transitions = []
     else:
-        doc = frappe.new_doc("Workflow")
+        doc = SecurityRepository.new_doc("Workflow")
         doc.workflow_name = name
         doc.document_type = document_type
         doc.is_active = cint(is_active)
@@ -635,7 +636,7 @@ def save_workflow(name, document_type, is_active, states, transitions):
         })
         
     doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    SecurityRepository.commit()
     return {"success": True, "name": name}
 
 @frappe.whitelist()
@@ -646,8 +647,8 @@ def delete_workflow(name):
     if not frappe.db.exists("Workflow", name):
         frappe.throw(_("Workflow {0} not found.").format(name))
         
-    frappe.delete_doc("Workflow", name, ignore_permissions=True)
-    frappe.db.commit()
+    SecurityRepository.delete_doc("Workflow", name, ignore_permissions=True)
+    SecurityRepository.commit()
     return {"success": True}
 
 @frappe.whitelist()
@@ -665,16 +666,16 @@ def save_workflow_state(name, style):
         frappe.throw(_("State Name is mandatory."))
         
     if frappe.db.exists("Workflow State", name):
-        doc = frappe.get_doc("Workflow State", name)
+        doc = SecurityRepository.get_doc("Workflow State", name)
         doc.style = style
         doc.save(ignore_permissions=True)
     else:
-        doc = frappe.new_doc("Workflow State")
+        doc = SecurityRepository.new_doc("Workflow State")
         doc.workflow_state_name = name
         doc.style = style
         doc.insert(ignore_permissions=True)
         
-    frappe.db.commit()
+    SecurityRepository.commit()
     return {"success": True, "name": name}
 
 # ─── Actionable Approval Inbox ───────────────────────────────────────────────
@@ -699,7 +700,7 @@ def get_pending_approvals():
     approvals = []
     for wf in workflows:
         try:
-            wf_doc = frappe.get_doc("Workflow", wf.name)
+            wf_doc = SecurityRepository.get_doc("Workflow", wf.name)
         except Exception:
             continue
             
@@ -756,11 +757,11 @@ def apply_workflow_action(doctype, docname, action):
     if not doctype or not docname or not action:
         frappe.throw(_("DocType, Document Name, and Action are all mandatory."))
         
-    doc = frappe.get_doc(doctype, docname)
+    doc = SecurityRepository.get_doc(doctype, docname)
     
     from frappe.model.workflow import apply_workflow
     apply_workflow(doc, action)
-    frappe.db.commit()
+    SecurityRepository.commit()
     return {"success": True, "message": _("Action '{0}' successfully applied.").format(action)}
 
 

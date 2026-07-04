@@ -1,5 +1,5 @@
 {
-  "created": "2026-07-04T05:27:46.581212+00:00",
+  "created": "2026-07-04T09:14:29.605044+00:00",
   "description": "Accepted baseline of known architecture boundary violations. Ratchet mode compares against this snapshot \u2014 the backlog can only shrink. Re-run with --write-baseline after each sprint to lock in progress.",
   "engine": "ERPNext + Frappe (Platform Engine)",
   "platform": "SMRITI Retail OS",
@@ -29,7 +29,6 @@
     "clienteling/api/clienteling_api.py": 3,
     "clienteling/service/clienteling_service.py": 13,
     "clienteling/service/walk_in_service.py": 4,
-    "company_api.py": 25,
     "inventory_api.py": 17,
     "item_master_api.py": 51,
     "key_recovery_service.py": 4,
@@ -59,7 +58,6 @@
     "reports_api.py": 55,
     "sales_order_api.py": 3,
     "search_studio/api/smriti_search_api.py": 7,
-    "security_api.py": 32,
     "services/dictionary_service.py": 2,
     "services/discount_service.py": 1,
     "services/explain_service.py": 2,

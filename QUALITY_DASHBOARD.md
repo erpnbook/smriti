@@ -8,7 +8,7 @@ This dashboard tracks the status, metrics, and health indices of SMRITI Retail O
 
 | Verification Gate | Required Threshold | Current Value / Status | Result |
 |---|---|---|---|
-| **Architecture Guard** | No regressions against baseline | 770 violations (87 files, 7.9% reduction from baseline) | **PASS** |
+| **Architecture Guard** | No regressions against baseline | 713 violations (85 files, 14.7% reduction from baseline) | **PASS** |
 | **Backend Unit Tests** | 100% pass rate | All core tests pass | **PASS** |
 | **UI Integration Tests** | 100% pass rate | 5/5 tests pass (`test_ui_sidebar_regression.py`) | **PASS** |
 | **Scheduler Hook Tests** | 100% pass rate | 1/1 tests pass (`test_scheduler_hooks.py`) | **PASS** |
@@ -26,7 +26,7 @@ To systematically reduce architectural debt across subsequent releases, SMRITI e
 | Milestone / Phase | Version Target | Required Max Violations | Current Status / Result |
 |---|---|---|---|
 | **Baseline** | v2.0.0 | 836 violations (88 files) | 836 violations |
-| **Phase 1 (Stabilize)** | v2.1.1 (Current) | 800 violations | **770 violations (87 files) — PASS** |
+| **Phase 1 (Stabilize)** | v2.1.1 (Current) | 800 violations | **713 violations (85 files) — PASS** |
 | **Phase 2 (Consolidate)** | v2.2.0 | 500 violations | *Scheduled* |
 | **Phase 3 (Refactor)** | v2.3.0 | 250 violations | *Scheduled* |
 | **General Availability (GA)** | v3.0.0 | 0 violations | *Target GA Gate* |

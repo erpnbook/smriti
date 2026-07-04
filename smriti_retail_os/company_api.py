@@ -15,6 +15,7 @@ import frappe
 import json
 from frappe import _
 from frappe.utils import flt, cint
+from smriti_retail_os.repositories.company_repository import CompanyRepository
 
 # ─── Permission helper ───────────────────────────────────────────────────────
 
@@ -116,7 +117,7 @@ def get_company_settings(company=None):
         return {}
 
     if frappe.db.exists(_SETTINGS_DOCTYPE, {"company": company}):
-        doc = frappe.get_doc(_SETTINGS_DOCTYPE, {"company": company})
+        doc = CompanyRepository.get_doc(_SETTINGS_DOCTYPE, {"company": company})
         result = doc.as_dict()
     else:
         # Return in-memory defaults — do NOT auto-save (avoid side-effects on read)
@@ -166,7 +167,7 @@ def save_company_settings(company=None, settings=None):
     _COMPANY_DIRECT_FIELDS = {"custom_smriti_store_type", "gstin"}
     for field in _COMPANY_DIRECT_FIELDS:
         if field in settings:
-            frappe.db.set_value("Company", company, field, settings.pop(field))
+            CompanyRepository.set_value("Company", company, field, settings.pop(field))
 
     # Sanitise — only allow known writable SMRITI Settings fields
     allowed_fields = {
@@ -181,17 +182,17 @@ def save_company_settings(company=None, settings=None):
 
     existing = frappe.db.exists(_SETTINGS_DOCTYPE, {"company": company})
     if existing:
-        doc = frappe.get_doc(_SETTINGS_DOCTYPE, existing)
+        doc = CompanyRepository.get_doc(_SETTINGS_DOCTYPE, existing)
         doc.update(clean)
         doc.save(ignore_permissions=True)
     else:
         defaults = _default_settings(company)
         defaults.update(clean)
-        doc = frappe.new_doc(_SETTINGS_DOCTYPE)
+        doc = CompanyRepository.new_doc(_SETTINGS_DOCTYPE)
         doc.update(defaults)
         doc.insert(ignore_permissions=True)
 
-    frappe.db.commit()
+    CompanyRepository.commit()
     return doc.as_dict()
 
 
@@ -236,7 +237,7 @@ def get_store_address(company=None):
                 "longitude": None
             }
             
-    addr = frappe.get_doc("Address", address_name)
+    addr = CompanyRepository.get_doc("Address", address_name)
     # Use addr.get() for all optional / India-Compliance-specific fields.
     # Direct attribute access (addr.gstin) raises AttributeError when the
     # column does not exist in this ERPNext installation (e.g. migration not run).
@@ -306,9 +307,9 @@ def save_store_address(company=None, address_data=None):
             existing_addr = links[0].parent
             
     if existing_addr:
-        addr = frappe.get_doc("Address", existing_addr)
+        addr = CompanyRepository.get_doc("Address", existing_addr)
     else:
-        addr = frappe.new_doc("Address")
+        addr = CompanyRepository.new_doc("Address")
         addr.address_title = address_data.get("address_title") or company
         addr.address_type = "Office"
         addr.is_primary_address = 1
@@ -349,7 +350,7 @@ def save_store_address(company=None, address_data=None):
     addr.gst_state_number = address_data.get("gst_state_number")
     
     addr.save(ignore_permissions=True)
-    frappe.db.commit()
+    CompanyRepository.commit()
     return {
         "success": True,
         "message": "Store primary address updated successfully!"
@@ -365,11 +366,11 @@ def ensure_company_settings(doc, method=None):
     if not frappe.db.exists(_SETTINGS_DOCTYPE, {"company": company}):
         try:
             defaults = _default_settings(company)
-            new_doc = frappe.new_doc(_SETTINGS_DOCTYPE)
+            new_doc = CompanyRepository.new_doc(_SETTINGS_DOCTYPE)
             new_doc.update(defaults)
             new_doc.flags.ignore_links = True  # Prevent "Could not find Row #N: Company" — hook fires inside Company.after_insert before outer commit
             new_doc.insert(ignore_permissions=True)
-            # NOTE: Do NOT call frappe.db.commit() here — this hook fires inside Company.after_insert
+            # NOTE: Do NOT call CompanyRepository.commit() here — this hook fires inside Company.after_insert
             # and committing mid-hook corrupts ERPNext's own chart-of-accounts setup transaction.
             frappe.logger().info(
                 f"[SMRITI] Created Company Settings for: {company}"
@@ -403,7 +404,7 @@ def create_company(company_name, abbr, country="India", default_currency="INR", 
     if frappe.db.exists("Company", {"abbr": abbr}):
         frappe.throw(_("Abbreviation '{0}' is already used by another company.").format(abbr))
 
-    doc = frappe.new_doc("Company")
+    doc = CompanyRepository.new_doc("Company")
     doc.company_name = company_name
     doc.abbr = abbr
     doc.country = country or "India"
@@ -412,7 +413,7 @@ def create_company(company_name, abbr, country="India", default_currency="INR", 
         doc.gstin = gstin.strip().upper()
 
     doc.insert(ignore_permissions=True)
-    frappe.db.commit()
+    CompanyRepository.commit()
 
     # Auto-provision SMRITI Company Settings
     ensure_company_settings(doc)
@@ -439,7 +440,7 @@ def update_company(company, company_name=None, gstin=None, default_currency=None
     if not company or not frappe.db.exists("Company", company):
         frappe.throw(_("Company '{0}' not found.").format(company))
 
-    doc = frappe.get_doc("Company", company)
+    doc = CompanyRepository.get_doc("Company", company)
     changed = False
 
     if company_name and company_name.strip():
@@ -454,7 +455,7 @@ def update_company(company, company_name=None, gstin=None, default_currency=None
 
     if changed:
         doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        CompanyRepository.commit()
 
     return {"success": True, "message": _("Company updated successfully.")}
 
@@ -498,10 +499,10 @@ def delete_company(company):
     # Clean up SMRITI Company Settings first
     settings_name = frappe.db.exists(_SETTINGS_DOCTYPE, {"company": company})
     if settings_name:
-        frappe.delete_doc(_SETTINGS_DOCTYPE, settings_name, ignore_permissions=True)
+        CompanyRepository.delete_doc(_SETTINGS_DOCTYPE, settings_name, ignore_permissions=True)
 
-    frappe.delete_doc("Company", company, ignore_permissions=True)
-    frappe.db.commit()
+    CompanyRepository.delete_doc("Company", company, ignore_permissions=True)
+    CompanyRepository.commit()
     return {"success": True, "message": _("Company '{0}' deleted.").format(company)}
 
 
@@ -656,7 +657,7 @@ def save_item_attributes(company=None, attributes=None):
         before_state = json.dumps(existing_entries)
         
         # Step 2: Delete existing weights for this company
-        frappe.db.delete("SMRITI Attribute Layout", {"company": company})
+        CompanyRepository.delete("SMRITI Attribute Layout", {"company": company})
         
         # Step 3: Insert new weights validating uniqueness
         seen_attributes = set()
@@ -678,7 +679,7 @@ def save_item_attributes(company=None, attributes=None):
                 )
             seen_attributes.add(attr_id)
             
-            doc = frappe.new_doc("SMRITI Attribute Layout")
+            doc = CompanyRepository.new_doc("SMRITI Attribute Layout")
             doc.company = company
             doc.attribute_id = attr_id
             doc.weight = weight
@@ -693,7 +694,7 @@ def save_item_attributes(company=None, attributes=None):
         frappe.cache.delete_key(cache_key)
         
         # Step 5: Log audit event
-        audit_doc = frappe.new_doc("SMRITI Audit Event")
+        audit_doc = CompanyRepository.new_doc("SMRITI Audit Event")
         audit_doc.timestamp = frappe.utils.now_datetime()
         audit_doc.user = frappe.session.user
         audit_doc.event_type = "ATTRIBUTE_LAYOUT_CHANGED"
@@ -703,7 +704,7 @@ def save_item_attributes(company=None, attributes=None):
         audit_doc.ip_address = ip_address
         audit_doc.insert(ignore_permissions=True)
         
-        frappe.db.commit()
+        CompanyRepository.commit()
         
     except Exception as e:
         frappe.db.rollback()
@@ -741,14 +742,14 @@ def reset_item_attributes(company=None):
         before_state = json.dumps(existing_entries)
         
         # Delete entries
-        frappe.db.delete("SMRITI Attribute Layout", {"company": company})
+        CompanyRepository.delete("SMRITI Attribute Layout", {"company": company})
         
         # Invalidate Redis cache key `smriti:item_attributes:{company}`
         cache_key = f"smriti:item_attributes:{company}"
         frappe.cache.delete_key(cache_key)
         
         # Log audit event
-        audit_doc = frappe.new_doc("SMRITI Audit Event")
+        audit_doc = CompanyRepository.new_doc("SMRITI Audit Event")
         audit_doc.timestamp = frappe.utils.now_datetime()
         audit_doc.user = frappe.session.user
         audit_doc.event_type = "ATTRIBUTE_LAYOUT_RESET"
@@ -758,7 +759,7 @@ def reset_item_attributes(company=None):
         audit_doc.ip_address = ip_address
         audit_doc.insert(ignore_permissions=True)
         
-        frappe.db.commit()
+        CompanyRepository.commit()
         
     except Exception as e:
         frappe.db.rollback()
