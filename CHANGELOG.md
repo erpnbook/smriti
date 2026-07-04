@@ -14,6 +14,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Fixed collapsed sidebar layout: SMRITI brand logo now remains visible and centered when collapsed, and brand text collapses vertically.
 - Configured custom dropdown select styles with premium SVG chevron arrow indicator, fixing unstyled native select filters in `products-toolbar`.
 - Set `smriti_logo.svg` globally as the default favicon and app shortcut icon across all SMRITI pages and templates.
+- Resolved Negative Stock Recovery Safety Net (KI-003) daily scheduler ImportError by creating package `__init__.py` and wrapper `run_safety_net` function.
+- Implemented static AST-based scheduler/doc_events hook validation regression test suite (`test_scheduler_hooks.py`) to prevent future import/signature regressions.
+- Resolved documentation compliance blockers (13 missing metadata headers and relative file paths in broken links), achieving 100% pass on Documentation Health Audit.
+- Resolved license conflict by replacing the Apache 2.0 LICENSE file in the app directory with the canonical MIT License.
+- Deleted the redundant `license.txt` file to maintain a single canonical LICENSE.
+- Updated `SECURITY.md` to define actual SMRITI versioning support limits and correct vulnerability reporting contacts.
+- Corrected Architecture Guard metrics in `QUALITY_DASHBOARD.md` to report real static checking count (770 remaining violations, 7.9% reduction from baseline) and locked in baseline progress.
+- Cleaned up outdated `v1.8.x` version badges from root and app `README.md` files.
 
 ## [2.1.0] — 2026-07-04
 
