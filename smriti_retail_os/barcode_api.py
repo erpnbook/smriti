@@ -28,7 +28,8 @@ from smriti_retail_os.barcode.printer_service import (
     get_field_mapping_reference as _get_field_mapping_reference,
     get_recent_transactions as _get_recent_transactions,
     test_printer_connection as _test_printer_connection,
-    print_test_label as _print_test_label
+    print_test_label as _print_test_label,
+    _send_to_printer_sync
 )
 from smriti_retail_os.barcode.analytics_service import (
     log_print_job as _log_print_job,
