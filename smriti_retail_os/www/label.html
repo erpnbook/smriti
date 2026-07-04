@@ -35,27 +35,93 @@
 
             <!-- Content Area -->
             <div class="studio-container">
+                <!-- Designer Toolbar & Sidebar Controls -->
                 <div class="studio-sidebar">
                     <div class="card">
-                        <h3 class="card-title">Select Template</h3>
-                        <select class="filter-select" id="templateSelect">
-                            <option value="">-- Choose Template --</option>
-                        </select>
+                        <h3 class="card-title">Preferences</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="gridToggle">Show Grid</label>
+                            <input type="checkbox" id="gridToggle" checked>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="snapToggle">Snap to Grid</label>
+                            <input type="checkbox" id="snapToggle" checked>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="gridSizeSelect">Grid Size (mm)</label>
+                            <select class="filter-select" id="gridSizeSelect">
+                                <option value="1">1 mm</option>
+                                <option value="2">2 mm</option>
+                                <option value="5" selected>5 mm</option>
+                                <option value="10">10 mm</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="zoomSelect">Zoom View</label>
+                            <select class="filter-select" id="zoomSelect">
+                                <option value="0.5">50%</option>
+                                <option value="1.0" selected>100%</option>
+                                <option value="2.0">200%</option>
+                                <option value="fit">Fit</option>
+                            </select>
+                        </div>
+
+                        <div class="toolbar-actions">
+                            <button class="btn btn-secondary btn-sm" id="undoBtn">Undo</button>
+                            <button class="btn btn-secondary btn-sm" id="redoBtn">Redo</button>
+                        </div>
                     </div>
 
-                    <div class="card">
-                        <h3 class="card-title">Select Target Printer</h3>
-                        <select class="filter-select" id="printerSelect">
-                            <option value="">-- Choose Printer --</option>
-                        </select>
+                    <!-- Inspector Panel -->
+                    <div class="card" id="inspectorCard">
+                        <h3 class="card-title">Element Inspector</h3>
+                        <p class="empty-state-text" id="inspectorEmptyState">Select an element to inspect</p>
+                        
+                        <div id="inspectorForm" style="display: none;">
+                            <div class="form-group">
+                                <label class="form-label" for="elemContent">Content / Value</label>
+                                <input type="text" class="search-input" id="elemContent">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="elemX">X (mm)</label>
+                                <input type="number" class="search-input" id="elemX" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="elemY">Y (mm)</label>
+                                <input type="number" class="search-input" id="elemY" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="elemW">Width (mm)</label>
+                                <input type="number" class="search-input" id="elemW" min="5">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="elemH">Height (mm)</label>
+                                <input type="number" class="search-input" id="elemH" min="5">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="elemRotation">Rotation (°)</label>
+                                <input type="number" class="search-input" id="elemRotation" min="0" max="360">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="elemLocked">Locked</label>
+                                <input type="checkbox" id="elemLocked">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="elemVisible">Visible</label>
+                                <input type="checkbox" id="elemVisible" checked>
+                            </div>
+                        </div>
                     </div>
-
-                    <button class="btn btn-primary" id="printBtn">Send to Printer</button>
                 </div>
 
+                <!-- Canvas Preview Area -->
                 <div class="studio-canvas-area">
                     <div class="canvas-card">
-                        <h3 class="card-title">Label Preview</h3>
+                        <h3 class="card-title">Design Workspace</h3>
                         <div class="canvas-container">
                             <canvas id="labelCanvas" width="378" height="189"></canvas>
                         </div>
@@ -69,5 +135,103 @@
     <script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js"></script>
     <script src="/assets/smriti_retail_os/js/smriti_sidebar.js"></script>
     <script src="/assets/smriti_retail_os/js/label/label_core.js"></script>
+    <script src="/assets/smriti_retail_os/js/label/label_designer.js"></script>
+    
+    <!-- Local UI Binding Orchestration -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const gridToggle = document.getElementById("gridToggle");
+            const snapToggle = document.getElementById("snapToggle");
+            const gridSizeSelect = document.getElementById("gridSizeSelect");
+            const zoomSelect = document.getElementById("zoomSelect");
+            const undoBtn = document.getElementById("undoBtn");
+            const redoBtn = document.getElementById("redoBtn");
+
+            const inspectorEmpty = document.getElementById("inspectorEmptyState");
+            const inspectorForm = document.getElementById("inspectorForm");
+            
+            const elemContent = document.getElementById("elemContent");
+            const elemX = document.getElementById("elemX");
+            const elemY = document.getElementById("elemY");
+            const elemW = document.getElementById("elemW");
+            const elemH = document.getElementById("elemH");
+            const elemRotation = document.getElementById("elemRotation");
+            const elemLocked = document.getElementById("elemLocked");
+            const elemVisible = document.getElementById("elemVisible");
+
+            let activeElement = null;
+
+            gridToggle.addEventListener("change", (e) => {
+                window.LabelEvents.emit("grid:toggle", e.target.checked);
+            });
+            snapToggle.addEventListener("change", (e) => {
+                window.LabelStudioState.preferences.snap = e.target.checked;
+            });
+            gridSizeSelect.addEventListener("change", (e) => {
+                window.LabelEvents.emit("grid:size", e.target.value);
+            });
+            zoomSelect.addEventListener("change", (e) => {
+                window.LabelEvents.emit("zoom:change", e.target.value);
+            });
+            undoBtn.addEventListener("click", () => {
+                window.LabelEvents.emit("history:undo");
+            });
+            redoBtn.addEventListener("click", () => {
+                window.LabelEvents.emit("history:redo");
+            });
+
+            // Element selected listener
+            window.LabelEvents.on("element:selected", (el) => {
+                activeElement = el;
+                inspectorEmpty.style.display = "none";
+                inspectorForm.style.display = "block";
+                
+                elemContent.value = el.content || "";
+                elemX.value = Math.round(el.x);
+                elemY.value = Math.round(el.y);
+                elemW.value = Math.round(el.width);
+                elemH.value = Math.round(el.height);
+                elemRotation.value = el.rotation || 0;
+                elemLocked.checked = el.locked || false;
+                elemVisible.checked = el.visible !== false;
+            });
+
+            window.LabelEvents.on("element:unselected", () => {
+                activeElement = null;
+                inspectorEmpty.style.display = "block";
+                inspectorForm.style.display = "none";
+            });
+
+            window.LabelEvents.on("element:changed", (el) => {
+                if (activeElement && activeElement.id === el.id) {
+                    elemX.value = Math.round(el.x);
+                    elemY.value = Math.round(el.y);
+                    elemW.value = Math.round(el.width);
+                    elemH.value = Math.round(el.height);
+                }
+            });
+
+            // Apply updates from inspector inputs back to state
+            function updateActiveElement() {
+                if (!activeElement) return;
+                activeElement.content = elemContent.value;
+                activeElement.x = parseFloat(elemX.value) || 0;
+                activeElement.y = parseFloat(elemY.value) || 0;
+                activeElement.width = parseFloat(elemW.value) || 10;
+                activeElement.height = parseFloat(elemH.value) || 10;
+                activeElement.rotation = parseFloat(elemRotation.value) || 0;
+                activeElement.locked = elemLocked.checked;
+                activeElement.visible = elemVisible.checked;
+                window.LabelEvents.emit("studio:ready");
+            }
+
+            [elemContent, elemX, elemY, elemW, elemH, elemRotation].forEach(input => {
+                input.addEventListener("input", updateActiveElement);
+            });
+            [elemLocked, elemVisible].forEach(checkbox => {
+                checkbox.addEventListener("change", updateActiveElement);
+            });
+        });
+    </script>
 </body>
 </html>
