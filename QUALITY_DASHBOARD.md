@@ -11,10 +11,11 @@ This dashboard tracks the status, metrics, and health indices of SMRITI Retail O
 | **Architecture Guard** | 0 boundary violations | 0 violations (statically checked) | **PASS** |
 | **Backend Unit Tests** | 100% pass rate | All core tests pass | **PASS** |
 | **UI Integration Tests** | 100% pass rate | 5/5 tests pass (`test_ui_sidebar_regression.py`) | **PASS** |
+| **Scheduler Hook Tests** | 100% pass rate | 1/1 tests pass (`test_scheduler_hooks.py`) | **PASS** |
 | **Security Gates** | Authorized role access policies | Centralized check verified on whitelisted APIs | **PASS** |
 | **Performance Gates** | Cold <2.5s, Warm <1.0s, UI <100ms | Verified in reference dev environment | **PASS** |
 | **Quality & Console** | 0 JS errors, 0 unhandled promise rejections | Checked and verified error-free | **PASS** |
-| **Documentation Gates** | Release criteria & notes updated | RELEASE_GATE_CRITERIA.md active | **PASS** |
+| **Documentation Gates** | 100% audit compliance, 0 blocker errors | Health audit passed successfully | **PASS** |
 
 ---
 
@@ -36,6 +37,18 @@ Ran 5 tests in 0.792s
 OK
 ```
 
+### Scheduler Hook Resolution Suite (`test_scheduler_hooks.py`)
+```
+Running 1 unspecified-category tests for smriti_retail_os
+
+smriti_retail_os.tests.test_scheduler_hooks.TestSchedulerAndDocEventHooksResolve
+    ✔  test_every_hook_path_resolves_to_a_callable
+----------------------------------------------------------------------
+Ran 1 test in 1.189s
+
+OK
+```
+
 ---
 
 ## 3. Reference Test Environment Specifications
@@ -47,8 +60,13 @@ OK
 ---
 
 ## 4. Release History & Quality Ledger
-* **SMRITI v2.1.0** (Current Build):
+* **SMRITI v2.1.1** (Current Build):
   * **Status**: Stable
   * **Automated Guard Run**: Successful
   * **Roles Audit**: Centralized under policy registry
+  * **Scheduler Hooks Resolve**: 100% verified callable
+  * **Documentation Health**: 0 blocker errors
   * **Release Authorization**: Approved
+
+* **SMRITI v2.1.0**:
+  * **Status**: Deprecated (Superceded by v2.1.1)

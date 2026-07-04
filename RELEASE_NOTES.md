@@ -1,8 +1,8 @@
-# SMRITI Retail OS — Release Notes v2.1.0
+# SMRITI Retail OS — Release Notes v2.1.1
 
 **Release Date**: 2026-07-04
 **Codename**: Engineering Governance
-**Previous Version**: v2.0.0
+**Previous Version**: v2.1.0
 
 ---
 
@@ -54,28 +54,26 @@ centralized security constants, and formal release gate criteria.
 
 ## Fixes
 
-- Corrected module import paths for `security_api` in regression tests.
-- Added cache-busting version parameters to SMRITI resolver and theme manager scripts.
-- Extended `blank.html` base template in Purchase, PO, and GRN pages to load Frappe JS.
-- Renamed hyphenated www page controllers to underscores for Frappe router resolution.
+- **Negative Stock Recovery Safety Sweep (KI-003)**: Added missing `__init__.py` module package initializer and module-level `run_safety_net` hook wrapper to resolve daily scheduler ImportError at migration.
+- **Product Catalog Console Blocker**: Added whitelisted backend API `get_catalog_metadata` to load filter metadata dynamically on `/products`, resolving client-side `frappe.db` undefined error.
+- **Missing CSRF Token Bad Requests**: Injected global `window.csrf_token` and `window.csrfToken` variables on `/products` and `/smriti` dashboard pages to prevent `400 Bad Request` errors on POST API calls.
+- **Unread Notification Badge Forbidden**: Whitelisted the `get_unread_count` API endpoint in the notifications controller to resolve `403 Forbidden` error on standalone pages.
+- **Collapsed Sidebar Brand Logo**: Fixed sidebar CSS layout to keep the brand logo visible and centered in collapsed mode, and verticalized the brand text.
+- **Styled Toolbar Filter Dropdowns**: Configured custom premium SMRITI dropdown CSS styles with an embedded SVG chevron arrow indicator, replacing browser-default select arrows.
+- **Unified Favicon Configuration**: Defined the SMRITI logo globally as the default page favicon and app tab shortcut icon.
 
 ---
 
 ## Known Issues
 
-- Billing integration tests (`test_billing_api.py`) fail due to missing POS Profile
-  fixture data in the test environment. These tests require a fully configured POS
-  Profile with warehouse, price list, and payment modes. This is a pre-existing
-  test data issue and does not affect production billing functionality.
-- CGE (Customer Growth Engine) tests have intermittent failures in concurrency stress
-  tests due to database lock contention under parallel execution.
+- Billing integration tests (`test_billing_api.py`) fail due to missing POS Profile fixture data in the test environment.
+- CGE (Customer Growth Engine) tests have intermittent failures in concurrency stress tests due to database lock contention.
 
 ---
 
-## Commits Since v2.0.0
+## Commits Since v2.1.0
 
-75 commits, spanning architecture governance, UI refactoring, automated testing,
-security hardening, and documentation improvements.
+12 commits, covering scheduler path hotfixes, client-side API error corrections, CSRF token handling, and CSS layout/styling polishes.
 
 ---
 
