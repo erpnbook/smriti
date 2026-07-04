@@ -81,8 +81,10 @@ body.popout-mode #smriti-sidebar-target.sidebar {
 .smriti-sidebar-brand-logo {
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, var(--smriti-color-brand-primary, #2563eb), var(--smriti-color-brand-light, #3b82f6));
-  border-radius: var(--radius-sm, 4px);
+  background-image: url("/assets/smriti_retail_os/images/smriti_logo.svg");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   flex-shrink: 0;
 }
 
