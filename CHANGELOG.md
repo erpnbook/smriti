@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.1.1] — 2026-07-04
+
+### Fixed
+- Resolved undefined `frappe.db` client console error on the `/products` page by adding the whitelisted backend API `get_catalog_metadata` to load filter options.
+- Resolved `400 (BAD REQUEST)` empty CSRF token error on `/products` and `/smriti` by injecting the global `window.csrf_token` and `window.csrfToken` variables.
+- Resolved `403 (FORBIDDEN)` permission error on notification badge hydration by whitelisting `get_unread_count` in the notification API.
+- Fixed collapsed sidebar layout: SMRITI brand logo now remains visible and centered when collapsed, and brand text collapses vertically.
+- Configured custom dropdown select styles with premium SVG chevron arrow indicator, fixing unstyled native select filters in `products-toolbar`.
+- Set `smriti_logo.svg` globally as the default favicon and app shortcut icon across all SMRITI pages and templates.
+
 ## [2.1.0] — 2026-07-04
 
 ### Added

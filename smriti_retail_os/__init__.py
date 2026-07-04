@@ -4,12 +4,12 @@
 # @description: SMRITI Retail OS -- Frappe app package initializer.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 2.1.0
+# @version: 2.1.1
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-__version__ = "2.1.0"
+__version__ = "2.1.1"
 
 # Advanced PDF Resilience: Monkey-patch get_pdf to automatically fallback
 # and strip broken image links/external assets to prevent transaction crashes.

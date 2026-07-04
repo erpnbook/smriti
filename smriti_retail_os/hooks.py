@@ -4,7 +4,7 @@
 # @description: Frappe application hooks — event bindings, scheduler jobs, and app metadata.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 2.1.0
+# @version: 2.1.1
 # @license: MIT
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #

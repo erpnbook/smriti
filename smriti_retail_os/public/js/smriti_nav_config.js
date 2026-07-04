@@ -8,8 +8,8 @@
  * * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
  */
 const SMRITI_NAV_META = {
-  version: "2.1.0",
-  updated_at: "2026-06-24",
+  version: "2.1.1",
+  updated_at: "2026-07-04",
   source: "SMRITI Sidebar — www-first routing (no Frappe Desk)"
 };
 
