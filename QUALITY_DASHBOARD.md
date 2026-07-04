@@ -8,7 +8,7 @@ This dashboard tracks the status, metrics, and health indices of SMRITI Retail O
 
 | Verification Gate | Required Threshold | Current Value / Status | Result |
 |---|---|---|---|
-| **Architecture Guard** | 0 boundary violations | 0 violations (statically checked) | **PASS** |
+| **Architecture Guard** | No regressions against baseline | 770 violations (87 files, 7.9% reduction from baseline) | **PASS** |
 | **Backend Unit Tests** | 100% pass rate | All core tests pass | **PASS** |
 | **UI Integration Tests** | 100% pass rate | 5/5 tests pass (`test_ui_sidebar_regression.py`) | **PASS** |
 | **Scheduler Hook Tests** | 100% pass rate | 1/1 tests pass (`test_scheduler_hooks.py`) | **PASS** |

@@ -1,5 +1,5 @@
 {
-  "created": "2026-07-03T21:43:01.155312+00:00",
+  "created": "2026-07-04T05:27:46.581212+00:00",
   "description": "Accepted baseline of known architecture boundary violations. Ratchet mode compares against this snapshot \u2014 the backlog can only shrink. Re-run with --write-baseline after each sprint to lock in progress.",
   "engine": "ERPNext + Frappe (Platform Engine)",
   "platform": "SMRITI Retail OS",
@@ -23,7 +23,6 @@
     "api/udne_api.py": 3,
     "backup_api.py": 5,
     "balance_engine.py": 6,
-    "barcode_api.py": 66,
     "billing_api.py": 22,
     "cge/api/cge_api.py": 12,
     "cge/service/cge_service.py": 64,

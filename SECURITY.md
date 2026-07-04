@@ -1,21 +1,20 @@
-# Security Policy
+# Security Policy — SMRITI Retail OS
 
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+SMRITI Retail OS only supports the current minor version branch with security updates. We strongly recommend all users stay updated to the latest patch release.
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| 2.1.x   | :white_check_mark: |
+| 2.0.x   | :x:                |
+| < 2.0   | :x:                |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
+If you discover a security vulnerability in SMRITI Retail OS, please do **not** open a public GitHub issue. Instead, report it privately to our security team:
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+1. Email the details to: **jawahar.mallah@gmail.com** and **support@erpnbook.com**
+2. Include a detailed description of the vulnerability, steps to reproduce, and any potential exploit or impact details.
+
+We will acknowledge receipt of your vulnerability report within 48 hours and provide a resolved update/patch within 10 business days for accepted security issues.
