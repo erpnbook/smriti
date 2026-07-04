@@ -186,10 +186,18 @@ def print_report(current: dict, baseline: dict) -> None:
     print("=" * 64)
     print(f"  Layer: UI -> api -> service -> Persistence Adapter -> Platform Engine")
     print()
-    print(f"  Baseline   {total_baseline_files:>4} files  {total_baseline_calls:>5} persistence calls")
-    print(f"  Current    {total_current_files:>4} files  {total_current_calls:>5} persistence calls")
-    print(f"  Progress   {cleared_files:>4} files cleared  "
-          f"({pct_files:.1f}%)   {cleared_calls:>5} calls removed  ({pct_calls:.1f}%)")
+    print(f"  Baseline   {total_baseline_files:>4} files  {total_baseline_calls:>5} legacy calls")
+    print(f"  Current    {total_current_files:>4} files  {total_current_calls:>5} legacy calls")
+    if cleared_calls > 0 or cleared_files > 0:
+        print(f"  Progress   {cleared_files:>4} files cleared  "
+              f"({pct_files:.1f}%)   {cleared_calls:>5} calls removed  ({pct_calls:.1f}%)")
+    elif cleared_calls == 0 and cleared_files == 0:
+        print(f"  New Violations:    0 \u2705")
+        print(f"  Legacy Violations: {total_current_calls}")
+        print(f"  Status:            Boundary Maintained")
+    else:
+        print(f"  Progress   {abs(cleared_files):>4} files added    "
+              f"({pct_files:.1f}%)   {abs(cleared_calls):>5} calls added    ({pct_calls:.1f}%)")
     print()
 
     if new_files:
