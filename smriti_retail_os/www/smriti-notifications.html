@@ -626,14 +626,31 @@
     const USER = "{{ cashier }}";
     const API_N = "smriti_retail_os.notification_studio.api.smriti_notifications_api";
 
-    function apiCall(method, args={}) {
-      return new Promise((res,rej) => {
-        frappe.call({ 
-          method, 
-          args,
-          callback: r => res(r.message !== undefined ? r.message : r),
-          error: e => rej(e)
-        });
+    const CSRF_TOKEN = "{{ csrf_token }}";
+
+    function apiCall(method, params = {}) {
+      return fetch(`/api/method/${method}`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+              'Content-Type': 'application/json',
+              'x-frappe-csrf-token': CSRF_TOKEN
+          },
+          body: JSON.stringify(params)
+      })
+      .then(r => {
+          if (!r.ok) {
+              return r.json().then(d => {
+                  throw new Error(d._error_message || d.exception || d.exc || `HTTP error! status: ${r.status}`);
+              }).catch(() => {
+                  throw new Error(`HTTP error! status: ${r.status}`);
+              });
+          }
+          return r.json();
+      })
+      .then(d => {
+          if (d.exc) throw new Error(d._error_message || d.exc);
+          return d.message !== undefined ? d.message : d;
       });
     }
 
