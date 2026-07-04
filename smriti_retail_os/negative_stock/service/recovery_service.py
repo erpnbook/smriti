@@ -88,3 +88,23 @@ class SMRITINegativeStockRecoveryService(object):
 		for case in cases:
 			srv = SMRITINegativeStockRecoveryService(case.item_code, case.warehouse)
 			srv.check_and_recover(source_doctype="Stock Entry", source_name="Daily Scheduler Safety Sweep", recovery_type="Scheduler")
+
+
+def run_safety_net():
+	"""
+	Module-level entry point for the scheduler and for `bench execute`.
+
+	KI-003 fix: Frappe's scheduler/get_attr resolution (frappe.utils.get_attr)
+	splits a hook string on the LAST dot into (module_path, attr_name) and does
+	`importlib.import_module(module_path)`. A path ending in
+	"...recovery_service.SMRITINegativeStockRecoveryService.run_scheduler_safety_net"
+	resolves module_path to "...recovery_service.SMRITINegativeStockRecoveryService",
+	which is a class, not an importable module -> ImportError at every migrate/scheduler tick.
+
+	This wrapper is a plain module-level function so the hook path is
+	"smriti_retail_os.negative_stock.service.recovery_service.run_safety_net"
+	(module_path = "...recovery_service", attr_name = "run_safety_net"), which
+	resolves correctly. It simply delegates to the existing classmethod so no
+	business logic is duplicated.
+	"""
+	SMRITINegativeStockRecoveryService.run_scheduler_safety_net()

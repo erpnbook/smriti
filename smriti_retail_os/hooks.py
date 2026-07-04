@@ -464,7 +464,7 @@ scheduler_events = {
         "smriti_retail_os.api.trial_operations_api.check_trial_health",
         "smriti_retail_os.api.trial_operations_api.cleanup_failed_provisioning",
         "smriti_retail_os.tasks.daily_telemetry_cleanup",
-        "smriti_retail_os.negative_stock.service.recovery_service.SMRITINegativeStockRecoveryService.run_scheduler_safety_net"
+        "smriti_retail_os.negative_stock.service.recovery_service.run_safety_net"
     ],
     "cron": {
         "*/30 * * * *": [

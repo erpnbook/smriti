@@ -1,7 +1,7 @@
-﻿# KNOWN ISSUES — SMRITI Retail OS v2.0.0
+# KNOWN ISSUES — SMRITI Retail OS v2.1.1
 
 Author: Jawahar R. Mallah | Founder & Chief Architect, AITDL
-Date: 2026-07-02
+Date: 2026-07-04
 Status: Pre-release audit
 
 ---
@@ -45,32 +45,6 @@ Status: Pre-release audit
   verified correct by the passing test_discount_application test.
 - **Workaround:** Run test in isolation.
 - **Fix target:** v2.0.1
-
-### KI-003 · SNSM Scheduler Path Error at Migrate (Non-Fatal Warning)
-- **Severity:** P4 (Info/Warning)
-- **Module:** SMRITI Negative Stock Management Engine
-- **Status:** New in v2.0.0
-- **Symptom:** During bench migrate, the following warning is logged:
-  ```
-  smriti_retail_os.negative_stock.service.recovery_service
-  .SMRITINegativeStockRecoveryService.run_scheduler_safety_net
-  is not a valid method: No module named
-  'smriti_retail_os.negative_stock.service.recovery_service
-  .SMRITINegativeStockRecoveryService'; 'smriti_retail_os.negative_stock
-  .service.recovery_service' is not a package
-  ```
-- **Cause:** Scheduler job path uses class-level dot notation
-  which Frappe treats as a sub-package path, not a class method.
-- **Impact on production:** The SNSM negative stock recovery scheduler
-  job does not run automatically. Manual recovery still works via
-  bench execute. All other SNSM features (case detection, policy, reasons)
-  function normally.
-- **Workaround:** Run recovery manually:
-  ```bash
-  bench --site smriti_retail execute \
-    smriti_retail_os.negative_stock.service.recovery_service.run_safety_net
-  ```
-- **Fix target:** v2.0.1 (change scheduler hook to module-level function)
 
 ### KI-004 · V17FrappeDeprecationWarning — limit_page_length Parameter
 - **Severity:** P4 (Info)
@@ -128,6 +102,17 @@ Status: Pre-release audit
 - **Cause:** Formula fixture seeding race condition in setUp phase.
 - **Impact on production:** None. Formula Registry reads correctly at runtime.
 - **Fix target:** v2.0.1
+
+---
+
+## Resolved in v2.1.1 (Previously Known Issues)
+
+### KI-003 · SNSM Scheduler Path Error at Migrate (Fixed)
+- **Severity:** P4 (Info/Warning)
+- **Module:** SMRITI Negative Stock Management Engine
+- **Symptom:** Import error on SMRITINegativeStockRecoveryService.run_scheduler_safety_net during scheduler tick.
+- **Cause:** Scheduler job path used class-level dot notation which Frappe treats as a sub-package path, and the directory was missing `__init__.py`.
+- **Fix:** Added missing `__init__.py`, created module-level `run_safety_net()` wrapper function in `recovery_service.py`, and updated `hooks.py`. Added `test_scheduler_hooks.py` regression gate.
 
 ---
 
