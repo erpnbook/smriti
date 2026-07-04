@@ -55,7 +55,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Pending\nProcessing\nCompleted\nFailed",
+   "options": "Pending\nQueued\nProcessing\nSending\nCompleted\nSuccess\nFailed",
    "in_list_view": 1,
    "default": "Pending"
   },
