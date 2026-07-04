@@ -18,6 +18,97 @@
     <script src="/assets/smriti_retail_os/js/ui/repository/product_repository.js"></script>
     <script src="/assets/smriti_retail_os/js/ui/service/product_service.js"></script>
     <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+    <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+    <style>
+        #app {
+            position: relative;
+            z-index: 1;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .topbar {
+            height: 52px;
+            background: var(--smriti-card-bg);
+            border-bottom: 1px solid var(--smriti-card-border);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+
+        .topbar-breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--smriti-text-muted);
+        }
+
+        .topbar-breadcrumbs span.sep {
+            color: var(--smriti-text-subtle);
+        }
+
+        .topbar-breadcrumbs span.active {
+            color: var(--smriti-text);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+        }
+
+        .topbar-breadcrumbs a.breadcrumb-link {
+            color: inherit;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .topbar-breadcrumbs a.breadcrumb-link:hover {
+            color: var(--smriti-primary);
+            text-decoration: underline;
+        }
+
+        .topbar-right {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .topbtn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid var(--smriti-card-border);
+            background: transparent;
+            color: var(--smriti-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .topbtn span {
+            font-size: 16px;
+        }
+
+        .topbtn:hover {
+            border-color: var(--smriti-primary);
+            color: var(--smriti-primary-light);
+        }
+    </style>
 </head>
 <body>
 <div class="bg-grid"></div>
