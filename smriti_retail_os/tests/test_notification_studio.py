@@ -17,23 +17,26 @@ class TestNotificationStudio(unittest.TestCase):
     def setUp(self):
         # Create a test customer if not exists
         if not frappe.db.exists("Customer", "Test Notification Customer"):
+            customer_group = frappe.db.get_value("Customer Group", {"is_group": 0}, "name") or "Individual"
+            territory = frappe.db.get_value("Territory", {"is_group": 0}, "name") or "All Territories"
             doc = frappe.get_doc({
                 "doctype": "Customer",
                 "customer_name": "Test Notification Customer",
                 "customer_type": "Individual",
-                "customer_group": "All Customer Groups",
-                "territory": "All Territories"
+                "customer_group": customer_group,
+                "territory": territory
             })
             doc.insert(ignore_permissions=True)
             frappe.db.commit()
 
         # Create a test supplier if not exists
         if not frappe.db.exists("Supplier", "Test Notification Supplier"):
+            supplier_group = frappe.db.get_value("Supplier Group", {"is_group": 0}, "name") or "All Supplier Groups"
             doc = frappe.get_doc({
                 "doctype": "Supplier",
                 "supplier_name": "Test Notification Supplier",
                 "supplier_type": "Individual",
-                "supplier_group": "All Supplier Groups"
+                "supplier_group": supplier_group
             })
             doc.insert(ignore_permissions=True)
             frappe.db.commit()
