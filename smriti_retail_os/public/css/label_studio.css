@@ -1,0 +1,58 @@
+/*
+ * @file:    smriti_retail_os/public/css/label_studio.css
+ * @desc:    Styles for SMRITI Label Studio.
+ * @author:  Jawahar R. Mallah
+ */
+
+:root {
+    --studio-bg: var(--smriti-bg-light, #f8fafc);
+    --card-border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.studio-container {
+    display: flex;
+    gap: var(--spacing-md, 1.5rem);
+    padding: var(--spacing-md, 1.5rem);
+    background-color: var(--studio-bg);
+    min-height: calc(100vh - 64px);
+}
+
+.studio-sidebar {
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm, 1rem);
+}
+
+.studio-canvas-area {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.canvas-card {
+    background-color: #ffffff;
+    border-radius: var(--border-radius-md, 8px);
+    border: var(--card-border);
+    padding: var(--spacing-md, 1.5rem);
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.canvas-container {
+    border: 2px dashed #cbd5e1;
+    padding: 10px;
+    background-color: #f1f5f9;
+    border-radius: 4px;
+    margin-top: 1rem;
+}
+
+#labelCanvas {
+    background-color: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    display: block;
+}

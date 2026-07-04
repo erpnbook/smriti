@@ -7,15 +7,12 @@
  "engine": "InnoDB",
  "field_order": [
   "job_id",
-  "item_code",
-  "barcode",
-  "template_name",
-  "printer_ip",
-  "printer_port",
-  "print_qty",
+  "module",
+  "printer",
   "payload_hash",
-  "payload_preview",
+  "payload_file",
   "status",
+  "retry_count",
   "error_message",
   "created_by",
   "created_on",
@@ -31,40 +28,15 @@
    "read_only": 1
   },
   {
-   "fieldname": "item_code",
-   "fieldtype": "Link",
-   "label": "Item Code",
-   "options": "Item",
-   "in_list_view": 1
-  },
-  {
-   "fieldname": "barcode",
+   "fieldname": "module",
    "fieldtype": "Data",
-   "label": "Barcode",
+   "label": "Module",
    "in_list_view": 1
   },
   {
-   "fieldname": "template_name",
+   "fieldname": "printer",
    "fieldtype": "Data",
-   "label": "Template Name",
-   "in_list_view": 1
-  },
-  {
-   "fieldname": "printer_ip",
-   "fieldtype": "Data",
-   "label": "Printer IP",
-   "in_list_view": 1
-  },
-  {
-   "fieldname": "printer_port",
-   "fieldtype": "Int",
-   "label": "Printer Port",
-   "default": "9100"
-  },
-  {
-   "fieldname": "print_qty",
-   "fieldtype": "Int",
-   "label": "Print Qty",
+   "label": "Printer ID",
    "in_list_view": 1
   },
   {
@@ -74,18 +46,24 @@
    "read_only": 1
   },
   {
-   "fieldname": "payload_preview",
-   "fieldtype": "Data",
-   "label": "Payload Preview",
+   "fieldname": "payload_file",
+   "fieldtype": "Attach",
+   "label": "Payload File",
    "read_only": 1
   },
   {
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Queued\nSending\nSuccess\nFailed",
+   "options": "Pending\nProcessing\nCompleted\nFailed",
    "in_list_view": 1,
-   "default": "Queued"
+   "default": "Pending"
+  },
+  {
+   "fieldname": "retry_count",
+   "fieldtype": "Int",
+   "label": "Retry Count",
+   "default": "0"
   },
   {
    "fieldname": "error_message",
@@ -114,7 +92,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-18 15:00:00.000000",
+ "modified": "2026-07-04 15:00:00.000000",
  "modified_by": "Administrator",
  "module": "SMRITI Retail OS",
  "name": "SMRITI Print Job",

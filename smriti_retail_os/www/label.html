@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMRITI Label Studio</title>
+    <link rel="shortcut icon" href="/assets/smriti_retail_os/images/smriti_logo.svg" type="image/svg+xml">
+    
+    <!-- SMRITI Standard Theme Variables -->
+    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_tokens.css">
+    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_theme.css">
+    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar.css">
+    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_branding.css">
+    <link rel="stylesheet" href="/assets/smriti_retail_os/css/ui/form.css">
+    <link rel="stylesheet" href="/assets/smriti_retail_os/css/label_studio.css">
+</head>
+<body class="smriti-theme-navy">
+    <div class="smriti-layout-wrapper">
+        <!-- Sidebar Navigation -->
+        {% include "smriti_retail_os/templates/includes/sidebar.html" %}
+
+        <div class="smriti-main-content">
+            <!-- SMRITI Standard Topbar -->
+            <div class="smriti-topbar">
+                <div class="topbar-left">
+                    <button class="sidebar-toggle-btn" id="sidebarToggle">
+                        <img src="/assets/smriti_retail_os/images/smriti_logo.svg" alt="SMRITI Logo" class="brand-logo-icon">
+                    </button>
+                    <span class="page-title">Label Studio</span>
+                </div>
+                <div class="topbar-right">
+                    <span class="user-badge" id="userBadge">Cashier</span>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="studio-container">
+                <div class="studio-sidebar">
+                    <div class="card">
+                        <h3 class="card-title">Select Template</h3>
+                        <select class="filter-select" id="templateSelect">
+                            <option value="">-- Choose Template --</option>
+                        </select>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">Select Target Printer</h3>
+                        <select class="filter-select" id="printerSelect">
+                            <option value="">-- Choose Printer --</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary" id="printBtn">Send to Printer</button>
+                </div>
+
+                <div class="studio-canvas-area">
+                    <div class="canvas-card">
+                        <h3 class="card-title">Label Preview</h3>
+                        <div class="canvas-container">
+                            <canvas id="labelCanvas" width="378" height="189"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SMRITI Standard Scripts -->
+    <script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js"></script>
+    <script src="/assets/smriti_retail_os/js/smriti_sidebar.js"></script>
+    <script src="/assets/smriti_retail_os/js/label/label_core.js"></script>
+</body>
+</html>
