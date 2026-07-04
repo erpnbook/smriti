@@ -476,4 +476,49 @@ window.SMRITI = window.SMRITI || {};
         topbarRight.appendChild(btn);
     };
 
+    // ── Keyboard Shortcuts (Ctrl+H to toggle collapse, Ctrl+Arrow to change position) ──
+    document.addEventListener("keydown", function (e) {
+        var activeEl = document.activeElement;
+        if (activeEl && (
+            activeEl.tagName === "INPUT" || 
+            activeEl.tagName === "TEXTAREA" || 
+            activeEl.contentEditable === "true" ||
+            activeEl.tagName === "SELECT"
+        )) {
+            return;
+        }
+
+        var isCtrl = e.ctrlKey || e.metaKey;
+        if (!isCtrl) return;
+
+        var key = e.key.toLowerCase();
+
+        if (key === "h") {
+            e.preventDefault();
+            SMRITI.toggleSidebarCollapse();
+            return;
+        }
+
+        if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            if (SMRITI.setSidebarPosition) SMRITI.setSidebarPosition("left");
+            return;
+        }
+        if (e.key === "ArrowRight") {
+            e.preventDefault();
+            if (SMRITI.setSidebarPosition) SMRITI.setSidebarPosition("right");
+            return;
+        }
+        if (e.key === "ArrowUp") {
+            e.preventDefault();
+            if (SMRITI.setSidebarPosition) SMRITI.setSidebarPosition("top");
+            return;
+        }
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            if (SMRITI.setSidebarPosition) SMRITI.setSidebarPosition("bottom");
+            return;
+        }
+    });
+
 }(window.SMRITI));
