@@ -8,6 +8,7 @@ import frappe
 from frappe.utils import today
 from smriti_retail_os.notification_studio.service.notification_service import create_notification
 from smriti_retail_os.notification_studio.service.notification_triggers import get_users_by_role, ROLE_STORE_MANAGER, ROLE_SYSTEM_MANAGER
+from smriti_retail_os.notification_studio.repository.notification_repository import NotificationRepository
 
 def _already_notified_today(user, notif_type, reference_doctype, reference_name):
     """
@@ -29,23 +30,11 @@ def run_low_stock_checks():
     Compares Bin.actual_qty vs Item.safety_stock or Item Reorder.warehouse_reorder_level.
     """
     try:
-        # Check 1: safety_stock at item level
-        safety_stock_items = frappe.db.sql("""
-            SELECT bin.item_code, bin.warehouse, bin.actual_qty, item.safety_stock as limit_qty
-            FROM `tabBin` bin
-            INNER JOIN `tabItem` item ON bin.item_code = item.name
-            WHERE item.safety_stock > 0 AND bin.actual_qty < item.safety_stock
-            LIMIT 50
-        """, as_dict=1)
+        # Check 1: safety_stock at item level via Repository
+        safety_stock_items = NotificationRepository.get_safety_stock_violations()
 
-        # Check 2: warehouse_reorder_level in Item Reorder table
-        reorder_items = frappe.db.sql("""
-            SELECT bin.item_code, bin.warehouse, bin.actual_qty, ir.warehouse_reorder_level as limit_qty
-            FROM `tabItem Reorder` ir
-            INNER JOIN `tabBin` bin ON ir.parent = bin.item_code AND ir.warehouse = bin.warehouse
-            WHERE ir.warehouse_reorder_level > 0 AND bin.actual_qty < ir.warehouse_reorder_level
-            LIMIT 50
-        """, as_dict=1)
+        # Check 2: warehouse_reorder_level in Item Reorder table via Repository
+        reorder_items = NotificationRepository.get_reorder_level_violations()
 
         low_stock_list = safety_stock_items + reorder_items
 

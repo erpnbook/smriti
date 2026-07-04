@@ -74,6 +74,10 @@ class QueueRepository:
     @staticmethod
     def insert_queue_entry(event_type: str, doc_type: str, doc_name: str, adapter_id: str, payload_dict: dict, priority: str) -> str:
         """Inserts pending transaction entry into SMRITI Integration Queue."""
+        if not frappe.db.exists("DocType", "SMRITI Integration Queue"):
+            frappe.msgprint(_("SMRITI Connect: Integration Queue not active. Event {0} bypassed.").format(event_type), indicator="orange", alert=True)
+            return ""
+            
         doc = frappe.get_doc({
             "doctype": "SMRITI Integration Queue",
             "event_type": event_type,
