@@ -5,6 +5,7 @@
 # @author:  Jawahar R. Mallah
 #
 
+import frappe
 from smriti_retail_os.print_framework.repository.print_job_repository import PrintJobRepository
 
 class ModuleType:
@@ -22,6 +23,7 @@ class PrintQueue:
     def enqueue(module_name, printer_id, payload_hash, payload_file_url):
         """Creates a new pending print job in the audit database log."""
         job = PrintJobRepository.new_doc("SMRITI Print Job")
+        job.job_id = frappe.generate_hash(length=12)
         job.module = module_name
         job.printer = printer_id
         job.payload_hash = payload_hash

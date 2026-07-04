@@ -34,15 +34,15 @@ class PreviewEngine:
             canvas_elements.append({
                 "id": el.get("id"),
                 "type": el_type,
-                "x_px": x * 3.78,  # Millimeter to pixel scale factor (approx 96 DPI)
-                "y_px": y * 3.78,
+                "x_px": round(x * 3.78, 2),  # Millimeter to pixel scale factor (approx 96 DPI)
+                "y_px": round(y * 3.78, 2),
                 "content": el.get("content", ""),
-                "width_px": float(el.get("width", 20)) * 3.78,
-                "height_px": float(el.get("height", 10)) * 3.78
+                "width_px": round(float(el.get("width", 20)) * 3.78, 2),
+                "height_px": round(float(el.get("height", 10)) * 3.78, 2)
             })
             
         return {
-            "width_px": width * 3.78,
-            "height_px": height * 3.78,
+            "width_px": round(width * 3.78, 2),
+            "height_px": round(height * 3.78, 2),
             "elements": canvas_elements
         }
