@@ -284,7 +284,8 @@ doc_events = {
         "on_submit": [
             "smriti_retail_os.cge.service.cge_service.process_invoice_submit",
             "smriti_retail_os.sfm.service.attribution_service.process_invoice_submit",
-            "smriti_retail_os.clienteling.service.clienteling_service.on_pos_invoice_submit"
+            "smriti_retail_os.clienteling.service.clienteling_service.on_pos_invoice_submit",
+            "smriti_retail_os.notification_studio.service.notification_triggers.trigger_sales_notification"
         ],
         "on_cancel": [
             "smriti_retail_os.cge.service.cge_service.process_invoice_cancel",
@@ -317,7 +318,8 @@ doc_events = {
             "smriti_retail_os.sfm.service.attribution_service.process_invoice_submit",
             "smriti_retail_os.clienteling.service.clienteling_service.on_invoice_submit",
             "smriti_retail_os.smriti_retail_os.uie.services.dispatcher.enqueue_document_sync",
-            "smriti_retail_os.integration.core.event_hooks.handle_sales_invoice_submit"
+            "smriti_retail_os.integration.core.event_hooks.handle_sales_invoice_submit",
+            "smriti_retail_os.notification_studio.service.notification_triggers.trigger_sales_notification"
         ],
         "on_cancel": [
             "smriti_retail_os.psv_service.process_sales_invoice_cancel",
@@ -333,7 +335,10 @@ doc_events = {
     },
     "Purchase Receipt": {
         "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
-        "on_submit": "smriti_retail_os.negative_stock.service.hooks.handle_transaction_submit",
+        "on_submit": [
+            "smriti_retail_os.negative_stock.service.hooks.handle_transaction_submit",
+            "smriti_retail_os.notification_studio.service.notification_triggers.trigger_grn_received"
+        ],
         # SSDL Purchase Studio — Phase 7 audit gap resolution
         "on_cancel": "smriti_retail_os.purchase_studio.service.audit_service.log_grn_cancel"
     },
@@ -348,6 +353,7 @@ doc_events = {
     },
     "Purchase Order": {
         "before_validate": "smriti_retail_os.hooks_logic.initialize_item_wise_tax_details",
+        "on_submit": "smriti_retail_os.notification_studio.service.notification_triggers.trigger_purchase_approval",
         # SSDL Purchase Studio — Phase 7 audit gap resolution
         "on_cancel": "smriti_retail_os.purchase_studio.service.audit_service.log_po_cancel"
     },
@@ -464,7 +470,9 @@ scheduler_events = {
         "smriti_retail_os.api.trial_operations_api.check_trial_health",
         "smriti_retail_os.api.trial_operations_api.cleanup_failed_provisioning",
         "smriti_retail_os.tasks.daily_telemetry_cleanup",
-        "smriti_retail_os.negative_stock.service.recovery_service.run_safety_net"
+        "smriti_retail_os.negative_stock.service.recovery_service.run_safety_net",
+        "smriti_retail_os.notification_studio.service.scheduled_checks.run_low_stock_checks",
+        "smriti_retail_os.notification_studio.service.scheduled_checks.run_due_invoice_checks"
     ],
     "cron": {
         "*/30 * * * *": [
