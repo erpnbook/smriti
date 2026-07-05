@@ -205,8 +205,8 @@ class LookupService:
         if entity == "Customer":
             doc.customer_name = data.get("customer_name")
             doc.mobile_no = data.get("mobile_no")
-            doc.customer_group = data.get("customer_group") or "All Customer Groups"
-            doc.territory = data.get("territory") or "All Territories"
+            doc.customer_group = data.get("customer_group") or frappe.db.get_value("Customer Group", {"is_group": 0}, "name") or "Individual"
+            doc.territory = data.get("territory") or frappe.db.get_value("Territory", {"is_group": 0}, "name") or "India"
             doc.customer_type = data.get("customer_type") or "Company"
 
         elif entity == "Supplier":
@@ -214,14 +214,14 @@ class LookupService:
             doc.mobile_no = data.get("mobile_no")
             doc.email_id = data.get("email_id")
             doc.supplier_type = data.get("supplier_type") or "Company"
-            doc.supplier_group = data.get("supplier_group") or "All Supplier Groups"
+            doc.supplier_group = data.get("supplier_group") or frappe.db.get_value("Supplier Group", {"is_group": 0}, "name") or "All Supplier Groups"
 
         elif entity == "Product":
             doc.item_code = data.get("item_code") or data.get("barcode")
             doc.item_name = data.get("item_name")
             doc.standard_rate = flt(data.get("standard_rate"))
             doc.stock_uom = data.get("uom") or "Nos"
-            doc.item_group = data.get("item_group") or "All Item Groups"
+            doc.item_group = data.get("item_group") or frappe.db.get_value("Item Group", {"is_group": 0}, "name") or "Products"
             
             # Resolve HSN for India Compliance
             try:
