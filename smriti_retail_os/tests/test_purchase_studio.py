@@ -494,8 +494,9 @@ class TestSmritiPurchaseStudioServices(unittest.TestCase):
 
         # Setup Supplier
         sup_name = "SMRITI Test Supplier Calculations"
-        if not frappe.db.exists("SMRITI Supplier", sup_name):
-            PurchaseOrderService.create_supplier({
+        sup_id = frappe.db.get_value("SMRITI Supplier", {"supplier_name": sup_name}, "name")
+        if not sup_id:
+            sup_id = PurchaseOrderService.create_supplier({
                 "supplier_name": sup_name,
                 "email_id": "sup_calc@smriti.com"
             })
@@ -506,7 +507,7 @@ class TestSmritiPurchaseStudioServices(unittest.TestCase):
             {"item_code": "SMRITI-TEST-ITEM-2", "qty": 5.0, "rate": 200.0}
         ]
         res = PurchaseOrderService.create_purchase_order(
-            supplier=sup_name,
+            supplier=sup_id,
             items_list=items,
             remarks="Test calculations"
         )

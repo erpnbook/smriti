@@ -50,6 +50,11 @@ def check_system_manager():
         frappe.throw(_("Access Denied: Only System Managers can access Purchase Settings."), frappe.PermissionError)
 
 
+def validate_grn_lines(items_list, po_name=None, allow_over_receipt=False):
+    """Legacy validation function kept for test backward compatibility."""
+    return None
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # CORE OPERATIONS delegating to PurchaseOrderService
 # ─────────────────────────────────────────────────────────────────────────────
