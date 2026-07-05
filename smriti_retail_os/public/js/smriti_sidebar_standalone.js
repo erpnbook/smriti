@@ -49,6 +49,8 @@ window.SMRITI = window.SMRITI || {};
 
         if (bootNav) {
             buildTree(bootNav);
+        } else if (window.SMRITI_NAV_DATA) {
+            buildTree(window.SMRITI_NAV_DATA);
         } else {
             // Use fetch() — works on both standalone www pages and Frappe Desk.
             // frappe.call requires a full Frappe boot; www pages only have a partial
@@ -517,7 +519,7 @@ window.SMRITI = window.SMRITI || {};
 
     window.addEventListener('hashchange', function() {
         if (window.SMRITI_NAV_DATA) {
-            buildTree(window.SMRITI_NAV_DATA);
+            SMRITI.renderFlexibleSidebar();
         }
     });
 

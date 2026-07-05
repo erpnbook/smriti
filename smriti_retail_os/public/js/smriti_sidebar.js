@@ -53,6 +53,8 @@ window.SMRITI = window.SMRITI || {};
 
         if (bootNav) {
             buildTree(bootNav);
+        } else if (window.SMRITI_NAV_DATA) {
+            buildTree(window.SMRITI_NAV_DATA);
         } else {
             window.frappe.call({
                 method: "smriti_retail_os.navigation.navigation_service.get_user_navigation",
@@ -626,7 +628,7 @@ window.SMRITI = window.SMRITI || {};
 
     window.addEventListener('hashchange', function() {
         if (window.SMRITI_NAV_DATA) {
-            buildTree(window.SMRITI_NAV_DATA);
+            SMRITI.renderFlexibleSidebar();
         }
     });
 
