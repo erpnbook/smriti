@@ -1,9 +1,11 @@
 import frappe
 
 def run():
-    print("--- RECENT ERROR LOGS ---")
-    logs = frappe.get_all("Error Log", fields=["name", "creation", "method", "error"], order_by="creation desc", limit=10)
-    for log in logs:
-        print(f"Log: {log.name} | Created: {log.creation} | Method: {log.method}")
-        print(log.error)
-        print("-" * 50)
+    print("Checking PO 9839a92r89:")
+    exists = frappe.db.exists("SMRITI Purchase Order", "9839a92r89")
+    print(f"Exists: {exists}")
+    
+    print("\nRecent SMRITI Purchase Orders:")
+    pos = frappe.get_all("SMRITI Purchase Order", fields=["name", "supplier", "grand_total", "status", "docstatus"], limit=5)
+    for po in pos:
+        print(f"Name: {po.name} | Supplier: {po.supplier} | Total: {po.grand_total} | Status: {po.status} | Docstatus: {po.docstatus}")
