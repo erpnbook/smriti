@@ -369,9 +369,31 @@ def sync_customer_address(doc, method):
 def sync_supplier_address_and_credit_days(doc, method):
     """
     Triggers on_update on Supplier.
-    1. Auto-creates standard linked Address from custom_address_text and custom_shipping_address_text.
-    2. Resolves custom_credit_days to a standard Payment Terms Template and links it.
+    1. Ensures SMRITI Supplier counterpart exists and stays in sync.
+    2. Auto-creates standard linked Address from custom_address_text and custom_shipping_address_text.
+    3. Resolves custom_credit_days to a standard Payment Terms Template and links it.
     """
+    # ── Sync/Ensure SMRITI Supplier Counterpart ───────────────────────────
+    smriti_sup_name = frappe.db.get_value("SMRITI Supplier", {"supplier_name": doc.supplier_name}, "name")
+    if not smriti_sup_name:
+        s = frappe.new_doc("SMRITI Supplier")
+        s.supplier_name = doc.supplier_name
+        s.supplier_type = doc.supplier_type or "Company"
+        s.supplier_group = doc.supplier_group or "Local"
+        s.tax_id = doc.tax_id
+        s.mobile_no = doc.mobile_no
+        s.email_id = doc.email_id
+        s.disabled = doc.disabled
+        s.erpnext_supplier = doc.name
+        s.insert(ignore_permissions=True)
+    else:
+        s = frappe.get_doc("SMRITI Supplier", smriti_sup_name)
+        if s.erpnext_supplier != doc.name or s.supplier_name != doc.supplier_name or s.disabled != doc.disabled:
+            s.erpnext_supplier = doc.name
+            s.supplier_name = doc.supplier_name
+            s.disabled = doc.disabled
+            s.save(ignore_permissions=True)
+
     # 1. Sync Address (Billing)
     if doc.custom_address_text:
         try:
