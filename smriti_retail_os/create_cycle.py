@@ -57,8 +57,9 @@ def run():
 
     # 3. Create GRN (submits real Purchase Receipt via erp_adapter!)
     grn_res = purchase_service.create_grn(
-        po_name=po_name,
-        items_list=[{"item_code": item_code, "qty": 10.0}]
+        supplier=sup_id,
+        items_list=[{"item_code": item_code, "qty": 10.0}],
+        po_name=po_name
     )
     grn_name = grn_res["name"]
 
