@@ -158,17 +158,17 @@ class TestPurchaseMatrix(unittest.TestCase):
         fw_var = VariantLifecycleService.resolve_or_create_variant(fw_art, {"Color": "Red", "Size": "M"})
         frappe.db.set_value("Item", fw_var, "item_group", "Footwear")
 
-        # Create Apparel item
-        app_art = "ART-SHIRT-002"
+        # Create Sandal item
+        app_art = "ART-SANDAL-002"
         VariantLifecycleService.create_article_template(
             article_code=app_art,
-            item_name="Apparel Item",
+            item_name="Sandal Item",
             hsn_code=hsn,
             attributes=["Color", "Size"]
         )
-        frappe.db.set_value("Item", app_art, "item_group", "Apparel")
+        frappe.db.set_value("Item", app_art, "item_group", "SANDAL")
         app_var = VariantLifecycleService.resolve_or_create_variant(app_art, {"Color": "Red", "Size": "M"})
-        frappe.db.set_value("Item", app_var, "item_group", "Apparel")
+        frappe.db.set_value("Item", app_var, "item_group", "SANDAL")
         
         frappe.db.commit()
 
@@ -208,7 +208,7 @@ class TestPurchaseMatrix(unittest.TestCase):
         po2.status = "Open"
         po2.append("items", {
             "item_code": app_var,
-            "item_name": "Apparel Item Var",
+            "item_name": "Sandal Item Var",
             "qty": 15,
             "rate": 100.0,
             "amount": 1500.0,
@@ -230,7 +230,7 @@ class TestPurchaseMatrix(unittest.TestCase):
         # Assert item group spend (Fix 1)
         item_groups = {ig["item_group"]: ig["total_spend"] for ig in analytics["by_item_group"]}
         self.assertEqual(item_groups.get("Footwear"), 1000.0)
-        self.assertEqual(item_groups.get("Apparel"), 1500.0)
+        self.assertEqual(item_groups.get("SANDAL"), 1500.0)
 
         # 5. Call get_supplier_performance and assert correct overdue amounts (Fix 2)
         from smriti_retail_os.purchase_studio.service.purchase_service import get_supplier_performance
