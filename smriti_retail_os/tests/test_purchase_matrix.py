@@ -94,3 +94,35 @@ def run_tests():
     runner = unittest.TextTestRunner()
     runner.run(suite)
 
+
+def seed_test_data():
+    import frappe
+    from smriti_retail_os.item_studio.service.variant_lifecycle_service import VariantLifecycleService
+    
+    hsn = frappe.db.get_value("GST HSN Code", {}, "name")
+    if not hsn:
+        doc = frappe.new_doc("GST HSN Code")
+        doc.name = "99990000"
+        doc.hsn_code = "99990000"
+        doc.description = "Test HSN Code"
+        doc.insert(ignore_permissions=True)
+        hsn = "99990000"
+
+    VariantLifecycleService.ensure_attribute_and_value("Color", "Red")
+    VariantLifecycleService.ensure_attribute_and_value("Color", "Blue")
+    VariantLifecycleService.ensure_attribute_and_value("Color", "Black")
+    VariantLifecycleService.ensure_attribute_and_value("Size", "S")
+    VariantLifecycleService.ensure_attribute_and_value("Size", "M")
+    VariantLifecycleService.ensure_attribute_and_value("Size", "L")
+
+    VariantLifecycleService.create_article_template(
+        article_code="ART-JEANS-001",
+        item_name="Style Jeans 001",
+        hsn_code=hsn,
+        attributes=["Color", "Size"]
+    )
+    
+    frappe.db.commit()
+    print("Success: ART-JEANS-001 created!")
+
+
