@@ -1,0 +1,332 @@
+services:
+  backend:
+    image: frappe/erpnext:v16.19.1
+    networks:
+      - frappe_network
+    # ── SMRITI FIX 4: Backend must wait for create-site to finish DB migrations
+    #    Otherwise concurrent SELECT queries cause metadata lock deadlock on tabDocType
+    depends_on:
+      create-site:
+        condition: service_completed_successfully
+    deploy:
+      restart_policy:
+        condition: on-failure
+    # ── SMRITI FIX 1: Healthcheck so frontend never connects before Gunicorn is ready
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://localhost:8000 | grep -E '^(200|404)$'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+      - ./apps/smriti_retail_os:/home/frappe/frappe-bench/apps/smriti_retail_os
+      - ./apps/india_compliance:/home/frappe/frappe-bench/apps/india_compliance
+      - ./backups:/home/frappe/frappe-bench/backups
+      - pip-cache:/home/frappe/.cache/pip
+      - ./company:/home/frappe/frappe-bench/company
+    entrypoint:
+      - bash
+      - -c
+    command:
+      - >
+        /home/frappe/frappe-bench/env/bin/pip install -q -e /home/frappe/frappe-bench/apps/smriti_retail_os -e /home/frappe/frappe-bench/apps/india_compliance &&
+        /home/frappe/frappe-bench/env/bin/python /home/frappe/frappe-bench/apps/smriti_retail_os/smriti_retail_os/sync_assets.py &&
+        (
+          echo "[SMRITI Asset Guard] In-container watchdog started";
+          while true; do
+            if [ -L /home/frappe/frappe-bench/sites/assets ] || [ ! -d /home/frappe/frappe-bench/sites/assets/smriti_retail_os ]; then
+              echo "[SMRITI Asset Guard] Symlink or missing assets detected! Re-syncing...";
+              /home/frappe/frappe-bench/env/bin/python /home/frappe/frappe-bench/apps/smriti_retail_os/smriti_retail_os/sync_assets.py;
+            fi;
+            sleep 60;
+          done
+        ) &
+        /usr/local/bin/entrypoint.sh start.sh
+
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      MYSQL_ROOT_PASSWORD: admin
+      MARIADB_ROOT_PASSWORD: admin
+      # ── SMRITI FIX: Ensure Frappe's importlib can find custom apps
+      PYTHONPATH: /home/frappe/frappe-bench/apps/smriti_retail_os:/home/frappe/frappe-bench/apps/india_compliance:/home/frappe/frappe-bench/apps/erpnext:/home/frappe/frappe-bench/apps/frappe
+
+
+  configurator:
+    image: frappe/erpnext:v16.19.1
+    networks:
+      - frappe_network
+    deploy:
+      restart_policy:
+        condition: none
+    entrypoint:
+      - bash
+      - -c
+    command:
+      - >
+        /home/frappe/frappe-bench/env/bin/pip install -e /home/frappe/frappe-bench/apps/smriti_retail_os -e /home/frappe/frappe-bench/apps/india_compliance &&
+        echo "frappe" > sites/apps.txt &&
+        echo "erpnext" >> sites/apps.txt &&
+        echo "india_compliance" >> sites/apps.txt &&
+        echo "smriti_retail_os" >> sites/apps.txt &&
+        bench set-config -g db_host $$DB_HOST;
+        bench set-config -gp db_port $$DB_PORT;
+        bench set-config -g redis_cache "redis://$$REDIS_CACHE";
+        bench set-config -g redis_queue "redis://$$REDIS_QUEUE";
+        bench set-config -g redis_socketio "redis://$$REDIS_QUEUE";
+        bench set-config -gp socketio_port $$SOCKETIO_PORT;
+        bench set-config -g allow_cors_origin "http://localhost:8080";
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      REDIS_CACHE: redis-cache:6379
+      REDIS_QUEUE: redis-queue:6379
+      SOCKETIO_PORT: "9000"
+      PYTHONPATH: /home/frappe/frappe-bench/apps/smriti_retail_os:/home/frappe/frappe-bench/apps/india_compliance:/home/frappe/frappe-bench/apps/erpnext:/home/frappe/frappe-bench/apps/frappe
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+      - ./apps/smriti_retail_os:/home/frappe/frappe-bench/apps/smriti_retail_os
+      - ./apps/india_compliance:/home/frappe/frappe-bench/apps/india_compliance
+      - pip-cache:/home/frappe/.cache/pip
+
+  create-site:
+    image: frappe/erpnext:v16.19.1
+    networks:
+      - frappe_network
+    # ── SMRITI FIX 5: Wait for configurator to write common_site_config.json first
+    depends_on:
+      configurator:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+    deploy:
+      restart_policy:
+        condition: none
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+      - ./apps/smriti_retail_os:/home/frappe/frappe-bench/apps/smriti_retail_os
+      - ./apps/india_compliance:/home/frappe/frappe-bench/apps/india_compliance
+      - pip-cache:/home/frappe/.cache/pip
+      - ./company:/home/frappe/frappe-bench/company
+      - ./docs:/home/frappe/frappe-bench/docs
+    environment:
+      PYTHONPATH: /home/frappe/frappe-bench/apps/smriti_retail_os:/home/frappe/frappe-bench/apps/india_compliance:/home/frappe/frappe-bench/apps/erpnext:/home/frappe/frappe-bench/apps/frappe
+    entrypoint:
+      - bash
+      - -c
+    command:
+      - >
+        wait-for-it -t 120 db:3306;
+        wait-for-it -t 120 redis-cache:6379;
+        wait-for-it -t 120 redis-queue:6379;
+        echo "Dependencies ready. Installing custom apps...";
+        /home/frappe/frappe-bench/env/bin/pip install -e /home/frappe/frappe-bench/apps/smriti_retail_os -e /home/frappe/frappe-bench/apps/india_compliance &&
+        if [ -f sites/smriti_retail/site_config.json ]; then
+          echo "Site 'smriti_retail' already exists — running migrate...";
+          bench --site smriti_retail migrate --skip-failing &&
+          bench --site smriti_retail build --app smriti_retail_os --app india_compliance;
+        else
+          echo "Creating new site 'smriti_retail'...";
+          bench new-site --mariadb-user-host-login-scope='%' --admin-password=admin --db-root-username=root --db-root-password=admin --install-app erpnext --install-app india_compliance --install-app smriti_retail_os --set-default smriti_retail &&
+          bench --site smriti_retail build --app smriti_retail_os --app india_compliance &&
+          bench --site smriti_retail execute smriti_retail_os.setup.setup_smriti_retail_os;
+        fi &&
+        bench --site smriti_retail execute smriti_retail_os.sync_assets.sync_assets;
+
+  db:
+    image: mariadb:11.8
+    networks:
+      - frappe_network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 60s
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      restart_policy:
+        condition: on-failure
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --transaction-isolation=READ-COMMITTED
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MARIADB_ROOT_PASSWORD: admin
+    volumes:
+      - db-data:/var/lib/mysql
+
+  frontend:
+    image: frappe/erpnext:v16.19.1
+    networks:
+      frappe_network:
+        aliases:
+          - smriti_retail
+    # ── SMRITI FIX 2: Wait for backend to be HEALTHY before nginx starts
+    #    This prevents 502 caused by nginx resolving a stale backend IP
+    depends_on:
+      backend:
+        condition: service_healthy
+      websocket:
+        condition: service_started
+    deploy:
+      restart_policy:
+        condition: on-failure
+    command:
+      - nginx-entrypoint.sh
+    environment:
+      BACKEND: backend:8000
+      FRAPPE_SITE_NAME_HEADER: smriti_retail
+      SOCKETIO: websocket:9000
+      UPSTREAM_REAL_IP_ADDRESS: 127.0.0.1
+      UPSTREAM_REAL_IP_HEADER: X-Forwarded-For
+      UPSTREAM_REAL_IP_RECURSIVE: "off"
+      PROXY_READ_TIMEOUT: 120
+      CLIENT_MAX_BODY_SIZE: 50m
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+      - ./apps/smriti_retail_os:/home/frappe/frappe-bench/apps/smriti_retail_os
+      - ./apps/india_compliance:/home/frappe/frappe-bench/apps/india_compliance
+      - ./frappe.conf.template:/templates/nginx/frappe.conf.template
+    ports:
+      - "${HTTP_PUBLISH_PORT:-8765}:8080"
+
+  queue-long:
+    image: frappe/erpnext:v16.19.1
+    networks:
+      - frappe_network
+    # ── SMRITI FIX 6: Workers must not start until DB migrations complete
+    depends_on:
+      create-site:
+        condition: service_completed_successfully
+    deploy:
+      restart_policy:
+        condition: on-failure
+    environment:
+      PYTHONPATH: /home/frappe/frappe-bench/apps/smriti_retail_os:/home/frappe/frappe-bench/apps/india_compliance:/home/frappe/frappe-bench/apps/erpnext:/home/frappe/frappe-bench/apps/frappe
+    entrypoint:
+      - bash
+      - -c
+    command:
+      - >
+        /home/frappe/frappe-bench/env/bin/pip install -e /home/frappe/frappe-bench/apps/smriti_retail_os -e /home/frappe/frappe-bench/apps/india_compliance &&
+        /usr/local/bin/entrypoint.sh bench worker --queue long,default,short
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+      - ./apps/smriti_retail_os:/home/frappe/frappe-bench/apps/smriti_retail_os
+      - ./apps/india_compliance:/home/frappe/frappe-bench/apps/india_compliance
+      - ./backups:/home/frappe/frappe-bench/backups
+      - pip-cache:/home/frappe/.cache/pip
+      - ./docs:/home/frappe/frappe-bench/docs
+
+  queue-short:
+    image: frappe/erpnext:v16.19.1
+    networks:
+      - frappe_network
+    # ── SMRITI FIX 7: Workers must not start until DB migrations complete
+    depends_on:
+      create-site:
+        condition: service_completed_successfully
+    deploy:
+      restart_policy:
+        condition: on-failure
+    environment:
+      PYTHONPATH: /home/frappe/frappe-bench/apps/smriti_retail_os:/home/frappe/frappe-bench/apps/india_compliance:/home/frappe/frappe-bench/apps/erpnext:/home/frappe/frappe-bench/apps/frappe
+    entrypoint:
+      - bash
+      - -c
+    command:
+      - >
+        /home/frappe/frappe-bench/env/bin/pip install -e /home/frappe/frappe-bench/apps/smriti_retail_os -e /home/frappe/frappe-bench/apps/india_compliance &&
+        /usr/local/bin/entrypoint.sh bench worker --queue short,default
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+      - ./apps/smriti_retail_os:/home/frappe/frappe-bench/apps/smriti_retail_os
+      - ./apps/india_compliance:/home/frappe/frappe-bench/apps/india_compliance
+      - ./backups:/home/frappe/frappe-bench/backups
+      - pip-cache:/home/frappe/.cache/pip
+      - ./docs:/home/frappe/frappe-bench/docs
+
+  redis-queue:
+    image: redis:6.2-alpine
+    networks:
+      - frappe_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+    volumes:
+      - redis-queue-data:/data
+
+  redis-cache:
+    image: redis:6.2-alpine
+    networks:
+      - frappe_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  scheduler:
+    image: frappe/erpnext:v16.19.1
+    networks:
+      - frappe_network
+    # ── SMRITI FIX 8: Scheduler must not start until DB migrations complete
+    depends_on:
+      create-site:
+        condition: service_completed_successfully
+    deploy:
+      restart_policy:
+        condition: on-failure
+    environment:
+      PYTHONPATH: /home/frappe/frappe-bench/apps/smriti_retail_os:/home/frappe/frappe-bench/apps/india_compliance:/home/frappe/frappe-bench/apps/erpnext:/home/frappe/frappe-bench/apps/frappe
+    entrypoint:
+      - bash
+      - -c
+    command:
+      - >
+        /home/frappe/frappe-bench/env/bin/pip install -e /home/frappe/frappe-bench/apps/smriti_retail_os -e /home/frappe/frappe-bench/apps/india_compliance &&
+        /usr/local/bin/entrypoint.sh bench schedule
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+      - ./apps/smriti_retail_os:/home/frappe/frappe-bench/apps/smriti_retail_os
+      - ./apps/india_compliance:/home/frappe/frappe-bench/apps/india_compliance
+      - ./backups:/home/frappe/frappe-bench/backups
+      - pip-cache:/home/frappe/.cache/pip
+      - ./docs:/home/frappe/frappe-bench/docs
+
+  websocket:
+    image: frappe/erpnext:v16.19.1
+    networks:
+      - frappe_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+    command:
+      - node
+      - /home/frappe/frappe-bench/apps/frappe/socketio.js
+    environment:
+      FRAPPE_REDIS_CACHE: redis://redis-cache:6379
+      FRAPPE_REDIS_QUEUE: redis://redis-queue:6379
+    volumes:
+      - sites:/home/frappe/frappe-bench/sites
+      - logs:/home/frappe/frappe-bench/logs
+
+
+volumes:
+  db-data:
+  redis-queue-data:
+  sites:
+  logs:
+  pip-cache:
+
+networks:
+  frappe_network:
+    driver: bridge
