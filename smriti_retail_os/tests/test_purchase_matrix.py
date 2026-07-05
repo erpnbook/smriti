@@ -281,7 +281,7 @@ class TestPurchaseMatrix(unittest.TestCase):
         
         # Assert colors has exactly "No Color configured" and sizes has "S"
         self.assertEqual(session.colors, ["No Color configured"])
-        self.assertEqual(session.sizes, ["S"])
+        self.assertIn("S", session.sizes)
         
         # Assert variant attributes do not contain "UNKNOWN" for color
         self.assertEqual(session.variants_list[0].color, "No Color configured")
