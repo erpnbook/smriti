@@ -68,7 +68,9 @@
     if (typeof global.frappe.call !== 'function') {
         global.frappe.call = function(opts) {
             return new Promise((resolve, reject) => {
-                var csrfToken = global.csrf_token || (document.cookie.match(/system_csrf_token=([^;]+)/) || [])[1] || "";
+                var csrfCookie = (document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/) || [])[1] ||
+                                 (document.cookie.match(/(?:^|;\s*)system_csrf_token=([^;]+)/) || [])[1];
+                var csrfToken = global.csrf_token || global.CSRF_TOKEN || (csrfCookie ? decodeURIComponent(csrfCookie) : "") || "";
                 fetch("/api/method/" + opts.method, {
                     method: 'POST',
                     credentials: 'include',
