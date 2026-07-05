@@ -71,3 +71,11 @@ class TestPurchaseMatrix(unittest.TestCase):
         self.assertEqual(po_items[0]["qty"], 10)
         self.assertEqual(po_items[0]["article"], self.article_code)
         self.assertEqual(po_items[0]["barcode"], barcode)
+
+
+def run_tests():
+    import unittest
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestPurchaseMatrix)
+    runner = unittest.TextTestRunner()
+    runner.run(suite)
+
