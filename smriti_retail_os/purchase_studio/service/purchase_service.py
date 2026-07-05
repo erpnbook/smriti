@@ -394,12 +394,26 @@ def get_purchase_analytics(company=None, from_date=None, to_date=None):
     # Aggregation by Supplier
     by_supplier = frappe.db.sql("""
         SELECT 
-            supplier_name as supplier,
-            supplier_name,
+            supplier as supplier,
+            MAX(supplier_name) as supplier_name,
             SUM(grand_total) as total_spend
         FROM `tabSMRITI Purchase Order`
         WHERE company = %s AND docstatus = 1 AND status != 'Cancelled'
-        GROUP BY supplier_name
+        GROUP BY supplier
+        ORDER BY total_spend DESC
+        LIMIT 10
+    """, (company,), as_dict=True)
+
+    # Aggregation by Item Group
+    by_item_group = frappe.db.sql("""
+        SELECT 
+            i.item_group,
+            SUM(poi.amount) as total_spend
+        FROM `tabSMRITI Purchase Order Item` poi
+        INNER JOIN `tabItem` i ON poi.item_code = i.name
+        INNER JOIN `tabSMRITI Purchase Order` po ON poi.parent = po.name
+        WHERE po.company = %s AND po.docstatus = 1 AND po.status != 'Cancelled'
+        GROUP BY i.item_group
         ORDER BY total_spend DESC
         LIMIT 10
     """, (company,), as_dict=True)
@@ -419,7 +433,7 @@ def get_purchase_analytics(company=None, from_date=None, to_date=None):
 
     return {
         "by_supplier": by_supplier,
-        "by_item_group": [{"item_group": "Footwear", "total_spend": sum(s["total_spend"] for s in by_supplier)}],
+        "by_item_group": by_item_group,
         "by_month": by_month
     }
 
@@ -431,12 +445,12 @@ def get_supplier_performance(company=None, from_date=None, to_date=None, top_n=1
     perf = frappe.db.sql("""
         SELECT 
             supplier as supplier,
-            supplier_name,
+            MAX(supplier_name) as supplier_name,
             COUNT(name) as po_count,
             SUM(grand_total) as po_value,
             SUM(grand_total * (per_received / 100)) as received_value,
             AVG(per_received) as fill_rate,
-            0.0 as overdue_amount
+            SUM(CASE WHEN schedule_date < CURDATE() AND per_received < 100 AND status != 'Cancelled' THEN grand_total * (1.0 - (per_received / 100.0)) ELSE 0.0 END) as overdue_amount
         FROM `tabSMRITI Purchase Order`
         WHERE company = %s AND docstatus = 1
         GROUP BY supplier
