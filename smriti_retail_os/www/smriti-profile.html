@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <html lang="en">
 <head>
+{%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>SMRITI — My Profile</title>
@@ -8,12 +9,22 @@
 <meta name="robots" content="noindex,nofollow"/>
 <style>
 :root{
-  --bg:#080e1c;--surface:#0f1729;--s2:#131e35;--s3:#1a2847;
-  --border:rgba(255,255,255,0.07);--bh:rgba(37,99,235,0.4);
-  --primary:#2563EB;--pg:linear-gradient(135deg,#2563EB,#7c3aed);
-  --success:#10b981;--warning:#f59e0b;--danger:#ef4444;
-  --text:#e2e8f0;--muted:#64748b;--mh:#94a3b8;--radius:12px;
-  font-family:Arial,Helvetica,sans-serif;
+  --bg: var(--smriti-color-bg-page, #080e1c);
+  --surface: var(--smriti-color-bg-primary, #0f1729);
+  --s2: var(--smriti-color-bg-secondary, #131e35);
+  --s3: var(--smriti-color-bg-elevated, #1a2847);
+  --border: var(--smriti-color-border-default, rgba(255,255,255,0.07));
+  --bh: var(--smriti-color-brand-light, rgba(37,99,235,0.4));
+  --primary: var(--smriti-color-brand-primary, #2563EB);
+  --pg: linear-gradient(135deg, var(--smriti-color-brand-primary, #2563EB), var(--smriti-color-brand-light, #7c3aed));
+  --success: var(--smriti-color-status-success, #10b981);
+  --warning: var(--smriti-color-status-warning, #f59e0b);
+  --danger: var(--smriti-color-status-danger, #ef4444);
+  --text: var(--smriti-color-text-primary, #e2e8f0);
+  --muted: var(--smriti-color-text-muted, #64748b);
+  --mh: var(--smriti-color-text-secondary, #94a3b8);
+  --radius: var(--smriti-dimension-border-radius-lg, 12px);
+  font-family: var(--smriti-font-family-primary, Arial, Helvetica, sans-serif);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{min-height:100%;background:var(--bg);color:var(--text);font-size:14px;}
@@ -434,3 +445,4 @@ document.addEventListener("DOMContentLoaded", () => UP.init());
 </script>
 </body>
 </html>
+{% endblock %}
