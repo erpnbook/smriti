@@ -20,8 +20,15 @@ class VariantLifecycleService:
         # Ensure Attribute Value exists
         if not frappe.db.exists("Item Attribute Value", {"parent": attribute, "attribute_value": value}):
             attr_doc = frappe.get_doc("Item Attribute", attribute)
+            abbr = value[:5].strip()
+            abbrs = [d.abbr for d in attr_doc.item_attribute_values if d.abbr]
+            if abbr in abbrs or not abbr:
+                import random
+                abbr = f"{abbr[:3]}{random.randint(10,99)}"
+            
             attr_doc.append("item_attribute_values", {
-                "attribute_value": value
+                "attribute_value": value,
+                "abbr": abbr
             })
             attr_doc.save(ignore_permissions=True)
 
