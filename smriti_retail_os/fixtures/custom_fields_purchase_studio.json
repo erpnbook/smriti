@@ -66,5 +66,48 @@
     "fieldtype": "Text",
     "insert_after": "status",
     "module": "Smriti Retail OS"
+  },
+  {
+    "doctype": "Custom Field",
+    "name": "Purchase Receipt-smriti_source_po",
+    "dt": "Purchase Receipt",
+    "fieldname": "smriti_source_po",
+    "label": "SMRITI Source PO",
+    "fieldtype": "Link",
+    "options": "SMRITI Purchase Order",
+    "read_only": 1,
+    "insert_after": "supplier",
+    "module": "Smriti Retail OS"
+  },
+  {
+    "doctype": "Custom Field",
+    "name": "Supplier-smriti_msme_registered",
+    "dt": "Supplier",
+    "fieldname": "smriti_msme_registered",
+    "label": "MSME / Udyam Registered",
+    "fieldtype": "Check",
+    "insert_after": "supplier_type",
+    "module": "Smriti Retail OS"
+  },
+  {
+    "doctype": "Custom Field",
+    "name": "Supplier-smriti_udyam_number",
+    "dt": "Supplier",
+    "fieldname": "smriti_udyam_number",
+    "label": "Udyam Registration Number",
+    "fieldtype": "Data",
+    "depends_on": "eval:doc.smriti_msme_registered",
+    "insert_after": "smriti_msme_registered",
+    "module": "Smriti Retail OS"
+  },
+  {
+    "doctype": "Custom Field",
+    "name": "Supplier-smriti_tds_194q_applicable",
+    "dt": "Supplier",
+    "fieldname": "smriti_tds_194q_applicable",
+    "label": "TDS Applicable (Sec 194Q)",
+    "fieldtype": "Check",
+    "insert_after": "smriti_udyam_number",
+    "module": "Smriti Retail OS"
   }
 ]

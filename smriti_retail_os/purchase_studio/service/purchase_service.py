@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 #
 # @file:    smriti_retail_os/purchase_studio/service/purchase_service.py
-# @desc:    All Purchase Studio business logic, completely independent of ERPNext PO/Supplier.
-#           UI → purchase_api.py → THIS FILE → new SMRITI services/repos.
-#           No ERPNext DocType calls.
+# @desc:    Purchase Studio business logic.
+#           Order intent + approval trail: native SMRITI Supplier / SMRITI Purchase Order.
+#           Execution documents (GRN, Invoice, Return): real ERPNext DocTypes via
+#           purchase_studio.adapter.erp_adapter, so Stock Ledger, GL Entries, GST
+#           fields, e-invoice/e-way bill and TDS are handled by ERPNext/india_compliance
+#           and never re-implemented natively. See erp_adapter.py for the only file
+#           permitted to call ERPNext DocType APIs directly.
+#           UI → purchase_api.py → THIS FILE → SMRITI services/repos + erp_adapter.
 # @author:  Jawahar R. Mallah <jawahar.mallah@gmail.com>
 # @std:     AES-002 SSDL v1.0.0 — Layer 4 (Business Logic)
 # @license: MIT
@@ -18,6 +23,8 @@ from smriti_retail_os.purchase_studio.service.purchase_order_service import Purc
 from smriti_retail_os.purchase_studio.service.purchase_workflow_service import PurchaseWorkflowService
 from smriti_retail_os.purchase_studio.service.purchase_settings_service import get_settings
 from smriti_retail_os.purchase_studio.service import audit_service
+from smriti_retail_os.purchase_studio.adapter import erp_adapter
+from smriti_retail_os.purchase_studio.repository import PurchaseRepository
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -48,11 +55,6 @@ def check_system_manager():
     """Enforces System Manager only (for Settings)."""
     if "System Manager" not in frappe.get_roles(frappe.session.user):
         frappe.throw(_("Access Denied: Only System Managers can access Purchase Settings."), frappe.PermissionError)
-
-
-def validate_grn_lines(items_list, po_name=None, allow_over_receipt=False):
-    """Legacy validation function kept for test backward compatibility."""
-    return None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -112,65 +114,58 @@ def resolve_po_approval(po_name, action, reason=None):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# GRN / RECEIPTS Simulation
+# GRN / RECEIPTS — real ERPNext Purchase Receipt, built from a SMRITI PO
 # ─────────────────────────────────────────────────────────────────────────────
 
 def list_grns(company=None, supplier=None, po_name=None, status=None,
               from_date=None, to_date=None, mode=None, page=1, page_size=50):
-    # Simulated GRNs list by listing SMRITI POs that are Partially Received or Completed
     check_any_purchase_role()
-    filters = {"status": ["in", ["Partially Received", "Completed"]]}
+    filters = {"docstatus": 1}
     if company:
         filters["company"] = company
     if supplier:
-        filters["supplier"] = supplier
+        erp_supplier = frappe.db.get_value("SMRITI Supplier", supplier, "erpnext_supplier")
+        filters["supplier"] = erp_supplier or supplier
     if po_name:
-        filters["name"] = po_name
+        filters["smriti_source_po"] = po_name
     if from_date:
-        filters["transaction_date"] = [">=", from_date]
+        filters["posting_date"] = [">=", from_date]
     if to_date:
-        filters.setdefault("transaction_date", ["<=", to_date])
+        filters.setdefault("posting_date", ["<=", to_date])
 
     limit_start = (int(page) - 1) * int(page_size)
-    items = frappe.get_list(
-        "SMRITI Purchase Order",
+    result = erp_adapter.list_grns(
         filters=filters,
-        fields=["name", "supplier", "supplier_name", "transaction_date as posting_date", "grand_total", "per_received as per_billed", "status"],
-        order_by="modified desc",
-        limit_start=limit_start,
-        limit_page_length=int(page_size)
+        fields=["name", "supplier", "supplier_name", "posting_date", "grand_total", "per_billed", "status", "smriti_source_po"],
+        page=int(page),
+        page_size=int(page_size)
     )
-    total = frappe.db.count("SMRITI Purchase Order", filters=filters)
-    return {"items": items, "total": total}
+    return result
 
 
 def get_grn_detail(grn_name):
-    # Retrieve PO received quantities as a simulated GRN
     check_any_purchase_role()
-    po = PurchaseOrderService.get_purchase_order_detail(grn_name)
-    items = []
-    for it in po["items"]:
-        if flt(it["received_qty"]) > 0:
-            items.append({
-                "item_code": it["item_code"],
-                "item_name": it["item_name"],
-                "qty": it["received_qty"],
-                "rate": it["rate"],
-                "amount": it["received_qty"] * it["rate"],
-                "warehouse": it["warehouse"],
-                "uom": it["uom"],
-                "batch_no": "BATCH-TEMP-SMRITI"
-            })
+    pr = erp_adapter.get_grn(grn_name)
+    items = [{
+        "item_code": row.item_code,
+        "item_name": row.item_name,
+        "qty": row.qty,
+        "rate": row.rate,
+        "amount": row.amount,
+        "warehouse": row.warehouse,
+        "uom": row.uom,
+        "batch_no": row.get("batch_no"),
+    } for row in pr.items]
     return {
-        "name": po["name"],
-        "supplier": po["supplier"],
-        "supplier_name": po["supplier_name"],
-        "company": po["company"],
-        "posting_date": po["transaction_date"],
-        "grand_total": sum(i["amount"] for i in items),
-        "per_billed": po["per_received"],
-        "status": "Submitted" if po["status"] in ("Partially Received", "Completed") else "Draft",
-        "items": items
+        "name": pr.name,
+        "supplier": pr.supplier,
+        "supplier_name": pr.supplier_name,
+        "company": pr.company,
+        "posting_date": pr.posting_date,
+        "grand_total": pr.grand_total,
+        "status": pr.status,
+        "smriti_source_po": pr.get("smriti_source_po"),
+        "items": items,
     }
 
 
@@ -178,98 +173,143 @@ def create_grn(supplier, items_list, po_name=None, warehouse=None):
     check_manager_role()
     if not po_name:
         frappe.throw(_("SMRITI Purchase Studio requires a Purchase Order reference for GRN creation."))
-    
+
+    smriti_po = PurchaseRepository.get_po(po_name)
     received_items = {it["item_code"]: flt(it["qty"]) for it in items_list}
-    po = PurchaseWorkflowService.receive(po_name, received_items)
-    
+
+    grn_name = erp_adapter.build_and_submit_grn(smriti_po, received_items, warehouse=warehouse)
+
+    # Keep SMRITI PO received_qty/status in sync for approval-trail reporting
+    PurchaseWorkflowService.receive(po_name, received_items)
+
     audit_service.log(
         event_type=audit_service.GRN_SUBMITTED,
-        payload={"doctype": "SMRITI Purchase Order", "name": po_name, "supplier": supplier, "items_count": len(items_list)}
+        payload={"doctype": "Purchase Receipt", "name": grn_name, "source_po": po_name, "supplier": supplier, "items_count": len(items_list)}
     )
     return {
         "status": "submitted",
-        "name": po_name,
-        "message": _("SMRITI GRN simulated for PO {0} successfully.").format(po_name)
+        "name": grn_name,
+        "message": _("GRN {0} created against PO {1}.").format(grn_name, po_name)
     }
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# INVOICES Simulation
+# INVOICES — real ERPNext Purchase Invoice, linked to a submitted GRN
 # ─────────────────────────────────────────────────────────────────────────────
 
 def list_invoices(company=None, supplier=None, status=None, from_date=None,
                   to_date=None, mode=None, page=1, page_size=50):
     check_any_purchase_role()
-    return list_grns(company, supplier, None, status, from_date, to_date, mode, page, page_size)
+    filters = {"docstatus": 1}
+    if company:
+        filters["company"] = company
+    if supplier:
+        erp_supplier = frappe.db.get_value("SMRITI Supplier", supplier, "erpnext_supplier")
+        filters["supplier"] = erp_supplier or supplier
+    if status:
+        filters["status"] = status
+    if from_date:
+        filters["posting_date"] = [">=", from_date]
+    if to_date:
+        filters.setdefault("posting_date", ["<=", to_date])
+
+    limit_start = (int(page) - 1) * int(page_size)
+    return erp_adapter.list_purchase_invoices(
+        filters=filters,
+        fields=["name", "supplier", "supplier_name", "posting_date", "grand_total", "status", "smriti_creation_mode"],
+        page=int(page),
+        page_size=int(page_size)
+    )
 
 
 def get_invoice_detail(pi_name):
     check_any_purchase_role()
-    return get_grn_detail(pi_name)
+    pi = erp_adapter.get_pi(pi_name)
+    items = [{
+        "item_code": row.item_code,
+        "item_name": row.item_name,
+        "qty": row.qty,
+        "rate": row.rate,
+        "amount": row.amount,
+    } for row in pi.items]
+    return {
+        "name": pi.name,
+        "supplier": pi.supplier,
+        "supplier_name": pi.supplier_name,
+        "company": pi.company,
+        "posting_date": pi.posting_date,
+        "grand_total": pi.grand_total,
+        "status": pi.status,
+        "creation_mode": pi.get("smriti_creation_mode"),
+        "items": items,
+    }
 
 
 def create_invoice(mode, supplier=None, grn_name=None, items_list=None, posting_date=None):
     check_manager_role()
     if not grn_name:
         frappe.throw(_("GRN reference is required for Invoice creation."))
-    
-    po = PurchaseWorkflowService.close(grn_name)
+
+    pi_name = erp_adapter.build_and_submit_invoice(grn_name, posting_date=posting_date)
+
+    source_po = frappe.db.get_value("Purchase Receipt", grn_name, "smriti_source_po")
+    if source_po:
+        PurchaseWorkflowService.close(source_po)
+
     audit_service.log(
         event_type=audit_service.PI_SUBMITTED,
-        payload={"doctype": "SMRITI Purchase Order", "name": grn_name, "supplier": supplier}
+        payload={"doctype": "Purchase Invoice", "name": pi_name, "grn": grn_name, "supplier": supplier}
     )
     return {
         "status": "submitted",
-        "name": grn_name,
-        "message": _("SMRITI Invoice created for PO {0}.").format(grn_name)
+        "name": pi_name,
+        "message": _("Invoice {0} created against GRN {1}.").format(pi_name, grn_name)
     }
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# RETURNS Simulation
+# RETURNS — real ERPNext Purchase Return, built against a submitted GRN
 # ─────────────────────────────────────────────────────────────────────────────
 
 def list_returns(company=None, supplier=None, from_date=None, to_date=None,
                  page=1, page_size=50):
     check_any_purchase_role()
-    filters = {"status": "Cancelled"}
+    filters = {"docstatus": 1, "is_return": 1}
     if company:
         filters["company"] = company
     if supplier:
-        filters["supplier"] = supplier
+        erp_supplier = frappe.db.get_value("SMRITI Supplier", supplier, "erpnext_supplier")
+        filters["supplier"] = erp_supplier or supplier
     if from_date:
-        filters["transaction_date"] = [">=", from_date]
+        filters["posting_date"] = [">=", from_date]
     if to_date:
-        filters.setdefault("transaction_date", ["<=", to_date])
+        filters.setdefault("posting_date", ["<=", to_date])
 
     limit_start = (int(page) - 1) * int(page_size)
-    items = frappe.get_list(
-        "SMRITI Purchase Order",
+    return erp_adapter.list_grns(
         filters=filters,
-        fields=["name", "supplier", "supplier_name", "transaction_date as posting_date", "grand_total", "status"],
-        order_by="modified desc",
-        limit_start=limit_start,
-        limit_page_length=int(page_size)
+        fields=["name", "supplier", "supplier_name", "posting_date", "grand_total", "status", "smriti_return_reason"],
+        page=int(page),
+        page_size=int(page_size)
     )
-    total = frappe.db.count("SMRITI Purchase Order", filters=filters)
-    return {"items": items, "total": total}
 
 
 def create_purchase_return(grn_name, items_list=None, return_reason=None):
     check_manager_role()
     if not return_reason or not return_reason.strip():
         frappe.throw(_("Return reason is mandatory."))
-    
-    po = PurchaseWorkflowService.reject(grn_name, return_reason)
+
+    return_name = erp_adapter.build_and_submit_return(grn_name, return_items=items_list, reason=return_reason)
+
     audit_service.log(
         event_type=audit_service.RETURN_SUBMITTED,
-        payload={"doctype": "SMRITI Purchase Order", "name": grn_name},
+        payload={"doctype": "Purchase Receipt", "name": return_name, "against_grn": grn_name},
         reason=return_reason
     )
     return {
         "status": "submitted",
-        "return_name": grn_name,
-        "message": _("SMRITI Purchase Return processed for PO {0}.").format(grn_name)
+        "return_name": return_name,
+        "message": _("Purchase Return {0} created against GRN {1}.").format(return_name, grn_name)
     }
 
 
@@ -279,10 +319,6 @@ def create_purchase_return(grn_name, items_list=None, return_reason=None):
 
 def get_supplier_ledger(supplier, from_date, to_date, company=None):
     check_manager_role()
-    if not supplier:
-        frappe.throw(_("Supplier is required."))
-    if not from_date or not to_date:
-        frappe.throw(_("From Date and To Date are required."))
     company = company or frappe.defaults.get_user_default("Company")
     pos = frappe.get_all(
         "SMRITI Purchase Order",

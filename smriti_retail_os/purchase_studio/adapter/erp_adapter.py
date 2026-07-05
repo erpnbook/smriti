@@ -915,6 +915,149 @@ def check_item_has_batch(item_code):
     return bool(frappe.db.get_value("Item", item_code, "has_batch_no"))
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# SMRITI SUPPLIER ↔ ERPNEXT SUPPLIER BRIDGE
+#
+# SMRITI Purchase Order/Approval workflow lives on the native "SMRITI Supplier"
+# and "SMRITI Purchase Order" DocTypes. GST-compliant execution documents
+# (Purchase Receipt, Purchase Invoice, Purchase Return) are ERPNext-native and
+# require a real ERPNext "Supplier" record. This bridge keeps SMRITI Supplier
+# as the single source of truth for SMRITI-side data and provisions/updates a
+# linked ERPNext Supplier only through documented Frappe APIs (insert/save) —
+# no ERPNext source is copied or modified, only its public DocType API is used.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_or_create_bridge_supplier(smriti_supplier_name):
+    """
+    Ensures a real ERPNext 'Supplier' exists for a given 'SMRITI Supplier'
+    and returns its name. Idempotent — safe to call on every transaction.
+    """
+    smriti_supplier = frappe.get_doc("SMRITI Supplier", smriti_supplier_name)
+    linked = smriti_supplier.get("erpnext_supplier")
+
+    if linked and frappe.db.exists("Supplier", linked):
+        # Keep core fields in sync (SMRITI Supplier remains source of truth)
+        frappe.db.set_value("Supplier", linked, {
+            "supplier_name": smriti_supplier.supplier_name,
+            "tax_id": smriti_supplier.tax_id,
+            "disabled": smriti_supplier.disabled,
+        })
+        return linked
+
+    existing = frappe.db.get_value(
+        "Supplier",
+        {"supplier_name": smriti_supplier.supplier_name},
+        "name"
+    )
+    if existing:
+        smriti_supplier.db_set("erpnext_supplier", existing)
+        return existing
+
+    erp_supplier = frappe.new_doc("Supplier")
+    erp_supplier.supplier_name = smriti_supplier.supplier_name
+    erp_supplier.supplier_group = smriti_supplier.supplier_group or _get_default_supplier_group()
+    erp_supplier.supplier_type = smriti_supplier.supplier_type or "Company"
+    erp_supplier.tax_id = smriti_supplier.tax_id
+    erp_supplier.mobile_no = smriti_supplier.mobile_no
+    erp_supplier.email_id = smriti_supplier.email_id
+    erp_supplier.disabled = smriti_supplier.disabled
+    erp_supplier.insert(ignore_permissions=True)
+
+    smriti_supplier.db_set("erpnext_supplier", erp_supplier.name)
+    return erp_supplier.name
+
+
+def _get_default_supplier_group():
+    return frappe.db.get_value("Supplier Group", {"is_group": 0}, "name") \
+        or frappe.db.get_value("Supplier Group", {}, "name")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# REAL GRN / INVOICE / RETURN — built from a SMRITI Purchase Order
+#
+# SMRITI Purchase Order stays the record of intent + approval trail.
+# These functions produce the actual ERPNext execution documents so that
+# Stock Ledger, GL Entries, GST fields, e-invoice/e-way bill, and TDS are
+# handled by ERPNext/india_compliance — never re-implemented natively.
+# ─────────────────────────────────────────────────────────────────────────────
+
+def build_and_submit_grn(smriti_po, received_items, warehouse=None):
+    """
+    Creates a standalone ERPNext Purchase Receipt (no ERPNext PO link needed)
+    from a SMRITI Purchase Order's items.
+
+    smriti_po: a loaded "SMRITI Purchase Order" document
+    received_items: {item_code: qty_received}
+    """
+    supplier = get_or_create_bridge_supplier(smriti_po.supplier)
+
+    pr = frappe.new_doc("Purchase Receipt")
+    pr.supplier = supplier
+    pr.company = smriti_po.company
+    pr.posting_date = nowdate()
+
+    for row in smriti_po.items:
+        qty = flt(received_items.get(row.item_code))
+        if qty <= 0:
+            continue
+        pr.append("items", {
+            "item_code": row.item_code,
+            "qty": qty,
+            "rate": row.rate,
+            "warehouse": warehouse or row.warehouse or get_default_warehouse(smriti_po.company),
+            "uom": row.uom,
+        })
+
+    if not pr.items:
+        frappe.throw(_("No receivable quantity provided for GRN."))
+
+    pr.smriti_source_po = smriti_po.name  # requires custom field, see fixtures
+    return insert_and_submit_grn(pr)
+
+
+def build_and_submit_invoice(grn_name, posting_date=None):
+    """
+    Creates an ERPNext Purchase Invoice linked to a submitted Purchase Receipt,
+    using ERPNext's own get_mapped_doc so tax templates, HSN, and
+    india_compliance GST fields are inherited correctly.
+    """
+    # ERPNext v14+: erpnext.stock.doctype.purchase_receipt.purchase_receipt.make_purchase_invoice
+    # Verify function signature on ERPNext major version upgrade (same caution as make_purchase_return above).
+    from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_invoice
+
+    pi = make_purchase_invoice(grn_name)
+    if posting_date:
+        pi.posting_date = posting_date
+    pi.smriti_creation_mode = "grn_linked"  # requires custom field, see fixtures
+    return insert_and_submit_pi(pi)
+
+
+def build_and_submit_return(grn_name, return_items=None, reason=None):
+    """
+    Creates and submits an ERPNext Purchase Return against a submitted GRN
+    using ERPNext's own make_purchase_return — never mutates PO/GRN status
+    directly, so partial receipts remain intact.
+    """
+    return_doc = make_purchase_return(grn_name)
+
+    if return_items:
+        wanted = {i["item_code"]: flt(i["qty"]) for i in return_items}
+        keep = []
+        for row in return_doc.items:
+            if row.item_code in wanted:
+                row.qty = -abs(wanted[row.item_code])
+                keep.append(row)
+        return_doc.items = keep
+
+    if reason:
+        return_doc.smriti_return_reason = reason  # existing fixture field
+
+    return_doc.insert(ignore_permissions=True)
+    return_doc.submit()
+    frappe.db.commit()
+    return return_doc.name
+
+
 
 
 
