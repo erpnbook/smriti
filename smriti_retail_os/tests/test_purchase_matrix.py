@@ -256,6 +256,37 @@ class TestPurchaseMatrix(unittest.TestCase):
         # Supplier B: 0% received, schedule_date in past, overdue_amount should be 1500.0
         self.assertEqual(float(perf_dict.get(supplier_b)["overdue_amount"]), 1500.0)
 
+    def test_size_only_matrix(self):
+        # 1. Create a size-only article template
+        from smriti_retail_os.item_studio.service.variant_lifecycle_service import VariantLifecycleService
+        hsn = self.hsn_code
+        
+        # Ensure Size "S" value exists
+        VariantLifecycleService.ensure_attribute_and_value("Size", "S")
+        
+        art_code = "ART-SIZEONLY-001"
+        VariantLifecycleService.create_article_template(
+            article_code=art_code,
+            item_name="Size Only Article",
+            hsn_code=hsn,
+            attributes=["Size"] # No Color attribute
+        )
+        
+        # Create a size variant
+        var_code = VariantLifecycleService.resolve_or_create_variant(art_code, {"Size": "S"})
+        frappe.db.commit()
+        
+        # 2. Build matrix session
+        session = MatrixService.build_session(art_code)
+        
+        # Assert colors has exactly "No Color configured" and sizes has "S"
+        self.assertEqual(session.colors, ["No Color configured"])
+        self.assertEqual(session.sizes, ["S"])
+        
+        # Assert variant attributes do not contain "UNKNOWN" for color
+        self.assertEqual(session.variants_list[0].color, "No Color configured")
+        self.assertEqual(session.variants_list[0].size, "S")
+
 
 def run_tests():
     import unittest

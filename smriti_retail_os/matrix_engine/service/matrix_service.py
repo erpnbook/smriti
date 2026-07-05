@@ -88,10 +88,7 @@ class MatrixService:
             fields=["name", "item_name", "standard_rate", "stock_uom"]
         )
 
-        variants_list = []
-        all_colors = set()
-        all_sizes = set()
-
+        variants_data = []
         for v in variants:
             # Fetch attributes
             v_attrs = frappe.db.get_all(
@@ -100,10 +97,24 @@ class MatrixService:
                 fields=["attribute", "attribute_value"]
             )
             attr_dict = {d.attribute: d.attribute_value for d in v_attrs}
-            
+            variants_data.append((v, attr_dict))
+
+        # Detect whether each axis actually exists in at least one variant
+        axis_x_exists = any(definition.axis_x in attr_dict for _, attr_dict in variants_data)
+        axis_y_exists = any(definition.axis_y in attr_dict for _, attr_dict in variants_data)
+
+        variants_list = []
+        all_colors = set()
+        all_sizes = set()
+
+        for v, attr_dict in variants_data:
             # Map Axis values
-            x_val = attr_dict.get(definition.axis_x) or "Default"
-            y_val = attr_dict.get(definition.axis_y) or "Default"
+            x_val = attr_dict.get(definition.axis_x) if axis_x_exists else "No Size configured"
+            y_val = attr_dict.get(definition.axis_y) if axis_y_exists else "No Color configured"
+            
+            # Final fallback to prevent empty/null values
+            x_val = x_val or "Default"
+            y_val = y_val or "Default"
             
             all_sizes.add(x_val)
             all_colors.add(y_val)
@@ -126,7 +137,7 @@ class MatrixService:
             ))
 
         # Sort sizes numerically if possible, otherwise by standard size sequences
-        is_all_numeric = all(x.replace('.', '', 1).isdigit() for x in all_sizes if x != "Default")
+        is_all_numeric = all(x.replace('.', '', 1).isdigit() for x in all_sizes if x not in ("Default", "No Size configured"))
         if is_all_numeric:
             sizes_sorted = sorted(list(all_sizes), key=lambda x: float(x) if x.replace('.', '', 1).isdigit() else 0.0)
         else:
