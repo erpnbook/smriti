@@ -112,14 +112,20 @@ class MatrixService:
         all_colors = set()
         all_sizes = set()
 
-        # Load all possible values from global Item Attribute master for X/Y axes
+        # Load all possible values from global Item Attribute master for Sizes (X axis) to allow ordering any size
         if axis_x_exists:
             all_sizes.update(frappe.db.get_all("Item Attribute Value", filters={"parent": definition.axis_x}, pluck="attribute_value"))
         else:
             all_sizes.add("No Size configured")
 
+        # Load ONLY the colors that actually exist as variants for this article (Y axis) to prevent cluttering
         if axis_y_exists:
-            all_colors.update(frappe.db.get_all("Item Attribute Value", filters={"parent": definition.axis_y}, pluck="attribute_value"))
+            for v, attr_dict in variants_data:
+                y_val = attr_dict.get(definition.axis_y)
+                if y_val:
+                    all_colors.add(y_val)
+            if not all_colors:
+                all_colors.add("Default")
         else:
             all_colors.add("No Color configured")
 
