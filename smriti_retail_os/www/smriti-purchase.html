@@ -1774,6 +1774,12 @@ const PS = {
     }
   },
 
+  poInlineAddSupplier(name, label) {
+    document.getElementById('po-inline-sup-val').value = name;
+    document.getElementById('po-inline-sup-input').value = label;
+    document.getElementById('po-inline-sup-res').style.display = 'none';
+  },
+
   async poInlineSupplierSearch(q) {
     const res = document.getElementById("po-inline-sup-res");
     if (q.length < 2) { res.style.display="none"; return; }
@@ -1782,7 +1788,7 @@ const PS = {
       if (!rows||!rows.length) { res.style.display="none"; return; }
       res.style.display = "block";
       res.innerHTML = rows.map(r=>`
-        <div class="ta-item" onclick="document.getElementById('po-inline-sup-val').value='${r.name}';document.getElementById('po-inline-sup-input').value='${(r.supplier_name||r.name).replace(/'/g,"\\'")}';document.getElementById('po-inline-sup-res').style.display='none';">
+        <div class="ta-item" onclick="PS.poInlineAddSupplier('${r.name.replace(/'/g,"\\'")}', '${(r.supplier_name||r.name).replace(/'/g,"\\'")}')">
           <div>
             <div style="font-weight:600;">${r.supplier_name||r.name}</div>
             <div class="ta-sub">${r.supplier_group||""}</div>
@@ -1805,7 +1811,7 @@ const PS = {
       if (!rows||!rows.length) { res.style.display="none"; return; }
       res.style.display = "block";
       res.innerHTML = rows.map(r=>`
-        <div class="ta-item" onclick="PS.poInlineAddItemFromSearch(${JSON.stringify(r).replace(/"/g,'&quot;')});document.getElementById('po-inline-item-res').style.display='none';">
+        <div class="ta-item" onclick="PS.poInlineAddItemFromSearch('${r.item_code.replace(/'/g,"\\'")}', '${(r.item_name||"").replace(/'/g,"\\'")}', ${r.standard_rate||0}, '${(r.stock_uom||"Nos").replace(/'/g,"\\'")}')">
           <div>
             <div style="font-weight:600;">${r.item_code}</div>
             <div class="ta-sub">${r.item_name||""} · ${r.stock_uom||"Nos"}</div>
@@ -1820,8 +1826,15 @@ const PS = {
     } catch(e) { res.style.display="none"; }
   },
 
-  poInlineAddItemFromSearch(item) {
-    S.po_create.items.push({item_code:item.item_code, item_name:item.item_name||"", qty:1, rate:parseFloat(item.standard_rate||0), uom:item.stock_uom||"Nos", warehouse:S.po_create.warehouse});
+  poInlineAddItemFromSearch(itemCode, itemName, rate, uom) {
+    S.po_create.items.push({
+      item_code: itemCode,
+      item_name: itemName || "",
+      qty: 1,
+      rate: parseFloat(rate) || 0,
+      uom: uom || "Nos",
+      warehouse: S.po_create.warehouse
+    });
     PS.poInlineRenderItems();
     document.getElementById("po-inline-item-search").value = "";
     document.getElementById("po-inline-item-res").style.display = "none";
