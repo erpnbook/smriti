@@ -214,6 +214,52 @@ def search_suppliers(query, company=None):
 def search_items(query):
     return svc.search_items(query)
 
+@frappe.whitelist()
+def get_matrix_session(article, matrix_name=None):
+    from smriti_retail_os.matrix_engine.service.matrix_service import MatrixService
+    return MatrixService.build_session(article, matrix_name).to_dict()
+
+@frappe.whitelist()
+def resolve_or_create_variant(article, attribute_values):
+    from smriti_retail_os.item_studio.service.variant_lifecycle_service import VariantLifecycleService
+    import json
+    if isinstance(attribute_values, str):
+        attribute_values = json.loads(attribute_values)
+    
+    variant_code = VariantLifecycleService.resolve_or_create_variant(article, attribute_values)
+    
+    from smriti_retail_os.barcode.item_service import get_item_print_details
+    details = get_item_print_details(variant_code, 1)
+    
+    return {
+        "item_code": variant_code,
+        "item_name": details.get("item_name"),
+        "barcode": details.get("barcode"),
+        "rate": details.get("mrp") or 0.0,
+        "uom": details.get("uom") or "Nos"
+    }
+
+@frappe.whitelist()
+def create_article_template(article_code, item_name, item_group=None, brand=None, hsn_code=None, gst_percentage=18, attributes=None):
+    from smriti_retail_os.item_studio.service.variant_lifecycle_service import VariantLifecycleService
+    import json
+    if isinstance(attributes, str):
+        attributes = json.loads(attributes)
+        
+    article = VariantLifecycleService.create_article_template(
+        article_code=article_code,
+        item_name=item_name,
+        item_group=item_group,
+        brand=brand,
+        hsn_code=hsn_code,
+        gst_percentage=frappe.utils.cint(gst_percentage or 18),
+        attributes=attributes
+    )
+    return {
+        "article": article,
+        "item_name": item_name
+    }
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # BACKWARD COMPATIBILITY — Existing purchase.html still calls purchase_api.py

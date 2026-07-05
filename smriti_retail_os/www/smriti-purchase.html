@@ -5,6 +5,8 @@
 {% endblock %}
 
 {% block scripts %}
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_matrix_renderer.css?v=1.0.0">
+<script src="/assets/smriti_retail_os/js/smriti_matrix_renderer.js?v=1.0.0"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════════
    SMRITI Purchase Studio v2.0
@@ -1454,15 +1456,19 @@ const PS = {
         schedule_date: "",
         remarks: "",
         warehouse: "",
-        items: []
+        items: [],
+        styles: {}
       };
     }
     const d = new Date(); d.setDate(d.getDate()+7);
     if (!S.po_create.schedule_date) {
       S.po_create.schedule_date = d.toISOString().slice(0,10);
     }
-    if (!S.po_create.items.length) {
-      S.po_create.items = [{item_code:"",item_name:"",qty:1,rate:0,uom:"Nos",warehouse:""}];
+    if (!S.po_create.items) {
+      S.po_create.items = [];
+    }
+    if (!S.po_create.styles) {
+      S.po_create.styles = {};
     }
 
     el.innerHTML = `
@@ -1640,11 +1646,39 @@ const PS = {
       if (!pc.schedule_date) { toast("warn","Required","Please set a schedule date."); return; }
       PS.poInlineGoStep(2);
     } else if (pc.step===2) {
-      PS.poInlineCollectItems();
-      const valid = pc.items.filter(i=>i.item_code&&(parseFloat(i.qty)||0)>0);
+      const finalItems = [...pc.items];
+      if (pc.styles) {
+        Object.keys(pc.styles).forEach(styleCode => {
+          const session = pc.styles[styleCode];
+          session.cells.forEach(c => {
+            const qty = parseFloat(c.qty) || 0;
+            if (qty > 0 && c.variant) {
+              finalItems.push({
+                item_code: c.variant.item_code,
+                item_name: c.variant.item_name,
+                qty: qty,
+                rate: parseFloat(c.variant.rate || 0),
+                uom: c.variant.uom || "Nos",
+                warehouse: pc.warehouse,
+                article: styleCode,
+                attribute_summary: `${c.y_val} / ${c.x_val}`,
+                barcode: c.variant.barcode
+              });
+            }
+          });
+        });
+      }
+      
+      const valid = finalItems.filter(i=>i.item_code&&(parseFloat(i.qty)||0)>0);
       if (!valid.length) { toast("warn","Required","Add at least one item with qty > 0."); return; }
+      
+      pc.final_items_to_submit = valid;
+      
+      const originalItems = pc.items;
       pc.items = valid;
       PS.poInlineRenderReview();
+      pc.items = originalItems;
+      
       PS.poInlineGoStep(3);
     } else if (pc.step===3) {
       PS.poInlineSubmit();
@@ -1665,48 +1699,130 @@ const PS = {
     PS.poInlineRenderItems();
   },
 
-  poInlineCollectItems() {
-    S.po_create.items.forEach((it,idx) => {
-      const codeEl = document.getElementById(`po-r-code-${idx}`);
-      const nameEl = document.getElementById(`po-r-name-${idx}`);
-      const qtyEl  = document.getElementById(`po-r-qty-${idx}`);
-      const rateEl = document.getElementById(`po-r-rate-${idx}`);
-      const uomEl  = document.getElementById(`po-r-uom-${idx}`);
-      if (codeEl) it.item_code  = codeEl.value;
-      if (nameEl) it.item_name  = nameEl.value;
-      if (qtyEl)  it.qty        = parseFloat(qtyEl.value)||0;
-      if (rateEl) it.rate       = parseFloat(rateEl.value)||0;
-      if (uomEl)  it.uom        = uomEl.value;
-    });
+  poInlineRemoveMatrix(styleCode) {
+    delete S.po_create.styles[styleCode];
+    PS.poInlineRenderItems();
+  },
+
+  poToggleMatrixView(styleCode) {
+    const el = document.getElementById(`matrix-mount-${styleCode}`);
+    if (el) {
+      el.style.display = el.style.display === "none" ? "block" : "none";
+    }
   },
 
   poInlineRenderItems() {
     const tbody = document.getElementById("po-inline-tbody");
     if (!tbody) return;
     const pc = S.po_create;
-    if (!pc.items.length) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted);">No items yet — search above or click "Add Item Row"</td></tr>`;
+    
+    tbody.innerHTML = "";
+    
+    const hasStyles = pc.styles && Object.keys(pc.styles).length > 0;
+    const hasItems = pc.items && pc.items.length > 0;
+    if (!hasStyles && !hasItems) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted);">No items yet — search above or scan barcode</td></tr>`;
       PS.poInlineUpdateTotal();
       return;
     }
-    tbody.innerHTML = pc.items.map((it,idx)=>`
-    <tr>
-      <td><input type="text" class="po-cell-in" id="po-r-code-${idx}" value="${it.item_code||""}" placeholder="Item code…" onchange="S.po_create.items[${idx}].item_code=this.value"/></td>
-      <td><input type="text" class="po-cell-in" id="po-r-name-${idx}" value="${it.item_name||""}" placeholder="Item name…" onchange="S.po_create.items[${idx}].item_name=this.value"/></td>
-      <td><input type="number" class="po-cell-in" id="po-r-qty-${idx}" value="${it.qty||1}" min="0.001" step="1" onchange="S.po_create.items[${idx}].qty=parseFloat(this.value)||0;PS.poInlineUpdateTotal()"/></td>
-      <td><input type="text" class="po-cell-in" id="po-r-uom-${idx}" value="${it.uom||'Nos'}" style="width:60px;"/></td>
-      <td><input type="number" class="po-cell-in" id="po-r-rate-${idx}" value="${it.rate||0}" min="0" step="0.01" onchange="S.po_create.items[${idx}].rate=parseFloat(this.value)||0;PS.poInlineUpdateTotal()"/></td>
-      <td><div class="cell-readonly" id="po-r-amt-${idx}">${fmt.cur((it.qty||0)*(it.rate||0))}</div></td>
-      <td><button class="po-btn-del" onclick="PS.poInlineRemoveRow(${idx})" title="Remove row">✕</button></td>
-    </tr>`).join("");
+
+    pc.items.forEach((it, idx) => {
+      const rowTr = document.createElement("tr");
+      rowTr.innerHTML = `
+        <td><input type="text" class="po-cell-in" id="po-r-code-${idx}" value="${it.item_code||""}" readonly/></td>
+        <td><input type="text" class="po-cell-in" id="po-r-name-${idx}" value="${it.item_name||""}" readonly/></td>
+        <td><input type="number" class="po-cell-in" id="po-r-qty-${idx}" value="${it.qty||1}" min="0.001" step="1" onchange="S.po_create.items[${idx}].qty=parseFloat(this.value)||0;PS.poInlineUpdateTotal()"/></td>
+        <td><input type="text" class="po-cell-in" id="po-r-uom-${idx}" value="${it.uom||'Nos'}" readonly style="width:60px;"/></td>
+        <td><input type="number" class="po-cell-in" id="po-r-rate-${idx}" value="${it.rate||0}" min="0" step="0.01" onchange="S.po_create.items[${idx}].rate=parseFloat(this.value)||0;PS.poInlineUpdateTotal()"/></td>
+        <td><div class="cell-readonly" id="po-r-amt-${idx}">${fmt.cur((it.qty||0)*(it.rate||0))}</div></td>
+        <td><button class="po-btn-del" onclick="PS.poInlineRemoveRow(${idx})" title="Remove row">✕</button></td>
+      `;
+      tbody.appendChild(rowTr);
+    });
+
+    if (hasStyles) {
+      const matrixTr = document.createElement("tr");
+      matrixTr.innerHTML = `<td colspan="7" style="padding: 10px 0;"><div id="po-style-matrices-list"></div></td>`;
+      tbody.appendChild(matrixTr);
+
+      const mList = document.getElementById("po-style-matrices-list");
+      if (mList) {
+        Object.keys(pc.styles).forEach(styleCode => {
+          const session = pc.styles[styleCode];
+          const itemWrap = document.createElement("div");
+          itemWrap.style.marginBottom = "16px";
+          itemWrap.className = "po-matrix-row-wrap";
+          itemWrap.innerHTML = `
+            <div style="display:flex;align-items:center;background:var(--bg2);padding:10px 14px;border-radius:8px;cursor:pointer;" onclick="PS.poToggleMatrixView('${styleCode}')">
+              <span style="font-weight:700;color:var(--primary);margin-right:8px;">Style Matrix: ${styleCode}</span>
+              <span style="color:var(--text-muted);font-size:12px;">(${session.item_name || ''})</span>
+              <button class="po-btn-del" style="margin-left:auto;" onclick="event.stopPropagation(); PS.poInlineRemoveMatrix('${styleCode}')">✕</button>
+            </div>
+            <div id="matrix-mount-${styleCode}" style="display:block;padding:8px 0;"></div>
+          `;
+          mList.appendChild(itemWrap);
+
+          new SmritiMatrixRenderer({
+            containerId: `matrix-mount-${styleCode}`,
+            article: styleCode,
+            session: session,
+            onChange: async (x, y, qty, cell) => {
+              if (qty > 0 && !cell.variant) {
+                try {
+                  const attributeValues = {
+                    [session.definition.axis_x]: x,
+                    [session.definition.axis_y]: y
+                  };
+                  toast("info", "Provisioning", `Creating variant for ${x} / ${y}...`);
+                  const variant = await api("smriti_retail_os.purchase_studio.api.purchase_api.resolve_or_create_variant", {
+                    article: styleCode,
+                    attribute_values: attributeValues
+                  });
+                  cell.variant = variant;
+                  toast("success", "Success", `Variant ${variant.item_code} resolved.`);
+                  
+                  const input = document.getElementById(`matrix-mount-${styleCode}`).querySelector(`input[data-x="${x}"][data-y="${y}"]`);
+                  if (input) {
+                    input.classList.add("smriti-state-new");
+                  }
+                } catch(e) {
+                  toast("error", "Error", e.message || "Failed to auto-create variant.");
+                  cell.qty = 0;
+                  const input = document.getElementById(`matrix-mount-${styleCode}`).querySelector(`input[data-x="${x}"][data-y="${y}"]`);
+                  if (input) input.value = "";
+                }
+              }
+              PS.poInlineUpdateTotal();
+            },
+            onStateChange: () => {
+              PS.poInlineUpdateTotal();
+            }
+          });
+        });
+      }
+    }
+
     PS.poInlineUpdateTotal();
   },
 
   poInlineUpdateTotal() {
     const pc = S.po_create;
-    const t = pc.items.reduce((s,it)=>s+(parseFloat(it.qty)||0)*(parseFloat(it.rate)||0),0);
+    let t = pc.items.reduce((s,it)=>s+(parseFloat(it.qty)||0)*(parseFloat(it.rate)||0),0);
+    
+    if (pc.styles) {
+      Object.keys(pc.styles).forEach(styleCode => {
+        const session = pc.styles[styleCode];
+        session.cells.forEach(c => {
+          const qty = parseFloat(c.qty) || 0;
+          const rate = c.variant ? parseFloat(c.variant.rate || 0) : parseFloat(session.mrp || 0);
+          t += qty * rate;
+        });
+      });
+    }
+
     const gt = document.getElementById("po-inline-grand-total");
     if (gt) gt.textContent = fmt.cur(t);
+    
     pc.items.forEach((it,idx)=>{
       const el = document.getElementById(`po-r-amt-${idx}`);
       if (el) el.textContent = fmt.cur((parseFloat(it.qty)||0)*(parseFloat(it.rate)||0));
@@ -1759,7 +1875,7 @@ const PS = {
     try {
       const r = await api(`${API}.create_purchase_order`, {
         supplier:      pc.supplier,
-        items:         JSON.stringify(pc.items.filter(i=>i.item_code&&(parseFloat(i.qty)||0)>0)),
+        items:         JSON.stringify(pc.final_items_to_submit || pc.items.filter(i=>i.item_code&&(parseFloat(i.qty)||0)>0)),
         schedule_date: pc.schedule_date,
         remarks:       pc.remarks,
         warehouse:     pc.warehouse
@@ -1811,10 +1927,10 @@ const PS = {
       if (!rows||!rows.length) { res.style.display="none"; return; }
       res.style.display = "block";
       res.innerHTML = rows.map(r=>`
-        <div class="ta-item" onclick="PS.poInlineAddItemFromSearch('${r.item_code.replace(/'/g,"\\'")}', '${(r.item_name||"").replace(/'/g,"\\'")}', ${r.standard_rate||0}, '${(r.stock_uom||"Nos").replace(/'/g,"\\'")}')">
+        <div class="ta-item" onclick="PS.poInlineLoadItem('${r.item_code.replace(/'/g,"\\'")}', '${(r.item_name||"").replace(/'/g,"\\'")}', ${r.standard_rate||0}, '${(r.stock_uom||"Nos").replace(/'/g,"\\'")}', ${r.has_variants || 0})">
           <div>
             <div style="font-weight:600;">${r.item_code}</div>
-            <div class="ta-sub">${r.item_name||""} · ${r.stock_uom||"Nos"}</div>
+            <div class="ta-sub">${r.item_name||""} · ${r.stock_uom||"Nos"} ${r.has_variants ? '· <span class="badge" style="background:var(--primary);color:#fff;">Style Template</span>' : ''}</div>
           </div>
           <div class="ta-sub" style="text-align:right;">₹${parseFloat(r.standard_rate||0).toFixed(2)}</div>
         </div>`).join("");
@@ -1826,16 +1942,40 @@ const PS = {
     } catch(e) { res.style.display="none"; }
   },
 
-  poInlineAddItemFromSearch(itemCode, itemName, rate, uom) {
-    S.po_create.items.push({
-      item_code: itemCode,
-      item_name: itemName || "",
-      qty: 1,
-      rate: parseFloat(rate) || 0,
-      uom: uom || "Nos",
-      warehouse: S.po_create.warehouse
-    });
-    PS.poInlineRenderItems();
+  poInlineLoadItem(itemCode, itemName, rate, uom, hasVariants) {
+    PS.poInlineLoadItemAsync(itemCode, itemName, rate, uom, hasVariants);
+  },
+
+  async poInlineLoadItemAsync(itemCode, itemName, rate, uom, hasVariants) {
+    const pc = S.po_create;
+    if (hasVariants) {
+      if (pc.styles && pc.styles[itemCode]) {
+        toast("info", "Duplicate", "Style is already added.");
+        return;
+      }
+      try {
+        const session = await api("smriti_retail_os.purchase_studio.api.purchase_api.get_matrix_session", { article: itemCode });
+        pc.styles = pc.styles || {};
+        pc.styles[itemCode] = session;
+        PS.poInlineRenderItems();
+      } catch(e) {
+        toast("error", "Error", "Failed to load style matrix.");
+      }
+    } else {
+      if (pc.items.some(i => i.item_code === itemCode)) {
+        toast("info", "Duplicate", "Item is already added.");
+        return;
+      }
+      pc.items.push({
+        item_code: itemCode,
+        item_name: itemName || "",
+        qty: 1,
+        rate: parseFloat(rate) || 0,
+        uom: uom || "Nos",
+        warehouse: pc.warehouse
+      });
+      PS.poInlineRenderItems();
+    }
     document.getElementById("po-inline-item-search").value = "";
     document.getElementById("po-inline-item-res").style.display = "none";
   },

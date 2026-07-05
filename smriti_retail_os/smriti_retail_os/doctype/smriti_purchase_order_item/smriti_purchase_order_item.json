@@ -13,7 +13,10 @@
   "received_qty",
   "pending_qty",
   "warehouse",
-  "uom"
+  "uom",
+  "article",
+  "attribute_summary",
+  "barcode"
  ],
  "fields": [
   {
@@ -78,6 +81,24 @@
    "fieldtype": "Link",
    "label": "UOM",
    "options": "UOM"
+  },
+  {
+   "fieldname": "article",
+   "fieldtype": "Link",
+   "label": "Article",
+   "options": "Item"
+  },
+  {
+   "fieldname": "attribute_summary",
+   "fieldtype": "Data",
+   "label": "Attribute Summary",
+   "read_only": 1
+  },
+  {
+   "fieldname": "barcode",
+   "fieldtype": "Data",
+   "label": "Barcode",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,

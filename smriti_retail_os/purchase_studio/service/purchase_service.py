@@ -373,7 +373,7 @@ def search_items(query):
     return frappe.get_all(
         "Item",
         filters={"disabled": 0, "item_code": ["like", f"%{query}%"]},
-        fields=["name as item_code", "item_name", "standard_rate"],
+        fields=["name as item_code", "item_name", "standard_rate", "has_variants", "variant_of", "stock_uom"],
         limit=20
     )
 

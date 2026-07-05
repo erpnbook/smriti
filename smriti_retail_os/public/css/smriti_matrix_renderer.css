@@ -1,0 +1,123 @@
+/**
+ * @file: smriti_matrix_renderer.css
+ * @description: Styling classes for SMRITI Dynamic Matrix Renderer.
+ */
+
+.smriti-matrix-wrapper {
+  margin: 16px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.smriti-matrix-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.smriti-matrix-header .matrix-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.matrix-table-container {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.matrix-table th, 
+.matrix-table td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: center;
+}
+
+.matrix-table th {
+  background: var(--bg2);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.matrix-table .sticky-col {
+  position: sticky;
+  left: 0;
+  background: var(--bg);
+  z-index: 2;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+
+.matrix-table th.sticky-col {
+  background: var(--bg2);
+}
+
+.matrix-table .first-col {
+  text-align: left;
+  min-width: 120px;
+}
+
+.matrix-table .total-col {
+  background: var(--bg2);
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.matrix-cell-input {
+  width: 60px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 6px;
+  text-align: center;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+
+.matrix-cell-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  background: var(--card);
+}
+
+/* State highlights conforming to Theme semantic variables */
+.matrix-cell-input.smriti-state-new {
+  background: var(--success-bg, rgba(16, 185, 129, 0.15)) !important;
+  border-color: var(--success, #10b981) !important;
+  color: var(--success, #10b981) !important;
+}
+
+.matrix-cell-input.smriti-state-warning {
+  background: var(--warning-bg, rgba(245, 158, 11, 0.15)) !important;
+  border-color: var(--warning, #f59e0b) !important;
+}
+
+.total-cell {
+  font-weight: 600;
+  background: var(--bg2);
+  color: var(--text-muted);
+}
+
+.summary-row td {
+  background: var(--bg2);
+  font-weight: 600;
+}
+
+.grand-total {
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--primary-bg, rgba(37, 99, 235, 0.1)) !important;
+  color: var(--primary, #2563eb) !important;
+}

@@ -67,7 +67,10 @@ class PurchaseOrderService:
                 "qty": flt(it.get("qty")),
                 "rate": flt(it.get("rate")),
                 "warehouse": it.get("warehouse") or warehouse,
-                "uom": it.get("uom") or frappe.db.get_value("Item", it.get("item_code"), "stock_uom")
+                "uom": it.get("uom") or frappe.db.get_value("Item", it.get("item_code"), "stock_uom"),
+                "article": it.get("article"),
+                "attribute_summary": it.get("attribute_summary"),
+                "barcode": it.get("barcode")
             })
 
         # Calculate amounts & validation
@@ -125,7 +128,10 @@ class PurchaseOrderService:
                 "rate": flt(item.rate),
                 "amount": flt(item.amount),
                 "warehouse": item.warehouse,
-                "uom": item.uom
+                "uom": item.uom,
+                "article": item.article,
+                "attribute_summary": item.attribute_summary,
+                "barcode": item.barcode
             })
         return {
             "name": po.name,
