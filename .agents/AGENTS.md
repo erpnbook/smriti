@@ -123,3 +123,43 @@ Every AI agent working on the SMRITI Retail OS codebase must adhere to the follo
      13. Related RFCs
 6. **Naming Convention**:
    * Files must be named as: `<Area>_<Topic>_v<Version>.md` (e.g., `Procurement_Matrix_Optimize_And_Supplier_Sync_v2.1.1.md`).
+
+---
+
+# SMRITI Human-Readable Error Policy (HREP)
+
+## Objective
+SMRITI must never expose raw programming, framework, database, or machine-generated error messages to end users. All user-facing errors must be translated into clear, friendly, human-readable language.
+
+The user should understand:
+* What happened
+* Why it happened (if appropriate)
+* What they can do next
+without requiring any technical knowledge.
+
+## 1. Never Show Technical Errors (Rule 1)
+The following must never be displayed directly to end users:
+* Python Tracebacks
+* SQL Errors
+* Exception Class Names
+* Frappe / ERPNext Errors
+* HTTP Stack Traces
+* File Paths / Source Code / Function Names
+* JSON Parse Errors / Database Constraint Errors
+These details belong only in internal logs.
+
+## 2. Business Language & Guidance (Rules 2–4)
+* Convert exceptions into business-friendly messages.
+* Messages must use business terminology (avoid saying API, SQL, Repository, JSON, Exception, Traceback, Object, Attribute, Stack).
+* Every message must include guidance (What happened? What should the user do next?).
+
+## 3. Severity & Dictionary (Rules 5–7)
+* Group user-facing errors by severity: Information, Success, Warning, Validation, Permission, Business Error, System Error.
+* Maintain and use the SMRITI Error Dictionary catalog (e.g., `SMRITI-PERM-001`, `SMRITI-VAL-001`, `SMRITI-NET-001`, `SMRITI-DATA-001`) instead of hardcoding messages.
+
+## 4. User Experience Standard (Rule 10)
+Structure messages as:
+* **Title**: Short, clear description.
+* **Explanation**: Simple business-language explanation.
+* **Suggested Action**: Guidance on what to do next.
+* **Reference ID**: Support reference (e.g., `SMRITI-ERR-YYYYMMDD-XXXXXX`).
