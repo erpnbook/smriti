@@ -80,11 +80,33 @@
                     }, opts.headers || {}),
                     body: JSON.stringify(opts.args || {})
                 })
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    if (data.exc) {
-                        if (opts.error) opts.error(data);
-                        reject(data);
+                .then(function(res) {
+                    return res.json().then(function(data) {
+                        return { ok: res.ok, status: res.status, data: data };
+                    }).catch(function() {
+                        return { ok: res.ok, status: res.status, data: {} };
+                    });
+                })
+                .then(function(result) {
+                    var data = result.data;
+                    if (!result.ok || data.exc || data.exc_type) {
+                        var errObj = data || {};
+                        if (!errObj.message && errObj._server_messages) {
+                            try {
+                                var msgs = typeof errObj._server_messages === 'string' ? JSON.parse(errObj._server_messages) : errObj._server_messages;
+                                if (Array.isArray(msgs) && msgs.length) {
+                                    var firstMsg = typeof msgs[0] === 'string' ? JSON.parse(msgs[0]) : msgs[0];
+                                    if (firstMsg && firstMsg.message) {
+                                        errObj.message = firstMsg.message;
+                                    }
+                                }
+                            } catch(e) {}
+                        }
+                        if (!errObj.message) {
+                            errObj.message = data.message || "Request failed with status " + result.status;
+                        }
+                        if (opts.error) opts.error(errObj);
+                        reject(errObj);
                     } else {
                         var responseObj = { message: data.message };
                         if (opts.callback) opts.callback(responseObj);

@@ -423,6 +423,9 @@ const GRN = {
     prev.innerHTML = `<div class="loading" style="padding:20px;"><div class="spinner" style="border-color:rgba(255,255,255,0.2);border-top-color:var(--primary);width:18px;height:18px;"></div> Loading PO…</div>`;
     try {
       const d = await apiCall(`${API}.get_items_for_grn`, {po_name: poName});
+      if (!d || !d.items) {
+        throw new Error("Failed to parse Purchase Order details.");
+      }
       D.po_name      = d.po_name;
       D.supplier     = d.supplier;
       D.supplier_name= d.supplier_name;
@@ -439,7 +442,7 @@ const GRN = {
       </div>`;
     } catch(e) {
       D.po_name = ""; D.items = [];
-      prev.innerHTML = `<div class="banner danger"><span>❌</span><span>${e.exc||e.message}</span></div>`;
+      prev.innerHTML = `<div class="banner danger"><span>❌</span><span>${e.message || e.exc || "Unknown Error"}</span></div>`;
     }
   },
 
