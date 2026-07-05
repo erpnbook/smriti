@@ -530,7 +530,7 @@ class TestSmritiPurchaseStudioServices(unittest.TestCase):
         PurchaseWorkflowService.receive(po_name, {"SMRITI-TEST-ITEM-1": 5.0})
         po_detail = PurchaseOrderService.get_purchase_order_detail(po_name)
         self.assertEqual(po_detail["status"], "Partially Received")
-        self.assertEqual(po_detail["per_received"], (5.0 / 15.0) * 100.0)
+        self.assertAlmostEqual(po_detail["per_received"], (5.0 / 15.0) * 100.0, places=4)
         self.assertEqual(po_detail["items"][0]["received_qty"], 5.0)
         self.assertEqual(po_detail["items"][0]["pending_qty"], 5.0)
 
