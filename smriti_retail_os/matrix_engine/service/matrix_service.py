@@ -114,7 +114,44 @@ class MatrixService:
 
         # Load all possible values from global Item Attribute master for Sizes (X axis) to allow ordering any size
         if axis_x_exists:
-            all_sizes.update(frappe.db.get_all("Item Attribute Value", filters={"parent": definition.axis_x}, pluck="attribute_value"))
+            # Smart size-group resolution based on existing variants' sizes
+            existing_sizes = set()
+            for v, attr_dict in variants_data:
+                x_val = attr_dict.get(definition.axis_x)
+                if x_val:
+                    existing_sizes.add(x_val)
+
+            # Get size groups
+            company = frappe.defaults.get_user_default("company") or frappe.db.get_value("Company", {}, "name")
+            from smriti_retail_os.company_api import get_size_groups as get_company_size_groups
+            from smriti_retail_os.master_api import _DEFAULT_SIZE_GROUPS
+            groups = get_company_size_groups(company)
+            if not groups:
+                raw = frappe.db.get_default("smriti_size_groups")
+                if raw:
+                    try:
+                        groups = frappe.parse_json(raw)
+                    except Exception:
+                        pass
+            if not groups:
+                groups = _DEFAULT_SIZE_GROUPS
+
+            # Find matching size group
+            best_group = None
+            max_overlap = 0
+            if existing_sizes and groups:
+                for g in groups:
+                    g_sizes = set(g.get("sizes") or [])
+                    overlap = len(existing_sizes & g_sizes)
+                    if overlap > max_overlap:
+                        max_overlap = overlap
+                        best_group = g
+
+            if best_group:
+                all_sizes.update(best_group.get("sizes") or [])
+            else:
+                # Fallback to all sizes in global master if no specific group matches or no variants exist yet
+                all_sizes.update(frappe.db.get_all("Item Attribute Value", filters={"parent": definition.axis_x}, pluck="attribute_value"))
         else:
             all_sizes.add("No Size configured")
 
