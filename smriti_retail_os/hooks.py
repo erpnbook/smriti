@@ -85,11 +85,13 @@ app_include_css = [
     "/assets/smriti_retail_os/css/smriti-reports.css",
     "/assets/smriti_retail_os/css/smriti_sales_invoice.css",
     "/assets/smriti_retail_os/css/smriti_desk_override.css",
+    "/assets/smriti_retail_os/css/smriti_smart_lookup.css",
 ]
 app_include_js = [
     "/assets/smriti_retail_os/js/smriti_ui_resolver.js",
     "/assets/smriti_retail_os/js/smriti_theme_manager.js",
     "/assets/smriti_retail_os/js/smriti-ui-hardening.js",
+    "/assets/smriti_retail_os/js/smriti_smart_lookup.js",
     # smriti_nav_config.js removed 2026-07-01 — zero consumers confirmed (grep: no calls to
     # SMRITI_NAV, resolveSmritiRoute, or SMRITI_NAV_META anywhere in repo). renderFlexibleSidebar
     # reads window.frappe.boot.smriti_navigation or calls get_user_navigation API directly.
@@ -116,9 +118,11 @@ update_website_context = ["smriti_retail_os.website_context.get_context"]
 web_include_css = [
     "/assets/smriti_retail_os/css/smriti_branding.css",
     "/assets/smriti_retail_os/css/smriti_web.css",
+    "/assets/smriti_retail_os/css/smriti_smart_lookup.css",
 ]
 web_include_js = [
     "/assets/smriti_retail_os/js/main.js",
+    "/assets/smriti_retail_os/js/smriti_smart_lookup.js",
     "/assets/smriti_retail_os/js/smriti_payload_bridge.js",
     # PWA — load on every SMRITI web page
     "/assets/smriti_retail_os/js/smriti_offline_store.js",

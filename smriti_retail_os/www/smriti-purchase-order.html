@@ -250,11 +250,8 @@ input,select,textarea{font-family:inherit;outline:none;}
       <div class="fr">
         <div class="fg">
           <label class="fl">Supplier <span class="req">*</span></label>
-          <div class="typeahead">
-            <input type="text" class="fi" id="sup-input" placeholder="Type supplier name to search…" oninput="PO.supplierSearch(this.value)" autocomplete="off"/>
-            <div class="ta-results" id="sup-results" style="display:none;"></div>
+            <input type="text" class="fi" id="sup-input" placeholder="Type supplier name to search…" autocomplete="off"/>
             <input type="hidden" id="sup-val"/>
-          </div>
         </div>
         <div class="fg">
           <label class="fl">Schedule Date <span class="req">*</span></label>
@@ -403,6 +400,15 @@ const PO = {
     // Set today + 7 days as default schedule date
     const d = new Date(); d.setDate(d.getDate()+7);
     document.getElementById("sched-date").value = d.toISOString().slice(0,10);
+
+    // Initialize SMRITI Universal Smart Lookup
+    new SmritiSmartLookup({
+      input: document.getElementById("sup-input"),
+      entity: "Supplier",
+      onSelect: (value, label) => {
+        document.getElementById("sup-val").value = value;
+      }
+    });
 
     // Load warehouses
     apiCall(`${API}.get_warehouses`).then(rows => {
