@@ -172,11 +172,26 @@ class TestPurchaseMatrix(unittest.TestCase):
         
         frappe.db.commit()
 
-        # 3. Create test Purchase Orders
+        # 3. Resolve suppliers and warehouse dynamically to prevent LinkValidationError
+        suppliers_list = frappe.db.get_all("Supplier", limit=2, pluck="name")
+        supplier_a = suppliers_list[0] if len(suppliers_list) > 0 else "Test Supplier A"
+        supplier_b = suppliers_list[1] if len(suppliers_list) > 1 else "Test Supplier B"
+        
+        for s in [supplier_a, supplier_b]:
+            if not frappe.db.exists("Supplier", s):
+                sup = frappe.new_doc("Supplier")
+                sup.name = s
+                sup.supplier_name = s
+                sup.supplier_group = "All Supplier Groups"
+                sup.insert(ignore_permissions=True)
+        
+        warehouse = frappe.db.get_value("Warehouse", {"is_group": 0}, "name") or "Stores - _SC"
+
+        # 4. Create test Purchase Orders
         # PO 1: Submitted, on time, fully received
         po1 = frappe.new_doc("SMRITI Purchase Order")
-        po1.supplier = "TEST-SUPP-A"
-        po1.supplier_name = "Supplier A"
+        po1.supplier = supplier_a
+        po1.supplier_name = supplier_a
         po1.company = "_Test Company"
         po1.transaction_date = "2026-07-01"
         po1.schedule_date = "2026-07-02"
@@ -191,14 +206,14 @@ class TestPurchaseMatrix(unittest.TestCase):
             "rate": 100.0,
             "amount": 1000.0,
             "uom": "Nos",
-            "warehouse": "Stores"
+            "warehouse": warehouse
         })
         po1.insert(ignore_permissions=True)
 
         # PO 2: Submitted, overdue (schedule_date is in the past), not received (0% received)
         po2 = frappe.new_doc("SMRITI Purchase Order")
-        po2.supplier = "TEST-SUPP-B"
-        po2.supplier_name = "Supplier B"
+        po2.supplier = supplier_b
+        po2.supplier_name = supplier_b
         po2.company = "_Test Company"
         po2.transaction_date = "2026-07-01"
         po2.schedule_date = "2026-07-02" # Past date
@@ -213,7 +228,7 @@ class TestPurchaseMatrix(unittest.TestCase):
             "rate": 100.0,
             "amount": 1500.0,
             "uom": "Nos",
-            "warehouse": "Stores"
+            "warehouse": warehouse
         })
         po2.insert(ignore_permissions=True)
         frappe.db.commit()
@@ -223,9 +238,9 @@ class TestPurchaseMatrix(unittest.TestCase):
         analytics = get_purchase_analytics(company="_Test Company")
         
         # Assert supplier spend
-        suppliers = {s["supplier_name"]: s["total_spend"] for s in analytics["by_supplier"]}
-        self.assertEqual(suppliers.get("Supplier A"), 1000.0)
-        self.assertEqual(suppliers.get("Supplier B"), 1500.0)
+        suppliers = {s["supplier"]: s["total_spend"] for s in analytics["by_supplier"]}
+        self.assertEqual(suppliers.get(supplier_a), 1000.0)
+        self.assertEqual(suppliers.get(supplier_b), 1500.0)
 
         # Assert item group spend (Fix 1)
         item_groups = {ig["item_group"]: ig["total_spend"] for ig in analytics["by_item_group"]}
@@ -236,11 +251,11 @@ class TestPurchaseMatrix(unittest.TestCase):
         from smriti_retail_os.purchase_studio.service.purchase_service import get_supplier_performance
         performance = get_supplier_performance(company="_Test Company")
         
-        perf_dict = {p["supplier_name"]: p for p in performance}
+        perf_dict = {p["supplier"]: p for p in performance}
         # Supplier A: fully received, overdue_amount should be 0.0
-        self.assertEqual(float(perf_dict.get("Supplier A")["overdue_amount"]), 0.0)
+        self.assertEqual(float(perf_dict.get(supplier_a)["overdue_amount"]), 0.0)
         # Supplier B: 0% received, schedule_date in past, overdue_amount should be 1500.0
-        self.assertEqual(float(perf_dict.get("Supplier B")["overdue_amount"]), 1500.0)
+        self.assertEqual(float(perf_dict.get(supplier_b)["overdue_amount"]), 1500.0)
 
 
 def run_tests():
