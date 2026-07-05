@@ -183,6 +183,16 @@ frappe.get_doc({
 
 The audit log is immutable — no update or delete is permitted on existing entries.
 
+## Purchase Matrix & Supplier Sync Architecture (v2.1.1)
+
+### Dynamic Row & Column Resolution
+Instead of a static grid of all system sizes and colors, the matrix schema is resolved dynamically:
+- **Variant-Based Rows (Colors)**: The service layer restricts active color rows to only the subset of colors present in existing active variant records.
+- **Overlap-Based Size Groups (Columns)**: The service layer runs a dynamic signature overlap check against all registered `SMRITI Size Group` documents. It automatically detects the group with the highest size-value match rate (e.g. Footwear sizing) and filters the columns to display only those sizes, hiding all other clothing or FMCG sizing clutter.
+
+### Closed-Loop Supplier Hook
+Standard `Supplier` updates (via the `on_update` hook) provision counterpart `SMRITI Supplier` records and sync core address and contact data downstream, keeping both the standard ERPNext and custom SMRITI registries aligned.
+
 ---
 
 ## Governance Compliance

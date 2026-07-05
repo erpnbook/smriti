@@ -178,6 +178,18 @@ Short form:
 4. Write a test in `test_purchase_studio.py`
 5. Run `bench --site smriti_retail execute smriti_retail_os.patches.seed_purchase_report_templates.execute`
 
+## Matrix & Supplier Enhancements (v2.1.1)
+
+### Matrix Session Filtering
+When retrieving the style matrix session data, the system filters rows and columns dynamically in `matrix_service.py`:
+1. **Color Filtering**: Returns only the color variants that have active, matching variant records created for that style, rather than displaying all global system colors.
+2. **Size Group Filtering**: Resolves the style's variant sizes against active `SMRITI Size Group` definitions, dynamically picking the group with maximum overlap (e.g. Footwear vs Garments) and filtering out irrelevant sizes (like `S`, `M`, `L` when displaying shoes).
+
+### Supplier Synchronization Bridge
+Standard ERPNext `Supplier` updates trigger an `on_update` hook in `hooks_logic.py` (`sync_supplier_address_and_credit_days`) that automatically:
+- Provisions a synchronized `SMRITI Supplier` counterpart matching the vendor's standard properties.
+- Synchronizes contact, address mapping, and validation details to keep both registers aligned.
+
 ---
 
 ## Testing

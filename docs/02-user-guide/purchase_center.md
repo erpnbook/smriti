@@ -61,6 +61,9 @@ URL: `/smriti-purchase`
    - Select item code
    - Enter quantity and rate
    - Assign warehouse
+   - **Style Matrix Grid Popup**: For style templates, click the matrix icon to open the Style Matrix popup. SMRITI automatically keeps this screen clean by:
+     * **Restricting Color Rows**: Showing only active color variants you've created for that style, rather than the entire global color list.
+     * **Auto-Detecting Sizing Columns**: Analyzing your variant sizes and displaying only the matching size group columns (e.g. Footwear sizes `36` to `43` will display, while clothing sizes `S`/`M`/`L` remain hidden).
 4. Set **Schedule Date** (expected delivery date)
 5. Click **Save**
 
