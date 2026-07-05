@@ -21,19 +21,11 @@ title    = "SMRITI — New Purchase Order"
 def get_context(context):
     """
     Page controller for the dedicated Purchase Order creation form.
-    Only SMRITI Store Managers and System Managers may create POs.
+    Redirects immediately to the unified hybrid view inside SMRITI Purchase Studio.
     """
-    # ── Guest redirect ────────────────────────────────────────────────────────
-    if frappe.session.user == "Guest":
-        frappe.local.flags.redirect_location = "/login"
-        raise frappe.Redirect
-
-    from smriti_retail_os.security_api import check_page_access
-    try:
-        check_page_access("smriti-purchase-order")
-    except frappe.PermissionError:
-        frappe.local.flags.redirect_location = "/smriti-purchase"
-        raise frappe.Redirect
+    # ── Redirect to hybrid Purchase Studio view ───────────────────────────────
+    frappe.local.flags.redirect_location = "/smriti-purchase#orders-create"
+    raise frappe.Redirect
 
     # ── Strip ALL Frappe web includes ─────────────────────────────────────────
     context.web_include_js  = []
