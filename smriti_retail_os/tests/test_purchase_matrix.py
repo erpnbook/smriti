@@ -219,7 +219,7 @@ class TestPurchaseMatrix(unittest.TestCase):
         po2.grand_total = 1500.0
         po2.per_received = 0.0
         po2.docstatus = 1
-        po2.status = "Open"
+        po2.status = "Ordered"
         po2.append("items", {
             "item_code": app_var,
             "item_name": "Sandal Item Var",
