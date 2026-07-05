@@ -173,16 +173,15 @@ class TestPurchaseMatrix(unittest.TestCase):
         frappe.db.commit()
 
         # 3. Resolve suppliers and warehouse dynamically to prevent LinkValidationError
-        suppliers_list = frappe.db.get_all("Supplier", limit=2, pluck="name")
-        supplier_a = suppliers_list[0] if len(suppliers_list) > 0 else "Test Supplier A"
-        supplier_b = suppliers_list[1] if len(suppliers_list) > 1 else "Test Supplier B"
+        suppliers_list = frappe.db.get_all("SMRITI Supplier", limit=2, pluck="name")
+        supplier_a = suppliers_list[0] if len(suppliers_list) > 0 else "TEST-SUPP-A"
+        supplier_b = suppliers_list[1] if len(suppliers_list) > 1 else "TEST-SUPP-B"
         
         for s in [supplier_a, supplier_b]:
-            if not frappe.db.exists("Supplier", s):
-                sup = frappe.new_doc("Supplier")
+            if not frappe.db.exists("SMRITI Supplier", s):
+                sup = frappe.new_doc("SMRITI Supplier")
                 sup.name = s
                 sup.supplier_name = s
-                sup.supplier_group = "All Supplier Groups"
                 sup.insert(ignore_permissions=True)
         
         warehouse = frappe.db.get_value("Warehouse", {"is_group": 0}, "name") or "Stores - _SC"
