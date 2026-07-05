@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FieldInventory",
+  "type": "OBJECT",
+  "required": ["ir_version", "compiler_version", "artifact_type", "generated_at", "repository_commit", "provenance", "data"],
+  "properties": {
+    "ir_version": { "type": "STRING" },
+    "compiler_version": { "type": "STRING" },
+    "artifact_type": { "type": "STRING", "enum": ["field_inventory"] },
+    "generated_at": { "type": "STRING" },
+    "repository_commit": { "type": "STRING" },
+    "provenance": {
+      "type": "OBJECT",
+      "required": ["artifact_id", "produced_by", "consumes", "used_by"],
+      "properties": {
+        "artifact_id": { "type": "STRING" },
+        "produced_by": { "type": "STRING" },
+        "consumes": { "type": "ARRAY", "items": { "type": "STRING" } },
+        "used_by": { "type": "ARRAY", "items": { "type": "STRING" } }
+      }
+    },
+    "data": {
+      "type": "ARRAY",
+      "items": {
+        "type": "OBJECT",
+        "required": ["artifact_id", "target_doctype", "fieldname", "label", "fieldtype", "evidence_type", "source_file", "source_line", "checksum"],
+        "properties": {
+          "artifact_id": { "type": "STRING" },
+          "target_doctype": { "type": "STRING" },
+          "fieldname": { "type": "STRING" },
+          "label": { "type": "STRING" },
+          "fieldtype": { "type": "STRING" },
+          "evidence_type": { "type": "STRING", "enum": ["FILE", "AST", "JSON", "CONFIG", "GIT", "GENERATED", "MISSING", "LEGACY"] },
+          "source_file": { "type": "STRING" },
+          "source_line": { "type": "INTEGER" },
+          "checksum": { "type": "STRING" }
+        }
+      }
+    }
+  }
+}

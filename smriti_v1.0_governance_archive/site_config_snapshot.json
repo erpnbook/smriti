@@ -1,0 +1,13 @@
+{
+ "active_backup_encryption_key_version": "v1",
+ "allow_tests": true,
+ "backup_encryption_keys": {
+  "v1": "dummy_backup_encryption_key_v1"
+ },
+ "db_name": "dummy_db",
+ "db_password": "dummy_db_password",
+ "db_type": "mariadb",
+ "db_user": "dummy_db_user",
+ "encryption_key": "dummy_encryption_key",
+ "smriti_license_secret": "SMRITI-DUMMY-LICENSE-SECRET"
+}

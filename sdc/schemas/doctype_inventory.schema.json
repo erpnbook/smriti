@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DocTypeInventory",
+  "type": "OBJECT",
+  "required": ["ir_version", "compiler_version", "artifact_type", "generated_at", "repository_commit", "provenance", "data"],
+  "properties": {
+    "ir_version": { "type": "STRING" },
+    "compiler_version": { "type": "STRING" },
+    "artifact_type": { "type": "STRING", "enum": ["doctype_inventory"] },
+    "generated_at": { "type": "STRING" },
+    "repository_commit": { "type": "STRING" },
+    "provenance": {
+      "type": "OBJECT",
+      "required": ["artifact_id", "produced_by", "consumes", "used_by"],
+      "properties": {
+        "artifact_id": { "type": "STRING" },
+        "produced_by": { "type": "STRING" },
+        "consumes": { "type": "ARRAY", "items": { "type": "STRING" } },
+        "used_by": { "type": "ARRAY", "items": { "type": "STRING" } }
+      }
+    },
+    "data": {
+      "type": "ARRAY",
+      "items": {
+        "type": "OBJECT",
+        "required": ["artifact_id", "doctype_name", "evidence_type", "schema_path", "checksum", "fields"],
+        "properties": {
+          "artifact_id": { "type": "STRING" },
+          "doctype_name": { "type": "STRING" },
+          "evidence_type": { "type": "STRING", "enum": ["FILE", "AST", "JSON", "CONFIG", "GIT", "GENERATED", "MISSING", "LEGACY"] },
+          "schema_path": { "type": "STRING" },
+          "checksum": { "type": "STRING" },
+          "fields": {
+            "type": "ARRAY",
+            "items": {
+              "type": "OBJECT",
+              "required": ["fieldname", "label", "fieldtype", "mandatory"],
+              "properties": {
+                "fieldname": { "type": "STRING" },
+                "label": { "type": "STRING" },
+                "fieldtype": { "type": "STRING" },
+                "mandatory": { "type": "INTEGER" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

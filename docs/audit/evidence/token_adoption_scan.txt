@@ -1,0 +1,5 @@
+smriti-inventory.css : 7/7 [PASS]
+smriti-purchase.css : 7/7 [PASS]
+smriti-reports.css : 7/7 [PASS]
+smriti-sizewise-invoice.css : 7/7 [PASS]
+smriti_sidebar_standalone.css: sidebar-width token = PRESENT

@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ScreenInventory",
+  "type": "OBJECT",
+  "required": ["ir_version", "compiler_version", "artifact_type", "generated_at", "repository_commit", "provenance", "data"],
+  "properties": {
+    "ir_version": { "type": "STRING" },
+    "compiler_version": { "type": "STRING" },
+    "artifact_type": { "type": "STRING", "enum": ["screen_inventory"] },
+    "generated_at": { "type": "STRING" },
+    "repository_commit": { "type": "STRING" },
+    "provenance": {
+      "type": "OBJECT",
+      "required": ["artifact_id", "produced_by", "consumes", "used_by"],
+      "properties": {
+        "artifact_id": { "type": "STRING" },
+        "produced_by": { "type": "STRING" },
+        "consumes": { "type": "ARRAY", "items": { "type": "STRING" } },
+        "used_by": { "type": "ARRAY", "items": { "type": "STRING" } }
+      }
+    },
+    "data": {
+      "type": "ARRAY",
+      "items": {
+        "type": "OBJECT",
+        "required": ["screen_id", "title", "route", "doctype", "beginner", "power_user", "developer"],
+        "properties": {
+          "screen_id": { "type": "STRING" },
+          "title": { "type": "STRING" },
+          "route": { "type": "STRING" },
+          "doctype": { "type": "STRING" },
+          "fields": { "type": "ARRAY", "items": { "type": "STRING" } },
+          "apis": { "type": "ARRAY", "items": { "type": "STRING" } },
+          "reports": { "type": "ARRAY", "items": { "type": "STRING" } },
+          "labels": { "type": "ARRAY", "items": { "type": "STRING" } },
+          "beginner": {
+            "type": "OBJECT",
+            "required": ["purpose", "how_to_use", "example"],
+            "properties": {
+              "purpose": { "type": "STRING" },
+              "how_to_use": { "type": "STRING" },
+              "example": { "type": "STRING" }
+            }
+          },
+          "power_user": {
+            "type": "OBJECT",
+            "required": ["validation", "workflow"],
+            "properties": {
+              "validation": { "type": "STRING" },
+              "workflow": { "type": "STRING" }
+            }
+          },
+          "developer": {
+            "type": "OBJECT",
+            "properties": {
+              "manual_reference": { "type": "STRING" },
+              "training_reference": { "type": "STRING" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+﻿
+frappe           16.18.3 UNVERSIONED
+erpnext          16.19.1 UNVERSIONED
+india_compliance 16.5.0  UNVERSIONED
+smriti_retail_os 1.2.10  main
+

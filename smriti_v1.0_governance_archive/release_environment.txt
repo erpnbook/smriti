@@ -1,0 +1,11 @@
+SMRITI Retail OS v1.0 GA Release Environment Details
+
+Target Site: smriti_retail
+OS Platform: Debian GNU/Linux 12 (bookworm) (In-Container)
+Python Virtual Environment: Python 3.11.9
+Node.js Runtime: v24.12.0
+MariaDB Server Version: 11.8.8-MariaDB-ubu2404
+Nginx Server Version: nginx/1.22.1
+Vitepress Builder Version: v2.0.0-alpha.16
+Host System Platform: Windows
+Timestamp: 2026-06-18

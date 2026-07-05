@@ -1,0 +1,175 @@
+{
+  "doctype": "DocType",
+  "name": "SMRITI Landed Cost Allocation",
+  "module": "SMRITI Inventory",
+  "custom": 0,
+  "istable": 0,
+  "issingle": 0,
+  "is_submittable": 1,
+  "autoname": "naming_series:",
+  "naming_series_options": "SMRITI-LCA-.YYYY.-",
+  "track_changes": 1,
+  "fields": [
+    {
+      "fieldname": "naming_series",
+      "fieldtype": "Select",
+      "label": "Series",
+      "options": "SMRITI-LCA-.YYYY.-",
+      "hidden": 1
+    },
+    {
+      "fieldname": "company",
+      "fieldtype": "Link",
+      "label": "Company",
+      "options": "Company",
+      "reqd": 1,
+      "description": "All linked Purchase Receipts (and their Purchase Invoices, if any) must belong to this Company. Also drives the read-only valuation_basis default below."
+    },
+    {
+      "fieldname": "posting_date",
+      "fieldtype": "Date",
+      "label": "Posting Date",
+      "reqd": 1,
+      "default": "Today"
+    },
+    {
+      "fieldname": "currency",
+      "fieldtype": "Link",
+      "label": "Currency",
+      "options": "Currency",
+      "read_only": 1,
+      "description": "Currency of the linked Purchase Receipts. Must be identical across all receipts."
+    },
+    {
+      "fieldname": "purchase_receipts",
+      "fieldtype": "Table MultiSelect",
+      "label": "Purchase Receipts",
+      "options": "SMRITI Landed Cost Allocation Receipt",
+      "reqd": 1,
+      "description": "One or more Purchase Receipts this allocation covers. Validation (controller): all must be Submitted (docstatus=1), same Company, same Currency."
+    },
+    {
+      "fieldname": "shipment_ref",
+      "fieldtype": "Data",
+      "label": "Shipment Reference",
+      "description": "Optional free-text grouping reference, e.g. container/shipment number."
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "allocation_method",
+      "fieldtype": "Select",
+      "label": "Default Allocation Method",
+      "options": "Value\nQty\nManual",
+      "default": "Value",
+      "reqd": 1,
+      "description": "Phase 1 active values only. Weight/Volume are reserved (Phase 2) -- must NOT appear in this Select's options."
+    },
+    {
+      "fieldname": "valuation_basis",
+      "fieldtype": "Select",
+      "label": "Valuation Basis",
+      "options": "Purchase Only",
+      "default": "Purchase Only",
+      "read_only": 1,
+      "description": "Phase 1: 'Purchase Only' is the sole active value. 'Landed Inclusive' is reserved (Phase 2), not selectable. This field is read-only here -- it reflects the Company-level setting and must never be edited mid-stream on existing transactions (immutability principle)."
+    },
+    {
+      "fieldname": "section_break_lines",
+      "fieldtype": "Section Break",
+      "label": "Cost Lines"
+    },
+    {
+      "fieldname": "cost_lines",
+      "fieldtype": "Table",
+      "label": "Cost Lines",
+      "options": "SMRITI Landed Cost Line",
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_break_manual",
+      "fieldtype": "Section Break",
+      "label": "Manual Allocations",
+      "depends_on": "eval:doc.allocation_method == 'Manual'",
+      "collapsible": 1
+    },
+    {
+      "fieldname": "manual_allocations",
+      "fieldtype": "Table",
+      "label": "Manual Allocations",
+      "options": "SMRITI Landed Cost Manual Allocation"
+    },
+    {
+      "fieldname": "section_break_computed",
+      "fieldtype": "Section Break",
+      "label": "Computed Summary",
+      "collapsible": 0
+    },
+    {
+      "fieldname": "base_purchase_value",
+      "fieldtype": "Currency",
+      "label": "Base Purchase Value",
+      "read_only": 1,
+      "description": "= Sum(Purchase Receipt item rate x qty) across all selected receipts."
+    },
+    {
+      "fieldname": "additional_cost",
+      "fieldtype": "Currency",
+      "label": "Additional Cost",
+      "read_only": 1,
+      "description": "= Sum(Cost Line amount WHERE affects_inventory_cost = 1)."
+    },
+    {
+      "fieldname": "column_break_2",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "estimated_landed_cost",
+      "fieldtype": "Currency",
+      "label": "Estimated Landed Cost",
+      "read_only": 1,
+      "description": "= base_purchase_value + additional_cost."
+    },
+    {
+      "fieldname": "landed_cost_percent",
+      "fieldtype": "Percent",
+      "label": "Landed Cost %",
+      "read_only": 1,
+      "description": "= (additional_cost / base_purchase_value) x 100. GUARD: if base_purchase_value <= 0, set to 0 instead of raising a divide-by-zero error."
+    },
+    {
+      "fieldname": "cost_per_unit",
+      "fieldtype": "Currency",
+      "label": "Cost Per Unit",
+      "read_only": 1,
+      "description": "= estimated_landed_cost / total qty across selected receipts."
+    },
+    {
+      "fieldname": "section_break_audit",
+      "fieldtype": "Section Break",
+      "label": "Allocation Audit Snapshot",
+      "collapsible": 1
+    },
+    {
+      "fieldname": "audit_snapshot",
+      "fieldtype": "Table",
+      "label": "Audit Snapshot",
+      "options": "SMRITI Allocation Audit Snapshot",
+      "read_only": 1,
+      "description": "Populated ONCE by the on_submit controller hook. Never editable in the UI, never recomputed after submit -- including on Cancel. See validation spec for population logic."
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1, "write": 1, "create": 1, "delete": 1, "submit": 1, "cancel": 1, "amend": 0
+    },
+    {
+      "role": "SMRITI Inventory Manager",
+      "read": 1, "write": 1, "create": 1, "delete": 0, "submit": 1, "cancel": 1, "amend": 0
+    }
+  ],
+  "_spec_reference": "SMRITI_Landed_Cost_Spec_v1.md Section 3.1, 3.2, 3.3, Revision D. amend=0 deliberately: per Section 1.3, corrections supersede via a new dated record rather than amending an existing one, to preserve clean audit lineage."
+}

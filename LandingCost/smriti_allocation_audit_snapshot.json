@@ -1,0 +1,82 @@
+{
+  "doctype": "DocType",
+  "name": "SMRITI Allocation Audit Snapshot",
+  "module": "SMRITI Inventory",
+  "custom": 0,
+  "istable": 1,
+  "issingle": 0,
+  "is_submittable": 0,
+  "fields": [
+    {
+      "fieldname": "purchase_receipt",
+      "fieldtype": "Link",
+      "label": "Purchase Receipt",
+      "options": "Purchase Receipt",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "purchase_receipt_row",
+      "fieldtype": "Data",
+      "label": "Receipt Item Row Ref",
+      "read_only": 1,
+      "description": "MUST store the Purchase Receipt Item child row's stable Frappe 'name' (internal unique identifier), NEVER a positional/display row number. A positional index can shift meaning after reordering or edits, breaking permanent traceability -- this is the entire purpose of this field."
+    },
+    {
+      "fieldname": "allocated_to_sku",
+      "fieldtype": "Link",
+      "label": "Item",
+      "options": "Item",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "cost_component",
+      "fieldtype": "Link",
+      "label": "Cost Component",
+      "options": "SMRITI Cost Component",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "qty",
+      "fieldtype": "Float",
+      "label": "Qty",
+      "read_only": 1
+    },
+    {
+      "fieldname": "base_value",
+      "fieldtype": "Currency",
+      "label": "Base Purchase Value (Row Share)",
+      "read_only": 1
+    },
+    {
+      "fieldname": "allocated_cost",
+      "fieldtype": "Currency",
+      "label": "Allocated Cost",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "currency",
+      "fieldtype": "Data",
+      "label": "Currency",
+      "read_only": 1,
+      "description": "Self-describing audit record. Same-currency is enforced at document level today; this field avoids ambiguity if that rule evolves later."
+    },
+    {
+      "fieldname": "allocation_method_used",
+      "fieldtype": "Data",
+      "label": "Method Used",
+      "read_only": 1,
+      "description": "Snapshot of the allocation_basis applied to THIS specific cost component at run time -- not a document-level value, since different cost lines may use different bases."
+    },
+    {
+      "fieldname": "timestamp",
+      "fieldtype": "Datetime",
+      "label": "Allocated On",
+      "read_only": 1
+    }
+  ],
+  "_spec_reference": "SMRITI_Landed_Cost_Spec_v1.md Section 3.2, Revision D. Grain: one row per (Purchase Receipt Item Row x Cost Component) pair. Populated ONCE on submit by the allocation service controller hook; immutable thereafter -- no app-level edit UI, no recompute path. See validation spec for the on_submit population logic."
+}

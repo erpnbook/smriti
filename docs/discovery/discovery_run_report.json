@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "policy_version": "1.2",
+  "schema_version": "1.0",
+  "formula_count": 12,
+  "formula_drift": 0,
+  "terminology_drift": 0,
+  "coverage": 92.8197,
+  "generated_at": "2026-06-27T23:29:13Z",
+  "warnings": []
+}

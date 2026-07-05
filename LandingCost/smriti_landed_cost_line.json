@@ -1,0 +1,59 @@
+{
+  "doctype": "DocType",
+  "name": "SMRITI Landed Cost Line",
+  "module": "SMRITI Inventory",
+  "custom": 0,
+  "istable": 1,
+  "issingle": 0,
+  "is_submittable": 0,
+  "fields": [
+    {
+      "fieldname": "cost_component",
+      "fieldtype": "Link",
+      "label": "Cost Component",
+      "options": "SMRITI Cost Component",
+      "reqd": 1,
+      "in_list_view": 1,
+      "description": "Client-side query filter recommended: only show is_active=1 components."
+    },
+    {
+      "fieldname": "amount",
+      "fieldtype": "Currency",
+      "label": "Amount",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "source_type",
+      "fieldtype": "Select",
+      "label": "Source Type",
+      "options": "Same Vendor Bill\nThird Party Bill\nManual/No Bill",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "source_reference",
+      "fieldtype": "Link",
+      "label": "Purchase Bill",
+      "options": "Purchase Invoice",
+      "depends_on": "eval:doc.source_type != 'Manual/No Bill'",
+      "description": "Schema uses Frappe-native 'Purchase Invoice' DocType; 'Purchase Bill' is the UI-facing label only. PENDING CONFIRMATION (spec Section 7 checklist item 5) — verify against actual SMRITI DocType naming before this ships; if SMRITI has done a schema-level rename, update 'options' accordingly."
+    },
+    {
+      "fieldname": "affects_inventory_cost",
+      "fieldtype": "Check",
+      "label": "Include In Unit Cost",
+      "default": "1",
+      "in_list_view": 1,
+      "description": "Default should be fetched from cost_component.default_affects_inventory_cost on selection (client script), but remains user-overridable per line."
+    },
+    {
+      "fieldname": "allocation_basis",
+      "fieldtype": "Select",
+      "label": "Allocation Basis",
+      "options": "Value\nQty\nManual",
+      "description": "Phase 1 active values only. Weight/Volume are reserved (Phase 2) and must NOT appear in this Select's options list. Inherits parent's allocation_method as default; overridable per line."
+    }
+  ],
+  "_spec_reference": "SMRITI_Landed_Cost_Spec_v1.md Section 3.1 Child Table 'Cost Line', Revision D"
+}

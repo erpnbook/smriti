@@ -1,0 +1,6198 @@
+{
+  "ir_version": "1.2",
+  "compiler_version": "1.1",
+  "generated_by": "SDC 1.1.2-GA",
+  "schema_version": "1.2",
+  "artifact_type": "dependency_graph",
+  "generated_at": "2026-06-27T23:29:13Z",
+  "repository_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
+  "provenance": {
+    "artifact_id": "ART-GRAPH-00001",
+    "produced_by": "Phase0_Discovery",
+    "consumes": [
+      "docs/discovery/file_inventory.json",
+      "docs/discovery/doctype_inventory.json",
+      "docs/discovery/field_inventory.json",
+      "docs/discovery/api_inventory.json",
+      "docs/discovery/business_dictionary.json",
+      "docs/discovery/screen_inventory.json",
+      "docs/discovery/collections_inventory.json",
+      "docs/discovery/search_index.json"
+    ],
+    "used_by": [
+      "docs_renderers",
+      "quality_gates"
+    ]
+  },
+  "data": {
+    "nodes": [
+      {
+        "id": "ART-DOCTYPE-00001",
+        "type": "DOCTYPE",
+        "label": "PSV Channel Partner"
+      },
+      {
+        "id": "ART-DOCTYPE-00002",
+        "type": "DOCTYPE",
+        "label": "PSV Channel Partner Brand"
+      },
+      {
+        "id": "ART-DOCTYPE-00003",
+        "type": "DOCTYPE",
+        "label": "PSV Ledger Entry"
+      },
+      {
+        "id": "ART-DOCTYPE-00004",
+        "type": "DOCTYPE",
+        "label": "PSV Reorder Rule"
+      },
+      {
+        "id": "ART-DOCTYPE-00005",
+        "type": "DOCTYPE",
+        "label": "PSV Stock Aging Snapshot"
+      },
+      {
+        "id": "ART-DOCTYPE-00006",
+        "type": "DOCTYPE",
+        "label": "PSV System Settings"
+      },
+      {
+        "id": "ART-DOCTYPE-00007",
+        "type": "DOCTYPE",
+        "label": "SMRITI Address Audit Log"
+      },
+      {
+        "id": "ART-DOCTYPE-00008",
+        "type": "DOCTYPE",
+        "label": "SMRITI Attribution Event"
+      },
+      {
+        "id": "ART-DOCTYPE-00009",
+        "type": "DOCTYPE",
+        "label": "SMRITI Attribution Ledger"
+      },
+      {
+        "id": "ART-DOCTYPE-00010",
+        "type": "DOCTYPE",
+        "label": "SMRITI Attribution Rule"
+      },
+      {
+        "id": "ART-DOCTYPE-00556",
+        "type": "DOCTYPE",
+        "label": "SMRITI Barcode Settings"
+      },
+      {
+        "id": "ART-DOCTYPE-00011",
+        "type": "DOCTYPE",
+        "label": "SMRITI Benefit Audit Log"
+      },
+      {
+        "id": "ART-DOCTYPE-00012",
+        "type": "DOCTYPE",
+        "label": "SMRITI Benefit Instrument"
+      },
+      {
+        "id": "ART-DOCTYPE-00013",
+        "type": "DOCTYPE",
+        "label": "SMRITI Benefit Instrument Type"
+      },
+      {
+        "id": "ART-DOCTYPE-00014",
+        "type": "DOCTYPE",
+        "label": "SMRITI Benefit Ledger"
+      },
+      {
+        "id": "ART-DOCTYPE-00015",
+        "type": "DOCTYPE",
+        "label": "SMRITI Benefit Liability Snapshot"
+      },
+      {
+        "id": "ART-DOCTYPE-00016",
+        "type": "DOCTYPE",
+        "label": "SMRITI Benefit Resolution Policy"
+      },
+      {
+        "id": "ART-DOCTYPE-00017",
+        "type": "DOCTYPE",
+        "label": "SMRITI Benefit Resolution Sequence Detail"
+      },
+      {
+        "id": "ART-DOCTYPE-00018",
+        "type": "DOCTYPE",
+        "label": "SMRITI Benefit Wallet"
+      },
+      {
+        "id": "ART-DOCTYPE-00019",
+        "type": "DOCTYPE",
+        "label": "SMRITI Business Term"
+      },
+      {
+        "id": "ART-DOCTYPE-00020",
+        "type": "DOCTYPE",
+        "label": "SMRITI Campaign"
+      },
+      {
+        "id": "ART-DOCTYPE-00021",
+        "type": "DOCTYPE",
+        "label": "SMRITI Certification Exam"
+      },
+      {
+        "id": "ART-DOCTYPE-00022",
+        "type": "DOCTYPE",
+        "label": "SMRITI CGE Settings"
+      },
+      {
+        "id": "ART-DOCTYPE-00023",
+        "type": "DOCTYPE",
+        "label": "SMRITI Clienteling Settings"
+      },
+      {
+        "id": "ART-DOCTYPE-00024",
+        "type": "DOCTYPE",
+        "label": "SMRITI Commission Adjustment Detail"
+      },
+      {
+        "id": "ART-DOCTYPE-00025",
+        "type": "DOCTYPE",
+        "label": "SMRITI Commission Event"
+      },
+      {
+        "id": "ART-DOCTYPE-00026",
+        "type": "DOCTYPE",
+        "label": "SMRITI Commission Ledger"
+      },
+      {
+        "id": "ART-DOCTYPE-00027",
+        "type": "DOCTYPE",
+        "label": "SMRITI Commission Rule"
+      },
+      {
+        "id": "ART-DOCTYPE-00028",
+        "type": "DOCTYPE",
+        "label": "SMRITI Commission Settings"
+      },
+      {
+        "id": "ART-DOCTYPE-00029",
+        "type": "DOCTYPE",
+        "label": "SMRITI Commission Settlement"
+      },
+      {
+        "id": "ART-DOCTYPE-00030",
+        "type": "DOCTYPE",
+        "label": "SMRITI Company Settings"
+      },
+      {
+        "id": "ART-DOCTYPE-00031",
+        "type": "DOCTYPE",
+        "label": "SMRITI Coupon Campaign"
+      },
+      {
+        "id": "ART-DOCTYPE-00032",
+        "type": "DOCTYPE",
+        "label": "SMRITI Coupon Rule"
+      },
+      {
+        "id": "ART-DOCTYPE-00033",
+        "type": "DOCTYPE",
+        "label": "SMRITI Customer Benefit Profile"
+      },
+      {
+        "id": "ART-DOCTYPE-00034",
+        "type": "DOCTYPE",
+        "label": "SMRITI Customer Graph"
+      },
+      {
+        "id": "ART-DOCTYPE-00035",
+        "type": "DOCTYPE",
+        "label": "SMRITI Customer Intelligence Graph"
+      },
+      {
+        "id": "ART-DOCTYPE-00036",
+        "type": "DOCTYPE",
+        "label": "SMRITI Customer Interaction"
+      },
+      {
+        "id": "ART-DOCTYPE-00037",
+        "type": "DOCTYPE",
+        "label": "SMRITI Customer Ownership"
+      },
+      {
+        "id": "ART-DOCTYPE-00038",
+        "type": "DOCTYPE",
+        "label": "SMRITI Customer Profile"
+      },
+      {
+        "id": "ART-DOCTYPE-00039",
+        "type": "DOCTYPE",
+        "label": "SMRITI Custom Attribute"
+      },
+      {
+        "id": "ART-DOCTYPE-00040",
+        "type": "DOCTYPE",
+        "label": "SMRITI Entity Attribute Value"
+      },
+      {
+        "id": "ART-DOCTYPE-00041",
+        "type": "DOCTYPE",
+        "label": "SMRITI Explain Audit Event"
+      },
+      {
+        "id": "ART-DOCTYPE-00042",
+        "type": "DOCTYPE",
+        "label": "SMRITI Formula Definition"
+      },
+      {
+        "id": "ART-DOCTYPE-00043",
+        "type": "DOCTYPE",
+        "label": "SMRITI Gender"
+      },
+      {
+        "id": "ART-DOCTYPE-00044",
+        "type": "DOCTYPE",
+        "label": "SMRITI Heel Type"
+      },
+      {
+        "id": "ART-DOCTYPE-00045",
+        "type": "DOCTYPE",
+        "label": "SMRITI Key Custodian"
+      },
+      {
+        "id": "ART-DOCTYPE-00046",
+        "type": "DOCTYPE",
+        "label": "SMRITI Knowledge Asset"
+      },
+      {
+        "id": "ART-DOCTYPE-00047",
+        "type": "DOCTYPE",
+        "label": "SMRITI Knowledge Relation"
+      },
+      {
+        "id": "ART-DOCTYPE-00613",
+        "type": "DOCTYPE",
+        "label": "SMRITI Knowledge Usage Log"
+      },
+      {
+        "id": "ART-DOCTYPE-00048",
+        "type": "DOCTYPE",
+        "label": "SMRITI Liability Snapshot"
+      },
+      {
+        "id": "ART-DOCTYPE-00049",
+        "type": "DOCTYPE",
+        "label": "SMRITI License"
+      },
+      {
+        "id": "ART-DOCTYPE-00050",
+        "type": "DOCTYPE",
+        "label": "SMRITI License Activity Log"
+      },
+      {
+        "id": "ART-DOCTYPE-00051",
+        "type": "DOCTYPE",
+        "label": "SMRITI License Features"
+      },
+      {
+        "id": "ART-DOCTYPE-00052",
+        "type": "DOCTYPE",
+        "label": "SMRITI License Validation History"
+      },
+      {
+        "id": "ART-DOCTYPE-00053",
+        "type": "DOCTYPE",
+        "label": "SMRITI Loyalty Program"
+      },
+      {
+        "id": "ART-DOCTYPE-00054",
+        "type": "DOCTYPE",
+        "label": "SMRITI Loyalty Rule"
+      },
+      {
+        "id": "ART-DOCTYPE-00055",
+        "type": "DOCTYPE",
+        "label": "SMRITI Loyalty Tier"
+      },
+      {
+        "id": "ART-DOCTYPE-00056",
+        "type": "DOCTYPE",
+        "label": "SMRITI Membership Tier"
+      },
+      {
+        "id": "ART-DOCTYPE-00057",
+        "type": "DOCTYPE",
+        "label": "SMRITI Merchandise Category"
+      },
+      {
+        "id": "ART-DOCTYPE-00675",
+        "type": "DOCTYPE",
+        "label": "SMRITI Navigation Assignment"
+      },
+      {
+        "id": "ART-DOCTYPE-00676",
+        "type": "DOCTYPE",
+        "label": "SMRITI Navigation Override"
+      },
+      {
+        "id": "ART-DOCTYPE-00677",
+        "type": "DOCTYPE",
+        "label": "SMRITI Navigation Permission"
+      },
+      {
+        "id": "ART-DOCTYPE-00678",
+        "type": "DOCTYPE",
+        "label": "SMRITI Navigation Profile"
+      },
+      {
+        "id": "ART-DOCTYPE-00679",
+        "type": "DOCTYPE",
+        "label": "SMRITI Navigation Profile Favorite"
+      },
+      {
+        "id": "ART-DOCTYPE-00680",
+        "type": "DOCTYPE",
+        "label": "SMRITI Navigation Profile Order"
+      },
+      {
+        "id": "ART-DOCTYPE-00058",
+        "type": "DOCTYPE",
+        "label": "SMRITI Outsole"
+      },
+      {
+        "id": "ART-DOCTYPE-00059",
+        "type": "DOCTYPE",
+        "label": "SMRITI Party Physical Item"
+      },
+      {
+        "id": "ART-DOCTYPE-00060",
+        "type": "DOCTYPE",
+        "label": "SMRITI Party Physical Snapshot"
+      },
+      {
+        "id": "ART-DOCTYPE-00061",
+        "type": "DOCTYPE",
+        "label": "SMRITI Party Sales Item"
+      },
+      {
+        "id": "ART-DOCTYPE-00062",
+        "type": "DOCTYPE",
+        "label": "SMRITI Party Sales Upload"
+      },
+      {
+        "id": "ART-DOCTYPE-00063",
+        "type": "DOCTYPE",
+        "label": "SMRITI Party Stock Account"
+      },
+      {
+        "id": "ART-DOCTYPE-00064",
+        "type": "DOCTYPE",
+        "label": "SMRITI Party Stock Ledger Entry"
+      },
+      {
+        "id": "ART-DOCTYPE-00065",
+        "type": "DOCTYPE",
+        "label": "SMRITI Print Job"
+      },
+      {
+        "id": "ART-DOCTYPE-00066",
+        "type": "DOCTYPE",
+        "label": "SMRITI Print Template"
+      },
+      {
+        "id": "ART-DOCTYPE-00067",
+        "type": "DOCTYPE",
+        "label": "SMRITI Print Template Version"
+      },
+      {
+        "id": "ART-DOCTYPE-00068",
+        "type": "DOCTYPE",
+        "label": "SMRITI Promotion Rule"
+      },
+      {
+        "id": "ART-DOCTYPE-00069",
+        "type": "DOCTYPE",
+        "label": "SMRITI Provision Log"
+      },
+      {
+        "id": "ART-DOCTYPE-00070",
+        "type": "DOCTYPE",
+        "label": "SMRITI PSV Activity Log"
+      },
+      {
+        "id": "ART-DOCTYPE-00071",
+        "type": "DOCTYPE",
+        "label": "SMRITI PSV Exam Attempt"
+      },
+      {
+        "id": "ART-DOCTYPE-00072",
+        "type": "DOCTYPE",
+        "label": "SMRITI PSV Exception Record"
+      },
+      {
+        "id": "ART-DOCTYPE-00073",
+        "type": "DOCTYPE",
+        "label": "SMRITI PSV Reorder Rule"
+      },
+      {
+        "id": "ART-DOCTYPE-00074",
+        "type": "DOCTYPE",
+        "label": "SMRITI PSV Settings"
+      },
+      {
+        "id": "ART-DOCTYPE-00075",
+        "type": "DOCTYPE",
+        "label": "SMRITI PSV Transaction"
+      },
+      {
+        "id": "ART-DOCTYPE-00076",
+        "type": "DOCTYPE",
+        "label": "SMRITI PSV Transaction Item"
+      },
+      {
+        "id": "ART-DOCTYPE-00077",
+        "type": "DOCTYPE",
+        "label": "SMRITI Purchase Class"
+      },
+      {
+        "id": "ART-DOCTYPE-00078",
+        "type": "DOCTYPE",
+        "label": "SMRITI Related Formula"
+      },
+      {
+        "id": "ART-DOCTYPE-00079",
+        "type": "DOCTYPE",
+        "label": "SMRITI Related Term"
+      },
+      {
+        "id": "ART-DOCTYPE-00080",
+        "type": "DOCTYPE",
+        "label": "SMRITI Report Role"
+      },
+      {
+        "id": "ART-DOCTYPE-00081",
+        "type": "DOCTYPE",
+        "label": "SMRITI Report Template"
+      },
+      {
+        "id": "ART-DOCTYPE-00082",
+        "type": "DOCTYPE",
+        "label": "SMRITI Rule Evaluation Log"
+      },
+      {
+        "id": "ART-DOCTYPE-00083",
+        "type": "DOCTYPE",
+        "label": "SMRITI Sales KPI Snapshot"
+      },
+      {
+        "id": "ART-DOCTYPE-00084",
+        "type": "DOCTYPE",
+        "label": "SMRITI Sales Target"
+      },
+      {
+        "id": "ART-DOCTYPE-00085",
+        "type": "DOCTYPE",
+        "label": "SMRITI Saved View"
+      },
+      {
+        "id": "ART-DOCTYPE-00086",
+        "type": "DOCTYPE",
+        "label": "SMRITI SFM Settings"
+      },
+      {
+        "id": "ART-DOCTYPE-00087",
+        "type": "DOCTYPE",
+        "label": "SMRITI SKU Twin"
+      },
+      {
+        "id": "ART-DOCTYPE-00088",
+        "type": "DOCTYPE",
+        "label": "SMRITI Store"
+      },
+      {
+        "id": "ART-DOCTYPE-00089",
+        "type": "DOCTYPE",
+        "label": "SMRITI Sub Category"
+      },
+      {
+        "id": "ART-DOCTYPE-00660",
+        "type": "DOCTYPE",
+        "label": "SMRITI Tally Settings"
+      },
+      {
+        "id": "ART-DOCTYPE-00661",
+        "type": "DOCTYPE",
+        "label": "SMRITI Tally Sync Log"
+      },
+      {
+        "id": "ART-DOCTYPE-00659",
+        "type": "DOCTYPE",
+        "label": "SMRITI Telemetry Event Definition"
+      },
+      {
+        "id": "ART-DOCTYPE-00090",
+        "type": "DOCTYPE",
+        "label": "SMRITI Trial Activation"
+      },
+      {
+        "id": "ART-DOCTYPE-00091",
+        "type": "DOCTYPE",
+        "label": "SMRITI Trial Checklist"
+      },
+      {
+        "id": "ART-DOCTYPE-00092",
+        "type": "DOCTYPE",
+        "label": "SMRITI Trial Lead"
+      },
+      {
+        "id": "ART-DOCTYPE-00093",
+        "type": "DOCTYPE",
+        "label": "SMRITI Trial Settings"
+      },
+      {
+        "id": "ART-DOCTYPE-00670",
+        "type": "DOCTYPE",
+        "label": "SMRITI UIE Credential"
+      },
+      {
+        "id": "ART-DOCTYPE-00671",
+        "type": "DOCTYPE",
+        "label": "SMRITI UIE Endpoint"
+      },
+      {
+        "id": "ART-DOCTYPE-00672",
+        "type": "DOCTYPE",
+        "label": "SMRITI UIE Integration"
+      },
+      {
+        "id": "ART-DOCTYPE-00673",
+        "type": "DOCTYPE",
+        "label": "SMRITI UIE Sync Log"
+      },
+      {
+        "id": "ART-DOCTYPE-00674",
+        "type": "DOCTYPE",
+        "label": "SMRITI UIE Sync Queue"
+      },
+      {
+        "id": "ART-DOCTYPE-00094",
+        "type": "DOCTYPE",
+        "label": "SMRITI Upper Material"
+      },
+      {
+        "id": "ART-DOCTYPE-00095",
+        "type": "DOCTYPE",
+        "label": "SMRITI Walk In Analytics"
+      },
+      {
+        "id": "ART-DOCTYPE-00096",
+        "type": "DOCTYPE",
+        "label": "SMRITI Walk In Visit"
+      },
+      {
+        "id": "ART-DOCTYPE-00097",
+        "type": "DOCTYPE",
+        "label": "SMRITI Wallet Ledger"
+      },
+      {
+        "id": "ART-DOCTYPE-00098",
+        "type": "DOCTYPE",
+        "label": "SMRITI Wallet Reconciliation Snapshot"
+      },
+      {
+        "id": "ART-FIELD-00134",
+        "type": "FIELD",
+        "label": "SMRITI Company Settings.custom_business_type"
+      },
+      {
+        "id": "ART-FIELD-00626",
+        "type": "FIELD",
+        "label": "SMRITI Company Settings.custom_discount_mode"
+      },
+      {
+        "id": "ART-FIELD-00627",
+        "type": "FIELD",
+        "label": "SMRITI Company Settings.custom_enable_bill_sales_person"
+      },
+      {
+        "id": "ART-FIELD-00628",
+        "type": "FIELD",
+        "label": "SMRITI Company Settings.custom_enable_item_sales_person"
+      },
+      {
+        "id": "ART-FIELD-00629",
+        "type": "FIELD",
+        "label": "SMRITI Company Settings.custom_allow_item_sales_person_override"
+      },
+      {
+        "id": "ART-FIELD-00630",
+        "type": "FIELD",
+        "label": "SMRITI Company Settings.custom_mandatory_discount_reason"
+      },
+      {
+        "id": "ART-FIELD-00631",
+        "type": "FIELD",
+        "label": "SMRITI Company Settings.custom_discount_approval_limit"
+      },
+      {
+        "id": "ART-FIELD-00632",
+        "type": "FIELD",
+        "label": "SMRITI Company Settings.custom_max_offline_cashier_discount"
+      },
+      {
+        "id": "ART-FIELD-00135",
+        "type": "FIELD",
+        "label": "SMRITI Company Settings.custom_print_profiles_json"
+      },
+      {
+        "id": "ART-FIELD-00136",
+        "type": "FIELD",
+        "label": "SMRITI Company Settings.default_printer_ip"
+      },
+      {
+        "id": "ART-FIELD-00137",
+        "type": "FIELD",
+        "label": "SMRITI Company Settings.default_printer_port"
+      },
+      {
+        "id": "ART-FIELD-00138",
+        "type": "FIELD",
+        "label": "SMRITI Company Settings.default_printer_lang"
+      },
+      {
+        "id": "ART-FIELD-00139",
+        "type": "FIELD",
+        "label": "SMRITI Company Settings.default_label_size"
+      },
+      {
+        "id": "ART-FIELD-00140",
+        "type": "FIELD",
+        "label": "User.custom_is_smriti_user"
+      },
+      {
+        "id": "ART-FIELD-00141",
+        "type": "FIELD",
+        "label": "User.custom_smriti_pin"
+      },
+      {
+        "id": "ART-FIELD-00142",
+        "type": "FIELD",
+        "label": "Loyalty Point Entry.remaining_points"
+      },
+      {
+        "id": "ART-FIELD-00143",
+        "type": "FIELD",
+        "label": "POS Invoice.custom_is_held"
+      },
+      {
+        "id": "ART-FIELD-00144",
+        "type": "FIELD",
+        "label": "POS Invoice.custom_held_by"
+      },
+      {
+        "id": "ART-FIELD-00145",
+        "type": "FIELD",
+        "label": "POS Invoice.custom_hold_time"
+      },
+      {
+        "id": "ART-FIELD-00146",
+        "type": "FIELD",
+        "label": "POS Invoice.custom_billing_session_id"
+      },
+      {
+        "id": "ART-FIELD-00633",
+        "type": "FIELD",
+        "label": "POS Invoice.custom_business_display_number"
+      },
+      {
+        "id": "ART-FIELD-00147",
+        "type": "FIELD",
+        "label": "POS Invoice.custom_wallet_deduction"
+      },
+      {
+        "id": "ART-FIELD-00148",
+        "type": "FIELD",
+        "label": "POS Invoice.custom_loyalty_points_earned"
+      },
+      {
+        "id": "ART-FIELD-00149",
+        "type": "FIELD",
+        "label": "POS Invoice.custom_coupon_discount"
+      },
+      {
+        "id": "ART-FIELD-00634",
+        "type": "FIELD",
+        "label": "POS Invoice.custom_sales_person"
+      },
+      {
+        "id": "ART-FIELD-00635",
+        "type": "FIELD",
+        "label": "POS Invoice.custom_discount_reason"
+      },
+      {
+        "id": "ART-FIELD-00150",
+        "type": "FIELD",
+        "label": "Item.custom_mrp"
+      },
+      {
+        "id": "ART-FIELD-00151",
+        "type": "FIELD",
+        "label": "Item.custom_gst_percentage"
+      },
+      {
+        "id": "ART-FIELD-00152",
+        "type": "FIELD",
+        "label": "Item.custom_is_retail_item"
+      },
+      {
+        "id": "ART-FIELD-00153",
+        "type": "FIELD",
+        "label": "Item.custom_department"
+      },
+      {
+        "id": "ART-FIELD-00099",
+        "type": "FIELD",
+        "label": "Item.custom_barcode_size"
+      },
+      {
+        "id": "ART-FIELD-00154",
+        "type": "FIELD",
+        "label": "Item.custom_current_stock_html"
+      },
+      {
+        "id": "ART-FIELD-00155",
+        "type": "FIELD",
+        "label": "Item.custom_purchase_class"
+      },
+      {
+        "id": "ART-FIELD-00156",
+        "type": "FIELD",
+        "label": "Item.custom_merchandise_category"
+      },
+      {
+        "id": "ART-FIELD-00157",
+        "type": "FIELD",
+        "label": "Item.custom_sub_category"
+      },
+      {
+        "id": "ART-FIELD-00158",
+        "type": "FIELD",
+        "label": "Item.custom_gender"
+      },
+      {
+        "id": "ART-FIELD-00159",
+        "type": "FIELD",
+        "label": "Item.custom_upper_material"
+      },
+      {
+        "id": "ART-FIELD-00160",
+        "type": "FIELD",
+        "label": "Item.custom_outsole"
+      },
+      {
+        "id": "ART-FIELD-00161",
+        "type": "FIELD",
+        "label": "Item.custom_heel_type"
+      },
+      {
+        "id": "ART-FIELD-00162",
+        "type": "FIELD",
+        "label": "Item.custom_style_code"
+      },
+      {
+        "id": "ART-FIELD-00163",
+        "type": "FIELD",
+        "label": "Customer.custom_address_text"
+      },
+      {
+        "id": "ART-FIELD-00164",
+        "type": "FIELD",
+        "label": "Customer.custom_shipping_address_text"
+      },
+      {
+        "id": "ART-FIELD-00165",
+        "type": "FIELD",
+        "label": "Customer.custom_tax_inclusive_override"
+      },
+      {
+        "id": "ART-FIELD-00166",
+        "type": "FIELD",
+        "label": "Customer.custom_birthday"
+      },
+      {
+        "id": "ART-FIELD-00167",
+        "type": "FIELD",
+        "label": "Customer.custom_anniversary"
+      },
+      {
+        "id": "ART-FIELD-00168",
+        "type": "FIELD",
+        "label": "Customer.custom_membership_plan"
+      },
+      {
+        "id": "ART-FIELD-00169",
+        "type": "FIELD",
+        "label": "Customer.custom_membership_start_date"
+      },
+      {
+        "id": "ART-FIELD-00170",
+        "type": "FIELD",
+        "label": "Customer.custom_membership_expiry_date"
+      },
+      {
+        "id": "ART-FIELD-00171",
+        "type": "FIELD",
+        "label": "Customer.custom_customer_growth_score"
+      },
+      {
+        "id": "ART-FIELD-00172",
+        "type": "FIELD",
+        "label": "Customer.custom_growth_score_last_calculated"
+      },
+      {
+        "id": "ART-FIELD-00173",
+        "type": "FIELD",
+        "label": "Coupon Code.custom_coupon_scope"
+      },
+      {
+        "id": "ART-FIELD-00174",
+        "type": "FIELD",
+        "label": "Coupon Code.custom_campaign"
+      },
+      {
+        "id": "ART-FIELD-00175",
+        "type": "FIELD",
+        "label": "Coupon Code.custom_max_uses_per_customer"
+      },
+      {
+        "id": "ART-FIELD-00176",
+        "type": "FIELD",
+        "label": "Coupon Code.custom_max_uses_per_mobile"
+      },
+      {
+        "id": "ART-FIELD-00177",
+        "type": "FIELD",
+        "label": "Coupon Code.custom_max_uses_per_day"
+      },
+      {
+        "id": "ART-FIELD-00178",
+        "type": "FIELD",
+        "label": "Coupon Code.custom_max_discount_cap"
+      },
+      {
+        "id": "ART-FIELD-00179",
+        "type": "FIELD",
+        "label": "Supplier.custom_address_text"
+      },
+      {
+        "id": "ART-FIELD-00180",
+        "type": "FIELD",
+        "label": "Supplier.custom_shipping_address_text"
+      },
+      {
+        "id": "ART-FIELD-00181",
+        "type": "FIELD",
+        "label": "Supplier.custom_credit_days"
+      },
+      {
+        "id": "ART-FIELD-00182",
+        "type": "FIELD",
+        "label": "Supplier.custom_vendor_code"
+      },
+      {
+        "id": "ART-FIELD-00183",
+        "type": "FIELD",
+        "label": "Delivery Note.custom_party_stock_account"
+      },
+      {
+        "id": "ART-FIELD-00184",
+        "type": "FIELD",
+        "label": "Stock Entry.custom_party_stock_account"
+      },
+      {
+        "id": "ART-FIELD-00185",
+        "type": "FIELD",
+        "label": "Sales Invoice.custom_sizewise_json"
+      },
+      {
+        "id": "ART-FIELD-00186",
+        "type": "FIELD",
+        "label": "Sales Invoice.custom_billing_session_id"
+      },
+      {
+        "id": "ART-FIELD-00636",
+        "type": "FIELD",
+        "label": "Sales Invoice.custom_business_display_number"
+      },
+      {
+        "id": "ART-FIELD-00187",
+        "type": "FIELD",
+        "label": "Sales Invoice.custom_party_stock_account"
+      },
+      {
+        "id": "ART-FIELD-00188",
+        "type": "FIELD",
+        "label": "Sales Invoice.custom_wallet_deduction"
+      },
+      {
+        "id": "ART-FIELD-00189",
+        "type": "FIELD",
+        "label": "Sales Invoice.custom_loyalty_points_earned"
+      },
+      {
+        "id": "ART-FIELD-00190",
+        "type": "FIELD",
+        "label": "Sales Invoice.custom_coupon_discount"
+      },
+      {
+        "id": "ART-FIELD-00637",
+        "type": "FIELD",
+        "label": "Sales Invoice.custom_sales_person"
+      },
+      {
+        "id": "ART-FIELD-00638",
+        "type": "FIELD",
+        "label": "Sales Invoice.custom_discount_reason"
+      },
+      {
+        "id": "ART-FIELD-00639",
+        "type": "FIELD",
+        "label": "Sales Invoice Item.custom_sales_person"
+      },
+      {
+        "id": "ART-FIELD-00640",
+        "type": "FIELD",
+        "label": "Sales Invoice Item.custom_discount_reason"
+      },
+      {
+        "id": "ART-FIELD-00641",
+        "type": "FIELD",
+        "label": "POS Invoice Item.custom_sales_person"
+      },
+      {
+        "id": "ART-FIELD-00642",
+        "type": "FIELD",
+        "label": "POS Invoice Item.custom_discount_reason"
+      },
+      {
+        "id": "ART-FIELD-00191",
+        "type": "FIELD",
+        "label": "Company.custom_smriti_store_type"
+      },
+      {
+        "id": "ART-FIELD-00192",
+        "type": "FIELD",
+        "label": "Company.custom_smriti_gstin_state"
+      },
+      {
+        "id": "ART-FIELD-00193",
+        "type": "FIELD",
+        "label": "Company.custom_smriti_settings_configured"
+      },
+      {
+        "id": "ART-FIELD-00100",
+        "type": "FIELD",
+        "label": "Item Barcode.custom_is_primary"
+      },
+      {
+        "id": "ART-API-00194",
+        "type": "API",
+        "label": "get_settings"
+      },
+      {
+        "id": "ART-API-00195",
+        "type": "API",
+        "label": "save_settings"
+      },
+      {
+        "id": "ART-API-00196",
+        "type": "API",
+        "label": "get_backup_status"
+      },
+      {
+        "id": "ART-API-00197",
+        "type": "API",
+        "label": "get_backup_history"
+      },
+      {
+        "id": "ART-API-00198",
+        "type": "API",
+        "label": "export_site_config"
+      },
+      {
+        "id": "ART-API-00199",
+        "type": "API",
+        "label": "run_smtp_password_migration"
+      },
+      {
+        "id": "ART-API-00200",
+        "type": "API",
+        "label": "verify_custodian_emails"
+      },
+      {
+        "id": "ART-API-00201",
+        "type": "API",
+        "label": "send_recovery_key"
+      },
+      {
+        "id": "ART-API-00202",
+        "type": "API",
+        "label": "get_encryption_status"
+      },
+      {
+        "id": "ART-API-00203",
+        "type": "API",
+        "label": "confirm_custodian_otp"
+      },
+      {
+        "id": "ART-API-00204",
+        "type": "API",
+        "label": "rotate_encryption_key"
+      },
+      {
+        "id": "ART-API-00205",
+        "type": "API",
+        "label": "take_backup_now"
+      },
+      {
+        "id": "ART-API-00206",
+        "type": "API",
+        "label": "delete_backup"
+      },
+      {
+        "id": "ART-API-00207",
+        "type": "API",
+        "label": "restore_backup"
+      },
+      {
+        "id": "ART-API-00101",
+        "type": "API",
+        "label": "get_barcode_filters"
+      },
+      {
+        "id": "ART-API-00102",
+        "type": "API",
+        "label": "get_print_templates"
+      },
+      {
+        "id": "ART-API-00103",
+        "type": "API",
+        "label": "expand_item_variants"
+      },
+      {
+        "id": "ART-API-00104",
+        "type": "API",
+        "label": "get_transaction_items_checklist"
+      },
+      {
+        "id": "ART-API-00105",
+        "type": "API",
+        "label": "get_items_by_range"
+      },
+      {
+        "id": "ART-API-00106",
+        "type": "API",
+        "label": "get_items_for_printing"
+      },
+      {
+        "id": "ART-API-00107",
+        "type": "API",
+        "label": "generate_prn"
+      },
+      {
+        "id": "ART-API-00108",
+        "type": "API",
+        "label": "send_to_network_printer"
+      },
+      {
+        "id": "ART-API-00109",
+        "type": "API",
+        "label": "get_field_mapping_reference"
+      },
+      {
+        "id": "ART-API-00110",
+        "type": "API",
+        "label": "get_recent_transactions"
+      },
+      {
+        "id": "ART-API-00111",
+        "type": "API",
+        "label": "test_printer_connection"
+      },
+      {
+        "id": "ART-API-00112",
+        "type": "API",
+        "label": "print_test_label"
+      },
+      {
+        "id": "ART-API-00113",
+        "type": "API",
+        "label": "log_print_job"
+      },
+      {
+        "id": "ART-API-00114",
+        "type": "API",
+        "label": "get_print_analytics"
+      },
+      {
+        "id": "ART-API-00115",
+        "type": "API",
+        "label": "get_template_usage_stats"
+      },
+      {
+        "id": "ART-API-00116",
+        "type": "API",
+        "label": "get_print_profiles"
+      },
+      {
+        "id": "ART-API-00117",
+        "type": "API",
+        "label": "save_print_profile"
+      },
+      {
+        "id": "ART-API-00118",
+        "type": "API",
+        "label": "delete_print_profile"
+      },
+      {
+        "id": "ART-API-00119",
+        "type": "API",
+        "label": "save_print_template"
+      },
+      {
+        "id": "ART-API-00120",
+        "type": "API",
+        "label": "delete_print_template"
+      },
+      {
+        "id": "ART-API-00121",
+        "type": "API",
+        "label": "search_barcode_items"
+      },
+      {
+        "id": "ART-API-00122",
+        "type": "API",
+        "label": "enqueue_print_job"
+      },
+      {
+        "id": "ART-API-00123",
+        "type": "API",
+        "label": "_process_print_job"
+      },
+      {
+        "id": "ART-API-00124",
+        "type": "API",
+        "label": "get_print_job_status"
+      },
+      {
+        "id": "ART-API-00125",
+        "type": "API",
+        "label": "retry_print_job"
+      },
+      {
+        "id": "ART-API-00126",
+        "type": "API",
+        "label": "get_recent_print_jobs"
+      },
+      {
+        "id": "ART-API-00127",
+        "type": "API",
+        "label": "get_print_template_versions"
+      },
+      {
+        "id": "ART-API-00128",
+        "type": "API",
+        "label": "restore_print_template_version"
+      },
+      {
+        "id": "ART-API-00129",
+        "type": "API",
+        "label": "validate_layout_diagnostics"
+      },
+      {
+        "id": "ART-API-00130",
+        "type": "API",
+        "label": "cleanup_old_print_jobs"
+      },
+      {
+        "id": "ART-API-00131",
+        "type": "API",
+        "label": "get_barcode_feature_flags"
+      },
+      {
+        "id": "ART-API-00132",
+        "type": "API",
+        "label": "log_barcode_scan_event"
+      },
+      {
+        "id": "ART-API-00133",
+        "type": "API",
+        "label": "aggregate_scan_telemetry"
+      },
+      {
+        "id": "ART-API-00208",
+        "type": "API",
+        "label": "add_item_by_barcode"
+      },
+      {
+        "id": "ART-API-00209",
+        "type": "API",
+        "label": "search_customer"
+      },
+      {
+        "id": "ART-API-00210",
+        "type": "API",
+        "label": "hold_bill"
+      },
+      {
+        "id": "ART-API-00211",
+        "type": "API",
+        "label": "recall_bill"
+      },
+      {
+        "id": "ART-API-00212",
+        "type": "API",
+        "label": "submit_bill"
+      },
+      {
+        "id": "ART-API-00213",
+        "type": "API",
+        "label": "search_items"
+      },
+      {
+        "id": "ART-API-00214",
+        "type": "API",
+        "label": "load_held_invoice"
+      },
+      {
+        "id": "ART-API-00215",
+        "type": "API",
+        "label": "validate_manager_override"
+      },
+      {
+        "id": "ART-API-00216",
+        "type": "API",
+        "label": "generate_mock_eway_bill"
+      },
+      {
+        "id": "ART-API-00217",
+        "type": "API",
+        "label": "create_return_invoice"
+      },
+      {
+        "id": "ART-API-00218",
+        "type": "API",
+        "label": "create_custom_sales_return"
+      },
+      {
+        "id": "ART-API-00219",
+        "type": "API",
+        "label": "update_sales_return"
+      },
+      {
+        "id": "ART-API-00220",
+        "type": "API",
+        "label": "delete_sales_return"
+      },
+      {
+        "id": "ART-API-00221",
+        "type": "API",
+        "label": "get_smriti_session_info"
+      },
+      {
+        "id": "ART-API-00222",
+        "type": "API",
+        "label": "health_check"
+      },
+      {
+        "id": "ART-API-00223",
+        "type": "API",
+        "label": "get_versions"
+      },
+      {
+        "id": "ART-API-00224",
+        "type": "API",
+        "label": "get_business_type"
+      },
+      {
+        "id": "ART-API-00225",
+        "type": "API",
+        "label": "list_companies"
+      },
+      {
+        "id": "ART-API-00226",
+        "type": "API",
+        "label": "get_company_settings"
+      },
+      {
+        "id": "ART-API-00227",
+        "type": "API",
+        "label": "save_company_settings"
+      },
+      {
+        "id": "ART-API-00228",
+        "type": "API",
+        "label": "get_store_address"
+      },
+      {
+        "id": "ART-API-00229",
+        "type": "API",
+        "label": "save_store_address"
+      },
+      {
+        "id": "ART-API-00230",
+        "type": "API",
+        "label": "create_company"
+      },
+      {
+        "id": "ART-API-00231",
+        "type": "API",
+        "label": "update_company"
+      },
+      {
+        "id": "ART-API-00232",
+        "type": "API",
+        "label": "delete_company"
+      },
+      {
+        "id": "ART-API-00233",
+        "type": "API",
+        "label": "get_item_attributes"
+      },
+      {
+        "id": "ART-API-00234",
+        "type": "API",
+        "label": "save_item_attributes"
+      },
+      {
+        "id": "ART-API-00235",
+        "type": "API",
+        "label": "reset_item_attributes"
+      },
+      {
+        "id": "ART-API-00236",
+        "type": "API",
+        "label": "scan_item_for_inventory"
+      },
+      {
+        "id": "ART-API-00237",
+        "type": "API",
+        "label": "create_grn"
+      },
+      {
+        "id": "ART-API-00238",
+        "type": "API",
+        "label": "create_stock_transfer"
+      },
+      {
+        "id": "ART-API-00239",
+        "type": "API",
+        "label": "create_stock_adjustment"
+      },
+      {
+        "id": "ART-API-00240",
+        "type": "API",
+        "label": "create_stock_audit"
+      },
+      {
+        "id": "ART-API-00241",
+        "type": "API",
+        "label": "get_stock_summary"
+      },
+      {
+        "id": "ART-API-00242",
+        "type": "API",
+        "label": "reset_db"
+      },
+      {
+        "id": "ART-API-00243",
+        "type": "API",
+        "label": "get_import_column_defs"
+      },
+      {
+        "id": "ART-API-00244",
+        "type": "API",
+        "label": "get_import_template_headers"
+      },
+      {
+        "id": "ART-API-00245",
+        "type": "API",
+        "label": "get_hsn_gst_rate"
+      },
+      {
+        "id": "ART-API-00246",
+        "type": "API",
+        "label": "validate_import_rows"
+      },
+      {
+        "id": "ART-API-00247",
+        "type": "API",
+        "label": "import_item_master"
+      },
+      {
+        "id": "ART-API-00248",
+        "type": "API",
+        "label": "generate_ean13_barcode"
+      },
+      {
+        "id": "ART-API-00249",
+        "type": "API",
+        "label": "get_style_details"
+      },
+      {
+        "id": "ART-API-00250",
+        "type": "API",
+        "label": "create_style_with_variants"
+      },
+      {
+        "id": "ART-API-00251",
+        "type": "API",
+        "label": "delete_size_variant"
+      },
+      {
+        "id": "ART-API-00252",
+        "type": "API",
+        "label": "delete_style_and_variants"
+      },
+      {
+        "id": "ART-API-00253",
+        "type": "API",
+        "label": "validate_pivot_values"
+      },
+      {
+        "id": "ART-API-00254",
+        "type": "API",
+        "label": "import_pivot_item_master"
+      },
+      {
+        "id": "ART-API-00255",
+        "type": "API",
+        "label": "reset_all_transactions"
+      },
+      {
+        "id": "ART-API-00256",
+        "type": "API",
+        "label": "reset_all_items"
+      },
+      {
+        "id": "ART-API-00257",
+        "type": "API",
+        "label": "get_items_missing_barcodes"
+      },
+      {
+        "id": "ART-API-00258",
+        "type": "API",
+        "label": "get_loyalty_details"
+      },
+      {
+        "id": "ART-API-00259",
+        "type": "API",
+        "label": "get_loyalty_schemes"
+      },
+      {
+        "id": "ART-API-00260",
+        "type": "API",
+        "label": "save_loyalty_scheme"
+      },
+      {
+        "id": "ART-API-00261",
+        "type": "API",
+        "label": "enroll_customer"
+      },
+      {
+        "id": "ART-API-00262",
+        "type": "API",
+        "label": "quick_create_item"
+      },
+      {
+        "id": "ART-API-00263",
+        "type": "API",
+        "label": "quick_create_customer"
+      },
+      {
+        "id": "ART-API-00264",
+        "type": "API",
+        "label": "quick_create_supplier"
+      },
+      {
+        "id": "ART-API-00265",
+        "type": "API",
+        "label": "save_supplier_on_fly"
+      },
+      {
+        "id": "ART-API-00266",
+        "type": "API",
+        "label": "get_customer_detail"
+      },
+      {
+        "id": "ART-API-00267",
+        "type": "API",
+        "label": "get_supplier_detail"
+      },
+      {
+        "id": "ART-API-00268",
+        "type": "API",
+        "label": "save_supplier_detail"
+      },
+      {
+        "id": "ART-API-00269",
+        "type": "API",
+        "label": "save_customer_detail"
+      },
+      {
+        "id": "ART-API-00270",
+        "type": "API",
+        "label": "get_size_groups"
+      },
+      {
+        "id": "ART-API-00271",
+        "type": "API",
+        "label": "save_size_groups"
+      },
+      {
+        "id": "ART-API-00272",
+        "type": "API",
+        "label": "get_destinationwise_taxes"
+      },
+      {
+        "id": "ART-API-00273",
+        "type": "API",
+        "label": "save_destinationwise_taxes"
+      },
+      {
+        "id": "ART-API-00274",
+        "type": "API",
+        "label": "get_item_tax_templates"
+      },
+      {
+        "id": "ART-API-00275",
+        "type": "API",
+        "label": "create_item_tax_template"
+      },
+      {
+        "id": "ART-API-00276",
+        "type": "API",
+        "label": "get_brands"
+      },
+      {
+        "id": "ART-API-00277",
+        "type": "API",
+        "label": "create_brand"
+      },
+      {
+        "id": "ART-API-00278",
+        "type": "API",
+        "label": "delete_brand"
+      },
+      {
+        "id": "ART-API-00279",
+        "type": "API",
+        "label": "get_tax_accounts"
+      },
+      {
+        "id": "ART-API-00280",
+        "type": "API",
+        "label": "get_system_health"
+      },
+      {
+        "id": "ART-API-00281",
+        "type": "API",
+        "label": "get_backup_history"
+      },
+      {
+        "id": "ART-API-00282",
+        "type": "API",
+        "label": "trigger_backup"
+      },
+      {
+        "id": "ART-API-00283",
+        "type": "API",
+        "label": "run_migration_action"
+      },
+      {
+        "id": "ART-API-00284",
+        "type": "API",
+        "label": "get_diagnostics"
+      },
+      {
+        "id": "ART-API-00285",
+        "type": "API",
+        "label": "run_repair"
+      },
+      {
+        "id": "ART-API-00286",
+        "type": "API",
+        "label": "toggle_maintenance_mode"
+      },
+      {
+        "id": "ART-API-00287",
+        "type": "API",
+        "label": "get_backup_summary"
+      },
+      {
+        "id": "ART-API-00288",
+        "type": "API",
+        "label": "execute_restore"
+      },
+      {
+        "id": "ART-API-00289",
+        "type": "API",
+        "label": "get_redistribution_suggestions"
+      },
+      {
+        "id": "ART-API-00290",
+        "type": "API",
+        "label": "get_channel_health_score"
+      },
+      {
+        "id": "ART-API-00291",
+        "type": "API",
+        "label": "get_sellin_sellout_summary"
+      },
+      {
+        "id": "ART-API-00292",
+        "type": "API",
+        "label": "get_stock_cover_risks"
+      },
+      {
+        "id": "ART-API-00293",
+        "type": "API",
+        "label": "get_channel_stock_trend"
+      },
+      {
+        "id": "ART-API-00294",
+        "type": "API",
+        "label": "get_inventory_productivity_metrics"
+      },
+      {
+        "id": "ART-API-00295",
+        "type": "API",
+        "label": "get_inventory_productivity_methodology"
+      },
+      {
+        "id": "ART-API-00296",
+        "type": "API",
+        "label": "get_dashboard_summary"
+      },
+      {
+        "id": "ART-API-00297",
+        "type": "API",
+        "label": "get_party_balance_detail"
+      },
+      {
+        "id": "ART-API-00298",
+        "type": "API",
+        "label": "get_reorder_dashboard_data"
+      },
+      {
+        "id": "ART-API-00299",
+        "type": "API",
+        "label": "create_psa"
+      },
+      {
+        "id": "ART-API-00300",
+        "type": "API",
+        "label": "update_psa"
+      },
+      {
+        "id": "ART-API-00301",
+        "type": "API",
+        "label": "get_psa"
+      },
+      {
+        "id": "ART-API-00302",
+        "type": "API",
+        "label": "list_psas"
+      },
+      {
+        "id": "ART-API-00303",
+        "type": "API",
+        "label": "upload_sell_through"
+      },
+      {
+        "id": "ART-API-00304",
+        "type": "API",
+        "label": "fetch_channel_balance"
+      },
+      {
+        "id": "ART-API-00305",
+        "type": "API",
+        "label": "get_psv_health"
+      },
+      {
+        "id": "ART-API-00306",
+        "type": "API",
+        "label": "create_reversal_entry"
+      },
+      {
+        "id": "ART-API-00307",
+        "type": "API",
+        "label": "migrate_to_new_psv_partner"
+      },
+      {
+        "id": "ART-API-00308",
+        "type": "API",
+        "label": "process_opening_balance"
+      },
+      {
+        "id": "ART-API-00309",
+        "type": "API",
+        "label": "get_landing_cost"
+      },
+      {
+        "id": "ART-API-00310",
+        "type": "API",
+        "label": "generate_snapshots"
+      },
+      {
+        "id": "ART-API-00311",
+        "type": "API",
+        "label": "get_open_purchase_orders"
+      },
+      {
+        "id": "ART-API-00312",
+        "type": "API",
+        "label": "get_po_details"
+      },
+      {
+        "id": "ART-API-00313",
+        "type": "API",
+        "label": "create_purchase_order"
+      },
+      {
+        "id": "ART-API-00314",
+        "type": "API",
+        "label": "create_purchase_receipt"
+      },
+      {
+        "id": "ART-API-00315",
+        "type": "API",
+        "label": "create_purchase_return"
+      },
+      {
+        "id": "ART-API-00316",
+        "type": "API",
+        "label": "get_sales_report"
+      },
+      {
+        "id": "ART-API-00317",
+        "type": "API",
+        "label": "get_stock_report"
+      },
+      {
+        "id": "ART-API-00318",
+        "type": "API",
+        "label": "get_gst_report"
+      },
+      {
+        "id": "ART-API-00319",
+        "type": "API",
+        "label": "get_outstanding_report"
+      },
+      {
+        "id": "ART-API-00320",
+        "type": "API",
+        "label": "get_quick_stats"
+      },
+      {
+        "id": "ART-API-00321",
+        "type": "API",
+        "label": "get_sales_return_register"
+      },
+      {
+        "id": "ART-API-00322",
+        "type": "API",
+        "label": "get_purchase_return_register"
+      },
+      {
+        "id": "ART-API-00323",
+        "type": "API",
+        "label": "get_gstr1_9b_report"
+      },
+      {
+        "id": "ART-API-00324",
+        "type": "API",
+        "label": "get_deadline_alerts"
+      },
+      {
+        "id": "ART-API-00325",
+        "type": "API",
+        "label": "get_smriti_report_data"
+      },
+      {
+        "id": "ART-API-00326",
+        "type": "API",
+        "label": "save_smriti_saved_view"
+      },
+      {
+        "id": "ART-API-00327",
+        "type": "API",
+        "label": "get_smriti_saved_views"
+      },
+      {
+        "id": "ART-API-00328",
+        "type": "API",
+        "label": "delete_smriti_saved_view"
+      },
+      {
+        "id": "ART-API-00329",
+        "type": "API",
+        "label": "get_smriti_reports_list"
+      },
+      {
+        "id": "ART-API-00330",
+        "type": "API",
+        "label": "get_smriti_warehouses"
+      },
+      {
+        "id": "ART-API-00331",
+        "type": "API",
+        "label": "get_smriti_item_groups"
+      },
+      {
+        "id": "ART-API-00332",
+        "type": "API",
+        "label": "get_smriti_brands"
+      },
+      {
+        "id": "ART-API-00333",
+        "type": "API",
+        "label": "get_smriti_salespersons"
+      },
+      {
+        "id": "ART-API-00334",
+        "type": "API",
+        "label": "get_smriti_cashiers"
+      },
+      {
+        "id": "ART-API-00335",
+        "type": "API",
+        "label": "export_smriti_report"
+      },
+      {
+        "id": "ART-API-00336",
+        "type": "API",
+        "label": "get_report_glossary"
+      },
+      {
+        "id": "ART-API-00337",
+        "type": "API",
+        "label": "get_open_sales_orders"
+      },
+      {
+        "id": "ART-API-00338",
+        "type": "API",
+        "label": "get_so_details"
+      },
+      {
+        "id": "ART-API-00339",
+        "type": "API",
+        "label": "create_sales_order"
+      },
+      {
+        "id": "ART-API-00340",
+        "type": "API",
+        "label": "list_users"
+      },
+      {
+        "id": "ART-API-00341",
+        "type": "API",
+        "label": "save_user"
+      },
+      {
+        "id": "ART-API-00342",
+        "type": "API",
+        "label": "set_user_status"
+      },
+      {
+        "id": "ART-API-00343",
+        "type": "API",
+        "label": "reset_user_password"
+      },
+      {
+        "id": "ART-API-00344",
+        "type": "API",
+        "label": "set_user_pin"
+      },
+      {
+        "id": "ART-API-00345",
+        "type": "API",
+        "label": "clear_user_pin"
+      },
+      {
+        "id": "ART-API-00346",
+        "type": "API",
+        "label": "get_user_metrics"
+      },
+      {
+        "id": "ART-API-00347",
+        "type": "API",
+        "label": "list_roles"
+      },
+      {
+        "id": "ART-API-00348",
+        "type": "API",
+        "label": "create_role"
+      },
+      {
+        "id": "ART-API-00349",
+        "type": "API",
+        "label": "delete_role"
+      },
+      {
+        "id": "ART-API-00350",
+        "type": "API",
+        "label": "list_role_profiles"
+      },
+      {
+        "id": "ART-API-00351",
+        "type": "API",
+        "label": "save_role_profile"
+      },
+      {
+        "id": "ART-API-00352",
+        "type": "API",
+        "label": "delete_role_profile"
+      },
+      {
+        "id": "ART-API-00353",
+        "type": "API",
+        "label": "list_user_permissions"
+      },
+      {
+        "id": "ART-API-00354",
+        "type": "API",
+        "label": "add_user_permission"
+      },
+      {
+        "id": "ART-API-00355",
+        "type": "API",
+        "label": "remove_user_permission"
+      },
+      {
+        "id": "ART-API-00356",
+        "type": "API",
+        "label": "list_workflows"
+      },
+      {
+        "id": "ART-API-00357",
+        "type": "API",
+        "label": "get_workflow_details"
+      },
+      {
+        "id": "ART-API-00358",
+        "type": "API",
+        "label": "save_workflow"
+      },
+      {
+        "id": "ART-API-00359",
+        "type": "API",
+        "label": "delete_workflow"
+      },
+      {
+        "id": "ART-API-00360",
+        "type": "API",
+        "label": "list_workflow_states"
+      },
+      {
+        "id": "ART-API-00361",
+        "type": "API",
+        "label": "save_workflow_state"
+      },
+      {
+        "id": "ART-API-00362",
+        "type": "API",
+        "label": "get_pending_approvals"
+      },
+      {
+        "id": "ART-API-00363",
+        "type": "API",
+        "label": "apply_workflow_action"
+      },
+      {
+        "id": "ART-API-00364",
+        "type": "API",
+        "label": "verify_user_password"
+      },
+      {
+        "id": "ART-API-00365",
+        "type": "API",
+        "label": "get_managers_list"
+      },
+      {
+        "id": "ART-API-00366",
+        "type": "API",
+        "label": "get_setup_wizard_initial_data"
+      },
+      {
+        "id": "ART-API-00367",
+        "type": "API",
+        "label": "run_setup_wizard"
+      },
+      {
+        "id": "ART-API-00368",
+        "type": "API",
+        "label": "open_shift"
+      },
+      {
+        "id": "ART-API-00369",
+        "type": "API",
+        "label": "get_active_shift"
+      },
+      {
+        "id": "ART-API-00370",
+        "type": "API",
+        "label": "get_shift_summary"
+      },
+      {
+        "id": "ART-API-00371",
+        "type": "API",
+        "label": "close_shift"
+      },
+      {
+        "id": "ART-API-00372",
+        "type": "API",
+        "label": "get_pos_profiles"
+      },
+      {
+        "id": "ART-API-00373",
+        "type": "API",
+        "label": "get_payment_modes"
+      },
+      {
+        "id": "ART-API-00374",
+        "type": "API",
+        "label": "get_shift_status"
+      },
+      {
+        "id": "ART-API-00375",
+        "type": "API",
+        "label": "get_company_details"
+      },
+      {
+        "id": "ART-API-00376",
+        "type": "API",
+        "label": "get_customer_details"
+      },
+      {
+        "id": "ART-API-00377",
+        "type": "API",
+        "label": "search_customers"
+      },
+      {
+        "id": "ART-API-00378",
+        "type": "API",
+        "label": "search_items"
+      },
+      {
+        "id": "ART-API-00379",
+        "type": "API",
+        "label": "resolve_barcode"
+      },
+      {
+        "id": "ART-API-00380",
+        "type": "API",
+        "label": "get_item_details_by_article"
+      },
+      {
+        "id": "ART-API-00381",
+        "type": "API",
+        "label": "get_states_list"
+      },
+      {
+        "id": "ART-API-00382",
+        "type": "API",
+        "label": "save_sizewise_invoice"
+      },
+      {
+        "id": "ART-API-00383",
+        "type": "API",
+        "label": "submit_sizewise_invoice"
+      },
+      {
+        "id": "ART-API-00384",
+        "type": "API",
+        "label": "get_sizewise_invoice"
+      },
+      {
+        "id": "ART-API-00385",
+        "type": "API",
+        "label": "list_sizewise_invoices"
+      },
+      {
+        "id": "ART-API-00386",
+        "type": "API",
+        "label": "cancel_sizewise_invoice"
+      },
+      {
+        "id": "ART-API-00387",
+        "type": "API",
+        "label": "get_admin_session_for_pdf"
+      },
+      {
+        "id": "ART-API-00388",
+        "type": "API",
+        "label": "get_pdt_column_map"
+      },
+      {
+        "id": "ART-API-00389",
+        "type": "API",
+        "label": "preview_pdt_import"
+      },
+      {
+        "id": "ART-API-00390",
+        "type": "API",
+        "label": "execute_smriti_transaction"
+      },
+      {
+        "id": "ART-API-00391",
+        "type": "API",
+        "label": "resolve_identifiers"
+      },
+      {
+        "id": "ART-API-00392",
+        "type": "API",
+        "label": "apply_pricing_rules"
+      },
+      {
+        "id": "ART-API-00393",
+        "type": "API",
+        "label": "get_doctype_schema"
+      },
+      {
+        "id": "ART-API-00611",
+        "type": "API",
+        "label": "get_ai_context"
+      },
+      {
+        "id": "ART-API-00612",
+        "type": "API",
+        "label": "ask_smriti_ai"
+      },
+      {
+        "id": "ART-API-00394",
+        "type": "API",
+        "label": "get_dashboard_kpis"
+      },
+      {
+        "id": "ART-API-00395",
+        "type": "API",
+        "label": "get_sales_trend"
+      },
+      {
+        "id": "ART-API-00396",
+        "type": "API",
+        "label": "get_payment_mix"
+      },
+      {
+        "id": "ART-API-00397",
+        "type": "API",
+        "label": "get_top_items"
+      },
+      {
+        "id": "ART-API-00398",
+        "type": "API",
+        "label": "get_cashier_performance"
+      },
+      {
+        "id": "ART-API-00399",
+        "type": "API",
+        "label": "get_outstanding_aging"
+      },
+      {
+        "id": "ART-API-00400",
+        "type": "API",
+        "label": "get_security_events"
+      },
+      {
+        "id": "ART-API-00401",
+        "type": "API",
+        "label": "get_event_detail"
+      },
+      {
+        "id": "ART-API-00402",
+        "type": "API",
+        "label": "get_stats"
+      },
+      {
+        "id": "ART-API-00403",
+        "type": "API",
+        "label": "get_brands"
+      },
+      {
+        "id": "ART-API-00404",
+        "type": "API",
+        "label": "create_brand"
+      },
+      {
+        "id": "ART-API-00405",
+        "type": "API",
+        "label": "update_brand"
+      },
+      {
+        "id": "ART-API-00406",
+        "type": "API",
+        "label": "delete_brand"
+      },
+      {
+        "id": "ART-API-00407",
+        "type": "API",
+        "label": "get_categories"
+      },
+      {
+        "id": "ART-API-00408",
+        "type": "API",
+        "label": "create_category"
+      },
+      {
+        "id": "ART-API-00409",
+        "type": "API",
+        "label": "update_category"
+      },
+      {
+        "id": "ART-API-00410",
+        "type": "API",
+        "label": "delete_category"
+      },
+      {
+        "id": "ART-API-00411",
+        "type": "API",
+        "label": "get_feature_info"
+      },
+      {
+        "id": "ART-API-00412",
+        "type": "API",
+        "label": "get_all_coming_soon"
+      },
+      {
+        "id": "ART-API-00413",
+        "type": "API",
+        "label": "get_active_terms"
+      },
+      {
+        "id": "ART-API-00414",
+        "type": "API",
+        "label": "get_term_detail"
+      },
+      {
+        "id": "ART-API-00415",
+        "type": "API",
+        "label": "get_explain_payload"
+      },
+      {
+        "id": "ART-API-00619",
+        "type": "API",
+        "label": "get_doctype_list"
+      },
+      {
+        "id": "ART-API-00620",
+        "type": "API",
+        "label": "get_doctype_fields"
+      },
+      {
+        "id": "ART-API-00621",
+        "type": "API",
+        "label": "get_document_data"
+      },
+      {
+        "id": "ART-API-00622",
+        "type": "API",
+        "label": "search_fields"
+      },
+      {
+        "id": "ART-API-00623",
+        "type": "API",
+        "label": "get_doctype_tree"
+      },
+      {
+        "id": "ART-API-00624",
+        "type": "API",
+        "label": "resolve_label_preview"
+      },
+      {
+        "id": "ART-API-00625",
+        "type": "API",
+        "label": "get_field_id_registry"
+      },
+      {
+        "id": "ART-API-00416",
+        "type": "API",
+        "label": "get_active_formulas"
+      },
+      {
+        "id": "ART-API-00417",
+        "type": "API",
+        "label": "get_formula_detail"
+      },
+      {
+        "id": "ART-API-00418",
+        "type": "API",
+        "label": "get_checklist"
+      },
+      {
+        "id": "ART-API-00419",
+        "type": "API",
+        "label": "get_help_article"
+      },
+      {
+        "id": "ART-API-00420",
+        "type": "API",
+        "label": "get_help_toc"
+      },
+      {
+        "id": "ART-API-00421",
+        "type": "API",
+        "label": "search_knowledge"
+      },
+      {
+        "id": "ART-API-00422",
+        "type": "API",
+        "label": "rebuild_index_cache"
+      },
+      {
+        "id": "ART-API-00423",
+        "type": "API",
+        "label": "get_governance_data"
+      },
+      {
+        "id": "ART-API-00424",
+        "type": "API",
+        "label": "get_document_registry"
+      },
+      {
+        "id": "ART-API-00425",
+        "type": "API",
+        "label": "get_manual_html"
+      },
+      {
+        "id": "ART-API-00426",
+        "type": "API",
+        "label": "get_knowledge_assets"
+      },
+      {
+        "id": "ART-API-00427",
+        "type": "API",
+        "label": "start_psv_exam"
+      },
+      {
+        "id": "ART-API-00428",
+        "type": "API",
+        "label": "submit_psv_exam"
+      },
+      {
+        "id": "ART-API-00429",
+        "type": "API",
+        "label": "get_psv_exam_status"
+      },
+      {
+        "id": "ART-API-00430",
+        "type": "API",
+        "label": "get_certified_registry"
+      },
+      {
+        "id": "ART-API-00431",
+        "type": "API",
+        "label": "download_psv_certificate"
+      },
+      {
+        "id": "ART-API-00432",
+        "type": "API",
+        "label": "verify_psv_certificate"
+      },
+      {
+        "id": "ART-API-00433",
+        "type": "API",
+        "label": "download_enablement_file"
+      },
+      {
+        "id": "ART-API-00607",
+        "type": "API",
+        "label": "query_ske"
+      },
+      {
+        "id": "ART-API-00608",
+        "type": "API",
+        "label": "get_knowledge_studio_counts"
+      },
+      {
+        "id": "ART-API-00609",
+        "type": "API",
+        "label": "explain_screen_by_route"
+      },
+      {
+        "id": "ART-API-00610",
+        "type": "API",
+        "label": "get_ske_meta"
+      },
+      {
+        "id": "ART-API-00614",
+        "type": "API",
+        "label": "log_telemetry_event"
+      },
+      {
+        "id": "ART-API-00615",
+        "type": "API",
+        "label": "get_telemetry_logs"
+      },
+      {
+        "id": "ART-API-00616",
+        "type": "API",
+        "label": "trigger_telemetry_cleanup"
+      },
+      {
+        "id": "ART-API-00617",
+        "type": "API",
+        "label": "get_explainable_health"
+      },
+      {
+        "id": "ART-API-00618",
+        "type": "API",
+        "label": "get_collections"
+      },
+      {
+        "id": "ART-API-00434",
+        "type": "API",
+        "label": "get_license_status"
+      },
+      {
+        "id": "ART-API-00435",
+        "type": "API",
+        "label": "activate_license"
+      },
+      {
+        "id": "ART-API-00436",
+        "type": "API",
+        "label": "sync_from_company"
+      },
+      {
+        "id": "ART-API-00437",
+        "type": "API",
+        "label": "get_feature_entitlements"
+      },
+      {
+        "id": "ART-API-00438",
+        "type": "API",
+        "label": "get_activity_log"
+      },
+      {
+        "id": "ART-API-00439",
+        "type": "API",
+        "label": "get_validation_history"
+      },
+      {
+        "id": "ART-API-00440",
+        "type": "API",
+        "label": "check_feature_access"
+      },
+      {
+        "id": "ART-API-00441",
+        "type": "API",
+        "label": "generate_test_key"
+      },
+      {
+        "id": "ART-API-00442",
+        "type": "API",
+        "label": "get_payments"
+      },
+      {
+        "id": "ART-API-00443",
+        "type": "API",
+        "label": "get_payment_detail"
+      },
+      {
+        "id": "ART-API-00444",
+        "type": "API",
+        "label": "create_payment"
+      },
+      {
+        "id": "ART-API-00445",
+        "type": "API",
+        "label": "get_outstanding_invoices"
+      },
+      {
+        "id": "ART-API-00446",
+        "type": "API",
+        "label": "get_parties"
+      },
+      {
+        "id": "ART-API-00447",
+        "type": "API",
+        "label": "get_modes_of_payment"
+      },
+      {
+        "id": "ART-API-00448",
+        "type": "API",
+        "label": "get_twin_status"
+      },
+      {
+        "id": "ART-API-00449",
+        "type": "API",
+        "label": "trigger_rebuild"
+      },
+      {
+        "id": "ART-API-00450",
+        "type": "API",
+        "label": "run_simulation"
+      },
+      {
+        "id": "ART-API-00451",
+        "type": "API",
+        "label": "get_pdt_dashboard_list"
+      },
+      {
+        "id": "ART-API-00452",
+        "type": "API",
+        "label": "get_profiles"
+      },
+      {
+        "id": "ART-API-00453",
+        "type": "API",
+        "label": "get_details"
+      },
+      {
+        "id": "ART-API-00454",
+        "type": "API",
+        "label": "save_profile"
+      },
+      {
+        "id": "ART-API-00455",
+        "type": "API",
+        "label": "clone_profile"
+      },
+      {
+        "id": "ART-API-00456",
+        "type": "API",
+        "label": "archive_profile"
+      },
+      {
+        "id": "ART-API-00457",
+        "type": "API",
+        "label": "get_dropdowns"
+      },
+      {
+        "id": "ART-API-00458",
+        "type": "API",
+        "label": "validate_profile"
+      },
+      {
+        "id": "ART-API-00459",
+        "type": "API",
+        "label": "get_schemes"
+      },
+      {
+        "id": "ART-API-00460",
+        "type": "API",
+        "label": "create_scheme"
+      },
+      {
+        "id": "ART-API-00461",
+        "type": "API",
+        "label": "update_scheme"
+      },
+      {
+        "id": "ART-API-00462",
+        "type": "API",
+        "label": "delete_scheme"
+      },
+      {
+        "id": "ART-API-00463",
+        "type": "API",
+        "label": "get_submitted_receipts"
+      },
+      {
+        "id": "ART-API-00464",
+        "type": "API",
+        "label": "get_receipt_details"
+      },
+      {
+        "id": "ART-API-00465",
+        "type": "API",
+        "label": "submit_supplier_return"
+      },
+      {
+        "id": "ART-API-00466",
+        "type": "API",
+        "label": "get_converted_leads"
+      },
+      {
+        "id": "ART-API-00467",
+        "type": "API",
+        "label": "create_activation"
+      },
+      {
+        "id": "ART-API-00468",
+        "type": "API",
+        "label": "activate_account"
+      },
+      {
+        "id": "ART-API-00469",
+        "type": "API",
+        "label": "retry_provision"
+      },
+      {
+        "id": "ART-API-00470",
+        "type": "API",
+        "label": "suspend_activation"
+      },
+      {
+        "id": "ART-API-00471",
+        "type": "API",
+        "label": "extend_trial"
+      },
+      {
+        "id": "ART-API-00472",
+        "type": "API",
+        "label": "mark_converted_to_paid"
+      },
+      {
+        "id": "ART-API-00473",
+        "type": "API",
+        "label": "get_activations"
+      },
+      {
+        "id": "ART-API-00474",
+        "type": "API",
+        "label": "get_provision_logs"
+      },
+      {
+        "id": "ART-API-00475",
+        "type": "API",
+        "label": "get_activation_dashboard"
+      },
+      {
+        "id": "ART-API-00476",
+        "type": "API",
+        "label": "get_trial_health_snapshots"
+      },
+      {
+        "id": "ART-API-00477",
+        "type": "API",
+        "label": "trigger_trial_health_snapshot"
+      },
+      {
+        "id": "ART-API-00478",
+        "type": "API",
+        "label": "submit_trial_lead"
+      },
+      {
+        "id": "ART-API-00479",
+        "type": "API",
+        "label": "get_trial_leads"
+      },
+      {
+        "id": "ART-API-00480",
+        "type": "API",
+        "label": "update_lead_status"
+      },
+      {
+        "id": "ART-API-00481",
+        "type": "API",
+        "label": "get_lead_counts"
+      },
+      {
+        "id": "ART-API-00643",
+        "type": "API",
+        "label": "preview_number"
+      },
+      {
+        "id": "ART-API-00644",
+        "type": "API",
+        "label": "save_rule"
+      },
+      {
+        "id": "ART-API-00645",
+        "type": "API",
+        "label": "get_rules"
+      },
+      {
+        "id": "ART-API-00646",
+        "type": "API",
+        "label": "get_reservations"
+      },
+      {
+        "id": "ART-API-00647",
+        "type": "API",
+        "label": "scan_sequence_gaps"
+      },
+      {
+        "id": "ART-API-00648",
+        "type": "API",
+        "label": "explain_doc"
+      },
+      {
+        "id": "ART-API-00649",
+        "type": "API",
+        "label": "get_dashboard_metrics"
+      },
+      {
+        "id": "ART-API-00482",
+        "type": "API",
+        "label": "get_item_stock"
+      },
+      {
+        "id": "ART-API-00483",
+        "type": "API",
+        "label": "validate_checkout_rules"
+      },
+      {
+        "id": "ART-API-00484",
+        "type": "API",
+        "label": "get_offline_cache"
+      },
+      {
+        "id": "ART-API-00485",
+        "type": "API",
+        "label": "get_wallet_ledger"
+      },
+      {
+        "id": "ART-API-00486",
+        "type": "API",
+        "label": "post_wallet_adjustment"
+      },
+      {
+        "id": "ART-API-00487",
+        "type": "API",
+        "label": "reverse_wallet_transaction"
+      },
+      {
+        "id": "ART-API-00488",
+        "type": "API",
+        "label": "get_cge_liability_metrics"
+      },
+      {
+        "id": "ART-API-00489",
+        "type": "API",
+        "label": "get_campaigns_with_utilization"
+      },
+      {
+        "id": "ART-API-00490",
+        "type": "API",
+        "label": "save_coupon_campaign"
+      },
+      {
+        "id": "ART-API-00491",
+        "type": "API",
+        "label": "save_loyalty_rule"
+      },
+      {
+        "id": "ART-API-00492",
+        "type": "API",
+        "label": "save_loyalty_tier"
+      },
+      {
+        "id": "ART-API-00493",
+        "type": "API",
+        "label": "get_cge_generic_fields"
+      },
+      {
+        "id": "ART-API-00494",
+        "type": "API",
+        "label": "get_cge_generic_list"
+      },
+      {
+        "id": "ART-API-00495",
+        "type": "API",
+        "label": "get_cge_generic_doc"
+      },
+      {
+        "id": "ART-API-00496",
+        "type": "API",
+        "label": "save_cge_generic_doc"
+      },
+      {
+        "id": "ART-API-00497",
+        "type": "API",
+        "label": "delete_cge_generic_doc"
+      },
+      {
+        "id": "ART-API-00498",
+        "type": "API",
+        "label": "validate_checkout_rules"
+      },
+      {
+        "id": "ART-API-00499",
+        "type": "API",
+        "label": "get_offline_cache"
+      },
+      {
+        "id": "ART-API-00500",
+        "type": "API",
+        "label": "get_customer_profile"
+      },
+      {
+        "id": "ART-API-00501",
+        "type": "API",
+        "label": "log_customer_interaction"
+      },
+      {
+        "id": "ART-API-00502",
+        "type": "API",
+        "label": "register_walk_in"
+      },
+      {
+        "id": "ART-API-00503",
+        "type": "API",
+        "label": "update_walk_in_visit"
+      },
+      {
+        "id": "ART-API-00504",
+        "type": "API",
+        "label": "get_store_walk_in_analytics"
+      },
+      {
+        "id": "ART-API-00505",
+        "type": "API",
+        "label": "log_explain_audit"
+      },
+      {
+        "id": "ART-API-00650",
+        "type": "API",
+        "label": "validate_approval_override"
+      },
+      {
+        "id": "ART-API-00651",
+        "type": "API",
+        "label": "calculate_billing_summary"
+      },
+      {
+        "id": "ART-API-00652",
+        "type": "API",
+        "label": "validate_discount_limit"
+      },
+      {
+        "id": "ART-API-00653",
+        "type": "API",
+        "label": "get_company_discount_settings"
+      },
+      {
+        "id": "ART-API-00506",
+        "type": "API",
+        "label": "get_active_formulas"
+      },
+      {
+        "id": "ART-API-00507",
+        "type": "API",
+        "label": "get_formula_detail"
+      },
+      {
+        "id": "ART-API-00508",
+        "type": "API",
+        "label": "get_asset_by_uri"
+      },
+      {
+        "id": "ART-API-00509",
+        "type": "API",
+        "label": "resolve_relations"
+      },
+      {
+        "id": "ART-API-00510",
+        "type": "API",
+        "label": "search_assets"
+      },
+      {
+        "id": "ART-API-00654",
+        "type": "API",
+        "label": "get_active_salespersons"
+      },
+      {
+        "id": "ART-API-00511",
+        "type": "API",
+        "label": "run_monthly_calculation"
+      },
+      {
+        "id": "ART-API-00512",
+        "type": "API",
+        "label": "get_monthly_commissions"
+      },
+      {
+        "id": "ART-API-00513",
+        "type": "API",
+        "label": "get_sfm_leaderboard"
+      },
+      {
+        "id": "ART-API-00514",
+        "type": "API",
+        "label": "get_employee_summary"
+      },
+      {
+        "id": "ART-API-00515",
+        "type": "API",
+        "label": "get_store_performance_center"
+      },
+      {
+        "id": "ART-API-00662",
+        "type": "API",
+        "label": "get_settings"
+      },
+      {
+        "id": "ART-API-00663",
+        "type": "API",
+        "label": "save_settings"
+      },
+      {
+        "id": "ART-API-00664",
+        "type": "API",
+        "label": "get_pending_vouchers"
+      },
+      {
+        "id": "ART-API-00665",
+        "type": "API",
+        "label": "export_bulk_xml"
+      },
+      {
+        "id": "ART-API-00666",
+        "type": "API",
+        "label": "sync_to_tally"
+      },
+      {
+        "id": "ART-API-00667",
+        "type": "API",
+        "label": "get_sync_logs"
+      },
+      {
+        "id": "ART-API-00669",
+        "type": "API",
+        "label": "compare_sync_status"
+      },
+      {
+        "id": "ART-API-00516",
+        "type": "API",
+        "label": "parse_opening_excel"
+      },
+      {
+        "id": "ART-TERM-00517",
+        "type": "GLOSSARY_TERM",
+        "label": "PSA"
+      },
+      {
+        "id": "ART-TERM-00518",
+        "type": "GLOSSARY_TERM",
+        "label": "PSV"
+      },
+      {
+        "id": "ART-TERM-00519",
+        "type": "GLOSSARY_TERM",
+        "label": "PDT"
+      },
+      {
+        "id": "ART-TERM-00520",
+        "type": "GLOSSARY_TERM",
+        "label": "WOC"
+      },
+      {
+        "id": "ART-TERM-00521",
+        "type": "GLOSSARY_TERM",
+        "label": "Sales Velocity"
+      },
+      {
+        "id": "ART-TERM-00522",
+        "type": "GLOSSARY_TERM",
+        "label": "Forecast Confidence"
+      },
+      {
+        "id": "ART-TERM-00523",
+        "type": "GLOSSARY_TERM",
+        "label": "Dead Stock"
+      },
+      {
+        "id": "ART-TERM-00524",
+        "type": "GLOSSARY_TERM",
+        "label": "Sell Through"
+      },
+      {
+        "id": "ART-TERM-00525",
+        "type": "GLOSSARY_TERM",
+        "label": "Stock Accuracy"
+      },
+      {
+        "id": "ART-TERM-00526",
+        "type": "GLOSSARY_TERM",
+        "label": "Inventory Turnover"
+      },
+      {
+        "id": "ART-TERM-00527",
+        "type": "GLOSSARY_TERM",
+        "label": "Outlet Health Score"
+      },
+      {
+        "id": "ART-TERM-00528",
+        "type": "GLOSSARY_TERM",
+        "label": "Transfer Benefit Score"
+      },
+      {
+        "id": "ART-TERM-00529",
+        "type": "GLOSSARY_TERM",
+        "label": "Physical Snapshot"
+      },
+      {
+        "id": "ART-TERM-00530",
+        "type": "GLOSSARY_TERM",
+        "label": "Party Stock Ledger"
+      },
+      {
+        "id": "ART-TERM-00531",
+        "type": "GLOSSARY_TERM",
+        "label": "Reorder Suggestion"
+      },
+      {
+        "id": "ART-TERM-00532",
+        "type": "GLOSSARY_TERM",
+        "label": "Stockout Risk"
+      },
+      {
+        "id": "ART-TERM-00533",
+        "type": "GLOSSARY_TERM",
+        "label": "Variant Curve"
+      },
+      {
+        "id": "ART-TERM-00534",
+        "type": "GLOSSARY_TERM",
+        "label": "EMA"
+      },
+      {
+        "id": "ART-TERM-00535",
+        "type": "GLOSSARY_TERM",
+        "label": "Seasonality Factor"
+      },
+      {
+        "id": "ART-TERM-00536",
+        "type": "GLOSSARY_TERM",
+        "label": "Lead Time"
+      },
+      {
+        "id": "ART-SCREEN-ITEM_MASTER",
+        "label": "Item Master Import",
+        "type": "SCREEN_VIRTUAL"
+      },
+      {
+        "id": "ART-SCREEN-BILLING",
+        "label": "POS Billing Center",
+        "type": "SCREEN_VIRTUAL"
+      },
+      {
+        "id": "ART-SCREEN-PURCHASE",
+        "label": "Purchase Order Center",
+        "type": "SCREEN_VIRTUAL"
+      },
+      {
+        "id": "ART-SCREEN-INVENTORY",
+        "label": "Stock Center",
+        "type": "SCREEN_VIRTUAL"
+      },
+      {
+        "id": "ART-DOCTYPE-00537",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "User"
+      },
+      {
+        "id": "ART-DOCTYPE-00538",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Loyalty Point Entry"
+      },
+      {
+        "id": "ART-DOCTYPE-00539",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "POS Invoice"
+      },
+      {
+        "id": "ART-DOCTYPE-00540",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Item"
+      },
+      {
+        "id": "ART-DOCTYPE-00541",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Customer"
+      },
+      {
+        "id": "ART-DOCTYPE-00542",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Coupon Code"
+      },
+      {
+        "id": "ART-DOCTYPE-00543",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Supplier"
+      },
+      {
+        "id": "ART-DOCTYPE-00544",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Delivery Note"
+      },
+      {
+        "id": "ART-DOCTYPE-00545",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Stock Entry"
+      },
+      {
+        "id": "ART-DOCTYPE-00546",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Sales Invoice"
+      },
+      {
+        "id": "ART-DOCTYPE-00655",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Sales Invoice Item"
+      },
+      {
+        "id": "ART-DOCTYPE-00656",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "POS Invoice Item"
+      },
+      {
+        "id": "ART-DOCTYPE-00547",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Company"
+      },
+      {
+        "id": "ART-DOCTYPE-00548",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Item Barcode"
+      },
+      {
+        "id": "ART-DOCTYPE-00549",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Brand"
+      },
+      {
+        "id": "ART-DOCTYPE-00550",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Department"
+      },
+      {
+        "id": "ART-DOCTYPE-00551",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "DocType"
+      },
+      {
+        "id": "ART-DOCTYPE-00552",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Item Group"
+      },
+      {
+        "id": "ART-DOCTYPE-00573",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Item Variant Attribute"
+      },
+      {
+        "id": "ART-DOCTYPE-00554",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Purchase Receipt"
+      },
+      {
+        "id": "ART-DOCTYPE-00555",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Activity Log"
+      },
+      {
+        "id": "ART-DOCTYPE-00557",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "SMRITI Barcode Scan Event"
+      },
+      {
+        "id": "ART-DOCTYPE-00558",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Warehouse"
+      },
+      {
+        "id": "ART-DOCTYPE-00559",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "SMRITI Barcode Telemetry Snapshot"
+      },
+      {
+        "id": "ART-DOCTYPE-00560",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Item Price"
+      },
+      {
+        "id": "ART-DOCTYPE-00561",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Address"
+      },
+      {
+        "id": "ART-DOCTYPE-00562",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Cost Center"
+      },
+      {
+        "id": "ART-DOCTYPE-00563",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Mode of Payment Account"
+      },
+      {
+        "id": "ART-DOCTYPE-00564",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "POS Opening Entry"
+      },
+      {
+        "id": "ART-DOCTYPE-00565",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Sales Taxes and Charges Template"
+      },
+      {
+        "id": "ART-DOCTYPE-00566",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Dynamic Link"
+      },
+      {
+        "id": "ART-DOCTYPE-00567",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "SMRITI Attribute Layout"
+      },
+      {
+        "id": "ART-DOCTYPE-00568",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "SMRITI Audit Event"
+      },
+      {
+        "id": "ART-DOCTYPE-00569",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Global Defaults"
+      },
+      {
+        "id": "ART-DOCTYPE-00570",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Account"
+      },
+      {
+        "id": "ART-DOCTYPE-00571",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Stock Reconciliation"
+      },
+      {
+        "id": "ART-DOCTYPE-00572",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Item Supplier"
+      },
+      {
+        "id": "ART-DOCTYPE-00553",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Item Attribute"
+      },
+      {
+        "id": "ART-DOCTYPE-00574",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Loyalty Program"
+      },
+      {
+        "id": "ART-DOCTYPE-00575",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Loyalty Program Collection"
+      },
+      {
+        "id": "ART-DOCTYPE-00576",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "GST HSN Code"
+      },
+      {
+        "id": "ART-DOCTYPE-00577",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Item Tax Template"
+      },
+      {
+        "id": "ART-DOCTYPE-00578",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Customer Group"
+      },
+      {
+        "id": "ART-DOCTYPE-00579",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Territory"
+      },
+      {
+        "id": "ART-DOCTYPE-00580",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Supplier Group"
+      },
+      {
+        "id": "ART-DOCTYPE-00581",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Contact"
+      },
+      {
+        "id": "ART-DOCTYPE-00582",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Item Tax Template Detail"
+      },
+      {
+        "id": "ART-DOCTYPE-00583",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "PSV Sell-Through Upload"
+      },
+      {
+        "id": "ART-DOCTYPE-00584",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Fiscal Year"
+      },
+      {
+        "id": "ART-DOCTYPE-00585",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Purchase Order"
+      },
+      {
+        "id": "ART-DOCTYPE-00586",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Bin"
+      },
+      {
+        "id": "ART-DOCTYPE-00587",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Sales Person"
+      },
+      {
+        "id": "ART-DOCTYPE-00588",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Sales Order"
+      },
+      {
+        "id": "ART-DOCTYPE-00589",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Item Reorder"
+      },
+      {
+        "id": "ART-DOCTYPE-00590",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Has Role"
+      },
+      {
+        "id": "ART-DOCTYPE-00591",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Role"
+      },
+      {
+        "id": "ART-DOCTYPE-00592",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Role Profile"
+      },
+      {
+        "id": "ART-DOCTYPE-00593",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "User Permission"
+      },
+      {
+        "id": "ART-DOCTYPE-00594",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Workflow"
+      },
+      {
+        "id": "ART-DOCTYPE-00595",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Workflow State"
+      },
+      {
+        "id": "ART-DOCTYPE-00596",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Mode of Payment"
+      },
+      {
+        "id": "ART-DOCTYPE-00597",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "POS Profile"
+      },
+      {
+        "id": "ART-DOCTYPE-00598",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Warehouse Type"
+      },
+      {
+        "id": "ART-DOCTYPE-00599",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "POS Closing Entry"
+      },
+      {
+        "id": "ART-DOCTYPE-00600",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "POS Settings"
+      },
+      {
+        "id": "ART-DOCTYPE-00601",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Bank Account"
+      },
+      {
+        "id": "ART-DOCTYPE-00602",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Payment Entry"
+      },
+      {
+        "id": "ART-DOCTYPE-00603",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Pricing Rule"
+      },
+      {
+        "id": "ART-DOCTYPE-00604",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "SMRITI Trial Health Snapshot"
+      },
+      {
+        "id": "ART-DOCTYPE-00657",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "SMRITI Numbering Rule"
+      },
+      {
+        "id": "ART-DOCTYPE-00658",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "SMRITI Numbering Reserved Range"
+      },
+      {
+        "id": "ART-DOCTYPE-00605",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Employee"
+      },
+      {
+        "id": "ART-DOCTYPE-00668",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "Purchase Invoice"
+      },
+      {
+        "id": "ART-DOCTYPE-00606",
+        "type": "DOCTYPE_VIRTUAL",
+        "label": "File"
+      }
+    ],
+    "edges": [
+      {
+        "source": "ART-FIELD-00134",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00626",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00627",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00628",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00629",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00630",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00631",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00632",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00135",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00136",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00137",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00138",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00139",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00140",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00141",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00142",
+        "target": "ART-DOCTYPE-00538",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00143",
+        "target": "ART-DOCTYPE-00539",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00144",
+        "target": "ART-DOCTYPE-00539",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00145",
+        "target": "ART-DOCTYPE-00539",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00146",
+        "target": "ART-DOCTYPE-00539",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00633",
+        "target": "ART-DOCTYPE-00539",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00147",
+        "target": "ART-DOCTYPE-00539",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00148",
+        "target": "ART-DOCTYPE-00539",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00149",
+        "target": "ART-DOCTYPE-00539",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00634",
+        "target": "ART-DOCTYPE-00539",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00635",
+        "target": "ART-DOCTYPE-00539",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00150",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00151",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00152",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00153",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00099",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00154",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00155",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00156",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00157",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00158",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00159",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00160",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00161",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00162",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00163",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00164",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00165",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00166",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00167",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00168",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00169",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00170",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00171",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00172",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00173",
+        "target": "ART-DOCTYPE-00542",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00174",
+        "target": "ART-DOCTYPE-00542",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00175",
+        "target": "ART-DOCTYPE-00542",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00176",
+        "target": "ART-DOCTYPE-00542",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00177",
+        "target": "ART-DOCTYPE-00542",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00178",
+        "target": "ART-DOCTYPE-00542",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00179",
+        "target": "ART-DOCTYPE-00543",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00180",
+        "target": "ART-DOCTYPE-00543",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00181",
+        "target": "ART-DOCTYPE-00543",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00182",
+        "target": "ART-DOCTYPE-00543",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00183",
+        "target": "ART-DOCTYPE-00544",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00184",
+        "target": "ART-DOCTYPE-00545",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00185",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00186",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00636",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00187",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00188",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00189",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00190",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00637",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00638",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00639",
+        "target": "ART-DOCTYPE-00655",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00640",
+        "target": "ART-DOCTYPE-00655",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00641",
+        "target": "ART-DOCTYPE-00656",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00642",
+        "target": "ART-DOCTYPE-00656",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00191",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00192",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00193",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-FIELD-00100",
+        "target": "ART-DOCTYPE-00548",
+        "relation": "EXTENDS"
+      },
+      {
+        "source": "ART-API-00101",
+        "target": "ART-DOCTYPE-00549",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00101",
+        "target": "ART-DOCTYPE-00550",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00101",
+        "target": "ART-DOCTYPE-00551",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00101",
+        "target": "ART-DOCTYPE-00552",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00101",
+        "target": "ART-DOCTYPE-00043",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00101",
+        "target": "ART-DOCTYPE-00066",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00101",
+        "target": "ART-DOCTYPE-00543",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00102",
+        "target": "ART-DOCTYPE-00551",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00102",
+        "target": "ART-DOCTYPE-00066",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00103",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00104",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00104",
+        "target": "ART-DOCTYPE-00548",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00106",
+        "target": "ART-DOCTYPE-00573",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00106",
+        "target": "ART-DOCTYPE-00554",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00106",
+        "target": "ART-DOCTYPE-00545",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00107",
+        "target": "ART-DOCTYPE-00551",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00107",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00107",
+        "target": "ART-DOCTYPE-00066",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00113",
+        "target": "ART-DOCTYPE-00555",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00113",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00116",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00117",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00117",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00118",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00119",
+        "target": "ART-DOCTYPE-00551",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00119",
+        "target": "ART-DOCTYPE-00066",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00120",
+        "target": "ART-DOCTYPE-00551",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00120",
+        "target": "ART-DOCTYPE-00066",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00122",
+        "target": "ART-DOCTYPE-00065",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00123",
+        "target": "ART-DOCTYPE-00065",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00124",
+        "target": "ART-DOCTYPE-00065",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00125",
+        "target": "ART-DOCTYPE-00065",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00126",
+        "target": "ART-DOCTYPE-00065",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00127",
+        "target": "ART-DOCTYPE-00066",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00127",
+        "target": "ART-DOCTYPE-00067",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00128",
+        "target": "ART-DOCTYPE-00066",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00128",
+        "target": "ART-DOCTYPE-00067",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00130",
+        "target": "ART-DOCTYPE-00065",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00131",
+        "target": "ART-DOCTYPE-00551",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00131",
+        "target": "ART-DOCTYPE-00556",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00132",
+        "target": "ART-DOCTYPE-00557",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00132",
+        "target": "ART-DOCTYPE-00558",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00133",
+        "target": "ART-DOCTYPE-00559",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00208",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00208",
+        "target": "ART-DOCTYPE-00548",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00208",
+        "target": "ART-DOCTYPE-00560",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00210",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00210",
+        "target": "ART-DOCTYPE-00539",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00212",
+        "target": "ART-DOCTYPE-00561",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00212",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00212",
+        "target": "ART-DOCTYPE-00562",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00212",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00212",
+        "target": "ART-DOCTYPE-00563",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00212",
+        "target": "ART-DOCTYPE-00539",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00212",
+        "target": "ART-DOCTYPE-00564",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00212",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00212",
+        "target": "ART-DOCTYPE-00565",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00212",
+        "target": "ART-DOCTYPE-00558",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00214",
+        "target": "ART-DOCTYPE-00560",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00214",
+        "target": "ART-DOCTYPE-00539",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00215",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00216",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00217",
+        "target": "ART-DOCTYPE-00539",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00217",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00218",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00218",
+        "target": "ART-DOCTYPE-00562",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00218",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00218",
+        "target": "ART-DOCTYPE-00565",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00218",
+        "target": "ART-DOCTYPE-00558",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00219",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00219",
+        "target": "ART-DOCTYPE-00562",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00219",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00219",
+        "target": "ART-DOCTYPE-00558",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00220",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00221",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00224",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00224",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00225",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00226",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00227",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00228",
+        "target": "ART-DOCTYPE-00561",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00228",
+        "target": "ART-DOCTYPE-00566",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00229",
+        "target": "ART-DOCTYPE-00561",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00229",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00229",
+        "target": "ART-DOCTYPE-00566",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00230",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00231",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00232",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00233",
+        "target": "ART-DOCTYPE-00551",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00233",
+        "target": "ART-DOCTYPE-00567",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00233",
+        "target": "ART-DOCTYPE-00039",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00234",
+        "target": "ART-DOCTYPE-00567",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00234",
+        "target": "ART-DOCTYPE-00568",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00235",
+        "target": "ART-DOCTYPE-00567",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00235",
+        "target": "ART-DOCTYPE-00568",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00236",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00236",
+        "target": "ART-DOCTYPE-00569",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00236",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00236",
+        "target": "ART-DOCTYPE-00548",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00237",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00237",
+        "target": "ART-DOCTYPE-00569",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00237",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00237",
+        "target": "ART-DOCTYPE-00554",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00238",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00238",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00238",
+        "target": "ART-DOCTYPE-00545",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00239",
+        "target": "ART-DOCTYPE-00570",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00239",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00239",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00239",
+        "target": "ART-DOCTYPE-00545",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00240",
+        "target": "ART-DOCTYPE-00570",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00240",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00240",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00240",
+        "target": "ART-DOCTYPE-00571",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00241",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00246",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00247",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00247",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00247",
+        "target": "ART-DOCTYPE-00548",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00247",
+        "target": "ART-DOCTYPE-00552",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00248",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00248",
+        "target": "ART-DOCTYPE-00548",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00249",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00249",
+        "target": "ART-DOCTYPE-00548",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00249",
+        "target": "ART-DOCTYPE-00572",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00249",
+        "target": "ART-DOCTYPE-00573",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00250",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00250",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00250",
+        "target": "ART-DOCTYPE-00548",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00251",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00252",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00253",
+        "target": "ART-DOCTYPE-00551",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00253",
+        "target": "ART-DOCTYPE-00553",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00254",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00254",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00254",
+        "target": "ART-DOCTYPE-00548",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00254",
+        "target": "ART-DOCTYPE-00552",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00258",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00259",
+        "target": "ART-DOCTYPE-00574",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00259",
+        "target": "ART-DOCTYPE-00575",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00260",
+        "target": "ART-DOCTYPE-00570",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00260",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00260",
+        "target": "ART-DOCTYPE-00562",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00260",
+        "target": "ART-DOCTYPE-00574",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00261",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00261",
+        "target": "ART-DOCTYPE-00574",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00262",
+        "target": "ART-DOCTYPE-00576",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00262",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00262",
+        "target": "ART-DOCTYPE-00577",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00263",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00263",
+        "target": "ART-DOCTYPE-00578",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00263",
+        "target": "ART-DOCTYPE-00579",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00264",
+        "target": "ART-DOCTYPE-00543",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00264",
+        "target": "ART-DOCTYPE-00580",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00265",
+        "target": "ART-DOCTYPE-00543",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00265",
+        "target": "ART-DOCTYPE-00580",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00266",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00267",
+        "target": "ART-DOCTYPE-00581",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00267",
+        "target": "ART-DOCTYPE-00566",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00267",
+        "target": "ART-DOCTYPE-00543",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00268",
+        "target": "ART-DOCTYPE-00581",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00268",
+        "target": "ART-DOCTYPE-00566",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00268",
+        "target": "ART-DOCTYPE-00543",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00268",
+        "target": "ART-DOCTYPE-00580",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00269",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00269",
+        "target": "ART-DOCTYPE-00578",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00269",
+        "target": "ART-DOCTYPE-00579",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00274",
+        "target": "ART-DOCTYPE-00577",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00274",
+        "target": "ART-DOCTYPE-00582",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00275",
+        "target": "ART-DOCTYPE-00570",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00275",
+        "target": "ART-DOCTYPE-00577",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00276",
+        "target": "ART-DOCTYPE-00549",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00277",
+        "target": "ART-DOCTYPE-00549",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00278",
+        "target": "ART-DOCTYPE-00549",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00279",
+        "target": "ART-DOCTYPE-00570",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00285",
+        "target": "ART-DOCTYPE-00570",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00285",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00289",
+        "target": "ART-DOCTYPE-00001",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00289",
+        "target": "ART-DOCTYPE-00063",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00290",
+        "target": "ART-DOCTYPE-00006",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00292",
+        "target": "ART-DOCTYPE-00001",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00292",
+        "target": "ART-DOCTYPE-00003",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00292",
+        "target": "ART-DOCTYPE-00063",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00294",
+        "target": "ART-DOCTYPE-00003",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00294",
+        "target": "ART-DOCTYPE-00006",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00296",
+        "target": "ART-DOCTYPE-00003",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00297",
+        "target": "ART-DOCTYPE-00003",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00298",
+        "target": "ART-DOCTYPE-00001",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00298",
+        "target": "ART-DOCTYPE-00003",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00298",
+        "target": "ART-DOCTYPE-00063",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00299",
+        "target": "ART-DOCTYPE-00063",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00300",
+        "target": "ART-DOCTYPE-00063",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00301",
+        "target": "ART-DOCTYPE-00063",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00302",
+        "target": "ART-DOCTYPE-00063",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00303",
+        "target": "ART-DOCTYPE-00583",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00305",
+        "target": "ART-DOCTYPE-00544",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00305",
+        "target": "ART-DOCTYPE-00551",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00305",
+        "target": "ART-DOCTYPE-00072",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00305",
+        "target": "ART-DOCTYPE-00545",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00306",
+        "target": "ART-DOCTYPE-00003",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00307",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00307",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00307",
+        "target": "ART-DOCTYPE-00584",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00307",
+        "target": "ART-DOCTYPE-00001",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00307",
+        "target": "ART-DOCTYPE-00003",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00307",
+        "target": "ART-DOCTYPE-00063",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00307",
+        "target": "ART-DOCTYPE-00064",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00307",
+        "target": "ART-DOCTYPE-00579",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00310",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00310",
+        "target": "ART-DOCTYPE-00001",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00310",
+        "target": "ART-DOCTYPE-00063",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00311",
+        "target": "ART-DOCTYPE-00585",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00312",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00312",
+        "target": "ART-DOCTYPE-00585",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00313",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00313",
+        "target": "ART-DOCTYPE-00576",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00313",
+        "target": "ART-DOCTYPE-00569",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00313",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00313",
+        "target": "ART-DOCTYPE-00552",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00313",
+        "target": "ART-DOCTYPE-00560",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00313",
+        "target": "ART-DOCTYPE-00577",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00313",
+        "target": "ART-DOCTYPE-00585",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00314",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00314",
+        "target": "ART-DOCTYPE-00569",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00314",
+        "target": "ART-DOCTYPE-00585",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00314",
+        "target": "ART-DOCTYPE-00554",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00315",
+        "target": "ART-DOCTYPE-00554",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00317",
+        "target": "ART-DOCTYPE-00586",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00317",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00319",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00326",
+        "target": "ART-DOCTYPE-00085",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00327",
+        "target": "ART-DOCTYPE-00085",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00328",
+        "target": "ART-DOCTYPE-00085",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00329",
+        "target": "ART-DOCTYPE-00081",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00330",
+        "target": "ART-DOCTYPE-00558",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00331",
+        "target": "ART-DOCTYPE-00552",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00332",
+        "target": "ART-DOCTYPE-00549",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00333",
+        "target": "ART-DOCTYPE-00587",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00336",
+        "target": "ART-DOCTYPE-00019",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00336",
+        "target": "ART-DOCTYPE-00042",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00336",
+        "target": "ART-DOCTYPE-00081",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00337",
+        "target": "ART-DOCTYPE-00588",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00338",
+        "target": "ART-DOCTYPE-00588",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00339",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00339",
+        "target": "ART-DOCTYPE-00569",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00339",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00339",
+        "target": "ART-DOCTYPE-00589",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00339",
+        "target": "ART-DOCTYPE-00588",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00339",
+        "target": "ART-DOCTYPE-00558",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00340",
+        "target": "ART-DOCTYPE-00590",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00340",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00341",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00342",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00343",
+        "target": "ART-DOCTYPE-00591",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00343",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00344",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00345",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00346",
+        "target": "ART-DOCTYPE-00590",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00346",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00347",
+        "target": "ART-DOCTYPE-00591",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00348",
+        "target": "ART-DOCTYPE-00591",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00349",
+        "target": "ART-DOCTYPE-00591",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00350",
+        "target": "ART-DOCTYPE-00590",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00350",
+        "target": "ART-DOCTYPE-00592",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00351",
+        "target": "ART-DOCTYPE-00592",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00352",
+        "target": "ART-DOCTYPE-00592",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00353",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00353",
+        "target": "ART-DOCTYPE-00593",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00354",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00355",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00356",
+        "target": "ART-DOCTYPE-00594",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00357",
+        "target": "ART-DOCTYPE-00594",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00358",
+        "target": "ART-DOCTYPE-00594",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00359",
+        "target": "ART-DOCTYPE-00594",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00360",
+        "target": "ART-DOCTYPE-00595",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00361",
+        "target": "ART-DOCTYPE-00595",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00362",
+        "target": "ART-DOCTYPE-00594",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00365",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00366",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00366",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00367",
+        "target": "ART-DOCTYPE-00570",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00367",
+        "target": "ART-DOCTYPE-00561",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00367",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00367",
+        "target": "ART-DOCTYPE-00562",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00367",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00367",
+        "target": "ART-DOCTYPE-00578",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00367",
+        "target": "ART-DOCTYPE-00596",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00367",
+        "target": "ART-DOCTYPE-00597",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00367",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00367",
+        "target": "ART-DOCTYPE-00565",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00367",
+        "target": "ART-DOCTYPE-00579",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00367",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00367",
+        "target": "ART-DOCTYPE-00558",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00367",
+        "target": "ART-DOCTYPE-00598",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00368",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00368",
+        "target": "ART-DOCTYPE-00564",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00368",
+        "target": "ART-DOCTYPE-00597",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00370",
+        "target": "ART-DOCTYPE-00564",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00371",
+        "target": "ART-DOCTYPE-00599",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00371",
+        "target": "ART-DOCTYPE-00564",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00371",
+        "target": "ART-DOCTYPE-00600",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00372",
+        "target": "ART-DOCTYPE-00597",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00375",
+        "target": "ART-DOCTYPE-00561",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00375",
+        "target": "ART-DOCTYPE-00601",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00375",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00375",
+        "target": "ART-DOCTYPE-00566",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00375",
+        "target": "ART-DOCTYPE-00569",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00376",
+        "target": "ART-DOCTYPE-00561",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00376",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00376",
+        "target": "ART-DOCTYPE-00566",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00377",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00378",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00380",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00382",
+        "target": "ART-DOCTYPE-00561",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00382",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00382",
+        "target": "ART-DOCTYPE-00063",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00382",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00383",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00384",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00385",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00386",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00391",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00400",
+        "target": "ART-DOCTYPE-00555",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00401",
+        "target": "ART-DOCTYPE-00555",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00403",
+        "target": "ART-DOCTYPE-00549",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00404",
+        "target": "ART-DOCTYPE-00549",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00405",
+        "target": "ART-DOCTYPE-00549",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00406",
+        "target": "ART-DOCTYPE-00549",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00406",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00407",
+        "target": "ART-DOCTYPE-00552",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00408",
+        "target": "ART-DOCTYPE-00552",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00409",
+        "target": "ART-DOCTYPE-00552",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00410",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00410",
+        "target": "ART-DOCTYPE-00552",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00426",
+        "target": "ART-DOCTYPE-00019",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00426",
+        "target": "ART-DOCTYPE-00042",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00426",
+        "target": "ART-DOCTYPE-00078",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00426",
+        "target": "ART-DOCTYPE-00079",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00427",
+        "target": "ART-DOCTYPE-00021",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00427",
+        "target": "ART-DOCTYPE-00071",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00428",
+        "target": "ART-DOCTYPE-00021",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00428",
+        "target": "ART-DOCTYPE-00071",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00429",
+        "target": "ART-DOCTYPE-00021",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00429",
+        "target": "ART-DOCTYPE-00071",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00430",
+        "target": "ART-DOCTYPE-00021",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00430",
+        "target": "ART-DOCTYPE-00071",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00430",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00431",
+        "target": "ART-DOCTYPE-00021",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00431",
+        "target": "ART-DOCTYPE-00071",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00431",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00432",
+        "target": "ART-DOCTYPE-00021",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00432",
+        "target": "ART-DOCTYPE-00071",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00432",
+        "target": "ART-DOCTYPE-00537",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00615",
+        "target": "ART-DOCTYPE-00613",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00436",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00443",
+        "target": "ART-DOCTYPE-00602",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00444",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00448",
+        "target": "ART-DOCTYPE-00063",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00448",
+        "target": "ART-DOCTYPE-00087",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00449",
+        "target": "ART-DOCTYPE-00063",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00451",
+        "target": "ART-DOCTYPE-00063",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00451",
+        "target": "ART-DOCTYPE-00087",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00454",
+        "target": "ART-DOCTYPE-00597",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00459",
+        "target": "ART-DOCTYPE-00603",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00460",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00460",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00461",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00461",
+        "target": "ART-DOCTYPE-00603",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00462",
+        "target": "ART-DOCTYPE-00603",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00464",
+        "target": "ART-DOCTYPE-00554",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00465",
+        "target": "ART-DOCTYPE-00554",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00466",
+        "target": "ART-DOCTYPE-00090",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00466",
+        "target": "ART-DOCTYPE-00092",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00467",
+        "target": "ART-DOCTYPE-00090",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00467",
+        "target": "ART-DOCTYPE-00092",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00468",
+        "target": "ART-DOCTYPE-00090",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00469",
+        "target": "ART-DOCTYPE-00090",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00470",
+        "target": "ART-DOCTYPE-00090",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00471",
+        "target": "ART-DOCTYPE-00090",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00472",
+        "target": "ART-DOCTYPE-00090",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00473",
+        "target": "ART-DOCTYPE-00090",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00474",
+        "target": "ART-DOCTYPE-00069",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00476",
+        "target": "ART-DOCTYPE-00604",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00478",
+        "target": "ART-DOCTYPE-00092",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00479",
+        "target": "ART-DOCTYPE-00092",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00480",
+        "target": "ART-DOCTYPE-00092",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00644",
+        "target": "ART-DOCTYPE-00657",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00645",
+        "target": "ART-DOCTYPE-00657",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00646",
+        "target": "ART-DOCTYPE-00658",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00482",
+        "target": "ART-DOCTYPE-00586",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00485",
+        "target": "ART-DOCTYPE-00097",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00487",
+        "target": "ART-DOCTYPE-00097",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00489",
+        "target": "ART-DOCTYPE-00031",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00490",
+        "target": "ART-DOCTYPE-00031",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00491",
+        "target": "ART-DOCTYPE-00054",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00492",
+        "target": "ART-DOCTYPE-00055",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00498",
+        "target": "ART-DOCTYPE-00547",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00498",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00498",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00498",
+        "target": "ART-DOCTYPE-00575",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00498",
+        "target": "ART-DOCTYPE-00603",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00498",
+        "target": "ART-DOCTYPE-00022",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00498",
+        "target": "ART-DOCTYPE-00031",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00498",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00499",
+        "target": "ART-DOCTYPE-00022",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00499",
+        "target": "ART-DOCTYPE-00031",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00499",
+        "target": "ART-DOCTYPE-00054",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00499",
+        "target": "ART-DOCTYPE-00055",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00500",
+        "target": "ART-DOCTYPE-00541",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00500",
+        "target": "ART-DOCTYPE-00035",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00500",
+        "target": "ART-DOCTYPE-00038",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00500",
+        "target": "ART-DOCTYPE-00042",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00501",
+        "target": "ART-DOCTYPE-00036",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00504",
+        "target": "ART-DOCTYPE-00095",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00505",
+        "target": "ART-DOCTYPE-00041",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00505",
+        "target": "ART-DOCTYPE-00042",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00653",
+        "target": "ART-DOCTYPE-00569",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00653",
+        "target": "ART-DOCTYPE-00030",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00506",
+        "target": "ART-DOCTYPE-00042",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00507",
+        "target": "ART-DOCTYPE-00042",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00508",
+        "target": "ART-DOCTYPE-00046",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00510",
+        "target": "ART-DOCTYPE-00046",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00654",
+        "target": "ART-DOCTYPE-00587",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00512",
+        "target": "ART-DOCTYPE-00605",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00512",
+        "target": "ART-DOCTYPE-00029",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00513",
+        "target": "ART-DOCTYPE-00605",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00513",
+        "target": "ART-DOCTYPE-00083",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00514",
+        "target": "ART-DOCTYPE-00605",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00514",
+        "target": "ART-DOCTYPE-00083",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00515",
+        "target": "ART-DOCTYPE-00083",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00515",
+        "target": "ART-DOCTYPE-00084",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00662",
+        "target": "ART-DOCTYPE-00551",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00666",
+        "target": "ART-DOCTYPE-00602",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00666",
+        "target": "ART-DOCTYPE-00668",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00666",
+        "target": "ART-DOCTYPE-00661",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00666",
+        "target": "ART-DOCTYPE-00546",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00516",
+        "target": "ART-DOCTYPE-00606",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-API-00516",
+        "target": "ART-DOCTYPE-00540",
+        "relation": "USES"
+      },
+      {
+        "source": "ART-TERM-00517",
+        "target": "ART-TERM-00518",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00517",
+        "target": "ART-TERM-00530",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00518",
+        "target": "ART-TERM-00517",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00518",
+        "target": "ART-TERM-00530",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00519",
+        "target": "ART-TERM-00520",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00519",
+        "target": "ART-TERM-00531",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00520",
+        "target": "ART-TERM-00521",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00520",
+        "target": "ART-TERM-00532",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00521",
+        "target": "ART-TERM-00520",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00522",
+        "target": "ART-TERM-00519",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00522",
+        "target": "ART-TERM-00531",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00523",
+        "target": "ART-TERM-00520",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00524",
+        "target": "ART-TERM-00521",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00525",
+        "target": "ART-TERM-00529",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00526",
+        "target": "ART-TERM-00520",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00526",
+        "target": "ART-TERM-00523",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00527",
+        "target": "ART-TERM-00525",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00528",
+        "target": "ART-TERM-00519",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00528",
+        "target": "ART-TERM-00536",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00529",
+        "target": "ART-TERM-00525",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00530",
+        "target": "ART-TERM-00517",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00530",
+        "target": "ART-TERM-00518",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00531",
+        "target": "ART-TERM-00519",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00531",
+        "target": "ART-TERM-00532",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00532",
+        "target": "ART-TERM-00520",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00532",
+        "target": "ART-TERM-00536",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00533",
+        "target": "ART-TERM-00526",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00534",
+        "target": "ART-TERM-00521",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00534",
+        "target": "ART-TERM-00535",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00535",
+        "target": "ART-TERM-00534",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00536",
+        "target": "ART-TERM-00532",
+        "relation": "RELATED_TO"
+      },
+      {
+        "source": "ART-TERM-00536",
+        "target": "ART-TERM-00528",
+        "relation": "RELATED_TO"
+      }
+    ]
+  }
+}

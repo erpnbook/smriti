@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "policy_version": "1.2",
+  "weights": {
+    "coverage": 0.45,
+    "validation": 0.20,
+    "broken_references": 0.20,
+    "drift": 0.15
+  },
+  "thresholds": {
+    "coverage_min": 92.0,
+    "broken_references_max": 0,
+    "formula_drift_tolerance": 0,
+    "banned_terminology_tolerance": 0
+  },
+  "banned_terms": [
+    "shadow ledger"
+  ],
+  "scan_extensions": [
+    ".py",
+    ".js",
+    ".md",
+    ".json",
+    ".yml",
+    ".yaml",
+    ".html"
+  ],
+  "ignore_paths": [
+    "apps/smriti_retail_os/smriti_retail_os/tests/",
+    "apps/smriti_retail_os/smriti_retail_os/sdc/",
+    "apps/smriti_retail_os/smriti_retail_os/docs/discovery/",
+    "sdc/",
+    "tests/",
+    "docs/discovery/",
+    "apps/smriti_retail_os/ARCHITECTURE.md",
+    "apps/smriti_retail_os/README.md",
+    "apps/smriti_retail_os/docs/architecture/PDT_ARCHITECTURE.md",
+    "apps/smriti_retail_os/CHANGELOG.md"
+  ]
+}

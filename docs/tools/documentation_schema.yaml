@@ -1,0 +1,20 @@
+required:
+  - "Document ID"
+  - "Title"
+  - "Owner"
+  - "Audience"
+  - "Module"
+  - "Version"
+  - "Status"
+  - "Primary Document"
+  - "Depends On"
+  - "Related Modules"
+  - "Last Updated"
+  - "Last Reviewed"
+  - "AI Generated"
+  - "Reviewed By"
+
+optional:
+  - "Tags"
+  - "Keywords"
+  - "Notes"

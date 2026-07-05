@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DiscoveryManifest",
+  "type": "OBJECT",
+  "required": ["ir_version", "compiler_version", "artifact_type", "generated_at", "repository_commit", "provenance", "data"],
+  "properties": {
+    "ir_version": { "type": "STRING" },
+    "compiler_version": { "type": "STRING" },
+    "artifact_type": { "type": "STRING", "enum": ["discovery_manifest"] },
+    "generated_at": { "type": "STRING" },
+    "repository_commit": { "type": "STRING" },
+    "provenance": {
+      "type": "OBJECT",
+      "required": ["artifact_id", "produced_by", "consumes", "used_by"],
+      "properties": {
+        "artifact_id": { "type": "STRING" },
+        "produced_by": { "type": "STRING" },
+        "consumes": { "type": "ARRAY", "items": { "type": "STRING" } },
+        "used_by": { "type": "ARRAY", "items": { "type": "STRING" } }
+      }
+    },
+    "data": {
+      "type": "OBJECT",
+      "required": ["scan_scope", "excluded", "generated_artifacts"],
+      "properties": {
+        "scan_scope": { "type": "ARRAY", "items": { "type": "STRING" } },
+        "excluded": { "type": "ARRAY", "items": { "type": "STRING" } },
+        "generated_artifacts": { "type": "ARRAY", "items": { "type": "STRING" } }
+      }
+    }
+  }
+}

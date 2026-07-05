@@ -1,0 +1,21 @@
+{
+  "doctype": "DocType",
+  "name": "SMRITI Landed Cost Allocation Receipt",
+  "module": "SMRITI Inventory",
+  "custom": 0,
+  "istable": 1,
+  "issingle": 0,
+  "is_submittable": 0,
+  "fields": [
+    {
+      "fieldname": "purchase_receipt",
+      "fieldtype": "Link",
+      "label": "Purchase Receipt",
+      "options": "Purchase Receipt",
+      "reqd": 1,
+      "in_list_view": 1,
+      "description": "Validation (controller-level, not field-level): must be Submitted (docstatus=1); all rows across this Table MultiSelect must share the same Company and Currency."
+    }
+  ],
+  "_spec_reference": "SMRITI_Landed_Cost_Spec_v1.md Section 3.1 header field 'purchase_receipts' (Table MultiSelect). This is the backing child DocType Frappe requires for that fieldtype."
+}

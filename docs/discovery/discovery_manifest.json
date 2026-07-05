@@ -1,0 +1,40 @@
+{
+  "ir_version": "1.2",
+  "compiler_version": "1.1",
+  "generated_by": "SDC 1.1.2-GA",
+  "schema_version": "1.2",
+  "artifact_type": "discovery_manifest",
+  "generated_at": "2026-06-27T23:29:13Z",
+  "repository_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
+  "provenance": {
+    "artifact_id": "ART-MANIFEST-00001",
+    "produced_by": "Phase0_Discovery",
+    "consumes": [],
+    "used_by": [
+      "compiler_core"
+    ]
+  },
+  "data": {
+    "scan_scope": [
+      "apps/smriti_retail_os"
+    ],
+    "excluded": [
+      "node_modules",
+      ".git",
+      "__pycache__",
+      "env",
+      "venv"
+    ],
+    "generated_artifacts": [
+      "docs/discovery/file_inventory.json",
+      "docs/discovery/doctype_inventory.json",
+      "docs/discovery/field_inventory.json",
+      "docs/discovery/api_inventory.json",
+      "docs/discovery/business_dictionary.json",
+      "docs/discovery/screen_inventory.json",
+      "docs/discovery/collections_inventory.json",
+      "docs/discovery/search_index.json",
+      "docs/discovery/dependency_graph.json"
+    ]
+  }
+}

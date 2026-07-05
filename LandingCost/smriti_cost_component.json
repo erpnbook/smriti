@@ -1,0 +1,56 @@
+{
+  "doctype": "DocType",
+  "name": "SMRITI Cost Component",
+  "module": "SMRITI Inventory",
+  "custom": 0,
+  "istable": 0,
+  "issingle": 0,
+  "is_submittable": 0,
+  "autoname": "field:component_code",
+  "naming_rule": "By fieldname",
+  "track_changes": 1,
+  "fields": [
+    {
+      "fieldname": "component_code",
+      "fieldtype": "Data",
+      "label": "Component Code",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1,
+      "description": "e.g. FREIGHT, INSURANCE, HANDLING, LOADING, UNLOADING, COURIER, QC, PACKAGING, OTHER"
+    },
+    {
+      "fieldname": "component_name",
+      "fieldtype": "Data",
+      "label": "Component Name",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "default_affects_inventory_cost",
+      "fieldtype": "Check",
+      "label": "Include In Unit Cost (Default)",
+      "default": "1",
+      "description": "Default value applied to Cost Line rows using this component; user can override per line."
+    },
+    {
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "label": "Is Active",
+      "default": "1",
+      "in_list_view": 1,
+      "description": "Soft-deactivate without breaking historical references. Deletion of a component referenced by any Submitted allocation must be blocked at the controller level (see validation spec)."
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1, "write": 1, "create": 1, "delete": 1
+    },
+    {
+      "role": "SMRITI Inventory Manager",
+      "read": 1, "write": 1, "create": 1, "delete": 0
+    }
+  ],
+  "_spec_reference": "SMRITI_Landed_Cost_Spec_v1.md Section 2.1, Revision D"
+}

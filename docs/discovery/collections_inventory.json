@@ -1,0 +1,1307 @@
+{
+  "ir_version": "1.2",
+  "compiler_version": "1.1",
+  "generated_by": "SDC 1.1.2-GA",
+  "schema_version": "1.2",
+  "artifact_type": "collections_inventory",
+  "generated_at": "2026-06-27T23:29:13Z",
+  "repository_commit": "43ea253a377f502e17d3006e1b2f6b179a785fa4",
+  "provenance": {
+    "artifact_id": "ART-COLLECTIONS-INV-00001",
+    "produced_by": "Phase0_Discovery",
+    "consumes": [
+      "sdc/rules/screen_narratives.json"
+    ],
+    "used_by": [
+      "docs_renderers",
+      "dependency_graph"
+    ]
+  },
+  "data": [
+    {
+      "collection_id": "barcode_studio",
+      "title": "Barcode Studio",
+      "description": "Enterprise barcode printing, warehouse ergonomics, and reprint queue management.",
+      "assets": [
+        {
+          "artifact_id": "ART-DOCTYPE-00556",
+          "asset_type": "doctype",
+          "title": "SMRITI Barcode Settings"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00065",
+          "asset_type": "doctype",
+          "title": "SMRITI Print Job"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00066",
+          "asset_type": "doctype",
+          "title": "SMRITI Print Template"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00067",
+          "asset_type": "doctype",
+          "title": "SMRITI Print Template Version"
+        },
+        {
+          "artifact_id": "ART-FIELD-00135",
+          "asset_type": "field",
+          "title": "SMRITI Company Settings.custom_print_profiles_json"
+        },
+        {
+          "artifact_id": "ART-FIELD-00136",
+          "asset_type": "field",
+          "title": "SMRITI Company Settings.default_printer_ip"
+        },
+        {
+          "artifact_id": "ART-FIELD-00137",
+          "asset_type": "field",
+          "title": "SMRITI Company Settings.default_printer_port"
+        },
+        {
+          "artifact_id": "ART-FIELD-00138",
+          "asset_type": "field",
+          "title": "SMRITI Company Settings.default_printer_lang"
+        },
+        {
+          "artifact_id": "ART-FIELD-00139",
+          "asset_type": "field",
+          "title": "SMRITI Company Settings.default_label_size"
+        },
+        {
+          "artifact_id": "ART-FIELD-00099",
+          "asset_type": "field",
+          "title": "Item.custom_barcode_size"
+        },
+        {
+          "artifact_id": "ART-FIELD-00100",
+          "asset_type": "field",
+          "title": "Item Barcode.custom_is_primary"
+        },
+        {
+          "artifact_id": "ART-API-00101",
+          "asset_type": "api",
+          "title": "get_barcode_filters"
+        },
+        {
+          "artifact_id": "ART-API-00102",
+          "asset_type": "api",
+          "title": "get_print_templates"
+        },
+        {
+          "artifact_id": "ART-API-00103",
+          "asset_type": "api",
+          "title": "expand_item_variants"
+        },
+        {
+          "artifact_id": "ART-API-00104",
+          "asset_type": "api",
+          "title": "get_transaction_items_checklist"
+        },
+        {
+          "artifact_id": "ART-API-00105",
+          "asset_type": "api",
+          "title": "get_items_by_range"
+        },
+        {
+          "artifact_id": "ART-API-00106",
+          "asset_type": "api",
+          "title": "get_items_for_printing"
+        },
+        {
+          "artifact_id": "ART-API-00107",
+          "asset_type": "api",
+          "title": "generate_prn"
+        },
+        {
+          "artifact_id": "ART-API-00108",
+          "asset_type": "api",
+          "title": "send_to_network_printer"
+        },
+        {
+          "artifact_id": "ART-API-00109",
+          "asset_type": "api",
+          "title": "get_field_mapping_reference"
+        },
+        {
+          "artifact_id": "ART-API-00110",
+          "asset_type": "api",
+          "title": "get_recent_transactions"
+        },
+        {
+          "artifact_id": "ART-API-00111",
+          "asset_type": "api",
+          "title": "test_printer_connection"
+        },
+        {
+          "artifact_id": "ART-API-00112",
+          "asset_type": "api",
+          "title": "print_test_label"
+        },
+        {
+          "artifact_id": "ART-API-00113",
+          "asset_type": "api",
+          "title": "log_print_job"
+        },
+        {
+          "artifact_id": "ART-API-00114",
+          "asset_type": "api",
+          "title": "get_print_analytics"
+        },
+        {
+          "artifact_id": "ART-API-00115",
+          "asset_type": "api",
+          "title": "get_template_usage_stats"
+        },
+        {
+          "artifact_id": "ART-API-00116",
+          "asset_type": "api",
+          "title": "get_print_profiles"
+        },
+        {
+          "artifact_id": "ART-API-00117",
+          "asset_type": "api",
+          "title": "save_print_profile"
+        },
+        {
+          "artifact_id": "ART-API-00118",
+          "asset_type": "api",
+          "title": "delete_print_profile"
+        },
+        {
+          "artifact_id": "ART-API-00119",
+          "asset_type": "api",
+          "title": "save_print_template"
+        },
+        {
+          "artifact_id": "ART-API-00120",
+          "asset_type": "api",
+          "title": "delete_print_template"
+        },
+        {
+          "artifact_id": "ART-API-00121",
+          "asset_type": "api",
+          "title": "search_barcode_items"
+        },
+        {
+          "artifact_id": "ART-API-00122",
+          "asset_type": "api",
+          "title": "enqueue_print_job"
+        },
+        {
+          "artifact_id": "ART-API-00123",
+          "asset_type": "api",
+          "title": "_process_print_job"
+        },
+        {
+          "artifact_id": "ART-API-00124",
+          "asset_type": "api",
+          "title": "get_print_job_status"
+        },
+        {
+          "artifact_id": "ART-API-00125",
+          "asset_type": "api",
+          "title": "retry_print_job"
+        },
+        {
+          "artifact_id": "ART-API-00126",
+          "asset_type": "api",
+          "title": "get_recent_print_jobs"
+        },
+        {
+          "artifact_id": "ART-API-00127",
+          "asset_type": "api",
+          "title": "get_print_template_versions"
+        },
+        {
+          "artifact_id": "ART-API-00128",
+          "asset_type": "api",
+          "title": "restore_print_template_version"
+        },
+        {
+          "artifact_id": "ART-API-00129",
+          "asset_type": "api",
+          "title": "validate_layout_diagnostics"
+        },
+        {
+          "artifact_id": "ART-API-00130",
+          "asset_type": "api",
+          "title": "cleanup_old_print_jobs"
+        },
+        {
+          "artifact_id": "ART-API-00131",
+          "asset_type": "api",
+          "title": "get_barcode_feature_flags"
+        },
+        {
+          "artifact_id": "ART-API-00132",
+          "asset_type": "api",
+          "title": "log_barcode_scan_event"
+        },
+        {
+          "artifact_id": "ART-API-00133",
+          "asset_type": "api",
+          "title": "aggregate_scan_telemetry"
+        },
+        {
+          "artifact_id": "ART-API-00208",
+          "asset_type": "api",
+          "title": "add_item_by_barcode"
+        },
+        {
+          "artifact_id": "ART-API-00248",
+          "asset_type": "api",
+          "title": "generate_ean13_barcode"
+        },
+        {
+          "artifact_id": "ART-API-00257",
+          "asset_type": "api",
+          "title": "get_items_missing_barcodes"
+        },
+        {
+          "artifact_id": "ART-API-00379",
+          "asset_type": "api",
+          "title": "resolve_barcode"
+        },
+        {
+          "artifact_id": "ART-API-00624",
+          "asset_type": "api",
+          "title": "resolve_label_preview"
+        }
+      ],
+      "coverage_score": 100.0,
+      "validation_score": 85.0,
+      "drift_score": 100.0
+    },
+    {
+      "collection_id": "psv_depot",
+      "title": "PSV Depot",
+      "description": "Party Stock Visibility, distributor inventory levels, coverage days, and aging.",
+      "assets": [
+        {
+          "artifact_id": "ART-DOCTYPE-00001",
+          "asset_type": "doctype",
+          "title": "PSV Channel Partner"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00002",
+          "asset_type": "doctype",
+          "title": "PSV Channel Partner Brand"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00003",
+          "asset_type": "doctype",
+          "title": "PSV Ledger Entry"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00004",
+          "asset_type": "doctype",
+          "title": "PSV Reorder Rule"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00005",
+          "asset_type": "doctype",
+          "title": "PSV Stock Aging Snapshot"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00006",
+          "asset_type": "doctype",
+          "title": "PSV System Settings"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00009",
+          "asset_type": "doctype",
+          "title": "SMRITI Attribution Ledger"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00014",
+          "asset_type": "doctype",
+          "title": "SMRITI Benefit Ledger"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00026",
+          "asset_type": "doctype",
+          "title": "SMRITI Commission Ledger"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00064",
+          "asset_type": "doctype",
+          "title": "SMRITI Party Stock Ledger Entry"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00070",
+          "asset_type": "doctype",
+          "title": "SMRITI PSV Activity Log"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00071",
+          "asset_type": "doctype",
+          "title": "SMRITI PSV Exam Attempt"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00072",
+          "asset_type": "doctype",
+          "title": "SMRITI PSV Exception Record"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00073",
+          "asset_type": "doctype",
+          "title": "SMRITI PSV Reorder Rule"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00074",
+          "asset_type": "doctype",
+          "title": "SMRITI PSV Settings"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00075",
+          "asset_type": "doctype",
+          "title": "SMRITI PSV Transaction"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00076",
+          "asset_type": "doctype",
+          "title": "SMRITI PSV Transaction Item"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00097",
+          "asset_type": "doctype",
+          "title": "SMRITI Wallet Ledger"
+        },
+        {
+          "artifact_id": "ART-API-00289",
+          "asset_type": "api",
+          "title": "get_redistribution_suggestions"
+        },
+        {
+          "artifact_id": "ART-API-00290",
+          "asset_type": "api",
+          "title": "get_channel_health_score"
+        },
+        {
+          "artifact_id": "ART-API-00291",
+          "asset_type": "api",
+          "title": "get_sellin_sellout_summary"
+        },
+        {
+          "artifact_id": "ART-API-00292",
+          "asset_type": "api",
+          "title": "get_stock_cover_risks"
+        },
+        {
+          "artifact_id": "ART-API-00293",
+          "asset_type": "api",
+          "title": "get_channel_stock_trend"
+        },
+        {
+          "artifact_id": "ART-API-00294",
+          "asset_type": "api",
+          "title": "get_inventory_productivity_metrics"
+        },
+        {
+          "artifact_id": "ART-API-00295",
+          "asset_type": "api",
+          "title": "get_inventory_productivity_methodology"
+        },
+        {
+          "artifact_id": "ART-API-00296",
+          "asset_type": "api",
+          "title": "get_dashboard_summary"
+        },
+        {
+          "artifact_id": "ART-API-00297",
+          "asset_type": "api",
+          "title": "get_party_balance_detail"
+        },
+        {
+          "artifact_id": "ART-API-00298",
+          "asset_type": "api",
+          "title": "get_reorder_dashboard_data"
+        },
+        {
+          "artifact_id": "ART-API-00299",
+          "asset_type": "api",
+          "title": "create_psa"
+        },
+        {
+          "artifact_id": "ART-API-00300",
+          "asset_type": "api",
+          "title": "update_psa"
+        },
+        {
+          "artifact_id": "ART-API-00301",
+          "asset_type": "api",
+          "title": "get_psa"
+        },
+        {
+          "artifact_id": "ART-API-00302",
+          "asset_type": "api",
+          "title": "list_psas"
+        },
+        {
+          "artifact_id": "ART-API-00303",
+          "asset_type": "api",
+          "title": "upload_sell_through"
+        },
+        {
+          "artifact_id": "ART-API-00304",
+          "asset_type": "api",
+          "title": "fetch_channel_balance"
+        },
+        {
+          "artifact_id": "ART-API-00305",
+          "asset_type": "api",
+          "title": "get_psv_health"
+        },
+        {
+          "artifact_id": "ART-API-00306",
+          "asset_type": "api",
+          "title": "create_reversal_entry"
+        },
+        {
+          "artifact_id": "ART-API-00307",
+          "asset_type": "api",
+          "title": "migrate_to_new_psv_partner"
+        },
+        {
+          "artifact_id": "ART-API-00308",
+          "asset_type": "api",
+          "title": "process_opening_balance"
+        },
+        {
+          "artifact_id": "ART-API-00309",
+          "asset_type": "api",
+          "title": "get_landing_cost"
+        },
+        {
+          "artifact_id": "ART-API-00310",
+          "asset_type": "api",
+          "title": "generate_snapshots"
+        },
+        {
+          "artifact_id": "ART-API-00427",
+          "asset_type": "api",
+          "title": "start_psv_exam"
+        },
+        {
+          "artifact_id": "ART-API-00428",
+          "asset_type": "api",
+          "title": "submit_psv_exam"
+        },
+        {
+          "artifact_id": "ART-API-00429",
+          "asset_type": "api",
+          "title": "get_psv_exam_status"
+        },
+        {
+          "artifact_id": "ART-API-00431",
+          "asset_type": "api",
+          "title": "download_psv_certificate"
+        },
+        {
+          "artifact_id": "ART-API-00432",
+          "asset_type": "api",
+          "title": "verify_psv_certificate"
+        },
+        {
+          "artifact_id": "ART-API-00485",
+          "asset_type": "api",
+          "title": "get_wallet_ledger"
+        },
+        {
+          "artifact_id": "ART-TERM-00517",
+          "asset_type": "glossary_term",
+          "title": "Party Stock Account"
+        },
+        {
+          "artifact_id": "ART-TERM-00518",
+          "asset_type": "glossary_term",
+          "title": "Party Stock Visibility"
+        },
+        {
+          "artifact_id": "ART-TERM-00530",
+          "asset_type": "glossary_term",
+          "title": "Party Stock Ledger"
+        }
+      ],
+      "coverage_score": 100.0,
+      "validation_score": 85.0,
+      "drift_score": 100.0
+    },
+    {
+      "collection_id": "billing_hub",
+      "title": "Billing Hub",
+      "description": "Point of Sale billing center, pricing, promotions, and cash registry.",
+      "assets": [
+        {
+          "artifact_id": "ART-DOCTYPE-00031",
+          "asset_type": "doctype",
+          "title": "SMRITI Coupon Campaign"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00032",
+          "asset_type": "doctype",
+          "title": "SMRITI Coupon Rule"
+        },
+        {
+          "artifact_id": "ART-FIELD-00143",
+          "asset_type": "field",
+          "title": "POS Invoice.custom_is_held"
+        },
+        {
+          "artifact_id": "ART-FIELD-00144",
+          "asset_type": "field",
+          "title": "POS Invoice.custom_held_by"
+        },
+        {
+          "artifact_id": "ART-FIELD-00145",
+          "asset_type": "field",
+          "title": "POS Invoice.custom_hold_time"
+        },
+        {
+          "artifact_id": "ART-FIELD-00146",
+          "asset_type": "field",
+          "title": "POS Invoice.custom_billing_session_id"
+        },
+        {
+          "artifact_id": "ART-FIELD-00633",
+          "asset_type": "field",
+          "title": "POS Invoice.custom_business_display_number"
+        },
+        {
+          "artifact_id": "ART-FIELD-00147",
+          "asset_type": "field",
+          "title": "POS Invoice.custom_wallet_deduction"
+        },
+        {
+          "artifact_id": "ART-FIELD-00148",
+          "asset_type": "field",
+          "title": "POS Invoice.custom_loyalty_points_earned"
+        },
+        {
+          "artifact_id": "ART-FIELD-00149",
+          "asset_type": "field",
+          "title": "POS Invoice.custom_coupon_discount"
+        },
+        {
+          "artifact_id": "ART-FIELD-00634",
+          "asset_type": "field",
+          "title": "POS Invoice.custom_sales_person"
+        },
+        {
+          "artifact_id": "ART-FIELD-00635",
+          "asset_type": "field",
+          "title": "POS Invoice.custom_discount_reason"
+        },
+        {
+          "artifact_id": "ART-FIELD-00173",
+          "asset_type": "field",
+          "title": "Coupon Code.custom_coupon_scope"
+        },
+        {
+          "artifact_id": "ART-FIELD-00174",
+          "asset_type": "field",
+          "title": "Coupon Code.custom_campaign"
+        },
+        {
+          "artifact_id": "ART-FIELD-00175",
+          "asset_type": "field",
+          "title": "Coupon Code.custom_max_uses_per_customer"
+        },
+        {
+          "artifact_id": "ART-FIELD-00176",
+          "asset_type": "field",
+          "title": "Coupon Code.custom_max_uses_per_mobile"
+        },
+        {
+          "artifact_id": "ART-FIELD-00177",
+          "asset_type": "field",
+          "title": "Coupon Code.custom_max_uses_per_day"
+        },
+        {
+          "artifact_id": "ART-FIELD-00178",
+          "asset_type": "field",
+          "title": "Coupon Code.custom_max_discount_cap"
+        },
+        {
+          "artifact_id": "ART-FIELD-00185",
+          "asset_type": "field",
+          "title": "Sales Invoice.custom_sizewise_json"
+        },
+        {
+          "artifact_id": "ART-FIELD-00186",
+          "asset_type": "field",
+          "title": "Sales Invoice.custom_billing_session_id"
+        },
+        {
+          "artifact_id": "ART-FIELD-00636",
+          "asset_type": "field",
+          "title": "Sales Invoice.custom_business_display_number"
+        },
+        {
+          "artifact_id": "ART-FIELD-00187",
+          "asset_type": "field",
+          "title": "Sales Invoice.custom_party_stock_account"
+        },
+        {
+          "artifact_id": "ART-FIELD-00188",
+          "asset_type": "field",
+          "title": "Sales Invoice.custom_wallet_deduction"
+        },
+        {
+          "artifact_id": "ART-FIELD-00189",
+          "asset_type": "field",
+          "title": "Sales Invoice.custom_loyalty_points_earned"
+        },
+        {
+          "artifact_id": "ART-FIELD-00190",
+          "asset_type": "field",
+          "title": "Sales Invoice.custom_coupon_discount"
+        },
+        {
+          "artifact_id": "ART-FIELD-00637",
+          "asset_type": "field",
+          "title": "Sales Invoice.custom_sales_person"
+        },
+        {
+          "artifact_id": "ART-FIELD-00638",
+          "asset_type": "field",
+          "title": "Sales Invoice.custom_discount_reason"
+        },
+        {
+          "artifact_id": "ART-FIELD-00639",
+          "asset_type": "field",
+          "title": "Sales Invoice Item.custom_sales_person"
+        },
+        {
+          "artifact_id": "ART-FIELD-00640",
+          "asset_type": "field",
+          "title": "Sales Invoice Item.custom_discount_reason"
+        },
+        {
+          "artifact_id": "ART-FIELD-00641",
+          "asset_type": "field",
+          "title": "POS Invoice Item.custom_sales_person"
+        },
+        {
+          "artifact_id": "ART-FIELD-00642",
+          "asset_type": "field",
+          "title": "POS Invoice Item.custom_discount_reason"
+        },
+        {
+          "artifact_id": "ART-API-00208",
+          "asset_type": "api",
+          "title": "add_item_by_barcode"
+        },
+        {
+          "artifact_id": "ART-API-00209",
+          "asset_type": "api",
+          "title": "search_customer"
+        },
+        {
+          "artifact_id": "ART-API-00210",
+          "asset_type": "api",
+          "title": "hold_bill"
+        },
+        {
+          "artifact_id": "ART-API-00211",
+          "asset_type": "api",
+          "title": "recall_bill"
+        },
+        {
+          "artifact_id": "ART-API-00212",
+          "asset_type": "api",
+          "title": "submit_bill"
+        },
+        {
+          "artifact_id": "ART-API-00213",
+          "asset_type": "api",
+          "title": "search_items"
+        },
+        {
+          "artifact_id": "ART-API-00214",
+          "asset_type": "api",
+          "title": "load_held_invoice"
+        },
+        {
+          "artifact_id": "ART-API-00215",
+          "asset_type": "api",
+          "title": "validate_manager_override"
+        },
+        {
+          "artifact_id": "ART-API-00216",
+          "asset_type": "api",
+          "title": "generate_mock_eway_bill"
+        },
+        {
+          "artifact_id": "ART-API-00217",
+          "asset_type": "api",
+          "title": "create_return_invoice"
+        },
+        {
+          "artifact_id": "ART-API-00218",
+          "asset_type": "api",
+          "title": "create_custom_sales_return"
+        },
+        {
+          "artifact_id": "ART-API-00219",
+          "asset_type": "api",
+          "title": "update_sales_return"
+        },
+        {
+          "artifact_id": "ART-API-00220",
+          "asset_type": "api",
+          "title": "delete_sales_return"
+        },
+        {
+          "artifact_id": "ART-API-00259",
+          "asset_type": "api",
+          "title": "get_loyalty_schemes"
+        },
+        {
+          "artifact_id": "ART-API-00260",
+          "asset_type": "api",
+          "title": "save_loyalty_scheme"
+        },
+        {
+          "artifact_id": "ART-API-00373",
+          "asset_type": "api",
+          "title": "get_payment_modes"
+        },
+        {
+          "artifact_id": "ART-API-00375",
+          "asset_type": "api",
+          "title": "get_company_details"
+        },
+        {
+          "artifact_id": "ART-API-00376",
+          "asset_type": "api",
+          "title": "get_customer_details"
+        },
+        {
+          "artifact_id": "ART-API-00377",
+          "asset_type": "api",
+          "title": "search_customers"
+        },
+        {
+          "artifact_id": "ART-API-00378",
+          "asset_type": "api",
+          "title": "search_items"
+        },
+        {
+          "artifact_id": "ART-API-00379",
+          "asset_type": "api",
+          "title": "resolve_barcode"
+        },
+        {
+          "artifact_id": "ART-API-00380",
+          "asset_type": "api",
+          "title": "get_item_details_by_article"
+        },
+        {
+          "artifact_id": "ART-API-00381",
+          "asset_type": "api",
+          "title": "get_states_list"
+        },
+        {
+          "artifact_id": "ART-API-00382",
+          "asset_type": "api",
+          "title": "save_sizewise_invoice"
+        },
+        {
+          "artifact_id": "ART-API-00383",
+          "asset_type": "api",
+          "title": "submit_sizewise_invoice"
+        },
+        {
+          "artifact_id": "ART-API-00384",
+          "asset_type": "api",
+          "title": "get_sizewise_invoice"
+        },
+        {
+          "artifact_id": "ART-API-00385",
+          "asset_type": "api",
+          "title": "list_sizewise_invoices"
+        },
+        {
+          "artifact_id": "ART-API-00386",
+          "asset_type": "api",
+          "title": "cancel_sizewise_invoice"
+        },
+        {
+          "artifact_id": "ART-API-00387",
+          "asset_type": "api",
+          "title": "get_admin_session_for_pdf"
+        },
+        {
+          "artifact_id": "ART-API-00388",
+          "asset_type": "api",
+          "title": "get_pdt_column_map"
+        },
+        {
+          "artifact_id": "ART-API-00389",
+          "asset_type": "api",
+          "title": "preview_pdt_import"
+        },
+        {
+          "artifact_id": "ART-API-00396",
+          "asset_type": "api",
+          "title": "get_payment_mix"
+        },
+        {
+          "artifact_id": "ART-API-00442",
+          "asset_type": "api",
+          "title": "get_payments"
+        },
+        {
+          "artifact_id": "ART-API-00443",
+          "asset_type": "api",
+          "title": "get_payment_detail"
+        },
+        {
+          "artifact_id": "ART-API-00444",
+          "asset_type": "api",
+          "title": "create_payment"
+        },
+        {
+          "artifact_id": "ART-API-00445",
+          "asset_type": "api",
+          "title": "get_outstanding_invoices"
+        },
+        {
+          "artifact_id": "ART-API-00446",
+          "asset_type": "api",
+          "title": "get_parties"
+        },
+        {
+          "artifact_id": "ART-API-00447",
+          "asset_type": "api",
+          "title": "get_modes_of_payment"
+        },
+        {
+          "artifact_id": "ART-API-00459",
+          "asset_type": "api",
+          "title": "get_schemes"
+        },
+        {
+          "artifact_id": "ART-API-00460",
+          "asset_type": "api",
+          "title": "create_scheme"
+        },
+        {
+          "artifact_id": "ART-API-00461",
+          "asset_type": "api",
+          "title": "update_scheme"
+        },
+        {
+          "artifact_id": "ART-API-00462",
+          "asset_type": "api",
+          "title": "delete_scheme"
+        },
+        {
+          "artifact_id": "ART-API-00490",
+          "asset_type": "api",
+          "title": "save_coupon_campaign"
+        },
+        {
+          "artifact_id": "ART-API-00651",
+          "asset_type": "api",
+          "title": "calculate_billing_summary"
+        },
+        {
+          "artifact_id": "ART-SCREEN-BILLING",
+          "asset_type": "screen",
+          "title": "POS Billing Center"
+        }
+      ],
+      "coverage_score": 100.0,
+      "validation_score": 85.0,
+      "drift_score": 100.0
+    },
+    {
+      "collection_id": "item_master_center",
+      "title": "Item Master Center",
+      "description": "Catalog management, item definitions, and size run curves.",
+      "assets": [
+        {
+          "artifact_id": "ART-DOCTYPE-00002",
+          "asset_type": "doctype",
+          "title": "PSV Channel Partner Brand"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00057",
+          "asset_type": "doctype",
+          "title": "SMRITI Merchandise Category"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00059",
+          "asset_type": "doctype",
+          "title": "SMRITI Party Physical Item"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00061",
+          "asset_type": "doctype",
+          "title": "SMRITI Party Sales Item"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00076",
+          "asset_type": "doctype",
+          "title": "SMRITI PSV Transaction Item"
+        },
+        {
+          "artifact_id": "ART-DOCTYPE-00089",
+          "asset_type": "doctype",
+          "title": "SMRITI Sub Category"
+        },
+        {
+          "artifact_id": "ART-FIELD-00628",
+          "asset_type": "field",
+          "title": "SMRITI Company Settings.custom_enable_item_sales_person"
+        },
+        {
+          "artifact_id": "ART-FIELD-00629",
+          "asset_type": "field",
+          "title": "SMRITI Company Settings.custom_allow_item_sales_person_override"
+        },
+        {
+          "artifact_id": "ART-FIELD-00150",
+          "asset_type": "field",
+          "title": "Item.custom_mrp"
+        },
+        {
+          "artifact_id": "ART-FIELD-00151",
+          "asset_type": "field",
+          "title": "Item.custom_gst_percentage"
+        },
+        {
+          "artifact_id": "ART-FIELD-00152",
+          "asset_type": "field",
+          "title": "Item.custom_is_retail_item"
+        },
+        {
+          "artifact_id": "ART-FIELD-00153",
+          "asset_type": "field",
+          "title": "Item.custom_department"
+        },
+        {
+          "artifact_id": "ART-FIELD-00099",
+          "asset_type": "field",
+          "title": "Item.custom_barcode_size"
+        },
+        {
+          "artifact_id": "ART-FIELD-00154",
+          "asset_type": "field",
+          "title": "Item.custom_current_stock_html"
+        },
+        {
+          "artifact_id": "ART-FIELD-00155",
+          "asset_type": "field",
+          "title": "Item.custom_purchase_class"
+        },
+        {
+          "artifact_id": "ART-FIELD-00156",
+          "asset_type": "field",
+          "title": "Item.custom_merchandise_category"
+        },
+        {
+          "artifact_id": "ART-FIELD-00157",
+          "asset_type": "field",
+          "title": "Item.custom_sub_category"
+        },
+        {
+          "artifact_id": "ART-FIELD-00158",
+          "asset_type": "field",
+          "title": "Item.custom_gender"
+        },
+        {
+          "artifact_id": "ART-FIELD-00159",
+          "asset_type": "field",
+          "title": "Item.custom_upper_material"
+        },
+        {
+          "artifact_id": "ART-FIELD-00160",
+          "asset_type": "field",
+          "title": "Item.custom_outsole"
+        },
+        {
+          "artifact_id": "ART-FIELD-00161",
+          "asset_type": "field",
+          "title": "Item.custom_heel_type"
+        },
+        {
+          "artifact_id": "ART-FIELD-00162",
+          "asset_type": "field",
+          "title": "Item.custom_style_code"
+        },
+        {
+          "artifact_id": "ART-FIELD-00639",
+          "asset_type": "field",
+          "title": "Sales Invoice Item.custom_sales_person"
+        },
+        {
+          "artifact_id": "ART-FIELD-00640",
+          "asset_type": "field",
+          "title": "Sales Invoice Item.custom_discount_reason"
+        },
+        {
+          "artifact_id": "ART-FIELD-00641",
+          "asset_type": "field",
+          "title": "POS Invoice Item.custom_sales_person"
+        },
+        {
+          "artifact_id": "ART-FIELD-00642",
+          "asset_type": "field",
+          "title": "POS Invoice Item.custom_discount_reason"
+        },
+        {
+          "artifact_id": "ART-FIELD-00100",
+          "asset_type": "field",
+          "title": "Item Barcode.custom_is_primary"
+        },
+        {
+          "artifact_id": "ART-API-00103",
+          "asset_type": "api",
+          "title": "expand_item_variants"
+        },
+        {
+          "artifact_id": "ART-API-00104",
+          "asset_type": "api",
+          "title": "get_transaction_items_checklist"
+        },
+        {
+          "artifact_id": "ART-API-00105",
+          "asset_type": "api",
+          "title": "get_items_by_range"
+        },
+        {
+          "artifact_id": "ART-API-00106",
+          "asset_type": "api",
+          "title": "get_items_for_printing"
+        },
+        {
+          "artifact_id": "ART-API-00121",
+          "asset_type": "api",
+          "title": "search_barcode_items"
+        },
+        {
+          "artifact_id": "ART-API-00208",
+          "asset_type": "api",
+          "title": "add_item_by_barcode"
+        },
+        {
+          "artifact_id": "ART-API-00213",
+          "asset_type": "api",
+          "title": "search_items"
+        },
+        {
+          "artifact_id": "ART-API-00223",
+          "asset_type": "api",
+          "title": "get_versions"
+        },
+        {
+          "artifact_id": "ART-API-00233",
+          "asset_type": "api",
+          "title": "get_item_attributes"
+        },
+        {
+          "artifact_id": "ART-API-00234",
+          "asset_type": "api",
+          "title": "save_item_attributes"
+        },
+        {
+          "artifact_id": "ART-API-00235",
+          "asset_type": "api",
+          "title": "reset_item_attributes"
+        },
+        {
+          "artifact_id": "ART-API-00236",
+          "asset_type": "api",
+          "title": "scan_item_for_inventory"
+        },
+        {
+          "artifact_id": "ART-API-00243",
+          "asset_type": "api",
+          "title": "get_import_column_defs"
+        },
+        {
+          "artifact_id": "ART-API-00244",
+          "asset_type": "api",
+          "title": "get_import_template_headers"
+        },
+        {
+          "artifact_id": "ART-API-00245",
+          "asset_type": "api",
+          "title": "get_hsn_gst_rate"
+        },
+        {
+          "artifact_id": "ART-API-00246",
+          "asset_type": "api",
+          "title": "validate_import_rows"
+        },
+        {
+          "artifact_id": "ART-API-00247",
+          "asset_type": "api",
+          "title": "import_item_master"
+        },
+        {
+          "artifact_id": "ART-API-00248",
+          "asset_type": "api",
+          "title": "generate_ean13_barcode"
+        },
+        {
+          "artifact_id": "ART-API-00249",
+          "asset_type": "api",
+          "title": "get_style_details"
+        },
+        {
+          "artifact_id": "ART-API-00250",
+          "asset_type": "api",
+          "title": "create_style_with_variants"
+        },
+        {
+          "artifact_id": "ART-API-00251",
+          "asset_type": "api",
+          "title": "delete_size_variant"
+        },
+        {
+          "artifact_id": "ART-API-00252",
+          "asset_type": "api",
+          "title": "delete_style_and_variants"
+        },
+        {
+          "artifact_id": "ART-API-00253",
+          "asset_type": "api",
+          "title": "validate_pivot_values"
+        },
+        {
+          "artifact_id": "ART-API-00254",
+          "asset_type": "api",
+          "title": "import_pivot_item_master"
+        },
+        {
+          "artifact_id": "ART-API-00255",
+          "asset_type": "api",
+          "title": "reset_all_transactions"
+        },
+        {
+          "artifact_id": "ART-API-00256",
+          "asset_type": "api",
+          "title": "reset_all_items"
+        },
+        {
+          "artifact_id": "ART-API-00257",
+          "asset_type": "api",
+          "title": "get_items_missing_barcodes"
+        },
+        {
+          "artifact_id": "ART-API-00262",
+          "asset_type": "api",
+          "title": "quick_create_item"
+        },
+        {
+          "artifact_id": "ART-API-00274",
+          "asset_type": "api",
+          "title": "get_item_tax_templates"
+        },
+        {
+          "artifact_id": "ART-API-00275",
+          "asset_type": "api",
+          "title": "create_item_tax_template"
+        },
+        {
+          "artifact_id": "ART-API-00276",
+          "asset_type": "api",
+          "title": "get_brands"
+        },
+        {
+          "artifact_id": "ART-API-00277",
+          "asset_type": "api",
+          "title": "create_brand"
+        },
+        {
+          "artifact_id": "ART-API-00278",
+          "asset_type": "api",
+          "title": "delete_brand"
+        },
+        {
+          "artifact_id": "ART-API-00331",
+          "asset_type": "api",
+          "title": "get_smriti_item_groups"
+        },
+        {
+          "artifact_id": "ART-API-00332",
+          "asset_type": "api",
+          "title": "get_smriti_brands"
+        },
+        {
+          "artifact_id": "ART-API-00378",
+          "asset_type": "api",
+          "title": "search_items"
+        },
+        {
+          "artifact_id": "ART-API-00380",
+          "asset_type": "api",
+          "title": "get_item_details_by_article"
+        },
+        {
+          "artifact_id": "ART-API-00397",
+          "asset_type": "api",
+          "title": "get_top_items"
+        },
+        {
+          "artifact_id": "ART-API-00403",
+          "asset_type": "api",
+          "title": "get_brands"
+        },
+        {
+          "artifact_id": "ART-API-00404",
+          "asset_type": "api",
+          "title": "create_brand"
+        },
+        {
+          "artifact_id": "ART-API-00405",
+          "asset_type": "api",
+          "title": "update_brand"
+        },
+        {
+          "artifact_id": "ART-API-00406",
+          "asset_type": "api",
+          "title": "delete_brand"
+        },
+        {
+          "artifact_id": "ART-API-00407",
+          "asset_type": "api",
+          "title": "get_categories"
+        },
+        {
+          "artifact_id": "ART-API-00408",
+          "asset_type": "api",
+          "title": "create_category"
+        },
+        {
+          "artifact_id": "ART-API-00409",
+          "asset_type": "api",
+          "title": "update_category"
+        },
+        {
+          "artifact_id": "ART-API-00410",
+          "asset_type": "api",
+          "title": "delete_category"
+        },
+        {
+          "artifact_id": "ART-API-00482",
+          "asset_type": "api",
+          "title": "get_item_stock"
+        },
+        {
+          "artifact_id": "ART-SCREEN-ITEM_MASTER",
+          "asset_type": "screen",
+          "title": "Item Master Import"
+        }
+      ],
+      "coverage_score": 100.0,
+      "validation_score": 85.0,
+      "drift_score": 100.0
+    }
+  ]
+}

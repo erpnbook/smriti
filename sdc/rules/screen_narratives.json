@@ -1,0 +1,74 @@
+{
+  "item_master": {
+    "title": "Item Master Import",
+    "route": "/item_master",
+    "doctype": "Item",
+    "beginner": {
+      "purpose": "Used to import catalog item details directly from spreadsheet sheets.",
+      "how_to_use": "Select/Paste spreadsheet cells containing headers and rows, then validate and click submit.",
+      "example": "Importing 100 new styles of footwear with planned MRP and costs."
+    },
+    "power_user": {
+      "validation": "Validates size run curve consistency and verifies that brand and categories exist in SMRITI masters.",
+      "workflow": "Draft -> Row-by-Row Validation -> Bulk Insertion -> Stock Master Registry"
+    },
+    "developer": {
+      "manual_reference": "Volume 2 > Master Data > Item Import Services",
+      "training_reference": "TRN-item-master-import"
+    }
+  },
+  "billing": {
+    "title": "POS Billing Center",
+    "route": "/billing",
+    "doctype": "Sales Invoice",
+    "beginner": {
+      "purpose": "Used by cashiers to record counter sales, process payments, and print customer bills.",
+      "how_to_use": "Add items via barcode search or manual lookup, input customer details, select payment method, and complete sale.",
+      "example": "Billing 2 pairs of sports shoes with a 10% promotional discount."
+    },
+    "power_user": {
+      "validation": "Checks stock availability in the active POS store warehouse, applies active promotions, and calculates taxes.",
+      "workflow": "Scan -> Price Apply -> Payment Capture -> Invoice Insertion -> Receipt Print"
+    },
+    "developer": {
+      "manual_reference": "Volume 3 > Store Operations > POS Billing",
+      "training_reference": "TRN-billing-pos"
+    }
+  },
+  "purchase": {
+    "title": "Purchase Order Center",
+    "route": "/purchase",
+    "doctype": "Purchase Order",
+    "beginner": {
+      "purpose": "Used to raise formal purchase requests to suppliers for inventory procurement.",
+      "how_to_use": "Select supplier, add items with style codes, purchase prices, quantities, and submit for approval.",
+      "example": "Ordering 500 units of Autumn apparel from active supplier AITDL Supplier."
+    },
+    "power_user": {
+      "validation": "Validates prices against supplier price lists and ensures total quantity satisfies vendor minimum order quantities (MOQ).",
+      "workflow": "Reorder Suggestion -> Draft PO -> Vendor Alignment -> Management Approval -> Submission"
+    },
+    "developer": {
+      "manual_reference": "Volume 4 > Procurement > Purchase Operations",
+      "training_reference": "TRN-purchase-order"
+    }
+  },
+  "inventory": {
+    "title": "Stock Center",
+    "route": "/inventory",
+    "doctype": "Stock Entry",
+    "beginner": {
+      "purpose": "Used for recording stock transfers, warehouse adjustments, and physical count reconciliations.",
+      "how_to_use": "Select entry type (Material Transfer/Issue), source & target warehouses, add items, and log quantities.",
+      "example": "Transferring 50 pairs of shoes from Main Warehouse to Counter A."
+    },
+    "power_user": {
+      "validation": "Checks stock levels at source warehouse and logs entries dynamically to ERPNext Stock Ledger without bypassing tax controls.",
+      "workflow": "Request -> Verification -> Transfer Entry -> Target Receipt confirmation"
+    },
+    "developer": {
+      "manual_reference": "Volume 5 > Warehouse Operations > Inventory Ledger",
+      "training_reference": "TRN-inventory-ledger"
+    }
+  }
+}

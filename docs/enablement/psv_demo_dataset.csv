@@ -1,0 +1,13 @@
+Transaction Date,Distributor ID,Distributor Name,Location,SKU Code,Variant Size,Color,Landed Cost,MRP,Opening Balance,Primary Dispatch Qty,Secondary Sales Qty,Adjustments Qty,Closing Balance,Sales Velocity (Daily),Weeks of Cover (WOC),Aging Status
+2026-06-23,DIST-MUM-01,Mumbai Depot,Mumbai,DNM-BLU-32,Size 32,Blue,600,1500,200,500,80,0,620,2.5,35.4,Active (Excess)
+2026-06-23,DIST-MUM-01,Mumbai Depot,Mumbai,DNM-BLK-34,Size 34,Black,600,1500,150,300,60,0,390,2.0,27.8,Active (Excess)
+2026-06-23,DIST-PUN-02,Pune Depot,Pune,DNM-BLU-32,Size 32,Blue,600,1500,10,0,10,0,0,4.0,0.0,Stockout (Critical)
+2026-06-23,DIST-PUN-02,Pune Depot,Pune,DNM-BLK-34,Size 34,Black,600,1500,5,0,5,0,0,3.5,0.0,Stockout (Critical)
+2026-06-23,DIST-NAS-03,Nashik Depot,Nashik,TEE-WHT-S,Size S,White,200,600,380,0,4,-50,326,0.1,465.7,Dead Stock (90+ Days)
+2026-06-23,DIST-NAS-03,Nashik Depot,Nashik,TEE-BLK-M,Size M,Black,200,600,410,0,2,0,408,0.05,1165.7,Dead Stock (90+ Days)
+2026-06-23,DIST-MUM-01,Mumbai Depot,Mumbai,SNK-BLK-09,Size 9,Black,1200,3000,100,200,80,0,220,3.0,10.5,Fresh
+2026-06-23,DIST-MUM-01,Mumbai Depot,Mumbai,SNK-WHT-10,Size 10,White,1200,3000,80,150,60,0,170,2.5,9.7,Fresh
+2026-06-23,DIST-PUN-02,Pune Depot,Pune,SNK-BLK-09,Size 9,Black,1200,3000,2,0,2,0,0,5.0,0.0,Stockout (Critical)
+2026-06-23,DIST-PUN-02,Pune Depot,Pune,SNK-WHT-10,Size 10,White,1200,3000,1,0,1,0,0,4.5,0.0,Stockout (Critical)
+2026-06-23,DIST-NAS-03,Nashik Depot,Nashik,SNK-BLK-09,Size 9,Black,1200,3000,15,50,15,0,50,0.8,8.9,Active
+2026-06-23,DIST-NAS-03,Nashik Depot,Nashik,SNK-WHT-10,Size 10,White,1200,3000,10,30,8,0,32,0.6,7.6,Active

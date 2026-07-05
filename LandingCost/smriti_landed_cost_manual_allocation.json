@@ -1,0 +1,80 @@
+{
+  "doctype": "DocType",
+  "name": "SMRITI Landed Cost Manual Allocation",
+  "module": "SMRITI Inventory",
+  "custom": 0,
+  "istable": 1,
+  "issingle": 0,
+  "is_submittable": 0,
+  "fields": [
+    {
+      "fieldname": "cost_line_ref",
+      "fieldtype": "Data",
+      "label": "Cost Line Row Ref",
+      "reqd": 1,
+      "in_list_view": 1,
+      "read_only": 0,
+      "description": "Stores the stable Frappe child-row 'name' of the parent SMRITI Landed Cost Line entry this manual amount applies to. NEVER a positional/display index -- same immutability principle as purchase_receipt_row in the Audit Snapshot (see Section 3.2, Revision D). Populated by client script when the user opens the manual allocation grid for a cost line."
+    },
+    {
+      "fieldname": "cost_component",
+      "fieldtype": "Link",
+      "label": "Cost Component",
+      "options": "SMRITI Cost Component",
+      "reqd": 1,
+      "in_list_view": 1,
+      "read_only": 1,
+      "description": "Fetched from the linked Cost Line on row creation (client script). Read-only here -- the source of truth is the Cost Line. Stored redundantly for UI readability and filtering without joining back to the parent table."
+    },
+    {
+      "fieldname": "purchase_receipt",
+      "fieldtype": "Link",
+      "label": "Purchase Receipt",
+      "options": "Purchase Receipt",
+      "reqd": 1,
+      "in_list_view": 1,
+      "description": "The Purchase Receipt this row's manual allocation applies to. Used by on_submit to resolve the correct snapshot row."
+    },
+    {
+      "fieldname": "purchase_receipt_row",
+      "fieldtype": "Data",
+      "label": "Receipt Item Row Ref",
+      "reqd": 1,
+      "in_list_view": 1,
+      "description": "Stable Frappe child-row 'name' of the Purchase Receipt Item this amount is allocated to. NEVER a positional index. Matches the same identifier stored in SMRITI Allocation Audit Snapshot.purchase_receipt_row, enabling an exact join at on_submit time without ambiguity under row reordering."
+    },
+    {
+      "fieldname": "allocated_to_sku",
+      "fieldtype": "Link",
+      "label": "Item",
+      "options": "Item",
+      "reqd": 0,
+      "in_list_view": 1,
+      "read_only": 1,
+      "description": "Fetched from the Purchase Receipt Item row on population (client script). Read-only display aid -- the authoritative join key is purchase_receipt_row, not this field."
+    },
+    {
+      "fieldname": "qty",
+      "fieldtype": "Float",
+      "label": "Qty",
+      "read_only": 1,
+      "description": "Pulled from the Purchase Receipt Item row for display context only. Helps the user sanity-check their manual allocation amount relative to quantity without switching screens."
+    },
+    {
+      "fieldname": "base_value",
+      "fieldtype": "Currency",
+      "label": "Base Value (Row Share)",
+      "read_only": 1,
+      "description": "= qty x rate for this receipt item row. Displayed so the user can see the proportional weight of this row before entering a manual amount. Computed and written by client script at population time."
+    },
+    {
+      "fieldname": "allocated_amount",
+      "fieldtype": "Currency",
+      "label": "Allocated Amount",
+      "reqd": 1,
+      "in_list_view": 1,
+      "description": "The user-entered manual cost allocation for this specific (Cost Line x Receipt Item Row) pair. Must be >= 0 (enforced by on_submit validation -- see validation_spec.md Section 2.3). The sum of all rows sharing the same cost_line_ref must equal the Cost Line amount within the configured tolerance (default 0.01)."
+    }
+  ],
+  "_spec_reference": "SMRITI_Landed_Cost_Spec_v1.md Gap Resolution G1, Revision E. Gap: the original schema had no persistence layer for Manual allocation inputs entered during Draft state, causing on_submit to have no data source when allocation_basis = Manual. Resolution: this child DocType, linked as 'manual_allocations' on SMRITI Landed Cost Allocation, provides the stable keyed store. Grain: one row per (Cost Line Row Ref x Purchase Receipt Item Row Ref) pair. Populated by client script when user enters the manual allocation grid; read by get_manual_allocation_from_db() in on_submit. Immutability: rows are not deleted on Cancel per Section 1.3 -- they remain as the input record of what the user intended at submission time."
+}
