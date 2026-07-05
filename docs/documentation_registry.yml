@@ -1,0 +1,41 @@
+purchase_studio:
+  architecture:
+    - docs/08-architecture/purchase_studio_architecture.md
+  developer:
+    - docs/05-developer/purchase_studio_developer.md
+  user:
+    - docs/02-user-guide/purchase_center.md
+  walkthrough:
+    - docs/walkthrough/procurement/
+  knowledge:
+    - KNOWLEDGE_BASE.md
+  governance:
+    - .agents/AGENTS.md
+
+barcode_studio:
+  architecture:
+    - docs/08-architecture/barcode_studio_architecture.md
+  developer:
+    - docs/05-developer/barcode_studio_developer.md
+  user:
+    - docs/02-user-guide/barcode_studio.md
+  walkthrough:
+    - docs/walkthrough/barcode/
+  knowledge:
+    - KNOWLEDGE_BASE.md
+  governance:
+    - .agents/AGENTS.md
+
+psv_studio:
+  architecture:
+    - docs/08-architecture/psv_architecture.md
+  developer:
+    - docs/05-developer/psv_developer.md
+  user:
+    - docs/02-user-guide/psv.md
+  walkthrough:
+    - docs/walkthrough/inventory/
+  knowledge:
+    - KNOWLEDGE_BASE.md
+  governance:
+    - .agents/AGENTS.md

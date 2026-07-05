@@ -163,3 +163,24 @@ Structure messages as:
 * **Explanation**: Simple business-language explanation.
 * **Suggested Action**: Guidance on what to do next.
 * **Reference ID**: Support reference (e.g., `SMRITI-ERR-YYYYMMDD-XXXXXX`).
+
+---
+
+# SMRITI Documentation Governance Policy (DGP)
+
+## Objective
+Documentation is a first-class engineering artifact. Every code change must automatically determine which documentation is affected (using `docs/documentation_registry.yml`) and update only those documents.
+
+## 1. Documentation Impact Analysis (Rule 1 & 8)
+Before completing any implementation, the AI must perform a Documentation Impact Analysis using `docs/documentation_registry.yml` to determine affected documents (User Guide, Developer Guide, Architecture, Walkthrough, etc.).
+
+## 2. Auto Documentation Update (Rules 3–5)
+When implementation is completed, the AI must automatically:
+1. Update the affected documentation based on change classification (Code Only, API Change, Business Workflow Change, Architecture Change, Governance Change).
+2. Update the Walkthrough.
+3. Append the Walkthrough Index.
+4. Update the Knowledge Base.
+
+## 3. Documentation Report & Validation (Rules 6–7)
+At the end of every implementation, generate a Documentation Impact Report summarizing updated files, walkthroughs, and guides. Verify all required document updates are completed before closing the task.
+
