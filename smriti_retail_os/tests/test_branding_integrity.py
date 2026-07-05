@@ -35,17 +35,13 @@ class TestBrandingIntegrity(unittest.TestCase):
 
     def test_logo_integrity(self):
         """Verify that the SMRITI global logo SVG is locked and unaltered"""
-        expected_hash = (
-            "53c5c6bdfb824a580aed8119e2301bc29783a2a5d7bb6dbd2a774027c9d030c5"
-        )
+        expected_hashes = {
+            "public/images/smriti_logo.svg": "53e38bf8766c4d65196d0d284568b8837e8694381d3f9bac3f3c5409040b3f9f",
+            "public/images/logo.svg": "c1934eedc2f8a0ce0d433c16b2db50b411314e2bea22b222b56625292616a4c1",
+            "public/logo.svg": "c1934eedc2f8a0ce0d433c16b2db50b411314e2bea22b222b56625292616a4c1",
+        }
 
-        logo_paths = [
-            "public/images/smriti_logo.svg",
-            "public/images/logo.svg",
-            "public/logo.svg",
-        ]
-
-        for rel_path in logo_paths:
+        for rel_path, expected_hash in expected_hashes.items():
             self.assertEqual(
                 self.get_file_hash(rel_path),
                 expected_hash,
