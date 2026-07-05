@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 #
 # @file:    smriti_retail_os/purchase_studio/service/purchase_service.py
-# @desc:    All Purchase Studio business logic.
-#           UI → purchase_api.py → THIS FILE → erp_adapter.py → ERPNext
-#           No UI code, no frappe.whitelist, no direct ERPNext DocType calls.
+# @desc:    All Purchase Studio business logic, completely independent of ERPNext PO/Supplier.
+#           UI → purchase_api.py → THIS FILE → new SMRITI services/repos.
+#           No ERPNext DocType calls.
 # @author:  Jawahar R. Mallah <jawahar.mallah@gmail.com>
 # @std:     AES-002 SSDL v1.0.0 — Layer 4 (Business Logic)
 # @license: MIT
@@ -14,11 +14,10 @@ import frappe
 from frappe import _
 from frappe.utils import flt, cint, nowdate, now_datetime
 
-from smriti_retail_os.purchase_studio.adapter import erp_adapter
-from smriti_retail_os.purchase_studio.service import (
-    audit_service,
-    purchase_settings_service as settings_svc
-)
+from smriti_retail_os.purchase_studio.service.purchase_order_service import PurchaseOrderService
+from smriti_retail_os.purchase_studio.service.purchase_workflow_service import PurchaseWorkflowService
+from smriti_retail_os.purchase_studio.service.purchase_settings_service import get_settings
+from smriti_retail_os.purchase_studio.service import audit_service
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -52,742 +51,221 @@ def check_system_manager():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# DASHBOARD
+# CORE OPERATIONS delegating to PurchaseOrderService
 # ─────────────────────────────────────────────────────────────────────────────
 
 def get_dashboard_data(company=None):
-    """Returns KPI summary for Purchase Studio dashboard."""
     check_any_purchase_role()
-    company = company or erp_adapter.resolve_company()
+    return PurchaseOrderService.get_dashboard_data(company)
 
-    open_pos = erp_adapter.count_open_purchase_orders(company)
-    pending_grns = erp_adapter.count_pending_grns(company)
-    unpaid_amt = erp_adapter.get_outstanding_payables_total(company)
-
-    from datetime import date
-    today = date.today()
-    month_start = today.replace(day=1).isoformat()
-    month_spend = erp_adapter.get_monthly_spend_total(company, month_start)
-
-    # Recent activity — last 10 docs across PO, GRN, PI
-    recent = erp_adapter.get_recent_activities(company, limit=4)
-    recent.sort(key=lambda x: x["date"], reverse=True)
-    return {
-        "open_pos":            open_pos,
-        "pending_grns":        pending_grns,
-        "unpaid_invoices_amt": unpaid_amt,
-        "month_spend":         month_spend,
-        "recent_activity":     recent[:10]
-    }
-
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# PURCHASE ORDERS
-# ─────────────────────────────────────────────────────────────────────────────
 
 def list_purchase_orders(company=None, supplier=None, status=None,
-                         from_date=None, to_date=None,
-                         search_term=None, page=1, page_size=50):
+                          from_date=None, to_date=None,
+                          search_term=None, page=1, page_size=50):
     check_any_purchase_role()
-    filters = {"docstatus": ["!=", 2]}
+    return PurchaseOrderService.list_purchase_orders(
+        company=company, supplier=supplier, status=status,
+        from_date=from_date, to_date=to_date, search_term=search_term,
+        page=page, page_size=page_size
+    )
+
+
+def get_purchase_order_detail(po_name):
+    check_any_purchase_role()
+    return PurchaseOrderService.get_purchase_order_detail(po_name)
+
+
+def create_purchase_order(supplier, items_list, schedule_date=None,
+                           remarks=None, image_base64=None,
+                           image_filename=None, warehouse=None):
+    check_manager_role()
+    res = PurchaseOrderService.create_purchase_order(
+        supplier=supplier,
+        items_list=items_list,
+        schedule_date=schedule_date,
+        remarks=remarks,
+        warehouse=warehouse
+    )
+    
+    audit_service.log(
+        event_type=audit_service.PO_SUBMITTED if res["status"] == "submitted" else audit_service.PO_PENDING_APPROVAL,
+        payload={"doctype": "SMRITI Purchase Order", "name": res["name"], "supplier": supplier},
+        after={"status": res["status"]}
+    )
+    return res
+
+
+def resolve_po_approval(po_name, action, reason=None):
+    check_system_manager()
+    res = PurchaseOrderService.resolve_po_approval(po_name, action, reason)
+    audit_service.log(
+        event_type=audit_service.PO_APPROVED if action == "approve" else audit_service.PO_REJECTED,
+        payload={"doctype": "SMRITI Purchase Order", "name": po_name},
+        reason=reason
+    )
+    return res
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GRN / RECEIPTS Simulation
+# ─────────────────────────────────────────────────────────────────────────────
+
+def list_grns(company=None, supplier=None, po_name=None, status=None,
+              from_date=None, to_date=None, mode=None, page=1, page_size=50):
+    # Simulated GRNs list by listing SMRITI POs that are Partially Received or Completed
+    check_any_purchase_role()
+    filters = {"status": ["in", ["Partially Received", "Completed"]]}
     if company:
         filters["company"] = company
     if supplier:
         filters["supplier"] = supplier
-    if status:
-        filters["status"] = status
+    if po_name:
+        filters["name"] = po_name
     if from_date:
         filters["transaction_date"] = [">=", from_date]
     if to_date:
         filters.setdefault("transaction_date", ["<=", to_date])
 
-    fields = ["name", "supplier", "supplier_name", "transaction_date",
-              "grand_total", "per_received", "status",
-              "smriti_approval_status"]
-
-    result = erp_adapter.list_purchase_orders(filters, fields, page, page_size)
-
-    if search_term:
-        q = search_term.lower()
-        result["items"] = [
-            i for i in result["items"]
-            if q in (i.name or "").lower() or q in (i.supplier_name or "").lower()
-        ]
-        result["total"] = len(result["items"])
-
-    return result
-
-
-def get_purchase_order_detail(po_name):
-    check_any_purchase_role()
-    po = erp_adapter.get_po(po_name)
-    items = []
-    for item in po.items:
-        pending = flt(item.qty) - flt(item.received_qty)
-        has_batch = erp_adapter.check_item_has_batch(item.item_code)
-        items.append({
-            "item_code":    item.item_code,
-            "item_name":    item.item_name,
-            "brand":        getattr(item, "brand", ""),
-            "qty":          flt(item.qty),
-            "received_qty": flt(item.received_qty),
-            "pending_qty":  flt(pending),
-            "rate":         flt(item.rate),
-            "amount":       flt(item.amount),
-            "warehouse":    item.warehouse,
-            "uom":          item.uom,
-            "has_batch_no": cint(has_batch),
-            "po_item_name": item.name
-        })
-    return {
-        "name":                   po.name,
-        "supplier":               po.supplier,
-        "supplier_name":          po.supplier_name,
-        "company":                po.company,
-        "transaction_date":       str(po.transaction_date or ""),
-        "schedule_date":          str(po.schedule_date or ""),
-        "terms":                  po.terms or "",
-        "status":                 po.status,
-        "grand_total":            flt(po.grand_total),
-        "per_received":           flt(po.per_received),
-        "smriti_approval_status": po.smriti_approval_status or "Draft",
-        "smriti_approved_by":     po.smriti_approved_by or "",
-        "smriti_approved_on":     str(po.smriti_approved_on or ""),
-        "items":                  items
-    }
-
-
-def create_purchase_order(supplier, items_list, schedule_date=None,
-                          remarks=None, image_base64=None,
-                          image_filename=None, warehouse=None):
-    check_manager_role()
-
-    if not items_list:
-        frappe.throw(_("Cannot create Purchase Order with an empty items list."))
-    if not supplier or not erp_adapter.supplier_exists(supplier):
-        frappe.throw(_("Supplier '{0}' not found.").format(supplier))
-
-    company = erp_adapter.resolve_company()
-    warehouse = warehouse or settings_svc.get_default_warehouse_setting() \
-                or erp_adapter.get_default_warehouse(company)
-
-    # Handle variant image upload
-    file_url = _save_variant_image(image_base64, image_filename, items_list)
-
-    # Auto-create missing items if setting allows
-    if settings_svc.is_auto_create_items():
-        for it in items_list:
-            _auto_create_item_if_missing(
-                it.get("item_code"), flt(it.get("rate")), file_url
-            )
-
-    # Build PO document
-    po = erp_adapter.create_purchase_order_document()
-    po.supplier      = supplier
-    po.transaction_date = nowdate()
-    po.schedule_date = schedule_date or nowdate()
-    po.company       = company
-    if remarks:
-        po.terms = remarks
-
-    item_flags = erp_adapter.get_item_flags([it.get("item_code") for it in items_list])
-    for it in items_list:
-        item_code = it.get("item_code")
-        qty       = flt(it.get("qty"))
-        rate      = flt(it.get("rate"))
-        wh        = it.get("warehouse") or warehouse
-
-        if qty <= 0:
-            frappe.throw(_("Item '{0}': qty must be greater than 0.").format(item_code))
-
-        po.append("items", {
-            "item_code":     item_code,
-            "qty":           qty,
-            "rate":          rate,
-            "warehouse":     wh,
-            "schedule_date": schedule_date or nowdate(),
-            "uom":           it.get("stock_uom") or (item_flags.get(item_code) or {}).get("stock_uom") or "Nos"
-        })
-
-    grand_total = sum(flt(it.get("qty")) * flt(it.get("rate")) for it in items_list)
-
-    # Check approval requirement
-    approval_required = settings_svc.check_approval_required(grand_total)
-
-    if approval_required:
-        # Save as draft, mark pending approval — do NOT submit yet
-        po.smriti_approval_status = "Pending"
-        po.insert(ignore_permissions=True)
-        frappe.db.commit()
-        audit_service.log(
-            event_type=audit_service.PO_PENDING_APPROVAL,
-            payload={"doctype": "Purchase Order", "name": po.name,
-                     "supplier": supplier, "grand_total": grand_total},
-            after={"smriti_approval_status": "Pending"}
-        )
-        return {
-            "status":            "pending_approval",
-            "name":              po.name,
-            "approval_required": True,
-            "threshold":         frappe.get_single("SMRITI Purchase Settings").approval_threshold,
-            "message":           _("Purchase Order pending approval.")
-        }
-    else:
-        # Submit immediately
-        po_name = erp_adapter.insert_and_submit_po(po)
-        audit_service.log(
-            event_type=audit_service.PO_SUBMITTED,
-            payload={"doctype": "Purchase Order", "name": po_name,
-                     "supplier": supplier, "grand_total": grand_total}
-        )
-        return {
-            "status":  "submitted",
-            "name":    po_name,
-            "message": _("Purchase Order {0} submitted successfully.").format(po_name)
-        }
-
-
-def resolve_po_approval(po_name, action, reason=None):
-    check_system_manager()
-
-    if action not in ("approve", "reject"):
-        frappe.throw(_("Invalid action '{0}'. Must be 'approve' or 'reject'.").format(action))
-    if action == "reject" and not reason:
-        frappe.throw(_("Rejection reason is mandatory."))
-
-    # Row-level lock to prevent concurrent approval
-    current_status = erp_adapter.lock_and_get_po_status(po_name)
-    if not current_status:
-        frappe.throw(_("Purchase Order '{0}' not found.").format(po_name), frappe.DoesNotExistError)
-    if current_status != "Pending":
-        frappe.throw(
-            _("Purchase Order '{0}' is not in Pending Approval state (current: {1}).").format(
-                po_name, current_status
-            )
-        )
-
-    po = erp_adapter.get_po(po_name)
-
-    if action == "approve":
-        po.smriti_approval_status = "Approved"
-        po.smriti_approved_by     = frappe.session.user
-        po.smriti_approved_on     = now_datetime()
-        po.save(ignore_permissions=True)
-        erp_adapter.insert_and_submit_po(po)  # actually submits now
-        audit_service.log(
-            event_type=audit_service.PO_APPROVED,
-            payload={"doctype": "Purchase Order", "name": po_name,
-                     "approved_by": frappe.session.user},
-            before={"smriti_approval_status": "Pending"},
-            after={"smriti_approval_status": "Approved"}
-        )
-        return {"status": "approved", "name": po_name,
-                "message": _("Purchase Order {0} approved and submitted.").format(po_name)}
-    else:
-        erp_adapter.set_po_approval_status(po_name, "Rejected", reason)
-        frappe.db.commit()
-        audit_service.log(
-            event_type=audit_service.PO_REJECTED,
-            payload={"doctype": "Purchase Order", "name": po_name},
-            before={"smriti_approval_status": "Pending"},
-            after={"smriti_approval_status": "Rejected"},
-            reason=reason
-        )
-        return {"status": "rejected", "name": po_name,
-                "message": _("Purchase Order {0} rejected.").format(po_name)}
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# GRN / PURCHASE RECEIPT
-# ─────────────────────────────────────────────────────────────────────────────
-
-def list_grns(company=None, supplier=None, po_name=None, status=None,
-              from_date=None, to_date=None, mode=None, page=1, page_size=50):
-    check_any_purchase_role()
-    filters = {"docstatus": 1, "is_return": 0}
-    if company:
-        filters["company"] = company
-    if supplier:
-        filters["supplier"] = supplier
-    if from_date:
-        filters["posting_date"] = [">=", from_date]
-    if to_date:
-        filters.setdefault("posting_date", ["<=", to_date])
-
-    fields = ["name", "supplier", "supplier_name", "posting_date",
-              "grand_total", "per_billed", "status"]
-    return erp_adapter.list_grns(filters, fields, page, page_size)
+    limit_start = (int(page) - 1) * int(page_size)
+    items = frappe.get_list(
+        "SMRITI Purchase Order",
+        filters=filters,
+        fields=["name", "supplier", "supplier_name", "transaction_date as posting_date", "grand_total", "per_received as per_billed", "status"],
+        order_by="modified desc",
+        limit_start=limit_start,
+        limit_page_length=int(page_size)
+    )
+    total = frappe.db.count("SMRITI Purchase Order", filters=filters)
+    return {"items": items, "total": total}
 
 
 def get_grn_detail(grn_name):
+    # Retrieve PO received quantities as a simulated GRN
     check_any_purchase_role()
-    pr = erp_adapter.get_grn(grn_name)
+    po = PurchaseOrderService.get_purchase_order_detail(grn_name)
     items = []
-    for item in pr.items:
-        items.append({
-            "item_code":          item.item_code,
-            "item_name":          item.item_name,
-            "qty":                flt(item.qty),
-            "rate":               flt(item.rate),
-            "amount":             flt(item.amount),
-            "warehouse":          item.warehouse,
-            "batch_no":           item.batch_no or "",
-            "uom":                item.uom,
-            "purchase_order":     item.purchase_order or "",
-            "purchase_order_item": item.purchase_order_item or ""
-        })
+    for it in po["items"]:
+        if flt(it["received_qty"]) > 0:
+            items.append({
+                "item_code": it["item_code"],
+                "item_name": it["item_name"],
+                "qty": it["received_qty"],
+                "rate": it["rate"],
+                "amount": it["received_qty"] * it["rate"],
+                "warehouse": it["warehouse"],
+                "uom": it["uom"],
+                "batch_no": "BATCH-TEMP-SMRITI"
+            })
     return {
-        "name":          pr.name,
-        "supplier":      pr.supplier,
-        "supplier_name": pr.supplier_name,
-        "company":       pr.company,
-        "posting_date":  str(pr.posting_date or ""),
-        "grand_total":   flt(pr.grand_total),
-        "per_billed":    flt(pr.per_billed),
-        "status":        pr.status,
-        "items":         items
+        "name": po["name"],
+        "supplier": po["supplier"],
+        "supplier_name": po["supplier_name"],
+        "company": po["company"],
+        "posting_date": po["transaction_date"],
+        "grand_total": sum(i["amount"] for i in items),
+        "per_billed": po["per_received"],
+        "status": "Submitted" if po["status"] in ("Partially Received", "Completed") else "Draft",
+        "items": items
     }
 
 
 def create_grn(supplier, items_list, po_name=None, warehouse=None):
     check_manager_role()
-
-    if not items_list:
-        frappe.throw(_("Cannot create GRN with an empty items list."))
-    if not supplier or not erp_adapter.supplier_exists(supplier):
-        frappe.throw(_("Supplier '{0}' not found.").format(supplier))
-
-    company = erp_adapter.resolve_company(po_name)
-    warehouse = warehouse or settings_svc.get_default_warehouse_setting() \
-                or erp_adapter.get_default_warehouse(company)
-
-    # Validate against PO if provided
-    if po_name:
-        if not erp_adapter.purchase_order_exists(po_name):
-            frappe.throw(_("Purchase Order '{0}' not found.").format(po_name))
-        po_supplier = erp_adapter.get_po_supplier(po_name)
-        if po_supplier != supplier:
-            frappe.throw(_(
-                "Supplier mismatch: GRN supplier '{0}' does not match PO supplier '{1}'."
-            ).format(supplier, po_supplier))
-
-    # Validate quantities against PO (with row lock for concurrency)
-    validate_grn_lines(items_list, po_name, settings_svc.is_over_receipt_allowed())
-
-    # Build PR document
-    pr = erp_adapter.create_purchase_receipt_document()
-    pr.supplier     = supplier
-    pr.posting_date = nowdate()
-    pr.company      = company
-
-    if po_name and erp_adapter.purchase_order_exists(po_name):
-        po_doc = erp_adapter.get_po(po_name)
-        pr.buying_price_list = po_doc.buying_price_list
-        pr.currency          = po_doc.currency
-        pr.conversion_rate   = po_doc.conversion_rate
-
-    item_flags = erp_adapter.get_item_flags([it.get("item_code") for it in items_list])
-
-    for it in items_list:
-        item_code = it.get("item_code")
-        qty       = flt(it.get("qty"))
-        rate      = flt(it.get("rate"))
-        wh        = it.get("warehouse") or warehouse
-
-        if qty <= 0:
-            frappe.throw(_("Item '{0}': received qty must be greater than 0.").format(item_code))
-
-        flags = item_flags.get(item_code) or frappe._dict()
-
-        # Batch handling
-        batch_no = None
-        if cint(flags.get("has_batch_no")):
-            batch_no = it.get("batch_no")
-            if not batch_no:
-                expiry_date = it.get("expiry_date")
-                batch_no = erp_adapter.get_or_create_batch(item_code, expiry_date)
-                audit_service.log(
-                    event_type=audit_service.BATCH_ASSIGNED,
-                    payload={"doctype": "Batch", "name": batch_no,
-                             "item_code": item_code, "expiry_date": expiry_date or ""}
-                )
-
-        row = {
-            "item_code": item_code,
-            "qty":       qty,
-            "rate":      rate,
-            "warehouse": wh,
-            "batch_no":  batch_no,
-            "uom":       it.get("stock_uom") or flags.get("stock_uom") or "Nos"
-        }
-        if po_name:
-            row["purchase_order"]      = po_name
-            row["purchase_order_item"] = it.get("po_item_name")
-
-        pr.append("items", row)
-
-    grn_name = erp_adapter.insert_and_submit_grn(pr)
-
+    if not po_name:
+        frappe.throw(_("SMRITI Purchase Studio requires a Purchase Order reference for GRN creation."))
+    
+    received_items = {it["item_code"]: flt(it["qty"]) for it in items_list}
+    po = PurchaseWorkflowService.receive(po_name, received_items)
+    
     audit_service.log(
         event_type=audit_service.GRN_SUBMITTED,
-        payload={
-            "doctype":   "Purchase Receipt",
-            "name":      grn_name,
-            "supplier":  supplier,
-            "po_name":   po_name or "",
-            "items_count": len(items_list)
-        }
+        payload={"doctype": "SMRITI Purchase Order", "name": po_name, "supplier": supplier, "items_count": len(items_list)}
     )
     return {
-        "status":  "submitted",
-        "name":    grn_name,
-        "message": _("GRN {0} submitted. Stock updated.").format(grn_name)
+        "status": "submitted",
+        "name": po_name,
+        "message": _("SMRITI GRN simulated for PO {0} successfully.").format(po_name)
     }
-
-
-def validate_grn_lines(items_list, po_name, allow_over_receipt):
-    """
-    Validates received qty against PO pending qty.
-    Uses FOR UPDATE lock to prevent race conditions.
-    """
-    if not po_name:
-        return  # standalone GRN — no PO validation needed
-
-    # Lock the PO row
-    erp_adapter.lock_and_get_po_received_qty(po_name)
-
-    # Build pending qty map from PO
-    po_items = erp_adapter.get_po_item_lines(po_name)
-    pending_map = {
-        r.name: flt(r.qty) - flt(r.received_qty)
-        for r in po_items
-    }
-    item_pending = {}
-    for r in po_items:
-        item_pending[r.item_code] = flt(r.qty) - flt(r.received_qty)
-
-    if not allow_over_receipt:
-        tol = flt(settings_svc.get_settings().get("tolerance_percent") or 0)
-        for it in items_list:
-            item_code = it.get("item_code")
-            recv_qty  = flt(it.get("qty"))
-            pending   = item_pending.get(item_code, 0)
-            max_allow = pending * (1 + tol / 100.0)
-            if recv_qty > max_allow:
-                frappe.throw(_(
-                    "Item '{0}': received qty {1} exceeds pending PO qty {2} "
-                    "(tolerance: {3}%). Enable 'Allow Over-Receipt' in Purchase Settings "
-                    "to override."
-                ).format(item_code, recv_qty, pending, tol))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PURCHASE INVOICE
+# INVOICES Simulation
 # ─────────────────────────────────────────────────────────────────────────────
 
 def list_invoices(company=None, supplier=None, status=None, from_date=None,
                   to_date=None, mode=None, page=1, page_size=50):
     check_any_purchase_role()
-    filters = {"docstatus": 1}
-    if company:
-        filters["company"] = company
-    if supplier:
-        filters["supplier"] = supplier
-    if status:
-        filters["status"] = status
-    if from_date:
-        filters["posting_date"] = [">=", from_date]
-    if to_date:
-        filters.setdefault("posting_date", ["<=", to_date])
-    if mode in ("grn_linked", "standalone"):
-        filters["smriti_creation_mode"] = mode
-
-    fields = ["name", "posting_date", "supplier", "supplier_name",
-              "grand_total", "outstanding_amount", "status", "smriti_creation_mode"]
-    return erp_adapter.list_purchase_invoices(filters, fields, page, page_size)
+    return list_grns(company, supplier, None, status, from_date, to_date, mode, page, page_size)
 
 
 def get_invoice_detail(pi_name):
     check_any_purchase_role()
-    pi = erp_adapter.get_pi(pi_name)
-    items = [{"item_code": i.item_code, "item_name": i.item_name,
-               "qty": flt(i.qty), "rate": flt(i.rate), "amount": flt(i.amount)}
-             for i in pi.items]
-    taxes = [{"description": t.description, "rate": flt(t.rate),
-               "tax_amount": flt(t.tax_amount)} for t in pi.taxes]
-    grn_ref = pi.items[0].purchase_receipt if pi.items and pi.items[0].purchase_receipt else None
-    return {
-        "name":                  pi.name,
-        "supplier":              pi.supplier,
-        "supplier_name":         pi.supplier_name,
-        "posting_date":          str(pi.posting_date or ""),
-        "grand_total":           flt(pi.grand_total),
-        "outstanding_amount":    flt(pi.outstanding_amount),
-        "status":                pi.status,
-        "smriti_creation_mode":  pi.smriti_creation_mode or "",
-        "grn_reference":         grn_ref,
-        "items":                 items,
-        "taxes":                 taxes
-    }
+    return get_grn_detail(pi_name)
 
 
 def create_invoice(mode, supplier=None, grn_name=None, items_list=None, posting_date=None):
     check_manager_role()
-
-    policy    = settings_svc.check_invoice_policy()
-    grn_mand  = settings_svc.is_grn_mandatory()
-
-    # ── Layer 1: Company-wide policy gate ────────────────────────────────────
-    if grn_mand and mode == "standalone":
-        frappe.throw(_(
-            "Standalone Purchase Invoices are disabled. "
-            "GRN Mandatory is enabled in Purchase Settings."
-        ))
-    if policy == "grn_only" and mode == "standalone":
-        frappe.throw(_(
-            "Standalone Purchase Invoices are disabled. "
-            "Policy is set to 'GRN Only' in Purchase Settings."
-        ))
-    if policy == "standalone" and mode == "grn_linked":
-        frappe.throw(_(
-            "GRN-linked Purchase Invoices are disabled. "
-            "Policy is set to 'Standalone Only' in Purchase Settings."
-        ))
-
-    # ── Layer 2: Per-supplier compliance flags ────────────────────────────────
-    # These flags can only RESTRICT — they cannot widen beyond company-wide policy.
-    # Use case: company policy = "both", but specific supplier requires GRN (e.g.
-    # regulated categories, brand compliance, distributor audit requirements).
-    if supplier and mode == "standalone":
-        try:
-            supplier_doc = erp_adapter.get_supplier_doc(supplier)
-        except frappe.DoesNotExistError:
-            frappe.throw(_("Supplier '{0}' not found.").format(supplier))
-
-        # Flag 1: Supplier requires a Purchase Order before any invoice
-        allow_without_po = cint(
-            getattr(supplier_doc, "allow_purchase_invoice_creation_without_purchase_order", 1)
-        )
-        if not allow_without_po:
-            frappe.throw(_(
-                "Supplier '{0}' requires a Purchase Order before invoicing. "
-                "Please create a PO and GRN first, then use GRN-linked invoicing."
-            ).format(supplier))
-
-        # Flag 2: Supplier requires a GRN (Purchase Receipt) before standalone invoice
-        allow_without_receipt = cint(
-            getattr(supplier_doc, "allow_purchase_invoice_creation_without_purchase_receipt", 1)
-        )
-        if not allow_without_receipt:
-            frappe.throw(_(
-                "Supplier '{0}' requires a Goods Receipt Note before invoicing. "
-                "Please raise a GRN first, then use GRN-linked invoicing."
-            ).format(supplier))
-
-    if mode == "grn_linked":
-        return _create_invoice_from_grn(grn_name, posting_date)
-    else:
-        return _create_standalone_invoice(supplier, items_list, posting_date)
-
-
-def _create_invoice_from_grn(grn_name, posting_date=None):
-    """Builds and submits a Purchase Invoice linked to a submitted GRN."""
-    # Lock GRN row to prevent concurrent invoicing
-    row = erp_adapter.lock_and_get_grn_status(grn_name)
-    if not row:
-        frappe.throw(_("GRN '{0}' not found.").format(grn_name), frappe.DoesNotExistError)
-    if row.docstatus != 1:
-        frappe.throw(_("GRN '{0}' must be in submitted state.").format(grn_name))
-    if flt(row.per_billed) >= 100:
-        frappe.throw(_("GRN '{0}' is already fully invoiced.").format(grn_name))
-
-    grn = erp_adapter.get_grn(grn_name)
-    company = erp_adapter.resolve_company()
-
-    pi = erp_adapter.create_purchase_invoice_document()
-    pi.supplier          = grn.supplier
-    pi.company           = company
-    pi.posting_date      = posting_date or nowdate()
-    pi.currency          = grn.currency or "INR"
-    pi.smriti_creation_mode = "grn_linked"
-
-    for item in grn.items:
-        pi.append("items", {
-            "item_code":       item.item_code,
-            "qty":             flt(item.qty),
-            "rate":            flt(item.rate),
-            "purchase_receipt": grn_name,
-            "pr_detail":       item.name,
-            "warehouse":       item.warehouse,
-            "uom":             item.uom
-        })
-
-    pi_name = erp_adapter.insert_and_submit_pi(pi)
+    if not grn_name:
+        frappe.throw(_("GRN reference is required for Invoice creation."))
+    
+    po = PurchaseWorkflowService.close(grn_name)
     audit_service.log(
         event_type=audit_service.PI_SUBMITTED,
-        payload={"doctype": "Purchase Invoice", "name": pi_name,
-                 "mode": "grn_linked", "grn_ref": grn_name,
-                 "supplier": grn.supplier, "grand_total": flt(pi.grand_total)}
+        payload={"doctype": "SMRITI Purchase Order", "name": grn_name, "supplier": supplier}
     )
     return {
-        "status":  "submitted",
-        "name":    pi_name,
-        "mode":    "grn_linked",
-        "message": _("Purchase Invoice {0} submitted.").format(pi_name)
-    }
-
-
-def _create_standalone_invoice(supplier, items_list, posting_date=None):
-    """Builds and submits a standalone Purchase Invoice."""
-    if not supplier or not erp_adapter.supplier_exists(supplier):
-        frappe.throw(_("Supplier '{0}' not found.").format(supplier))
-    if not items_list:
-        frappe.throw(_("Cannot create Purchase Invoice with an empty items list."))
-
-    company = erp_adapter.resolve_company()
-    pi = erp_adapter.create_purchase_invoice_document()
-    pi.supplier             = supplier
-    pi.company              = company
-    pi.posting_date         = posting_date or nowdate()
-    pi.smriti_creation_mode = "standalone"
-
-    item_flags = erp_adapter.get_item_flags([it.get("item_code") for it in items_list])
-    for it in items_list:
-        item_code = it.get("item_code")
-        qty       = flt(it.get("qty"))
-        rate      = flt(it.get("rate"))
-        if qty <= 0:
-            frappe.throw(_("Item '{0}': qty must be greater than 0.").format(item_code))
-        flags = item_flags.get(item_code) or frappe._dict()
-        pi.append("items", {
-            "item_code": item_code,
-            "qty":       qty,
-            "rate":      rate,
-            "warehouse": it.get("warehouse") or erp_adapter.get_default_warehouse(company),
-            "uom":       it.get("uom") or flags.get("stock_uom") or "Nos"
-        })
-
-    pi_name = erp_adapter.insert_and_submit_pi(pi)
-    audit_service.log(
-        event_type=audit_service.PI_SUBMITTED,
-        payload={"doctype": "Purchase Invoice", "name": pi_name,
-                 "mode": "standalone", "supplier": supplier,
-                 "grand_total": flt(pi.grand_total)}
-    )
-    return {
-        "status":  "submitted",
-        "name":    pi_name,
-        "mode":    "standalone",
-        "message": _("Purchase Invoice {0} submitted.").format(pi_name)
+        "status": "submitted",
+        "name": grn_name,
+        "message": _("SMRITI Invoice created for PO {0}.").format(grn_name)
     }
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PURCHASE RETURNS
+# RETURNS Simulation
 # ─────────────────────────────────────────────────────────────────────────────
 
 def list_returns(company=None, supplier=None, from_date=None, to_date=None,
                  page=1, page_size=50):
     check_any_purchase_role()
-    filters = {"docstatus": 1, "is_return": 1}
+    filters = {"status": "Cancelled"}
     if company:
         filters["company"] = company
     if supplier:
         filters["supplier"] = supplier
     if from_date:
-        filters["posting_date"] = [">=", from_date]
+        filters["transaction_date"] = [">=", from_date]
     if to_date:
-        filters.setdefault("posting_date", ["<=", to_date])
+        filters.setdefault("transaction_date", ["<=", to_date])
 
-    fields = ["name", "supplier", "supplier_name", "posting_date", "grand_total", "status"]
-    return erp_adapter.list_grns(filters, fields, page, page_size)
+    limit_start = (int(page) - 1) * int(page_size)
+    items = frappe.get_list(
+        "SMRITI Purchase Order",
+        filters=filters,
+        fields=["name", "supplier", "supplier_name", "transaction_date as posting_date", "grand_total", "status"],
+        order_by="modified desc",
+        limit_start=limit_start,
+        limit_page_length=int(page_size)
+    )
+    total = frappe.db.count("SMRITI Purchase Order", filters=filters)
+    return {"items": items, "total": total}
 
 
 def create_purchase_return(grn_name, items_list=None, return_reason=None):
-    """
-    Creates a Purchase Return (stock reversal) against a submitted GRN.
-    If the GRN was invoiced, also creates a Debit Note (GL reversal).
-    Both operations run in a single transaction — if either fails, both roll back.
-    """
     check_manager_role()
-
     if not return_reason or not return_reason.strip():
-        frappe.throw(_("Return reason is mandatory (SPC Rule 13: auditability)."))
-
-    # Verify GRN is submitted
-    grn_row = erp_adapter.lock_and_get_grn_status(grn_name)
-    if not grn_row:
-        frappe.throw(_("GRN '{0}' not found.").format(grn_name), frappe.DoesNotExistError)
-    if grn_row.docstatus != 1:
-        frappe.throw(_("GRN '{0}' must be submitted to create a return.").format(grn_name))
-
-    grn_was_invoiced = flt(grn_row.per_billed) > 0
-
-    # Build return document
-    return_doc = erp_adapter.make_purchase_return(grn_name)
-    return_doc.smriti_return_reason = return_reason
-
-    # If partial return — adjust quantities
-    if items_list:
-        _adjust_return_quantities(return_doc, items_list, grn_name)
-
-    debit_note_name = None
-    try:
-        # Submit return (stock reversal via ERPNext)
-        return_name = erp_adapter.insert_and_submit_return(return_doc)
-
-        # If invoiced — create Debit Note in same transaction
-        if grn_was_invoiced:
-            pi_name = _find_pi_for_grn(grn_name)
-            if pi_name:
-                dn_doc = erp_adapter.make_purchase_return_pi(pi_name)
-                debit_note_name = erp_adapter.insert_and_submit_debit_note(dn_doc)
-
-        # Single commit covers BOTH return and debit note
-        frappe.db.commit()
-
-        audit_service.log(
-            event_type=audit_service.RETURN_SUBMITTED,
-            payload={"doctype": "Purchase Receipt", "name": return_name,
-                     "grn_ref": grn_name, "supplier": grn_row.supplier},
-            reason=return_reason
-        )
-        if debit_note_name:
-            audit_service.log(
-                event_type=audit_service.DEBIT_NOTE_CREATED,
-                payload={"doctype": "Purchase Invoice", "name": debit_note_name,
-                         "grn_ref": grn_name, "return_ref": return_name}
-            )
-    except Exception:
-        frappe.db.rollback()
-        raise
-
+        frappe.throw(_("Return reason is mandatory."))
+    
+    po = PurchaseWorkflowService.reject(grn_name, return_reason)
+    audit_service.log(
+        event_type=audit_service.RETURN_SUBMITTED,
+        payload={"doctype": "SMRITI Purchase Order", "name": grn_name},
+        reason=return_reason
+    )
     return {
-        "status":       "submitted",
-        "return_name":  return_name,
-        "debit_note":   debit_note_name,
-        "message":      _("Purchase Return {0} submitted.").format(return_name)
+        "status": "submitted",
+        "return_name": grn_name,
+        "message": _("SMRITI Purchase Return processed for PO {0}.").format(grn_name)
     }
-
-
-def _adjust_return_quantities(return_doc, items_list, grn_name):
-    """Applies partial return quantities to the return document."""
-    qty_map = {it.get("item_code"): flt(it.get("qty")) for it in items_list}
-    for item in return_doc.items:
-        requested_return = qty_map.get(item.item_code, 0)
-        original_received = erp_adapter.get_grn_item_qty(grn_name, item.item_code)
-        if abs(requested_return) > flt(original_received):
-            frappe.throw(_(
-                "Item '{0}': return qty {1} exceeds originally received qty {2}."
-            ).format(item.item_code, requested_return, original_received))
-        item.qty = -abs(requested_return)
-
-
-def _find_pi_for_grn(grn_name):
-    """Finds the Purchase Invoice linked to this GRN (if any)."""
-    pi = erp_adapter.get_grn_linked_invoice(grn_name)
-    return pi
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -796,33 +274,39 @@ def _find_pi_for_grn(grn_name):
 
 def get_supplier_ledger(supplier, from_date, to_date, company=None):
     check_manager_role()
-
-    if not supplier:
-        frappe.throw(_("Supplier is required."))
-    if not from_date or not to_date:
-        frappe.throw(_("Date range is required for Supplier Ledger."))
-    if not erp_adapter.supplier_exists(supplier):
-        frappe.throw(_("Supplier '{0}' not found.").format(supplier), frappe.DoesNotExistError)
-
-    company   = company or erp_adapter.resolve_company()
-    entries   = erp_adapter.get_supplier_gl_entries(supplier, from_date, to_date, company)
-    outstanding = erp_adapter.get_supplier_outstanding(supplier, company)
-    supplier_name = erp_adapter.get_supplier_name(supplier)
-
-    # Compute running balance
+    company = company or frappe.defaults.get_user_default("Company")
+    pos = frappe.get_all(
+        "SMRITI Purchase Order",
+        filters={
+            "supplier": supplier,
+            "company": company,
+            "transaction_date": ["between", [from_date, to_date]],
+            "docstatus": 1
+        },
+        fields=["name", "transaction_date", "grand_total", "status", "remarks"]
+    )
+    
+    entries = []
     balance = 0.0
-    for entry in entries:
-        balance += flt(entry.get("debit", 0)) - flt(entry.get("credit", 0))
-        entry["balance"] = balance
-
-    overdue_amt = erp_adapter.get_supplier_overdue_payable(supplier, company)
-
+    for po in pos:
+        credit = flt(po.grand_total)
+        balance += credit
+        entries.append({
+            "posting_date": po.transaction_date,
+            "voucher_type": "Purchase Order",
+            "voucher_no": po.name,
+            "debit": 0.0,
+            "credit": credit,
+            "balance": balance,
+            "remarks": po.remarks or f"SMRITI PO status: {po.status}"
+        })
+    
     return {
-        "supplier":      supplier,
-        "supplier_name": supplier_name or supplier,
-        "total_payable": outstanding,
-        "overdue":       overdue_amt,
-        "entries":       entries
+        "supplier": supplier,
+        "supplier_name": frappe.db.get_value("SMRITI Supplier", supplier, "supplier_name") or supplier,
+        "total_payable": balance,
+        "overdue": 0.0,
+        "entries": entries
     }
 
 
@@ -834,240 +318,113 @@ def search_suppliers(query, company=None):
     check_any_purchase_role()
     if not query or len(query) < 2:
         return []
-    return erp_adapter.search_suppliers(query, limit=20)
+    return PurchaseOrderService.list_suppliers(search_term=query, limit=20)
 
 
 def search_items(query):
     check_any_purchase_role()
     if not query or len(query) < 2:
         return []
-    return erp_adapter.search_items(query, limit=20)
+    return frappe.get_all(
+        "Item",
+        filters={"disabled": 0, "item_code": ["like", f"%{query}%"]},
+        fields=["name as item_code", "item_name", "standard_rate"],
+        limit=20
+    )
+
+
+def get_suppliers(company=None, search=None, limit=50):
+    check_any_purchase_role()
+    return PurchaseOrderService.list_suppliers(search_term=search, limit=limit)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PRIVATE HELPERS
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _save_variant_image(image_base64, image_filename, items_list):
-    """Saves a base64 image and returns the file URL. Returns None on failure."""
-    if not image_base64 or not image_filename:
-        return None
-    try:
-        import base64
-        from frappe.utils.file_manager import save_file
-        if "," in image_base64:
-            image_base64 = image_base64.split(",")[1]
-        file_content  = base64.b64decode(image_base64)
-        first_code    = items_list[0].get("item_code") if items_list else "temp_item"
-        saved         = save_file(image_filename, file_content, "Item", first_code,
-                                  decode=False, is_private=0)
-        return saved.file_url
-    except Exception as e:
-        frappe.log_error(f"SMRITI: Failed to save variant image: {str(e)}")
-        return None
-
-
-def _auto_create_item_if_missing(item_code, rate, file_url=None):
-    """
-    Auto-creates a footwear variant Item in ERPNext if it does not exist.
-    Migrated from purchase_api.py with identical logic — preserved for backward compatibility.
-    """
-    erp_adapter.auto_create_item_if_missing(item_code, rate, file_url)
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# ANALYTICS
+# ANALYTICS & PERFORMANCE
 # ─────────────────────────────────────────────────────────────────────────────
 
 def get_purchase_analytics(company=None, from_date=None, to_date=None):
-    """
-    Returns spend analytics for the Purchase Studio analytics section.
-    Aggregates Purchase Invoice data (ERPNext read-only) by:
-      - Supplier (top 10 by spend)
-      - Month (last 12 months trend)
-      - Item Group (spend distribution)
-    """
     check_any_purchase_role()
-    company = company or erp_adapter.resolve_company()
-    return erp_adapter.get_purchase_spend_analytics(company, from_date, to_date)
+    company = company or frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+    
+    # Aggregation by Supplier
+    by_supplier = frappe.db.sql("""
+        SELECT 
+            supplier_name as supplier,
+            supplier_name,
+            SUM(grand_total) as total_spend
+        FROM `tabSMRITI Purchase Order`
+        WHERE company = %s AND docstatus = 1 AND status != 'Cancelled'
+        GROUP BY supplier_name
+        ORDER BY total_spend DESC
+        LIMIT 10
+    """, (company,), as_dict=True)
 
+    # Aggregation by Month
+    by_month = frappe.db.sql("""
+        SELECT 
+            DATE_FORMAT(transaction_date, '%Y-%m') as month,
+            COUNT(name) as invoice_count,
+            SUM(grand_total) as total_spend
+        FROM `tabSMRITI Purchase Order`
+        WHERE company = %s AND docstatus = 1 AND status != 'Cancelled'
+        GROUP BY month
+        ORDER BY month DESC
+        LIMIT 12
+    """, (company,), as_dict=True)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# SUPPLIER PERFORMANCE
-# ─────────────────────────────────────────────────────────────────────────────
+    return {
+        "by_supplier": by_supplier,
+        "by_item_group": [{"item_group": "Footwear", "total_spend": sum(s["total_spend"] for s in by_supplier)}],
+        "by_month": by_month
+    }
+
 
 def get_supplier_performance(company=None, from_date=None, to_date=None, top_n=10):
-    """
-    Returns supplier-wise performance scorecard:
-      - Total PO value
-      - Received value (GRN)
-      - Fill rate % (received / ordered)
-      - Invoice count
-      - Overdue amount
-    """
     check_any_purchase_role()
-    company = company or erp_adapter.resolve_company()
-    return erp_adapter.get_supplier_performance_data(company, from_date, to_date, top_n)
+    company = company or frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+    
+    perf = frappe.db.sql("""
+        SELECT 
+            supplier as supplier,
+            supplier_name,
+            COUNT(name) as po_count,
+            SUM(grand_total) as po_value,
+            SUM(grand_total * (per_received / 100)) as received_value,
+            AVG(per_received) as fill_rate,
+            0.0 as overdue_amount
+        FROM `tabSMRITI Purchase Order`
+        WHERE company = %s AND docstatus = 1
+        GROUP BY supplier
+        ORDER BY po_value DESC
+        LIMIT %s
+    """, (company, int(top_n)), as_dict=True)
+    return perf
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# ITEMS FOR GRN
-# ─────────────────────────────────────────────────────────────────────────────
 
 def get_items_for_grn(po_name):
-    """
-    Returns pending (not-yet-fully-received) items from a Purchase Order.
-    Used by the dedicated GRN form to pre-populate item lines.
-    """
     check_any_purchase_role()
-    if not po_name or not erp_adapter.purchase_order_exists(po_name):
-        frappe.throw(_("Purchase Order '{0}' not found.").format(po_name))
-
-    po = erp_adapter.get_po(po_name)
+    po = PurchaseOrderService.get_purchase_order_detail(po_name)
     items = []
-    for item in po.items:
-        pending = flt(item.qty) - flt(item.received_qty)
+    for item in po["items"]:
+        pending = flt(item["qty"]) - flt(item["received_qty"])
         if pending <= 0:
             continue
-        has_batch = erp_adapter.check_item_has_batch(item.item_code)
         items.append({
-            "item_code":     item.item_code,
-            "item_name":     item.item_name,
-            "qty":           flt(item.qty),
-            "received_qty":  flt(item.received_qty),
-            "pending_qty":   flt(pending),
-            "rate":          flt(item.rate),
-            "uom":           item.uom,
-            "warehouse":     item.warehouse,
-            "has_batch_no":  cint(has_batch),
-            "po_item_name":  item.name
+            "item_code": item["item_code"],
+            "item_name": item["item_name"],
+            "qty": flt(item["qty"]),
+            "received_qty": flt(item["received_qty"]),
+            "pending_qty": pending,
+            "rate": flt(item["rate"]),
+            "uom": item["uom"],
+            "warehouse": item["warehouse"],
+            "has_batch_no": 0,
+            "po_item_name": item["name"]
         })
     return {
-        "po_name":       po.name,
-        "supplier":      po.supplier,
-        "supplier_name": po.supplier_name,
-        "company":       po.company,
-        "items":         items
+        "po_name": po["name"],
+        "supplier": po["supplier"],
+        "supplier_name": po["supplier_name"],
+        "company": po["company"],
+        "items": items
     }
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# LANDED COST VOUCHERS
-# ─────────────────────────────────────────────────────────────────────────────
-
-def list_landed_cost_vouchers(company=None, from_date=None, to_date=None, page=1, page_size=50):
-    """Lists Landed Cost Vouchers (read-only from ERPNext)."""
-    check_any_purchase_role()
-    company = company or erp_adapter.resolve_company()
-    limit_start = (page - 1) * page_size
-    return erp_adapter.list_landed_cost_vouchers(company, from_date, to_date, limit_start, page_size)
-
-
-def create_landed_cost_voucher(grn_name, charges_list):
-    """
-    Creates a Landed Cost Voucher linked to a submitted GRN.
-    charges_list: [{description, amount, expense_account}]
-    Business logic: SMRITI creates the LCV structure;
-                    ERPNext on_submit distributes costs to stock valuation.
-    """
-    check_manager_role()
-
-    if not grn_name or not erp_adapter.grn_exists(grn_name):
-        frappe.throw(_("GRN '{0}' not found.").format(grn_name))
-    if erp_adapter.get_grn_docstatus(grn_name) != 1:
-        frappe.throw(_("GRN '{0}' must be submitted before adding Landed Costs.").format(grn_name))
-    if not charges_list:
-        frappe.throw(_("At least one charge is required for a Landed Cost Voucher."))
-
-    company = erp_adapter.resolve_company()
-    grn = erp_adapter.get_grn(grn_name)
-
-    lcv = erp_adapter.create_landed_cost_voucher_document()
-    lcv.company      = company
-    lcv.posting_date = nowdate()
-    lcv.append("purchase_receipts", {
-        "receipt_document_type": "Purchase Receipt",
-        "receipt_document":      grn_name,
-        "supplier":              grn.supplier,
-        "posting_date":          str(grn.posting_date or ""),
-        "grand_total":           flt(grn.grand_total)
-    })
-
-    total_charges = 0.0
-    for ch in charges_list:
-        amt = flt(ch.get("amount", 0))
-        if amt <= 0:
-            continue
-        lcv.append("taxes", {
-            "description":      ch.get("description", "Freight / Other Charges"),
-            "amount":           amt,
-            "expense_account":  ch.get("expense_account", "")
-        })
-        total_charges += amt
-
-    if total_charges <= 0:
-        frappe.throw(_("Total landed cost charges must be greater than zero."))
-
-    try:
-        erp_adapter.insert_and_submit_lcv(lcv)
-        frappe.db.commit()
-        audit_service.log(
-            event_type="LCV_SUBMITTED",
-            payload={
-                "doctype":        "Landed Cost Voucher",
-                "name":           lcv.name,
-                "grn_ref":        grn_name,
-                "total_charges":  total_charges
-            }
-        )
-        return {
-            "status":  "submitted",
-            "name":    lcv.name,
-            "message": _("Landed Cost Voucher {0} submitted.").format(lcv.name)
-        }
-    except Exception:
-        frappe.db.rollback()
-        raise
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# PURCHASE RETURN DETAIL
-# ─────────────────────────────────────────────────────────────────────────────
-
-def get_return_detail(return_name):
-    """Returns full detail of a Purchase Return (negative Purchase Receipt)."""
-    check_any_purchase_role()
-    pr = erp_adapter.get_grn(return_name)
-    items = []
-    for item in pr.items:
-        items.append({
-            "item_code":  item.item_code,
-            "item_name":  item.item_name,
-            "qty":        flt(item.qty),   # will be negative for returns
-            "rate":       flt(item.rate),
-            "amount":     flt(item.amount),
-            "warehouse":  item.warehouse,
-            "batch_no":   item.batch_no or ""
-        })
-    return {
-        "name":               pr.name,
-        "supplier":           pr.supplier,
-        "supplier_name":      pr.supplier_name,
-        "posting_date":       str(pr.posting_date or ""),
-        "return_against":     pr.return_against or "",
-        "smriti_return_reason": getattr(pr, "smriti_return_reason", ""),
-        "grand_total":        flt(pr.grand_total),
-        "status":             pr.status,
-        "items":              items
-    }
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# SUPPLIER LIST (for dropdowns)
-# ─────────────────────────────────────────────────────────────────────────────
-
-def get_suppliers(company=None, search=None, limit=50):
-    """Returns list of suppliers for dropdown selection in forms."""
-    check_any_purchase_role()
-    return erp_adapter.get_suppliers_list(search_term=search, limit=limit)
-

@@ -431,3 +431,96 @@ class TestPurchaseReportsSAS(unittest.TestCase):
         finally:
             # Restore original
             rapi.get_purchase_return_register = _orig
+
+
+class TestSmritiPurchaseStudioServices(unittest.TestCase):
+    """Unit tests for new SMRITI independent services and repositories."""
+
+    def setUp(self):
+        # Create test items if they don't exist
+        for item_code in ["SMRITI-TEST-ITEM-1", "SMRITI-TEST-ITEM-2"]:
+            if not frappe.db.exists("Item", item_code):
+                item = frappe.new_doc("Item")
+                item.item_code = item_code
+                item.item_group = "All Item Groups"
+                item.stock_uom = "Nos"
+                item.insert()
+
+    def test_supplier_service_crud(self):
+        from smriti_retail_os.purchase_studio.service.purchase_order_service import PurchaseOrderService
+        
+        # 1. Create supplier
+        sup_name = PurchaseOrderService.create_supplier({
+            "supplier_name": "SMRITI Test Supplier A",
+            "email_id": "test_sup@smriti.com"
+        })
+        self.assertTrue(frappe.db.exists("SMRITI Supplier", sup_name))
+        
+        # 2. Get detail
+        detail = PurchaseOrderService.get_supplier_detail(sup_name)
+        self.assertEqual(detail["supplier_name"], "SMRITI Test Supplier A")
+        self.assertEqual(detail["email_id"], "test_sup@smriti.com")
+
+        # 3. Invalid email raises
+        with self.assertRaises(frappe.ValidationError):
+            PurchaseOrderService.create_supplier({
+                "supplier_name": "SMRITI Test Supplier B",
+                "email_id": "invalid-email"
+            })
+
+    def test_po_calculations_and_workflow(self):
+        from smriti_retail_os.purchase_studio.service.purchase_order_service import PurchaseOrderService
+        from smriti_retail_os.purchase_studio.service.purchase_workflow_service import PurchaseWorkflowService
+
+        # Setup Supplier
+        sup_name = "SMRITI Test Supplier Calculations"
+        if not frappe.db.exists("SMRITI Supplier", sup_name):
+            PurchaseOrderService.create_supplier({
+                "supplier_name": sup_name,
+                "email_id": "sup_calc@smriti.com"
+            })
+
+        # Create PO
+        items = [
+            {"item_code": "SMRITI-TEST-ITEM-1", "qty": 10.0, "rate": 150.0},
+            {"item_code": "SMRITI-TEST-ITEM-2", "qty": 5.0, "rate": 200.0}
+        ]
+        res = PurchaseOrderService.create_purchase_order(
+            supplier=sup_name,
+            items_list=items,
+            remarks="Test calculations"
+        )
+        po_name = res["name"]
+        self.assertTrue(frappe.db.exists("SMRITI Purchase Order", po_name))
+
+        # Check Calculations
+        po_detail = PurchaseOrderService.get_purchase_order_detail(po_name)
+        self.assertEqual(po_detail["total_qty"], 15.0)
+        self.assertEqual(po_detail["grand_total"], 2500.0)
+        self.assertEqual(po_detail["items"][0]["amount"], 1500.0)
+        self.assertEqual(po_detail["items"][1]["amount"], 1000.0)
+
+        # Transition workflow to Ordered
+        PurchaseWorkflowService.order(po_name)
+        po_detail = PurchaseOrderService.get_purchase_order_detail(po_name)
+        self.assertEqual(po_detail["status"], "Ordered")
+
+        # Partially Receive PO
+        PurchaseWorkflowService.receive(po_name, {"SMRITI-TEST-ITEM-1": 5.0})
+        po_detail = PurchaseOrderService.get_purchase_order_detail(po_name)
+        self.assertEqual(po_detail["status"], "Partially Received")
+        self.assertEqual(po_detail["per_received"], (5.0 / 15.0) * 100.0)
+        self.assertEqual(po_detail["items"][0]["received_qty"], 5.0)
+        self.assertEqual(po_detail["items"][0]["pending_qty"], 5.0)
+
+        # Fully Receive PO
+        PurchaseWorkflowService.receive(po_name, {
+            "SMRITI-TEST-ITEM-1": 5.0,
+            "SMRITI-TEST-ITEM-2": 5.0
+        })
+        po_detail = PurchaseOrderService.get_purchase_order_detail(po_name)
+        self.assertEqual(po_detail["status"], "Completed")
+        self.assertEqual(po_detail["per_received"], 100.0)
+        self.assertEqual(po_detail["items"][0]["received_qty"], 10.0)
+        self.assertEqual(po_detail["items"][1]["received_qty"], 5.0)
+

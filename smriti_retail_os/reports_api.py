@@ -1209,22 +1209,16 @@ REPORT_QUERIES = {
         "order_by": "posting_date DESC"
     },
     "supplier_purchase_summary": {
-        "base_sql": """
-            SELECT
-                supplier,
-                supplier_name,
-                COUNT(*) AS total_invoices,
-                SUM(net_total) AS net_total,
-                SUM(total_taxes_and_charges) AS tax_amount,
-                SUM(grand_total) AS grand_total,
-                SUM(outstanding_amount) AS outstanding_amount,
-                SUM(paid_amount) AS paid_amount,
-                AVG(grand_total) AS avg_invoice_value
-            FROM `tabPurchase Invoice`
-            WHERE docstatus = 1 AND is_return = 0
-        """,
-        "group_by": "supplier",
-        "order_by": "grand_total DESC"
+        "is_custom": True
+    },
+    "open_purchase_orders": {
+        "is_custom": True
+    },
+    "pending_deliveries": {
+        "is_custom": True
+    },
+    "purchase_analytics": {
+        "is_custom": True
     },
     "item_wise_purchase": {
         "base_sql": """
@@ -1323,7 +1317,8 @@ class SMRITIReportEngine:
             "payment_register", "receipt_register", "cash_book", "day_book",
             "customer_outstanding", "supplier_outstanding", "security_audit_log", "address_change_log",
             "purchase_invoice_register", "purchase_order_summary", "grn_register",
-            "supplier_purchase_summary", "item_wise_purchase", "purchase_return_register"
+            "supplier_purchase_summary", "item_wise_purchase", "purchase_return_register",
+            "open_purchase_orders", "pending_deliveries", "purchase_analytics"
         ]
         query_config = REPORT_QUERIES.get(self.report_key)
         if self.report_key in bypassed_reports or (query_config and query_config.get("is_custom")):
@@ -1396,7 +1391,8 @@ class SMRITIReportEngine:
             "payment_register", "receipt_register", "cash_book", "day_book",
             "customer_outstanding", "supplier_outstanding", "security_audit_log", "address_change_log",
             "purchase_invoice_register", "purchase_order_summary", "grn_register",
-            "supplier_purchase_summary", "item_wise_purchase", "purchase_return_register"
+            "supplier_purchase_summary", "item_wise_purchase", "purchase_return_register",
+            "open_purchase_orders", "pending_deliveries", "purchase_analytics"
         ]
         if self.report_key in bypassed_reports:
             return
@@ -1555,6 +1551,18 @@ class SMRITIReportEngine:
             return self._run_inventory_productivity()
         elif self.report_key == "purchase_return_register":
             return self._run_purchase_return_register()
+        elif self.report_key == "open_purchase_orders":
+            from smriti_retail_os.smriti_retail_os.report.open_purchase_orders.open_purchase_orders import get_data
+            return get_data(self.filters)
+        elif self.report_key == "supplier_purchase_summary":
+            from smriti_retail_os.smriti_retail_os.report.supplier_purchase_summary.supplier_purchase_summary import get_data
+            return get_data(self.filters)
+        elif self.report_key == "pending_deliveries":
+            from smriti_retail_os.smriti_retail_os.report.pending_deliveries.pending_deliveries import get_data
+            return get_data(self.filters)
+        elif self.report_key == "purchase_analytics":
+            from smriti_retail_os.smriti_retail_os.report.purchase_analytics.purchase_analytics import get_data
+            return get_data(self.filters)
         return []
 
     def _run_purchase_return_register(self):
