@@ -11,6 +11,18 @@ class TestPurchaseMatrix(unittest.TestCase):
         self.article_code = "TST-SHIRT-TMP"
         self.variant_code = "TST-SHIRT-TMP-RED-M"
         
+        # Ensure valid HSN code
+        self.hsn_code = frappe.db.get_value("GST HSN Code", {}, "name")
+        if not self.hsn_code:
+            self.hsn_code = "99990000"
+            if not frappe.db.exists("GST HSN Code", self.hsn_code):
+                hsn = frappe.new_doc("GST HSN Code")
+                hsn.name = self.hsn_code
+                hsn.hsn_code = self.hsn_code
+                hsn.description = "Test HSN Code"
+                hsn.insert(ignore_permissions=True)
+                frappe.db.commit()
+
         # Cleanup
         self.cleanup()
 
@@ -31,6 +43,7 @@ class TestPurchaseMatrix(unittest.TestCase):
         article_name = VariantLifecycleService.create_article_template(
             article_code=self.article_code,
             item_name="Test Template Shirt",
+            hsn_code=self.hsn_code,
             attributes=["Color", "Size"]
         )
         self.assertEqual(article_name, self.article_code)
