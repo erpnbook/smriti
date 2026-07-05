@@ -99,25 +99,52 @@ class MatrixService:
             attr_dict = {d.attribute: d.attribute_value for d in v_attrs}
             variants_data.append((v, attr_dict))
 
-        # Detect whether each axis actually exists in at least one variant
-        axis_x_exists = any(definition.axis_x in attr_dict for _, attr_dict in variants_data)
-        axis_y_exists = any(definition.axis_y in attr_dict for _, attr_dict in variants_data)
+        # Fetch configured attributes on the template item itself
+        template_attrs = frappe.db.get_all(
+            "Item Variant Attribute",
+            filters={"parent": article},
+            pluck="attribute"
+        )
 
-        variants_list = []
+        axis_x_exists = definition.axis_x in template_attrs
+        axis_y_exists = definition.axis_y in template_attrs
+
         all_colors = set()
         all_sizes = set()
 
+        # Load all possible values from global Item Attribute master for X/Y axes
+        if axis_x_exists:
+            all_sizes.update(frappe.db.get_all("Item Attribute Value", filters={"parent": definition.axis_x}, pluck="attribute_value"))
+        else:
+            all_sizes.add("No Size configured")
+
+        if axis_y_exists:
+            all_colors.update(frappe.db.get_all("Item Attribute Value", filters={"parent": definition.axis_y}, pluck="attribute_value"))
+        else:
+            all_colors.add("No Color configured")
+
+        # Fallback/union with existing variant values
+        for v, attr_dict in variants_data:
+            x_val = attr_dict.get(definition.axis_x) if axis_x_exists else "No Size configured"
+            y_val = attr_dict.get(definition.axis_y) if axis_y_exists else "No Color configured"
+            if x_val:
+                all_sizes.add(x_val)
+            if y_val:
+                all_colors.add(y_val)
+
+        # Final fallback to prevent empty/null values
+        if not all_sizes:
+            all_sizes.add("Default")
+        if not all_colors:
+            all_colors.add("Default")
+
+        variants_list = []
         for v, attr_dict in variants_data:
             # Map Axis values
             x_val = attr_dict.get(definition.axis_x) if axis_x_exists else "No Size configured"
             y_val = attr_dict.get(definition.axis_y) if axis_y_exists else "No Color configured"
-            
-            # Final fallback to prevent empty/null values
             x_val = x_val or "Default"
             y_val = y_val or "Default"
-            
-            all_sizes.add(x_val)
-            all_colors.add(y_val)
 
             # Barcode
             barcode = frappe.db.get_value(
