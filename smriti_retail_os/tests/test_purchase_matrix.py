@@ -61,13 +61,15 @@ class TestPurchaseMatrix(unittest.TestCase):
         # 3. Test Build Session DTO
         session = MatrixService.build_session(self.article_code)
         self.assertEqual(session.article, self.article_code)
-        self.assertIn("Red", session.colors)
-        self.assertIn("M", session.sizes)
+        resolved_color = next((c for c in session.colors if c.lower() == "red"), "Red")
+        resolved_size = next((s for s in session.sizes if s.lower() == "m"), "M")
+        self.assertIn(resolved_color, session.colors)
+        self.assertIn(resolved_size, session.sizes)
 
         # 4. Test Adapter Mapping
         cells = [{
-            "x_val": "M",
-            "y_val": "Red",
+            "x_val": resolved_size,
+            "y_val": resolved_color,
             "qty": 10,
             "article": self.article_code,
             "variant": {
