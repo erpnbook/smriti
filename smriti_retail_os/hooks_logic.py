@@ -178,14 +178,20 @@ def sync_item_taxes_and_prices(doc, method):
         )
         
         if not template_name:
-            details = frappe.db.get_all(
-                "Item Tax Template Detail",
-                filters={"tax_rate": pct},
-                pluck="parent",
-                limit=1
+            company_templates = frappe.db.get_all(
+                "Item Tax Template",
+                filters={"company": company},
+                pluck="name"
             )
-            if details:
-                template_name = details[0]
+            if company_templates:
+                details = frappe.db.get_all(
+                    "Item Tax Template Detail",
+                    filters={"tax_rate": pct, "parent": ["in", company_templates]},
+                    pluck="parent",
+                    limit=1
+                )
+                if details:
+                    template_name = details[0]
                 
         if template_name:
             # Skip if the correct template is already the sole entry (idempotent)
