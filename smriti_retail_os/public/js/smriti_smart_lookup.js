@@ -302,15 +302,26 @@
     }
 
     async apiCall(method, args) {
+      if (!frappe.csrf_token) {
+        frappe.csrf_token = window.csrf_token || window.CSRF_TOKEN || (typeof CSRF_TOKEN !== "undefined" ? CSRF_TOKEN : "");
+      }
       return new Promise((resolve, reject) => {
-        frappe.call({
+        const callArgs = {
           method: `${API}.${method}`,
           args: args,
           callback: (r) => {
             if (r.exc) reject(r);
             else resolve(r.message);
+          },
+          error: (err) => {
+            reject(err);
           }
-        });
+        };
+        const token = frappe.csrf_token;
+        if (token) {
+          callArgs.headers = { "X-Frappe-CSRF-Token": token };
+        }
+        frappe.call(callArgs);
       });
     }
   }
