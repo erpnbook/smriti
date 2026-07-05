@@ -274,6 +274,10 @@ def create_purchase_return(grn_name, items_list=None, return_reason=None):
 
 def get_supplier_ledger(supplier, from_date, to_date, company=None):
     check_manager_role()
+    if not supplier:
+        frappe.throw(_("Supplier is required."))
+    if not from_date or not to_date:
+        frappe.throw(_("From Date and To Date are required."))
     company = company or frappe.defaults.get_user_default("Company")
     pos = frappe.get_all(
         "SMRITI Purchase Order",

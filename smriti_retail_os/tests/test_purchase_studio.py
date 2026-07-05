@@ -437,6 +437,11 @@ class TestSmritiPurchaseStudioServices(unittest.TestCase):
     """Unit tests for new SMRITI independent services and repositories."""
 
     def setUp(self):
+        # Clean up test suppliers to avoid duplicate key errors
+        for sup in ["SMRITI Test Supplier A", "SMRITI Test Supplier B", "SMRITI Test Supplier Calculations"]:
+            frappe.db.delete("SMRITI Supplier", {"supplier_name": sup})
+            frappe.db.delete("SMRITI Supplier", {"name": sup})
+
         # Resolve a valid GST HSN Code for India Compliance module
         hsn_code = frappe.db.get_value("GST HSN Code", {}, "name")
         if not hsn_code:
