@@ -273,6 +273,11 @@ const SMRITI_NAV = {
           route: "/billing",
           standalone_route: "/billing",
           status: "active" },
+        { id: "sizewise_invoice",
+          label: "Sizewise Billing",
+          route: resolveSmritiRoute("sizewise_invoice"),
+          standalone_route: "/sizewise_invoice",
+          status: "active" },
         { id: "clienteling",
           label: "Clienteling Studio",
           route: "/smriti-clienteling",
@@ -413,11 +418,6 @@ const SMRITI_NAV = {
           label: "Sizewise Item CRUD",
           route: resolveSmritiRoute("sizewise_item"),
           standalone_route: "/sizewise_item",
-          status: "active" },
-        { id: "sizewise_invoice",
-          label: "Sizewise Invoice",
-          route: resolveSmritiRoute("sizewise_invoice"),
-          standalone_route: "/sizewise_invoice",
           status: "active" }
       ]
     },

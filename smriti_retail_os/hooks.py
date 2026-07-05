@@ -633,12 +633,19 @@ website_route_rules = [
     {"from_route": "/psv-reconciliation",      "to_route": "psv_reconciliation"},   # www/psv_reconciliation.html
     {"from_route": "/psv-exception-analysis",  "to_route": "psv_exception_analysis"}, # www/psv_exception_analysis.html
     {"from_route": "/exception-analysis",      "to_route": "psv_exception_analysis"}, # alias
+    {"from_route": "/sizewise-billing",        "to_route": "sizewise_invoice"},    # www/sizewise_invoice.html
+    {"from_route": "/sizewise-invoice",        "to_route": "sizewise_invoice"},    # alias
+    {"from_route": "/sizewise_billing",        "to_route": "sizewise_invoice"},    # alias
 
     # ─── Retired Desk Pages → SMRITI www Routes ──────────────────────────────
     # All legacy desk pages are retired (Rule 9: No Desk Elements).
     # These redirects catch any bookmarked /app/* or /desk/page/* URLs.
     {"from_route": "/app/smriti-purchase-invoice",          "to_route": "purchase_invoice"},
     {"from_route": "/desk/page/smriti-purchase-invoice",    "to_route": "purchase_invoice"},
+    {"from_route": "/app/sizewise-billing",                 "to_route": "sizewise_invoice"},
+    {"from_route": "/desk/page/sizewise-billing",           "to_route": "sizewise_invoice"},
+    {"from_route": "/app/sizewise-invoice",                 "to_route": "sizewise_invoice"},
+    {"from_route": "/desk/page/sizewise-invoice",           "to_route": "sizewise_invoice"},
     {"from_route": "/app/smriti-billing",                   "to_route": "billing"},
     {"from_route": "/desk/page/smriti-billing",             "to_route": "billing"},
     {"from_route": "/app/smriti-customers",                 "to_route": "customers"},

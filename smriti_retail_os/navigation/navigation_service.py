@@ -72,6 +72,7 @@ CANONICAL_NAV = {
             "status": "active",
             "items": [
                 { "id": "pos_billing", "label": "POS Billing", "route": "/billing", "standalone_route": "/billing", "status": "active" },
+                { "id": "sizewise_invoice", "label": "Sizewise Billing", "route": "/sizewise_invoice", "standalone_route": "/sizewise_invoice", "status": "active" },
                 { "id": "clienteling", "label": "Clienteling Studio", "route": "/smriti-clienteling", "standalone_route": "/smriti-clienteling", "status": "active" },
                 { "id": "sales_orders", "label": "Sales Orders", "route": "/sales-orders", "standalone_route": "/sales-orders", "status": "active" },
                 { "id": "tax_invoice", "label": "Tax Invoice", "route": "/sales-invoices", "standalone_route": "/sales-invoices", "status": "active" },
@@ -116,8 +117,7 @@ CANONICAL_NAV = {
             "items": [
                 { "id": "label_studio", "label": "Label Studio", "route": "/barcode", "standalone_route": "/barcode", "status": "active" },
                 { "id": "print_templates", "label": "Print Templates", "route": "/print-templates", "standalone_route": "/print-templates", "status": "active" },
-                { "id": "sizewise_item", "label": "Sizewise Item CRUD", "route": "/sizewise_item", "standalone_route": "/sizewise_item", "status": "active" },
-                { "id": "sizewise_invoice", "label": "Sizewise Invoice", "route": "/sizewise_invoice", "standalone_route": "/sizewise_invoice", "status": "active" }
+                { "id": "sizewise_item", "label": "Sizewise Item CRUD", "route": "/sizewise_item", "standalone_route": "/sizewise_item", "status": "active" }
             ]
         },
         {
