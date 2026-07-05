@@ -125,10 +125,11 @@ window.SMRITI = window.SMRITI || {};
             // ── CONTENT GROUPS ──
             html.push('<div class="smriti-sidebar-content" role="tree">');
 
-            // Pinned group
+            // Pinned group (MyDesk)
             if (pinnedItems.length > 0) {
-                html.push('<div class="smriti-sidebar-group" data-group-id="__pinned__" role="none">');
-                html.push('  <div class="smriti-sidebar-group-header" role="treeitem" aria-expanded="true" tabindex="0"><span>⭐ Pinned</span>' + ICONS.chevron + '</div>');
+                var isMyDeskCollapsed = collapsedGroupIds.indexOf("mydesk") !== -1;
+                html.push('<div class="smriti-sidebar-group' + (isMyDeskCollapsed ? ' collapsed' : '') + '" data-group-id="mydesk" role="none">');
+                html.push('  <div class="smriti-sidebar-group-header" role="treeitem" aria-expanded="' + (isMyDeskCollapsed ? 'false' : 'true') + '" tabindex="0"><span>MyDesk</span>' + ICONS.chevron + '</div>');
                 html.push('  <div class="smriti-sidebar-group-items" role="group"><div class="smriti-sidebar-group-items-inner">');
                 pinnedItems.forEach(function(p) {
                     var item = p.item;
@@ -136,7 +137,9 @@ window.SMRITI = window.SMRITI || {};
                     html.push('<a class="smriti-sidebar-item' + (isItemActive ? ' active' : '') + '" href="' + (item.route || "#") + '" role="treeitem" tabindex="0"' + (isItemActive ? ' aria-current="page"' : '') + '>');
                     html.push('  <div class="smriti-sidebar-item-icon">' + (ICONS[p.sec.id] || ICONS.default) + '</div>');
                     html.push('  <span class="smriti-sidebar-item-label">' + item.label + '</span>');
-                    html.push('  <button class="smriti-star-btn active" data-item-id="' + item.id + '" title="Unpin">⭐</button>');
+                    html.push('  <div class="smriti-sidebar-item-actions">');
+                    html.push('    <button class="smriti-star-btn active" data-item-id="' + item.id + '" title="Unpin from MyDesk">⭐</button>');
+                    html.push('  </div>');
                     html.push('</a>');
                 });
                 html.push('  </div></div></div>');

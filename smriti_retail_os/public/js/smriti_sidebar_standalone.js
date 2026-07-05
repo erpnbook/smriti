@@ -90,6 +90,16 @@ window.SMRITI = window.SMRITI || {};
             var activeRoute = window.location.pathname + window.location.hash;
             var collapsedGroupIds = JSON.parse(localStorage.getItem("smriti-sidebar-collapsed-groups") || "[]");
             var favorites = JSON.parse(localStorage.getItem("smriti-sidebar-favorites") || "[]");
+            var pinnedItems = [];
+            if (favorites.length > 0) {
+                navData.sections.forEach(function(sec) {
+                    (sec.items || []).forEach(function(item) {
+                        if (favorites.indexOf(item.id) !== -1) {
+                            pinnedItems.push({ item: item, sec: sec });
+                        }
+                    });
+                });
+            }
             var isSidebarCollapsed = localStorage.getItem("smriti-sidebar-collapsed") === "true";
 
             // Apply sidebar layout controls from localStorage
@@ -123,6 +133,31 @@ window.SMRITI = window.SMRITI || {};
 
             // ── CONTENT GROUPS ──
             html.push('<div class="smriti-sidebar-content" role="tree">');
+
+            // Pinned group (MyDesk)
+            if (pinnedItems.length > 0) {
+                var isMyDeskCollapsed = collapsedGroupIds.indexOf("mydesk") !== -1;
+                html.push('<div class="smriti-sidebar-group' + (isMyDeskCollapsed ? ' collapsed' : '') + '" data-group-id="mydesk" role="none">');
+                html.push('  <div class="smriti-sidebar-group-header" role="treeitem" aria-expanded="' + (isMyDeskCollapsed ? 'false' : 'true') + '" tabindex="0"><span>MyDesk</span>' + ICONS.chevron + '</div>');
+                html.push('  <div class="smriti-sidebar-group-items" role="group"><div class="smriti-sidebar-group-items-inner">');
+                pinnedItems.forEach(function(p) {
+                    var item = p.item;
+                    var isItemActive = (item.id === activePageId || item.route === activeRoute || item.standalone_route === activeRoute);
+                    var itemRoute = item.route || "#";
+                    html.push('<a class="smriti-sidebar-item' + (isItemActive ? ' active' : '') + '" href="' + itemRoute + '" role="treeitem" tabindex="0"' + (isItemActive ? ' aria-current="page"' : '') + '>');
+                    html.push('  <div class="smriti-sidebar-item-icon">' + (ICONS[p.sec.id] || ICONS.default) + '</div>');
+                    html.push('  <span class="smriti-sidebar-item-label">' + item.label + '</span>');
+                    if (item.badge) {
+                        html.push('  <span class="smriti-nav-badge">' + item.badge + '</span>');
+                    }
+                    html.push('  <div class="smriti-sidebar-item-actions">');
+                    html.push('    <button class="smriti-popout-icon-btn" onclick="SMRITI.triggerPopout(event, \'' + itemRoute + '\')" title="Open in Popout Window">📺</button>');
+                    html.push('    <button class="smriti-star-btn active" data-item-id="' + item.id + '" title="Unpin from MyDesk">⭐</button>');
+                    html.push('  </div>');
+                    html.push('</a>');
+                });
+                html.push('  </div></div></div>');
+            }
             
             navData.sections.forEach(function (sec) {
                 if (sec.status === "hidden" || !sec.items || sec.items.length === 0) return;
