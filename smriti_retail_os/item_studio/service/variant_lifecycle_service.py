@@ -19,11 +19,11 @@ class VariantLifecycleService:
         
         # Ensure Attribute Value exists
         attr_doc = frappe.get_doc("Item Attribute", attribute)
-        existing_values = [d.attribute_value for d in attr_doc.item_attribute_values]
-        if value not in existing_values:
+        existing_values = [d.attribute_value.lower() for d in attr_doc.item_attribute_values if d.attribute_value]
+        if value.lower() not in existing_values:
             abbr = value[:5].strip()
-            abbrs = [d.abbr for d in attr_doc.item_attribute_values if d.abbr]
-            if abbr in abbrs or not abbr:
+            abbrs = [d.abbr.lower() for d in attr_doc.item_attribute_values if d.abbr]
+            if abbr.lower() in abbrs or not abbr:
                 import random
                 abbr = f"{abbr[:3]}{random.randint(10,99)}"
             
@@ -90,16 +90,26 @@ class VariantLifecycleService:
         if not frappe.db.exists("Item", {"name": article, "has_variants": 1}):
             frappe.throw(_("Article {0} is not a valid variant template item.").format(article))
 
+        resolved_attributes = {}
         for attr, val in attribute_values.items():
             VariantLifecycleService.ensure_attribute_and_value(attr, val)
+            
+            # Map requested val to the exact case registered in the Item Attribute master
+            registered_vals = frappe.db.get_all(
+                "Item Attribute Value",
+                filters={"parent": attr},
+                pluck="attribute_value"
+            )
+            val_match = next((v for v in registered_vals if v.lower() == val.lower()), val)
+            resolved_attributes[attr] = val_match
 
         from erpnext.controllers.item_variant import get_variant, create_variant
         
-        variant_code = get_variant(article, attribute_values)
+        variant_code = get_variant(article, resolved_attributes)
         if variant_code:
             return variant_code
 
-        variant_doc = create_variant(article, attribute_values)
+        variant_doc = create_variant(article, resolved_attributes)
         variant_doc.insert(ignore_permissions=True)
 
         barcode = BarcodeService.generate("EAN13")
