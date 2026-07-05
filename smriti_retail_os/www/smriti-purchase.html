@@ -78,14 +78,16 @@ const PS = {
 
   init() {
     if (IS_SYS) {
-      document.getElementById("nav-settings").style.display = "flex";
-      document.getElementById("sys-sep").style.display      = "block";
+      const settings = document.getElementById("nav-settings");
+      if (settings) settings.style.display = "flex";
+      const sep = document.getElementById("sys-sep");
+      if (sep) sep.style.display = "block";
     }
     const av   = document.getElementById("nav-user-avatar");
     const name = document.getElementById("nav-user-name");
     const short = USER.split("@")[0];
-    av.textContent   = short.charAt(0).toUpperCase();
-    name.textContent = short;
+    if (av) av.textContent   = short.charAt(0).toUpperCase();
+    if (name) name.textContent = short;
 
     // Hash routing
     const hash = (window.location.hash||"").replace("#","").trim() || "dashboard";
