@@ -70,14 +70,14 @@
             return new Promise((resolve, reject) => {
                 var csrfCookie = (document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/) || [])[1] ||
                                  (document.cookie.match(/(?:^|;\s*)system_csrf_token=([^;]+)/) || [])[1];
-                var csrfToken = global.csrf_token || global.CSRF_TOKEN || (csrfCookie ? decodeURIComponent(csrfCookie) : "") || "";
+                var csrfToken = (opts.headers && opts.headers['X-Frappe-CSRF-Token']) || global.frappe.csrf_token || global.csrf_token || global.CSRF_TOKEN || (typeof CSRF_TOKEN !== "undefined" ? CSRF_TOKEN : "") || (csrfCookie ? decodeURIComponent(csrfCookie) : "") || "";
                 fetch("/api/method/" + opts.method, {
                     method: 'POST',
                     credentials: 'include',
-                    headers: {
+                    headers: Object.assign({
                         'Content-Type': 'application/json',
                         'X-Frappe-CSRF-Token': csrfToken
-                    },
+                    }, opts.headers || {}),
                     body: JSON.stringify(opts.args || {})
                 })
                 .then(function(res) { return res.json(); })
