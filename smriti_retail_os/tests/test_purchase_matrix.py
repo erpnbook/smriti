@@ -134,6 +134,114 @@ class TestPurchaseMatrix(unittest.TestCase):
             sizes_sorted_fw = sorted(list(footwear_sizes), key=lambda x: float(x) if x.replace('.', '', 1).isdigit() else 0.0)
         self.assertEqual(sizes_sorted_fw, ["6", "7", "8", "9", "10", "11", "12"])
 
+    def test_analytics_and_performance(self):
+        # 1. Clear any existing POs for company
+        frappe.db.delete("SMRITI Purchase Order Item")
+        frappe.db.delete("SMRITI Purchase Order")
+        frappe.db.commit()
+
+        # 2. Create standard items with distinct item groups
+        from smriti_retail_os.item_studio.service.variant_lifecycle_service import VariantLifecycleService
+        hsn = self.hsn_code
+        
+        # Create Footwear item
+        VariantLifecycleService.ensure_attribute_and_value("Color", "Red")
+        VariantLifecycleService.ensure_attribute_and_value("Size", "M")
+        fw_art = "ART-SHOES-002"
+        VariantLifecycleService.create_article_template(
+            article_code=fw_art,
+            item_name="Footwear Item",
+            hsn_code=hsn,
+            attributes=["Color", "Size"]
+        )
+        frappe.db.set_value("Item", fw_art, "item_group", "Footwear")
+        fw_var = VariantLifecycleService.resolve_or_create_variant(fw_art, {"Color": "Red", "Size": "M"})
+        frappe.db.set_value("Item", fw_var, "item_group", "Footwear")
+
+        # Create Apparel item
+        app_art = "ART-SHIRT-002"
+        VariantLifecycleService.create_article_template(
+            article_code=app_art,
+            item_name="Apparel Item",
+            hsn_code=hsn,
+            attributes=["Color", "Size"]
+        )
+        frappe.db.set_value("Item", app_art, "item_group", "Apparel")
+        app_var = VariantLifecycleService.resolve_or_create_variant(app_art, {"Color": "Red", "Size": "M"})
+        frappe.db.set_value("Item", app_var, "item_group", "Apparel")
+        
+        frappe.db.commit()
+
+        # 3. Create test Purchase Orders
+        # PO 1: Submitted, on time, fully received
+        po1 = frappe.new_doc("SMRITI Purchase Order")
+        po1.supplier = "TEST-SUPP-A"
+        po1.supplier_name = "Supplier A"
+        po1.company = "_Test Company"
+        po1.transaction_date = "2026-07-01"
+        po1.schedule_date = "2026-07-02"
+        po1.grand_total = 1000.0
+        po1.per_received = 100.0
+        po1.docstatus = 1
+        po1.status = "Completed"
+        po1.append("items", {
+            "item_code": fw_var,
+            "item_name": "Footwear Item Var",
+            "qty": 10,
+            "rate": 100.0,
+            "amount": 1000.0,
+            "uom": "Nos",
+            "warehouse": "Stores"
+        })
+        po1.insert(ignore_permissions=True)
+
+        # PO 2: Submitted, overdue (schedule_date is in the past), not received (0% received)
+        po2 = frappe.new_doc("SMRITI Purchase Order")
+        po2.supplier = "TEST-SUPP-B"
+        po2.supplier_name = "Supplier B"
+        po2.company = "_Test Company"
+        po2.transaction_date = "2026-07-01"
+        po2.schedule_date = "2026-07-02" # Past date
+        po2.grand_total = 1500.0
+        po2.per_received = 0.0
+        po2.docstatus = 1
+        po2.status = "Open"
+        po2.append("items", {
+            "item_code": app_var,
+            "item_name": "Apparel Item Var",
+            "qty": 15,
+            "rate": 100.0,
+            "amount": 1500.0,
+            "uom": "Nos",
+            "warehouse": "Stores"
+        })
+        po2.insert(ignore_permissions=True)
+        frappe.db.commit()
+
+        # 4. Call get_purchase_analytics and assert correct aggregations
+        from smriti_retail_os.purchase_studio.service.purchase_service import get_purchase_analytics
+        analytics = get_purchase_analytics(company="_Test Company")
+        
+        # Assert supplier spend
+        suppliers = {s["supplier_name"]: s["total_spend"] for s in analytics["by_supplier"]}
+        self.assertEqual(suppliers.get("Supplier A"), 1000.0)
+        self.assertEqual(suppliers.get("Supplier B"), 1500.0)
+
+        # Assert item group spend (Fix 1)
+        item_groups = {ig["item_group"]: ig["total_spend"] for ig in analytics["by_item_group"]}
+        self.assertEqual(item_groups.get("Footwear"), 1000.0)
+        self.assertEqual(item_groups.get("Apparel"), 1500.0)
+
+        # 5. Call get_supplier_performance and assert correct overdue amounts (Fix 2)
+        from smriti_retail_os.purchase_studio.service.purchase_service import get_supplier_performance
+        performance = get_supplier_performance(company="_Test Company")
+        
+        perf_dict = {p["supplier_name"]: p for p in performance}
+        # Supplier A: fully received, overdue_amount should be 0.0
+        self.assertEqual(float(perf_dict.get("Supplier A")["overdue_amount"]), 0.0)
+        # Supplier B: 0% received, schedule_date in past, overdue_amount should be 1500.0
+        self.assertEqual(float(perf_dict.get("Supplier B")["overdue_amount"]), 1500.0)
+
 
 def run_tests():
     import unittest
