@@ -421,7 +421,7 @@ def get_purchase_analytics(company=None, from_date=None, to_date=None):
     # Aggregation by Month
     by_month = frappe.db.sql("""
         SELECT 
-            DATE_FORMAT(transaction_date, '%Y-%m') as month,
+            DATE_FORMAT(transaction_date, '%%Y-%%m') as month,
             COUNT(name) as invoice_count,
             SUM(grand_total) as total_spend
         FROM `tabSMRITI Purchase Order`
