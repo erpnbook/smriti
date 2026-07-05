@@ -437,6 +437,18 @@ class TestSmritiPurchaseStudioServices(unittest.TestCase):
     """Unit tests for new SMRITI independent services and repositories."""
 
     def setUp(self):
+        # Resolve a valid GST HSN Code for India Compliance module
+        hsn_code = frappe.db.get_value("GST HSN Code", {}, "name")
+        if not hsn_code:
+            try:
+                hsn = frappe.new_doc("GST HSN Code")
+                hsn.name = "999999"
+                hsn.hsn_code = "999999"
+                hsn.insert(ignore_permissions=True)
+                hsn_code = hsn.name
+            except Exception:
+                pass
+
         # Create test items if they don't exist
         for item_code in ["SMRITI-TEST-ITEM-1", "SMRITI-TEST-ITEM-2"]:
             if not frappe.db.exists("Item", item_code):
@@ -444,7 +456,10 @@ class TestSmritiPurchaseStudioServices(unittest.TestCase):
                 item.item_code = item_code
                 item.item_group = "All Item Groups"
                 item.stock_uom = "Nos"
+                if hsn_code:
+                    item.gst_hsn_code = hsn_code
                 item.insert()
+
 
     def test_supplier_service_crud(self):
         from smriti_retail_os.purchase_studio.service.purchase_order_service import PurchaseOrderService
