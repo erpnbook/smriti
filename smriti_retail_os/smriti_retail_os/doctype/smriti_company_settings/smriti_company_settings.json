@@ -39,8 +39,7 @@
   "default_printer_ip",
   "default_printer_port",
   "default_printer_lang",
-  "default_label_size",
-  "template_item_label"
+  "default_label_size"
  ],
  "fields": [
   {
@@ -236,12 +235,6 @@
    "label": "Default Label Size",
    "options": "50x25\n50x30\n75x50\n100x50\n106x55",
    "default": "50x25"
-  },
-  {
-   "fieldname": "template_item_label",
-   "fieldtype": "Data",
-   "label": "Template Item Label",
-   "default": "Article"
   }
  ],
  "index_web_pages_for_search": 1,

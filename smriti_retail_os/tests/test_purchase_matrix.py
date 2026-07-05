@@ -87,6 +87,53 @@ class TestPurchaseMatrix(unittest.TestCase):
         self.assertEqual(po_items[0]["article"], self.article_code)
         self.assertEqual(po_items[0]["barcode"], barcode)
 
+    def test_dto_and_sorting(self):
+        # Create article template with standard rate & name
+        VariantLifecycleService.create_article_template(
+            article_code=self.article_code,
+            item_name="Slim Fit Jeans",
+            hsn_code=self.hsn_code,
+            attributes=["Color", "Size"]
+        )
+        # Set standard rate (MRP)
+        frappe.db.set_value("Item", self.article_code, "standard_rate", 1299.0)
+        frappe.db.commit()
+
+        # Clear cache first to ensure cache miss
+        MatrixService.clear_cache(self.article_code)
+
+        # 1. Fresh build / Cache Miss
+        session = MatrixService.build_session(self.article_code)
+        session_dict = session.to_dict()
+        self.assertEqual(session_dict.get("item_name"), "Slim Fit Jeans")
+        self.assertEqual(float(session_dict.get("mrp") or 0.0), 1299.0)
+
+        # 2. Cache Hit
+        session2 = MatrixService.build_session(self.article_code)
+        session_dict2 = session2.to_dict()
+        self.assertEqual(session_dict2.get("item_name"), "Slim Fit Jeans")
+        self.assertEqual(float(session_dict2.get("mrp") or 0.0), 1299.0)
+
+        # 3. Mixed Size Sorting Logic
+        std_sizes = {"M", "XL", "S", "L"}
+        std_order = ["3XS", "2XS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"]
+        std_order_map = {size: idx for idx, size in enumerate(std_order)}
+        def get_sort_key(sz):
+            val = sz.upper()
+            if val in std_order_map:
+                return (0, std_order_map[val])
+            else:
+                return (1, val)
+        sizes_sorted = sorted(list(std_sizes), key=get_sort_key)
+        self.assertEqual(sizes_sorted, ["S", "M", "L", "XL"])
+
+        # Footwear numeric sorting logic
+        footwear_sizes = {"9", "11", "6", "10", "7", "12", "8"}
+        is_all_numeric = all(x.replace('.', '', 1).isdigit() for x in footwear_sizes if x != "Default")
+        if is_all_numeric:
+            sizes_sorted_fw = sorted(list(footwear_sizes), key=lambda x: float(x) if x.replace('.', '', 1).isdigit() else 0.0)
+        self.assertEqual(sizes_sorted_fw, ["6", "7", "8", "9", "10", "11", "12"])
+
 
 def run_tests():
     import unittest

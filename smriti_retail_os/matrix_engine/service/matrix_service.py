@@ -71,7 +71,9 @@ class MatrixService:
                     colors=data["colors"],
                     sizes=data["sizes"],
                     cells=cells,
-                    variants_list=variants_list
+                    variants_list=variants_list,
+                    item_name=data.get("item_name"),
+                    mrp=float(data.get("mrp") or 0.0)
                 )
             except Exception:
                 frappe.cache().delete_key(cache_key)
@@ -123,8 +125,22 @@ class MatrixService:
                 uom=v.stock_uom or "Nos"
             ))
 
-        # Sort sizes numerically if possible, otherwise alphabetically
-        sizes_sorted = sorted(list(all_sizes), key=lambda x: float(x) if x.replace('.','',1).isdigit() else 0)
+        # Sort sizes numerically if possible, otherwise by standard size sequences
+        is_all_numeric = all(x.replace('.', '', 1).isdigit() for x in all_sizes if x != "Default")
+        if is_all_numeric:
+            sizes_sorted = sorted(list(all_sizes), key=lambda x: float(x) if x.replace('.', '', 1).isdigit() else 0.0)
+        else:
+            std_order = ["3XS", "2XS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL"]
+            std_order_map = {size: idx for idx, size in enumerate(std_order)}
+            
+            def get_sort_key(sz):
+                val = sz.upper()
+                if val in std_order_map:
+                    return (0, std_order_map[val])
+                else:
+                    return (1, val)
+            sizes_sorted = sorted(list(all_sizes), key=get_sort_key)
+
         colors_sorted = sorted(list(all_colors))
 
         # Build initial empty cells for all permutations
@@ -136,13 +152,18 @@ class MatrixService:
                 var_dto = variant_map.get((x, y))
                 cells.append(MatrixCellDTO(x_val=x, y_val=y, qty=0, variant=var_dto))
 
+        # Fetch template Item name and rate
+        tpl_name, tpl_rate = frappe.db.get_value("Item", article, ["item_name", "standard_rate"]) or (article, 0.0)
+
         session = MatrixSessionDTO(
             article=article,
             definition=definition,
             colors=colors_sorted or ["Default"],
             sizes=sizes_sorted or ["Default"],
             cells=cells,
-            variants_list=variants_list
+            variants_list=variants_list,
+            item_name=tpl_name,
+            mrp=float(tpl_rate or 0.0)
         )
 
         # Cache session representation

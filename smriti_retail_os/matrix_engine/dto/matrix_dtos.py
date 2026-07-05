@@ -61,13 +61,15 @@ class MatrixCellDTO:
         }
 
 class MatrixSessionDTO:
-    def __init__(self, article, definition, colors, sizes, cells, variants_list):
+    def __init__(self, article, definition, colors, sizes, cells, variants_list, item_name=None, mrp=0.0):
         self.article = article
         self.definition = definition
         self.colors = colors
         self.sizes = sizes
         self.cells = cells
         self.variants_list = variants_list
+        self.item_name = item_name
+        self.mrp = mrp
 
     def to_dict(self):
         return {
@@ -76,5 +78,7 @@ class MatrixSessionDTO:
             "colors": self.colors,
             "sizes": self.sizes,
             "cells": [c.to_dict() for c in self.cells],
-            "variants_list": [v.to_dict() for v in self.variants_list]
+            "variants_list": [v.to_dict() for v in self.variants_list],
+            "item_name": self.item_name,
+            "mrp": self.mrp
         }
