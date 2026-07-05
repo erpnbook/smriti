@@ -18,8 +18,9 @@ class VariantLifecycleService:
             frappe.publish_realtime("smriti_item_attribute_created", {"attribute": attribute})
         
         # Ensure Attribute Value exists
-        if not frappe.db.exists("Item Attribute Value", {"parent": attribute, "attribute_value": value}):
-            attr_doc = frappe.get_doc("Item Attribute", attribute)
+        attr_doc = frappe.get_doc("Item Attribute", attribute)
+        existing_values = [d.attribute_value for d in attr_doc.item_attribute_values]
+        if value not in existing_values:
             abbr = value[:5].strip()
             abbrs = [d.abbr for d in attr_doc.item_attribute_values if d.abbr]
             if abbr in abbrs or not abbr:
