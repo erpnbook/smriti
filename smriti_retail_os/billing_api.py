@@ -178,7 +178,7 @@ def hold_bill(cashier, customer, items, remarks=None, sales_staff=None):
     pos_invoice.docstatus = 0 # Draft
     pos_invoice.flags.ignore_validate = True # Bypass POS opening entry / profile checks for held draft holds!
     pos_invoice.flags.ignore_mandatory = True # Bypass standard database mandatory field checks!
-    # reviewed-ignore-permissions: cashier pos transient draft billing transaction
+    # reviewed-ignore-permissions: no role restriction — any authenticated user may hold transient bills, by design
     pos_invoice.save(ignore_permissions=True)
     frappe.db.commit()
 
@@ -538,10 +538,10 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     # 4. Save and Submit
     try:
         if is_recalled:
-            # reviewed-ignore-permissions: final checkout pos invoice insertion, audited by transaction logs
+            # reviewed-ignore-permissions: no role restriction for standard sales; gated by manager PIN only when discount override is requested
             invoice_doc.save(ignore_permissions=True)
         else:
-            # reviewed-ignore-permissions: final checkout pos invoice insertion, audited by transaction logs
+            # reviewed-ignore-permissions: no role restriction for standard sales; gated by manager PIN only when discount override is requested
             invoice_doc.insert(ignore_permissions=True)
 
         invoice_doc.submit()
@@ -554,7 +554,7 @@ def submit_bill(cashier, customer, items, payments, loyalty_points=0, invoice_na
     # in zero invoices with no recovery. Now the POS Invoice survives until SI is safe.
     if on_credit and invoice_name and frappe.db.exists("POS Invoice", invoice_name):
         try:
-            # reviewed-ignore-permissions: final checkout pos invoice insertion, audited by transaction logs
+            # reviewed-ignore-permissions: no role restriction for standard sales; gated by manager PIN only when discount override is requested
             frappe.delete_doc("POS Invoice", invoice_name, ignore_permissions=True)
         except Exception as del_ex:
             frappe.log_error(f"[SMRITI] Could not delete recalled POS Invoice {invoice_name}: {del_ex}")
@@ -851,7 +851,7 @@ def validate_manager_override(pin, action_type, invoice_name=None):
                 "content": f"Manager Override approved by {auth_manager} for: {action_type}",
                 "comment_email": frappe.session.user,
                 "comment_by": frappe.session.user
-            # reviewed-ignore-permissions: validation of cashier override event
+            # reviewed-ignore-permissions: gated by SMRITI Store Manager or System Manager PIN override validation
             }).insert(ignore_permissions=True)
         return {"authorized": True, "manager": auth_manager}
 
@@ -944,7 +944,7 @@ def create_return_invoice(invoice_name):
     return_doc = make_sales_return(invoice_name)
     
     try:
-        # reviewed-ignore-permissions: return invoice generation, references validated invoice
+        # reviewed-ignore-permissions: no role restriction — any authenticated user may create return invoices, by design
         return_doc.insert(ignore_permissions=True)
         return_doc.submit()
         frappe.db.commit()
@@ -1059,9 +1059,9 @@ def create_custom_sales_return(customer, items, return_against_invoice=None, rem
         return_doc.remarks = remarks
         
     try:
-        # reviewed-ignore-permissions: custom return entry, validated against original invoice
+        # reviewed-ignore-permissions: no role restriction — any authenticated user may create sales returns, by design
         return_doc.flags.ignore_permissions = True
-        # reviewed-ignore-permissions: custom return entry, validated against original invoice
+        # reviewed-ignore-permissions: no role restriction — any authenticated user may create sales returns, by design
         return_doc.insert(ignore_permissions=True)
         
         if not draft:
@@ -1144,9 +1144,9 @@ def update_sales_return(name, items, remarks=None, draft=0):
         doc.remarks = remarks
         
     try:
-        # reviewed-ignore-permissions: return edit, gated by POS manager permission
+        # reviewed-ignore-permissions: no role restriction — any authenticated user may edit sales returns, by design
         doc.flags.ignore_permissions = True
-        # reviewed-ignore-permissions: return edit, gated by POS manager permission
+        # reviewed-ignore-permissions: no role restriction — any authenticated user may edit sales returns, by design
         doc.save(ignore_permissions=True)
         
         if not draft:
@@ -1193,10 +1193,10 @@ def delete_sales_return(name, manager_pin=None):
             frappe.throw(_("Invalid Manager PIN: Access Denied."))
 
     try:
-        # reviewed-ignore-permissions: gated by custom manager PIN verification
+        # reviewed-ignore-permissions: gated by SMRITI Store Manager/System Manager role, or a valid manager PIN override
         doc.flags.ignore_permissions = True
         if doc.docstatus == 0:
-            # reviewed-ignore-permissions: gated by custom manager PIN verification
+            # reviewed-ignore-permissions: gated by SMRITI Store Manager/System Manager role, or a valid manager PIN override
             frappe.delete_doc("Sales Invoice", name, ignore_permissions=True)
             message = _("Draft Sales Return {0} deleted successfully.").format(name)
         elif doc.docstatus == 1:
