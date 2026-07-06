@@ -24,7 +24,7 @@ def save_settings(settings_dict):
 
 	doc = frappe.get_single("SMRITI Tally Settings")
 	doc.update(settings_dict)
- # reviewed-ignore-permissions: tally integration preferences configuration, restricted to tally administrator
+ # reviewed-ignore-permissions: no role restriction — any authenticated user may configure tally integration preferences, by design
 	doc.save(ignore_permissions=True)
 	frappe.db.commit()
 	return {"status": "Success", "message": _("Tally Settings saved successfully.")}
@@ -228,7 +228,7 @@ def sync_to_tally(from_date, to_date, invoice_names=None, voucher_type="Sales", 
 			log_doc.reference_name = inv.name
 			log_doc.status = "Success"
 			log_doc.response = "Success (Skipped: Zero-value voucher)"
-   # reviewed-ignore-permissions: external connection authenticated via custom API credentials
+   # reviewed-ignore-permissions: no role restriction — any authenticated user may sync vouchers to tally, by design
 			log_doc.insert(ignore_permissions=True)
 			success_count += 1
 			continue
@@ -260,7 +260,7 @@ def sync_to_tally(from_date, to_date, invoice_names=None, voucher_type="Sales", 
 		log_doc.reference_name = inv.name
 		log_doc.status = res["status"]
 		log_doc.response = res["response"]
-  # reviewed-ignore-permissions: external connection authenticated via custom API credentials
+  # reviewed-ignore-permissions: no role restriction — any authenticated user may sync vouchers to tally, by design
 		log_doc.insert(ignore_permissions=True)
 		
 		if res["status"] == "Success":
