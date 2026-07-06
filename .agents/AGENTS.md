@@ -260,3 +260,10 @@ No task is completed until:
 ✓ License Guard reviewed (if applicable)
 ✓ Status marked Completed
 
+---
+
+# SMRITI Wiki Documentation-First Policy
+
+**Documentation-First Policy:** Every new feature, module, architectural change, or release must automatically create or update the corresponding GitHub Wiki pages before the task is considered complete. Documentation is a mandatory deliverable, not an optional activity. The agent must also update the Home page, release history, cross-links, and navigation, validate internal links, and publish the updated Wiki automatically.
+
+
