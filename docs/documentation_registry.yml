@@ -39,3 +39,11 @@ psv_studio:
     - KNOWLEDGE_BASE.md
   governance:
     - .agents/AGENTS.md
+
+licensing:
+  walkthrough:
+    - docs/walkthrough/foundation/
+  knowledge:
+    - KNOWLEDGE_BASE.md
+  governance:
+    - .agents/AGENTS.md

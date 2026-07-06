@@ -7,7 +7,8 @@
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-26
 # @version: 1.8.6
-# @license: MIT
+# @license: GPL-3.0-only
+# SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 # API naming convention: smriti_retail_os.api.field_explorer_api.<method>

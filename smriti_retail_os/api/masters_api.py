@@ -6,7 +6,8 @@
 #   master data pages. All reads go through this service layer.
 # @author: Jawahar R. Mallah
 # @version: 1.0.0
-# @license: MIT
+# @license: GPL-3.0-only
+# SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK. All rights reserved.
 #
 

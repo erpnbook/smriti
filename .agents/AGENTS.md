@@ -184,3 +184,18 @@ When implementation is completed, the AI must automatically:
 ## 3. Documentation Report & Validation (Rules 6–7)
 At the end of every implementation, generate a Documentation Impact Report summarizing updated files, walkthroughs, and guides. Verify all required document updates are completed before closing the task.
 
+---
+
+# SMRITI License & Copyright Governance Policy
+
+## 1. Third-Party Code Protection
+The AI must never modify the license, copyright, or attribution of third-party code.
+Only SMRITI-owned source files may receive SMRITI copyright notices or SPDX identifiers.
+
+## 2. Governance Tracking for Licensing Changes
+License changes are governance changes. Any modification to licensing, copyright, SPDX identifiers, NOTICE, COPYING, or THIRD_PARTY_LICENSES.md requires:
+- Documentation update
+- Walkthrough
+- Knowledge Base update
+- CHANGELOG entry
+

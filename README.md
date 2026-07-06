@@ -8,7 +8,7 @@
   ![Version](https://img.shields.io/badge/version-v2.1.1-1A2B5C)
   ![CI](https://img.shields.io/github/actions/workflow/status/erpnbook/smriti/smriti_ci.yml?label=CI&logo=github)
   ![Status](https://img.shields.io/badge/status-Stable-22c55e)
-  ![License](https://img.shields.io/badge/license-MIT-yellow)
+  ![License](https://img.shields.io/badge/license-GPL--3.0--only-blue)
   ![ERPNext](https://img.shields.io/badge/ERPNext-v16-2563EB)
   ![Frappe](https://img.shields.io/badge/Frappe-v16-2563EB)
   ![India Compliance](https://img.shields.io/badge/India%20Compliance-v16-22c55e)
@@ -22,7 +22,7 @@
 | **Developer** | AITDL – AI Technology & Development Lab |
 | **Version** | `v2.1.1` — Stable |
 | **Compatibility** | ERPNext v16 · Frappe v16 · India Compliance v16 |
-| **License** | MIT — Free for commercial use |
+| **License** | GPL-3.0-only |
 | **Copyright** | © 2026 AITDL NETWORK & ERPNbook.com |
 
 ---
@@ -236,8 +236,12 @@ test(<module>): short description
 ## 10. License
 
 ```
-MIT License
+GNU General Public License v3.0 (GPL-3.0-only)
 Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All Rights Reserved.
+
+The SMRITI project is distributed under GPL-3.0-only.
+Contributors agree that accepted contributions will be distributed under the
+project's license unless otherwise documented.
 
 All open-source licensing notices for ERPNext and Frappe
 must be preserved in source code files.

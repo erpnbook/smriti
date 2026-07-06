@@ -4,7 +4,8 @@
 # @description: Unit tests for SMRITI AI Context Builder & LLM Integration (Sprint SDC-004)
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @version: 1.8.6
-# @license: MIT
+# @license: GPL-3.0-only
+# SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 

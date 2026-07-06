@@ -5,7 +5,8 @@
 #           Covers all 14 service contracts (SC-01 to SC-14) and edge cases.
 # @author:  Jawahar R. Mallah <jawahar.mallah@gmail.com>
 # @std:     AES-002 SSDL v1.0.0 — Layer 9 (Tests)
-# @license: MIT
+# @license: GPL-3.0-only
+# SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK. All rights reserved.
 #
 

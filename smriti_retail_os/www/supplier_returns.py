@@ -5,7 +5,8 @@
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
 # @version: 1.8.6
-# @license: MIT
+# @license: GPL-3.0-only
+# SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 # @file: smriti_retail_os/www/supplier_returns.py
@@ -16,7 +17,8 @@
 # @author: Antigravity AI
 # @date: 2026-06-16
 # @version: 1.8.6
-# @license: MIT
+# @license: GPL-3.0-only
+# SPDX-License-Identifier: GPL-3.0-only
 #
 
 import frappe

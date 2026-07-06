@@ -2,7 +2,7 @@
 
 > **Single-source overview.** This document is the entry point to all project documentation, completed features, open risks, architecture decisions, and operational runbooks.  
 > **Author:** Jawahar R Mallah (<jawahar.mallah@gmail.com>)  
-> **Last Updated:** 2026-07-06 · **Version:** v2.1.1
+> **Last Updated:** 2026-07-06 · **Version:** v2.1.2
 
 > [!TIP]
 > Keep this document updated after any development session to keep the knowledge base current.
@@ -210,6 +210,7 @@ smriti_retail_os/
 | 57 | **SMRITI Barcode Scan Telemetry Collection Framework (v2.4.0)** | 2026-06-21 | `barcode_api.py`, `test_telemetry.py`, `seed_telemetry_meta.py` |
 | 58 | **SMRITI Landed Cost Allocation Module (v2.5.0)** | 2026-06-25 | `landed_cost.py` |
 | 59 | **SMRITI Purchase Matrix Optimizations & Supplier Auto-Sync Bridge (v2.1.1)** | 2026-07-06 | `matrix_service.py`, `hooks_logic.py`, `test_purchase_matrix.py` |
+| 60 | **SMRITI Licensing Migration to GPL-3.0-only (v2.1.2)** | 2026-07-06 | `LICENSE`, `COPYING`, `NOTICE`, `THIRD_PARTY_LICENSES.md` |
 
 ---
 

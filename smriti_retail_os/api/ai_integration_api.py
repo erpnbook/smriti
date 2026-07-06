@@ -4,7 +4,8 @@
 # @description: Whitelisted backend API endpoints for SMRITI AI integration.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @version: 1.8.6
-# @license: MIT
+# @license: GPL-3.0-only
+# SPDX-License-Identifier: GPL-3.0-only
 #
 
 import frappe

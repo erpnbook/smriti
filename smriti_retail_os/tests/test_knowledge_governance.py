@@ -4,7 +4,8 @@
 # @description: Sprint SDC-005 unit tests for SKE runtime, migrations, drift fallback, AI safe gate and telemetry retention.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @version: 1.8.6
-# @license: MIT
+# @license: GPL-3.0-only
+# SPDX-License-Identifier: GPL-3.0-only
 #
 
 import unittest

@@ -5,7 +5,8 @@
 # @author: Antigravity AI Pair Programmer
 # @date: 2026-07-01
 # @version: 1.8.6
-# @license: MIT
+# @license: GPL-3.0-only
+# SPDX-License-Identifier: GPL-3.0-only
 #
 
 import os

@@ -19,3 +19,4 @@ This index lists all implementation, architecture, and verification walkthroughs
 | 2026-06-25 | Procurement | v1.0.0 | [Procurement_Vendor_Mapping_v1.0.0.md](procurement/Procurement_Vendor_Mapping_v1.0.0.md) |
 | 2026-07-04 | Sales | v1.8.0 | [Sales_Product_Catalog_Metadata_v1.8.0.md](sales/Sales_Product_Catalog_Metadata_v1.8.0.md) |
 | 2026-07-06 | Procurement | v2.1.1 | [Procurement_Matrix_Optimize_And_Supplier_Sync_v2.1.1.md](procurement/Procurement_Matrix_Optimize_And_Supplier_Sync_v2.1.1.md) |
+| 2026-07-06 | Foundation | v2.1.2 | [Foundation_Licensing_Migration_GPLv3_v2.1.2.md](foundation/Foundation_Licensing_Migration_GPLv3_v2.1.2.md) |

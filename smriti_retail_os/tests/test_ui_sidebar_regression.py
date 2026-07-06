@@ -4,7 +4,8 @@
 # @desc:    Automated UI regression assertions for sidebar layout, developer bypass, and permissions.
 # @author:  Jawahar R. Mallah <jawahar.mallah@gmail.com>
 # @version: 2.1.0
-# @license: MIT
+# @license: GPL-3.0-only
+# SPDX-License-Identifier: GPL-3.0-only
 #
 
 import frappe

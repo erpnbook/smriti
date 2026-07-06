@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.1.2] — 2026-07-06
+
+### Changed
+- Migrated primary project license from MIT License to GNU General Public License v3.0 (GPL-3.0-only).
+- Created `COPYING` file with verbatim GPLv3 text and added standard `NOTICE` file.
+- Created `THIRD_PARTY_LICENSES.md` to document upstream framework and dependency licenses.
+- Added `SPDX-License-Identifier: GPL-3.0-only` headers to SMRITI source code files.
+
 ## [2.1.1] — 2026-07-04
 
 ### Fixed

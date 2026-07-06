@@ -7,7 +7,8 @@
 #               - Strips all Frappe chrome from the page context
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @version: 1.8.6
-# @license: MIT
+# @license: GPL-3.0-only
+# SPDX-License-Identifier: GPL-3.0-only
 #
 # NOTE: This file MUST be named smriti-home.py (hyphenated) to match
 #       www/smriti-home.html. Frappe resolves .py by exact filename.
