@@ -385,6 +385,13 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         self.cust.customer_type = "Individual"
         self.cust.mobile_no = "9988776655"
         self.cust.insert(ignore_permissions=True)
+        
+        # 3b. Setup a test Sales Person
+        if not frappe.db.exists("Sales Person", "Rahul Sharma"):
+            sp = frappe.new_doc("Sales Person")
+            sp.sales_person_name = "Rahul Sharma"
+            sp.commission_rate = 5.0
+            sp.insert(ignore_permissions=True)
 
         # 4. Setup a test Manager PIN / Password
         # Assign Password to current user so we can test validation easily
