@@ -1269,7 +1269,7 @@ def get_manual_html(volume_name=None):
         if "System Manager" not in frappe.get_roles(frappe.session.user):
             frappe.throw(_("Not permitted to view governance documents"), frappe.PermissionError)
             
-    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "..", "..", "docs"))
+    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "docs"))
     
     # Determine the directory based on the document type
     doc_type = registry_entry.get("document_type")
@@ -1374,7 +1374,7 @@ def _parse_answer_key(file_key):
     """
     import os
     import re
-    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "..", "..", "docs"))
+    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "docs"))
     
     file_name = f"{file_key}.md"
     file_path = None
@@ -1413,7 +1413,7 @@ def _parse_questions(file_key):
     import os
     import re
     
-    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "..", "..", "docs"))
+    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "docs"))
     file_name = f"{file_key}.md"
     file_path = None
     for sub in ["certification", "enablement", "user_manual", "governance"]:
@@ -1979,7 +1979,7 @@ def download_enablement_file(file_key=None):
         frappe.throw(_("Invalid file key formatting"), frappe.ValidationError)
         
     import os
-    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "..", "..", "docs"))
+    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "docs"))
     
     if file_key == "zip_bundle":
         import io

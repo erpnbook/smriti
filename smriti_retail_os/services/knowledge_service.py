@@ -159,7 +159,7 @@ def rebuild_knowledge_index():
         })
 
     # 4. Index User Manuals & KB Markdown Files
-    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "..", "..", "docs"))
+    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "docs"))
     if os.path.exists(docs_root):
         _index_markdown_directory(docs_root, index)
 
@@ -823,7 +823,7 @@ def get_assets(module="PSV", category="Enablement"):
         except Exception:
             pass
 
-    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "..", "..", "docs"))
+    docs_root = os.path.abspath(os.path.join(frappe.get_app_path("smriti_retail_os"), "..", "docs"))
     assets = []
     
     # Define directories to search based on module and category
