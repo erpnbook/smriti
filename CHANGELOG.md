@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.1.5] — 2026-07-06
+
+### Fixed
+- Fixed a test-isolation bug in the UAT seeding script `seed_psv_uat.py` where data from previous runs leaked into subsequent runs.
+- Introduced `_clear_ledger_entries_by_company(company)` shared helper function to clear both `PSV Ledger Entry` and legacy `SMRITI Party Stock Ledger Entry` tables.
+- Refactored `validate_compatibility_matrix()` and `cleanup_uat_data()` to utilize the shared helper function.
+- Added row-count assertions for Scenarios A, B, and C to verify exact seeded ledger entries.
+
 ## [2.1.3] — 2026-07-06
 
 ### Added

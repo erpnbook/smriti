@@ -214,6 +214,8 @@ smriti_retail_os/
 | 59 | **SMRITI Purchase Matrix Optimizations & Supplier Auto-Sync Bridge (v2.1.1)** | 2026-07-06 | `matrix_service.py`, `hooks_logic.py`, `test_purchase_matrix.py` |
 | 60 | **SMRITI Licensing Migration to GPL-3.0-only (v2.1.2)** | 2026-07-06 | `LICENSE`, `COPYING`, `NOTICE`, `THIRD_PARTY_LICENSES.md` |
 | 61 | **SMRITI Security Permission Audit & Custom Field Setup (v2.1.4)** | 2026-07-06 | `setup.py`, `test_billing_api.py`, `check_ignore_permissions.py` |
+| 62 | **SMRITI Royal Theme Contrast Audits & Drawer Fixes (v2.1.3)** | 2026-07-06 | `smriti_ui_resolver.js`, `smriti-help.html` |
+| 63 | **SMRITI PSV Seeding Test Isolation & DRY Deletion Refactor (v2.1.5)** | 2026-07-06 | `seed_psv_uat.py`, `KNOWN_ISSUES.md` |
 
 ---
 

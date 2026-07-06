@@ -22,3 +22,5 @@ This index lists all implementation, architecture, and verification walkthroughs
 | 2026-07-06 | Foundation | v2.1.2 | [Foundation_Licensing_Migration_GPLv3_v2.1.2.md](foundation/Foundation_Licensing_Migration_GPLv3_v2.1.2.md) |
 | 2026-07-06 | Foundation | v2.1.3 | [Foundation_Royal_Theme_And_Contrast_Fixes_v2.1.3.md](foundation/Foundation_Royal_Theme_And_Contrast_Fixes_v2.1.3.md) |
 | 2026-07-06 | Security | v2.1.4 | [Security_Ignore_Permissions_And_Custom_Fields_v2.1.4.md](security/Security_Ignore_Permissions_And_Custom_Fields_v2.1.4.md) |
+| 2026-07-06 | Inventory | v2.1.5 | [Inventory_PSV_Seeding_Test_Isolation_v2.1.5.md](inventory/Inventory_PSV_Seeding_Test_Isolation_v2.1.5.md) |
+
