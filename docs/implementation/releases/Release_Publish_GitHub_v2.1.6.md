@@ -60,7 +60,8 @@ Ensure all 153/153 integration tests run and pass successfully before publishing
 Pull the new release commits and tags on the test environment `F:\Smriti9`.
 
 ## 17. Status
-In Progress.
+Completed
+
 
 ## 18. Related ADRs
 None.
