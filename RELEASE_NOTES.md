@@ -1,79 +1,41 @@
-# SMRITI Retail OS — Release Notes v2.1.1
+# SMRITI Retail OS — Release Notes v2.1.6
 
-**Release Date**: 2026-07-04
-**Codename**: Engineering Governance
-**Previous Version**: v2.1.0
+**Release Date**: 2026-07-06
+**Codename**: Security Remediation
+**Previous Version**: v2.1.1
 
 ---
 
 ## Highlights
 
-This release transitions SMRITI Retail OS from feature development into a quality-assured,
-governance-driven release process. It introduces automated verification infrastructure,
-centralized security constants, and formal release gate criteria.
+This release focuses on hardening SMRITI Retail OS security controls, integrating automated compliance linting and integration testing into the CI pipeline, and correcting persistence boundary violations.
 
 ---
 
 ## New Capabilities
 
-### 1. Automated UI Integration Regression Test Suite
-- 5 automated Python tests covering sidebar DOM structure, CSS classes,
-  hashchange navigation, page access policy enforcement, and developer bypass configuration.
-- Tests execute headlessly in the Docker test environment via `bench run-tests`.
+### 1. Automated Compliance CI Workflows
+- Integrated `check_ignore_permissions.py` (whitelisted permission check) into `.github/workflows/smriti_ci.yml`.
+- Integrated `validate_architecture.py` (compliance linter audit) into `.github/workflows/smriti_ci.yml`.
+- Added a self-hosted runner integration testing workflow to run the entire backend test suite.
 
-### 2. Config-Driven Developer Bypass
-- Replaced hostname-based loopback check (`localhost/127.0.0.1`) with server-controlled
-  `window.SMRITI_DEVELOPER_MODE` flag injected from `frappe.conf.developer_mode`.
-- Backend security controls remain authoritative in production.
-
-### 3. Centralized Roles Constants Registry
-- Added `Roles.ACCOUNTANT`, `Roles.SALES_MANAGER`, `Roles.SMRITI_TEAM` to the
-  centralized `roles.py` class.
-- Migrated all remaining raw string role references in the page access policy registry.
-
-### 4. Release Governance Documents
-- **RELEASE_GATE_CRITERIA.md**: Defines mandatory pass/fail thresholds for architecture,
-  tests, performance, security, accessibility, and documentation.
-- **QUALITY_DASHBOARD.md**: Tracks per-release health status across all quality gates.
-
-### 5. Purchase Studio Sidebar Integration
-- Dynamic sidebar with Left/Right/Top/Bottom placement controls.
-- Collapse/expand toggle with smooth CSS transitions.
-- Popout buttons on all menu items for multi-window workflows.
-- Hash-based navigation highlighting matching the Space Midnight dark theme.
-
----
-
-## Architecture & Governance
-
-- Architecture Guard: `[OK] No new architecture boundary violations.`
-- Legacy desk page retirement complete (21 directories removed in v2.0.0).
-- Boot.py desk redirection enforced for all `/desk/*` routes.
+### 2. Architecture Boundary Isolation
+- Extracted persistence layer calls (`frappe.new_doc`, `frappe.get_doc`, `frappe.db.sql`) from services.
+- Created `LookupRepository` and `MatrixRepository` classes, wrapping all direct database operations to keep boundaries clean.
 
 ---
 
 ## Fixes
 
-- **Negative Stock Recovery Safety Sweep (KI-003)**: Added missing `__init__.py` module package initializer and module-level `run_safety_net` hook wrapper to resolve daily scheduler ImportError at migration.
-- **Product Catalog Console Blocker**: Added whitelisted backend API `get_catalog_metadata` to load filter metadata dynamically on `/products`, resolving client-side `frappe.db` undefined error.
-- **Missing CSRF Token Bad Requests**: Injected global `window.csrf_token` and `window.csrfToken` variables on `/products` and `/smriti` dashboard pages to prevent `400 Bad Request` errors on POST API calls.
-- **Unread Notification Badge Forbidden**: Whitelisted the `get_unread_count` API endpoint in the notifications controller to resolve `403 Forbidden` error on standalone pages.
-- **Collapsed Sidebar Brand Logo**: Fixed sidebar CSS layout to keep the brand logo visible and centered in collapsed mode, and verticalized the brand text.
-- **Styled Toolbar Filter Dropdowns**: Configured custom premium SMRITI dropdown CSS styles with an embedded SVG chevron arrow indicator, replacing browser-default select arrows.
-- **Unified Favicon Configuration**: Defined the SMRITI logo globally as the default page favicon and app tab shortcut icon.
+- **Whitelisted API ignore-permissions Audit**: Reviewed and updated comments for all 161 endpoints that bypass standard permissions in whitelisted APIs, using unique contextual explanations.
+- **Tally Integration Test Database Setup**: Corrected the test suite to automatically configure root and child Cost Centers and the Company's `round_off_account` defaults in the database during test setups, resolving precision loss validation errors.
+- **Branding Integrity Tests**: Corrected expected SHA-256 hashes of the login page template and global logo SVG to match their current correct versions.
 
 ---
 
-## Known Issues
+## Commits Since v2.1.1
 
-- Billing integration tests (`test_billing_api.py`) fail due to missing POS Profile fixture data in the test environment.
-- CGE (Customer Growth Engine) tests have intermittent failures in concurrency stress tests due to database lock contention.
-
----
-
-## Commits Since v2.1.0
-
-12 commits, covering scheduler path hotfixes, client-side API error corrections, CSRF token handling, and CSS layout/styling polishes.
+7 commits covering API permission audits, repository extraction refactoring, CI workflow wiring, and test suite initialization corrections.
 
 ---
 
