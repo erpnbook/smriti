@@ -15,16 +15,17 @@
     <script src="/assets/smriti_retail_os/js/smriti_explain.js"></script>
     <style>
         :root {
-            --navy-blue: #1A2B5C;
-            --bright-blue: #2563EB;
-            --accent-blue: #3B82F6;
-            --background: #F8FAFC;
-            --card-bg: #FFFFFF;
-            --text-dark: #0F172A;
-            --text-gray: #475569;
-            --border-color: #E2E8F0;
-            --shadow: 0 4px 20px rgba(26,43,92,0.06);
-            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --navy-blue:          var(--smriti-color-bg-secondary);
+            --header-text:        var(--smriti-color-text-primary);
+            --bright-blue:        var(--smriti-color-brand-primary);
+            --accent-blue:        var(--smriti-color-brand-light);
+            --background:         var(--smriti-color-bg-page);
+            --card-bg:            var(--smriti-color-bg-primary);
+            --text-dark:          var(--smriti-color-text-primary);
+            --text-gray:          var(--smriti-color-text-muted);
+            --border-color:       var(--smriti-color-border-default);
+            --shadow:             var(--smriti-shadow-md);
+            --transition:         all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
@@ -45,7 +46,7 @@
         /* Header Navigation */
         header {
             background-color: var(--navy-blue);
-            color: white;
+            color: var(--header-text);
             padding: 16px 40px;
             display: flex;
             align-items: center;
@@ -446,18 +447,18 @@
             font-size: 15px;
             line-height: 1.6;
             color: var(--text-dark);
-            background: #F8FAFC;
+            background: var(--smriti-color-bg-secondary);
             padding: 16px;
             border-radius: 12px;
-            border-left: 4px solid var(--navy-blue);
+            border-left: 4px solid var(--bright-blue);
         }
 
         .drawer-example {
             font-family: system-ui, sans-serif;
             font-size: 14px;
             line-height: 1.6;
-            color: var(--text-gray);
-            background: #EFF6FF;
+            color: var(--text-dark);
+            background: rgba(255, 255, 255, 0.05);
             padding: 16px;
             border-radius: 12px;
             border-left: 4px solid var(--accent-blue);
