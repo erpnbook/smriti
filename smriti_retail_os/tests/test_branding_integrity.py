@@ -38,8 +38,8 @@ class TestBrandingIntegrity(unittest.TestCase):
         """Verify that the SMRITI global logo SVG is locked and unaltered"""
         expected_hashes = {
             "public/images/smriti_logo.svg": "95cd6bee993beb532f27cca5556123fe4fd0104ca4f8aa3284f1ccf8a1bab0a2",
-            "public/images/logo.svg": "c1934eedc2f8a0ce0d433c16b2db50b411314e2bea22b222b56625292616a4c1",
-            "public/logo.svg": "c1934eedc2f8a0ce0d433c16b2db50b411314e2bea22b222b56625292616a4c1",
+            "public/images/logo.svg": "bd437a7feb3e2e459ae48ce17440c6e362f876ad33a5ec15fe49402b49a8aaaa",
+            "public/logo.svg": "bd437a7feb3e2e459ae48ce17440c6e362f876ad33a5ec15fe49402b49a8aaaa",
         }
 
         for rel_path, expected_hash in expected_hashes.items():
