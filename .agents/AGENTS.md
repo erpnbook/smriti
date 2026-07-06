@@ -264,6 +264,55 @@ No task is completed until:
 
 # SMRITI Wiki Documentation-First Policy
 
-**Documentation-First Policy:** Every new feature, module, architectural change, or release must automatically create or update the corresponding GitHub Wiki pages before the task is considered complete. Documentation is a mandatory deliverable, not an optional activity. The agent must also update the Home page, release history, cross-links, and navigation, validate internal links, and publish the updated Wiki automatically.
+## Documentation-First Governance
+
+No implementation is considered complete until all of the following are finished:
+
+- Source code implemented
+- Tests executed successfully
+- Documentation updated
+- GitHub Wiki updated
+- Release Notes updated
+- CHANGELOG updated
+- Architecture documentation updated (if applicable)
+- User documentation updated (if applicable)
+- API documentation updated (if applicable)
+- Screenshots or diagrams updated (if UI changed)
+- Cross-links validated
+- No broken wiki links
+- Documentation committed and published
+
+## AI Agent Verification Checklist
+
+Every verification report must include an objective documentation and publishing checklist in the following format:
+
+```
+Implementation Status
+
+✓ Code Complete
+✓ Tests Passed
+✓ Documentation Updated
+✓ Wiki Updated
+✓ CHANGELOG Updated
+✓ Release Notes Updated
+✓ Architecture Updated
+✓ GitHub Published
+✓ Links Verified
+
+Evidence Level: [A/B/C/D]
+```
+
+## Documentation Quality Gates
+
+The AI agent must fail the task and report the issue if any of the following occur:
+
+* Missing wiki page
+* Broken internal links
+* Duplicate content
+* Empty sections
+* Placeholder text ("TODO", "Coming Soon")
+* References to prohibited platform terminology (per SMRITI branding policy)
+* Inconsistent terminology
+
 
 
