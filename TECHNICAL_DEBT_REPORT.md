@@ -23,10 +23,17 @@
 - **Impact**: High risk of credential exposure if these files are committed or shared.
 - **Reference**: `pwd.yml`, `example.env`
 
-### 2.2 Insecure Manager Overrides
-- **Issue**: `validate_manager_override` in `billing_api.py` uses the full ERPNext password as a PIN.
-- **Impact**: Increases risk of shoulder surfing in a busy retail environment. Standard practice is a separate, shorter, hashed PIN field.
-- **Reference**: `billing_api.py:560`
+### 2.2 Insecure Manager Overrides — RESOLVED (verify before closing)
+- **Original issue**: `validate_manager_override` in `billing_api.py` used the full ERPNext
+  login password as a PIN.
+- **Current state (as of this audit)**: `billing_api.py::validate_manager_override` now checks
+  a dedicated `custom_smriti_pin` field with no fallback to the login password, and applies a
+  Redis-backed rate limit (5 attempts / 10 min). This appears fixed in code.
+- **Action before marking closed**: (1) confirm `custom_smriti_pin` is stored hashed, not
+  plaintext, via `frappe.utils.password.check_password`; (2) add/confirm a regression test that
+  asserts login-password fallback is impossible; (3) update this report's status once verified,
+  since it was found stale relative to the code during a third-party audit.
+- **Reference**: `billing_api.py:789`
 
 ### 2.3 Role-Based Access Control (RBAC) Bypass
 - **Issue**: `billing_api.py` uses `ignore_permissions=True` in several `@frappe.whitelist()` functions.

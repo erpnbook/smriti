@@ -1,7 +1,11 @@
 SMRITI Retail OS
-Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All Rights Reserved.
+Copyright (c) 2026 AITDL NETWORK & ERPNbook.com.
 
-This product is distributed under the GNU General Public License v3.0 (GPL-3.0-only).
+This product is distributed under the terms of the GNU General Public License
+v3.0 (GPL-3.0-only); see the LICENSE / COPYING file for the full text.
+("All Rights Reserved" was removed here because it contradicts distributing
+the code under an open-source license — see COPYING for the actual terms
+under which the code may be used, modified, and redistributed.)
 
 This product includes software developed by:
 - AITDL – AI Technology & Development Lab (https://github.com/erpnbook/smriti)

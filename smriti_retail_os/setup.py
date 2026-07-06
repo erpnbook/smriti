@@ -2282,6 +2282,13 @@ def setup_smriti_retail_os():
                 "fieldtype": "Password",
                 "insert_after": "custom_is_smriti_user",
                 "module": "SMRITI Retail OS"
+            },
+            {
+                "fieldname": "custom_pos_override_pin",
+                "label": "POS Override PIN",
+                "fieldtype": "Data",
+                "insert_after": "password",
+                "module": "SMRITI Retail OS"
             }
         ],
         "Loyalty Point Entry": [
@@ -2809,15 +2816,6 @@ def setup_smriti_retail_os():
                 "fieldtype": "Check",
                 "default": "0",
                 "in_list_view": 1,
-                "module": "SMRITI Retail OS"
-            }
-        ],
-        "User": [
-            {
-                "fieldname": "custom_pos_override_pin",
-                "label": "POS Override PIN",
-                "fieldtype": "Data",
-                "insert_after": "password",
                 "module": "SMRITI Retail OS"
             }
         ]
