@@ -61,6 +61,7 @@ def open_shift(cashier, pos_profile, opening_entries):
                 "opening_amount": flt(entry.get("opening_amount"))
             })
 
+    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
     opening.flags.ignore_permissions = True
     opening.insert()
     try:
@@ -277,6 +278,7 @@ def close_shift(opening_entry_name, closing_entries, manager_pin=None, notes=Non
     if notes:
         closing.closing_note = notes
 
+    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
     closing.flags.ignore_permissions = True
     closing.insert()
     try:

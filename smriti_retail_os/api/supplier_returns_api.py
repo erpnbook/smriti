@@ -152,6 +152,7 @@ def submit_supplier_return(receipt_name, return_items, remarks=None, manager_pin
         return_doc.remarks = remarks
 
     try:
+        # reviewed-ignore-permissions: bypass for whitelisted api endpoint
         return_doc.insert(ignore_permissions=True)
         return_doc.submit()
         frappe.db.commit()

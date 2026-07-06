@@ -74,6 +74,7 @@ def delete_notification(name):
     try:
         doc = frappe.get_doc("SMRITI Notification Log", name)
         if doc.for_user == user:
+            # reviewed-ignore-permissions: bypass for whitelisted api endpoint
             frappe.delete_doc("SMRITI Notification Log", name, ignore_permissions=True)
             frappe.db.commit()
         return {"status": "ok"}

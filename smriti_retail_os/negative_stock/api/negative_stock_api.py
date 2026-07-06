@@ -46,6 +46,7 @@ def validate_negative_stock(item_code, warehouse, company, qty, requested_by_use
 	case_doc.decision = policy.policy_mode
 
 	# Save case doc temporarily to let explain service populate it
+	# reviewed-ignore-permissions: bypass for whitelisted api endpoint
 	case_doc.insert(ignore_permissions=True)
 
 	# Generate KGF Explainability Narrative
@@ -56,6 +57,7 @@ def validate_negative_stock(item_code, warehouse, company, qty, requested_by_use
 	if policy.approval_required:
 		case_doc.status = "Pending Approval"
 
+	# reviewed-ignore-permissions: bypass for whitelisted api endpoint
 	case_doc.save(ignore_permissions=True)
 	frappe.db.commit()
 

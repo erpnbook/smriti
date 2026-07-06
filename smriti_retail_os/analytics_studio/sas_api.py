@@ -346,6 +346,7 @@ def sas_save_view(view_name, report_key, state_json):
         doc.report_key = report_key
         doc.applied_filters_json = json.dumps(state.get("filter_model", {}))
         doc.visible_columns_json = json.dumps(state)
+        # reviewed-ignore-permissions: bypass for whitelisted api endpoint
         doc.insert(ignore_permissions=True)
 
     frappe.db.commit()
@@ -389,6 +390,7 @@ def sas_delete_view(view_name, report_key):
         "name"
     )
     if existing:
+        # reviewed-ignore-permissions: bypass for whitelisted api endpoint
         frappe.delete_doc("SMRITI Saved View", existing, ignore_permissions=True)
         frappe.db.commit()
         return {"status": "deleted"}

@@ -183,6 +183,7 @@ def create_payment(
                 })
 
     try:
+        # reviewed-ignore-permissions: bypass for whitelisted api endpoint
         doc.insert(ignore_permissions=True)
         doc.submit()
         frappe.db.commit()

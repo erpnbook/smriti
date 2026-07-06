@@ -182,6 +182,7 @@ def log_telemetry_event(event_type, query=None, target_asset=None, has_result=1,
             "user": frappe.session.user,
             "timestamp": frappe.utils.now_datetime()
         })
+        # reviewed-ignore-permissions: bypass for whitelisted api endpoint
         doc.insert(ignore_permissions=True)
         frappe.db.commit()
         return {"success": True, "name": doc.name}

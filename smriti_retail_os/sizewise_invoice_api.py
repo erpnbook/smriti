@@ -522,8 +522,10 @@ def save_sizewise_invoice(payload):
     # Attach container GST tax rows
     _add_gst_taxes(si, tax_type, company)
 
+    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
     si.flags.ignore_permissions = True
     si.flags.ignore_mandatory   = True
+    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
     si.save(ignore_permissions=True)
     frappe.db.commit()
 

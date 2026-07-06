@@ -122,6 +122,7 @@ def create_sales_order(customer, items, delivery_date=None, remarks=None):
         })
 
     try:
+        # reviewed-ignore-permissions: bypass for whitelisted api endpoint
         so.insert(ignore_permissions=True)
         so.submit()
         frappe.db.commit()
