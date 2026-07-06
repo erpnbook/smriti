@@ -1,0 +1,44 @@
+# ── Additions to .github/workflows/smriti_ci.yml ────────────────────────────
+# Paste these as additional jobs. They close two of the audit's real gaps:
+#   1. CI currently never runs the 65 real test files (needs live Frappe+DB).
+#   2. Nothing stops new ignore_permissions=True from silently entering
+#      whitelisted endpoints without review.
+#
+# Job 1 requires a self-hosted runner (or GH-hosted + docker-compose) with a
+# working Frappe bench. Adjust site name / bench path to match your infra.
+
+  smriti-integration-tests:
+    name: Integration Tests (live Frappe + MariaDB)
+    runs-on: self-hosted   # <-- point this at a runner with bench already set up
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run full backend test suite
+        run: |
+          cd /home/frappe/frappe-bench
+          bench --site frontend run-tests --app smriti_retail_os
+        # This is the step that was previously "manual only" per KNOWN_ISSUES.md.
+        # If KI-001/KI-002/KI-006/KI-007 (test isolation issues) are still open,
+        # this job will fail until those are fixed — that's intentional; a red
+        # CI is more honest than a green CI that never ran the tests.
+
+  smriti-permission-gate:
+    name: Ignore-Permissions Regression Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Fail on unreviewed ignore_permissions in whitelisted endpoints
+        run: |
+          python3 tools/audit/check_ignore_permissions.py
+        # See tools/audit/check_ignore_permissions.py (companion script below).
+        # Policy: any @frappe.whitelist() function using ignore_permissions=True
+        # must have a "# reviewed-ignore-permissions: <reason>" comment on the
+        # line above the call, so new bypasses can't be added silently.

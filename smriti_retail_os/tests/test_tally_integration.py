@@ -88,6 +88,9 @@ class TestTallyIntegration(unittest.TestCase):
 			warehouse = wh.name
 			frappe.db.commit()
 
+		# Get cost center
+		cost_center = frappe.db.get_value("Cost Center", {"company": self.company, "is_group": 0})
+
 		# Create a dummy Sales Invoice
 		self.invoice = frappe.new_doc("Sales Invoice")
 		self.invoice.customer = "Tally Test Customer"
@@ -100,7 +103,8 @@ class TestTallyIntegration(unittest.TestCase):
 			"qty": 1,
 			"rate": 100.0,
 			"income_account": income_account,
-			"warehouse": warehouse
+			"warehouse": warehouse,
+			"cost_center": cost_center
 		})
 		
 		# Insert and submit
