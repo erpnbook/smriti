@@ -6,7 +6,40 @@
 
 ---
 
-## Highlights
+## 📢 Announcement: Official SMRITI Wiki Documentation Portal is Live!
+
+We are thrilled to announce the official launch of the **SMRITI Retail OS Documentation Wiki**! 
+
+This new documentation portal serves as the single source of truth for customers, partners, developers, and administrators deploying and managing SMRITI Retail OS.
+
+### 🌟 Highlights of the New Wiki
+The wiki covers all core modules, engines, and configuration interfaces of the standalone SMRITI enterprise retail platform:
+
+1. **Getting Started & Deployments**: Step-by-step setup guides, installation instructions, and quick-start checklists.
+2. **Product Studios**: Complete guides to:
+   - **Product Studio**: Catalog and variant lifecycle management.
+   - **Purchase Studio**: Procurement workflows and supplier relationships.
+   - **Sales Studio**: POS cashier sessions, terminal management, and sales checkout.
+   - **Inventory Studio**: Multi-warehouse stock receipts, transfers, and physical snapshots.
+   - **Label Studio**: Queue-based barcode generation and printing.
+   - **Customer Studio**: Loyalty programs, demographic segmentation, and CRM.
+3. **Core Engines**:
+   - **Matrix Engine**: High-dimensional size/color grid configurations.
+   - **Customer Growth Engine**: Real-time customer lifetime value and campaign automation.
+   - **Theme Engine & Navigation Engine**: Custom branding stylesheets and role-based navigation access policies.
+   - **Explain Engine & Formula Registry**: Interactive explanation tooltips and locked mathematical equations for transparency.
+   - **Integration Engine**: Sales and inventory synchronization pipelines.
+4. **Administration & Security**: User roles, security hardening, REST API references, and system configuration guidelines.
+
+### 🔗 Quick Links
+- **SMRITI Wiki**: https://github.com/erpnbook/smriti/wiki
+- **Latest Release (v2.1.6)**: https://github.com/erpnbook/smriti/releases/tag/v2.1.6
+- **Documentation Home**: https://github.com/erpnbook/smriti/wiki/Home
+- **SMRITI Codebase**: https://github.com/erpnbook/smriti
+
+---
+
+## Highlights of this Release
 
 This release focuses on hardening SMRITI Retail OS security controls, integrating automated compliance linting and integration testing into the CI pipeline, and correcting persistence boundary violations.
 
