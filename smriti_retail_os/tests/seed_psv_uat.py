@@ -625,6 +625,12 @@ def validate_migration():
 # SECTION 4: COMPATIBILITY MATRIX VALIDATION
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _clear_ledger_entries_by_company(company):
+    """Removes all PSV Ledger and legacy Party Stock Ledger entries for a given company."""
+    frappe.db.delete("PSV Ledger Entry", {"company": company})
+    frappe.db.delete("SMRITI Party Stock Ledger Entry", {"company": company})
+
+
 def validate_compatibility_matrix():
     """
     Tests 3 compatibility scenarios:
@@ -704,10 +710,12 @@ def validate_compatibility_matrix():
     else:
         _log(f"  PSA-A exists: {psa_a}")
 
-    # Clear any existing PSV Ledger entries for COMPAT-TEST-CO (ensure no false new data)
-    frappe.db.delete("PSV Ledger Entry", {"company": "COMPAT-TEST-CO"})
+    # Clear any existing PSV Ledger entries and legacy entries for COMPAT-TEST-CO (ensure no false new data)
+    _clear_ledger_entries_by_company("COMPAT-TEST-CO")
 
     for qty, vtype in [(200.0, "Dispatch"), (-50.0, "Sales")]:
+        # NOTE: This existence check is redundant now that we clear the company entries beforehand,
+        # but is kept to preserve the original seeding check design.
         if not frappe.db.get_value(
             "SMRITI Party Stock Ledger Entry",
             {"party_stock_account": psa_a, "voucher_type": vtype},
@@ -725,7 +733,11 @@ def validate_compatibility_matrix():
                 "unique_hash": raw_hash
             }).insert(ignore_permissions=True)
 
-    frappe.db.commit()
+    # Assert expected row counts
+    count_legacy_a = frappe.db.count("SMRITI Party Stock Ledger Entry", {"company": "COMPAT-TEST-CO"})
+    count_new_a = frappe.db.count("PSV Ledger Entry", {"company": "COMPAT-TEST-CO"})
+    assert count_legacy_a == 2, f"Scenario A expected 2 legacy rows, found {count_legacy_a}"
+    assert count_new_a == 0, f"Scenario A expected 0 new rows, found {count_new_a}"
 
     summary_a = get_sellin_sellout_summary("COMPAT-TEST-CO", psa_a)
     _log(f"  Result: balance={summary_a.get('current_balance')}, "
@@ -787,6 +799,9 @@ def validate_compatibility_matrix():
             "active": 1, "status": "Active", "effective_from": today()
         }).insert(ignore_permissions=True)
 
+    # Clear any existing PSV Ledger and legacy entries for COMPAT-NEW-CO
+    _clear_ledger_entries_by_company("COMPAT-NEW-CO")
+
     # Seed new PSV only: +300 dispatch, -80 sales → balance=220
     for qty, tx_type in [(300.0, "Dispatch"), (-80.0, "Sales")]:
         dt_str = now_datetime()
@@ -805,7 +820,11 @@ def validate_compatibility_matrix():
             }).insert(ignore_permissions=True)
             time.sleep(0.01)  # ensure unique datetimes
 
-    frappe.db.commit()
+    # Assert expected row counts
+    count_legacy_b = frappe.db.count("SMRITI Party Stock Ledger Entry", {"company": "COMPAT-NEW-CO"})
+    count_new_b = frappe.db.count("PSV Ledger Entry", {"company": "COMPAT-NEW-CO"})
+    assert count_legacy_b == 0, f"Scenario B expected 0 legacy rows, found {count_legacy_b}"
+    assert count_new_b == 2, f"Scenario B expected 2 new rows, found {count_new_b}"
 
     summary_b = get_sellin_sellout_summary("COMPAT-NEW-CO", partner_b)
     _log(f"  Result: balance={summary_b.get('current_balance')}, "
@@ -877,6 +896,9 @@ def validate_compatibility_matrix():
             "active": 1, "status": "Active", "effective_from": today()
         }).insert(ignore_permissions=True)
 
+    # Clear any existing PSV Ledger and legacy entries for COMPAT-MIXED-CO
+    _clear_ledger_entries_by_company("COMPAT-MIXED-CO")
+
     # Legacy: +500 units
     if not frappe.db.get_value("SMRITI Party Stock Ledger Entry",
                                 {"party_stock_account": psa_c, "item_code": item_c}, "name"):
@@ -909,6 +931,12 @@ def validate_compatibility_matrix():
         }).insert(ignore_permissions=True)
 
     frappe.db.commit()
+
+    # Assert expected row counts
+    count_legacy_c = frappe.db.count("SMRITI Party Stock Ledger Entry", {"company": "COMPAT-MIXED-CO"})
+    count_new_c = frappe.db.count("PSV Ledger Entry", {"company": "COMPAT-MIXED-CO"})
+    assert count_legacy_c == 1, f"Scenario C expected 1 legacy row, found {count_legacy_c}"
+    assert count_new_c == 1, f"Scenario C expected 1 new row, found {count_new_c}"
 
     summary_c = get_sellin_sellout_summary("COMPAT-MIXED-CO", partner_c)
     _log(f"  Result: balance={summary_c.get('current_balance')} (expected=120, NOT 500)")
@@ -1572,9 +1600,9 @@ def cleanup_uat_data():
     """Removes all UAT-seeded data (non-destructive to production data)."""
     _log("\n=== CLEANUP: Removing UAT data ===")
 
-    # PSV Ledger entries — delete by company
+    # PSV and legacy Ledger entries — delete by company
     for company in [UAT_COMPANY, "COMPAT-TEST-CO", "COMPAT-NEW-CO", "COMPAT-MIXED-CO"]:
-        frappe.db.delete("PSV Ledger Entry", {"company": company})
+        _clear_ledger_entries_by_company(company)
 
     # PSV Aging Snapshots — keyed by channel_partner (no company column); delete via partner list
     for company in [UAT_COMPANY, "COMPAT-TEST-CO", "COMPAT-NEW-CO", "COMPAT-MIXED-CO"]:

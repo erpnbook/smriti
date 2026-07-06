@@ -105,7 +105,21 @@ Status: Pre-release audit
 
 ---
 
+## Resolved in v2.1.5 (Previously Known Issues)
+
+### KI-008 · SMRITI PSV Seeding script test isolation failure during compatibility matrix validation (Fixed)
+- **Severity:** P3
+- **Module:** Inventory (tests)
+- **Status:** Resolved in v2.1.5
+- **Symptom:** Scenario B and Scenario C in compatibility matrix validation fail during subsequent runs of UAT seeding script.
+- **Cause:** Lack of pre-seed data deletion for COMPAT-NEW-CO and COMPAT-MIXED-CO, coupled with unique timestamp-based hashing, leading to duplicate records accumulation.
+- **Impact on production:** None. This is a test-only isolation issue.
+- **Fix:** Added `_clear_ledger_entries_by_company` shared helper to clear ledger tables for both compat companies before seeding, and added row count assertions to Scenarios A, B, and C.
+
+---
+
 ## Resolved in v2.1.1 (Previously Known Issues)
+
 
 ### KI-003 · SNSM Scheduler Path Error at Migrate (Fixed)
 - **Severity:** P4 (Info/Warning)
