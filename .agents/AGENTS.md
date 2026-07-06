@@ -319,5 +319,107 @@ The AI agent must fail the task and report the issue if any of the following occ
 * References to prohibited platform terminology (per SMRITI branding policy)
 * Inconsistent terminology
 
+---
+
+# SMRITI Continuous Repository Governance (Auto-Update Policy)
+
+This rule is mandatory.
+
+Every completed implementation, bug fix, enhancement, refactoring, architecture change, documentation update, release, or governance modification MUST automatically review and update all affected repository assets before the task is considered complete.
+
+## Always Auto-Update
+
+The AI agent shall automatically update, when applicable:
+
+### Documentation
+- GitHub Wiki
+- README.md
+- CHANGELOG.md
+- RELEASE_NOTES.md
+- Architecture documents
+- Implementation Plans
+- Walkthroughs
+- User Manual
+- Developer Guide
+- API Documentation
+- Knowledge Base
+- FAQ
+- Troubleshooting Guide
+
+### GitHub Repository
+- Pull Request Template
+- Issue Templates
+- Discussion Templates
+- CODEOWNERS
+- CONTRIBUTING.md
+- SECURITY.md
+- SUPPORT.md
+- Labels (if managed)
+- Milestones (if managed)
+- Projects (if managed)
+- GitHub Releases
+
+### Governance
+- AGENTS.md
+- Architecture Constitution
+- Coding Standards
+- Documentation Standards
+- Branding Standards
+- Testing Standards
+
+### Navigation
+Automatically update:
+- Wiki Home page
+- Table of Contents
+- Cross-links
+- Index pages
+- Navigation menus
+- Release history
+
+### Validation
+Automatically verify:
+- No broken links
+- No duplicate pages
+- No orphan documentation
+- No outdated references
+- Consistent terminology
+- Branding compliance
+- Documentation completeness
+
+### Completion Gate
+No task is considered complete until all affected documentation and governance assets have been reviewed and updated.
+If no update is required, explicitly state:
+"Reviewed — No changes required."
+The AI agent must never skip this review.
+
+---
+
+## Auto-Update Targets (Dependency-Driven Mapping)
+The agent must discover what needs updating based on the files it changed:
+
+- **If source code changes:**
+  - Update Wiki
+  - Update README (if needed)
+  - Update CHANGELOG
+  - Update RELEASE_NOTES
+- **If UI changes:**
+  - Update screenshots
+  - Update walkthroughs
+  - Update user manual
+- **If API changes:**
+  - Update API docs
+  - Update examples
+  - Update Wiki
+- **If architecture changes:**
+  - Update architecture docs
+  - Update diagrams
+  - Update governance
+- **If new feature:**
+  - Create Wiki page
+  - Add FAQ
+  - Add release notes
+  - Update roadmap
+
+
 
 
