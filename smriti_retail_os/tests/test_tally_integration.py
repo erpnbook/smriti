@@ -112,6 +112,23 @@ class TestTallyIntegration(unittest.TestCase):
 			cc.insert(ignore_permissions=True)
 			cost_center = cc.name
 
+		# Ensure cost center and round off account are set on Company
+		round_off_account = frappe.db.get_value("Account", {"company": self.company, "account_name": "Round Off", "is_group": 0})
+		if not round_off_account:
+			parent_exp = frappe.db.get_value("Account", {"company": self.company, "root_type": "Expense", "is_group": 1})
+			if not parent_exp:
+				parent_exp = frappe.db.get_value("Account", {"company": self.company, "is_group": 1})
+			acc = frappe.new_doc("Account")
+			acc.account_name = "Round Off"
+			acc.parent_account = parent_exp
+			acc.company = self.company
+			acc.insert(ignore_permissions=True)
+			round_off_account = acc.name
+		
+		frappe.db.set_value("Company", self.company, {
+			"round_off_cost_center": cost_center,
+			"default_round_off_account": round_off_account
+		})
 
 		# Create a dummy Sales Invoice
 		self.invoice = frappe.new_doc("Sales Invoice")
