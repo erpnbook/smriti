@@ -1,20 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" fill="none">
   <defs>
-    <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#092540" />
-      <stop offset="100%" stop-color="#00D2FF" />
-    </linearGradient>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@800&amp;display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700&amp;display=swap');
       .s-text {
         font-family: 'Outfit', 'Inter', 'Helvetica Neue', sans-serif;
-        font-weight: 800;
-        font-size: 300px;
+        font-weight: 700;
+        font-size: 266px;
         fill: #FFFFFF;
       }
     </style>
   </defs>
-  <rect x="24" y="24" width="464" height="464" rx="92" fill="#092540" />
-  <text x="256" y="330" text-anchor="middle" dominant-baseline="middle" class="s-text">S</text>
-  <line x1="180" y1="390" x2="332" y2="390" stroke="url(#line-grad)" stroke-width="18" stroke-linecap="round" />
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="#092540" />
+  <text x="256" y="326" text-anchor="middle" class="s-text">s</text>
+  <circle cx="215" cy="155" r="23" fill="#00D2FF" />
+  <circle cx="297" cy="155" r="23" fill="#2563EB" />
 </svg>

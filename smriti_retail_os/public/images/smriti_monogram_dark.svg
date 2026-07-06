@@ -5,13 +5,12 @@
       .s-text {
         font-family: 'Outfit', 'Inter', 'Helvetica Neue', sans-serif;
         font-weight: 700;
-        font-size: 266px;
+        font-size: 320px;
         fill: #FFFFFF;
       }
     </style>
   </defs>
-  <rect x="24" y="24" width="464" height="464" rx="112" fill="#092540" />
-  <text x="256" y="326" text-anchor="middle" class="s-text">s</text>
-  <circle cx="215" cy="155" r="23" fill="#00D2FF" />
-  <circle cx="297" cy="155" r="23" fill="#2563EB" />
+  <text x="256" y="340" text-anchor="middle" class="s-text">s</text>
+  <circle cx="210" cy="135" r="26" fill="#00D2FF" />
+  <circle cx="302" cy="135" r="26" fill="#2563EB" />
 </svg>
