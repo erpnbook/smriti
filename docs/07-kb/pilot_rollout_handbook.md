@@ -27,7 +27,7 @@ Welcome to SMRITI Retail OS.
 
 Thank you for being part of the early rollout.
 
-SMRITI Retail OS is a premium operational retail layer built on top of ERPNext. While ERPNext manages the transaction ledger, accounting, and tax computations in the background, SMRITI provides the frontend UI, register billing layouts, reorder intelligence dashboards, and POS cashier workflows.
+SMRITI Retail OS is a premium operational retail layer built on top of the host ERP. While the host ERP manages the transaction ledger, accounting, and tax computations in the background, SMRITI provides the frontend UI, register billing layouts, reorder intelligence dashboards, and POS cashier workflows.
 
 ---
 

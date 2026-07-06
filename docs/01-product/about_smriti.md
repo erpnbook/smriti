@@ -18,9 +18,9 @@ Reviewed By: "Jawahar R. Mallah"
 # About SMRITI Retail OS
 
 ## Platform Vision & Rationale
-SMRITI Retail OS™ is a premium operational and business intelligence layer built on top of ERPNext®. 
+SMRITI Retail OS™ is a premium operational and business intelligence layer built on top of the host ERP. 
 
-While ERPNext serves as the transaction ledger and accounting engine in the background, SMRITI provides the high-performance user experience layer, register billing interfaces, and operational intelligence workflows. SMRITI focuses on making retail store operations responsive, data-driven, and highly efficient.
+While the host ERP serves as the transaction ledger and accounting engine in the background, SMRITI provides the high-performance user experience layer, register billing interfaces, and operational intelligence workflows. SMRITI focuses on making retail store operations responsive, data-driven, and highly efficient.
 
 ---
 
