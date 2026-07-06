@@ -67,7 +67,12 @@ Every verification report must structure its conclusions into three explicitly l
 - When a tool's output disagrees with what manual inspection shows (for example, a linter flags a "conflict" between two values that, once resolved through their var() chains, are actually identical), say so explicitly under Interpretation: state what the tool reported, what manual resolution showed, and why they differ. Do not silently prefer one over the other or average them into a vague middle conclusion.
 - A Recommendation must never be phrased as if it were Evidence. "This should be reviewed before expanding scope" is a Recommendation. "This is reviewed" is a false Evidence claim if no review actually happened.
 
+
+## 11. Evidence Policy (MANDATORY)
+Every completion claim must be backed by directly observable evidence. If evidence is unavailable, the agent must report the status as "claimed but unverified" rather than marking it complete.
+
 ---
+
 
 ### Self-check before sending any report
 Before presenting a verification report, the agent should confirm:
