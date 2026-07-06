@@ -199,3 +199,56 @@ License changes are governance changes. Any modification to licensing, copyright
 - Knowledge Base update
 - CHANGELOG entry
 
+---
+
+# SMRITI Implementation Plan Governance Policy (IPGP)
+
+## 1. Mandatory Implementation Plan (Rules 1-2)
+Before implementing any significant feature, enhancement, optimization, migration, refactoring, framework, SDK component, studio, API, security improvement, or infrastructure change, the AI must create or update an Implementation Plan.
+All plans must be stored under `docs/implementation/` organized by area (e.g. `docs/implementation/foundation/`).
+
+## 2. Engineering History & Identification (Rules 3-5)
+The AI must never overwrite historical plans. Instead: create a new version, append new phases, mark previous plans as superseded, and preserve history.
+Search `docs/implementation/` and identify existing plans before starting. Generate missing historical retrospective plans based on Git, walkthroughs, and ADRs where missing.
+
+## 3. Master Index & Required Sections (Rules 6-7)
+Maintain `docs/implementation/README.md` as a chronological master index table.
+Every plan must contain these 19 sections:
+1. Objective
+2. Business Motivation
+3. Scope
+4. Current State
+5. Gap Analysis
+6. Architecture Impact
+7. Proposed Design
+8. Files Created
+9. Files Modified
+10. Dependencies
+11. Risks
+12. Rollback Strategy
+13. Verification Plan
+14. Test Plan
+15. Documentation Impact
+16. Deployment Plan
+17. Status
+18. Related ADRs
+19. Related Walkthroughs
+
+## 4. Documentation Sync & Lifecycle (Rules 8-9)
+Create/update plans must automatically synchronize index tables, walkthroughs, Knowledge Base, CHANGELOG, architecture docs, and developer/user guides.
+Lifecycle statuses allowed: Draft, Approved, In Progress, Completed, Superseded, Cancelled.
+
+## 5. Definition of Done (Rule 12)
+No task is completed until:
+✓ Implementation Plan updated
+✓ Walkthrough created
+✓ Walkthrough Index updated
+✓ Implementation Index updated
+✓ Knowledge Base updated
+✓ CHANGELOG updated
+✓ Documentation synchronized
+✓ Tests completed
+✓ Architecture Guard passed
+✓ License Guard reviewed (if applicable)
+✓ Status marked Completed
+
