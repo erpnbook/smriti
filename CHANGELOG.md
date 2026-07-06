@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.1.6] — 2026-07-06
+
+### Added
+- Integrated static checks (permission audit, architecture compliance) and integration test execution into `.github/workflows/smriti_ci.yml`.
+- Created `LookupRepository` and `MatrixRepository` classes to isolate direct database access.
+
+### Fixed
+- Completed a comprehensive manual security audit of all 161 whitelisted permission bypass endpoints, replacing generic comments with unique descriptions.
+- Resolved 5 architecture boundary violations across lookup, variant lifecycle, purchase order, notification, and matrix engine services by routing database persistence operations through repository-layer abstractions.
+- Resolved database setup issues in Tally Integration test modules by dynamically initializing parent and child Cost Centers and Round Off Accounts.
+
 ## [2.1.5] — 2026-07-06
 
 ### Fixed

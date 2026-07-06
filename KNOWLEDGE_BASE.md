@@ -2,7 +2,7 @@
 
 > **Single-source overview.** This document is the entry point to all project documentation, completed features, open risks, architecture decisions, and operational runbooks.  
 > **Author:** Jawahar R Mallah (<jawahar.mallah@gmail.com>)  
-> **Last Updated:** 2026-07-06 · **Version:** v2.1.4
+> **Last Updated:** 2026-07-06 · **Version:** v2.1.6
 
 > [!TIP]
 > Keep this document updated after any development session to keep the knowledge base current.
