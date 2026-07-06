@@ -88,8 +88,30 @@ class TestTallyIntegration(unittest.TestCase):
 			warehouse = wh.name
 			frappe.db.commit()
 
-		# Get cost center
-		cost_center = frappe.db.get_value("Cost Center", {"company": self.company, "is_group": 0})
+		# Ensure cost center exists for the test company
+		cost_center = frappe.db.get_value("Company", self.company, "cost_center")
+		if not cost_center:
+			cost_center = frappe.db.get_value("Cost Center", {"company": self.company, "is_group": 0}, "name")
+		if not cost_center:
+			# The root cost center name MUST equal company name to pass parent_cost_center check!
+			parent_cc = frappe.db.get_value("Cost Center", {"cost_center_name": self.company}, "name")
+			if not parent_cc:
+				pcc = frappe.new_doc("Cost Center")
+				pcc.cost_center_name = self.company
+				pcc.company = self.company
+				pcc.is_group = 1
+				pcc.flags.ignore_mandatory = True # Bypass parent_cost_center check on Root CC!
+				pcc.insert(ignore_permissions=True)
+				parent_cc = pcc.name
+			
+			cc = frappe.new_doc("Cost Center")
+			cc.cost_center_name = "Test Cost Center"
+			cc.company = self.company
+			cc.is_group = 0
+			cc.parent_cost_center = parent_cc
+			cc.insert(ignore_permissions=True)
+			cost_center = cc.name
+
 
 		# Create a dummy Sales Invoice
 		self.invoice = frappe.new_doc("Sales Invoice")
