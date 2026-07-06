@@ -1512,7 +1512,7 @@ def start_psv_exam(exam_id=None):
             "start_time": frappe.utils.now_datetime(),
             "status": "In Progress"
         })
-        # reviewed-ignore-permissions: learning exam attempt creation
+        # reviewed-ignore-permissions: no role restriction — any authenticated user may create exam attempts, by design
         attempt_doc.insert(ignore_permissions=True)
         frappe.db.commit()
         
@@ -1564,7 +1564,7 @@ def submit_psv_exam(attempt_id=None, answers_json=None):
         attempt_doc.total_questions = len(answer_key)
         attempt_doc.status = "Failed"
         attempt_doc.submitted_answers_json = answers_json
-        # reviewed-ignore-permissions: learning exam attempt evaluation
+        # reviewed-ignore-permissions: no role restriction — any authenticated user may evaluate exam attempts, by design
         attempt_doc.save(ignore_permissions=True)
         frappe.db.commit()
         return {
@@ -1624,7 +1624,7 @@ def submit_psv_exam(attempt_id=None, answers_json=None):
     attempt_doc.status = status
     attempt_doc.submitted_answers_json = answers_json
     attempt_doc.certificate_hash = certificate_hash
-    # reviewed-ignore-permissions: learning exam attempt evaluation
+    # reviewed-ignore-permissions: no role restriction — any authenticated user may evaluate exam attempts, by design
     attempt_doc.save(ignore_permissions=True)
     frappe.db.commit()
     
@@ -1677,7 +1677,7 @@ def get_psv_exam_status(exam_id=None):
                 doc.status = "Failed"
                 doc.score = 0.0
                 doc.end_time = frappe.utils.now_datetime()
-                # reviewed-ignore-permissions: learning exam status retrieval
+                # reviewed-ignore-permissions: no role restriction — any authenticated user may retrieve exam status, by design
                 doc.save(ignore_permissions=True)
                 frappe.db.commit()
                 att["status"] = "Failed"
