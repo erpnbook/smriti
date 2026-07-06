@@ -60,3 +60,6 @@ BRANDING_POLICY.md
 # SMRITI extracted images from sheets
 smriti_retail_os/public/extracted_images/
 
+# Local Dev Directories
+apps/
+scratch/
