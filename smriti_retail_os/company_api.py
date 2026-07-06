@@ -185,14 +185,14 @@ def save_company_settings(company=None, settings=None):
     if existing:
         doc = CompanyRepository.get_doc(_SETTINGS_DOCTYPE, existing)
         doc.update(clean)
-        # reviewed-ignore-permissions: company preferences updates, restricted to company admin
+        # reviewed-ignore-permissions: company preferences updates, gated by SMRITI Store Manager or System Manager roles
         doc.save(ignore_permissions=True)
     else:
         defaults = _default_settings(company)
         defaults.update(clean)
         doc = CompanyRepository.new_doc(_SETTINGS_DOCTYPE)
         doc.update(defaults)
-        # reviewed-ignore-permissions: company preferences updates, restricted to company admin
+        # reviewed-ignore-permissions: company preferences updates, gated by SMRITI Store Manager or System Manager roles
         doc.insert(ignore_permissions=True)
 
     CompanyRepository.commit()
@@ -352,7 +352,7 @@ def save_store_address(company=None, address_data=None):
     addr.gst_state = address_data.get("state")
     addr.gst_state_number = address_data.get("gst_state_number")
     
-    # reviewed-ignore-permissions: store location metadata updates
+    # reviewed-ignore-permissions: store location metadata updates, gated by SMRITI Store Manager or System Manager roles
     addr.save(ignore_permissions=True)
     CompanyRepository.commit()
     return {
@@ -416,7 +416,7 @@ def create_company(company_name, abbr, country="India", default_currency="INR", 
     if gstin:
         doc.gstin = gstin.strip().upper()
 
-    # reviewed-ignore-permissions: system provisioning of new new organization entity
+    # reviewed-ignore-permissions: system provisioning of new organization entity, gated by SMRITI Store Manager or System Manager roles
     doc.insert(ignore_permissions=True)
     CompanyRepository.commit()
 
@@ -459,7 +459,7 @@ def update_company(company, company_name=None, gstin=None, default_currency=None
         changed = True
 
     if changed:
-        # reviewed-ignore-permissions: organization entity detail updates
+        # reviewed-ignore-permissions: organization entity detail updates, gated by SMRITI Store Manager or System Manager roles
         doc.save(ignore_permissions=True)
         CompanyRepository.commit()
 
@@ -505,10 +505,10 @@ def delete_company(company):
     # Clean up SMRITI Company Settings first
     settings_name = frappe.db.exists(_SETTINGS_DOCTYPE, {"company": company})
     if settings_name:
-        # reviewed-ignore-permissions: organization entity deletion, restricted to Administrator
+        # reviewed-ignore-permissions: organization entity deletion, gated by System Manager role
         CompanyRepository.delete_doc(_SETTINGS_DOCTYPE, settings_name, ignore_permissions=True)
 
-    # reviewed-ignore-permissions: organization entity deletion, restricted to Administrator
+    # reviewed-ignore-permissions: organization entity deletion, gated by System Manager role
     CompanyRepository.delete_doc("Company", company, ignore_permissions=True)
     CompanyRepository.commit()
     return {"success": True, "message": _("Company '{0}' deleted.").format(company)}
@@ -691,7 +691,7 @@ def save_item_attributes(company=None, attributes=None):
             doc.company = company
             doc.attribute_id = attr_id
             doc.weight = weight
-            # reviewed-ignore-permissions: attribute layout updates, restricted to catalog manager
+            # reviewed-ignore-permissions: attribute layout updates, gated by SMRITI Store Manager or System Manager roles
             doc.insert(ignore_permissions=True)
             
             after_state_list.append({"attribute_id": attr_id, "weight": weight})
@@ -711,7 +711,7 @@ def save_item_attributes(company=None, attributes=None):
         audit_doc.after_state = after_state
         audit_doc.company = company
         audit_doc.ip_address = ip_address
-        # reviewed-ignore-permissions: attribute layout updates, restricted to catalog manager
+        # reviewed-ignore-permissions: attribute layout updates, gated by SMRITI Store Manager or System Manager roles
         audit_doc.insert(ignore_permissions=True)
         
         CompanyRepository.commit()
@@ -767,7 +767,7 @@ def reset_item_attributes(company=None):
         audit_doc.after_state = json.dumps([])
         audit_doc.company = company
         audit_doc.ip_address = ip_address
-        # reviewed-ignore-permissions: attribute layout resetting, restricted to catalog manager
+        # reviewed-ignore-permissions: attribute layout resetting, gated by SMRITI Store Manager or System Manager roles
         audit_doc.insert(ignore_permissions=True)
         
         CompanyRepository.commit()
