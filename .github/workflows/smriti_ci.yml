@@ -84,6 +84,12 @@ jobs:
       - name: SMRITI Architecture Guard (Persistence Boundary)
         run: python smriti_architecture_guard.py
 
+      - name: SMRITI Whitelisted API Permission Bypass Check
+        run: python tools/audit/check_ignore_permissions.py
+
+      - name: SMRITI Architecture Compliance Audit
+        run: python smriti_retail_os/tools/validate_architecture.py
+
       # ── 4. SDC-006 Mutation Tests — pure Python ───────────────────────────
       - name: SDC-006 mutation tests
         run: |
@@ -104,8 +110,20 @@ jobs:
           echo " Syntax check:             done"
           echo " SDC compiler:             done"
           echo " Architecture fitness:     done"
+          echo " Permission check:         done"
+          echo " Compliance linter:        done"
           echo " SDC-006 mutation tests:   done"
-          echo ""
-          echo " Full integration tests → run manually:"
-          echo "   bench run-tests --app smriti_retail_os"
           echo "==================================================="
+
+  smriti-integration-tests:
+    name: SMRITI Behavior Integration Tests
+    runs-on: self-hosted
+    needs: smriti-static-gate
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Frappe Integration Tests
+        run: |
+          docker compose -p smriti9 exec -T backend bench --site smriti_retail run-tests --app smriti_retail_os
+

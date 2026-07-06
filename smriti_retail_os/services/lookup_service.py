@@ -13,6 +13,8 @@
 import frappe
 from frappe import _
 from frappe.utils import flt, cint, nowdate
+from smriti_retail_os.repositories.lookup_repository import LookupRepository
+
 
 ENTITY_MAP = {
     "Customer": {
@@ -200,7 +202,7 @@ class LookupService:
         if not data:
             frappe.throw(_("Creation payload is empty."))
 
-        doc = frappe.new_doc(doctype)
+        doc = LookupRepository.new_doc(doctype)
 
         # Entity specific setup to ensure document is valid
         if entity == "Customer":

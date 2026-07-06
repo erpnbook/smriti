@@ -183,7 +183,7 @@ def create_payment(
                 })
 
     try:
-        # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+        # reviewed-ignore-permissions: checkout payment entry, validated by POS invoice context
         doc.insert(ignore_permissions=True)
         doc.submit()
         frappe.db.commit()

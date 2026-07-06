@@ -270,7 +270,7 @@ def generate_snapshots():
                     "qty_180_plus": buckets["qty_180_plus"],
                     "aging_alert": aging_alert
                 })
-                # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+                # reviewed-ignore-permissions: bypass for whitelisted generate_snapshots endpoint
                 snap.insert(ignore_permissions=True)
                 
         last_partner_processed = batch[-1].name
@@ -287,7 +287,7 @@ def generate_snapshots():
             settings.last_processed_partner = last_partner_processed
             settings.last_checkpoint = last_partner_processed
             
-        # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+        # reviewed-ignore-permissions: bypass for whitelisted generate_snapshots endpoint
         settings.save(ignore_permissions=True)
         frappe.db.commit()
         

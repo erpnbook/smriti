@@ -170,7 +170,7 @@ def activate_license(license_key, organization_name="", owner_name="",
         doc.customer_id = customer_id
 
     # _recalculate_license_state runs in validate() on save
-    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+    # reviewed-ignore-permissions: product license validation and local activation
     doc.save(ignore_permissions=True)
     frappe.db.commit()
 
@@ -190,7 +190,7 @@ def activate_license(license_key, organization_name="", owner_name="",
         "signature_check_result": sig_result,
         "remarks":                validation_msg,
     })
-    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+    # reviewed-ignore-permissions: product license validation and local activation
     doc.save(ignore_permissions=True)
     frappe.db.commit()
 
@@ -224,7 +224,7 @@ def sync_from_company():
     doc.gstin = getattr(company, "gstin", "") or getattr(company, "tax_id", "") or ""
     doc.store_name = company.company_name
 
-    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+    # reviewed-ignore-permissions: local sync of license organization details
     doc.save(ignore_permissions=True)
     frappe.db.commit()
 
@@ -236,7 +236,7 @@ def sync_from_company():
         "result":       "Success",
         "remarks":      f"Synced from Company: {company_name}",
     })
-    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+    # reviewed-ignore-permissions: local sync of license organization details
     doc.save(ignore_permissions=True)
     frappe.db.commit()
 

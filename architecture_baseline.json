@@ -1,5 +1,5 @@
 {
-  "created": "2026-07-04T09:14:29.605044+00:00",
+  "created": "2026-07-06T10:45:27.005360+00:00",
   "description": "Accepted baseline of known architecture boundary violations. Ratchet mode compares against this snapshot \u2014 the backlog can only shrink. Re-run with --write-baseline after each sprint to lock in progress.",
   "engine": "ERPNext + Frappe (Platform Engine)",
   "platform": "SMRITI Retail OS",
@@ -50,7 +50,6 @@
     "psv_service.py": 13,
     "psv_snapshot_service.py": 7,
     "psv_upload_service.py": 6,
-    "purchase_api.py": 12,
     "purchase_studio/service/audit_service.py": 3,
     "purchase_studio/service/purchase_service.py": 4,
     "purchase_studio/service/purchase_settings_service.py": 1,

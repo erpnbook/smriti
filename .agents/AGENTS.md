@@ -1,11 +1,17 @@
 # SMRITI UI & Agent Verification Governance Rules
 
+**Status:** FROZEN — v1.1 (2026-07-06)
+**Supersedes:** `AGENTS_ADDENDUM.md`, which is now fully merged into Rules 7–10 below and should be deleted from `.agents/`. Its Rule 8 specified a binary Done/Unverified status; that conflicted with this document's four-state system (Rule 7) and is resolved in favor of the four-state system here.
+
 To prevent unverified or phantom claims of code completion and testing, all coding assistant agents MUST follow these strict rules before declaring a task "done" or reporting test results:
 
 ## 1. Verifiable Code Diffs (MANDATORY)
 For every file modified, created, or deleted, you MUST run a git diff and paste the literal `git diff` output for that exact file.
 - Do NOT paraphrase the diff in prose.
 - If a file is claimed to be modified but no diff can be produced, state that it was not actually committed or changed.
+- For a **newly created** file: plain `git diff` shows nothing for an untracked file. Run `git add -N <file>` (or `git add <file>`) first, then paste the `git diff` or `git diff --cached` output so the actual content is shown.
+- For a **deleted** file: state explicitly whether the pasted diff is staged (`git diff --cached`) or unstaged (`git diff`), and paste whichever reflects the current state of the working tree.
+- Empty `git diff` output on a file you claim to have created or deleted is not evidence of anything — it usually means the file is untracked or the wrong diff command was used, not that there's nothing to show.
 
 ## 2. Literal Terminal Test Outputs
 Do not summarize test results in tables or bullet points (e.g., "9/9 passed") without providing the literal terminal output of the test run.
@@ -22,27 +28,29 @@ Do not claim metrics (e.g. "80% query reduction", "0 console errors") unless you
 
 ## 5. Verify Prior Session Claims
 Do not build on top of a previous session summary's claims without first inspecting the actual codebase to verify those claims are true.
+- The inspection itself must be shown, not just asserted: paste the command run (e.g. `grep`, `cat`, `git log`) and its literal output confirming or contradicting the prior claim.
+- "I checked and confirmed X" with no shown command/output does not satisfy this rule — it is the same unverified-claim pattern this rule exists to prevent, one level removed.
 
 ## 6. Granular and Enumerated Scope
 Do not summarize file changes under high-level descriptions (e.g., "fixed the whole module" or "updated all templates") unless you list every single affected file and confirm the changes for each one individually.
 
-## 7. Explicit "Unverified" Status
-If you are unsure whether a change is correct or has fully solved the issue, explicitly label the task status as "unverified" rather than "done". Do not round up unverified items.
+## 7. Explicit Verification Status (MANDATORY)
+Every task, file, or claim must be labeled with exactly one of these four objective status values — nothing else:
+```
+Done                 — change made, verified with evidence per Rules 1–4
+Failed                — change attempted, verification shows it did not work
+Partially Verified    — some evidence gathered, some claims still unconfirmed
+Unverified            — claimed, but no evidence has been gathered yet
+```
+These are states, not opinions — they describe what was checked, not how good the result is. Do not substitute a different word for these four. Do not round up a Partially Verified or Unverified item to Done.
 
 ## 8. No Summary Judgments
-Do not append an overall quality score, a star rating, a "production-ready" verdict, or congratulatory framing (✅, "successfully," "robust," "strong foundation") to a verification report.
+Do not append an overall quality score, a star rating, a "production-ready" verdict, or congratulatory framing (✅, "successfully," "robust," "strong foundation") to a verification report — on top of, or instead of, the status value defined in Rule 7.
 - State only what was checked and what the literal output showed.
 - Do not assign a numeric score (e.g. "9.8/10") to your own work, in whole or by category.
 - Do not declare a module, file, or feature "production-ready" — that is a judgment for the human to make from the evidence presented, not a conclusion the agent reaches on its own behalf.
 - Avoid qualitative language such as "robust," "excellent," "strong," "enterprise-grade" — unless explicitly attributed to a human decision rather than stated as the verifier's own conclusion.
-- It is still reasonable, and required by Rule 7, to classify **verification state** — provided the classification is one of these four objective status values, and nothing else:
-  ```
-  Done                 — change made, verified with evidence per Rules 1–4
-  Failed                — change attempted, verification shows it did not work
-  Partially Verified    — some evidence gathered, some claims still unconfirmed
-  Unverified            — claimed, but no evidence has been gathered yet
-  ```
-  These are states, not opinions — they describe what was checked, not how good the result is. Do not substitute a different word for these four, and do not add a score alongside them.
+- The Rule 7 status value is the only classification permitted. Do not add a score, adjective, or additional label alongside it.
 
 ## 9. Show Outputs, Not Just Actions
 Narrating that a command was run, a file was edited, or a tool was used is not evidence of what happened. Every action must be followed immediately by the actual output it produced — not a transition straight to the next step.
@@ -157,7 +165,7 @@ These details belong only in internal logs.
 * Group user-facing errors by severity: Information, Success, Warning, Validation, Permission, Business Error, System Error.
 * Maintain and use the SMRITI Error Dictionary catalog (e.g., `SMRITI-PERM-001`, `SMRITI-VAL-001`, `SMRITI-NET-001`, `SMRITI-DATA-001`) instead of hardcoding messages.
 
-## 4. User Experience Standard (Rule 10)
+## 4. User Experience Standard (Rule 8)
 Structure messages as:
 * **Title**: Short, clear description.
 * **Explanation**: Simple business-language explanation.
@@ -171,17 +179,17 @@ Structure messages as:
 ## Objective
 Documentation is a first-class engineering artifact. Every code change must automatically determine which documentation is affected (using `docs/documentation_registry.yml`) and update only those documents.
 
-## 1. Documentation Impact Analysis (Rule 1 & 8)
+## 1. Documentation Impact Analysis (Rule 1)
 Before completing any implementation, the AI must perform a Documentation Impact Analysis using `docs/documentation_registry.yml` to determine affected documents (User Guide, Developer Guide, Architecture, Walkthrough, etc.).
 
-## 2. Auto Documentation Update (Rules 3–5)
+## 2. Auto Documentation Update (Rules 2–4)
 When implementation is completed, the AI must automatically:
 1. Update the affected documentation based on change classification (Code Only, API Change, Business Workflow Change, Architecture Change, Governance Change).
 2. Update the Walkthrough.
 3. Append the Walkthrough Index.
 4. Update the Knowledge Base.
 
-## 3. Documentation Report & Validation (Rules 6–7)
+## 3. Documentation Report & Validation (Rules 5–6)
 At the end of every implementation, generate a Documentation Impact Report summarizing updated files, walkthroughs, and guides. Verify all required document updates are completed before closing the task.
 
 ---
@@ -238,7 +246,7 @@ Every plan must contain these 19 sections:
 Create/update plans must automatically synchronize index tables, walkthroughs, Knowledge Base, CHANGELOG, architecture docs, and developer/user guides.
 Lifecycle statuses allowed: Draft, Approved, In Progress, Completed, Superseded, Cancelled.
 
-## 5. Definition of Done (Rule 12)
+## 5. Definition of Done (Rule 10)
 No task is completed until:
 ✓ Implementation Plan updated
 ✓ Walkthrough created

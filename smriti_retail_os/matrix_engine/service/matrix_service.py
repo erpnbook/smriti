@@ -6,6 +6,8 @@ from frappe import _
 from smriti_retail_os.matrix_engine.dto.matrix_dtos import (
     MatrixDefinitionDTO, MatrixVariantDTO, MatrixCellDTO, MatrixSessionDTO
 )
+from smriti_retail_os.matrix_engine.repository.matrix_repository import MatrixRepository
+
 
 class MatrixService:
     @staticmethod
@@ -18,7 +20,7 @@ class MatrixService:
             matrix_name = frappe.db.get_value("SMRITI Matrix Definition", {}, "name")
             
         if matrix_name and frappe.db.exists("SMRITI Matrix Definition", matrix_name):
-            doc = frappe.get_doc("SMRITI Matrix Definition", matrix_name)
+            doc = MatrixRepository.get_doc("SMRITI Matrix Definition", matrix_name)
             # Map axes
             axis_x = "Size"
             axis_y = "Color"

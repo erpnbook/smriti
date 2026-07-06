@@ -11,6 +11,8 @@ from smriti_retail_os.notification_studio.service.notification_service import (
     mark_as_read as _mark_as_read,
     mark_all_read as _mark_all_read
 )
+from smriti_retail_os.notification_studio.repository.notification_repository import NotificationRepository
+
 
 @frappe.whitelist()
 def get_notifications(notif_type="all", limit=50, page=1, user=None):
@@ -72,11 +74,11 @@ def delete_notification(name):
     """Soft delete (dismiss) a notification."""
     user = frappe.session.user
     try:
-        doc = frappe.get_doc("SMRITI Notification Log", name)
+        doc = NotificationRepository.get_doc("SMRITI Notification Log", name)
         if doc.for_user == user:
-            # reviewed-ignore-permissions: bypass for whitelisted api endpoint
-            frappe.delete_doc("SMRITI Notification Log", name, ignore_permissions=True)
-            frappe.db.commit()
+            # reviewed-ignore-permissions: gated by user ownership validation
+            NotificationRepository.delete_doc("SMRITI Notification Log", name, ignore_permissions=True)
+            NotificationRepository.commit()
         return {"status": "ok"}
     except Exception as e:
         frappe.log_error(str(e), "delete_notification")

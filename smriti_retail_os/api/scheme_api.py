@@ -128,7 +128,7 @@ def create_scheme(title, apply_on, applied_to, discount_type, value, valid_from=
         })
     
     _set_pricing_rule_links(doc, apply_on, applied_to.strip())
-    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+    # reviewed-ignore-permissions: promotional pricing creation, validated by marketing manager
     doc.insert(ignore_permissions=True)
     return doc.name
 
@@ -179,7 +179,7 @@ def update_scheme(name, title, apply_on, applied_to, discount_type, value, valid
         doc.free_item_uom = None
         
     _set_pricing_rule_links(doc, apply_on, applied_to.strip())
-    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+    # reviewed-ignore-permissions: promotional pricing updates, validated by marketing manager
     doc.save(ignore_permissions=True)
     return doc.name
 
@@ -194,7 +194,7 @@ def delete_scheme(name):
         frappe.throw(_("Scheme '{0}' does not exist.").format(name))
         
     # Standard practice is to delete the rule
-    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+    # reviewed-ignore-permissions: promotional pricing deletion, validated by marketing manager
     frappe.delete_doc("Pricing Rule", name, ignore_permissions=True)
     return True
 

@@ -2216,7 +2216,7 @@ def save_smriti_saved_view(view_name, report_key, applied_filters_json, visible_
     doc.applied_filters_json = applied_filters_json
     doc.visible_columns_json = visible_columns_json
     doc.is_default = is_default
-    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+    # reviewed-ignore-permissions: user UI preference metadata, no business data modification
     doc.insert(ignore_permissions=True)
     frappe.db.commit()
     return doc.name
@@ -2238,7 +2238,7 @@ def delete_smriti_saved_view(view_name):
     """Deletes a saved view if the user is owner or system manager."""
     doc = frappe.get_doc("SMRITI Saved View", view_name)
     if doc.user == frappe.session.user or "System Manager" in frappe.get_roles():
-        # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+        # reviewed-ignore-permissions: user UI preference deletion
         frappe.delete_doc("SMRITI Saved View", view_name, ignore_permissions=True)
         frappe.db.commit()
         return {"success": True}
@@ -2537,7 +2537,7 @@ def export_smriti_report(report_key, filters=None, format_type="csv"):
         "before_state": "",
         "after_state": json.dumps(audit_payload)
     })
-    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+    # reviewed-ignore-permissions: telemetry logging for compliance exports
     log_doc.insert(ignore_permissions=True)
     frappe.db.commit()
     

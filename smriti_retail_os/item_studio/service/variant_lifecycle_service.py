@@ -3,6 +3,8 @@
 import frappe
 from frappe import _
 from smriti_retail_os.barcode.service.barcode_service import BarcodeService
+from smriti_retail_os.item_studio.repository.product_repository import ProductRepository
+
 
 class VariantLifecycleService:
     @staticmethod
@@ -11,14 +13,14 @@ class VariantLifecycleService:
             return
         # Ensure Attribute exists
         if not frappe.db.exists("Item Attribute", attribute):
-            doc = frappe.new_doc("Item Attribute")
+            doc = ProductRepository.new_doc("Item Attribute")
             doc.attribute_name = attribute
             doc.numeric = 0
             doc.insert(ignore_permissions=True)
             frappe.publish_realtime("smriti_item_attribute_created", {"attribute": attribute})
         
         # Ensure Attribute Value exists
-        attr_doc = frappe.get_doc("Item Attribute", attribute)
+        attr_doc = ProductRepository.get_doc("Item Attribute", attribute)
         existing_values = [d.attribute_value.lower() for d in attr_doc.item_attribute_values if d.attribute_value]
         if value.lower() not in existing_values:
             abbr = value[:5].strip()
@@ -45,11 +47,11 @@ class VariantLifecycleService:
             item_group = frappe.db.get_single_value("SMRITI Settings", "default_item_group") or "Products"
 
         if brand and not frappe.db.exists("Brand", brand):
-            b = frappe.new_doc("Brand")
+            b = ProductRepository.new_doc("Brand")
             b.brand = brand
             b.insert(ignore_permissions=True)
 
-        item = frappe.new_doc("Item")
+        item = ProductRepository.new_doc("Item")
         item.item_code = article_code
         item.item_name = item_name
         item.item_group = item_group

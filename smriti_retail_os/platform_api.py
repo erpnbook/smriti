@@ -446,7 +446,7 @@ def execute_restore(file_name, confirm_text, password):
             "ip_address": frappe.local.request_ip or "Unknown",
             "status": "Failed",
             "content": f"Failed to create pre-restore backup. Error: {str(e)}"
-        # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+        # reviewed-ignore-permissions: system-level restore operation, gated by password and confirmation checks
         }).insert(ignore_permissions=True)
         frappe.db.commit()
         frappe.throw(_("Restore aborted: Failed to create automatic pre-restore backup. Error: {0}").format(str(e)))
@@ -509,7 +509,7 @@ def execute_restore(file_name, confirm_text, password):
         "ip_address": frappe.local.request_ip or "Unknown",
         "status": "Success" if success else "Failed",
         "content": f"Backup Restored: {file_name}\nPre-restore Backup: {pre_backup_path}\nResult Status: {'Success' if success else 'Failed'}\nError: {error_msg}"
-    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+    # reviewed-ignore-permissions: system-level restore operation, gated by password and confirmation checks
     }).insert(ignore_permissions=True)
     frappe.db.commit()
     

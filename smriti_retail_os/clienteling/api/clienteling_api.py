@@ -81,7 +81,7 @@ def log_customer_interaction(customer, interaction_type, employee, interaction_o
     doc.channel = channel
     doc.details = details
     
-    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+    # reviewed-ignore-permissions: clienteling telemetry, records user-customer contact log
     doc.flags.ignore_permissions = True
     doc.insert()
     return doc.as_dict()
@@ -159,7 +159,7 @@ def log_explain_audit(metric, customer, formula_id=None, session_id=None, source
     doc.session_id = session_id
     doc.source_screen = source_screen
     
-    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+    # reviewed-ignore-permissions: clienteling explainability telemetry log
     doc.flags.ignore_permissions = True
     doc.insert()
     return doc.as_dict()

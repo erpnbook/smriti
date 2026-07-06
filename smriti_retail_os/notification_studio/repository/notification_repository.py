@@ -28,3 +28,19 @@ class NotificationRepository:
             WHERE ir.warehouse_reorder_level > 0 AND bin.actual_qty < ir.warehouse_reorder_level
             LIMIT %s
         """, (int(limit),), as_dict=1)
+
+    @staticmethod
+    def get_doc(*args, **kwargs):
+        """Wraps frappe.get_doc."""
+        return frappe.get_doc(*args, **kwargs)
+
+    @staticmethod
+    def delete_doc(*args, **kwargs):
+        """Wraps frappe.delete_doc."""
+        return frappe.delete_doc(*args, **kwargs)
+
+    @staticmethod
+    def commit(*args, **kwargs):
+        """Wraps frappe.db.commit."""
+        return frappe.db.commit(*args, **kwargs)
+

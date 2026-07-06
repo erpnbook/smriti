@@ -60,8 +60,9 @@ class TestTallyIntegration(unittest.TestCase):
 			cust.territory = territory
 			cust.insert(ignore_permissions=True)
 
-		# Find a valid sales item
-		item_code = frappe.db.get_value("Item", {"is_sales_item": 1, "disabled": 0})
+		# Find a valid sales item (excluding template items with variants)
+		item_code = frappe.db.get_value("Item", {"is_sales_item": 1, "disabled": 0, "has_variants": 0})
+
 		if not item_code:
 			# Create a dummy item
 			item = frappe.new_doc("Item")

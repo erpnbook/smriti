@@ -66,7 +66,7 @@ def update_my_profile(first_name=None, last_name=None, phone=None, language=None
             doc.language = language
         if time_zone is not None:
             doc.time_zone = time_zone
-        # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+        # reviewed-ignore-permissions: user profile self-update, restricted to the logged-in user
         doc.save(ignore_permissions=True)
         frappe.db.commit()
         return {"status": "ok", "message": "Profile updated successfully."}

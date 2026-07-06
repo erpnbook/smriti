@@ -55,7 +55,7 @@ def submit_trial_lead(
         'status':        'New',
         'submitted_at':  datetime.now(),
     })
-    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+    # reviewed-ignore-permissions: guest trial signup, runs under guest role context
     lead.insert(ignore_permissions=True)
     frappe.db.commit()
 
@@ -116,7 +116,7 @@ def update_lead_status(lead_name, new_status, notes=None):
         existing_notes = lead.notes or ''
         lead.notes = (existing_notes + '\n' + note_line).strip()
 
-    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+    # reviewed-ignore-permissions: lead status tracking, restricted to sales agent
     lead.save(ignore_permissions=True)
     frappe.db.commit()
 

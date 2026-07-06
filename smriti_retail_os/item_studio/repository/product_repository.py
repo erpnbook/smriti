@@ -164,3 +164,14 @@ class ProductRepository:
             p.price_list_rate = float(rate)
             p.insert(ignore_permissions=True)
         frappe.db.commit()
+
+    @staticmethod
+    def new_doc(*args, **kwargs):
+        """Wraps frappe.new_doc."""
+        return frappe.new_doc(*args, **kwargs)
+
+    @staticmethod
+    def get_doc(*args, **kwargs):
+        """Wraps frappe.get_doc."""
+        return frappe.get_doc(*args, **kwargs)
+

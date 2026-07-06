@@ -128,7 +128,7 @@ def log_barcode_scan_event(event_uuid, template_id, barcode_family, printer_prof
         "pos_invoice": pos_invoice,
         "pos_invoice_item": pos_invoice_item
     })
-    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+    # reviewed-ignore-permissions: barcode scan telemetry logging, no business data modification
     doc.insert(ignore_permissions=True)
     frappe.db.commit()
     return doc
@@ -236,7 +236,7 @@ def aggregate_scan_telemetry(period="Daily", target_date=None):
         snapshot.scan_reliability_score = reliability_score
         snapshot.first_pass_success_rate = first_pass_rate
         
-        # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+        # reviewed-ignore-permissions: periodic barcode telemetry rollup, restricted to system runner
         snapshot.save(ignore_permissions=True)
 
     frappe.db.commit()

@@ -76,3 +76,14 @@ class PurchaseRepository:
         po_doc.docstatus = 2
         po_doc.save(ignore_permissions=True)
         return po_doc.name
+
+    @staticmethod
+    def new_doc(*args, **kwargs):
+        """Wraps frappe.new_doc."""
+        return frappe.new_doc(*args, **kwargs)
+
+    @staticmethod
+    def db_sql(*args, **kwargs):
+        """Wraps frappe.db.sql."""
+        return frappe.db.sql(*args, **kwargs)
+

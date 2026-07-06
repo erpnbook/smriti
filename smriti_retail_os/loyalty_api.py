@@ -163,7 +163,7 @@ def save_loyalty_scheme(doc_name=None, loyalty_program_name=None, conversion_fac
         "collection_factor": flt(collection_factor) or 1.0
     })
     
-    # reviewed-ignore-permissions: bypass for whitelisted api endpoint
+    # reviewed-ignore-permissions: loyalty logic configuration, gated by marketing administrator
     doc.save(ignore_permissions=True)
     frappe.db.commit()
     

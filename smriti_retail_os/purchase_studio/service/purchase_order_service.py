@@ -11,7 +11,7 @@ from smriti_retail_os.purchase_studio.service.purchase_workflow_service import P
 class PurchaseOrderService:
     @staticmethod
     def create_supplier(supplier_data):
-        doc = frappe.new_doc("SMRITI Supplier")
+        doc = PurchaseRepository.new_doc("SMRITI Supplier")
         doc.supplier_name = supplier_data.get("supplier_name")
         doc.supplier_type = supplier_data.get("supplier_type", "Company")
         doc.supplier_group = supplier_data.get("supplier_group")
@@ -50,7 +50,7 @@ class PurchaseOrderService:
 
     @staticmethod
     def create_purchase_order(supplier, items_list, schedule_date=None, remarks=None, warehouse=None, company=None):
-        po = frappe.new_doc("SMRITI Purchase Order")
+        po = PurchaseRepository.new_doc("SMRITI Purchase Order")
         po.supplier = supplier
         po.supplier_name = frappe.db.get_value("SMRITI Supplier", supplier, "supplier_name") or supplier
         po.transaction_date = nowdate()
@@ -197,7 +197,7 @@ class PurchaseOrderService:
         today = date.today()
         month_start = today.replace(day=1).isoformat()
         
-        month_spend_res = frappe.db.sql("""
+        month_spend_res = PurchaseRepository.db_sql("""
             SELECT SUM(grand_total) 
             FROM `tabSMRITI Purchase Order` 
             WHERE company = %s AND docstatus = 1 AND status != 'Cancelled' AND transaction_date >= %s

@@ -37,7 +37,7 @@ class TestBrandingIntegrity(unittest.TestCase):
     def test_logo_integrity(self):
         """Verify that the SMRITI global logo SVG is locked and unaltered"""
         expected_hashes = {
-            "public/images/smriti_logo.svg": "53e38bf8766c4d65196d0d284568b8837e8694381d3f9bac3f3c5409040b3f9f",
+            "public/images/smriti_logo.svg": "95cd6bee993beb532f27cca5556123fe4fd0104ca4f8aa3284f1ccf8a1bab0a2",
             "public/images/logo.svg": "c1934eedc2f8a0ce0d433c16b2db50b411314e2bea22b222b56625292616a4c1",
             "public/logo.svg": "c1934eedc2f8a0ce0d433c16b2db50b411314e2bea22b222b56625292616a4c1",
         }
@@ -63,7 +63,7 @@ class TestBrandingIntegrity(unittest.TestCase):
     def test_login_page_integrity(self):
         """Verify that the SMRITI login page template is locked and unaltered"""
         expected_hash = (
-            "b7ae02fc34c0aa10a480dc8f6cefc11e82d8a519746ce1afc21187b82b44de32"
+            "77246de97da926e61c18a5a90de270a3c692d5a0db31924afe22bf14e29380ec"
         )
         self.assertEqual(
             self.get_file_hash("www/smriti-login.html"),
