@@ -1,20 +1,23 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
+name: Feature Request
+about: Propose a new capability or enhancement for SMRITI Retail OS
+title: '[FEAT] '
+labels: enhancement
 assignees: ''
-
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+## Feature Description
+Provide a clear and concise description of the feature or capability you are proposing.
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+## Business Motivation
+Why is this feature needed? Describe the problem it solves and the business value it delivers to retail operations.
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+## Proposed Solution
+Provide a detailed description of the proposed workflow, UI design, or changes.
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+## SMRITI Branding & Architecture Alignment
+- Does this feature introduce new UI screens? If yes, will they be built under the Theme Engine and SMRITI Experience Constitution?
+- Does this feature require new database fields or tables?
+
+## Additional Context
+Add any other context, wireframes, or references here.
