@@ -565,6 +565,27 @@
 
     /** Level 2 — System Module Policy (per-route forced overrides) */
     function _readSystemModulePolicy() {
+        try {
+            if (window.location && window.location.pathname && window.location.pathname.indexOf("/smriti-help") !== -1) {
+                return {
+                    /* Royal Black and White theme tokens */
+                    "--smriti-color-bg-page":              "#000000", /* Deep black background */
+                    "--smriti-color-bg-primary":           "#09090b", /* Sleek dark zinc secondary bg */
+                    "--smriti-color-bg-secondary":         "#121214", /* Very dark grey card bg */
+                    "--smriti-color-bg-elevated":          "#1c1c1e", /* Elevated popovers/drawers */
+                    "--smriti-color-text-primary":         "#ffffff", /* Pure white text */
+                    "--smriti-color-text-muted":           "#a1a1aa", /* Zinc 400 */
+                    "--smriti-color-text-subtle":          "#71717a", /* Zinc 500 */
+                    "--smriti-color-brand-primary":        "#ffffff", /* White accents */
+                    "--smriti-color-brand-light":          "#e4e4e7", /* Light silver accents */
+                    "--smriti-color-brand-dark":           "#27272a", /* Dark charcoal */
+                    "--smriti-color-border-default":       "rgba(255,255,255,0.08)", /* Thin white borders */
+                    "--smriti-color-border-strong":        "rgba(255,255,255,0.15)", /* Thicker white borders */
+                    "--smriti-color-bg-overlay":           "rgba(0,0,0,0.85)",
+                    "profile_token_set":                   "royal-black-white"
+                };
+            }
+        } catch (e) {}
         return {};
     }
 
