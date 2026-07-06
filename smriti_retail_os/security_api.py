@@ -173,7 +173,7 @@ def save_user(email, first_name, last_name=None, roles=None, role_profile=None):
         if roles:
             user.set("roles", [{"role": r} for r in roles])
 
-        # reviewed-ignore-permissions: user account provisioning, restricted to user administrator
+        # reviewed-ignore-permissions: user account provisioning, gated by SMRITI Store Manager, System Manager, or Administrator roles
         user.insert(ignore_permissions=True)
         # Notify admin to send a reset link — the user cannot log in until they set a password
         frappe.log_error(
@@ -193,7 +193,7 @@ def save_user(email, first_name, last_name=None, roles=None, role_profile=None):
         if roles is not None:
             user.set("roles", [{"role": r} for r in roles])
             
-        # reviewed-ignore-permissions: user account provisioning, restricted to user administrator
+        # reviewed-ignore-permissions: user account provisioning, gated by SMRITI Store Manager, System Manager, or Administrator roles
         user.save(ignore_permissions=True)
         
     SecurityRepository.commit()
@@ -642,7 +642,7 @@ def save_workflow(name, document_type, is_active, states, transitions):
             "allowed": t.get("allowed")
         })
         
-    # reviewed-ignore-permissions: business workflow updates, restricted to workflow manager
+    # reviewed-ignore-permissions: business workflow updates, restricted to Administrator
     doc.save(ignore_permissions=True)
     SecurityRepository.commit()
     return {"success": True, "name": name}
@@ -655,7 +655,7 @@ def delete_workflow(name):
     if not frappe.db.exists("Workflow", name):
         frappe.throw(_("Workflow {0} not found.").format(name))
         
-    # reviewed-ignore-permissions: business workflow deletion, restricted to workflow manager
+    # reviewed-ignore-permissions: business workflow deletion, restricted to Administrator
     SecurityRepository.delete_doc("Workflow", name, ignore_permissions=True)
     SecurityRepository.commit()
     return {"success": True}
@@ -677,13 +677,13 @@ def save_workflow_state(name, style):
     if frappe.db.exists("Workflow State", name):
         doc = SecurityRepository.get_doc("Workflow State", name)
         doc.style = style
-        # reviewed-ignore-permissions: workflow states config, restricted to workflow manager
+        # reviewed-ignore-permissions: workflow states config, restricted to Administrator
         doc.save(ignore_permissions=True)
     else:
         doc = SecurityRepository.new_doc("Workflow State")
         doc.workflow_state_name = name
         doc.style = style
-        # reviewed-ignore-permissions: workflow states config, restricted to workflow manager
+        # reviewed-ignore-permissions: workflow states config, restricted to Administrator
         doc.insert(ignore_permissions=True)
         
     SecurityRepository.commit()
