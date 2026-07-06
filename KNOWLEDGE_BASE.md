@@ -2,7 +2,7 @@
 
 > **Single-source overview.** This document is the entry point to all project documentation, completed features, open risks, architecture decisions, and operational runbooks.  
 > **Author:** Jawahar R Mallah (<jawahar.mallah@gmail.com>)  
-> **Last Updated:** 2026-07-06 · **Version:** v2.1.2
+> **Last Updated:** 2026-07-06 · **Version:** v2.1.3
 
 > [!TIP]
 > Keep this document updated after any development session to keep the knowledge base current.
@@ -39,6 +39,8 @@
 26. [SMRITI Reporting Governance & Security Auditing Framework (v2.5.0)](#26-smriti-reporting-governance--security-auditing-framework-v250)
 27. [SMRITI Sales Force Management & Commission Module (v2.6.0)](#27-smriti-sales-force-management--commission-module-v260)
 28. [SMRITI Customer Intelligence Graph (CIG) (v2.7.0)](#28-smriti-customer-intelligence-graph-cig-v270)
+29. [SMRITI Billing Terminal & Theme Hardening (v2.8.0)](#29-smriti-billing-terminal--theme-hardening-v280)
+30. [SMRITI Royal Black and White Theme & Contrast Hardening (v2.8.1)](#30-smriti-royal-black-and-white-theme--contrast-hardening-v281)
 
 ---
 
@@ -746,4 +748,17 @@ SMRITI Retail OS v2.8.0 consolidates front-end assets, locks down canonical rout
 *   **Author Profile & Credibility (Rule 12)**: Designed by Founder & Chief Architect **Jawahar R. Mallah** (AITDL - AI Technology & Development Lab).
 
 ---
-*This knowledge base is maintained by **Jawahar R Mallah** and the SMRITI project team. For issues, open a GitHub issue at [erpnbook/smriti-docker](https://github.com/erpnbook/smriti-docker).*
+
+## 30. SMRITI Royal Black and White Theme & Contrast Hardening (v2.8.1)
+
+SMRITI Retail OS v2.8.1 introduces the **Royal Black and White** theme override and contrast accessibility fixes across user-facing pages, resolving low-contrast text readability bugs in dark mode.
+
+### Key Capabilities
+
+*   **Route-Level Theme Forced Overrides**: Intercepts `/smriti-help` routes inside Level 2 of the SMRITI UI resolver to automatically serve a high-contrast monochrome token set. Derives dark mode automatically via background luminance checks (`bg_luminance < 80`).
+*   **Contrast Accessibility Mapping**: Replaces legacy, low-contrast text color elements (such as Hinglish definitions, glossary term titles, and FAQ items) with responsive, theme-aware variables (`var(--text-dark)`).
+*   **Theme-Responsive Dictionary & Formula Registry Pages**: Updates static variables in `smriti-dictionary.html` and `smriti-formula-registry.html` to bind with responsive SMRITI tokens, ensuring standard pages automatically match light/dark theme modes.
+*   **Author Profile & Credibility (Rule 12)**: Designed by Founder & Chief Architect **Jawahar R. Mallah** (AITDL - AI Technology & Development Lab).
+
+---
+*This knowledge base is maintained by **Jawahar R Mallah** and the SMRITI project team. For issues, open a GitHub issue at [erpnbook/smriti-docker](https://github.com/erpnbook/smriti-docker).*

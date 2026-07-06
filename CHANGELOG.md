@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.1.3] — 2026-07-06
+
+### Added
+- Route-level forced theme override inside SMRITI UI resolver to automatically apply a premium "Royal Black and White" theme on `/smriti-help`.
+
+### Fixed
+- Fixed accessibility contrast bugs on the Help Center page by mapping headings and native Hinglish definitions to theme-aware variables.
+- Mapped Business Dictionary and Formula Registry pages to responsive SMRITI tokens, resolving dark-mode text and drawer background contrast conflicts.
+
 ## [2.1.2] — 2026-07-06
 
 ### Changed
