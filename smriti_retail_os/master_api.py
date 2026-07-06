@@ -70,7 +70,7 @@ def quick_create_item(item_name, barcode, rate, mrp, gst_percentage, style_code=
                 hsn_doc.name = default_hsn
                 hsn_doc.hsn_code = default_hsn
                 hsn_doc.description = "Auto-created default HSN"
-                # reviewed-ignore-permissions: retail catalog quick create, validated by item studio
+                # reviewed-ignore-permissions: no role restriction — any authenticated user may create items, by design
                 hsn_doc.insert(ignore_permissions=True)
             item.gst_hsn_code = default_hsn
             try: item.gn_hsn_code = default_hsn
@@ -92,7 +92,7 @@ def quick_create_item(item_name, barcode, rate, mrp, gst_percentage, style_code=
             "tax_category": ""
         })
 
-    # reviewed-ignore-permissions: retail catalog quick create, validated by item studio
+    # reviewed-ignore-permissions: no role restriction — any authenticated user may create items, by design
     item.insert(ignore_permissions=True)
 
     # 2. Add Barcode (redundant if item_code = barcode, but good for ERPNext standard)
@@ -100,7 +100,7 @@ def quick_create_item(item_name, barcode, rate, mrp, gst_percentage, style_code=
         "barcode": barcode,
         "uom": "Nos"
     })
-    # reviewed-ignore-permissions: retail catalog quick create, validated by item studio
+    # reviewed-ignore-permissions: no role restriction — any authenticated user may create items, by design
     item.save(ignore_permissions=True)
 
     # 3. Create Price List entries
@@ -167,7 +167,7 @@ def quick_create_customer(customer_name, mobile_no):
             else:
                 cg = frappe.new_doc("Customer Group")
                 cg.customer_group_name = "Individual"
-                # reviewed-ignore-permissions: retail customer quick create, validated by customer studio
+                # reviewed-ignore-permissions: no role restriction — any authenticated user may create a customer record, by design
                 cg.insert(ignore_permissions=True)
                 customer_group = cg.name
     cust.customer_group = customer_group
@@ -181,13 +181,13 @@ def quick_create_customer(customer_name, mobile_no):
         else:
             t = frappe.new_doc("Territory")
             t.territory_name = "All Territories"
-            # reviewed-ignore-permissions: retail customer quick create, validated by customer studio
+            # reviewed-ignore-permissions: no role restriction — any authenticated user may create a customer record, by design
             t.insert(ignore_permissions=True)
             territory = t.name
     cust.territory = territory
     
     cust.customer_type = "Individual"
-    # reviewed-ignore-permissions: retail customer quick create, validated by customer studio
+    # reviewed-ignore-permissions: no role restriction — any authenticated user may create a customer record, by design
     cust.insert(ignore_permissions=True)
     
     frappe.db.commit()
@@ -221,7 +221,7 @@ def quick_create_supplier(supplier_name, mobile_no=None):
             else:
                 sg = frappe.new_doc("Supplier Group")
                 sg.supplier_group_name = "Local"
-                # reviewed-ignore-permissions: vendor register quick create, validated by purchase studio
+                # reviewed-ignore-permissions: no role restriction — any authenticated user may create suppliers, by design
                 sg.insert(ignore_permissions=True)
                 supplier_group = sg.name
     supp.supplier_group = supplier_group
@@ -229,7 +229,7 @@ def quick_create_supplier(supplier_name, mobile_no=None):
     supp.supplier_type = "Individual"
     if mobile_no:
         supp.mobile_no = mobile_no
-    # reviewed-ignore-permissions: vendor register quick create, validated by purchase studio
+    # reviewed-ignore-permissions: no role restriction — any authenticated user may create suppliers, by design
     supp.insert(ignore_permissions=True)
     
     frappe.db.commit()
@@ -253,7 +253,7 @@ def save_supplier_on_fly(supplier_name, supplier_group, supplier_type, name=None
         doc.supplier_name = supplier_name
         doc.supplier_group = supplier_group
         doc.supplier_type = supplier_type
-        # reviewed-ignore-permissions: inline supplier onboarding during procurement
+        # reviewed-ignore-permissions: no role restriction — any authenticated user may create suppliers, by design
         doc.save(ignore_permissions=True)
     else:
         doc = frappe.new_doc("Supplier")
@@ -268,7 +268,7 @@ def save_supplier_on_fly(supplier_name, supplier_group, supplier_type, name=None
                 existing = frappe.db.get_all("Supplier Group", pluck="name", limit=1)
                 resolved_group = existing[0] if existing else "Local"
         doc.supplier_group = resolved_group
-        # reviewed-ignore-permissions: inline supplier onboarding during procurement
+        # reviewed-ignore-permissions: no role restriction — any authenticated user may create suppliers, by design
         doc.insert(ignore_permissions=True)
 
     frappe.db.commit()
@@ -451,10 +451,10 @@ def save_supplier_detail(**kwargs):
     if not frappe.db.exists("Supplier Group", doc.supplier_group):
         sg = frappe.new_doc("Supplier Group")
         sg.supplier_group_name = doc.supplier_group
-        # reviewed-ignore-permissions: vendor detail updates, gated by supplier admin roles
+        # reviewed-ignore-permissions: no role restriction — any authenticated user may update supplier records, by design
         sg.insert(ignore_permissions=True)
 
-    # reviewed-ignore-permissions: vendor detail updates, gated by supplier admin roles
+    # reviewed-ignore-permissions: no role restriction — any authenticated user may update supplier records, by design
     doc.save(ignore_permissions=True)
 
     # Contact Person processing
@@ -468,7 +468,7 @@ def save_supplier_detail(**kwargs):
                 contact.mobile_no = doc.mobile_no
             if doc.email_id:
                 contact.email_id = doc.email_id
-            # reviewed-ignore-permissions: vendor detail updates, gated by supplier admin roles
+            # reviewed-ignore-permissions: no role restriction — any authenticated user may update supplier records, by design
             contact.save(ignore_permissions=True)
         else:
             contact = frappe.new_doc("Contact")
@@ -481,7 +481,7 @@ def save_supplier_detail(**kwargs):
                 "link_doctype": "Supplier",
                 "link_name": doc.name
             })
-            # reviewed-ignore-permissions: vendor detail updates, gated by supplier admin roles
+            # reviewed-ignore-permissions: no role restriction — any authenticated user may update supplier records, by design
             contact.insert(ignore_permissions=True)
 
     frappe.db.commit()
@@ -523,16 +523,16 @@ def save_customer_detail(customer_name, customer_type, customer_group, territory
     if not frappe.db.exists("Customer Group", doc.customer_group):
         cg = frappe.new_doc("Customer Group")
         cg.customer_group_name = doc.customer_group
-        # reviewed-ignore-permissions: customer detail updates, gated by customer manager roles
+        # reviewed-ignore-permissions: no role restriction — any authenticated user may update customer records, by design
         cg.insert(ignore_permissions=True)
 
     if not frappe.db.exists("Territory", doc.territory):
         t = frappe.new_doc("Territory")
         t.territory_name = doc.territory
-        # reviewed-ignore-permissions: customer detail updates, gated by customer manager roles
+        # reviewed-ignore-permissions: no role restriction — any authenticated user may update customer records, by design
         t.insert(ignore_permissions=True)
 
-    # reviewed-ignore-permissions: customer detail updates, gated by customer manager roles
+    # reviewed-ignore-permissions: no role restriction — any authenticated user may update customer records, by design
     doc.save(ignore_permissions=True)
     frappe.db.commit()
 
@@ -678,7 +678,7 @@ def create_item_tax_template(title, gst_rate, taxes):
                 "tax_rate": flt(row.get("tax_rate", 0))
             })
 
-    # reviewed-ignore-permissions: tax configuration seeding, restricted to tax administrator
+    # reviewed-ignore-permissions: tax configuration creation, gated by SMRITI Store Manager or System Manager roles
     doc.insert(ignore_permissions=True)
     frappe.db.commit()
     return {"name": doc.name, "title": doc.title}
@@ -719,7 +719,7 @@ def create_brand(brand_name, brand_description=None):
             import sys
             _frappe = sys.modules.get('frappe')
             if _frappe: _frappe.logger().debug(f"SMRITI Debug: Silent exception in master_api.py:648: {sys.exc_info()[1]}")
-    # reviewed-ignore-permissions: catalog brand creation, validated by product manager
+    # reviewed-ignore-permissions: catalog brand creation, gated by SMRITI Store Manager or System Manager roles
     doc.insert(ignore_permissions=True)
     frappe.db.commit()
     return {"name": doc.name, "brand": doc.brand}
@@ -734,7 +734,7 @@ def delete_brand(brand_name):
     linked = frappe.db.count("Item", {"brand": brand_name})
     if linked:
         frappe.throw(_(f"Cannot delete brand '{brand_name}': {linked} item(s) are linked to it."))
-    # reviewed-ignore-permissions: catalog brand deletion, validated by product manager
+    # reviewed-ignore-permissions: catalog brand deletion, gated by SMRITI Store Manager or System Manager roles
     frappe.delete_doc("Brand", brand_name, ignore_permissions=True)
     frappe.db.commit()
     return {"success": True}
