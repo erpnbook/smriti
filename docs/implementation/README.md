@@ -10,6 +10,8 @@ This index lists all SMRITI implementation plans in chronological order, in acco
 | 2026-07-06 | Security    | Phase 1 | v2.1.4  | Completed | [Security_Ignore_Permissions_And_Custom_Fields_v2.1.4.md](security/Security_Ignore_Permissions_And_Custom_Fields_v2.1.4.md) |
 | 2026-07-06 | Inventory   | Phase 1 | v2.1.5  | In Progress | [Inventory_PSV_Seeding_Test_Isolation_v2.1.5.md](inventory/Inventory_PSV_Seeding_Test_Isolation_v2.1.5.md) |
 | 2026-07-06 | Security    | Phase 1 | v2.1.6  | In Progress | [Security_Redo_Permission_Audit_And_CI_Wiring_v2.1.6.md](security/Security_Redo_Permission_Audit_And_CI_Wiring_v2.1.6.md) |
+| 2026-07-06 | Releases    | Phase 1 | v2.1.6  | In Progress | [Release_Publish_GitHub_v2.1.6.md](releases/Release_Publish_GitHub_v2.1.6.md) |
+
 
 
 
