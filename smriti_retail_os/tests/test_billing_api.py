@@ -179,7 +179,8 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         updates = {
             "round_off_cost_center": round_off_cost_center,
             "round_off_account": round_off_account,
-            "default_cash_account": default_cash_account
+            "default_cash_account": default_cash_account,
+            "default_income_account": self.income_account
         }
         
         # Clean up any invalid account/cost center references to prevent LinkValidationErrors due to test DB pollution
@@ -367,6 +368,10 @@ class TestSmritiRetailBillingAPI(unittest.TestCase):
         self.item.append("barcodes", {
             "barcode": "8901234567890",
             "uom": self.uom
+        })
+        self.item.append("item_defaults", {
+            "company": self.company,
+            "default_income_account": self.income_account
         })
         self.item.insert(ignore_permissions=True)
 
