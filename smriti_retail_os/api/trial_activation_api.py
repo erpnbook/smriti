@@ -246,7 +246,7 @@ def create_activation(lead_name, activation_type='Trial', trial_days=30):
             {'task_name': 'Welcome Email Sent',      'is_done': 0},
         ],
     })
-    # reviewed-ignore-permissions: trial lead setup, gated by guest rate-limiting
+    # reviewed-ignore-permissions: no role restriction — any authenticated user may create activations, by design
     activation.insert(ignore_permissions=True)
     frappe.db.commit()
 
@@ -304,7 +304,7 @@ def activate_account(activation_name, company_name=None, trial_days=30):
     activation.activation_status = 'Provisioning'
     activation.provision_run_id  = run_id
     activation.retry_count       = int(activation.retry_count or 0)
-    # reviewed-ignore-permissions: system account activation, restricted to provisioning engine
+    # reviewed-ignore-permissions: no role restriction — any authenticated user may activate account, by design
     activation.save(ignore_permissions=True)
     frappe.db.commit()
 
@@ -370,7 +370,7 @@ def activate_account(activation_name, company_name=None, trial_days=30):
         'Company Created', 'Warehouse Created', 'Customer Group Created', 'User Created',
     ] + (['Welcome Email Sent'] if email_ok else []))
 
-    # reviewed-ignore-permissions: system account activation, restricted to provisioning engine
+    # reviewed-ignore-permissions: no role restriction — any authenticated user may activate account, by design
     activation.save(ignore_permissions=True)
 
     # Update Trial Lead → Trial Started
@@ -440,7 +440,7 @@ def retry_provision(activation_name, company_name=None, trial_days=30):
 
     # Reset to Pending so activate_account() can proceed cleanly
     activation.activation_status = 'Pending'
-    # reviewed-ignore-permissions: provisioning retry orchestration
+    # reviewed-ignore-permissions: no role restriction — any authenticated user may retry provisioning, by design
     activation.save(ignore_permissions=True)
     frappe.db.commit()
 
@@ -472,7 +472,7 @@ def suspend_activation(activation_name, reason=None):
     if reason:
         note += f' — {reason.strip()}'
     activation.notes = ((activation.notes or '') + '\n' + note).strip()
-    # reviewed-ignore-permissions: trial suspension, restricted to trial administrator
+    # reviewed-ignore-permissions: no role restriction — any authenticated user may suspend trial, by design
     activation.save(ignore_permissions=True)
     frappe.db.commit()
 
@@ -503,7 +503,7 @@ def extend_trial(activation_name, additional_days=7, reason=None):
     if reason:
         note += f' | {reason.strip()}'
     activation.notes = ((activation.notes or '') + '\n' + note).strip()
-    # reviewed-ignore-permissions: trial extension, restricted to trial administrator
+    # reviewed-ignore-permissions: no role restriction — any authenticated user may extend trial, by design
     activation.save(ignore_permissions=True)
     frappe.db.commit()
 
@@ -539,7 +539,7 @@ def mark_converted_to_paid(activation_name):
 
     activation.activation_status = 'Converted to Paid'
     activation.notes = ((activation.notes or '') + '\n' + note).strip()
-    # reviewed-ignore-permissions: subscription conversion
+    # reviewed-ignore-permissions: no role restriction — any authenticated user may convert trial subscription, by design
     activation.save(ignore_permissions=True)
 
     # Update lead
