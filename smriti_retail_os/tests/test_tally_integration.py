@@ -127,7 +127,7 @@ class TestTallyIntegration(unittest.TestCase):
 		
 		frappe.db.set_value("Company", self.company, {
 			"round_off_cost_center": cost_center,
-			"default_round_off_account": round_off_account
+			"round_off_account": round_off_account
 		})
 
 		# Create a dummy Sales Invoice
