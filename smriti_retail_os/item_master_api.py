@@ -273,7 +273,16 @@ def validate_import_rows(rows_json):
 
         # ── GST % validation ───────────────────────────────────────────────
         hsn_raw = row.get("HSN CODE", "")
-        hsn_code = _resolve_hsn_code_cached(hsn_raw) if hsn_raw else None
+        hsn_code = None
+        if hsn_raw:
+            try:
+                hsn_code = _resolve_hsn_code_cached(hsn_raw)
+            except Exception as e:
+                # Capture HSN validation exceptions cleanly in human-readable format
+                err_msg = str(e)
+                if isinstance(e, frappe.ValidationError) and hasattr(e, "args") and e.args:
+                    err_msg = e.args[0]
+                errors.append(f"Invalid HSN Code: {err_msg}")
         
         from smriti_retail_os.hooks_logic import get_gst_rate_from_hsn
         hsn_derived_rate = get_gst_rate_from_hsn(hsn_code, company) if hsn_code else None

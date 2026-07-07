@@ -91,3 +91,9 @@ In collapsed mode, the SMRITI brand logo now remains visible and centered on the
 **Q: Why did the daily Negative Stock Safety Sweep scheduler fail with an ImportError during migrate?**
 The scheduler job was pointing to a classmethod rather than a module-level function, and the service package was missing `__init__.py`. In v2.1.1, this is fully resolved with a plain wrapper function and the correct package initialization.
 
+---
+
+## SMRITI v2.1.7 FAQs
+
+**Q: Why did the catalog validation API return a "417 (EXPECTATION FAILED)" error when entering an invalid HSN code length?**
+In earlier versions, if an invalid HSN length (such as 7 digits) was supplied in a row during import validation dry-run, the backend validation helper raised an unhandled `ValidationError`, crashing the entire validate_import_rows API process. This has been resolved in v2.1.7 by wrapping the HSN validation in a try-except block, returning the validation message gracefully as a row-specific error to the user interface.

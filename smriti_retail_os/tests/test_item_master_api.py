@@ -938,6 +938,42 @@ class TestBarcodeHardening(unittest.TestCase):
         frappe.db.delete("Supplier", {"custom_vendor_code": "VND-TEST-HSN-1"})
         frappe.db.commit()
 
+    def test_hsn_invalid_length_validation_catching(self):
+        """
+        Verify validate_import_rows catches HSN length validation exceptions and logs
+        them as row errors rather than letting the entire request crash.
+        """
+        from smriti_retail_os.item_master_api import validate_import_rows
+        
+        row_invalid_hsn = {
+            "BARCODE NO": "TEST-HSN-BAR-ERR",
+            "PRODUCT STYLE CODE": "TST-HSN-STYLE",
+            "ITEM DESCRIPTION": "Test HSN Item",
+            "BRAND NAME": "Nike",
+            "COLOR": "RED",
+            "SIZE": "9",
+            "PLANNED MRP": 2500,
+            "COST PRICE": 1200,
+            "PRODUCT TAX": "18",
+            "HSN CODE": "6897845",  # Invalid length 7 (must be 6 or 8 digits)
+            "GENDER": "UNISEX",
+            "VENDOR CODE": "VND-TEST-HSN-1",
+            "PURCHASE CLASS": "FW",
+            "DEPARTMENT": "LADIES FTW",
+            "MERCHANDISE CATEGORY": "SANDAL",
+            "Sub category": "LASTIC PATTA",
+            "HEELS": "FLAT",
+            "UPPER MATERIAL": "CLOTH"
+        }
+        
+        # This call must complete successfully and return a status: "error" with HSN code validation listed in errors
+        results = validate_import_rows(frappe.as_json([row_invalid_hsn]))
+        self.assertEqual(results[0]["status"], "error")
+        hsn_errors = [e for e in results[0]["errors"] if "HSN" in e or "hsn" in e.lower()]
+        self.assertTrue(len(hsn_errors) > 0, "HSN invalid length error was not captured in errors list")
+        self.assertIn("6897845", hsn_errors[0])
+        self.assertIn("length 7", hsn_errors[0])
+
 
 class TestImportLookupCache(unittest.TestCase):
     """

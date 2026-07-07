@@ -623,6 +623,51 @@ class TestSmritiBarcodeAPI(unittest.TestCase):
         except FileNotFoundError:
             pass
 
+    def test_async_9_get_recent_print_jobs(self):
+        """test_async_9: get_recent_print_jobs API executes without DB schema issues and returns jobs."""
+        from smriti_retail_os.barcode_api import get_recent_print_jobs, enqueue_print_job
+        import os
+        
+        # Enqueue a print job to have at least one record
+        old_in_test = frappe.flags.in_test
+        frappe.flags.in_test = False
+        try:
+            res = enqueue_print_job(
+                template_name="TEST_ZPL_TEMPLATE",
+                printer_ip="192.168.1.180",
+                printer_port=9100,
+                payload="^XA^FDTest Get Recent Jobs^FS^XZ",
+                print_qty=2,
+                item_code=None,
+                barcode="123456789012"
+            )
+            job_id = res["job_id"]
+        finally:
+            frappe.flags.in_test = old_in_test
+        
+        try:
+            # Query recent print jobs using the API
+            jobs = get_recent_print_jobs(limit=10)
+            self.assertTrue(len(jobs) >= 1)
+            
+            # Find our enqueued job in the list
+            matched = [j for j in jobs if j.get("job_id") == job_id]
+            self.assertEqual(len(matched), 1)
+            self.assertEqual(matched[0]["status"], "Queued")
+            self.assertEqual(matched[0]["template_name"], "TEST_ZPL_TEMPLATE")
+            self.assertEqual(matched[0]["labels_count"], 2)
+            self.assertEqual(matched[0]["printer_ip"], "192.168.1.180")
+        finally:
+            # Clean up print job and file
+            frappe.delete_doc("SMRITI Print Job", job_id, ignore_permissions=True)
+            frappe.db.commit()
+            prn_path = frappe.get_site_path('private', 'print_jobs', f"{job_id}.prn")
+            if os.path.exists(prn_path):
+                try:
+                    os.unlink(prn_path)
+                except Exception:
+                    pass
+
     def test_15_publish_realtime_targets_requested_by_user(self):
         """test_15: publish_realtime targets correct requested_by user in enqueue and process"""
         from smriti_retail_os.barcode_api import enqueue_print_job, _process_print_job

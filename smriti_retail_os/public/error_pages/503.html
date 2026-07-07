@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/public/error_pages/503.html
+  @description: SMRITI Branded 503 Service Unavailable (Static Asset for Nginx).
+  @author: Jawahar Ramkripal Mallah
+  @owner: AITDL
+  @license: GPL-3.0-only
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Unavailable — SMRITI</title>
+    
+    <!-- Design System Token Registry Integration (Static Paths) -->
+    <link rel="icon" href="/assets/smriti_retail_os/images/smriti_logo.svg" type="image/svg+xml">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_tokens.css">
+    <script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js"></script>
+    <script src="/assets/smriti_retail_os/js/smriti_theme_manager.js"></script>
+
+    <!-- Component Stylesheet -->
+    <link rel="stylesheet" href="/assets/smriti_retail_os/error_pages/error_page.css">
+</head>
+<body class="smriti-error-body">
+    
+    <!-- Background Animated Blobs -->
+    <div class="bg-blob bg-blob-1"></div>
+    <div class="bg-blob bg-blob-2"></div>
+
+    <main class="smriti-error-container" id="error-card" tabindex="-1" aria-labelledby="error-heading">
+        
+        <!-- SMRITI Logo Header -->
+        <header class="logo-row">
+            <img src="/assets/smriti_retail_os/images/smriti_logo.svg" alt="SMRITI Monogram" class="monogram-logo" onerror="this.style.display='none'">
+            <div class="brand-text">
+                <span class="brand-title">SMRITI</span>
+                <span class="brand-subtitle">RETAIL OS</span>
+            </div>
+        </header>
+
+        <!-- Animated Illustration Container -->
+        <div class="illustration-wrap" aria-hidden="true">
+            <!-- Default System Gear SVG -->
+            <svg class="floating-illustration" viewBox="0 0 100 100" width="80" height="80">
+                <circle cx="50" cy="50" r="16" fill="none" stroke="var(--smriti-color-brand-primary)" stroke-width="6" />
+                <path d="M 50 15 L 50 25 M 50 75 L 50 85 M 15 50 L 25 50 M 75 50 L 85 50 M 25 25 L 32 32 M 68 68 L 75 75 M 25 75 L 32 68 M 68 32 L 75 25" stroke="var(--smriti-color-brand-primary)" stroke-width="6" stroke-linecap="round" />
+            </svg>
+        </div>
+
+        <!-- Large Error Code -->
+        <h1 class="error-code" id="error-code-val">503</h1>
+        
+        <!-- Friendly business message -->
+        <h2 id="error-heading" class="error-title">Service Unavailable</h2>
+        <p class="error-message">The server is temporarily overloaded or down for scheduled maintenance. Please retry shortly.</p>
+
+        <!-- Smart Suggestions Panel -->
+        <section id="suggestions-box" class="suggestions-panel" aria-label="Smart suggestions">
+            <h3 class="panel-title">Smart Suggestions</h3>
+            <ul id="suggestion-list" class="suggestion-links">
+                <!-- Javascript will inject context-aware recommendations here -->
+            </ul>
+        </section>
+
+        <!-- Actions Button Grid -->
+        <div class="actions-row">
+            <button onclick="window.history.back()" class="btn btn-secondary" aria-label="Go to previous page">← Go Back</button>
+            <a href="/smriti" class="btn btn-primary" aria-label="Navigate to SMRITI Dashboard">🏠 Home</a>
+        </div>
+
+        <!-- Diagnostics Expandable Panel -->
+        <section class="diagnostics-panel" aria-label="Technical diagnostics">
+            <button id="diag-toggle" class="diag-header-btn" aria-expanded="false" aria-controls="diag-details">
+                <span>🔍 Diagnostic Information</span>
+                <span class="chevron" aria-hidden="true">▼</span>
+            </button>
+            <div id="diag-details" class="diag-body" hidden>
+                <div class="diag-grid">
+                    <span class="diag-label">Requested URL:</span>
+                    <span class="diag-val" id="diag-url">Loading...</span>
+                    
+                    <span class="diag-label">Timestamp:</span>
+                    <span class="diag-val" id="diag-time">Loading...</span>
+                    
+                    <span class="diag-label">Reference ID:</span>
+                    <span class="diag-val font-mono" id="diag-ref">Loading...</span>
+                    
+                    <span class="diag-label">Environment:</span>
+                    <span class="diag-val" id="diag-env">SMRITI Production</span>
+                </div>
+
+                <!-- Dev Mode stack traces -->
+                <div id="dev-stack-box" class="dev-stack-panel" style="display: none;">
+                    <span class="diag-label-stack">Debug Stack Trace:</span>
+                    <pre class="stack-trace"><code>No server-side stack trace available for static Nginx errors.</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Branded Footer -->
+        <footer class="footer">
+            © PrathamOne / AITDL — SMRITI Retail OS
+        </footer>
+
+    </main>
+
+    <!-- Client-Side Suggestions and Hydration Logic -->
+    <script src="/assets/smriti_retail_os/error_pages/error_page.js"></script>
+</body>
+</html>

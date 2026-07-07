@@ -74,17 +74,17 @@ class TestBrandingIntegrity(unittest.TestCase):
     def test_error_pages_integrity(self):
         """Verify that SMRITI custom error page templates are locked and unaltered"""
         expected_404 = (
-            "d90c3fddc69a225c2cb429004d41dfa5bcd4d81d7aa5df8c6d2ab6de8027a071"
+            "b4afa5d4f36655a6664ce0502949e35bfad21966d45b658a4fe5deab016fbebd"
         )
         expected_smriti_404 = (
-            "d62346a25bd3e8f9cf2a79b224df185b1f56426007dc474a6d5b4e10fa1a043e"
+            "f5ac8cbb7926983d13ae3997fcd2befde9c61c82eafa2b661beecdcf7d4be54e"
         )
 
         expected_403 = (
-            "5c852babf55c88fea48eb40bdaf214f89aaf659280efb5046ee9cf2714cd08d2"
+            "e90bca52c0858b9a73e395b68f1c013235b27c05570e3b321e1531c09455ad84"
         )
         expected_smriti_403 = (
-            "8b7ab25917c9d02a64298635016c898bebc599d6533da021a0014694b60bd313"
+            "3b721167e4c5bd46cb0035012ec3cc56466588c7a631e920a437980d48f833dd"
         )
 
         self.assertEqual(

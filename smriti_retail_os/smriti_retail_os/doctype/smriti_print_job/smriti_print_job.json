@@ -11,6 +11,10 @@
   "printer",
   "printer_ip",
   "printer_port",
+  "template_name",
+  "print_qty",
+  "item_code",
+  "barcode",
   "payload_hash",
   "payload_file",
   "status",
@@ -102,6 +106,31 @@
    "fieldtype": "Datetime",
    "label": "Completed On",
    "read_only": 1
+  },
+  {
+   "fieldname": "template_name",
+   "fieldtype": "Data",
+   "label": "Template Name",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "print_qty",
+   "fieldtype": "Int",
+   "label": "Print Qty",
+   "default": "1"
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "options": "Item",
+   "label": "Item Code",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "barcode",
+   "fieldtype": "Data",
+   "label": "Barcode",
+   "in_list_view": 1
   }
  ],
  "index_web_pages_for_search": 1,

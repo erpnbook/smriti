@@ -5,6 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.1.7] — 2026-07-07
+
+### Added
+- Created a dedicated `error_pages` module containing Jinja-resolved `404.html`, `403.html`, `500.html`, and `503.html` templates.
+- Created reusable glassmorphic layout component files (`error_page.html`, `error_page.css`, `error_page.js`) mapping tonamespaced SMRITI design tokens.
+- Created pre-rendered static assets under `public/error_pages/` for immediate Nginx serving when Frappe backend services are offline.
+- Added route aliases and redirect logic for `/500` and `/503` under `website_route_rules` in `hooks.py`.
+
+### Changed
+- Replaced custom page content in `www/404.html`, `www/smriti-404.html`, `www/403.html`, and `www/smriti-403.html` with centralized error module Jinja inclusions.
+- Updated expected SHA-256 validation hashes inside `tests/test_branding_integrity.py` to match the newly styled templates.
+
+### Fixed
+- Fixed an unhandled validation crash during product catalog import dry-runs where invalid HSN code lengths (e.g. 7 digits) crashed the validate_import_rows API endpoint; wrapped the HSN loader in a try-except block to return validation messages gracefully as row-level errors.
+
 ## [2.1.6] — 2026-07-06
 
 ### Added

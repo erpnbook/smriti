@@ -36,7 +36,7 @@ Reviewed By: "Jawahar R. Mallah"
 **A**: Yes. B2B transactions require the customer's verified GSTIN. Register the GSTIN on the Customer card. During billing, the checkout panel automatically maps the transaction as a tax-credit eligible sales invoice.
 
 ### Q5: What is the minimum HSN digit count required by the validation engine?
-**A**: SMRITI's India Compliance module enforces standard validation checks: HSN codes must be exactly **6 or 8 digits** long. Standard 4-digit codes will be rejected by the validation engine during product save operations.
+**A**: SMRITI's India Compliance module enforces standard validation checks: HSN codes must be exactly **6 or 8 digits** long. Standard 4-digit codes or invalid lengths (e.g. 7 digits) will be caught by the catalog import validation engine and reported as row-level validation errors (compliant with the Human-Readable Error Policy), allowing you to correct them inline before submitting the import.
 
 ## Revision History
 

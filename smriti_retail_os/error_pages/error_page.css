@@ -1,0 +1,336 @@
+/**
+ * @file: smriti_retail_os/error_pages/error_page.css
+ * @description: Reusable component styles for the SMRITI Branded Error Experience.
+ * @governance: UI-GOV-005 - Token contract enforcement
+ */
+
+/* ── Custom Properties & Animations ── */
+@keyframes smriti-float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(2deg); }
+}
+
+@keyframes smriti-pulse {
+    0%, 100% { opacity: 0.15; transform: scale(1); }
+    50% { opacity: 0.22; transform: scale(1.03); }
+}
+
+@keyframes smriti-fade-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* ── Shell Styling ── */
+.smriti-error-body {
+    background: var(--smriti-color-bg-page);
+    color: var(--smriti-color-text-primary);
+    font-family: var(--smriti-font-family-primary, 'Inter', sans-serif);
+    line-height: var(--smriti-line-height-normal, 1.5);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--smriti-spacing-section, 24px);
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Background Animated Blobs */
+.bg-blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.15;
+    animation: smriti-pulse 8s ease-in-out infinite;
+}
+.bg-blob-1 {
+    width: 450px;
+    height: 450px;
+    background: var(--smriti-color-brand-primary);
+    top: -10%;
+    left: -10%;
+    animation-delay: 0s;
+}
+.bg-blob-2 {
+    width: 380px;
+    height: 380px;
+    background: var(--smriti-color-brand-light);
+    bottom: -10%;
+    right: -10%;
+    animation-delay: -4s;
+}
+
+/* Glassmorphic Neumorphic Card container */
+.smriti-error-container {
+    background: var(--smriti-color-bg-secondary);
+    border: 1px solid var(--smriti-color-border-default);
+    border-radius: var(--smriti-radius-xl, 24px);
+    padding: var(--smriti-spacing-section, 40px);
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    box-shadow: var(--smriti-shadow-lg, 0 12px 32px rgba(0, 0, 0, 0.15));
+    animation: smriti-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    position: relative;
+    z-index: 1;
+}
+
+.smriti-error-container:focus-visible {
+    outline: 2px solid var(--smriti-color-brand-primary);
+    outline-offset: 4px;
+}
+
+/* Branding Header */
+.logo-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--smriti-spacing-md, 12px);
+    margin-bottom: var(--smriti-spacing-lg, 24px);
+}
+.monogram-logo {
+    height: 40px;
+    width: auto;
+}
+.brand-text {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+}
+.brand-title {
+    font-family: var(--smriti-font-family-secondary, 'Outfit', sans-serif);
+    font-size: var(--smriti-font-size-lg, 20px);
+    font-weight: 800;
+    color: var(--smriti-color-text-primary);
+    line-height: 1;
+    letter-spacing: 0.5px;
+}
+.brand-subtitle {
+    font-family: var(--smriti-font-family-secondary, 'Outfit', sans-serif);
+    font-size: var(--smriti-font-size-xs, 11px);
+    font-weight: 600;
+    color: var(--smriti-color-brand-primary);
+    letter-spacing: 1.5px;
+    margin-top: 2px;
+    line-height: 1;
+}
+
+/* Illustration */
+.illustration-wrap {
+    display: flex;
+    justify-content: center;
+    margin: var(--smriti-spacing-md, 16px) 0;
+}
+.floating-illustration {
+    animation: smriti-float 5s ease-in-out infinite;
+}
+
+/* Big Error Code */
+.error-code {
+    font-family: var(--smriti-font-family-secondary, 'Outfit', sans-serif);
+    font-size: 72px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--smriti-color-brand-primary) 0%, var(--smriti-color-brand-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+    margin: var(--smriti-spacing-sm, 8px) 0;
+    letter-spacing: -2px;
+}
+
+/* Error Headings */
+.error-title {
+    font-family: var(--smriti-font-family-secondary, 'Outfit', sans-serif);
+    font-size: var(--smriti-font-size-xl, 22px);
+    color: var(--smriti-color-text-primary);
+    margin-bottom: var(--smriti-spacing-xs, 8px);
+    font-weight: 600;
+}
+.error-message {
+    font-size: var(--smriti-font-size-base, 14px);
+    color: var(--smriti-color-text-muted);
+    margin-bottom: var(--smriti-spacing-xl, 32px);
+    line-height: 1.6;
+}
+
+/* Smart Suggestions Panel */
+.suggestions-panel {
+    background: var(--smriti-color-bg-primary);
+    border: 1px solid var(--smriti-color-border-default);
+    border-radius: var(--smriti-radius-md, 12px);
+    padding: var(--smriti-spacing-md, 16px);
+    margin-bottom: var(--smriti-spacing-lg, 24px);
+    text-align: left;
+    display: none; /* Displayed by JS when suggestions exist */
+}
+.panel-title {
+    font-size: var(--smriti-font-size-sm, 12px);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--smriti-color-text-subtle);
+    margin-bottom: var(--smriti-spacing-sm, 8px);
+}
+.suggestion-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.suggestion-links a {
+    color: var(--smriti-color-brand-primary);
+    text-decoration: none;
+    font-size: var(--smriti-font-size-base, 14px);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s ease;
+}
+.suggestion-links a:hover {
+    color: var(--smriti-color-brand-light);
+}
+
+/* Button Layout */
+.actions-row {
+    display: flex;
+    gap: var(--smriti-spacing-sm, 12px);
+    margin-bottom: var(--smriti-spacing-lg, 24px);
+}
+.btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    border-radius: var(--smriti-radius-md, 12px);
+    font-size: var(--smriti-font-size-base, 14px);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-primary {
+    background: var(--smriti-color-brand-primary);
+    color: var(--smriti-color-bg-primary);
+    border: none;
+    box-shadow: 0 4px 12px rgba(105, 65, 198, 0.2);
+}
+.btn-primary:hover {
+    background: var(--smriti-color-brand-light);
+    transform: translateY(-1px);
+}
+.btn-secondary {
+    background: var(--smriti-color-bg-primary);
+    color: var(--smriti-color-text-muted);
+    border: 1px solid var(--smriti-color-border-strong);
+}
+.btn-secondary:hover {
+    background: var(--smriti-color-bg-secondary);
+    color: var(--smriti-color-text-primary);
+}
+
+/* Diagnostics Panel */
+.diagnostics-panel {
+    border-top: 1px solid var(--smriti-color-border-default);
+    padding-top: var(--smriti-spacing-md, 16px);
+    text-align: left;
+}
+.diag-header-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--smriti-color-text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--smriti-font-size-sm, 13px);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 0;
+    transition: color 0.15s ease;
+}
+.diag-header-btn:hover {
+    color: var(--smriti-color-text-primary);
+}
+.diag-header-btn .chevron {
+    font-size: 10px;
+    transition: transform 0.20s ease;
+}
+.diag-header-btn[aria-expanded="true"] .chevron {
+    transform: rotate(180deg);
+}
+
+.diag-body {
+    padding-top: 12px;
+}
+.diag-grid {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: var(--smriti-spacing-xs, 8px) var(--smriti-spacing-sm, 12px);
+    font-size: var(--smriti-font-size-xs, 12px);
+    line-height: 1.4;
+}
+.diag-label {
+    color: var(--smriti-color-text-subtle);
+    font-weight: 500;
+}
+.diag-val {
+    color: var(--smriti-color-text-muted);
+    word-break: break-all;
+}
+.font-mono {
+    font-family: monospace;
+}
+
+/* Dev Stack Traces */
+.dev-stack-panel {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--smriti-color-border-default);
+}
+.diag-label-stack {
+    display: block;
+    color: var(--smriti-color-status-danger);
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+.stack-trace {
+    background: var(--smriti-color-bg-page);
+    border: 1px solid var(--smriti-color-border-default);
+    border-radius: var(--smriti-radius-sm, 6px);
+    padding: 12px;
+    max-height: 180px;
+    overflow: auto;
+    font-size: 11px;
+    color: var(--smriti-color-status-danger);
+    text-align: left;
+}
+
+/* Branded Footer */
+.footer {
+    margin-top: var(--smriti-spacing-xl, 36px);
+    font-size: var(--smriti-font-size-xs, 11px);
+    color: var(--smriti-color-text-subtle);
+    letter-spacing: 0.5px;
+}
+
+/* Responsive Overrides */
+@media (max-width: 480px) {
+    .smriti-error-container {
+        padding: var(--smriti-spacing-lg, 24px) var(--smriti-spacing-md, 16px);
+        border-radius: var(--smriti-radius-lg, 16px);
+    }
+    .error-code {
+        font-size: 56px;
+    }
+    .actions-row {
+        flex-direction: column;
+    }
+    .btn {
+        width: 100%;
+    }
+}
