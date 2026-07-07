@@ -88,13 +88,13 @@ BARCODE_TOKEN_REGISTRY = {
         "description": "Color from Item Attribute table",
     },
     "style": {
-        "source": "item.variant_of > item.custom_style_code > item.style_no > item_code.split('-')[0]",
+        "source": "item.custom_style_code > item.variant_of > item.style_no > item_code",
         "item_master_field": "Intelligent Style Resolution",
         "category": "Style",
-        "example": "BBM-SPORTS",
+        "example": "CH-01-A",
         "description": (
             "Resolved Style/Article code using priority: "
-            "variant_of > Explicit Style Code > Import Profile > SKU splitting."
+            "custom_style_code > variant_of > style_no > item_code."
         ),
     },
     "style_code": {
@@ -199,7 +199,7 @@ def build_token_dict(item_data: dict) -> dict:
     pkd_date = item_data.get("pkd_date") or _dt.datetime.now().strftime("%m/%y")
 
     # Style resolution: use pre-resolved value from item_service, or fallback
-    style = item_data.get("style") or (item_code.split("-")[0] if "-" in item_code else item_code)
+    style = item_data.get("style") or item_code
 
     return {
         "barcode":              item_data.get("barcode") or "",

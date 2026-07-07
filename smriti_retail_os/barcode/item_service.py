@@ -277,14 +277,17 @@ def get_item_print_details(item_code, default_print_qty):
                 color = attr.attribute_value
                 break
 
-    # 5. Style resolution: variant_of > custom_style_code > style_no > SKU prefix
-    style = item_doc.get("variant_of") or ""
-    if not style and item_doc.meta.has_field("custom_style_code"):
+    # 5. Style resolution: custom_style_code > variant_of > style_no > item_code
+    #    custom_style_code is the actual Article/Style from import (e.g. CH-01-A)
+    style = ""
+    if item_doc.meta.has_field("custom_style_code"):
         style = item_doc.get("custom_style_code") or ""
+    if not style:
+        style = item_doc.get("variant_of") or ""
     if not style and item_doc.meta.has_field("style_no"):
         style = item_doc.get("style_no") or ""
     if not style:
-        style = item_code.split("-")[0] if "-" in item_code else item_code
+        style = item_code
 
     style_code = (
         item_doc.get("custom_style_code")

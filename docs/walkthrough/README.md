@@ -24,5 +24,10 @@ This index lists all implementation, architecture, and verification walkthroughs
 | 2026-07-06 | Security | v2.1.4 | [Security_Ignore_Permissions_And_Custom_Fields_v2.1.4.md](security/Security_Ignore_Permissions_And_Custom_Fields_v2.1.4.md) |
 | 2026-07-06 | Inventory | v2.1.5 | [Inventory_PSV_Seeding_Test_Isolation_v2.1.5.md](inventory/Inventory_PSV_Seeding_Test_Isolation_v2.1.5.md) |
 | 2026-07-06 | Security | v2.1.6 | [Security_Redo_Permission_Audit_And_CI_Wiring_v2.1.6.md](security/Security_Redo_Permission_Audit_And_CI_Wiring_v2.1.6.md) |
+| 2026-07-07 | Foundation | v2.1.7 | [Foundation_Error_Pages_v2.1.7.md](foundation/Foundation_Error_Pages_v2.1.7.md) |
+| 2026-07-07 | Procurement | v2.1.7 | [Procurement_HSN_Validation_Graceful_Error_v2.1.7.md](procurement/Procurement_HSN_Validation_Graceful_Error_v2.1.7.md) |
+| 2026-07-07 | Barcode    | v2.1.8 | [Barcode_Print_Style_Instead_Of_Itemcode_v2.1.8.md](barcode/Barcode_Print_Style_Instead_Of_Itemcode_v2.1.8.md) |
+
+
 
 
