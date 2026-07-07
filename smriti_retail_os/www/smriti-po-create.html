@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>SMRITI — Special Purchase Order Creator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="SMRITI Special Purchase Order creation wizard with matrix input style.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --smriti-bg: #f8fafc;
+      --smriti-card-bg: #ffffff;
+      --smriti-primary: #1e293b;
+      --smriti-accent: #2e7d32;
+      --smriti-accent-light: #e8f5e9;
+      --smriti-border: #cbd5e1;
+      --smriti-text: #0f172a;
+      --smriti-muted: #64748b;
+      --smriti-font: 'Outfit', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--smriti-font);
+      background-color: var(--smriti-bg);
+      color: var(--smriti-text);
+      line-height: 1.5;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: var(--smriti-card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      padding: 2.5rem;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* Header & Letterhead Section */
+    .header-block {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--smriti-primary);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-img {
+      max-height: 70px;
+    }
+
+    .logo-text {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--smriti-primary);
+      letter-spacing: 1px;
+    }
+
+    .company-details {
+      text-align: right;
+      font-size: 0.9rem;
+      color: var(--smriti-muted);
+    }
+
+    .company-details h2 {
+      font-size: 1.4rem;
+      color: var(--smriti-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    /* Page Title */
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Form Fields Grid */
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      background: #f1f5f9;
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      position: relative;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--smriti-primary);
+    }
+
+    .form-control {
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--smriti-border);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      background: white;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+      border-color: var(--smriti-primary);
+    }
+
+    /* Autocomplete Dropdown List */
+    .autocomplete-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid var(--smriti-border);
+      border-radius: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 100;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      display: none;
+    }
+
+    .autocomplete-item {
+      padding: 0.6rem 0.8rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .autocomplete-item:hover {
+      background-color: #f1f5f9;
+    }
+
+    /* Action bar */
+    .action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn {
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      font-family: inherit;
+      font-weight: 500;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .btn-primary {
+      background: var(--smriti-primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: var(--smriti-primary);
+    }
+
+    .btn-secondary:hover {
+      background: #cbd5e1;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+    }
+
+    .btn-danger:hover {
+      opacity: 0.9;
+    }
+
+    /* Matrix Table Layout */
+    .table-container {
+      overflow-x: auto;
+      margin-bottom: 2rem;
+      border: 1px solid var(--smriti-border);
+      border-radius: 8px;
+      background: white;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      border: 1px solid var(--smriti-border);
+      padding: 0.6rem;
+      text-align: center;
+    }
+
+    th {
+      background: #f8fafc;
+      font-weight: 600;
+      color: var(--smriti-primary);
+    }
+
+    .row-meta-col {
+      width: 120px;
+    }
+
+    .qty-input {
+      width: 50px;
+      padding: 0.4rem;
+      text-align: center;
+      border: 1px solid var(--smriti-border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+
+    .rate-input, .remark-input {
+      width: 100%;
+      min-width: 80px;
+      padding: 0.4rem;
+      border: 1px solid var(--smriti-border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+
+    .rate-input {
+      text-align: right;
+    }
+
+    .total-cell {
+      font-weight: 600;
+    }
+
+    /* Notes / Terms section */
+    .terms-section {
+      margin-bottom: 2.5rem;
+    }
+
+    .terms-section label {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .terms-textarea {
+      width: 100%;
+      height: 180px;
+      padding: 1rem;
+      border: 1px solid var(--smriti-border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    /* Submit Section */
+    .submit-section {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 1.5rem;
+    }
+
+    /* Notifications */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #334155;
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border-radius: 6px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      display: none;
+      z-index: 1000;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Letterhead -->
+    <div class="header-block">
+      <div class="logo-container">
+        <div class="logo-text" id="store-title">TATTLY THREADS</div>
+      </div>
+      <div class="company-details" id="company-info-block">
+        <h2 id="comp-name">TATTLY THREADS</h2>
+        <p id="comp-address">Office No. 81, Ibrahim Rehmatulla Road, Beside Jio Gallary, Mumbai - 03</p>
+        <p id="comp-gst">GSTIN: 27AAXFT2508H1ZR | State: 27 - Maharashtra</p>
+        <p id="comp-contact">Cont: 9820960076 / 8055566672</p>
+        <p id="comp-email">Email: tattlythreads@gmail.com</p>
+      </div>
+    </div>
+
+    <h1>📋 Create Special Purchase Order</h1>
+
+    <!-- Meta Fields -->
+    <div class="meta-grid">
+      <div class="form-group">
+        <label for="supplier-input">Supplier *</label>
+        <input type="text" id="supplier-input" class="form-control" placeholder="Search supplier..." autocomplete="off">
+        <input type="hidden" id="supplier-value">
+        <div id="supplier-list" class="autocomplete-list"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="order-date">Order Date *</label>
+        <input type="date" id="order-date" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label for="delivery-date">Delivery Date *</label>
+        <input type="date" id="delivery-date" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label for="size-preset">Size Preset</label>
+        <select id="size-preset" class="form-control">
+          <!-- Populated dynamically -->
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="common-article">Common Article No.</label>
+        <input type="text" id="common-article" class="form-control" placeholder="e.g. CH-01-A">
+      </div>
+
+      <div class="form-group">
+        <label for="common-price">Common Purchase Price</label>
+        <input type="number" id="common-price" class="form-control" placeholder="e.g. 370">
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-secondary" onclick="addRow()">➕ Add Color Row</button>
+      <div>
+        <button class="btn btn-secondary" onclick="applyCommonFillDown()">⚡ Apply Common Fill-down</button>
+      </div>
+    </div>
+
+    <!-- Matrix Table -->
+    <div class="table-container">
+      <table id="matrix-table">
+        <thead>
+          <tr id="header-row">
+            <th>Article No.</th>
+            <th>Color</th>
+            <!-- Dynamic sizes inserted here -->
+            <th>Total</th>
+            <th>Purchase Price</th>
+            <th>Remark</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="matrix-body">
+          <!-- Dynamic rows inserted here -->
+        </tbody>
+        <tfoot>
+          <tr id="total-row" style="background:#f8fafc; font-weight:bold;">
+            <td colspan="2" style="text-align:right;">TOTAL</td>
+            <!-- Dynamic size column totals -->
+            <td id="grand-total-qty">0</td>
+            <td colspan="3"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- T&Cs Section -->
+    <div class="terms-section">
+      <label for="notes-input">Notes / Terms & Conditions</label>
+      <textarea id="notes-input" class="terms-textarea">1) Signed copy of PO must be provided by Manufacturer at the time of delivery.
+2) Goods must match the approved samples/specification.
+3) Any changes in material or design must be approved within 7 days in written by buyer.
+4) Delivery should be completed within the mention date as per PO.
+5) Any delay in delivery must be informed in advance.
+6) Invoice of the delivery must be submitted within 2 days of delivery.
+7) The buyer has the right to inspect goods upon delivery.
+8) Any defective or rejection must be replaced by supplier at their own cost.
+9) Payments will be done with standard credit terms from the date of delivery.
+10) Each goods will have Brand dye (Tattly Threads) embossed on it mandatorily.</textarea>
+    </div>
+
+    <!-- Submit Section -->
+    <div class="submit-section">
+      <button class="btn btn-secondary" onclick="window.location.href='/smriti-purchase'">Cancel</button>
+      <button class="btn btn-primary" onclick="submitSpecialPO()">Submit Purchase Order</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Notification Message</div>
+
+  <script>
+    let sizePresets = {};
+    let activePreset = "Footwear (35–43)";
+    let sizeColumns = [];
+
+    // Initialize Page
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Set dates
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('order-date').value = today;
+      document.getElementById('delivery-date').value = today;
+
+      // Load size presets
+      await loadSizePresets();
+      
+      // Load company letterhead details
+      await loadCompanyDetails();
+
+      // Load supplier search autocomplete
+      setupSupplierAutocomplete();
+
+      // Add first row automatically
+      addRow();
+    });
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.innerText = msg;
+      toast.style.display = "block";
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 3000);
+    }
+
+    async function loadSizePresets() {
+      try {
+        const res = await fetch("/api/method/smriti_retail_os.purchase_studio.api.get_size_presets");
+        const data = await res.json();
+        sizePresets = data.message || {};
+        
+        const select = document.getElementById("size-preset");
+        select.innerHTML = "";
+        
+        for (const presetName in sizePresets) {
+          const opt = document.createElement("option");
+          opt.value = presetName;
+          opt.textContent = presetName;
+          select.appendChild(opt);
+        }
+
+        select.addEventListener("change", (e) => {
+          activePreset = e.target.value;
+          updateTableColumns();
+        });
+
+        // Trigger initial table setup
+        if (Object.keys(sizePresets).length > 0) {
+          activePreset = Object.keys(sizePresets)[0];
+          updateTableColumns();
+        }
+      } catch (err) {
+        console.error("Failed to load presets", err);
+      }
+    }
+
+    async function loadCompanyDetails() {
+      try {
+        // Fetch company settings directly or fall back to default
+        const res = await fetch("/api/method/smriti_retail_os.company_api.get_company_settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+        const data = await res.json();
+        const settings = data.message || {};
+        
+        if (settings.store_trade_name) {
+          document.getElementById("store-title").textContent = settings.store_trade_name.toUpperCase();
+          document.getElementById("comp-name").textContent = settings.store_trade_name.toUpperCase();
+        }
+      } catch (err) {
+        console.log("Could not load company details from API, using default.", err);
+      }
+    }
+
+    function setupSupplierAutocomplete() {
+      const input = document.getElementById("supplier-input");
+      const list = document.getElementById("supplier-list");
+      const hidden = document.getElementById("supplier-value");
+
+      input.addEventListener("input", async () => {
+        const query = input.value;
+        if (query.length < 2) {
+          list.style.display = "none";
+          return;
+        }
+
+        try {
+          const res = await fetch(`/api/method/smriti_retail_os.purchase_studio.api.get_suppliers?search=${encodeURIComponent(query)}`);
+          const data = await res.json();
+          const suppliers = data.message || [];
+
+          list.innerHTML = "";
+          if (suppliers.length > 0) {
+            suppliers.forEach(sup => {
+              const item = document.createElement("div");
+              item.className = "autocomplete-item";
+              item.textContent = sup.supplier_name || sup.name;
+              item.addEventListener("click", () => {
+                input.value = sup.supplier_name || sup.name;
+                hidden.value = sup.name;
+                list.style.display = "none";
+              });
+              list.appendChild(item);
+            });
+            list.style.display = "block";
+          } else {
+            list.style.display = "none";
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      });
+
+      document.addEventListener("click", (e) => {
+        if (e.target !== input) {
+          list.style.display = "none";
+        }
+      });
+    }
+
+    function updateTableColumns() {
+      sizeColumns = sizePresets[activePreset] || [];
+      const headerRow = document.getElementById("header-row");
+      
+      // Clear existing dynamic columns
+      headerRow.innerHTML = `
+        <th>Article No.</th>
+        <th>Color</th>
+      `;
+      
+      sizeColumns.forEach(size => {
+        const th = document.createElement("th");
+        th.textContent = size;
+        headerRow.appendChild(th);
+      });
+      
+      headerRow.innerHTML += `
+        <th>Total</th>
+        <th>Purchase Price</th>
+        <th>Remark</th>
+        <th>Actions</th>
+      `;
+
+      // Reset rows to apply new columns
+      document.getElementById("matrix-body").innerHTML = "";
+      addRow();
+      updateFooterTotals();
+    }
+
+    function addRow() {
+      const tbody = document.getElementById("matrix-body");
+      const tr = document.createElement("tr");
+
+      // Common values to pre-populate if filled
+      const commonArt = document.getElementById("common-article").value || "";
+      const commonRate = document.getElementById("common-price").value || "";
+
+      let tdHtml = `
+        <td><input type="text" class="rate-input art-field" value="${commonArt}" placeholder="Article No."></td>
+        <td><input type="text" class="rate-input col-field" placeholder="Color" style="text-align:left;"></td>
+      `;
+
+      sizeColumns.forEach((size, idx) => {
+        tdHtml += `<td><input type="number" class="qty-input size-qty-field" data-size="${size}" value="0" min="0" oninput="calculateRowTotal(this.parentNode.parentNode)"></td>`;
+      });
+
+      tdHtml += `
+        <td class="total-cell row-total-qty">0</td>
+        <td><input type="number" class="rate-input row-rate-field" value="${commonRate}" placeholder="Price"></td>
+        <td><input type="text" class="remark-input row-remark-field" placeholder="Remark"></td>
+        <td><button class="btn btn-danger" onclick="removeRow(this.parentNode.parentNode)">Remove</button></td>
+      `;
+
+      tr.innerHTML = tdHtml;
+      tbody.appendChild(tr);
+    }
+
+    function removeRow(row) {
+      row.remove();
+      updateFooterTotals();
+    }
+
+    function applyCommonFillDown() {
+      const commonArt = document.getElementById("common-article").value;
+      const commonRate = document.getElementById("common-price").value;
+
+      document.querySelectorAll(".art-field").forEach(input => {
+        if (commonArt) input.value = commonArt;
+      });
+
+      document.querySelectorAll(".row-rate-field").forEach(input => {
+        if (commonRate) input.value = commonRate;
+      });
+    }
+
+    function calculateRowTotal(row) {
+      let total = 0;
+      row.querySelectorAll(".size-qty-field").forEach(input => {
+        total += parseInt(input.value || 0);
+      });
+      row.querySelector(".row-total-qty").textContent = total;
+      updateFooterTotals();
+    }
+
+    function updateFooterTotals() {
+      const totalRow = document.getElementById("total-row");
+      
+      // Reset footer html structure
+      let footerHtml = `
+        <td colspan="2" style="text-align:right;">TOTAL</td>
+      `;
+
+      // Calculate totals per size column
+      let grandTotal = 0;
+      const sizeQtyTotals = {};
+      sizeColumns.forEach(size => {
+        sizeQtyTotals[size] = 0;
+      });
+
+      document.querySelectorAll("#matrix-body tr").forEach(row => {
+        row.querySelectorAll(".size-qty-field").forEach(input => {
+          const size = input.getAttribute("data-size");
+          sizeQtyTotals[size] += parseInt(input.value || 0);
+          grandTotal += parseInt(input.value || 0);
+        });
+      });
+
+      sizeColumns.forEach(size => {
+        footerHtml += `<td>${sizeQtyTotals[size] > 0 ? sizeQtyTotals[size] : '-'}</td>`;
+      });
+
+      footerHtml += `
+        <td style="font-weight:700;">${grandTotal}</td>
+        <td colspan="3"></td>
+      `;
+
+      totalRow.innerHTML = footerHtml;
+    }
+
+    async function submitSpecialPO() {
+      const supplier = document.getElementById("supplier-value").value;
+      if (!supplier) {
+        showToast("Please select a Supplier first.");
+        return;
+      }
+
+      const rows = document.querySelectorAll("#matrix-body tr");
+      if (rows.length === 0) {
+        showToast("Please add at least one color row.");
+        return;
+      }
+
+      const itemsList = [];
+      
+      for (const row of rows) {
+        const article = row.querySelector(".art-field").value.trim();
+        const color = row.querySelector(".col-field").value.trim();
+        const rate = parseFloat(row.querySelector(".row-rate-field").value || 0);
+        const remark = row.querySelector(".row-remark-field").value;
+
+        if (!article || !color) {
+          showToast("Article No. and Color are required for all rows.");
+          return;
+        }
+
+        const sizeQtyFields = row.querySelectorAll(".size-qty-field");
+        for (const input of sizeQtyFields) {
+          const qty = parseInt(input.value || 0);
+          if (qty <= 0) continue;
+          
+          const size = input.getAttribute("data-size");
+
+          // Call resolve API to find matching item variant code
+          showToast(`Resolving item code for ${article} - ${color} - ${size}...`);
+          const res = await fetch(`/api/method/smriti_retail_os.purchase_studio.api.resolve_variant_item?article=${encodeURIComponent(article)}&color=${encodeURIComponent(color)}&size=${encodeURIComponent(size)}`);
+          const data = await res.json();
+          const itemCode = data.message;
+
+          if (!itemCode) {
+            showToast(`Could not resolve variant item code for Article: ${article}, Color: ${color}, Size: ${size}`);
+            return;
+          }
+
+          itemsList.push({
+            item_code: itemCode,
+            qty: qty,
+            rate: rate,
+            remark: remark,
+            article: article,
+            attribute_summary: `Color: ${color}, Size: ${size}`
+          });
+        }
+      }
+
+      if (itemsList.length === 0) {
+        showToast("No quantities entered.");
+        return;
+      }
+
+      // Submit PO
+      showToast("Submitting Purchase Order...");
+      try {
+        const res = await fetch("/api/method/smriti_retail_os.purchase_studio.api.create_purchase_order", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Frappe-CSRF-Token": "{{ csrf_token }}"
+          },
+          body: JSON.stringify({
+            supplier: supplier,
+            items: itemsList,
+            schedule_date: document.getElementById("delivery-date").value,
+            remarks: document.getElementById("notes-input").value
+          })
+        });
+
+        const data = await res.json();
+        if (data.message && data.message.status) {
+          showToast("Purchase Order created successfully!");
+          setTimeout(() => {
+            window.location.href = "/smriti-purchase#orders";
+          }, 1500);
+        } else {
+          showToast("Submission failed: " + (data._server_messages || "Unknown error"));
+        }
+      } catch (err) {
+        showToast("Error submitting PO: " + err);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Purchase Order Print</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      color: #000;
+      background: #fff;
+    }
+
+    .print-container {
+      max-width: 900px;
+      margin: 0 auto;
+      border: 1px solid #000;
+      padding: 0;
+    }
+
+    /* Grid lines */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #000;
+      padding: 6px 8px;
+      font-size: 13px;
+      vertical-align: middle;
+    }
+
+    /* Header styling */
+    .header-table td {
+      border: none;
+      border-bottom: 2px solid #000;
+    }
+
+    .logo-cell {
+      width: 30%;
+      text-align: center;
+      border-right: 1px solid #000 !important;
+      padding: 10px;
+    }
+
+    .logo-text-title {
+      font-size: 14px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      margin-top: 5px;
+    }
+
+    .info-cell {
+      width: 70%;
+      padding: 10px 15px;
+    }
+
+    .comp-title {
+      font-size: 32px;
+      font-weight: 800;
+      text-align: center;
+      margin: 0 0 10px 0;
+      letter-spacing: 1px;
+    }
+
+    .comp-meta-line {
+      font-size: 11px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    /* Meta section */
+    .meta-table {
+      border-bottom: 2px solid #000;
+    }
+
+    .meta-table td {
+      border: none;
+      border-bottom: 1px solid #000;
+      border-right: 1px solid #000;
+    }
+
+    .vendor-header {
+      background: #f3f4f6;
+      font-weight: bold;
+      font-size: 11px;
+    }
+
+    .vendor-details-box {
+      font-size: 14px;
+      font-weight: bold;
+      height: 40px;
+      vertical-align: top;
+      padding-top: 8px;
+    }
+
+    .meta-label {
+      font-size: 13px;
+      font-weight: bold;
+      width: 150px;
+    }
+
+    .meta-val {
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .image-box-cell {
+      width: 45%;
+      text-align: center;
+      vertical-align: middle;
+      border-right: none !important;
+      padding: 5px;
+    }
+
+    .po-product-image {
+      max-width: 100%;
+      max-height: 180px;
+      object-fit: contain;
+    }
+
+    /* Matrix items table */
+    .matrix-table {
+      margin-top: -1px;
+      border-bottom: 2px solid #000;
+    }
+
+    .matrix-table th {
+      background: #fff;
+      font-weight: bold;
+      font-size: 12px;
+      text-align: center;
+      border-bottom: 2px solid #000;
+    }
+
+    .matrix-table td {
+      text-align: center;
+    }
+
+    .total-row td {
+      font-weight: bold;
+      border-top: 2px solid #000;
+      border-bottom: 2px solid #000;
+    }
+
+    /* Notes section */
+    .notes-box {
+      padding: 15px;
+      font-size: 11px;
+      line-height: 1.4;
+      font-weight: bold;
+      border-bottom: 1px solid #000;
+    }
+
+    .notes-title {
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+
+    /* Signature footer */
+    .footer-sig-table td {
+      border: none;
+      width: 50%;
+      padding: 15px;
+    }
+
+    .sig-box {
+      border: 1px solid #000;
+      height: 70px;
+      margin-top: 5px;
+    }
+
+    .sig-title {
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    /* Print utility */
+    @media print {
+      body {
+        padding: 0;
+      }
+      .print-container {
+        border: none;
+      }
+      .no-print {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="print-container">
+    <!-- Header Letterhead -->
+    <table class="header-table">
+      <tr>
+        <td class="logo-cell">
+          <img id="logo-img" src="" style="max-height:60px; display:none;">
+          <div class="logo-text-title" id="logo-fallback-text">TATTLY THREADS</div>
+        </td>
+        <td class="info-cell">
+          <div class="comp-title" id="comp-name">TATTLY THREADS</div>
+          <div class="comp-meta-line" id="comp-address">Office No. 81, Ibrahim Rehmatulla Road, Beside Jio Gallary, Mumbai - 03</div>
+          <table style="border:none; width:100%; margin-top:5px;">
+            <tr style="border:none;">
+              <td style="border:none; padding:0; font-size:11px; font-weight:bold; width:50%;" id="comp-gst">GSTIN : 27AAXFT2508H1ZR</td>
+              <td style="border:none; padding:0; font-size:11px; font-weight:bold; width:50%; text-align:right;">State : 27 - Maharashtra</td>
+            </tr>
+          </table>
+          <div class="comp-meta-line" style="margin-top:5px;" id="comp-contact">Cont : 9820960076 / 8055566672</div>
+          <div class="comp-meta-line" id="comp-email">Email : tattlythreadssales@gmail.com &nbsp;&nbsp;|&nbsp;&nbsp; tattlythreads@gmail.com</div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Metadata & Image Section -->
+    <table class="meta-table">
+      <tr>
+        <td style="width:55%; padding:0; vertical-align:top;">
+          <table style="width:100%; height:100%;">
+            <tr>
+              <td class="vendor-header" colspan="2">VENDOR DETAILS :</td>
+            </tr>
+            <tr>
+              <td class="vendor-details-box" colspan="2" id="vendor-name">HANYA FOOTWEAR</td>
+            </tr>
+            <tr>
+              <td class="meta-label">Order No.</td>
+              <td class="meta-val" id="po-no">-</td>
+            </tr>
+            <tr>
+              <td class="meta-label">Order Date</td>
+              <td class="meta-val" id="po-date">-</td>
+            </tr>
+            <tr>
+              <td class="meta-label">Delivery Date</td>
+              <td class="meta-val" id="po-del-date">-</td>
+            </tr>
+            <tr>
+              <td class="meta-label">Article No if common.</td>
+              <td class="meta-val" id="po-art-no">-</td>
+            </tr>
+            <tr>
+              <td class="meta-label" style="border-bottom:none;">Purchase Price (Common for all)</td>
+              <td class="meta-val" style="border-bottom:none;" id="po-rate">-</td>
+            </tr>
+          </table>
+        </td>
+        <td class="image-box-cell">
+          <img id="product-image" class="po-product-image" src="" style="display:none;">
+        </td>
+      </tr>
+    </table>
+
+    <!-- Matrix Grid Table -->
+    <table class="matrix-table" id="matrix-grid">
+      <thead>
+        <tr id="grid-header">
+          <th>Article No</th>
+          <th>Color</th>
+          <!-- dynamic sizes go here -->
+          <th>Total</th>
+          <th>Purchase Price</th>
+          <th>Remark</th>
+        </tr>
+      </thead>
+      <tbody id="grid-body">
+        <!-- dynamic rows go here -->
+      </tbody>
+      <tfoot>
+        <tr class="total-row" id="grid-total-row">
+          <td colspan="2" style="text-align:right;">TOTAL</td>
+          <!-- dynamic totals go here -->
+          <td id="grand-total-qty">0</td>
+          <td colspan="2"></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- Notes / Terms section -->
+    <div class="notes-box">
+      <div class="notes-title">NOTES :</div>
+      <div id="notes-content" style="white-space: pre-line;"></div>
+    </div>
+
+    <!-- Signatures -->
+    <table class="footer-sig-table">
+      <tr>
+        <td>
+          <div class="sig-title">AUTHORISED BY :</div>
+          <div class="sig-box"></div>
+        </td>
+        <td>
+          <div class="sig-title" style="text-align:right;">AUTHORISED BY :</div>
+          <div class="sig-box"></div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const poName = urlParams.get("po");
+      if (!poName) {
+        alert("No Purchase Order specified.");
+        return;
+      }
+
+      await loadPoData(poName);
+    });
+
+    async function loadPoData(poName) {
+      try {
+        const res = await fetch(`/api/method/smriti_retail_os.purchase_studio.api.get_po_matrix_print_data?po_name=${encodeURIComponent(poName)}`);
+        const data = await res.json();
+        const payload = data.message;
+
+        if (!payload) {
+          alert("Could not load PO print data.");
+          return;
+        }
+
+        // 1. Populate Company info
+        if (payload.company_info) {
+          const ci = payload.company_info;
+          document.getElementById("comp-name").innerText = ci.company_name;
+          document.getElementById("logo-fallback-text").innerText = ci.company_name;
+          document.getElementById("comp-address").innerText = ci.address || "Office Address Not Configured";
+          document.getElementById("comp-gst").innerText = "GSTIN : " + (ci.tax_id || "");
+          document.getElementById("comp-contact").innerText = "Cont : " + (ci.phone_no || "");
+          document.getElementById("comp-email").innerText = "Email : " + (ci.email || "");
+          
+          if (ci.logo_url) {
+            const logo = document.getElementById("logo-img");
+            logo.src = ci.logo_url;
+            logo.style.display = "block";
+            document.getElementById("logo-fallback-text").style.display = "none";
+          }
+        }
+
+        // 2. Populate PO meta
+        const po = payload.po;
+        document.getElementById("vendor-name").innerText = payload.supplier.supplier_name.toUpperCase();
+        document.getElementById("po-no").innerText = po.name;
+        document.getElementById("po-date").innerText = formatDate(po.transaction_date);
+        document.getElementById("po-del-date").innerText = formatDate(po.schedule_date);
+        document.getElementById("notes-content").innerText = po.remarks || "";
+
+        // 3. Populate product image
+        if (payload.image_url) {
+          const img = document.getElementById("product-image");
+          img.src = payload.image_url;
+          img.style.display = "inline-block";
+        }
+
+        // 4. Build Matrix Table Columns
+        const sizes = payload.sizes || [];
+        const gridHeader = document.getElementById("grid-header");
+        
+        // Rebuild header
+        let headerHtml = `
+          <th>Article No</th>
+          <th>Color</th>
+        `;
+        sizes.forEach(size => {
+          headerHtml += `<th>${size}</th>`;
+        });
+        headerHtml += `
+          <th>Total</th>
+          <th>Purchase Price</th>
+          <th>Remark</th>
+        `;
+        gridHeader.innerHTML = headerHtml;
+
+        // 5. Build Matrix Rows
+        const gridBody = document.getElementById("grid-body");
+        gridBody.innerHTML = "";
+        
+        const matrix = payload.matrix || {};
+        let grandTotal = 0;
+        const sizeTotals = {};
+        sizes.forEach(size => { sizeTotals[size] = 0; });
+
+        let commonArticle = "";
+        let commonRate = "";
+        let articleCount = 0;
+        let rateCount = 0;
+
+        for (const article in matrix) {
+          articleCount++;
+          commonArticle = article;
+          
+          for (const color in matrix[article]) {
+            let rowHtml = `
+              <td>${article}</td>
+              <td style="text-align:left; font-weight:bold;">${color}</td>
+            `;
+
+            let rowTotal = 0;
+            let rowRate = "";
+
+            sizes.forEach(size => {
+              const cell = matrix[article][color][size];
+              if (cell && cell.qty > 0) {
+                rowHtml += `<td>${cell.qty}</td>`;
+                rowTotal += cell.qty;
+                sizeTotals[size] += cell.qty;
+                rowRate = cell.rate;
+              } else {
+                rowHtml += `<td>-</td>`;
+              }
+            });
+
+            if (rowRate !== "") {
+              rateCount++;
+              commonRate = rowRate;
+            }
+
+            rowHtml += `
+              <td style="font-weight:bold;">${rowTotal}</td>
+              <td style="text-align:right;">${rowRate || '-'}</td>
+              <td></td>
+            `;
+
+            grandTotal += rowTotal;
+
+            const tr = document.createElement("tr");
+            tr.innerHTML = rowHtml;
+            gridBody.appendChild(tr);
+          }
+        }
+
+        // Fill meta fields if common article/rate exists
+        if (articleCount === 1) {
+          document.getElementById("po-art-no").innerText = commonArticle;
+        }
+        if (rateCount > 0) {
+          document.getElementById("po-rate").innerText = commonRate;
+        }
+
+        // 6. Build Matrix Footer Totals
+        const gridTotalRow = document.getElementById("grid-total-row");
+        let totalRowHtml = `
+          <td colspan="2" style="text-align:right; font-weight:bold;">TOTAL</td>
+        `;
+        sizes.forEach(size => {
+          totalRowHtml += `<td>${sizeTotals[size] > 0 ? sizeTotals[size] : '-'}</td>`;
+        });
+        totalRowHtml += `
+          <td style="font-weight:bold;">${grandTotal}</td>
+          <td colspan="2"></td>
+        `;
+        gridTotalRow.innerHTML = totalRowHtml;
+
+        // Auto trigger print in a short moment
+        setTimeout(() => {
+          window.print();
+        }, 800);
+
+      } catch (err) {
+        console.error(err);
+        alert("Failed to load PO matrix details.");
+      }
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return "-";
+      const parts = dateStr.split("-");
+      if (parts.length === 3) {
+        return `${parts[1]}/${parts[2]}/${parts[0]}`; // MM/DD/YYYY
+      }
+      return dateStr;
+    }
+  </script>
+</body>
+</html>
