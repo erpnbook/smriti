@@ -282,6 +282,7 @@ const PS = {
           <h3>⚡ Quick Actions</h3>
           <div style="display:flex;flex-direction:column;gap:8px;">
             ${IS_MGR?`<button class="qa-btn" onclick="PS.nav('orders-create')"><span class="qa-ico">📋</span>New Purchase Order <span class="kb-hint">Ctrl+N</span></button>`:""}
+            ${IS_MGR?`<button class="qa-btn" onclick="window.open('/smriti-po-create','_blank')"><span class="qa-ico">📋</span>New Special PO</button>`:""}
             ${IS_MGR?`<button class="qa-btn" onclick="window.open('/smriti-grn','_blank')"><span class="qa-ico">📦</span>New GRN / Receipt</button>`:""}
             ${IS_ACC?`<button class="qa-btn" onclick="PS.openModal('invoice')"><span class="qa-ico">🧾</span>New Invoice</button>`:""}
             <button class="qa-btn" onclick="PS.nav('supplier-ledger')"><span class="qa-ico">📒</span>Supplier Ledger</button>
@@ -424,7 +425,8 @@ const PS = {
         </table>`;
 
       // Actions
-      let acts = `<button class="d-btn" onclick="PS.printDoc('PO','${d.name}')">🖨 Print</button>`;
+      let acts = `<button class="d-btn" onclick="PS.printDoc('PO','${d.name}')">🖨 Print</button>
+                  <button class="d-btn" onclick="window.open('/smriti-po-print?po=${d.name}','_blank')">🖨 Special Print</button>`;
       if (IS_SYS && d.smriti_approval_status==="Pending") {
         acts += `<button class="d-btn success" onclick="PS.approveRejectPO('${d.name}','approve')">✅ Approve</button>
                  <button class="d-btn danger"  onclick="PS.approveRejectPO('${d.name}','reject')">❌ Reject</button>`;

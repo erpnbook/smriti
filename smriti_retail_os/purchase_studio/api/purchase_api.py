@@ -371,3 +371,36 @@ def get_return_detail(return_name):
 def get_suppliers(company=None, search=None, limit=50):
     """Returns list of suppliers for dropdown selection."""
     return svc.get_suppliers(company, search, frappe.utils.cint(limit))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SC-22 — Special PO Matrix Print Data
+# ─────────────────────────────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_po_matrix_print_data(po_name):
+    """
+    Returns PO data restructured as a Color×Size matrix for the Special Print page.
+    Each item's Color and Size attributes are read from tabItem Variant Attribute.
+    """
+    return svc.get_po_matrix_print_data(po_name)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SC-23 — Size Presets
+# ─────────────────────────────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_size_presets():
+    """Returns size preset definitions from SMRITI Company Settings."""
+    return svc.get_size_presets()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SC-24 — Resolve Variant Item
+# ─────────────────────────────────────────────────────────────────────────────
+
+@frappe.whitelist()
+def resolve_variant_item(article, color, size):
+    """Resolves article (parent style), color, and size to a specific variant item_code."""
+    return svc.resolve_variant_item(article, color, size)

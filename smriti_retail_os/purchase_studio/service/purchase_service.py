@@ -501,3 +501,200 @@ def get_items_for_grn(po_name):
         "company": po["company"],
         "items": items
     }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SC-22 — Special PO Matrix Print Data
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_po_matrix_print_data(po_name):
+    """
+    Fetches PO detail and restructures flat items into a Color×Size matrix.
+    Returns company info, supplier info, PO meta, matrix data, and image url.
+    """
+    check_any_purchase_role()
+
+    po = PurchaseOrderService.get_purchase_order_detail(po_name)
+
+    # Load company info
+    company = po.get("company") or frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+    comp_doc = frappe.get_doc("Company", company) if frappe.db.exists("Company", company) else None
+    cs = frappe.db.get_value(
+        "SMRITI Company Settings", {"company": company},
+        ["store_trade_name", "store_logo_url", "receipt_footer_text"],
+        as_dict=True
+    ) or {}
+
+    company_info = {
+        "company_name": cs.get("store_trade_name") or (comp_doc.company_name if comp_doc else company),
+        "logo_url": cs.get("store_logo_url") or "",
+        "address": getattr(comp_doc, "company_description", "") if comp_doc else "",
+        "tax_id": getattr(comp_doc, "tax_id", "") if comp_doc else "",
+        "phone_no": getattr(comp_doc, "phone_no", "") if comp_doc else "",
+        "email": getattr(comp_doc, "email", "") if comp_doc else "",
+    }
+
+    # Supplier info
+    supplier_doc = frappe.db.get_value(
+        "SMRITI Supplier", po.get("supplier"),
+        ["supplier_name", "billing_address", "tax_id", "mobile_no", "email_id"],
+        as_dict=True
+    ) or {}
+
+    # Build Color × Size matrix from flat items
+    matrix = {}    # { article: { color: { size: {qty, rate} } } }
+    all_sizes = set()
+
+    for item in po.get("items", []):
+        item_code = item.get("item_code")
+        if not item_code:
+            continue
+
+        # Read attributes from Item Variant Attribute table
+        attrs = frappe.db.get_all(
+            "Item Variant Attribute",
+            filters={"parent": item_code},
+            fields=["attribute", "attribute_value"]
+        )
+        attr_map = {a.attribute.lower(): a.attribute_value for a in attrs}
+        color = attr_map.get("colour") or attr_map.get("color") or "-"
+        size  = attr_map.get("size") or attr_map.get("shoe size") or "-"
+
+        # Resolve article from item meta
+        article = (
+            frappe.db.get_value("Item", item_code, "custom_style_code")
+            or frappe.db.get_value("Item", item_code, "variant_of")
+            or item_code
+        )
+
+        all_sizes.add(size)
+        if article not in matrix:
+            matrix[article] = {}
+        if color not in matrix[article]:
+            matrix[article][color] = {}
+        matrix[article][color][size] = {
+            "qty": flt(item.get("qty")),
+            "rate": flt(item.get("rate"))
+        }
+
+    # Sort sizes numerically where possible
+    def size_sort_key(s):
+        try:
+            return (0, float(s))
+        except (ValueError, TypeError):
+            return (1, str(s))
+
+    sorted_sizes = sorted(all_sizes, key=size_sort_key)
+
+    # Resolve product image (first attachment on the PO document)
+    image_url = frappe.db.get_value("SMRITI Purchase Order", po_name, "image") or ""
+    if not image_url:
+        attachments = frappe.db.get_all(
+            "File",
+            filters={"attached_to_doctype": "SMRITI Purchase Order", "attached_to_name": po_name},
+            fields=["file_url"],
+            limit=1,
+            order_by="creation asc"
+        )
+        image_url = attachments[0].file_url if attachments else ""
+
+    return {
+        "po": {
+            "name": po.get("name"),
+            "transaction_date": po.get("transaction_date"),
+            "schedule_date": po.get("schedule_date"),
+            "status": po.get("status"),
+            "remarks": po.get("remarks"),
+            "grand_total": flt(po.get("grand_total")),
+            "total_qty": flt(po.get("total_qty")),
+        },
+        "company_info": company_info,
+        "supplier": {
+            "name": po.get("supplier"),
+            "supplier_name": supplier_doc.get("supplier_name") or po.get("supplier_name"),
+            "address": supplier_doc.get("billing_address") or "",
+            "tax_id": supplier_doc.get("tax_id") or "",
+            "mobile_no": supplier_doc.get("mobile_no") or "",
+            "email_id": supplier_doc.get("email_id") or "",
+        },
+        "sizes": sorted_sizes,
+        "matrix": matrix,
+        "image_url": image_url,
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SC-23 — Size Presets
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_size_presets():
+    """Returns size preset definitions from SMRITI Company Settings."""
+    import json
+    company = frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
+    raw = frappe.db.get_value("SMRITI Company Settings", {"company": company}, "size_groups_json") or ""
+    try:
+        presets = json.loads(raw) if raw else {}
+    except Exception:
+        presets = {}
+
+    # Default footwear preset if none configured
+    if not presets:
+        presets = {
+            "Footwear (35–43)": ["35", "36", "37", "38", "39", "40", "41", "42", "43"],
+            "Kids (20–30)":     ["20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30"],
+            "Open (XS–XXL)":    ["XS", "S", "M", "L", "XL", "XXL"],
+        }
+    return presets
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SC-24 — Resolve Variant Item
+# ─────────────────────────────────────────────────────────────────────────────
+
+def resolve_variant_item(article, color, size):
+    """
+    Returns the item_code for a variant matching the given article, color, and size.
+    """
+    check_any_purchase_role()
+
+    if not article or not color or not size:
+        return None
+
+    # Resolve parent items matching article code
+    items = frappe.db.get_all("Item", filters={
+        "disabled": 0,
+        "variant_of": article
+    }, fields=["name"])
+
+    if not items:
+        items = frappe.db.get_all("Item", filters={
+            "disabled": 0,
+            "custom_style_code": article
+        }, fields=["name"])
+
+    if not items:
+        # Fallback to direct name match
+        if frappe.db.exists("Item", article):
+            return article
+        return None
+
+    for item in items:
+        attrs = frappe.db.get_all("Item Variant Attribute", filters={"parent": item.name}, fields=["attribute", "attribute_value"])
+        attr_map = {a.attribute.lower(): a.attribute_value.lower() for a in attrs}
+
+        has_color = False
+        has_size = False
+
+        c_val = attr_map.get("colour") or attr_map.get("color")
+        if c_val and c_val == color.lower():
+            has_color = True
+
+        s_val = attr_map.get("size") or attr_map.get("shoe size")
+        if s_val and s_val == size.lower():
+            has_size = True
+
+        if has_color and has_size:
+            return item.name
+
+    return None
+
