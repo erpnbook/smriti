@@ -18,7 +18,7 @@
 > **If a feature exists only to operate the Platform Engine, keep it in the Platform Engine.**
 > **If a feature is part of the business experience, SMRITI owns it.**
 
-This rule answers every architecture question. Apply it before any other consideration.
+This rule answers every architecture question. It is adopted as supreme law in the SMRITI Product Constitution (SPC-000). In the event of any conflict, SMRITI_PRODUCT_CONSTITUTION.md prevails.
 
 ---
 

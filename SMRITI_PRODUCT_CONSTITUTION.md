@@ -1,4 +1,4 @@
-﻿# SMRITI Product Constitution (SPC)
+# SMRITI Product Constitution (SPC)
 **Status:** DRAFT (not LOCKED, not FROZEN)
 **File:** `/SMRITI_PRODUCT_CONSTITUTION.md`
 **Internal Version:** 1.0.0 (Established 2026-07-01)
@@ -20,7 +20,7 @@ In the event of a conflict between SMRITI documents, rules, or instructions, the
 ```
 Level 1: SMRITI Product Constitution (SPC)  <-- Highest Authority
    ↓
-Level 2: SMRITI Architecture Directive (GEMINI.md, ARCHITECTURE.md)
+Level 2: SMRITI Architecture Directive (ARCHITECTURE.md)
    ↓
 Level 3: SMRITI Governance & CI Specifications (SMRITI_GOVERNANCE.md)
    ↓
@@ -47,6 +47,13 @@ Applies to all files in this repository **except:**
 ---
 
 ## Adopted Articles (Enforceable Constraints)
+
+### SPC-000 — The Golden Rule
+**Severity:** Critical  
+**Description:** SMRITI is the product. The Platform Engine (currently ERPNext + Frappe) is an internal implementation detail. If a feature exists only to operate the Platform Engine, keep it in the Platform Engine; if a feature is part of the business experience, SMRITI owns it. Operational users must never interact with the Platform Engine directly.  
+**Enforcement:** Verified by SMRITI Architecture Guard (Persistence boundaries) and Navigation / Brand boundaries.
+
+---
 
 ### SPC-001 — No Framework Leakage
 **Severity:** Critical  
@@ -94,6 +101,34 @@ Applies to all files in this repository **except:**
 **Severity:** Major  
 **Description:** No agent report or walkthrough may present summaries, scores, or conclusions without first presenting the raw evidence and findings that support them. Evidence must always precede interpretation.  
 **Enforcement:** Validation of document structure: Evidence -> Finding -> Conclusion.
+
+---
+
+### SPC-008 — Standing Governance Principle
+**Severity:** Major  
+**Description:** Governance exists to simplify engineering, not to increase bureaucracy. Every governance artifact shall have one clear owner, one clear purpose, and one clear authority. Every new governance document, rule, or process must either replace an existing document, consolidate multiple documents, or resolve a verified governance gap.  
+**Enforcement:** Reviewed via manual verification and documented change budgets.
+
+---
+
+### SPC-009 — Policy Before Implementation
+**Severity:** Major  
+**Description:** When multiple technically valid implementations exist, the business policy must be defined before selecting an implementation. AI agents shall not infer policy from framework defaults.  
+**Enforcement:** Evaluated by Capability Ownership Matrix (Phase 2 SSDL) and human architecture review.
+
+---
+
+### SPC-010 — Ownership Before Construction
+**Severity:** Major  
+**Description:** Before creating any new module, page, service, API, workflow, or report, the AI agent shall identify whether the capability is owned by SMRITI, the underlying framework, shared, or currently unowned (Gap). New implementation shall not begin until ownership has been established.  
+**Enforcement:** Checked by Capability Ownership Map during Phase 2 of SSDL.
+
+---
+
+### SPC-011 — Conflict Escalation
+**Severity:** Major  
+**Description:** AI agents shall not resolve business policy conflicts autonomously. When multiple valid policies exist, the conflict must be documented, options presented with trade-offs, and implementation paused pending human architectural decision. The resolution decision becomes an ADR entry.  
+**Enforcement:** Validated at Phase 7 (Architecture Review) and documented in ADR registry.
 
 ---
 

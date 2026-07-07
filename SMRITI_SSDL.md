@@ -545,6 +545,8 @@ Problem Definition — Next Project (Phase -1)
 
 ## SPC Rules Referenced by SSDL
 
+These rules are adopted in the supreme SMRITI Product Constitution (SMRITI_PRODUCT_CONSTITUTION.md):
+
 ### SPC-009 — Policy Before Implementation
 
 > When multiple technically valid implementations exist, the business policy must be defined

@@ -1,4 +1,4 @@
-﻿# SMRITI Governance & CI Specification
+# SMRITI Governance & CI Specification
 **Status:** DRAFT
 **File:** `/SMRITI_GOVERNANCE.md`
 **Internal Version:** 1.0.0 (Established 2026-07-01)
@@ -48,41 +48,37 @@ Each SMRITI Policy Constraint (SPC) is mapped to a severity level that defines i
 
 ---
 
-## CI Status Reporting Format
+## CI Status Reporting Format & Verified Controls
 
-When the test suite or CI engine runs the SMRITI Product Constitution tests, it must output a structured, parsable status table at the end of the log:
+The active governance verification controls are executed dynamically in CI or via pre-commit hooks:
 
-```text
-=======================================================================
-SMRITI PRODUCT CONSTITUTION TEST STATUS REPORT
-=======================================================================
-RULE     SEVERITY   STATUS        DETAILS
------------------------------------------------------------------------
-SPC-001  Critical   PASS          0 violations across 47 HTML files
-SPC-002  Major      ADR-EXEMPT    ADR-0012 bypasses duplicate check
-SPC-003  Critical   PASS          Refactor scan attached, 0 references
-SPC-004  Critical   PASS          Commit hash verified in live log
-SPC-005  Critical   PASS          No fabrication flags detected
-SPC-006  Major      WARNING       Scope mismatch: 2 additional files (Cleared)
-SPC-007  Major      PASS          Evidence-first structure validated
------------------------------------------------------------------------
-RESULT: PASS (with 1 Warning, 0 Blocks)
-=======================================================================
-```
+| Rule | Description | Enforcement Mechanism | Status |
+|---|---|---|---|
+| **SPC-000** | The Golden Rule | `smriti_architecture_guard.py` (Persistence boundary) | CI-Verified |
+| **SPC-001** | No Framework Leakage | `scripts/validate_html_templates.py` (TEMPLATE-01 pre-commit check) | Verified |
+| **SPC-002** | Single Source of Truth | Manual PR / Prior-Art Search Review | Manual |
+| **SPC-003** | Safe Refactoring | Manual PR dependency scan attachment check | Manual |
+| **SPC-004** | Evidence-First Completion | Automated linter rule checking for commit hashes / test logs | Planned |
+| **SPC-005** | AI Honesty Principle | Human check of terminal logs and Git commits | Manual |
+| **SPC-006** | Scope Integrity | Git diff vs PR description check | Manual |
+| **SPC-007** | Single Source of Evidence | Structure validation (Evidence -> Findings -> Conclusion) | Manual |
+| **SPC-008** | Standing Governance Principle | Document Change Budget validation | Manual |
+| **SPC-009** | Policy Before Implementation | SSDL Capability Ownership Matrix alignment check | Manual |
+| **SPC-010** | Ownership Before Construction | SSDL Capability Ownership Map verification | Manual |
+| **SPC-011** | Conflict Escalation | Architecture Review / ADR Registry check | Manual |
 
 ---
 
-## Constitutional Test Suite Structure
+## Active Gating Tools
 
-Enforcement scripts live in `tests/constitution/` and are integrated into the Frappe bench test suite:
+The active enforcement validators are:
+1. **Pre-Commit HTML Template Leak Checker (`scripts/validate_html_templates.py`)**: Runs on staged `.html` files before commit to catch framework leakages.
+2. **Whitelist ignore_permissions Linter (`tools/audit/check_ignore_permissions.py`)**: Fails builds if whitelisted API decorators bypass permission verification without a `# reviewed-ignore-permissions` tag.
+3. **SMRITI Architecture Guard (`smriti_architecture_guard.py`)**: Checks for persistence boundary violations.
+4. **Pre-Commit Phantom Link & Authority Validators (Planned)**: Checkers to validate link references and precedence hierarchies.
 
-- `test_spc001_framework_leakage.py`: Scans all templates in `www/` and scripts in `public/js/` for framework leaks.
-- `test_spc002_duplicate_policy.py`: Checks for existence of the `Prior-Art Search` header in the PR description markdown.
-- `test_spc003_safe_refactor.py`: Scans git diff for deleted files and verifies a matching `.log` dependency scan exists in `/scratch/`.
-- `test_spc004_evidence_first.py`: Validates that any report containing the word "done" or "fixed" also contains a commit hash or test log block.
-- `test_spc005_honesty.py`: Connects to `git` to verify that all commit hashes cited in the agent's report actually exist in the repository log.
-- `test_spc006_scope_integrity.py`: Compares modified file lists from git against the "Implemented Scope" list in the PR description.
-- `test_spc007_evidence_first_doc.py`: Parses the agent's final report to ensure the `# Evidence` section precedes the `# Conclusion` section.
-
-Run command:
-`bench run-tests --app smriti_retail_os --module smriti_retail_os.tests.constitution`
+Run all active Python audit checkers locally:
+```bash
+python smriti_architecture_guard.py
+python tools/audit/check_ignore_permissions.py
+```

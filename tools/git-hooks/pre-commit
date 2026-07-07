@@ -27,4 +27,30 @@ if [ -n "$STAGED_FILES" ]; then
     echo "======================================================================="
 fi
 
+# Get all staged .md files
+STAGED_MD_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.md$')
+
+if [ -n "$STAGED_MD_FILES" ]; then
+    echo "======================================================================="
+    echo "Running SMRITI Governance & Precedence Validators..."
+    echo "======================================================================="
+    
+    python tools/audit/check_phantom_references.py $STAGED_MD_FILES
+    RESULT_PHANTOM=$?
+    
+    python tools/audit/check_authority_hierarchy.py $STAGED_MD_FILES
+    RESULT_HIERARCHY=$?
+    
+    if [ $RESULT_PHANTOM -ne 0 ] || [ $RESULT_HIERARCHY -ne 0 ]; then
+        echo "======================================================================="
+        echo "❌ ERROR: Governance or Precedence check failed. Commit aborted."
+        echo "======================================================================="
+        exit 1
+    fi
+    
+    echo "======================================================================="
+    echo "✅ SUCCESS: All staged Markdown templates passed validation!"
+    echo "======================================================================="
+fi
+
 exit 0

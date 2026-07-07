@@ -453,7 +453,7 @@ This constitution is enforced by:
 1. **Architecture Guard (Guard 5 -- UX Boundary)** [Planned]
    Automated checks for missing Search, Save, Cancel, and Breadcrumb on every page.
 
-2. **Design System** (SMRITI_DESIGN_SYSTEM.md)
+2. **Design Tokens** (smriti_retail_os/public/css/smriti_tokens.css)
    Token-based CSS ensures visual consistency without page-level overrides.
 
 3. **Code Review**
