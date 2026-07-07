@@ -472,7 +472,11 @@
 
     async function loadSizePresets() {
       try {
-        const res = await fetch("/api/method/smriti_retail_os.purchase_studio.api.get_size_presets");
+        const res = await fetch("/api/method/smriti_retail_os.purchase_studio.api.get_size_presets", {
+          headers: {
+            "X-Frappe-CSRF-Token": "{{ csrf_token }}"
+          }
+        });
         const data = await res.json();
         sizePresets = data.message || {};
         
@@ -506,7 +510,10 @@
         // Fetch company settings directly or fall back to default
         const res = await fetch("/api/method/smriti_retail_os.company_api.get_company_settings", {
           method: "POST",
-          headers: { "Content-Type": "application/json" }
+          headers: {
+            "Content-Type": "application/json",
+            "X-Frappe-CSRF-Token": "{{ csrf_token }}"
+          }
         });
         const data = await res.json();
         const settings = data.message || {};
@@ -533,7 +540,11 @@
         }
 
         try {
-          const res = await fetch(`/api/method/smriti_retail_os.purchase_studio.api.get_suppliers?search=${encodeURIComponent(query)}`);
+          const res = await fetch(`/api/method/smriti_retail_os.purchase_studio.api.get_suppliers?search=${encodeURIComponent(query)}`, {
+            headers: {
+              "X-Frappe-CSRF-Token": "{{ csrf_token }}"
+            }
+          });
           const data = await res.json();
           const suppliers = data.message || [];
 
