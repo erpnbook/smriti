@@ -13,10 +13,24 @@ import frappe
 from frappe import _
 from frappe.utils import flt
 
-# SMRITI Foundation SDK Integrations
-from smriti_foundation.common import SmritiRegistry
-from smriti_foundation.configuration import IConfigurationProvider
-from smriti_foundation.policy import IPolicyProvider
+# smriti_foundation is not a deployed package — provide silent no-op stubs so
+# that the existing try/except Exception: pass call-sites degrade gracefully.
+try:
+	from smriti_foundation.common import SmritiRegistry
+	from smriti_foundation.configuration import IConfigurationProvider
+	from smriti_foundation.policy import IPolicyProvider
+except ImportError:
+	# Stubs — all SDK usage sites already use try/except so they will fall through
+	# to the Frappe DocType fallback path automatically.
+	class _NoOpProvider:
+		"""Null provider that raises AttributeError on any attribute access."""
+		pass
+	class SmritiRegistry:
+		@staticmethod
+		def resolve(iface):
+			raise RuntimeError("smriti_foundation not installed")
+	IConfigurationProvider = _NoOpProvider
+	IPolicyProvider = _NoOpProvider
 
 SETTINGS_DOCTYPE = "SMRITI Purchase Settings"
 VALID_POLICIES   = {"grn_only", "standalone", "both"}

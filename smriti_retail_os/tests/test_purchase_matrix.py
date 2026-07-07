@@ -135,6 +135,15 @@ class TestPurchaseMatrix(unittest.TestCase):
         self.assertEqual(sizes_sorted_fw, ["6", "7", "8", "9", "10", "11", "12"])
 
     def test_analytics_and_performance(self):
+        # Ensure Item Groups exist
+        for group in ["Footwear", "SANDAL"]:
+            if not frappe.db.exists("Item Group", group):
+                doc = frappe.new_doc("Item Group")
+                doc.item_group_name = group
+                doc.parent_item_group = "All Item Groups"
+                doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+
         # 1. Clear any existing POs for company
         frappe.db.delete("SMRITI Purchase Order Item")
         frappe.db.delete("SMRITI Purchase Order")

@@ -87,7 +87,7 @@ def create_purchase_order(supplier, items_list, schedule_date=None,
                            remarks=None, image_base64=None,
                            image_filename=None, warehouse=None):
     check_manager_role()
-    from smriti_foundation.common import SmritiValidationError
+    from smriti_retail_os.purchase_studio.service.purchase_validation_service import SmritiValidationError
     try:
         res = PurchaseOrderService.create_purchase_order(
             supplier=supplier,

@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 # SMRITI Purchase Studio — Purchase Validation Service
-# Integrating with the SMRITI Foundation SDK Custom Exceptions
 
 import frappe
 from frappe import _
 from frappe.utils import flt
-from smriti_foundation.common import SmritiValidationError
+
+
+# Local alias — smriti_foundation is not a deployed package; ValidationError
+# raised by this service is identical to frappe.ValidationError so all callers
+# can catch either type without changes.
+class SmritiValidationError(frappe.ValidationError):
+	"""SMRITI business validation exception raised by the purchase validation layer."""
+	pass
 
 class PurchaseValidationService:
 	@staticmethod
