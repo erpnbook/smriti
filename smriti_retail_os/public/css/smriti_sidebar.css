@@ -900,3 +900,50 @@ body.sidebar-position-bottom .main-wrapper {
   margin-top: 0 !important;
 }
 
+/* ── SRLE Phase 2 — Resize Handle ──────────────────────────────────────── */
+
+/* Handle element sits on the right edge of the sidebar in left-dock mode */
+.smriti-sidebar .srle-resize-handle,
+#smriti-sidebar-target.sidebar .srle-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: calc(var(--srle-z-sidebar, 1041) + 1);
+  background: transparent;
+  transition: background 150ms ease;
+}
+
+/* Right-dock: handle moves to the left edge */
+#app.sidebar-position-right .smriti-sidebar .srle-resize-handle,
+body.sidebar-position-right .smriti-sidebar .srle-resize-handle {
+  right: auto;
+  left: -2px;
+}
+
+/* Hover + active highlight */
+.smriti-sidebar .srle-resize-handle:hover,
+.smriti-sidebar .srle-resize-handle:active,
+#smriti-sidebar-target.sidebar .srle-resize-handle:hover {
+  background: var(--smriti-color-accent, #7c3aed);
+  opacity: 0.6;
+}
+
+/* Hide handle in top/bottom dock modes */
+#app.sidebar-position-top    .smriti-sidebar .srle-resize-handle,
+#app.sidebar-position-bottom .smriti-sidebar .srle-resize-handle,
+body.sidebar-position-top    .smriti-sidebar .srle-resize-handle,
+body.sidebar-position-bottom .smriti-sidebar .srle-resize-handle {
+  display: none !important;
+}
+
+/* Prevent text selection while dragging */
+body.srle-resizing {
+  user-select: none !important;
+  cursor: col-resize !important;
+}
+body.srle-resizing * {
+  user-select: none !important;
+}

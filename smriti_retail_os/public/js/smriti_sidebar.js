@@ -262,6 +262,67 @@ window.SMRITI = window.SMRITI || {};
 
             target.innerHTML = html.join("\n");
 
+            // ── RESIZE HANDLE (Phase 2 — SRLE) ──
+            // Only active in left/right dock positions; hidden in top/bottom
+            (function attachResizeHandle() {
+                var handle = document.createElement("div");
+                handle.className = "srle-resize-handle";
+                handle.setAttribute("aria-hidden", "true");
+                handle.setAttribute("title", "Drag to resize sidebar");
+                target.appendChild(handle);
+
+                var MIN_W = 180, MAX_W = 480;
+                var startX, startW, dragging = false;
+
+                function onMouseMove(e) {
+                    if (!dragging) return;
+                    var pos = localStorage.getItem("smriti-sidebar-position") || "left";
+                    var delta = pos === "right" ? (startX - e.clientX) : (e.clientX - startX);
+                    var newW = Math.max(MIN_W, Math.min(MAX_W, startW + delta));
+                    document.documentElement.style.setProperty("--srle-sidebar-width", newW + "px");
+                    document.documentElement.style.setProperty("--sidebar-width", newW + "px");
+                    // Update workspace offset live
+                    if (window.SRLE_DockManager) window.SRLE_DockManager.refresh();
+                }
+
+                function onMouseUp() {
+                    if (!dragging) return;
+                    dragging = false;
+                    document.body.classList.remove("srle-resizing");
+                    document.removeEventListener("mousemove", onMouseMove);
+                    document.removeEventListener("mouseup", onMouseUp);
+                    // Persist
+                    var finalW = parseInt(
+                        getComputedStyle(document.documentElement)
+                            .getPropertyValue("--srle-sidebar-width"), 10
+                    ) || 260;
+                    if (window.SRLE_Store) window.SRLE_Store.set("sidebar_width", finalW);
+                    localStorage.setItem("smriti-sidebar-width", finalW);
+                }
+
+                handle.addEventListener("mousedown", function (e) {
+                    var pos = localStorage.getItem("smriti-sidebar-position") || "left";
+                    if (pos === "top" || pos === "bottom") return;  // no resize in H-docks
+                    e.preventDefault();
+                    dragging = true;
+                    startX = e.clientX;
+                    startW = parseInt(
+                        getComputedStyle(document.documentElement)
+                            .getPropertyValue("--srle-sidebar-width"), 10
+                    ) || 260;
+                    document.body.classList.add("srle-resizing");
+                    document.addEventListener("mousemove", onMouseMove);
+                    document.addEventListener("mouseup", onMouseUp);
+                });
+
+                // Restore saved width on render
+                var savedW = parseInt(localStorage.getItem("smriti-sidebar-width"), 10);
+                if (savedW && savedW >= MIN_W && savedW <= MAX_W) {
+                    document.documentElement.style.setProperty("--srle-sidebar-width", savedW + "px");
+                    document.documentElement.style.setProperty("--sidebar-width", savedW + "px");
+                }
+            }());
+
             // ── CLICK HANDLERS ──
 
             // 1. Sidebar Toggle Button
