@@ -4,7 +4,7 @@
 # @description: SMRITI Trial Activation API — Provisioning lifecycle, state machine,
 #               provision log, retry mechanism, and dashboard metrics.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
-# @version: 1.8.6  (Sprint 3B — Operational Resilience)
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @sprint: 3B — Trial Operations & Subscription Lifecycle
 # @authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL
 #
@@ -27,6 +27,7 @@
 import frappe
 from frappe import _
 from datetime import datetime, timedelta
+from smriti_retail_os import smriti
 
 
 _LOG = frappe.logger('smriti.trial')
@@ -42,7 +43,7 @@ def _generate_run_id():
     Groups all provision log steps for a single activation attempt.
     """
     year = datetime.now().year
-    last = frappe.db.sql(
+    last = smriti.db.sql(
         """
         SELECT name FROM `tabSMRITI Provision Log`
         WHERE  run_id LIKE %s
@@ -84,8 +85,8 @@ def _write_provision_log(activation_name, run_id, step_name, step_status,
     _step_sequences[run_id] = seq
 
     try:
-        log = frappe.get_doc({
-            'doctype':       'SMRITI Provision Log',
+        log = smriti.documents.new("ProvisionLog")
+        log.update({
             'activation':    activation_name,
             'run_id':        run_id,
             'step_sequence': seq,
@@ -96,7 +97,7 @@ def _write_provision_log(activation_name, run_id, step_name, step_status,
             'operator':      operator or frappe.session.user,
         })
         log.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception as e:
         _LOG.warning(f'PLOG write failed [{run_id}/{step_name}]: {e}')
 
@@ -126,16 +127,15 @@ def _preflight_checks(activation, company_name):
     email  = f'trial.{mobile}@smriti.local'
 
     # 1. Company
-    if frappe.db.exists('Company', company_name):
+    if smriti.db.exists("ERPCompany", company_name):
         conflicts.append(f'ERPNext Company "{company_name}" already exists')
 
-    # 2. User email
-    if frappe.db.exists('User', email):
+    if smriti.db.exists("SystemUser", email):
         conflicts.append(f'Trial user "{email}" already exists')
 
     # 3. Duplicate activation for same lead
-    existing = frappe.db.get_value(
-        'SMRITI Trial Activation',
+    existing = smriti.db.get(
+        "TrialActivation",
         {
             'trial_lead': activation.trial_lead,
             'activation_status': ['in', ['Active', 'Activated', 'Provisioning', 'Provisioned']],
@@ -148,18 +148,18 @@ def _preflight_checks(activation, company_name):
 
     # 4. Warehouse (warn only — prepend W:)
     wh_name = f'Main Store - {abbr}'
-    if frappe.db.exists('Warehouse', wh_name):
+    if smriti.db.exists("ERPWarehouse", wh_name):
         conflicts.append(f'W:Warehouse "{wh_name}" already exists — will skip creation')
 
     # 5. Customer Group (warn only — prepend W:)
     cg_name = f'{company_name} — Retail Customers'
-    if frappe.db.exists('Customer Group', cg_name):
+    if smriti.db.exists("ERPCustomerGroup", cg_name):
         conflicts.append(f'W:Customer Group "{cg_name}" already exists — will skip creation')
 
     # 6. Mobile collision
     if mobile:
-        mob_hit = frappe.db.get_value(
-            'SMRITI Trial Activation',
+        mob_hit = smriti.db.get(
+            "TrialActivation",
             {
                 'mobile': ['like', f'%{mobile}%'],
                 'activation_status': ['in', ['Active', 'Activated']],
@@ -171,7 +171,7 @@ def _preflight_checks(activation, company_name):
             conflicts.append(f'Mobile {mobile} already associated with activation {mob_hit}')
 
     # 7. Lead already Trial Started
-    lead_status = frappe.db.get_value('SMRITI Trial Lead', activation.trial_lead, 'status')
+    lead_status = smriti.db.get("TrialLead", activation.trial_lead, "status")
     if lead_status in ('Trial Started', 'Expired'):
         conflicts.append(f'Lead status is already "{lead_status}"')
 
@@ -185,8 +185,8 @@ def _preflight_checks(activation, company_name):
 @frappe.whitelist()
 def get_converted_leads():
     """Return Trial Leads with status 'Converted' that have no pending/active activation."""
-    converted = frappe.get_all(
-        'SMRITI Trial Lead',
+    converted = smriti.db.get_list(
+        "TrialLead",
         filters={'status': 'Converted'},
         fields=['name', 'store_name', 'owner_name', 'mobile', 'city',
                 'email', 'plan_selected', 'creation'],
@@ -197,8 +197,8 @@ def get_converted_leads():
     active_statuses = ('Pending', 'Provisioning', 'Provisioned', 'Activated', 'Active')
     result = []
     for lead in converted:
-        has_activation = frappe.db.exists(
-            'SMRITI Trial Activation',
+        has_activation = smriti.db.exists(
+            "TrialActivation",
             {'trial_lead': lead['name'], 'activation_status': ['in', active_statuses]},
         )
         if not has_activation:
@@ -214,11 +214,10 @@ def create_activation(lead_name, activation_type='Trial', trial_days=30):
 
     Lifecycle event: TRIAL_CREATED
     """
-    lead = frappe.get_doc('SMRITI Trial Lead', lead_name)
+    lead = smriti.documents.get("TrialLead", lead_name)
 
-    # Idempotency — return existing if already created
-    existing = frappe.db.get_value(
-        'SMRITI Trial Activation',
+    existing = smriti.db.get(
+        "TrialActivation",
         {'trial_lead': lead_name},
         'name',
     )
@@ -229,8 +228,8 @@ def create_activation(lead_name, activation_type='Trial', trial_days=30):
             'message':    f'Activation already exists: {existing}',
         }
 
-    activation = frappe.get_doc({
-        'doctype':          'SMRITI Trial Activation',
+    activation = smriti.documents.new("TrialActivation")
+    activation.update({
         'activation_type':  activation_type,
         'trial_lead':       lead_name,
         'store_name':       lead.store_name,
@@ -246,9 +245,8 @@ def create_activation(lead_name, activation_type='Trial', trial_days=30):
             {'task_name': 'Welcome Email Sent',      'is_done': 0},
         ],
     })
-    # reviewed-ignore-permissions: no role restriction — any authenticated user may create activations, by design
     activation.insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     _LOG.info(f'TRIAL_CREATED: {activation.name} for lead {lead_name}')
 
@@ -276,7 +274,7 @@ def activate_account(activation_name, company_name=None, trial_days=30):
     Lifecycle events: PROVISION_STARTED, COMPANY_CREATED, WAREHOUSE_CREATED,
                       USER_CREATED, PROVISION_COMPLETED, TRIAL_STARTED
     """
-    activation = frappe.get_doc('SMRITI Trial Activation', activation_name)
+    activation = smriti.documents.get('TrialActivation', activation_name)
 
     if activation.activation_status in ('Active', 'Activated'):
         frappe.throw(_('This activation is already Active/Activated.'))
@@ -304,9 +302,8 @@ def activate_account(activation_name, company_name=None, trial_days=30):
     activation.activation_status = 'Provisioning'
     activation.provision_run_id  = run_id
     activation.retry_count       = int(activation.retry_count or 0)
-    # reviewed-ignore-permissions: no role restriction — any authenticated user may activate account, by design
     activation.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     _LOG.info(f'PROVISION_STARTED: {activation_name} | Run: {run_id} | Attempt #{activation.retry_count + 1}')
     _write_provision_log(activation_name, run_id, 'Provision Started', 'Pass',
@@ -379,7 +376,7 @@ def activate_account(activation_name, company_name=None, trial_days=30):
                         f'Trial Started | Ref: {activation.activation_reference} | '
                         f'Run: {run_id} | Company: {co_name}')
 
-    frappe.db.commit()
+    smriti.db.commit()
 
     _write_provision_log(activation_name, run_id, 'Provision Completed', 'Pass',
                          f'Activated → trial until {end_date.strftime("%d %b %Y")}', operator)
@@ -406,7 +403,7 @@ def _fail_activation(activation, run_id, reason):
     activation.activation_status  = 'Failed'
     activation.last_failure_reason = reason
     activation.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     _LOG.error(f'PROVISION_FAILED: {activation.name} | Run: {run_id} | Reason: {reason}')
     return {
         'status':  'failed',
@@ -430,7 +427,7 @@ def retry_provision(activation_name, company_name=None, trial_days=30):
 
     Allowed states: Failed, Provisioning (stale)
     """
-    activation = frappe.get_doc('SMRITI Trial Activation', activation_name)
+    activation = smriti.documents.get('TrialActivation', activation_name)
 
     if activation.activation_status not in ('Failed', 'Provisioning', 'Pending'):
         frappe.throw(_(
@@ -440,9 +437,8 @@ def retry_provision(activation_name, company_name=None, trial_days=30):
 
     # Reset to Pending so activate_account() can proceed cleanly
     activation.activation_status = 'Pending'
-    # reviewed-ignore-permissions: no role restriction — any authenticated user may retry provisioning, by design
     activation.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     _LOG.info(f'RETRY_PROVISION: {activation_name} | Attempt #{int(activation.retry_count or 0) + 1}')
 
@@ -457,7 +453,7 @@ def retry_provision(activation_name, company_name=None, trial_days=30):
 @frappe.whitelist()
 def suspend_activation(activation_name, reason=None):
     """Suspend an active trial. Records reason in notes for explainability."""
-    activation = frappe.get_doc('SMRITI Trial Activation', activation_name)
+    activation = smriti.documents.get('TrialActivation', activation_name)
 
     if activation.activation_status not in ('Active', 'Activated'):
         frappe.throw(_(
@@ -472,9 +468,8 @@ def suspend_activation(activation_name, reason=None):
     if reason:
         note += f' — {reason.strip()}'
     activation.notes = ((activation.notes or '') + '\n' + note).strip()
-    # reviewed-ignore-permissions: no role restriction — any authenticated user may suspend trial, by design
     activation.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     _LOG.info(f'TRIAL_SUSPENDED: {activation_name} | By: {by} | Reason: {reason}')
     return {'status': 'success', 'message': f'{activation_name} suspended.'}
@@ -483,7 +478,7 @@ def suspend_activation(activation_name, reason=None):
 @frappe.whitelist()
 def extend_trial(activation_name, additional_days=7, reason=None):
     """Extend a trial by N additional days. Reactivates Suspended trials."""
-    activation = frappe.get_doc('SMRITI Trial Activation', activation_name)
+    activation = smriti.documents.get('TrialActivation', activation_name)
 
     if activation.activation_status not in ('Active', 'Activated', 'Suspended'):
         frappe.throw(_('Can only extend Active, Activated, or Suspended trials.'))
@@ -503,9 +498,8 @@ def extend_trial(activation_name, additional_days=7, reason=None):
     if reason:
         note += f' | {reason.strip()}'
     activation.notes = ((activation.notes or '') + '\n' + note).strip()
-    # reviewed-ignore-permissions: no role restriction — any authenticated user may extend trial, by design
     activation.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     _LOG.info(f'TRIAL_RESUMED: {activation_name} | New end: {new_end.date()}')
     return {
@@ -525,7 +519,7 @@ def mark_converted_to_paid(activation_name):
 
     Lifecycle event: TRIAL_CONVERTED
     """
-    activation = frappe.get_doc('SMRITI Trial Activation', activation_name)
+    activation = smriti.documents.get('TrialActivation', activation_name)
 
     if activation.activation_status not in ('Active', 'Activated', 'Suspended', 'Expired'):
         frappe.throw(_(
@@ -548,7 +542,7 @@ def mark_converted_to_paid(activation_name):
         f'[{ts}] {by}: Converted to Paid | Ref: {activation.activation_reference}'
     )
 
-    frappe.db.commit()
+    smriti.db.commit()
 
     _LOG.info(f'TRIAL_CONVERTED: {activation_name} | By: {by}')
     return {
@@ -568,8 +562,8 @@ def get_activations(status=None, limit=100):
     if status:
         filters['activation_status'] = status
 
-    rows = frappe.get_all(
-        'SMRITI Trial Activation',
+    rows = smriti.db.get_list(
+        "TrialActivation",
         filters=filters,
         fields=[
             'name', 'activation_reference', 'activation_type',
@@ -607,8 +601,8 @@ def get_provision_logs(activation_name, run_id=None):
     if run_id:
         filters['run_id'] = run_id
 
-    logs = frappe.get_all(
-        'SMRITI Provision Log',
+    logs = smriti.db.get_list(
+        "ProvisionLog",
         filters=filters,
         fields=['name', 'run_id', 'step_sequence', 'step_name',
                 'step_status', 'step_message', 'step_time', 'operator'],
@@ -639,27 +633,27 @@ def get_activation_dashboard():
     Formula: SLA = AVG(TIMESTAMPDIFF(MINUTE, lead.modified, activation.trial_start_date)) / 60
     """
     lead_counts = {
-        'converted_total': frappe.db.count('SMRITI Trial Lead', {'status': 'Converted'}),
-        'trial_started':   frappe.db.count('SMRITI Trial Lead', {'status': 'Trial Started'}),
-        'expired':         frappe.db.count('SMRITI Trial Lead', {'status': 'Expired'}),
+        'converted_total': smriti.db.count('TrialLead', {'status': 'Converted'}),
+        'trial_started':   smriti.db.count('TrialLead', {'status': 'Trial Started'}),
+        'expired':         smriti.db.count('TrialLead', {'status': 'Expired'}),
     }
 
     act_counts = {
-        'pending':           frappe.db.count('SMRITI Trial Activation', {'activation_status': 'Pending'}),
-        'provisioning':      frappe.db.count('SMRITI Trial Activation', {'activation_status': 'Provisioning'}),
-        'provisioned':       frappe.db.count('SMRITI Trial Activation', {'activation_status': 'Provisioned'}),
-        'active':            frappe.db.count('SMRITI Trial Activation', {'activation_status': ['in', ['Active', 'Activated']]}),
-        'suspended':         frappe.db.count('SMRITI Trial Activation', {'activation_status': 'Suspended'}),
-        'expired':           frappe.db.count('SMRITI Trial Activation', {'activation_status': 'Expired'}),
-        'failed':            frappe.db.count('SMRITI Trial Activation', {'activation_status': 'Failed'}),
-        'converted_to_paid': frappe.db.count('SMRITI Trial Activation', {'activation_status': 'Converted to Paid'}),
+        'pending':           smriti.db.count('TrialActivation', {'activation_status': 'Pending'}),
+        'provisioning':      smriti.db.count('TrialActivation', {'activation_status': 'Provisioning'}),
+        'provisioned':       smriti.db.count('TrialActivation', {'activation_status': 'Provisioned'}),
+        'active':            smriti.db.count('TrialActivation', {'activation_status': ['in', ['Active', 'Activated']]}),
+        'suspended':         smriti.db.count('TrialActivation', {'activation_status': 'Suspended'}),
+        'expired':           smriti.db.count('TrialActivation', {'activation_status': 'Expired'}),
+        'failed':            smriti.db.count('TrialActivation', {'activation_status': 'Failed'}),
+        'converted_to_paid': smriti.db.count('TrialActivation', {'activation_status': 'Converted to Paid'}),
     }
 
     act_counts['activation_queue'] = (
         lead_counts['converted_total'] + act_counts['pending']
     )
 
-    expiring_rows = frappe.db.sql(
+    expiring_rows = smriti.db.sql(
         """
         SELECT COUNT(*) AS cnt FROM `tabSMRITI Trial Activation`
         WHERE  activation_status IN ('Active', 'Activated')
@@ -670,7 +664,7 @@ def get_activation_dashboard():
     act_counts['expiring_soon'] = expiring_rows[0]['cnt'] if expiring_rows else 0
 
     # SLA
-    sla_rows = frappe.db.sql(
+    sla_rows = smriti.db.sql(
         """
         SELECT AVG(TIMESTAMPDIFF(MINUTE, tl.modified, ta.trial_start_date)) AS avg_minutes
         FROM `tabSMRITI Trial Activation` ta
@@ -705,11 +699,11 @@ def get_activation_dashboard():
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _ensure_company(company_name, errors):
-    if frappe.db.exists('Company', company_name):
+    if smriti.db.exists("ERPCompany", company_name):
         return company_name
     try:
-        co = frappe.get_doc({
-            'doctype':          'Company',
+        co = smriti.documents.new("ERPCompany")
+        co.update({
             'company_name':     company_name,
             'abbr':             _derive_abbr(company_name),
             'default_currency': 'INR',
@@ -719,17 +713,17 @@ def _ensure_company(company_name, errors):
         return co.name
     except Exception as e:
         errors.append(f'Company creation failed: {e}')
-        frappe.log_error(f'SMRITI Activation — Company error: {e}')
+        smriti.errors.log_error(f'SMRITI Activation — Company error: {e}', exc=e)
         return company_name
 
 
 def _ensure_warehouse(company_name, errors):
     wh_name = f'Main Store - {_derive_abbr(company_name)}'
-    if frappe.db.exists('Warehouse', wh_name):
+    if smriti.db.exists("ERPWarehouse", wh_name):
         return wh_name
     try:
-        wh = frappe.get_doc({
-            'doctype':        'Warehouse',
+        wh = smriti.documents.new("ERPWarehouse")
+        wh.update({
             'warehouse_name': 'Main Store',
             'company':        company_name,
         })
@@ -737,18 +731,18 @@ def _ensure_warehouse(company_name, errors):
         return wh.name
     except Exception as e:
         errors.append(f'Warehouse creation failed: {e}')
-        frappe.log_error(f'SMRITI Activation — Warehouse error: {e}')
+        smriti.errors.log_error(f'SMRITI Activation — Warehouse error: {e}', exc=e)
         return wh_name
 
 
 def _ensure_customer_group(company_name, errors):
     cg_name = f'{company_name} — Retail Customers'
-    if frappe.db.exists('Customer Group', cg_name):
+    if smriti.db.exists("ERPCustomerGroup", cg_name):
         return cg_name
     try:
-        parent = 'All Customer Groups' if frappe.db.exists('Customer Group', 'All Customer Groups') else None
-        cg = frappe.get_doc({
-            'doctype':               'Customer Group',
+        parent = 'All Customer Groups' if smriti.db.exists("ERPCustomerGroup", 'All Customer Groups') else None
+        cg = smriti.documents.new("ERPCustomerGroup")
+        cg.update({
             'customer_group_name':   cg_name,
             'parent_customer_group': parent,
         })
@@ -756,18 +750,18 @@ def _ensure_customer_group(company_name, errors):
         return cg.name
     except Exception as e:
         errors.append(f'Customer Group creation failed: {e}')
-        frappe.log_error(f'SMRITI Activation — Customer Group error: {e}')
+        smriti.errors.log_error(f'SMRITI Activation — Customer Group error: {e}', exc=e)
         return cg_name
 
 
 def _ensure_trial_user(activation, company_name, errors):
     mobile = (activation.mobile or '').lstrip('+').replace(' ', '')
     email  = f'trial.{mobile}@smriti.local'
-    if frappe.db.exists('User', email):
+    if smriti.db.exists("SystemUser", email):
         return email
     try:
-        user = frappe.get_doc({
-            'doctype':            'User',
+        user = smriti.documents.new("SystemUser")
+        user.update({
             'email':              email,
             'first_name':         activation.owner_name or activation.store_name,
             'send_welcome_email': 0,
@@ -777,7 +771,7 @@ def _ensure_trial_user(activation, company_name, errors):
         return email
     except Exception as e:
         errors.append(f'User creation failed: {e}')
-        frappe.log_error(f'SMRITI Activation — User error: {e}')
+        smriti.errors.log_error(f'SMRITI Activation — User error: {e}', exc=e)
         return email
 
 
@@ -798,7 +792,7 @@ def _send_welcome_email(activation, company_name, user_email):
         )
         return True
     except Exception as e:
-        frappe.log_error(f'SMRITI Welcome Email failed for {user_email}: {e}')
+        smriti.errors.log_error(f'SMRITI Welcome Email failed for {user_email}: {e}', exc=e)
         return False
 
 
@@ -814,12 +808,12 @@ def _tick_checklist(activation, now, operator, done_tasks):
 def _update_lead_status(lead_name, new_status, note_line):
     """Update the Trial Lead status and append note."""
     try:
-        lead = frappe.get_doc('SMRITI Trial Lead', lead_name)
+        lead = smriti.documents.get("TrialLead", lead_name)
         lead.status = new_status
         lead.notes  = ((lead.notes or '') + '\n' + note_line).strip()
         lead.save(ignore_permissions=True)
     except Exception as e:
-        frappe.log_error(f'SMRITI — Lead status update failed for {lead_name}: {e}')
+        smriti.errors.log_error(f'SMRITI — Lead status update failed for {lead_name}: {e}', exc=e)
 
 
 def _derive_abbr(company_name):
@@ -841,8 +835,8 @@ def get_trial_health_snapshots(limit=100):
             frappe.PermissionError
         )
         
-    return frappe.get_all(
-        "SMRITI Trial Health Snapshot",
+    return smriti.db.get_list(
+        "TrialHealthSnapshot",
         fields=[
             "name", "snapshot_date", "snapshot_time", "snapshot_type",
             "active_trials", "expiring_7d", "expiring_3d", "expiring_1d",

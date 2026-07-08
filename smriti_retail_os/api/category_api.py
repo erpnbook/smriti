@@ -4,23 +4,15 @@
 # @description: SMRITI Category Api — retail operating system module.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.8.6
-# @license: GPL-3.0-only
-# SPDX-License-Identifier: GPL-3.0-only
-# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
-#
-# @file: smriti_retail_os/api/category_api.py
-# @description: Whitelisted API endpoints for Category (Item Group) management.
-# @author: Antigravity AI
-# @date: 2026-06-16
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
-from frappe import _
+import frappe    # frappe.whitelist, frappe.throw, frappe.get_roles, frappe.session, frappe.delete_doc — framework utilities
+from frappe import _  # i18n only
+from smriti_retail_os import smriti
 
 @frappe.whitelist()
 def get_categories(search_txt=None):
@@ -31,8 +23,8 @@ def get_categories(search_txt=None):
     if search_txt:
         filters = {"name": ["like", f"%{search_txt}%"]}
     
-    categories = frappe.get_all(
-        "Item Group",
+    categories = smriti.db.get_list(
+        "Category",
         filters=filters,
         fields=["name", "parent_item_group", "is_group"],
         order_by="name asc"
@@ -40,15 +32,15 @@ def get_categories(search_txt=None):
     return categories
 
 def _ensure_root_item_group():
-    if not frappe.db.exists("Item Group", "All Item Groups"):
-        root = frappe.get_doc({
-            "doctype": "Item Group",
+    if not smriti.db.exists("Category", "All Item Groups"):
+        root = smriti.documents.new("Category")
+        root.update({
             "item_group_name": "All Item Groups",
             "is_group": 1,
             "parent_item_group": ""
         })
         root.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
 
 
 @frappe.whitelist()
@@ -64,21 +56,19 @@ def create_category(category_name, parent_category=None, is_group=0):
         frappe.throw(_("Category Name is required."))
         
     category_name = category_name.strip()
-    if frappe.db.exists("Item Group", category_name):
+    if smriti.db.exists("Category", category_name):
         frappe.throw(_("Category '{0}' already exists.").format(category_name))
-        
+
     parent_category = parent_category or "All Item Groups"
-    if parent_category != "All Item Groups" and not frappe.db.exists("Item Group", parent_category):
-        # Fallback to All Item Groups if specified parent doesn't exist
+    if parent_category != "All Item Groups" and not smriti.db.exists("Category", parent_category):
         parent_category = "All Item Groups"
-        
-    doc = frappe.get_doc({
-        "doctype": "Item Group",
+
+    doc = smriti.documents.new("Category")
+    doc.update({
         "item_group_name": category_name,
         "parent_item_group": parent_category,
         "is_group": int(is_group)
     })
-    # reviewed-ignore-permissions: catalog group creation, validated by product manager
     doc.insert(ignore_permissions=True)
     return doc.name
 
@@ -90,19 +80,18 @@ def update_category(category_name, parent_category=None):
     """
     check_manager_permission()
     
-    if not category_name or not frappe.db.exists("Item Group", category_name):
+    if not category_name or not smriti.db.exists("Category", category_name):
         frappe.throw(_("Category '{0}' does not exist.").format(category_name))
-        
-    if parent_category and not frappe.db.exists("Item Group", parent_category):
+
+    if parent_category and not smriti.db.exists("Category", parent_category):
         frappe.throw(_("Parent Category '{0}' does not exist.").format(parent_category))
-        
+
     if parent_category == category_name:
         frappe.throw(_("A category cannot be its own parent."))
-        
-    doc = frappe.get_doc("Item Group", category_name)
+
+    doc = smriti.documents.get("Category", category_name)
     if parent_category:
         doc.parent_item_group = parent_category
-    # reviewed-ignore-permissions: catalog group updates, validated by product manager
     doc.save(ignore_permissions=True)
     return doc.name
 
@@ -114,18 +103,16 @@ def delete_category(category_name):
     """
     check_manager_permission()
     
-    if not category_name or not frappe.db.exists("Item Group", category_name):
+    if not category_name or not smriti.db.exists("Category", category_name):
         frappe.throw(_("Category '{0}' does not exist.").format(category_name))
-        
+
     if category_name == "All Item Groups":
         frappe.throw(_("The root category 'All Item Groups' cannot be deleted."))
-        
-    # Check for child groups
-    if frappe.db.exists("Item Group", {"parent_item_group": category_name}):
+
+    if smriti.db.exists("Category", {"parent_item_group": category_name}):
         frappe.throw(_("Cannot delete category '{0}' because it contains sub-categories.").format(category_name))
-        
-    # Check if any Item references this category
-    if frappe.db.exists("Item", {"item_group": category_name}):
+
+    if smriti.db.exists("Product", {"item_group": category_name}):
         frappe.throw(_("Cannot delete category '{0}' because it is linked to active items.").format(category_name))
         
     # reviewed-ignore-permissions: catalog group deletion, validated by product manager
