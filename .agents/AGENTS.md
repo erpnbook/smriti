@@ -423,3 +423,109 @@ The agent must discover what needs updating based on the files it changed:
 
 
 
+
+
+---
+
+# SMRITI Core Framework — Mandatory Agent Rules
+
+**Status:** MANDATORY — applies to ALL agents, ALL sessions, ALL tasks.
+**Supersedes:** Any prior instruction to call rappe.* directly in business code.
+**Authority:** SPC-012 (SMRITI_PRODUCT_CONSTITUTION.md), ARCHITECTURE.md §15
+
+## Python Platform Calls (MANDATORY)
+
+Before writing any Python code in a service, studio, API file, or repository:
+
+**USE — the only correct pattern in business code:**
+```python
+from smriti_retail_os import smriti
+
+customer = smriti.documents.get("Customer", name)
+value    = smriti.db.get("Customer", name, "credit_limit")
+data     = smriti.cache.get_or_set("key", lambda: build_data(), ttl=300)
+smriti.events.publish("smriti:stock_update", {"item": item_code})
+smriti.jobs.enqueue("smriti_retail_os.services.sync.run", company=company)
+smriti.errors.raise_validation("Field Required", "Please fill in all required fields.")
+smriti.permissions.require("Customer", "read")
+```
+
+**NEVER — forbidden outside smriti_retail_os/core/platform/:**
+```python
+import frappe
+frappe.get_doc(...)        # VIOLATION — SPC-012 / Guard 6
+frappe.new_doc(...)        # VIOLATION
+frappe.db.get_value(...)   # VIOLATION
+frappe.db.set_value(...)   # VIOLATION
+frappe.db.sql(...)         # VIOLATION
+frappe.enqueue(...)        # VIOLATION
+frappe.publish_realtime(.) # VIOLATION
+frappe.cache().get_value() # VIOLATION
+```
+
+**Exception:** rappe.throw, rappe.db.exists, rappe.get_cached_doc, rappe.utils, rappe.session
+are framework utilities, not persistence operations, and remain permitted in service layers.
+
+## JavaScript Platform Calls (MANDATORY)
+
+Before writing any JavaScript for a www/ page:
+
+**USE — smriti.* namespace (defined in public/js/smriti_core.js):**
+```javascript
+smriti.api.call("smriti_retail_os.module.method", { arg })
+  .then(data => smriti.notify.success("Done", "Action completed."))
+  .catch(err => smriti.notify.error("Failed", err.message));
+
+smriti.navigation.go(smriti.navigation.routes.customers);
+smriti.dialog.confirm("Delete?", "This cannot be undone.", () => doDelete());
+smriti.events.on("smriti:stock_update", data => refreshDisplay(data));
+```
+
+**NEVER — forbidden in www/ pages:**
+```javascript
+frappe.call({ method: "...", ... });   // VIOLATION — Guard 6
+frappe.show_alert(...);               // VIOLATION
+frappe.msgprint(...);                 // VIOLATION
+frappe.set_route(...);               // VIOLATION
+frappe.confirm(...);                  // VIOLATION
+frappe.realtime.on(...);              // VIOLATION
+```
+
+## Adding a New SMRITI Model
+
+To map a new business concept to a platform DocType, add ONE entry to
+smriti_retail_os/core/platform/document_map.yaml:
+```yaml
+MyModel:
+  platform: "Platform DocType Name"
+  description: "What this model represents"
+```
+No Python changes required. The registry resolves automatically.
+
+## Writing a New Service
+
+Extend BaseService from smriti_retail_os.core.services:
+```python
+from smriti_retail_os.core.services import BaseService
+from smriti_retail_os import smriti
+
+class MyService(BaseService):
+    MODEL = "MyModel"
+
+    def do_something(self, name: str):
+        self._require_read()   # raises PermissionError if not allowed
+        self._validate_required({"Name": name})
+        doc = smriti.documents.get(self.MODEL, name)
+        # business logic here
+        return doc.as_dict()
+```
+
+## Reference
+
+- ARCHITECTURE.md §15 — full layer diagram and canonical patterns
+- SPC-012 in SMRITI_PRODUCT_CONSTITUTION.md — constitutional law
+- docs/implementation/foundation/SMRITI_Core_Framework_v1.0.md — implementation walkthrough
+- smriti_retail_os/core/platform/document_map.yaml — model registry
+- smriti_retail_os/core/platform/ — adapter implementation (internal)
+- smriti_retail_os/public/js/smriti_core.js — JS adapter source
+

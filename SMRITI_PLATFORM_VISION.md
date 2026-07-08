@@ -347,12 +347,36 @@ SMRITI IS:
 
 | Guard | Status | What It Protects |
 |---|---|---|
-| Guard 1 -- Persistence Boundary | Active (smriti_architecture_guard.py) | No DB calls above Repository layer (Python) |
-| Guard 2 -- Navigation Boundary | Planned | No /app/* or /desk/* in any SMRITI page |
-| Guard 3 -- UI Vocabulary Boundary | Planned | No DocType/Workspace/Repository in user-facing text |
-| Guard 4 -- Brand Boundary | Planned | No Platform Engine branding in page titles or footers |
-| Guard 5 -- UX Boundary | Planned | Mandatory Search/Save/Cancel/Breadcrumb on every screen |
-| Guard 6 -- UI Persistence Boundary | Planned | No frappe.client.insert/set_value in www HTML |
+| Guard 1 — Persistence Boundary | **Active** (smriti_architecture_guard.py) | No frappe.* DB calls above Repository layer (Python) |
+| Guard 2 — Navigation Boundary | Planned | No /app/* or /desk/* in any SMRITI page |
+| Guard 3 — UI Vocabulary Boundary | Planned | No DocType/Workspace/Repository in user-facing text |
+| Guard 4 — Brand Boundary | Planned | No Platform Engine branding in page titles or footers |
+| Guard 5 — UX Boundary | Planned | Mandatory Search/Save/Cancel/Breadcrumb on every screen |
+| Guard 6 — UI Persistence Boundary | **Active (Warning Mode)** | No frappe.* in www/ JS/HTML; no frappe.* outside core/platform/ in Python |
+
+**Guard 6 progression plan:**
+- Phase 1 (current): Warning only — 2,348 violations tracked as migration baseline
+- Phase 2 (after 50% migration cleared): Fail new violations only
+- Phase 3 (after 90% migration cleared): Fail all remaining violations
+
+## SMRITI Core Framework — Canonical API
+
+The SMRITI Core Framework (`smriti_retail_os/core/`) is the canonical platform abstraction.
+
+**Business code always uses the Framework API:**
+```python
+from smriti_retail_os import smriti
+
+smriti.documents.get("Customer", name)      # never: frappe.get_doc(...)
+smriti.db.get("Customer", name, "field")    # never: frappe.db.get_value(...)
+smriti.cache.get_or_set("key", builder)     # never: frappe.cache().get_value(...)
+smriti.events.publish("smriti:event", data) # never: frappe.publish_realtime(...)
+smriti.jobs.enqueue("module.function", ...)  # never: frappe.enqueue(...)
+```
+
+**`smriti.core.platform` is the adapter layer — internal only.** Business modules never import it directly.
+Model registry: `core/platform/document_map.yaml` — add a YAML entry to map any new SMRITI model.
+Implementation: `docs/implementation/foundation/SMRITI_Core_Framework_v1.0.md`
 
 ---
 

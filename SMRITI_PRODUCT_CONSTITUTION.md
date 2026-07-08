@@ -132,6 +132,32 @@ Applies to all files in this repository **except:**
 
 ---
 
+### SPC-012 — Platform Adapter Boundary
+**Severity:** Critical
+**Description:** No SMRITI service, studio, API file, or www/ page may call `frappe.*` platform APIs directly.
+All platform access must route through the SMRITI Core Framework (`smriti_retail_os/core/platform/`).
+Business modules use the SMRITI Framework API (`from smriti_retail_os import smriti`) — never the internal adapter path.
+This rule ensures the Platform Engine (currently Frappe + ERPNext) remains a replaceable implementation detail.
+
+**Canonical pattern:**
+```python
+# Compliant — all business services and studios
+from smriti_retail_os import smriti
+customer = smriti.documents.get("Customer", name)
+
+# Violation — must never appear outside core/platform/
+import frappe
+doc = frappe.get_doc("Customer", name)
+```
+
+**JavaScript equivalent:** All `www/` pages use `smriti.api.*`, `smriti.notify.*`, `smriti.navigation.*`.
+Calling `frappe.call()`, `frappe.show_alert()`, or `frappe.set_route()` directly is a violation.
+
+**Enforcement:** Guard 6 in `smriti_architecture_guard.py` (warning mode — transitioning to error mode as migration progresses).
+Migration tracked in `ARCHITECTURE_MIGRATION_BACKLOG.md`.
+
+---
+
 ## Candidate Articles (Documented, Not Adopted)
 
 The following candidate articles carry **no blocking authority** until promoted to Adopted status via the formal amendment process:

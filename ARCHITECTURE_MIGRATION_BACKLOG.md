@@ -176,3 +176,43 @@ Measurement covers ALL direct rappe.* calls across production Python and JS/HTM
 **Adapter created:** smriti_retail_os/core/platform/ — the migration target for all rows above.
 
 Guard 6 (warning mode) in smriti_architecture_guard.py now tracks JS/HTML violations automatically.
+
+
+---
+
+## Guard 6 Progression Plan
+
+Guard 6 (UI Persistence Boundary) tracks the migration of all rappe.* calls
+in www/ JS/HTML files and all rappe.* ORM calls in Python files outside core/platform/.
+
+### Current State (Phase 1 — Warning Mode)
+- **2,348 violations** in **263 files** — all pre-existing, all migration baseline
+- Build is **never failed** by Guard 6 in Phase 1
+- Guard 6 runs automatically with every python smriti_architecture_guard.py invocation
+
+### Progression Milestones
+
+| Phase | Trigger | Mode | Impact |
+|---|---|---|---|
+| Phase 1 (current) | Baseline established 2026-07-08 | Warning only | No build failures |
+| Phase 2 | 50% of baseline cleared (~1,174 violations remain) | Fail **new** violations | New rappe.* outside core/platform/ fails CI |
+| Phase 3 | 90% of baseline cleared (~235 violations remain) | Fail all remaining | Full enforcement — only core/platform/ may call rappe.* |
+
+### How to Progress to Phase 2
+1. Migrate services/ layer (21 files, ~450 violations)
+2. Migrate *_studio/api/ layer (~30 files, ~600 violations)
+3. Re-run python smriti_architecture_guard.py --report to confirm < 1,174 violations
+4. Update Guard 6 from warning mode to "fail new violations" mode in smriti_architecture_guard.py
+5. Re-run python smriti_architecture_guard.py --write-baseline to lock progress
+
+### Migration Priority (updated 2026-07-08)
+
+| Priority | Files | Violations | Status |
+|---|---|---|---|
+| P0 — Repositories | 4 | ~120 | **Done** (2026-07-08) |
+| P1 — Services | 21 | ~450 | Not started |
+| P2 — Studio APIs | ~30 | ~600 | Not started |
+| P3 — Core APIs (illing_api, etc.) | ~15 | ~400 | Not started |
+| P4 — Transaction kernel | 1 | ~80 | Not started |
+| P5 — www/ JS/HTML | 46+ | 162+ | Not started |
+

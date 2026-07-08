@@ -545,35 +545,109 @@ New API added:         verify @frappe.whitelist() + role check + unit test
 
 ---
 
-## 15. Persistence Boundary Guard
+## 15. Persistence Boundary Guard & SMRITI Core Framework
 
 **Rule:** The Repository/Adapter layer is the **only** layer permitted to call Platform Engine persistence APIs.
+All platform access in SMRITI routes through the **SMRITI Core Framework** (`smriti_retail_os/core/platform/`).
+Business modules use the **SMRITI Framework API** — never `core.platform` directly.
+
+### Layer model
 
 ```
-UI -> api -> service -> repository -> Platform Engine
-                             ^
-                    ONLY HERE may these calls appear:
-                      frappe.get_doc(
-                      frappe.new_doc(
-                      frappe.db.sql(
-                      frappe.db.set_value(
-                      frappe.db.commit(
-                      frappe.db.delete(
-                      frappe.delete_doc(
+Business Studio / Service
+        │
+        ▼   from smriti_retail_os import smriti
+            smriti.documents.get("Customer", name)
+            smriti.db.get("Customer", name, "credit_limit")
+            smriti.cache.get_or_set("key", builder)
+            smriti.events.publish("smriti:stock_update", data)
+SMRITI Framework API  (smriti_retail_os/smriti.py)
+        │
+        ▼   delegates to core/platform/
+SMRITI Core Platform Adapter  (smriti_retail_os/core/platform/)
+        │        ← ONLY here may these platform calls appear:
+        ▼          frappe.get_doc(    frappe.new_doc(
+                   frappe.db.sql(     frappe.db.set_value(
+                   frappe.db.commit(  frappe.db.delete(
+                   frappe.delete_doc( frappe.cache()
+                   frappe.enqueue(    frappe.publish_realtime(
+Frappe ORM / ERPNext  (Platform Engine)
 ```
 
-**Allowed in service layers** (framework utilities, not persistence):
-`frappe.throw`, `frappe.db.exists`, `frappe.get_cached_doc`, `frappe.permissions`, `frappe.utils`, `frappe._`
+### Canonical Python import patterns
 
-**Enforcement:** `smriti_architecture_guard.py` at the repo root enforces this rule in CI and pre-commit.
+```python
+# CORRECT — all business code (services, studios, APIs)
+from smriti_retail_os import smriti
+customer = smriti.documents.get("Customer", "CUST-001")
+smriti.cache.set("smriti_profiles", data, ttl=300)
 
-- **Ratchet mode** (default): passes against the current baseline, fails only on new violations or regressions.
+# CORRECT — inside core/platform/ only (adapter layer)
+import frappe
+return frappe.get_doc("Customer", name)
+
+# FORBIDDEN — frappe.* outside core/platform/
+import frappe
+doc = frappe.get_doc("Customer", name)   # VIOLATION — Guard 6
+```
+
+### Canonical JavaScript patterns
+
+```javascript
+// CORRECT — all www/ pages and JS files
+smriti.api.call("smriti_retail_os.billing_api.get_summary", { company })
+  .then(data => smriti.notify.success("Loaded", "Summary ready."))
+  .catch(err => smriti.notify.error("Load Failed", err.message));
+
+smriti.navigation.go(smriti.navigation.routes.customers);
+
+// FORBIDDEN — frappe.* in www/ pages
+frappe.call({ method: "...", callback: r => ... });   // VIOLATION — Guard 6
+frappe.show_alert(...);                               // VIOLATION — Guard 6
+frappe.set_route(...);                               // VIOLATION — Guard 6
+```
+
+### Core Framework modules
+
+| Module | Import path | Purpose |
+|---|---|---|
+| Framework API | `from smriti_retail_os import smriti` | **Business code entry point** |
+| documents | `smriti.documents` | Document CRUD |
+| db | `smriti.db` | Database queries |
+| cache | `smriti.cache` | Redis cache (get_or_set pattern) |
+| events | `smriti.events` | Realtime publish |
+| jobs | `smriti.jobs` | Background job enqueue |
+| permissions | `smriti.permissions` | Permission guards |
+| errors | `smriti.errors` | HREP-compliant error raising |
+| forms | `smriti.forms` | Form Engine (Phase C) |
+
+**Model registry:** `core/platform/document_map.yaml` maps SMRITI business model names to platform DocTypes.
+To add a new model: add one entry to the YAML file — no Python changes required.
+
+### Architecture Guards
+
+| Guard | Status | Scope |
+|---|---|---|
+| Guard 1 — Persistence Boundary | **Active** | No frappe.* DB calls above Repository layer (Python) |
+| Guard 2 — Navigation Boundary | Planned | No /app/* or /desk/* in any SMRITI page |
+| Guard 3 — UI Vocabulary Boundary | Planned | No DocType/Workspace/Repository in user-facing text |
+| Guard 4 — Brand Boundary | Planned | No Platform Engine branding in page titles or footers |
+| Guard 5 — UX Boundary | Planned | Mandatory Search/Save/Cancel/Breadcrumb on every screen |
+| Guard 6 — UI Persistence Boundary | **Active (Warning Mode)** | No frappe.* calls in www/ JS/HTML or outside core/platform/ in Python |
+
+**Guard 6 progression:**
+- Phase 1 (current): Warning only — 2,348 violations are migration baseline, not new failures
+- Phase 2 (after 50% migration): Fail **new** violations only
+- Phase 3 (after 90% migration): Fail all remaining violations
+
+**Enforcement:** `smriti_architecture_guard.py` at the repo root.
+
+- **Ratchet mode** (default): passes against the current baseline, fails only on new violations or regressions. Guard 6 always runs in warning mode.
 - **Report mode** (`--report`): prints sprint-by-sprint progress, always exits 0.
 - **Strict mode** (`--strict`): fails on any violation; switch to this once the backlog is cleared.
 
 Baseline snapshot: `architecture_baseline.json` (versioned, ROOT-relative paths).
-
-Migration backlog: `ARCHITECTURE_MIGRATION_BACKLOG.md` — 88 files, 858 calls, sequenced P0 to P3.
+Migration backlog: `ARCHITECTURE_MIGRATION_BACKLOG.md`
 
 Reference implementation: `api/pos_profile_api.py` -> `services/pos_profile_service.py` -> `repositories/pos_profile_repository.py`
 
@@ -587,15 +661,18 @@ See `SMRITI_PLATFORM_VISION.md` at the repo root for the full statement of:
 - **Domain ownership** (what SMRITI owns vs. what the Platform Engine owns)
 - **Terminology standard** ("Platform Engine (currently ERPNext + Frappe)" not "ERPNext")
 - **Studio model**
-- **Architecture Guards roadmap** (Guards 1–5)
+- **Architecture Guards roadmap** (Guards 1–6, Guard 6 now Active in warning mode)
+- **SMRITI Core Framework** — canonical adapter layer (`core/platform/`) and Framework API (`smriti.py`)
 
 Every AI agent, developer, and contributor working on SMRITI must read `SMRITI_PLATFORM_VISION.md` before making architecture decisions.
+
+Implementation reference: `docs/implementation/foundation/SMRITI_Core_Framework_v1.0.md`
 
 ---
 
 *SMRITI Retail OS™ — Architecture & Technical Reference*
 *Authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL*
-*Version: 1.3.0 — LOCKED*
+*Version: 1.4.0 — LOCKED*
 
 ---
 

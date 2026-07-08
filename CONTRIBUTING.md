@@ -186,6 +186,62 @@ Contributors should preserve:
 - Security
 - Stability
 
+## SMRITI Core Framework — Platform Adapter Rule
+
+**Every contribution must follow the platform adapter boundary.**
+
+### Python — where to put platform calls
+
+| Layer | Allowed | Forbidden |
+|---|---|---|
+| Business service / studio / API | `from smriti_retail_os import smriti` | `import frappe` for ORM calls |
+| `core/platform/` only | `frappe.get_doc(...)`, `frappe.db.*`, etc. | — (this is the only permitted location) |
+| Repository layer | Delegates to `smriti.core.platform` | Direct `frappe.*` for new code |
+
+**Correct pattern in a business service:**
+```python
+from smriti_retail_os import smriti
+
+# Good — routes through Framework API
+customer = smriti.documents.get("Customer", name)
+smriti.cache.set("smriti_pos_profiles", data, ttl=600)
+smriti.errors.raise_validation("Supplier Required", "Please select a supplier.")
+```
+
+**Forbidden in a business service:**
+```python
+import frappe
+doc = frappe.get_doc("Customer", name)   # VIOLATION — Guard 6 will flag this
+```
+
+### Adding a new SMRITI model
+
+To map a new business model to a platform DocType, add one entry to `core/platform/document_map.yaml`:
+```yaml
+MyModel:
+  platform: "My DocType Name"
+  description: "Brief description"
+```
+No Python changes required.
+
+### JavaScript — all www/ pages
+
+```javascript
+// Correct
+smriti.api.call("smriti_retail_os.my_api.method", { arg })
+  .then(data => smriti.notify.success("Done", "Action completed."))
+  .catch(err => smriti.notify.error("Failed", err.message));
+
+smriti.navigation.go(smriti.navigation.routes.customers);
+
+// Forbidden
+frappe.call({ method: "...", ... });   // VIOLATION
+frappe.show_alert(...);               // VIOLATION
+frappe.set_route(...);               // VIOLATION
+```
+
+Reference: `ARCHITECTURE.md §15`, `docs/implementation/foundation/SMRITI_Core_Framework_v1.0.md`
+
 ---
 
 # Documentation Standards
