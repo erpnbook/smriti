@@ -214,6 +214,9 @@
             var r = _resp();
             if (r) r.init();
 
+            // Boot top-dock navigation overflow renderer (Phase 3)
+            if (global.SRLE_NavRenderer) global.SRLE_NavRenderer.init();
+
             // Register current workspace if provided
             if (options.workspace) {
                 this.registerWorkspace(options.workspace);

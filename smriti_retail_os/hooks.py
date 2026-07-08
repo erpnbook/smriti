@@ -105,6 +105,7 @@ app_include_js = [
     "/assets/smriti_retail_os/js/layout_engine/dock_manager.js",
     "/assets/smriti_retail_os/js/layout_engine/responsive_manager.js",
     "/assets/smriti_retail_os/js/layout_engine/layout_manager.js",
+    "/assets/smriti_retail_os/js/layout_engine/navigation_renderer.js",
     "/assets/smriti_retail_os/js/smriti_reports.js",
     "/assets/smriti_retail_os/js/main.js",
     "/assets/smriti_retail_os/js/smriti_payload_bridge.js",

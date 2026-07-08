@@ -45,8 +45,10 @@ window.SMRITI = window.SMRITI || {};
             document.body.appendChild(target);
         }
 
-        // Apply sidebar class to container
+        // Apply sidebar class and ARIA landmark to container (Phase 4)
         target.classList.add("smriti-sidebar");
+        target.setAttribute("role", "navigation");
+        target.setAttribute("aria-label", "SMRITI application navigation");
 
         var user = (window.frappe && window.frappe.session && window.frappe.session.user) || "Administrator";
         var bootNav = window.frappe && window.frappe.boot && window.frappe.boot.smriti_navigation;
@@ -356,6 +358,40 @@ window.SMRITI = window.SMRITI || {};
             }
             target._smritiSidebarShortcutHandler = handleGlobalKeyDown;
             document.addEventListener("keydown", handleGlobalKeyDown);
+
+            // Phase 4 — Arrow key navigation between sidebar items
+            target.addEventListener("keydown", function (e) {
+                var focusable = Array.prototype.slice.call(
+                    target.querySelectorAll(".smriti-sidebar-item[tabindex='0'], .smriti-sidebar-group-header[tabindex='0']")
+                ).filter(function (el) { return el.offsetParent !== null; });  // visible only
+
+                var idx = focusable.indexOf(document.activeElement);
+
+                if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    var next = focusable[idx + 1];
+                    if (next) next.focus();
+                } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    var prev = focusable[idx - 1];
+                    if (prev) prev.focus();
+                } else if (e.key === "Home") {
+                    e.preventDefault();
+                    if (focusable[0]) focusable[0].focus();
+                } else if (e.key === "End") {
+                    e.preventDefault();
+                    var last = focusable[focusable.length - 1];
+                    if (last) last.focus();
+                } else if (e.key === "Enter" || e.key === " ") {
+                    // Enter/Space activates group header toggle or item link
+                    var active = document.activeElement;
+                    if (active && active.classList.contains("smriti-sidebar-group-header")) {
+                        e.preventDefault();
+                        active.click();
+                    }
+                    // For .smriti-sidebar-item links, Enter already works natively (anchor)
+                }
+            });
 
             // 2. Expand/Collapse Section Groups
             var headers = target.querySelectorAll(".smriti-sidebar-group-header");
