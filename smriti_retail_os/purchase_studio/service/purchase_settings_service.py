@@ -62,14 +62,17 @@ def get_settings():
 		# If configuration keys are present, return the resolved set
 		if policy_val is not None:
 			return {
-				"purchase_invoice_policy": policy_val or "both",
-				"approval_threshold":      flt(threshold_val or 0.0),
-				"grn_mandatory":           bool(grn_mand),
-				"allow_over_receipt":      bool(over_rec),
-				"auto_create_items":       bool(auto_itm),
-				"default_warehouse":       def_wh or "",
-				"tolerance_percent":       flt(tol_pct or 0.0),
-				"landed_cost_rule":        lc_rule or "manual"
+				"purchase_invoice_policy":             policy_val or "both",
+				"approval_threshold":                  flt(threshold_val or 0.0),
+				# Issue #5: True = threshold is compared against GST-inclusive grand_total;
+				# False (default) = compared against pre-GST net_total (line totals before tax)
+				"approval_threshold_inclusive_of_tax": bool(config.get_config("approval_threshold_inclusive_of_tax")),
+				"grn_mandatory":                       bool(grn_mand),
+				"allow_over_receipt":                  bool(over_rec),
+				"auto_create_items":                   bool(auto_itm),
+				"default_warehouse":                   def_wh or "",
+				"tolerance_percent":                   flt(tol_pct or 0.0),
+				"landed_cost_rule":                    lc_rule or "manual"
 			}
 	except Exception:
 		pass
@@ -78,26 +81,28 @@ def get_settings():
 	try:
 		s = frappe.get_single(SETTINGS_DOCTYPE)
 		return {
-			"purchase_invoice_policy": s.purchase_invoice_policy or "both",
-			"approval_threshold":      flt(s.approval_threshold),
-			"grn_mandatory":           bool(s.grn_mandatory),
-			"allow_over_receipt":      bool(s.allow_over_receipt),
-			"auto_create_items":       bool(s.auto_create_items),
-			"default_warehouse":       s.default_warehouse or "",
-			"tolerance_percent":       flt(s.tolerance_percent),
-			"landed_cost_rule":        s.landed_cost_rule or "manual"
+			"purchase_invoice_policy":             s.purchase_invoice_policy or "both",
+			"approval_threshold":                  flt(s.approval_threshold),
+			"approval_threshold_inclusive_of_tax": bool(getattr(s, "approval_threshold_inclusive_of_tax", False)),
+			"grn_mandatory":                       bool(s.grn_mandatory),
+			"allow_over_receipt":                  bool(s.allow_over_receipt),
+			"auto_create_items":                   bool(s.auto_create_items),
+			"default_warehouse":                   s.default_warehouse or "",
+			"tolerance_percent":                   flt(s.tolerance_percent),
+			"landed_cost_rule":                    s.landed_cost_rule or "manual"
 		}
 	except Exception:
 		# Settings not yet created — return safe defaults
 		return {
-			"purchase_invoice_policy": "both",
-			"approval_threshold":      0.0,
-			"grn_mandatory":           False,
-			"allow_over_receipt":      False,
-			"auto_create_items":       True,
-			"default_warehouse":       "",
-			"tolerance_percent":       0.0,
-			"landed_cost_rule":        "manual"
+			"purchase_invoice_policy":             "both",
+			"approval_threshold":                  0.0,
+			"approval_threshold_inclusive_of_tax": False,
+			"grn_mandatory":                       False,
+			"allow_over_receipt":                  False,
+			"auto_create_items":                   True,
+			"default_warehouse":                   "",
+			"tolerance_percent":                   0.0,
+			"landed_cost_rule":                    "manual"
 		}
 
 
@@ -108,9 +113,15 @@ def check_invoice_policy():
 	return get_settings().get("purchase_invoice_policy", "both")
 
 
-def check_approval_required(grand_total):
+def check_approval_required(grand_total, net_total=None):
 	"""
-	Returns True if grand_total exceeds the approval threshold.
+	Returns True if the relevant PO total exceeds the approval threshold.
+
+	- When settings.approval_threshold_inclusive_of_tax is True:
+	    compare grand_total (GST-inclusive) against threshold.
+	- When False (default — pre-GST basis):
+	    compare net_total against threshold if provided, else fall back to grand_total.
+
 	Queries the SDK Policy Engine to support tenant/department specific thresholds.
 	"""
 	try:
@@ -120,13 +131,23 @@ def check_approval_required(grand_total):
 			"user": frappe.session.user or "Guest"
 		}
 		threshold = flt(policy_engine.get_policy("approval_threshold", context))
+		inclusive = bool(policy_engine.get_policy("approval_threshold_inclusive_of_tax", context))
 	except Exception:
 		s = get_settings()
 		threshold = flt(s.get("approval_threshold", 0))
+		inclusive = bool(s.get("approval_threshold_inclusive_of_tax", False))
 
 	if threshold <= 0:
 		return False
-	return flt(grand_total) > threshold
+
+	# Issue #5: choose the correct total for comparison
+	if inclusive:
+		comparison_total = flt(grand_total)
+	else:
+		# Pre-GST basis: prefer net_total (line-item subtotal before tax)
+		comparison_total = flt(net_total) if net_total is not None else flt(grand_total)
+
+	return comparison_total > threshold
 
 
 def is_grn_mandatory():

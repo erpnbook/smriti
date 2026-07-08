@@ -21,18 +21,24 @@ class PurchaseWorkflowService:
     def submit(po_name):
         po = PurchaseRepository.get_po(po_name)
         PurchaseValidationService.validate_state_change(po.status, "Submitted")
-        
-        # Check settings for approval requirement
+
+        # Issue #5: Use check_approval_required with both totals so that
+        # approval_threshold_inclusive_of_tax setting is respected.
+        # net_total = pre-GST line-item subtotal; grand_total = GST-inclusive total.
         from smriti_retail_os.purchase_studio.service import purchase_settings_service as settings_svc
-        threshold = float(settings_svc.get_settings().get("approval_threshold") or 0)
-        
-        if threshold > 0 and float(po.grand_total) > threshold:
+        net_total = getattr(po, "net_total", None) or po.grand_total
+        requires_approval = settings_svc.check_approval_required(
+            grand_total=po.grand_total,
+            net_total=net_total
+        )
+
+        if requires_approval:
             po.status = "Submitted"
         else:
             po.status = "Approved"
             po.approved_by = "System"
             po.approved_on = now_datetime()
-        
+
         PurchaseRepository.save_po(po)
         return po
 

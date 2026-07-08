@@ -938,11 +938,17 @@ def get_or_create_bridge_supplier(smriti_supplier_name):
 
     if linked and frappe.db.exists("Supplier", linked):
         # Keep core fields in sync (SMRITI Supplier remains source of truth)
-        frappe.db.set_value("Supplier", linked, {
+        sync_vals = {
             "supplier_name": smriti_supplier.supplier_name,
-            "tax_id": smriti_supplier.tax_id,
-            "disabled": smriti_supplier.disabled,
-        })
+            "tax_id":        smriti_supplier.tax_id,
+            "disabled":      smriti_supplier.disabled,
+        }
+        # TDS category sync (Issue #4): only update if the field exists on ERPNext Supplier
+        if smriti_supplier.get("tds_category") and frappe.db.exists(
+            "Tax Withholding Category", smriti_supplier.tds_category
+        ):
+            sync_vals["tax_withholding_category"] = smriti_supplier.tds_category
+        frappe.db.set_value("Supplier", linked, sync_vals)
         return linked
 
     existing = frappe.db.get_value(
@@ -955,13 +961,18 @@ def get_or_create_bridge_supplier(smriti_supplier_name):
         return existing
 
     erp_supplier = frappe.new_doc("Supplier")
-    erp_supplier.supplier_name = smriti_supplier.supplier_name
+    erp_supplier.supplier_name  = smriti_supplier.supplier_name
     erp_supplier.supplier_group = smriti_supplier.supplier_group or _get_default_supplier_group()
-    erp_supplier.supplier_type = smriti_supplier.supplier_type or "Company"
-    erp_supplier.tax_id = smriti_supplier.tax_id
-    erp_supplier.mobile_no = smriti_supplier.mobile_no
-    erp_supplier.email_id = smriti_supplier.email_id
-    erp_supplier.disabled = smriti_supplier.disabled
+    erp_supplier.supplier_type  = smriti_supplier.supplier_type or "Company"
+    erp_supplier.tax_id         = smriti_supplier.tax_id
+    erp_supplier.mobile_no      = smriti_supplier.mobile_no
+    erp_supplier.email_id       = smriti_supplier.email_id
+    erp_supplier.disabled       = smriti_supplier.disabled
+    # TDS category sync (Issue #4)
+    if smriti_supplier.get("tds_category") and frappe.db.exists(
+        "Tax Withholding Category", smriti_supplier.tds_category
+    ):
+        erp_supplier.tax_withholding_category = smriti_supplier.tds_category
     erp_supplier.insert(ignore_permissions=True)
 
     smriti_supplier.db_set("erpnext_supplier", erp_supplier.name)

@@ -69,6 +69,15 @@
    "default": "0"
   },
   {
+   "fieldname": "tds_category",
+   "fieldtype": "Link",
+   "label": "TDS Category",
+   "options": "Tax Withholding Category",
+   "insert_after": "disabled",
+   "description": "TDS / Tax Withholding Category applied to this supplier. Synced to ERPNext Supplier on every transaction.",
+   "translatable": 0
+  },
+  {
    "fieldname": "erpnext_supplier",
    "fieldtype": "Link",
    "label": "Linked ERPNext Supplier",
