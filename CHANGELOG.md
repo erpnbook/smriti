@@ -5,7 +5,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.3.0] — 2026-07-08
+
+### Added
+- **SMRITI Retail OS Layout Engine (SRLE) v1.0 — Phase 1**: New `layout_engine/` Python module + 4-file JS stack + 2 CSS files establishing the platform-wide layout API.
+- **`window.SRLE` Public API**: `setLayout(pos)`, `getLayout()`, `toggleSidebar()`, `setCollapsed(state)`, `savePreferences()`, `restorePreferences()`, `registerWorkspace(config)`, `refreshLayout()`, `init(options)`, `getVersion()`.
+- **`SRLE_Store`**: Unified localStorage state store with legacy `smriti-sidebar-*` bridge (backward compatible) and Frappe server sync via `layout_service.py`.
+- **`SRLE_DockManager`**: Applies dock CSS classes and sets `--srle-workspace-offset-*` CSS custom properties on `:root` so workspace margins self-adjust on dock switch.
+- **`SRLE_Responsive`**: ResizeObserver breakpoint manager — auto-switches to bottom dock on mobile (<768px), constrains to left/bottom on tablet (768–1279px), respects saved preference on desktop (≥1280px).
+- **CSS tokens** (`layout_tokens.css`): `--srle-*` namespace custom properties for all SRLE dimensions, z-indices, timing, and workspace offsets.
+- **`.srle-workspace` opt-in class**: Opt-in CSS class that causes a page's content area to track dock position via CSS custom properties. Existing pages unaffected until they add the class.
+- **Server-side preferences** (`layout_service.py`): `@frappe.whitelist` `get_layout_preferences` / `save_layout_preferences` endpoints with graceful fallback when the User custom field doesn't exist.
+
+### Changed
+- **`hooks.py`**: SRLE CSS (`layout_tokens.css`, `layout.css`) and JS (`layout_store.js`, `dock_manager.js`, `responsive_manager.js`, `layout_manager.js`) registered in `app_include_css` / `app_include_js` with strict load-order comments.
+- **`public/css/ui/layout.css`**: Added `.srle-workspace` class definition (opt-in, additive only).
+
+---
+
 ## [2.2.1] — 2026-07-08
+
 
 ### Changed
 - **Purchase Studio — Supplier Performance** (`get_supplier_performance`): Removed raw SQL on `tabSMRITI Purchase Order`. Now delegates to `erp_adapter.get_supplier_performance_data()` which reads ERPNext PO + PI KPIs with real overdue payable amounts per supplier.
