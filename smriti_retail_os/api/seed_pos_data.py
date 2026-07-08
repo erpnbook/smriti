@@ -10,8 +10,9 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 # -*- coding: utf-8 -*-
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 
 def run():
     print("START SEEDING POS DATA...")
@@ -25,11 +26,11 @@ def run():
 
     # 2. Create Item Tax Template for _Test Company
     item_tax_template_title = "GST 18% - _TC"
-    item_tax_template_name = frappe.db.get_value("Item Tax Template", {"title": item_tax_template_title, "company": company}, "name")
+    item_tax_template_name = smriti.db.get("Item Tax Template", {"title": item_tax_template_title, "company": company}, "name")
     
     if not item_tax_template_name:
-        itt = frappe.get_doc({
-            "doctype": "Item Tax Template",
+        itt = smriti.documents.new("ItemTaxTemplate")
+        itt.update({
             "title": item_tax_template_title,
             "company": company,
             "gst_rate": 18,
@@ -54,17 +55,17 @@ def run():
     # 3. Update Items to trigger the before_save hook (sync_item_taxes_and_prices)
     items = ["ITEM-001", "ITEM-002", "ITEM-003", "ITEM-004", "ITEM-005"]
     for item_code in items:
-        if not frappe.db.exists("Item", item_code):
+        if not smriti.db.exists("Item", item_code):
             print(f"Warning: Item {item_code} does not exist!")
             continue
         
-        price_exists = frappe.db.exists("Item Price", {
+        price_exists = smriti.db.exists("Item Price", {
             "item_code": item_code,
             "price_list": price_list
         })
         if not price_exists:
-            ip = frappe.get_doc({
-                "doctype": "Item Price",
+            ip = smriti.documents.new("ItemPrice")
+            ip.update({
                 "item_code": item_code,
                 "price_list": price_list,
                 "price_list_rate": 1000.0
@@ -72,7 +73,7 @@ def run():
             ip.insert(ignore_permissions=True)
             print(f"Created Item Price for {item_code}: 1000.0")
         
-        item = frappe.get_doc("Item", item_code)
+        item = smriti.documents.get("Item", item_code)
         
         seen_uoms = set()
         unique_uoms = []
@@ -88,11 +89,11 @@ def run():
 
     # 4. Create Sales Taxes and Charges Template for _Test Company
     template_title = "GST 18% - _TC"
-    existing = frappe.db.get_value("Sales Taxes and Charges Template", {"title": template_title, "company": company}, "name")
+    existing = smriti.db.get("Sales Taxes and Charges Template", {"title": template_title, "company": company}, "name")
     
     if not existing:
-        template = frappe.get_doc({
-            "doctype": "Sales Taxes and Charges Template",
+        template = smriti.documents.new("SalesTaxTemplate")
+        template.update({
             "title": template_title,
             "company": company,
             "is_default": 1,
@@ -123,15 +124,15 @@ def run():
         print(f"Sales Taxes and Charges Template {template_name} already exists.")
 
     # 5. Link template to Test POS Profile
-    pos_profile = frappe.get_doc("POS Profile", "Test POS Profile")
+    pos_profile = smriti.documents.get("POS Profile", "Test POS Profile")
     pos_profile.taxes_and_charges = template_name
     
     # Resolve write_off_account
-    write_off_account = frappe.db.get_value("Account", {"company": company, "account_type": "Write Off"}, "name")
+    write_off_account = smriti.db.get("Account", {"company": company, "account_type": "Write Off"}, "name")
     if not write_off_account:
-        write_off_account = frappe.db.get_value("Account", {"company": company, "name": ["like", "%write%"]}, "name")
+        write_off_account = smriti.db.get("Account", {"company": company, "name": ["like", "%write%"]}, "name")
     if not write_off_account:
-        write_off_account = frappe.db.get_value("Account", {"company": company, "root_type": "Expense"}, "name")
+        write_off_account = smriti.db.get("Account", {"company": company, "root_type": "Expense"}, "name")
         
     pos_profile.write_off_account = write_off_account
     pos_profile.write_off_cost_center = cost_center
@@ -139,5 +140,5 @@ def run():
     pos_profile.save(ignore_permissions=True)
     print(f"Linked tax template '{template_name}' and set write-off account '{write_off_account}' on Test POS Profile.")
 
-    frappe.db.commit()
+    smriti.db.commit()
     print("SEEDING COMPLETE!")

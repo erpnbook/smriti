@@ -10,7 +10,8 @@
 # * Copyright (c) 2026 AITDL NETWORK. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 import json
 from smriti_retail_os.services.lookup_service import LookupService
 

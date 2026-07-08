@@ -8,7 +8,8 @@
 # SPDX-License-Identifier: GPL-3.0-only
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from smriti_retail_os.services import ai_context_service
 
 @frappe.whitelist()
@@ -19,7 +20,7 @@ def get_ai_context(query):
     try:
         return ai_context_service.build_context_pack(query)
     except Exception as e:
-        frappe.log_error(message=str(e), title="get_ai_context Failed")
+        smriti.errors.log_error(message=str(e), title="get_ai_context Failed")
         frappe.throw(f"Failed to compile AI Context: {str(e)}")
 
 @frappe.whitelist()
@@ -124,5 +125,5 @@ def ask_smriti_ai(query):
         }
 
     except Exception as e:
-        frappe.log_error(message=str(e), title="ask_smriti_ai Failed")
+        smriti.errors.log_error(message=str(e), title="ask_smriti_ai Failed")
         frappe.throw(f"AI Assistant Error: {str(e)}")

@@ -12,8 +12,9 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
-from frappe import _
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.sendmail, frappe.logger, frappe._ — framework utilities
+from frappe import _  # i18n only
+from smriti_retail_os import smriti
 
 # Operations written by v1.8.2a security interceptors
 SMRITI_SECURITY_OPERATIONS = [
@@ -59,9 +60,9 @@ def get_security_events(page=1, page_size=50, operation_filter="All"):
 
     filters = {"operation": ["in", ops_filter]}
 
-    total = frappe.db.count("Activity Log", filters=filters)
+    total = smriti.db.count("Activity Log", filters=filters)
 
-    rows = frappe.get_all(
+    rows = smriti.db.get_list(
         "Activity Log",
         filters=filters,
         fields=[
@@ -95,7 +96,7 @@ def get_event_detail(event_name):
     if not event_name or ".." in str(event_name) or "/" in str(event_name):
         frappe.throw(_("Invalid event name."), frappe.ValidationError)
 
-    doc = frappe.db.get_value(
+    doc = smriti.db.get(
         "Activity Log",
         {"name": event_name, "operation": ["in", SMRITI_SECURITY_OPERATIONS]},
         ["name", "creation", "user", "operation", "subject", "ip_address", "status", "content"],
@@ -115,12 +116,12 @@ def get_stats():
 
     stats = {}
     for op in SMRITI_SECURITY_OPERATIONS:
-        stats[op] = frappe.db.count("Activity Log", filters={"operation": op})
+        stats[op] = smriti.db.count("Activity Log", filters={"operation": op})
 
     # Last 24h blocked attempts
     from frappe.utils import now_datetime, add_to_date
     yesterday = add_to_date(now_datetime(), hours=-24)
-    stats["blocked_last_24h"] = frappe.db.count(
+    stats["blocked_last_24h"] = smriti.db.count(
         "Activity Log",
         filters={
             "operation": "Blocked Download Attempt",

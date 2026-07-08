@@ -9,8 +9,9 @@
 # @authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL
 #
 
-import frappe
-from frappe import _
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.sendmail, frappe.logger, frappe._ — framework utilities
+from frappe import _  # i18n only
+from smriti_retail_os import smriti
 from smriti_retail_os.services import pos_profile_service
 from smriti_retail_os.repositories import pos_profile_repository
 
@@ -51,7 +52,7 @@ def save_profile(doc_data):
         frappe.throw(_("POS Profile Name is required."))
 
     # Validate shift lock before modification
-    if frappe.db.exists("POS Profile", name):
+    if smriti.db.exists("POS Profile", name):
         pos_profile_service.validate_profile_modification(name, doc_data)
 
     return pos_profile_repository.save_profile(doc_data)

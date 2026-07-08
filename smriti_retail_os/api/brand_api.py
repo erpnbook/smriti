@@ -19,8 +19,9 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 
 @frappe.whitelist()
 def get_brands(search_txt=None):
@@ -31,7 +32,7 @@ def get_brands(search_txt=None):
     if search_txt:
         filters = {"name": ["like", f"%{search_txt}%"]}
     
-    brands = frappe.get_all(
+    brands = smriti.db.get_list(
         "Brand",
         filters=filters,
         fields=["name", "brand", "description", "image"],
@@ -51,15 +52,14 @@ def create_brand(brand_name, description=None):
         frappe.throw(_("Brand Name is required."))
         
     brand_name = brand_name.strip()
-    if frappe.db.exists("Brand", brand_name):
+    if smriti.db.exists("Brand", brand_name):
         frappe.throw(_("Brand '{0}' already exists.").format(brand_name))
         
-    doc = frappe.get_doc({
-        "doctype": "Brand",
+    doc = smriti.documents.new("Brand")
+    doc.update({
         "brand": brand_name,
         "description": description
     })
-    # reviewed-ignore-permissions: catalog brand creation, validated by product manager
     doc.insert(ignore_permissions=True)
     return doc.name
 
@@ -71,10 +71,10 @@ def update_brand(brand_name, description=None):
     """
     check_manager_permission()
     
-    if not brand_name or not frappe.db.exists("Brand", brand_name):
+    if not brand_name or not smriti.db.exists("Brand", brand_name):
         frappe.throw(_("Brand '{0}' does not exist.").format(brand_name))
         
-    doc = frappe.get_doc("Brand", brand_name)
+    doc = smriti.documents.get("Brand", brand_name)
     doc.description = description
     # reviewed-ignore-permissions: catalog brand updates, validated by product manager
     doc.save(ignore_permissions=True)
@@ -88,11 +88,11 @@ def delete_brand(brand_name):
     """
     check_manager_permission()
     
-    if not brand_name or not frappe.db.exists("Brand", brand_name):
+    if not brand_name or not smriti.db.exists("Brand", brand_name):
         frappe.throw(_("Brand '{0}' does not exist.").format(brand_name))
         
     # Check if any Item references this brand
-    if frappe.db.exists("Item", {"brand": brand_name}):
+    if smriti.db.exists("Item", {"brand": brand_name}):
         frappe.throw(_("Cannot delete brand '{0}' because it is linked to active items.").format(brand_name))
         
     # reviewed-ignore-permissions: catalog brand deletion, validated by product manager

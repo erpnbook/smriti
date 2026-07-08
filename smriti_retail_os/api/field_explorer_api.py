@@ -13,7 +13,8 @@
 #
 # API naming convention: smriti_retail_os.api.field_explorer_api.<method>
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 import json
 from smriti_retail_os.services import field_explorer_service as _svc
 

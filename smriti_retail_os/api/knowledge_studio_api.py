@@ -13,7 +13,8 @@ import os
 import io
 import json
 import datetime
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 # Append SDC directory to sys.path dynamically
 def _get_ske_engine():
@@ -49,7 +50,7 @@ def query_ske(query):
         # Return serialized list of objects
         return [obj.to_dict() for obj in results]
     except Exception as e:
-        frappe.log_error(message=str(e), title="SKE Query Resolution Failed")
+        smriti.errors.log_error(message=str(e), title="SKE Query Resolution Failed")
         frappe.throw(f"Knowledge Engine Error: {str(e)}")
 
 @frappe.whitelist()
@@ -86,7 +87,7 @@ def get_knowledge_studio_counts():
             "last_scan": last_scan
         }
     except Exception as e:
-        frappe.log_error(message=str(e), title="Failed to resolve Knowledge Studio counts")
+        smriti.errors.log_error(message=str(e), title="Failed to resolve Knowledge Studio counts")
         return {
             "glossary": 0, "fields": 0, "doctypes": 0, "apis": 0, "screens": 0, "formulas": 0, "last_scan": "Error"
         }
@@ -131,7 +132,7 @@ def explain_screen_by_route(route_path):
             "developer": matched.get("developer", {})
         }
     except Exception as e:
-        frappe.log_error(message=str(e), title="Explain Screen Failed")
+        smriti.errors.log_error(message=str(e), title="Explain Screen Failed")
         frappe.throw(f"Explain Screen Error: {str(e)}")
 
 @frappe.whitelist()
@@ -170,8 +171,8 @@ def get_ske_meta():
 def log_telemetry_event(event_type, query=None, target_asset=None, has_result=1, resolution_time_ms=0, provider_hit=None, confidence_source=None):
     """Logs SMRITI Knowledge platform telemetry search/open/explain events."""
     try:
-        doc = frappe.get_doc({
-            "doctype": "SMRITI Knowledge Usage Log",
+        doc = smriti.documents.new("KnowledgeUsageLog")
+        doc.update({
             "event_type": event_type,
             "query": query,
             "target_asset": target_asset,
@@ -182,12 +183,11 @@ def log_telemetry_event(event_type, query=None, target_asset=None, has_result=1,
             "user": frappe.session.user,
             "timestamp": frappe.utils.now_datetime()
         })
-        # reviewed-ignore-permissions: telemetry logging, does not modify business data
         doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         return {"success": True, "name": doc.name}
     except Exception as e:
-        frappe.log_error(message=str(e), title="Failed to log telemetry event")
+        smriti.errors.log_error(message=str(e), title="Failed to log telemetry event")
         return {"success": False, "error": str(e)}
 
 @frappe.whitelist()
@@ -196,7 +196,7 @@ def get_telemetry_logs(limit=50, has_result=None):
     filters = {}
     if has_result is not None:
         filters["has_result"] = int(has_result)
-    return frappe.get_all(
+    return smriti.db.get_list(
         "SMRITI Knowledge Usage Log",
         filters=filters,
         fields=["name", "event_type", "query", "target_asset", "has_result", "resolution_time_ms", "provider_hit", "confidence_source", "user", "timestamp"],

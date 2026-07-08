@@ -1,4 +1,5 @@
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 import json
 from smriti_retail_os.services.udne.template_compiler import CompiledTemplate
 from smriti_retail_os.services.udne.template_validator import validate_template
@@ -29,7 +30,7 @@ def save_rule(doc_data: str) -> dict:
         
         rule_name = data.get("name")
         if rule_name:
-            doc = frappe.get_doc("SMRITI Numbering Rule", rule_name)
+            doc = smriti.documents.get("SMRITI Numbering Rule", rule_name)
             doc.version = (doc.version or 1) + 1
             doc.is_active = data.get("is_active", 1)
             doc.priority = data.get("priority", "Global")
@@ -42,8 +43,8 @@ def save_rule(doc_data: str) -> dict:
             # reviewed-ignore-permissions: doc sequence rule updates, restricted to Administrator
             doc.save(ignore_permissions=True)
         else:
-            doc = frappe.get_doc({
-                "doctype": "SMRITI Numbering Rule",
+            doc = smriti.documents.new("UDNRule")
+            doc.update({
                 "document_type": data.get("document_type"),
                 "is_active": data.get("is_active", 1),
                 "priority": data.get("priority", "Global"),
@@ -58,7 +59,7 @@ def save_rule(doc_data: str) -> dict:
             # reviewed-ignore-permissions: doc sequence rule updates, restricted to Administrator
             doc.insert(ignore_permissions=True)
             
-        frappe.db.commit()
+        smriti.db.commit()
         return {"success": True, "name": doc.name}
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -66,12 +67,12 @@ def save_rule(doc_data: str) -> dict:
 @frappe.whitelist()
 def get_rules() -> list:
     """Gets list of rules."""
-    return frappe.get_all("SMRITI Numbering Rule", fields=["*"], order_by="creation desc")
+    return smriti.db.get_list("SMRITI Numbering Rule", fields=["*"], order_by="creation desc")
 
 @frappe.whitelist()
 def get_reservations() -> list:
     """Gets list of terminal reservations."""
-    return frappe.get_all("SMRITI Numbering Reserved Range", fields=["*"], order_by="creation desc")
+    return smriti.db.get_list("SMRITI Numbering Reserved Range", fields=["*"], order_by="creation desc")
 
 @frappe.whitelist()
 def scan_sequence_gaps(doctype: str, rule_name: str) -> dict:

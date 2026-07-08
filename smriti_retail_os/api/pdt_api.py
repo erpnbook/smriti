@@ -11,7 +11,8 @@
 #
 
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 import json
 from frappe.utils import now_datetime, get_datetime
 
@@ -23,7 +24,7 @@ def get_twin_status(party_stock_account, item_code):
     """
     frappe.only_for(["System Manager", "SMRITI Store Manager", "SMRITI Cashier"])
 
-    company = frappe.db.get_value("SMRITI Party Stock Account", party_stock_account, "company")
+    company = smriti.db.get("SMRITI Party Stock Account", party_stock_account, "company")
     if not company:
         frappe.throw(frappe._("Party Stock Account {0} not found or has no Company assigned.").format(party_stock_account))
 
@@ -46,10 +47,10 @@ def get_twin_status(party_stock_account, item_code):
                 
             return cached_data
     except Exception:
-        frappe.log_error(frappe.get_traceback(), "SMRITI: Exception in api/pdt_api.py")
+        smriti.errors.log_error(frappe.get_traceback(), "SMRITI: Exception in api/pdt_api.py")
 
     # 2. Query MariaDB SMRITI SKU Twin table
-    twin_data = frappe.db.get_value(
+    twin_data = smriti.db.get(
         "SMRITI SKU Twin",
         {"company": company, "party_stock_account": party_stock_account, "item_code": item_code},
         "*"
@@ -60,7 +61,7 @@ def get_twin_status(party_stock_account, item_code):
         from smriti_retail_os.services.pdt_service import rebuild_twin_cache
         rebuild_twin_cache(company, party_stock_account, item_code, "FULL_REBUILD")
         
-        twin_data = frappe.db.get_value(
+        twin_data = smriti.db.get(
             "SMRITI SKU Twin",
             {"company": company, "party_stock_account": party_stock_account, "item_code": item_code},
             "*"
@@ -91,7 +92,7 @@ def get_twin_status(party_stock_account, item_code):
         try:
             frappe.cache().set_value(redis_key, twin_dict, expires_in_sec=3600)
         except Exception:
-            frappe.log_error(frappe.get_traceback(), "SMRITI: Exception in api/pdt_api.py")
+            smriti.errors.log_error(frappe.get_traceback(), "SMRITI: Exception in api/pdt_api.py")
             
         return twin_dict
 
@@ -105,7 +106,7 @@ def trigger_rebuild(party_stock_account, item_code):
     """
     frappe.only_for(["System Manager", "SMRITI Store Manager"])
 
-    company = frappe.db.get_value("SMRITI Party Stock Account", party_stock_account, "company")
+    company = smriti.db.get("SMRITI Party Stock Account", party_stock_account, "company")
     if not company:
         frappe.throw(frappe._("Party Stock Account {0} not found.").format(party_stock_account))
 
@@ -161,7 +162,7 @@ def get_pdt_dashboard_list(filters=None):
         db_filters["item_code"] = ["like", f"%{filters.get('item_code')}%"]
         
     # Read twins
-    twins = frappe.get_all(
+    twins = smriti.db.get_list(
         "SMRITI SKU Twin",
         filters=db_filters,
         fields=[
@@ -175,7 +176,7 @@ def get_pdt_dashboard_list(filters=None):
     )
     
     # Calculate stats across ALL twins (unfiltered for accurate dashboard counters)
-    all_twins = frappe.get_all("SMRITI SKU Twin", fields=["twin_state"])
+    all_twins = smriti.db.get_list("SMRITI SKU Twin", fields=["twin_state"])
     stats = {
         "total": len(all_twins),
         "healthy": sum(1 for t in all_twins if t.twin_state == "Healthy"),
@@ -187,7 +188,7 @@ def get_pdt_dashboard_list(filters=None):
     }
     
     # Fetch active PSAs for filtering dropdowns
-    psas = frappe.get_all("SMRITI Party Stock Account", filters={"active": 1}, fields=["name", "customer", "location_name"])
+    psas = smriti.db.get_list("SMRITI Party Stock Account", filters={"active": 1}, fields=["name", "customer", "location_name"])
     
     return {
         "twins": twins,

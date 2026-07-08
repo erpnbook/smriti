@@ -11,8 +11,9 @@
 # * Copyright (c) 2026 AITDL NETWORK. All rights reserved.
 #
 
-import frappe
-from frappe import _
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.sendmail, frappe.logger, frappe._ — framework utilities
+from frappe import _  # i18n only
+from smriti_retail_os import smriti
 
 
 @frappe.whitelist()
@@ -51,7 +52,7 @@ def get_supplier_form_options():
     # Naming series from DocField
     naming_series = ""
     try:
-        naming_series = frappe.db.get_value(
+        naming_series = smriti.db.get(
             "DocField",
             {"parent": "Supplier", "fieldname": "naming_series"},
             "options"

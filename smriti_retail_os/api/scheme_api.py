@@ -4,24 +4,15 @@
 # @description: SMRITI Scheme Api — retail operating system module.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.8.6
-# @license: GPL-3.0-only
-# SPDX-License-Identifier: GPL-3.0-only
-# * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
-#
-# @file: smriti_retail_os/api/scheme_api.py
-# @description: Whitelisted API endpoints for SMRITI Scheme Creator (Pricing Rules).
-# @author: Antigravity AI
-# @date: 2026-06-16
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
-from frappe import _
-from frappe.utils import flt
+import frappe  # frappe.whitelist, frappe.throw, frappe.get_roles, frappe.session, frappe.get_meta, frappe.delete_doc, frappe.defaults — framework utilities
+from frappe import _, cint, flt  # i18n + type helpers only
+from smriti_retail_os import smriti
 
 @frappe.whitelist()
 def get_schemes(search_txt=None):
@@ -32,8 +23,8 @@ def get_schemes(search_txt=None):
     if search_txt:
         filters["title"] = ["like", f"%{search_txt}%"]
         
-    rules = frappe.get_all(
-        "Pricing Rule",
+    rules = smriti.db.get_list(
+        "PricingRule",
         filters=filters,
         fields=["name", "title", "apply_on", "price_or_product_discount", "rate_or_discount", "discount_percentage", "discount_amount", "rate", "min_qty", "free_qty", "same_item", "free_item", "valid_from", "valid_upto", "company"],
         order_by="creation desc"
@@ -43,7 +34,7 @@ def get_schemes(search_txt=None):
     for r in rules:
         applied_to = ""
         try:
-            doc = frappe.get_doc("Pricing Rule", r.name)
+            doc = smriti.documents.get("PricingRule", r.name)
             if r.apply_on == "Item Code":
                 if doc.get("items"):
                     applied_to = ", ".join([x.item_code for x in doc.items if x.item_code])
@@ -59,8 +50,8 @@ def get_schemes(search_txt=None):
                     applied_to = ", ".join([x.brand for x in doc.brands if x.brand])
                 elif getattr(doc, "brand", None):
                     applied_to = doc.brand
-        except Exception:
-            frappe.log_error(frappe.get_traceback(), "SMRITI: Exception in api/scheme_api.py")
+        except Exception as e:
+            smriti.errors.log_error("SMRITI: Exception in api/scheme_api.py", exc=e)
         r["applied_to"] = applied_to or "-"
         
     return rules
@@ -80,8 +71,7 @@ def create_scheme(title, apply_on, applied_to, discount_type, value, valid_from=
         
     company = company or frappe.defaults.get_user_default("company")
     if not company:
-        # Fallback
-        companies = frappe.get_all("Company", limit=1, pluck="name")
+        companies = smriti.db.get_list("ERPCompany", limit=1, pluck="name")
         company = companies[0] if companies else ""
         
     val = flt(value)
@@ -93,8 +83,8 @@ def create_scheme(title, apply_on, applied_to, discount_type, value, valid_from=
         same_it = 1 if same_item in (1, "1", True) else 0
         free_it = free_item if not same_it else None
         
-        doc = frappe.get_doc({
-            "doctype": "Pricing Rule",
+        doc = smriti.documents.new("PricingRule")
+        doc.update({
             "title": title.strip(),
             "apply_on": apply_on,
             "selling": 1,
@@ -107,12 +97,12 @@ def create_scheme(title, apply_on, applied_to, discount_type, value, valid_from=
             "same_item": same_it,
             "free_item": free_it,
             "free_qty": free_q,
-            "free_item_uom": frappe.db.get_value("Item", free_it or applied_to, "stock_uom") or "Nos"
+            "free_item_uom": smriti.db.get("Product", free_it or applied_to, "stock_uom") or "Nos"
         })
     else:
         rate_or_discount = "Discount Percentage" if discount_type == "Percentage" else ("Discount Amount" if discount_type == "Amount" else "Rate")
-        doc = frappe.get_doc({
-            "doctype": "Pricing Rule",
+        doc = smriti.documents.new("PricingRule")
+        doc.update({
             "title": title.strip(),
             "apply_on": apply_on,
             "selling": 1,
@@ -128,7 +118,6 @@ def create_scheme(title, apply_on, applied_to, discount_type, value, valid_from=
         })
     
     _set_pricing_rule_links(doc, apply_on, applied_to.strip())
-    # reviewed-ignore-permissions: promotional pricing creation, validated by marketing manager
     doc.insert(ignore_permissions=True)
     return doc.name
 
@@ -140,11 +129,11 @@ def update_scheme(name, title, apply_on, applied_to, discount_type, value, valid
     """
     check_manager_permission()
     
-    if not name or not frappe.db.exists("Pricing Rule", name):
+    if not name or not smriti.db.exists("PricingRule", name):
         frappe.throw(_("Scheme '{0}' does not exist.").format(name))
         
     val = flt(value)
-    doc = frappe.get_doc("Pricing Rule", name)
+    doc = smriti.documents.get("PricingRule", name)
     doc.title = title.strip()
     doc.apply_on = apply_on
     doc.valid_from = valid_from
@@ -159,7 +148,7 @@ def update_scheme(name, title, apply_on, applied_to, discount_type, value, valid
             doc.free_item = None
         else:
             doc.free_item = free_item
-            doc.free_item_uom = frappe.db.get_value("Item", free_item, "stock_uom") or "Nos"
+            doc.free_item_uom = smriti.db.get("Product", free_item, "stock_uom") or "Nos"
             
         doc.rate_or_discount = None
         doc.discount_percentage = 0.0
@@ -179,7 +168,6 @@ def update_scheme(name, title, apply_on, applied_to, discount_type, value, valid
         doc.free_item_uom = None
         
     _set_pricing_rule_links(doc, apply_on, applied_to.strip())
-    # reviewed-ignore-permissions: promotional pricing updates, validated by marketing manager
     doc.save(ignore_permissions=True)
     return doc.name
 
@@ -190,11 +178,9 @@ def delete_scheme(name):
     """
     check_manager_permission()
     
-    if not name or not frappe.db.exists("Pricing Rule", name):
+    if not name or not smriti.db.exists("PricingRule", name):
         frappe.throw(_("Scheme '{0}' does not exist.").format(name))
         
-    # Standard practice is to delete the rule
-    # reviewed-ignore-permissions: promotional pricing deletion, validated by marketing manager
     frappe.delete_doc("Pricing Rule", name, ignore_permissions=True)
     return True
 

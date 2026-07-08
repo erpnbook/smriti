@@ -11,8 +11,9 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from frappe.utils import flt, nowdate
 
 # ─── Permission helpers ───────────────────────────────────────────────────────
@@ -58,7 +59,7 @@ def get_payments(payment_type="Receive", search=None, date_from=None, date_to=No
             "party_name":   ["like", f"%{search}%"],
         }
 
-    rows = frappe.db.get_all(
+    rows = smriti.db.get_list(
         "Payment Entry",
         filters=filters,
         or_filters=or_filters,
@@ -84,10 +85,10 @@ def get_payment_detail(name):
     """
     _check_access()
 
-    if not name or not frappe.db.exists("Payment Entry", name):
+    if not name or not smriti.db.exists("Payment Entry", name):
         frappe.throw(_("Payment Entry '{0}' not found.").format(name))
 
-    doc = frappe.get_doc("Payment Entry", name)
+    doc = smriti.documents.get("Payment Entry", name)
 
     refs = []
     for r in doc.references:
@@ -135,7 +136,7 @@ def create_payment(
 ):
     """
     Creates and submits a Payment Entry via SMRITI service controller.
-    SMRITI UI must call this instead of frappe.new_doc("Payment Entry").
+    SMRITI UI must call this instead of smriti.documents.new("PaymentEntry").
     """
     _check_write()
 
@@ -143,17 +144,17 @@ def create_payment(
     if amount <= 0:
         frappe.throw(_("Payment amount must be greater than zero."))
 
-    if not party or not frappe.db.exists(party_type, party):
+    if not party or not smriti.db.exists(party_type, party):
         frappe.throw(_("{0} '{1}' not found.").format(party_type, party))
 
     company = frappe.defaults.get_user_default("company") or \
-              frappe.get_all("Company", limit=1, pluck="name")[0]
+              smriti.db.get_list("Company", limit=1, pluck="name")[0]
 
     # Resolve accounts
     paid_from, paid_to = _resolve_accounts(payment_type, party_type, party, mode_of_payment, company)
 
-    doc = frappe.get_doc({
-        "doctype":          "Payment Entry",
+    doc = smriti.documents.new("PaymentEntry")
+    doc.update({
         "payment_type":     payment_type,
         "posting_date":     posting_date or nowdate(),
         "company":          company,
@@ -186,9 +187,9 @@ def create_payment(
         # reviewed-ignore-permissions: checkout payment entry, validated by POS invoice context
         doc.insert(ignore_permissions=True)
         doc.submit()
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception:
-        frappe.db.rollback()
+        smriti.db.rollback()
         raise
 
     return {
@@ -202,35 +203,35 @@ def _resolve_accounts(payment_type, party_type, party, mode_of_payment, company)
     """
     Resolves paid_from and paid_to accounts for a Payment Entry.
     """
-    mop_account = frappe.db.get_value(
+    mop_account = smriti.db.get(
         "Mode of Payment Account",
         {"parent": mode_of_payment, "company": company},
         "default_account"
     )
     if not mop_account:
         # Fallback: find any bank/cash account for this company
-        mop_account = frappe.db.get_value(
+        mop_account = smriti.db.get(
             "Account",
             {"company": company, "account_type": ["in", ["Bank", "Cash"]], "is_group": 0},
             "name"
         )
 
     if party_type == "Customer":
-        party_account = frappe.db.get_value(
+        party_account = smriti.db.get(
             "Party Account",
             {"parent": party, "parenttype": "Customer", "company": company},
             "account"
-        ) or frappe.db.get_value(
+        ) or smriti.db.get(
             "Account",
             {"company": company, "account_type": "Receivable", "is_group": 0},
             "name"
         )
     else:
-        party_account = frappe.db.get_value(
+        party_account = smriti.db.get(
             "Party Account",
             {"parent": party, "parenttype": "Supplier", "company": company},
             "account"
-        ) or frappe.db.get_value(
+        ) or smriti.db.get(
             "Account",
             {"company": company, "account_type": "Payable", "is_group": 0},
             "name"
@@ -253,13 +254,13 @@ def get_outstanding_invoices(party_type, party):
     """
     _check_access()
 
-    if not party or not frappe.db.exists(party_type, party):
+    if not party or not smriti.db.exists(party_type, party):
         return []
 
     doctype = "Sales Invoice" if party_type == "Customer" else "Purchase Invoice"
     party_field = "customer" if party_type == "Customer" else "supplier"
 
-    invoices = frappe.db.get_all(
+    invoices = smriti.db.get_list(
         doctype,
         filters={party_field: party, "docstatus": 1, "outstanding_amount": [">", 0]},
         fields=["name", "posting_date", "grand_total", "outstanding_amount", "currency"],
@@ -294,7 +295,7 @@ def get_parties(party_type, search=None):
             name_field:  ["like", f"%{search}%"],
         }
 
-    return frappe.db.get_all(
+    return smriti.db.get_list(
         party_type,
         filters=filters,
         or_filters=or_filters,
@@ -311,7 +312,7 @@ def get_modes_of_payment():
     Returns all active modes of payment for the payment creation dropdown.
     """
     _check_access()
-    return frappe.db.get_all(
+    return smriti.db.get_list(
         "Mode of Payment",
         filters={"enabled": 1},
         fields=["name", "type"],

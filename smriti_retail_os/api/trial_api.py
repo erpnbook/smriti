@@ -4,8 +4,9 @@ Route: smriti_retail_os.api.trial_api.submit_trial_lead
 
 Authority: Jawahar R. Mallah, Founder & Chief Architect, AITDL
 """
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 from datetime import datetime
 
 
@@ -33,7 +34,7 @@ def submit_trial_lead(
         frappe.throw(_('Please enter a valid mobile number.'))
 
     # Check for duplicate (same mobile submitted in last 24h)
-    existing = frappe.db.exists('SMRITI Trial Lead', {'mobile': mobile})
+    existing = smriti.db.exists('SMRITI Trial Lead', {'mobile': mobile})
     if existing:
         return {
             'status': 'duplicate',
@@ -41,8 +42,8 @@ def submit_trial_lead(
         }
 
     # Create lead record
-    lead = frappe.get_doc({
-        'doctype':       'SMRITI Trial Lead',
+    lead = smriti.documents.new('TrialLead')
+    lead.update({
         'store_name':    store_name.strip(),
         'owner_name':    owner_name.strip(),
         'mobile':        mobile,
@@ -57,7 +58,7 @@ def submit_trial_lead(
     })
     # reviewed-ignore-permissions: guest trial signup, runs under guest role context
     lead.insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     # Log for visibility
     frappe.logger('smriti.trial').info(
@@ -78,7 +79,7 @@ def get_trial_leads(status=None, limit=50):
     if status:
         filters['status'] = status
 
-    leads = frappe.get_all(
+    leads = smriti.db.get_list(
         'SMRITI Trial Lead',
         filters=filters,
         fields=['name', 'store_name', 'owner_name', 'mobile', 'city',
@@ -101,7 +102,7 @@ def update_lead_status(lead_name, new_status, notes=None):
     if new_status not in ALLOWED_STATUSES:
         frappe.throw(_(f'Invalid status: {new_status}'))
 
-    lead = frappe.get_doc('SMRITI Trial Lead', lead_name)
+    lead = smriti.documents.get('SMRITI Trial Lead', lead_name)
 
     old_status  = lead.status
     lead.status = new_status
@@ -118,7 +119,7 @@ def update_lead_status(lead_name, new_status, notes=None):
 
     # reviewed-ignore-permissions: lead status tracking, restricted to sales agent
     lead.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     frappe.logger('smriti.trial').info(
         f'STATUS UPDATE: {lead_name} | {old_status} → {new_status} | {frappe.session.user}'
@@ -139,6 +140,6 @@ def get_lead_counts():
                 'Trial Started', 'Converted', 'Lost']
     counts = {}
     for s in STATUSES:
-        counts[s] = frappe.db.count('SMRITI Trial Lead', {'status': s})
+        counts[s] = smriti.db.count('SMRITI Trial Lead', {'status': s})
     counts['total'] = sum(counts.values())
     return counts

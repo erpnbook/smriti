@@ -10,11 +10,12 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 # -*- coding: utf-8 -*-
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 def run():
     print("POS SETTINGS:")
     try:
-        print(frappe.db.get_value("POS Settings", "POS Settings", ["invoice_type", "pos_closing_entry_validation_amount"], as_dict=True))
+        print(smriti.db.get("POS Settings", "POS Settings", ["invoice_type", "pos_closing_entry_validation_amount"], as_dict=True))
     except Exception as e:
         print("Error:", e)

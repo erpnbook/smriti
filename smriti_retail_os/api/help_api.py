@@ -10,8 +10,9 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe import _
+from smriti_retail_os import smriti
 
 DOCUMENT_REGISTRY = {
     "volume_1_daily_operations": {
@@ -1316,13 +1317,13 @@ def get_knowledge_assets():
     """
     import json
     
-    formulas = frappe.get_all(
+    formulas = smriti.db.get_list(
         "SMRITI Formula Definition",
         filters={"is_active": 1, "status": "Approved"},
         fields=["formula_id", "formula_name", "formula_category", "formula_expression", "business_meaning", "worked_example", "interpretation_guide", "recommended_action", "business_owner"]
     )
     
-    terms = frappe.get_all(
+    terms = smriti.db.get_list(
         "SMRITI Business Term",
         filters={"is_active": 1, "status": "Approved"},
         fields=["name", "term_id", "term_name", "term_category", "definition", "hinglish_definition", "faq", "common_mistakes", "manual_reference", "training_reference", "business_owner"]
@@ -1332,8 +1333,8 @@ def get_knowledge_assets():
     for t in terms:
         t.faq = json.loads(t.faq) if t.faq else []
         t.common_mistakes = json.loads(t.common_mistakes) if t.common_mistakes else []
-        t.related_formulas = [rf.formula_id for rf in frappe.get_all("SMRITI Related Formula", filters={"parent": t.name}, fields=["formula_id"])]
-        t.related_terms = [rt.related_term_id for rt in frappe.get_all("SMRITI Related Term", filters={"parent": t.name}, fields=["related_term_id"])]
+        t.related_formulas = [rf.formula_id for rf in smriti.db.get_list("SMRITI Related Formula", filters={"parent": t.name}, fields=["formula_id"])]
+        t.related_terms = [rt.related_term_id for rt in smriti.db.get_list("SMRITI Related Term", filters={"parent": t.name}, fields=["related_term_id"])]
         
     return {
         "formulas": formulas,
@@ -1492,7 +1493,7 @@ def start_psv_exam(exam_id=None):
         frappe.throw(_("Guest is not permitted to take exams"), frappe.PermissionError)
         
     # Check if there is already an active attempt
-    active_attempt_name = frappe.db.get_value(
+    active_attempt_name = smriti.db.get(
         "SMRITI PSV Exam Attempt",
         filters={
             "user": frappe.session.user,
@@ -1503,25 +1504,24 @@ def start_psv_exam(exam_id=None):
     )
     
     if active_attempt_name:
-        attempt_doc = frappe.get_doc("SMRITI PSV Exam Attempt", active_attempt_name)
+        attempt_doc = smriti.documents.get("SMRITI PSV Exam Attempt", active_attempt_name)
     else:
-        attempt_doc = frappe.get_doc({
-            "doctype": "SMRITI PSV Exam Attempt",
+        attempt_doc = smriti.documents.new("PSVExamAttempt")
+        attempt_doc.update({
             "user": frappe.session.user,
             "exam_id": exam_id,
             "start_time": frappe.utils.now_datetime(),
             "status": "In Progress"
         })
-        # reviewed-ignore-permissions: no role restriction — any authenticated user may create exam attempts, by design
         attempt_doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         
-    source_document = frappe.db.get_value("SMRITI Certification Exam", exam_id, "source_document")
+    source_document = smriti.db.get("SMRITI Certification Exam", exam_id, "source_document")
     if not source_document:
         frappe.throw(_("Exam source document not configured"), frappe.ValidationError)
         
     questions = _parse_questions(source_document)
-    duration_minutes = frappe.db.get_value("SMRITI Certification Exam", exam_id, "duration_minutes") or 60
+    duration_minutes = smriti.db.get("SMRITI Certification Exam", exam_id, "duration_minutes") or 60
     
     return {
         "status": "In Progress",
@@ -1545,16 +1545,16 @@ def submit_psv_exam(attempt_id=None, answers_json=None):
     if not attempt_id or not answers_json:
         frappe.throw(_("Attempt ID and Answers are required"), frappe.ValidationError)
         
-    attempt_doc = frappe.get_doc("SMRITI PSV Exam Attempt", attempt_id)
+    attempt_doc = smriti.documents.get("SMRITI PSV Exam Attempt", attempt_id)
     if attempt_doc.status in ("Passed", "Failed"):
         frappe.throw(_("This exam attempt has already been graded and closed."), frappe.ValidationError)
         
     # Check for expiration
     elapsed_seconds = (frappe.utils.now_datetime() - attempt_doc.start_time).total_seconds()
-    duration_limit_minutes = frappe.db.get_value("SMRITI Certification Exam", attempt_doc.exam_id, "duration_minutes") or 60
+    duration_limit_minutes = smriti.db.get("SMRITI Certification Exam", attempt_doc.exam_id, "duration_minutes") or 60
     is_expired = elapsed_seconds > (duration_limit_minutes * 60)
     
-    source_document = frappe.db.get_value("SMRITI Certification Exam", attempt_doc.exam_id, "source_document")
+    source_document = smriti.db.get("SMRITI Certification Exam", attempt_doc.exam_id, "source_document")
     answer_key = _parse_answer_key(source_document)
     
     if is_expired:
@@ -1566,7 +1566,7 @@ def submit_psv_exam(attempt_id=None, answers_json=None):
         attempt_doc.submitted_answers_json = answers_json
         # reviewed-ignore-permissions: no role restriction — any authenticated user may evaluate exam attempts, by design
         attempt_doc.save(ignore_permissions=True)
-        frappe.db.commit()
+        smriti.db.commit()
         return {
             "status": "Failed",
             "score": 0.0,
@@ -1586,7 +1586,7 @@ def submit_psv_exam(attempt_id=None, answers_json=None):
             correct_count += 1
             
     score = (correct_count / total_count) * 100.0 if total_count > 0 else 0.0
-    passing_score = frappe.db.get_value("SMRITI Certification Exam", attempt_doc.exam_id, "passing_score") or 80.0
+    passing_score = smriti.db.get("SMRITI Certification Exam", attempt_doc.exam_id, "passing_score") or 80.0
     
     passed = score >= passing_score
     status = "Passed" if passed else "Failed"
@@ -1626,7 +1626,7 @@ def submit_psv_exam(attempt_id=None, answers_json=None):
     attempt_doc.certificate_hash = certificate_hash
     # reviewed-ignore-permissions: no role restriction — any authenticated user may evaluate exam attempts, by design
     attempt_doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
     
     return {
         "status": status,
@@ -1650,7 +1650,7 @@ def get_psv_exam_status(exam_id=None):
         
     user = frappe.session.user
     
-    attempts = frappe.get_all(
+    attempts = smriti.db.get_list(
         "SMRITI PSV Exam Attempt",
         filters={"user": user, "exam_id": exam_id},
         fields=["name", "start_time", "score", "status", "end_time"],
@@ -1671,15 +1671,15 @@ def get_psv_exam_status(exam_id=None):
     for att in mapped_attempts:
         if att["status"] == "In Progress":
             elapsed_seconds = (frappe.utils.now_datetime() - att["start_time"]).total_seconds()
-            duration_limit_minutes = frappe.db.get_value("SMRITI Certification Exam", exam_id, "duration_minutes") or 60
+            duration_limit_minutes = smriti.db.get("SMRITI Certification Exam", exam_id, "duration_minutes") or 60
             if elapsed_seconds > (duration_limit_minutes * 60):
-                doc = frappe.get_doc("SMRITI PSV Exam Attempt", att["attempt_id"])
+                doc = smriti.documents.get("SMRITI PSV Exam Attempt", att["attempt_id"])
                 doc.status = "Failed"
                 doc.score = 0.0
                 doc.end_time = frappe.utils.now_datetime()
                 # reviewed-ignore-permissions: no role restriction — any authenticated user may retrieve exam status, by design
                 doc.save(ignore_permissions=True)
-                frappe.db.commit()
+                smriti.db.commit()
                 att["status"] = "Failed"
                 att["score"] = 0.0
             else:
@@ -1703,7 +1703,7 @@ def get_certified_registry():
     """
     Returns a list of certified planners without leaking internal IDs or emails.
     """
-    attempts = frappe.get_all(
+    attempts = smriti.db.get_list(
         "SMRITI PSV Exam Attempt",
         filters={"status": "Passed"},
         fields=["user", "exam_id", "end_time", "certificate_hash"],
@@ -1720,11 +1720,11 @@ def get_certified_registry():
             
         user = att.user
         if user not in user_names:
-            user_names[user] = frappe.db.get_value("User", user, "full_name") or user
+            user_names[user] = smriti.db.get("User", user, "full_name") or user
             
         exam_id = att.exam_id
         if exam_id not in exam_titles:
-            exam_titles[exam_id] = frappe.db.get_value("SMRITI Certification Exam", exam_id, "title") or exam_id
+            exam_titles[exam_id] = smriti.db.get("SMRITI Certification Exam", exam_id, "title") or exam_id
             
         registry.append({
             "candidate_name": user_names[user],
@@ -1746,12 +1746,12 @@ def download_psv_certificate(attempt_id=None):
     if not attempt_id:
         frappe.throw(_("Attempt ID is required"), frappe.ValidationError)
         
-    attempt = frappe.get_doc("SMRITI PSV Exam Attempt", attempt_id)
+    attempt = smriti.documents.get("SMRITI PSV Exam Attempt", attempt_id)
     if attempt.status != "Passed":
         frappe.throw(_("Certificate is only available for passed attempts."), frappe.ValidationError)
         
-    candidate_name = frappe.db.get_value("User", attempt.user, "full_name") or attempt.user
-    exam_title = frappe.db.get_value("SMRITI Certification Exam", attempt.exam_id, "title") or attempt.exam_id
+    candidate_name = smriti.db.get("User", attempt.user, "full_name") or attempt.user
+    exam_title = smriti.db.get("SMRITI Certification Exam", attempt.exam_id, "title") or attempt.exam_id
     completion_date = frappe.utils.format_date(attempt.end_time) if attempt.end_time else ""
     score = attempt.score
     certificate_hash = attempt.certificate_hash
@@ -1940,7 +1940,7 @@ def verify_psv_certificate(certificate_hash=None):
     if not certificate_hash:
         return {"valid": False, "error": "Missing certificate hash"}
         
-    attempt = frappe.get_all(
+    attempt = smriti.db.get_list(
         "SMRITI PSV Exam Attempt",
         filters={"certificate_hash": certificate_hash, "status": "Passed"},
         fields=["name", "user", "exam_id", "end_time", "score"]
@@ -1950,8 +1950,8 @@ def verify_psv_certificate(certificate_hash=None):
         return {"valid": False, "error": "Invalid or non-existent certificate hash"}
         
     attempt_doc = attempt[0]
-    candidate_name = frappe.db.get_value("User", attempt_doc.user, "full_name") or attempt_doc.user
-    exam_title = frappe.db.get_value("SMRITI Certification Exam", attempt_doc.exam_id, "title") or attempt_doc.exam_id
+    candidate_name = smriti.db.get("User", attempt_doc.user, "full_name") or attempt_doc.user
+    exam_title = smriti.db.get("SMRITI Certification Exam", attempt_doc.exam_id, "title") or attempt_doc.exam_id
     
     return {
         "valid": True,

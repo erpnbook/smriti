@@ -3,7 +3,8 @@
 # @file: smriti_retail_os/api/__init__.py
 # @description: Shared API utilities and session management helpers.
 #
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from frappe.utils import flt
 
 @frappe.whitelist()
@@ -13,9 +14,9 @@ def get_item_stock(item_code, warehouse=None):
     Aggregates across all warehouses if no warehouse is specified.
     """
     if warehouse:
-        actual_qty = frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse}, "actual_qty") or 0.0
+        actual_qty = smriti.db.get("Bin", {"item_code": item_code, "warehouse": warehouse}, "actual_qty") or 0.0
     else:
-        res = frappe.db.sql(
+        res = smriti.db.sql(
             "SELECT SUM(actual_qty) FROM `tabBin` WHERE item_code=%s",
             (item_code,)
         )

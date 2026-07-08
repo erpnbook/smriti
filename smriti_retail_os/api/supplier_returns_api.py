@@ -19,9 +19,10 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
 from frappe.utils import flt, cint, nowdate
 from frappe import _
+from smriti_retail_os import smriti
 
 @frappe.whitelist()
 def get_submitted_receipts(query=None):
@@ -39,7 +40,7 @@ def get_submitted_receipts(query=None):
             "supplier_name": ["like", f"%{query}%"]
         }
 
-    receipts = frappe.db.get_all(
+    receipts = smriti.db.get_list(
         "Purchase Receipt",
         filters=filters,
         or_filters=or_filters,
@@ -54,10 +55,10 @@ def get_receipt_details(receipt_name):
     """
     Fetches details of a specific Purchase Receipt for return processing.
     """
-    if not frappe.db.exists("Purchase Receipt", receipt_name):
+    if not smriti.db.exists("Purchase Receipt", receipt_name):
         return None
 
-    pr = frappe.get_doc("Purchase Receipt", receipt_name)
+    pr = smriti.documents.get("Purchase Receipt", receipt_name)
     items = []
     
     for item in pr.items:
@@ -102,10 +103,10 @@ def submit_supplier_return(receipt_name, return_items, remarks=None, manager_pin
         from smriti_retail_os.purchase_api import check_store_manager_role
         check_store_manager_role()
 
-    if not frappe.db.exists("Purchase Receipt", receipt_name):
+    if not smriti.db.exists("Purchase Receipt", receipt_name):
         frappe.throw(_("Original Purchase Receipt {0} not found.").format(receipt_name))
 
-    docstatus = frappe.db.get_value("Purchase Receipt", receipt_name, "docstatus")
+    docstatus = smriti.db.get("Purchase Receipt", receipt_name, "docstatus")
     if docstatus != 1:
         frappe.throw(_("Purchase Receipt {0} must be submitted to create a return.").format(receipt_name))
 
@@ -155,9 +156,9 @@ def submit_supplier_return(receipt_name, return_items, remarks=None, manager_pin
         # reviewed-ignore-permissions: purchase debit note submission, gated by manager PIN
         return_doc.insert(ignore_permissions=True)
         return_doc.submit()
-        frappe.db.commit()
+        smriti.db.commit()
     except Exception:
-        frappe.db.rollback()
+        smriti.db.rollback()
         raise
 
     return {

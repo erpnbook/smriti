@@ -17,8 +17,9 @@
 # @version: 1.8.6
 #
 
-import frappe
-from frappe import _
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.sendmail, frappe.logger, frappe._ — framework utilities
+from frappe import _  # i18n only
+from smriti_retail_os import smriti
 from frappe.utils import cint
 
 
@@ -65,7 +66,7 @@ def _check_license():
 
 
 def _check_company():
-    company = frappe.db.get_value("Company", {}, "name")
+    company = smriti.db.get("Company", {}, "name")
     if company:
         return {"id": "company", "label": "Default Company",
                 "status": "PASS", "message": f"Company '{company}' is configured."}
@@ -74,7 +75,7 @@ def _check_company():
 
 
 def _check_warehouse():
-    count = frappe.db.count("Warehouse", {"is_group": 0, "disabled": 0})
+    count = smriti.db.count("Warehouse", {"is_group": 0, "disabled": 0})
     if count >= 1:
         return {"id": "warehouse", "label": "Store Warehouse",
                 "status": "PASS", "message": f"{count} active warehouse(s) configured."}
@@ -83,7 +84,7 @@ def _check_warehouse():
 
 
 def _check_pos_profile():
-    count = frappe.db.count("POS Profile", {"disabled": 0})
+    count = smriti.db.count("POS Profile", {"disabled": 0})
     if count >= 1:
         return {"id": "pos_profile", "label": "POS Profile",
                 "status": "PASS", "message": f"{count} active POS Profile(s) configured."}
@@ -92,12 +93,12 @@ def _check_pos_profile():
 
 
 def _check_cashier_users():
-    users = frappe.db.get_all(
+    users = smriti.db.get_list(
         "Has Role",
         filters={"role": "SMRITI Cashier"},
         pluck="parent"
     )
-    active = [u for u in set(users) if frappe.db.get_value("User", u, "enabled")]
+    active = [u for u in set(users) if smriti.db.get("User", u, "enabled")]
     if active:
         return {"id": "cashier_users", "label": "Cashier Users",
                 "status": "PASS", "message": f"{len(active)} user(s) with SMRITI Cashier role.",
@@ -108,12 +109,12 @@ def _check_cashier_users():
 
 
 def _check_manager_users():
-    users = frappe.db.get_all(
+    users = smriti.db.get_list(
         "Has Role",
         filters={"role": "SMRITI Store Manager"},
         pluck="parent"
     )
-    active = [u for u in set(users) if frappe.db.get_value("User", u, "enabled")]
+    active = [u for u in set(users) if smriti.db.get("User", u, "enabled")]
     if active:
         return {"id": "manager_users", "label": "Store Manager Users",
                 "status": "PASS", "message": f"{len(active)} user(s) with SMRITI Store Manager role.",
@@ -124,16 +125,16 @@ def _check_manager_users():
 
 
 def _check_manager_pins():
-    managers = frappe.db.get_all(
+    managers = smriti.db.get_list(
         "Has Role",
         filters={"role": ["in", ["SMRITI Store Manager", "System Manager"]]},
         pluck="parent"
     )
     active_managers = [u for u in set(managers)
-                       if frappe.db.get_value("User", u, "enabled")
+                       if smriti.db.get("User", u, "enabled")
                        and u not in ("Administrator", "Guest")]
     with_pin = [u for u in active_managers
-                if frappe.db.get_value("User", u, "custom_smriti_pin")]
+                if smriti.db.get("User", u, "custom_smriti_pin")]
     if not active_managers:
         return {"id": "manager_pins", "label": "Manager POS Override PINs",
                 "status": "WARN", "message": "No active managers to check. Add manager users first.",
@@ -154,7 +155,7 @@ def _check_backup_security():
         settings = get_settings()
         enabled  = cint(settings.get("enable_backup_encryption", 0))
         if enabled:
-            verified = frappe.get_all("SMRITI Key Custodian", filters={"status": "Verified", "verified": 1})
+            verified = smriti.db.get_list("SMRITI Key Custodian", filters={"status": "Verified", "verified": 1})
             if len(verified) >= 2:
                 return {"id": "backup", "label": "Backup Encryption",
                         "status": "PASS", "message": "AES-256 encryption enabled. Dual-custodian recovery verified.",
@@ -174,7 +175,7 @@ def _check_backup_security():
 
 def _check_outgoing_email():
     try:
-        count = frappe.db.count("Email Account", {"enable_outgoing": 1})
+        count = smriti.db.count("Email Account", {"enable_outgoing": 1})
         if count:
             return {"id": "email", "label": "Outgoing Email (SMTP)",
                     "status": "PASS", "message": f"{count} outgoing email account(s) configured."}
@@ -186,7 +187,7 @@ def _check_outgoing_email():
 
 
 def _check_price_list():
-    count = frappe.db.count("Price List", {"selling": 1, "enabled": 1})
+    count = smriti.db.count("Price List", {"selling": 1, "enabled": 1})
     if count:
         return {"id": "price_list", "label": "Selling Price List",
                 "status": "PASS", "message": f"{count} active selling price list(s) configured."}
@@ -195,7 +196,7 @@ def _check_price_list():
 
 
 def _check_tax_templates():
-    count = frappe.db.count("Sales Taxes and Charges Template", {"disabled": 0})
+    count = smriti.db.count("Sales Taxes and Charges Template", {"disabled": 0})
     if count:
         return {"id": "tax", "label": "GST / Tax Templates",
                 "status": "PASS", "message": f"{count} tax template(s) configured."}
@@ -204,7 +205,7 @@ def _check_tax_templates():
 
 
 def _check_items():
-    count = frappe.db.count("Item", {"disabled": 0, "is_sales_item": 1})
+    count = smriti.db.count("Item", {"disabled": 0, "is_sales_item": 1})
     if count >= 5:
         return {"id": "items", "label": "Product Catalogue",
                 "status": "PASS", "message": f"{count} sellable items loaded in system."}
@@ -216,7 +217,7 @@ def _check_items():
 
 
 def _check_customers():
-    count = frappe.db.count("Customer", {"disabled": 0})
+    count = smriti.db.count("Customer", {"disabled": 0})
     if count >= 1:
         return {"id": "customers", "label": "Customer Master",
                 "status": "PASS", "message": f"{count} active customer(s) in system."}

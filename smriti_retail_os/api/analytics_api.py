@@ -10,8 +10,9 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
-from frappe import _
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.sendmail, frappe.logger, frappe._ — framework utilities
+from frappe import _  # i18n only
+from smriti_retail_os import smriti
 from frappe.utils import (
     flt, nowdate, add_days, add_months,
     get_first_day, get_last_day, getdate
@@ -50,21 +51,21 @@ def get_dashboard_kpis():
     prev_month_data = _sales_summary(prev_month_start, prev_month_end)
 
     # Outstanding receivables
-    outstanding = frappe.db.sql("""
+    outstanding = smriti.db.sql("""
         SELECT COALESCE(SUM(outstanding_amount), 0) as total
         FROM `tabSales Invoice`
         WHERE docstatus = 1 AND outstanding_amount > 0
     """, as_dict=True)[0]
 
     # Stock value
-    stock_val = frappe.db.sql("""
+    stock_val = smriti.db.sql("""
         SELECT COALESCE(SUM(stock_value), 0) as total,
                COUNT(DISTINCT item_code) as skus
         FROM `tabBin` WHERE actual_qty > 0
     """, as_dict=True)[0]
 
     # Low stock count
-    low_stock = frappe.db.sql("""
+    low_stock = smriti.db.sql("""
         SELECT COUNT(DISTINCT item_code) as cnt
         FROM `tabBin` WHERE actual_qty > 0 AND actual_qty <= 5
     """, as_dict=True)[0]
@@ -93,7 +94,7 @@ def get_dashboard_kpis():
 
 def _sales_summary(from_date, to_date):
     """Single SQL aggregate for sales between dates."""
-    row = frappe.db.sql("""
+    row = smriti.db.sql("""
         SELECT COALESCE(SUM(grand_total), 0) as total,
                COUNT(*) as bills
         FROM `tabPOS Invoice`
@@ -121,7 +122,7 @@ def get_sales_trend(days=30):
     days = int(days)
     from_date = add_days(nowdate(), -(days - 1))
 
-    rows = frappe.db.sql("""
+    rows = smriti.db.sql("""
         SELECT posting_date AS date,
                COUNT(*) AS bills,
                COALESCE(SUM(grand_total), 0) AS sales
@@ -145,7 +146,7 @@ def get_payment_mix(days=30):
     _check_access()
     from_date = add_days(nowdate(), -(int(days) - 1))
 
-    rows = frappe.db.sql("""
+    rows = smriti.db.sql("""
         SELECT pp.mode_of_payment, SUM(pp.amount) as total
         FROM `tabPOS Invoice` pi
         JOIN `tabSales Invoice Payment` pp ON pp.parent = pi.name
@@ -166,7 +167,7 @@ def get_top_items(days=30, limit=10):
     _check_access()
     from_date = add_days(nowdate(), -(int(days) - 1))
 
-    rows = frappe.db.sql("""
+    rows = smriti.db.sql("""
         SELECT pii.item_code, pii.item_name,
                SUM(pii.qty) as total_qty,
                SUM(pii.amount) as total_amount
@@ -189,7 +190,7 @@ def get_cashier_performance(days=30):
     _check_access()
     from_date = add_days(nowdate(), -(int(days) - 1))
 
-    rows = frappe.db.sql("""
+    rows = smriti.db.sql("""
         SELECT owner as cashier,
                COUNT(*) as bills,
                COALESCE(SUM(grand_total), 0) as total_sales
@@ -216,7 +217,7 @@ def get_outstanding_aging():
     _check_access()
     today = getdate(nowdate())
 
-    invoices = frappe.db.get_all(
+    invoices = smriti.db.get_list(
         "Sales Invoice",
         filters={"docstatus": 1, "outstanding_amount": [">", 0]},
         fields=["outstanding_amount", "posting_date", "due_date"]

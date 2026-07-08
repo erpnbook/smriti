@@ -17,8 +17,9 @@
 # @version: 1.8.6
 #
 
-import frappe
-from frappe import _
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.sendmail, frappe.logger, frappe._ — framework utilities
+from frappe import _  # i18n only
+from smriti_retail_os import smriti
 from frappe.utils import now_datetime, cint
 
 
@@ -66,7 +67,7 @@ def get_license_status():
         suffix = doc.license_key_suffix or ""
         summary["license_key_masked"] = (f"****-****-****-{suffix}") if suffix else ("****-****-****-****" if doc.license_key else "Not Set")
     except Exception:
-        frappe.log_error(frappe.get_traceback(), "SMRITI: Exception in api/license_api.py")
+        smriti.errors.log_error(frappe.get_traceback(), "SMRITI: Exception in api/license_api.py")
 
     return summary
 
@@ -139,7 +140,7 @@ def activate_license(license_key, organization_name="", owner_name="",
 
     except Exception:
         # Unexpected error in validator — accept in legacy mode, log the error
-        frappe.log_error(
+        smriti.errors.log_error(
             title="SMRITI License: Key Validation Error",
             message=frappe.get_traceback()
         )
@@ -172,7 +173,7 @@ def activate_license(license_key, organization_name="", owner_name="",
     # _recalculate_license_state runs in validate() on save
     # reviewed-ignore-permissions: product license validation and local activation, gated by SMRITI System Admin, System Manager, or Administrator roles
     doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     # ── Audit log ─────────────────────────────────────────────────────────────
     doc.reload()
@@ -192,7 +193,7 @@ def activate_license(license_key, organization_name="", owner_name="",
     })
     # reviewed-ignore-permissions: product license validation and local activation, gated by SMRITI System Admin, System Manager, or Administrator roles
     doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     return {
         "success": True,
@@ -214,11 +215,11 @@ def sync_from_company():
     _require_license_admin()
 
     company_name = frappe.defaults.get_user_default("Company") or \
-                   frappe.db.get_value("Company", {}, "name")
+                   smriti.db.get("Company", {}, "name")
     if not company_name:
         frappe.throw(_("No default company found. Please set a default company first."))
 
-    company = frappe.get_doc("Company", company_name)
+    company = smriti.documents.get("Company", company_name)
     doc = frappe.get_single("SMRITI License")
     doc.organization_name = company.company_name
     doc.gstin = getattr(company, "gstin", "") or getattr(company, "tax_id", "") or ""
@@ -226,7 +227,7 @@ def sync_from_company():
 
     # reviewed-ignore-permissions: local sync of license organization details, gated by SMRITI System Admin, System Manager, or Administrator roles
     doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     doc.reload()
     doc.append("activity_log", {
@@ -238,7 +239,7 @@ def sync_from_company():
     })
     # reviewed-ignore-permissions: local sync of license organization details, gated by SMRITI System Admin, System Manager, or Administrator roles
     doc.save(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()
 
     return {"success": True, "organization_name": doc.organization_name, "gstin": doc.gstin}
 

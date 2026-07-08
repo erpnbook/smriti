@@ -12,7 +12,8 @@
 # @file: smriti_retail_os/api/coming_soon_api.py
 # @description: whitelisted API endpoints for feature roadmaps and coming soon registry.
 #
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 # Registry of features under development
 # Add new features here as they are planned

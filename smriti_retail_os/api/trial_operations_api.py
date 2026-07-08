@@ -22,7 +22,8 @@
 #   smriti_retail_os.api.trial_operations_api.check_trial_health
 #   smriti_retail_os.api.trial_operations_api.cleanup_failed_provisioning
 
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 from datetime import datetime, timedelta
 
 _LOG = frappe.logger('smriti.trial')
@@ -73,13 +74,13 @@ def _write_ops_log(activation_name, step_name, step_status, step_message=''):
 def _update_lead_status(lead_name, new_status, note_line):
     """Update Trial Lead status and append note."""
     try:
-        lead = frappe.get_doc('SMRITI Trial Lead', lead_name)
+        lead = smriti.documents.get('SMRITI Trial Lead', lead_name)
         if lead.status != new_status:
             lead.status = new_status
             lead.notes  = ((lead.notes or '') + '\n' + note_line).strip()
             lead.save(ignore_permissions=True)
     except Exception as e:
-        frappe.log_error(f'SMRITI OPS — Lead status update failed for {lead_name}: {e}')
+        smriti.errors.log_error(f'SMRITI OPS — Lead status update failed for {lead_name}: {e}')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -100,7 +101,7 @@ def expire_trials():
     try:
         _LOG.info('TRIAL_OPS: expire_trials() starting')
 
-        expired = frappe.db.sql(
+        expired = smriti.db.sql(
             """
             SELECT name, activation_reference, trial_lead, store_name, trial_end_date
             FROM   `tabSMRITI Trial Activation`
@@ -113,7 +114,7 @@ def expire_trials():
         count = 0
         for row in expired:
             try:
-                activation = frappe.get_doc('SMRITI Trial Activation', row['name'])
+                activation = smriti.documents.get('SMRITI Trial Activation', row['name'])
                 activation.activation_status = 'Expired'
                 ts   = datetime.now().strftime('%Y-%m-%d %H:%M')
                 note = (f'[{ts}] Scheduler: Trial expired | '
@@ -135,13 +136,13 @@ def expire_trials():
                 count += 1
 
             except Exception as e:
-                frappe.log_error(f'SMRITI expire_trials row error [{row["name"]}]: {e}')
+                smriti.errors.log_error(f'SMRITI expire_trials row error [{row["name"]}]: {e}')
 
-        frappe.db.commit()
+        smriti.db.commit()
         _LOG.info(f'TRIAL_OPS: expire_trials() completed — {count} trial(s) expired')
 
     except Exception as e:
-        frappe.log_error(f'SMRITI expire_trials() failed: {e}')
+        smriti.errors.log_error(f'SMRITI expire_trials() failed: {e}')
         _LOG.exception(f'expire_trials() outer exception: {e}')
 
 
@@ -181,7 +182,7 @@ def send_trial_reminders():
 
             target_date = today + timedelta(days=days_before)
 
-            candidates = frappe.db.sql(
+            candidates = smriti.db.sql(
                 f"""
                 SELECT name, activation_reference, store_name, owner_name,
                        mobile, trial_end_date, trial_lead
@@ -197,7 +198,7 @@ def send_trial_reminders():
             for row in candidates:
                 try:
                     # Get owner email from Trial Lead
-                    lead_email = frappe.db.get_value(
+                    lead_email = smriti.db.get(
                         'SMRITI Trial Lead', row['trial_lead'], 'email'
                     ) or ''
 
@@ -212,7 +213,7 @@ def send_trial_reminders():
 
                     # Mark flag to prevent duplicate sends
                     if flag_field:
-                        frappe.db.set_value(
+                        smriti.db.set_value(
                             'SMRITI Trial Activation', row['name'],
                             flag_field, 1,
                             update_modified=False,
@@ -225,15 +226,15 @@ def send_trial_reminders():
                     )
 
                 except Exception as e:
-                    frappe.log_error(
+                    smriti.errors.log_error(
                         f'SMRITI send_trial_reminders row error [{row["name"]} D-{days_before}]: {e}'
                     )
 
-        frappe.db.commit()
+        smriti.db.commit()
         _LOG.info(f'TRIAL_OPS: send_trial_reminders() completed — {total_sent} email(s) sent')
 
     except Exception as e:
-        frappe.log_error(f'SMRITI send_trial_reminders() failed: {e}')
+        smriti.errors.log_error(f'SMRITI send_trial_reminders() failed: {e}')
         _LOG.exception(f'send_trial_reminders() outer exception: {e}')
 
 
@@ -290,13 +291,13 @@ def check_trial_health():
         )
 
     except Exception as e:
-        frappe.log_error(f'SMRITI check_trial_health() failed: {e}')
+        smriti.errors.log_error(f'SMRITI check_trial_health() failed: {e}')
         _LOG.exception(f'check_trial_health() outer exception: {e}')
 
 
 def _count_expiring(days):
     """Count Active/Activated trials expiring within N days from now."""
-    rows = frappe.db.sql(
+    rows = smriti.db.sql(
         """
         SELECT COUNT(*) AS cnt FROM `tabSMRITI Trial Activation`
         WHERE  activation_status IN ('Active', 'Activated')
@@ -331,7 +332,7 @@ def cleanup_failed_provisioning():
 
         cutoff = datetime.now() - timedelta(hours=stale_hours)
 
-        stale = frappe.db.sql(
+        stale = smriti.db.sql(
             """
             SELECT name, activation_reference, store_name, provision_run_id, modified
             FROM   `tabSMRITI Trial Activation`
@@ -351,7 +352,7 @@ def cleanup_failed_provisioning():
 
         for row in stale:
             try:
-                activation = frappe.get_doc('SMRITI Trial Activation', row['name'])
+                activation = smriti.documents.get('SMRITI Trial Activation', row['name'])
                 activation.activation_status  = 'Failed'
                 activation.last_failure_reason = reason
                 ts   = datetime.now().strftime('%Y-%m-%d %H:%M')
@@ -365,11 +366,11 @@ def cleanup_failed_provisioning():
                 failed_names.append(f'{row["activation_reference"]} ({row["store_name"]})')
 
             except Exception as e:
-                frappe.log_error(
+                smriti.errors.log_error(
                     f'SMRITI cleanup_failed_provisioning row error [{row["name"]}]: {e}'
                 )
 
-        frappe.db.commit()
+        smriti.db.commit()
 
         # Notify administrator
         if failed_names:
@@ -381,7 +382,7 @@ def cleanup_failed_provisioning():
         )
 
     except Exception as e:
-        frappe.log_error(f'SMRITI cleanup_failed_provisioning() failed: {e}')
+        smriti.errors.log_error(f'SMRITI cleanup_failed_provisioning() failed: {e}')
         _LOG.exception(f'cleanup_failed_provisioning() outer exception: {e}')
 
 
@@ -403,4 +404,4 @@ def _notify_admin_stale(failed_names, stale_hours, admin_email):
             ),
         )
     except Exception as e:
-        frappe.log_error(f'SMRITI stale provisioning admin notification failed: {e}')
+        smriti.errors.log_error(f'SMRITI stale provisioning admin notification failed: {e}')

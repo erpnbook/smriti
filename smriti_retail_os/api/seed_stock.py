@@ -10,7 +10,8 @@
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 # -*- coding: utf-8 -*-
-import frappe
+import frappe  # frappe.whitelist, frappe.throw, frappe.session, frappe.logger — framework utilities
+from smriti_retail_os import smriti
 
 def run():
     print("START SEEDING STOCK...")
@@ -22,7 +23,7 @@ def run():
     # Check if stock already exists
     has_stock = False
     for item_code in items:
-        qty = frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse}, "actual_qty")
+        qty = smriti.db.get("Bin", {"item_code": item_code, "warehouse": warehouse}, "actual_qty")
         if qty and qty > 0:
             print(f"Item {item_code} already has stock: {qty}")
             has_stock = True
@@ -33,8 +34,8 @@ def run():
         return
 
     # Create Material Receipt Stock Entry
-    se = frappe.get_doc({
-        "doctype": "Stock Entry",
+    se = smriti.documents.new("StockEntry")
+    se.update({
         "purpose": "Material Receipt",
         "stock_entry_type": "Material Receipt",
         "company": company,
@@ -43,7 +44,7 @@ def run():
     })
 
     for item_code in items:
-        if not frappe.db.exists("Item", item_code):
+        if not smriti.db.exists("Item", item_code):
             print(f"Item {item_code} does not exist, skipping.")
             continue
         se.append("items", {
@@ -65,4 +66,4 @@ def run():
     se.insert(ignore_permissions=True)
     se.submit()
     print(f"Created and submitted Stock Entry {se.name} for items.")
-    frappe.db.commit()
+    smriti.db.commit()
