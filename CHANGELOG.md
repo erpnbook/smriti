@@ -5,7 +5,43 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.4.0] — 2026-07-08
+
+### Added — Label Studio Phase A (Retail Chain Store complete)
+
+#### Backend
+- **`label_api.get_item_for_label(item_code)`**: Fetches `item_name`, `barcode` (from `Item Barcode` child table), `mrp` (from `Item Price` — Standard Selling), `hsn_code`, `brand` from ERPNext `Item`. Human-readable error when Item Code not found.
+- **`label_api.get_printers_list()`**: Returns registered `SMRITI Printer` records; graceful fallback entry when doctype not configured.
+- **`render_engine.ZPLRenderer`**: `QRCode` → `^BQN,2,3` command; `Line` → `^GB` graphic box; `visible=false` elements skipped; `font_size` used in text command (`^A0N`).
+- **`render_engine.TSPLRenderer`**: `QRCode` → `QRCODE … H,3,M,0,M2`; `Line` → `BAR`; `visible=false` skipped.
+
+#### JS
+- **`label_core.js`**: Canvas starts **empty** (no placeholder elements). `LabelStudioState.nextId` counter for unique IDs. `LabelElementFactory.create(type, overrides)` — retail defaults per type (Text 60×8 mm, Barcode 80×18 mm, QRCode 20×20 mm, Line 90×1 mm). Event bus `off()` method added.
+- **`label_designer.js`**: Full rewrite.
+  - `element:add {type}` → creates via factory, pushes to canvas, selects.
+  - `element:delete` → removes active element.
+  - `canvas:resize {width_mm, height_mm}` → updates canvas dimensions, redraws.
+  - `element:load_item` → if canvas empty scaffolds standard retail layout (name + brand + MRP texts + barcode); otherwise updates source-tagged elements. Emits `item:loaded`.
+  - `QRCode` element renders as a QR-pattern grid placeholder on canvas.
+  - `Line` element renders as horizontal rule.
+  - `Text` element uses `el.font_size` for proportional text scaling.
+  - Selection outline changed to purple dashed border (`#7c3aed`) — matches SMRITI accent.
+
+#### UI (`label.html`) — full rebuild
+- **Element palette toolbar**: `+ Text` / `+ Barcode` / `+ QR Code` / `+ Line` / `Delete` buttons.
+- **Label size presets**: 100×50 mm (Standard), 58×40 mm, 40×30 mm, 75×50 mm, 100×30 mm (Strip), Custom (prompt).
+- **SKU / Item Lookup card**: Item Code input (Enter or Load button) → `get_item_for_label` → shows Name / Barcode / MRP / HSN / Brand; auto-scaffolds or updates label on load.
+- **Inspector**: content, x, y, width, height, rotation, font size, locked, visible.
+- **Print panel** (right dock): printer selector (API-loaded), ZPL/TSPL format toggle, copies input, Print button, Export button (downloads JSON preview).
+- **Element list panel**: live list of all elements; click-to-select.
+- **Status bar** + **toast notifications** (success / error / info).
+- **Keyboard shortcuts**: `Ctrl+Z` undo, `Ctrl+Y` redo, `Delete` / `Backspace` removes selected element.
+- **Canvas info bar**: shows current dimensions + element count.
+
+---
+
 ## [2.3.1] — 2026-07-08
+
 
 ### Fixed
 
