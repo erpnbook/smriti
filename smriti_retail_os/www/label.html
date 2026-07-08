@@ -1,7 +1,8 @@
 {% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/label.html
-  @description: SMRITI Label Studio (Zero system chrome)
+  @description: SMRITI Label Studio — Retail label designer with SKU lookup,
+                element palette, label size presets, and print dispatch.
   @author: Jawahar R Mallah
 -->
 <html lang="en">
@@ -11,245 +12,661 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMRITI Label Studio</title>
     <link rel="shortcut icon" href="/assets/smriti_retail_os/images/smriti_logo.svg" type="image/svg+xml">
-    
-    <!-- SMRITI Standard Theme Variables -->
     <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_tokens.css">
     <link rel="stylesheet" href="/assets/smriti_retail_os/css/label_studio.css">
     <link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css">
+
+    <style>
+        /* ── Label Studio Layout ─────────────────────────────────────────── */
+        :root {
+            --ls-bg:        #0f172a;
+            --ls-surface:   #1e293b;
+            --ls-surface2:  #293548;
+            --ls-border:    #334155;
+            --ls-accent:    #7c3aed;
+            --ls-accent2:   #a78bfa;
+            --ls-text:      #e2e8f0;
+            --ls-text-dim:  #94a3b8;
+            --ls-success:   #10b981;
+            --ls-warning:   #f59e0b;
+            --ls-danger:    #ef4444;
+        }
+
+        body { background: var(--ls-bg); color: var(--ls-text); font-family: 'Inter', Arial, sans-serif; margin: 0; }
+
+        .studio-layout { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        /* Topbar */
+        .ls-topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 16px; background: var(--ls-surface);
+            border-bottom: 1px solid var(--ls-border); flex-shrink: 0;
+        }
+        .ls-topbar-left { display: flex; align-items: center; gap: 12px; }
+        .ls-brand { font-size: 14px; font-weight: 700; color: var(--ls-accent2); letter-spacing: 0.5px; }
+        .ls-title { font-size: 13px; color: var(--ls-text-dim); }
+
+        /* Element Toolbar */
+        .ls-toolbar {
+            display: flex; align-items: center; gap: 8px; padding: 8px 16px;
+            background: var(--ls-surface2); border-bottom: 1px solid var(--ls-border);
+            flex-shrink: 0; flex-wrap: wrap;
+        }
+        .ls-toolbar-label { font-size: 11px; color: var(--ls-text-dim); margin-right: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .ls-tool-btn {
+            display: flex; align-items: center; gap: 5px; padding: 5px 11px;
+            background: var(--ls-surface); border: 1px solid var(--ls-border);
+            border-radius: 6px; color: var(--ls-text); font-size: 12px;
+            cursor: pointer; transition: all 0.15s; white-space: nowrap;
+        }
+        .ls-tool-btn:hover { border-color: var(--ls-accent2); color: var(--ls-accent2); background: rgba(124,58,237,0.08); }
+        .ls-tool-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+        .ls-tool-btn.danger:hover { border-color: var(--ls-danger); color: var(--ls-danger); background: rgba(239,68,68,0.08); }
+
+        .ls-toolbar-sep { width: 1px; height: 22px; background: var(--ls-border); margin: 0 4px; }
+
+        /* Label Size Presets */
+        .ls-size-select {
+            padding: 4px 8px; background: var(--ls-surface); border: 1px solid var(--ls-border);
+            border-radius: 6px; color: var(--ls-text); font-size: 12px; cursor: pointer;
+        }
+        .ls-size-select:focus { outline: none; border-color: var(--ls-accent); }
+
+        /* Main area */
+        .ls-main { display: flex; flex: 1; overflow: hidden; }
+
+        /* Left Panel */
+        .ls-panel-left {
+            width: 240px; flex-shrink: 0; background: var(--ls-surface);
+            border-right: 1px solid var(--ls-border); overflow-y: auto;
+            display: flex; flex-direction: column; gap: 0;
+        }
+
+        /* Panel Cards */
+        .ls-card { padding: 14px; border-bottom: 1px solid var(--ls-border); }
+        .ls-card-title { font-size: 11px; font-weight: 700; color: var(--ls-accent2); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 10px; }
+
+        /* SKU Lookup */
+        .ls-sku-row { display: flex; gap: 6px; }
+        .ls-sku-input {
+            flex: 1; padding: 7px 10px; background: var(--ls-surface2);
+            border: 1px solid var(--ls-border); border-radius: 6px;
+            color: var(--ls-text); font-size: 12px;
+        }
+        .ls-sku-input:focus { outline: none; border-color: var(--ls-accent); }
+        .ls-sku-input::placeholder { color: var(--ls-text-dim); }
+        .ls-btn {
+            padding: 7px 11px; border-radius: 6px; border: none; font-size: 12px;
+            cursor: pointer; font-weight: 600; transition: all 0.15s; white-space: nowrap;
+        }
+        .ls-btn-accent { background: var(--ls-accent); color: #fff; }
+        .ls-btn-accent:hover { background: #6d28d9; }
+        .ls-btn-success { background: var(--ls-success); color: #fff; }
+        .ls-btn-success:hover { background: #059669; }
+        .ls-btn-outline { background: transparent; border: 1px solid var(--ls-border); color: var(--ls-text); }
+        .ls-btn-outline:hover { border-color: var(--ls-accent2); color: var(--ls-accent2); }
+
+        .ls-item-info { margin-top: 8px; font-size: 11px; color: var(--ls-text-dim); display: none; }
+        .ls-item-info.visible { display: block; }
+        .ls-item-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .ls-item-key { color: var(--ls-text-dim); }
+        .ls-item-val { color: var(--ls-text); font-weight: 600; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* Inspector */
+        .ls-inspector-empty { font-size: 12px; color: var(--ls-text-dim); text-align: center; padding: 8px 0; }
+        .ls-form-row { margin-bottom: 8px; }
+        .ls-form-label { display: block; font-size: 11px; color: var(--ls-text-dim); margin-bottom: 3px; }
+        .ls-form-input {
+            width: 100%; box-sizing: border-box; padding: 6px 9px;
+            background: var(--ls-surface2); border: 1px solid var(--ls-border);
+            border-radius: 5px; color: var(--ls-text); font-size: 12px;
+        }
+        .ls-form-input:focus { outline: none; border-color: var(--ls-accent); }
+        .ls-form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+        .ls-checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+
+        /* Preferences */
+        .ls-pref-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; }
+        .ls-select {
+            padding: 4px 8px; background: var(--ls-surface2); border: 1px solid var(--ls-border);
+            border-radius: 5px; color: var(--ls-text); font-size: 12px;
+        }
+
+        /* Canvas area */
+        .ls-canvas-area {
+            flex: 1; overflow: auto; background: var(--ls-bg);
+            display: flex; align-items: flex-start; justify-content: center;
+            padding: 24px;
+        }
+        .ls-canvas-wrap {
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+        }
+        .ls-canvas-label { font-size: 11px; color: var(--ls-text-dim); }
+        canvas#labelCanvas { box-shadow: 0 4px 24px rgba(0,0,0,0.5); border-radius: 2px; cursor: crosshair; }
+
+        /* Right panel — Print */
+        .ls-panel-right {
+            width: 220px; flex-shrink: 0; background: var(--ls-surface);
+            border-left: 1px solid var(--ls-border); overflow-y: auto;
+        }
+
+        /* Status bar */
+        .ls-statusbar {
+            display: flex; align-items: center; gap: 12px; padding: 5px 16px;
+            background: var(--ls-surface2); border-top: 1px solid var(--ls-border);
+            font-size: 11px; color: var(--ls-text-dim); flex-shrink: 0;
+        }
+        .ls-status-msg { flex: 1; }
+        .ls-status-msg.success { color: var(--ls-success); }
+        .ls-status-msg.error   { color: var(--ls-danger); }
+        .ls-status-msg.info    { color: var(--ls-accent2); }
+
+        /* Notification toast */
+        #ls-toast {
+            position: fixed; bottom: 48px; right: 24px; z-index: 999;
+            padding: 10px 16px; border-radius: 8px; font-size: 13px;
+            background: #1e293b; border: 1px solid #334155; color: #e2e8f0;
+            opacity: 0; pointer-events: none; transform: translateY(8px);
+            transition: opacity 0.2s, transform 0.2s; max-width: 320px;
+        }
+        #ls-toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        #ls-toast.success { border-color: var(--ls-success); color: var(--ls-success); }
+        #ls-toast.error   { border-color: var(--ls-danger);  color: var(--ls-danger);  }
+    </style>
 </head>
 <body class="smriti-theme-navy">
-    <div class="bg-grid"></div>
+<div class="studio-layout">
 
-    <div id="app">
-        <!-- Sidebar Target -->
-        <div id="smriti-sidebar-target" class="sidebar"></div>
-
-        <!-- Main Wrapper -->
-        <div class="main-wrapper">
-            <!-- SMRITI Standard Topbar -->
-            <div class="topbar">
-                <div class="topbar-breadcrumbs">
-                    <a href="/smriti" class="breadcrumb-link">SMRITI</a>
-                    <span class="sep">/</span>
-                    <span class="active">Label Studio</span>
-                </div>
-                <div class="topbar-right">
-                    <span class="user-badge" id="userBadge">Cashier</span>
-                </div>
-            </div>
-
-            <!-- Content Area -->
-            <div class="studio-container">
-                <!-- Designer Toolbar & Sidebar Controls -->
-                <div class="studio-sidebar">
-                    <div class="card">
-                        <h3 class="card-title">Preferences</h3>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="gridToggle">Show Grid</label>
-                            <input type="checkbox" id="gridToggle" checked>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="snapToggle">Snap to Grid</label>
-                            <input type="checkbox" id="snapToggle" checked>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="gridSizeSelect">Grid Size (mm)</label>
-                            <select class="filter-select" id="gridSizeSelect">
-                                <option value="1">1 mm</option>
-                                <option value="2">2 mm</option>
-                                <option value="5" selected>5 mm</option>
-                                <option value="10">10 mm</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="zoomSelect">Zoom View</label>
-                            <select class="filter-select" id="zoomSelect">
-                                <option value="0.5">50%</option>
-                                <option value="1.0" selected>100%</option>
-                                <option value="2.0">200%</option>
-                                <option value="fit">Fit</option>
-                            </select>
-                        </div>
-
-                        <div class="toolbar-actions">
-                            <button class="btn btn-secondary btn-sm" id="undoBtn">Undo</button>
-                            <button class="btn btn-secondary btn-sm" id="redoBtn">Redo</button>
-                        </div>
-                    </div>
-
-                    <!-- Inspector Panel -->
-                    <div class="card" id="inspectorCard">
-                        <h3 class="card-title">Element Inspector</h3>
-                        <p class="empty-state-text" id="inspectorEmptyState">Select an element to inspect</p>
-                        
-                        <div id="inspectorForm" style="display: none;">
-                            <div class="form-group">
-                                <label class="form-label" for="elemContent">Content / Value</label>
-                                <input type="text" class="search-input" id="elemContent">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="elemX">X (mm)</label>
-                                <input type="number" class="search-input" id="elemX" min="0">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="elemY">Y (mm)</label>
-                                <input type="number" class="search-input" id="elemY" min="0">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="elemW">Width (mm)</label>
-                                <input type="number" class="search-input" id="elemW" min="5">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="elemH">Height (mm)</label>
-                                <input type="number" class="search-input" id="elemH" min="5">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="elemRotation">Rotation (°)</label>
-                                <input type="number" class="search-input" id="elemRotation" min="0" max="360">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="elemLocked">Locked</label>
-                                <input type="checkbox" id="elemLocked">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="elemVisible">Visible</label>
-                                <input type="checkbox" id="elemVisible" checked>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Canvas Preview Area -->
-                <div class="studio-canvas-area">
-                    <div class="canvas-card">
-                        <h3 class="card-title">Design Workspace</h3>
-                        <div class="canvas-container">
-                            <canvas id="labelCanvas" width="378" height="189"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- ── Topbar ───────────────────────────────────────────────────────── -->
+    <div class="ls-topbar">
+        <div class="ls-topbar-left">
+            <div id="smriti-sidebar-target" class="sidebar" style="display:none;"></div>
+            <span class="ls-brand">SMRITI</span>
+            <span class="ls-title">Label Studio</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <span id="lsCanvasDims" style="font-size:11px;color:#64748b;">100×50 mm</span>
+            <span class="ls-brand" id="userBadge" style="font-size:11px;color:#94a3b8;font-weight:400;"></span>
         </div>
     </div>
 
-    <!-- SMRITI Standard Scripts -->
-    <script src="/assets/smriti_retail_os/js/label/label_core.js"></script>
-    <script src="/assets/smriti_retail_os/js/label/label_designer.js"></script>
-    
-    <!-- Sidebar injection -->
-    <script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
-    <script>SMRITI.renderFlexibleSidebar("barcode");</script>
+    <!-- ── Element Toolbar ──────────────────────────────────────────────── -->
+    <div class="ls-toolbar">
+        <span class="ls-toolbar-label">Add Element</span>
 
-    <script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js"></script>
-    <script src="/assets/smriti_retail_os/js/smriti_theme_manager.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.SMRITI && typeof SMRITI.initUIEngine === 'function') {
-                SMRITI.initUIEngine();
-            }
+        <button class="ls-tool-btn" id="addTextBtn" title="Add text element">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+            Text
+        </button>
+        <button class="ls-tool-btn" id="addBarcodeBtn" title="Add barcode (Code 128)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="2" height="16"/><rect x="6" y="4" width="1" height="16"/><rect x="9" y="4" width="3" height="16"/><rect x="14" y="4" width="1" height="16"/><rect x="17" y="4" width="2" height="16"/><rect x="21" y="4" width="1" height="16"/></svg>
+            Barcode
+        </button>
+        <button class="ls-tool-btn" id="addQRBtn" title="Add QR Code">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/></svg>
+            QR Code
+        </button>
+        <button class="ls-tool-btn" id="addLineBtn" title="Add separator line">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/></svg>
+            Line
+        </button>
+
+        <div class="ls-toolbar-sep"></div>
+
+        <span class="ls-toolbar-label">Canvas</span>
+        <select class="ls-size-select" id="labelSizeSelect" title="Label size preset">
+            <option value="100,50">100 × 50 mm (Standard)</option>
+            <option value="58,40">58 × 40 mm (Small)</option>
+            <option value="40,30">40 × 30 mm (Mini)</option>
+            <option value="75,50">75 × 50 mm (Medium)</option>
+            <option value="100,30">100 × 30 mm (Strip)</option>
+            <option value="custom">Custom…</option>
+        </select>
+
+        <div class="ls-toolbar-sep"></div>
+
+        <button class="ls-tool-btn" id="undoBtn" title="Undo (Ctrl+Z)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+            Undo
+        </button>
+        <button class="ls-tool-btn" id="redoBtn" title="Redo (Ctrl+Y)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+            Redo
+        </button>
+        <button class="ls-tool-btn danger" id="deleteElemBtn" title="Delete selected element">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            Delete
+        </button>
+    </div>
+
+    <!-- ── Main ─────────────────────────────────────────────────────────── -->
+    <div class="ls-main">
+
+        <!-- Left Panel -->
+        <div class="ls-panel-left">
+
+            <!-- SKU / Item Lookup -->
+            <div class="ls-card">
+                <div class="ls-card-title">Load from Inventory</div>
+                <div class="ls-sku-row">
+                    <input type="text" id="skuInput" class="ls-sku-input" placeholder="Item Code / Barcode" autocomplete="off">
+                    <button class="ls-btn ls-btn-accent" id="loadSkuBtn">Load</button>
+                </div>
+                <div class="ls-item-info" id="itemInfo">
+                    <div class="ls-item-row"><span class="ls-item-key">Name</span><span class="ls-item-val" id="iiName">—</span></div>
+                    <div class="ls-item-row"><span class="ls-item-key">Barcode</span><span class="ls-item-val" id="iiBarcode">—</span></div>
+                    <div class="ls-item-row"><span class="ls-item-key">MRP</span><span class="ls-item-val" id="iiMRP">—</span></div>
+                    <div class="ls-item-row"><span class="ls-item-key">HSN</span><span class="ls-item-val" id="iiHSN">—</span></div>
+                    <div class="ls-item-row"><span class="ls-item-key">Brand</span><span class="ls-item-val" id="iiBrand">—</span></div>
+                </div>
+            </div>
+
+            <!-- Element Inspector -->
+            <div class="ls-card" id="inspectorCard">
+                <div class="ls-card-title">Element Inspector</div>
+                <p class="ls-inspector-empty" id="inspectorEmpty">Select an element</p>
+                <div id="inspectorForm" style="display:none;">
+                    <div class="ls-form-row">
+                        <label class="ls-form-label" for="elemContent">Content / Value</label>
+                        <input type="text" class="ls-form-input" id="elemContent">
+                    </div>
+                    <div class="ls-form-row-2">
+                        <div><label class="ls-form-label" for="elemX">X (mm)</label><input type="number" class="ls-form-input" id="elemX" min="0"></div>
+                        <div><label class="ls-form-label" for="elemY">Y (mm)</label><input type="number" class="ls-form-input" id="elemY" min="0"></div>
+                    </div>
+                    <div class="ls-form-row-2">
+                        <div><label class="ls-form-label" for="elemW">Width</label><input type="number" class="ls-form-input" id="elemW" min="5"></div>
+                        <div><label class="ls-form-label" for="elemH">Height</label><input type="number" class="ls-form-input" id="elemH" min="1"></div>
+                    </div>
+                    <div class="ls-form-row-2">
+                        <div><label class="ls-form-label" for="elemRotation">Rotation °</label><input type="number" class="ls-form-input" id="elemRotation" min="0" max="360"></div>
+                        <div><label class="ls-form-label" for="elemFontSize">Font Size</label><input type="number" class="ls-form-input" id="elemFontSize" min="5" max="48"></div>
+                    </div>
+                    <div class="ls-checkbox-row">
+                        <input type="checkbox" id="elemLocked"> <label for="elemLocked">Locked</label>
+                        &nbsp;&nbsp;
+                        <input type="checkbox" id="elemVisible" checked> <label for="elemVisible">Visible</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preferences -->
+            <div class="ls-card">
+                <div class="ls-card-title">Canvas Preferences</div>
+                <div class="ls-pref-row">
+                    <label for="gridToggle">Show Grid</label>
+                    <input type="checkbox" id="gridToggle" checked>
+                </div>
+                <div class="ls-pref-row">
+                    <label for="snapToggle">Snap to Grid</label>
+                    <input type="checkbox" id="snapToggle" checked>
+                </div>
+                <div class="ls-pref-row">
+                    <label for="gridSizeSelect">Grid Size</label>
+                    <select class="ls-select" id="gridSizeSelect">
+                        <option value="1">1 mm</option>
+                        <option value="2">2 mm</option>
+                        <option value="5" selected>5 mm</option>
+                        <option value="10">10 mm</option>
+                    </select>
+                </div>
+                <div class="ls-pref-row">
+                    <label for="zoomSelect">Zoom</label>
+                    <select class="ls-select" id="zoomSelect">
+                        <option value="0.5">50%</option>
+                        <option value="1.0" selected>100%</option>
+                        <option value="1.5">150%</option>
+                        <option value="2.0">200%</option>
+                        <option value="fit">Fit</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas Area -->
+        <div class="ls-canvas-area">
+            <div class="ls-canvas-wrap">
+                <span class="ls-canvas-label" id="canvasInfo">100 mm × 50 mm · 0 elements</span>
+                <canvas id="labelCanvas" width="378" height="189"></canvas>
+                <span class="ls-canvas-label" style="color:#475569;">Click canvas to select · Drag to move · Bottom-right corner to resize</span>
+            </div>
+        </div>
+
+        <!-- Right Panel — Print -->
+        <div class="ls-panel-right">
+            <div class="ls-card">
+                <div class="ls-card-title">Print & Export</div>
+
+                <div class="ls-form-row">
+                    <label class="ls-form-label" for="printerSelect">Printer</label>
+                    <select class="ls-form-input" id="printerSelect">
+                        <option value="default">Loading…</option>
+                    </select>
+                </div>
+                <div class="ls-form-row">
+                    <label class="ls-form-label" for="formatSelect">Format</label>
+                    <select class="ls-form-input" id="formatSelect">
+                        <option value="ZPL">ZPL (Zebra)</option>
+                        <option value="TSPL">TSPL (TSC / Argox)</option>
+                    </select>
+                </div>
+                <div class="ls-form-row">
+                    <label class="ls-form-label" for="copiesInput">Copies</label>
+                    <input type="number" class="ls-form-input" id="copiesInput" value="1" min="1" max="999">
+                </div>
+
+                <button class="ls-btn ls-btn-accent" id="printBtn" style="width:100%;margin-top:4px;">
+                    ▶ Print Label
+                </button>
+                <button class="ls-btn ls-btn-outline" id="exportZplBtn" style="width:100%;margin-top:8px;">
+                    ↓ Export ZPL / TSPL
+                </button>
+            </div>
+
+            <div class="ls-card">
+                <div class="ls-card-title">Element List</div>
+                <div id="elementList" style="font-size:11px;color:#94a3b8;">No elements</div>
+            </div>
+        </div>
+    </div><!-- end .ls-main -->
+
+    <!-- Status Bar -->
+    <div class="ls-statusbar">
+        <span class="ls-status-msg" id="lsStatusMsg">Ready</span>
+        <span id="lsElemCount" style="color:#475569;">0 elements</span>
+    </div>
+</div><!-- end .studio-layout -->
+
+<!-- Toast -->
+<div id="ls-toast"></div>
+
+<!-- ── Scripts ─────────────────────────────────────────────────────────── -->
+<script src="/assets/smriti_retail_os/js/label/label_core.js"></script>
+<script src="/assets/smriti_retail_os/js/label/label_designer.js"></script>
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+<script>SMRITI.renderFlexibleSidebar("barcode");</script>
+<script src="/assets/smriti_retail_os/js/smriti_ui_resolver.js"></script>
+<script src="/assets/smriti_retail_os/js/smriti_theme_manager.js"></script>
+
+<script>
+// ── Label Studio UI Controller ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+
+    const CSRF = "{{ csrf_token }}";
+
+    // Helper: Frappe API call
+    async function api(method, args = {}) {
+        const res = await fetch('/api/method/' + method, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Frappe-CSRF-Token': CSRF },
+            body: JSON.stringify(args)
         });
-    </script>
-    
-    <!-- Local UI Binding Orchestration -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const gridToggle = document.getElementById("gridToggle");
-            const snapToggle = document.getElementById("snapToggle");
-            const gridSizeSelect = document.getElementById("gridSizeSelect");
-            const zoomSelect = document.getElementById("zoomSelect");
-            const undoBtn = document.getElementById("undoBtn");
-            const redoBtn = document.getElementById("redoBtn");
+        const data = await res.json();
+        if (data.exc) throw new Error(data.exc_type || 'Server error');
+        return data.message;
+    }
 
-            const inspectorEmpty = document.getElementById("inspectorEmptyState");
-            const inspectorForm = document.getElementById("inspectorForm");
-            
-            const elemContent = document.getElementById("elemContent");
-            const elemX = document.getElementById("elemX");
-            const elemY = document.getElementById("elemY");
-            const elemW = document.getElementById("elemW");
-            const elemH = document.getElementById("elemH");
-            const elemRotation = document.getElementById("elemRotation");
-            const elemLocked = document.getElementById("elemLocked");
-            const elemVisible = document.getElementById("elemVisible");
+    // Toast helper
+    function toast(msg, type = 'info', ms = 3000) {
+        const el = document.getElementById('ls-toast');
+        el.textContent = msg;
+        el.className = `show ${type}`;
+        clearTimeout(el._t);
+        el._t = setTimeout(() => { el.className = ''; }, ms);
+    }
 
-            let activeElement = null;
+    function setStatus(msg, type = '') {
+        const el = document.getElementById('lsStatusMsg');
+        el.textContent  = msg;
+        el.className    = `ls-status-msg ${type}`;
+    }
 
-            gridToggle.addEventListener("change", (e) => {
-                window.LabelEvents.emit("grid:toggle", e.target.checked);
-            });
-            snapToggle.addEventListener("change", (e) => {
-                window.LabelStudioState.preferences.snap = e.target.checked;
-            });
-            gridSizeSelect.addEventListener("change", (e) => {
-                window.LabelEvents.emit("grid:size", e.target.value);
-            });
-            zoomSelect.addEventListener("change", (e) => {
-                window.LabelEvents.emit("zoom:change", e.target.value);
-            });
-            undoBtn.addEventListener("click", () => {
-                window.LabelEvents.emit("history:undo");
-            });
-            redoBtn.addEventListener("click", () => {
-                window.LabelEvents.emit("history:redo");
-            });
+    // ── Update canvas info bar ───────────────────────────────────────────
+    function updateCanvasInfo() {
+        const state = window.LabelStudioState;
+        const count = (state.document && state.document.elements) ? state.document.elements.length : 0;
+        const dims  = `${state.canvas.width} mm × ${state.canvas.height} mm`;
+        document.getElementById('canvasInfo').textContent   = `${dims} · ${count} element${count !== 1 ? 's' : ''}`;
+        document.getElementById('lsElemCount').textContent  = `${count} elements`;
+        document.getElementById('lsCanvasDims').textContent = dims;
+        refreshElementList();
+    }
 
-            // Element selected listener
-            window.LabelEvents.on("element:selected", (el) => {
-                activeElement = el;
-                inspectorEmpty.style.display = "none";
-                inspectorForm.style.display = "block";
-                
-                elemContent.value = el.content || "";
-                elemX.value = Math.round(el.x);
-                elemY.value = Math.round(el.y);
-                elemW.value = Math.round(el.width);
-                elemH.value = Math.round(el.height);
-                elemRotation.value = el.rotation || 0;
-                elemLocked.checked = el.locked || false;
-                elemVisible.checked = el.visible !== false;
-            });
-
-            window.LabelEvents.on("element:unselected", () => {
-                activeElement = null;
-                inspectorEmpty.style.display = "block";
-                inspectorForm.style.display = "none";
-            });
-
-            window.LabelEvents.on("element:changed", (el) => {
-                if (activeElement && activeElement.id === el.id) {
-                    elemX.value = Math.round(el.x);
-                    elemY.value = Math.round(el.y);
-                    elemW.value = Math.round(el.width);
-                    elemH.value = Math.round(el.height);
+    // ── Element list (right panel) ───────────────────────────────────────
+    function refreshElementList() {
+        const state = window.LabelStudioState;
+        const els   = state.document && state.document.elements ? state.document.elements : [];
+        const list  = document.getElementById('elementList');
+        if (!els.length) { list.textContent = 'No elements'; return; }
+        list.innerHTML = els.map((el, i) =>
+            `<div style="padding:4px 0;border-bottom:1px solid #1e293b;cursor:pointer;color:${
+                el.id === state.selection.activeElementId ? '#a78bfa' : '#94a3b8'}" data-id="${el.id}">
+                <b>${el.type}</b> — ${(el.content || '').slice(0,18)}</div>`
+        ).join('');
+        list.querySelectorAll('[data-id]').forEach(row => {
+            row.addEventListener('click', () => {
+                const el = els.find(e => e.id === row.dataset.id);
+                if (el) {
+                    state.selection.activeElementId = el.id;
+                    window.LabelEvents.emit('element:selected', el);
+                    window.LabelEvents.emit('studio:ready');
                 }
             });
-
-            // Apply updates from inspector inputs back to state
-            function updateActiveElement() {
-                if (!activeElement) return;
-                activeElement.content = elemContent.value;
-                activeElement.x = parseFloat(elemX.value) || 0;
-                activeElement.y = parseFloat(elemY.value) || 0;
-                activeElement.width = parseFloat(elemW.value) || 10;
-                activeElement.height = parseFloat(elemH.value) || 10;
-                activeElement.rotation = parseFloat(elemRotation.value) || 0;
-                activeElement.locked = elemLocked.checked;
-                activeElement.visible = elemVisible.checked;
-                window.LabelEvents.emit("studio:ready");
-            }
-
-            [elemContent, elemX, elemY, elemW, elemH, elemRotation].forEach(input => {
-                input.addEventListener("input", updateActiveElement);
-            });
-            [elemLocked, elemVisible].forEach(checkbox => {
-                checkbox.addEventListener("change", updateActiveElement);
-            });
         });
-    </script>
+    }
+
+    // Refresh after any state-mutating event
+    ['studio:ready','element:selected','element:unselected','item:loaded'].forEach(ev =>
+        window.LabelEvents.on(ev, updateCanvasInfo)
+    );
+
+    // ── Inspector ────────────────────────────────────────────────────────
+    const inspEmpty = document.getElementById('inspectorEmpty');
+    const inspForm  = document.getElementById('inspectorForm');
+    const iContent  = document.getElementById('elemContent');
+    const iX        = document.getElementById('elemX');
+    const iY        = document.getElementById('elemY');
+    const iW        = document.getElementById('elemW');
+    const iH        = document.getElementById('elemH');
+    const iRot      = document.getElementById('elemRotation');
+    const iFontSize = document.getElementById('elemFontSize');
+    const iLocked   = document.getElementById('elemLocked');
+    const iVisible  = document.getElementById('elemVisible');
+    let activeEl    = null;
+
+    window.LabelEvents.on('element:selected', el => {
+        activeEl = el;
+        inspEmpty.style.display = 'none';
+        inspForm.style.display  = 'block';
+        iContent.value   = el.content   || '';
+        iX.value         = Math.round(el.x);
+        iY.value         = Math.round(el.y);
+        iW.value         = Math.round(el.width);
+        iH.value         = Math.round(el.height);
+        iRot.value       = el.rotation  || 0;
+        iFontSize.value  = el.font_size || 8;
+        iLocked.checked  = !!el.locked;
+        iVisible.checked = el.visible !== false;
+    });
+    window.LabelEvents.on('element:unselected', () => {
+        activeEl = null;
+        inspEmpty.style.display = 'block';
+        inspForm.style.display  = 'none';
+    });
+    window.LabelEvents.on('element:changed', el => {
+        if (activeEl && activeEl.id === el.id) {
+            iX.value = Math.round(el.x); iY.value = Math.round(el.y);
+            iW.value = Math.round(el.width); iH.value = Math.round(el.height);
+        }
+    });
+
+    function applyInspector() {
+        if (!activeEl) return;
+        activeEl.content   = iContent.value;
+        activeEl.x         = parseFloat(iX.value)        || 0;
+        activeEl.y         = parseFloat(iY.value)        || 0;
+        activeEl.width     = parseFloat(iW.value)        || 10;
+        activeEl.height    = parseFloat(iH.value)        || 5;
+        activeEl.rotation  = parseFloat(iRot.value)      || 0;
+        activeEl.font_size = parseFloat(iFontSize.value) || 8;
+        activeEl.locked    = iLocked.checked;
+        activeEl.visible   = iVisible.checked;
+        window.LabelEvents.emit('studio:ready');
+    }
+    [iContent, iX, iY, iW, iH, iRot, iFontSize].forEach(i => i.addEventListener('input', applyInspector));
+    [iLocked, iVisible].forEach(c => c.addEventListener('change', applyInspector));
+
+    // ── Preferences ──────────────────────────────────────────────────────
+    document.getElementById('gridToggle').addEventListener('change', e =>
+        window.LabelEvents.emit('grid:toggle', e.target.checked));
+    document.getElementById('snapToggle').addEventListener('change', e =>
+        window.LabelStudioState.preferences.snap = e.target.checked);
+    document.getElementById('gridSizeSelect').addEventListener('change', e =>
+        window.LabelEvents.emit('grid:size', e.target.value));
+    document.getElementById('zoomSelect').addEventListener('change', e =>
+        window.LabelEvents.emit('zoom:change', e.target.value));
+
+    // ── Undo / Redo ──────────────────────────────────────────────────────
+    document.getElementById('undoBtn').addEventListener('click', () => window.LabelEvents.emit('history:undo'));
+    document.getElementById('redoBtn').addEventListener('click', () => window.LabelEvents.emit('history:redo'));
+    document.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); window.LabelEvents.emit('history:undo'); }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) { e.preventDefault(); window.LabelEvents.emit('history:redo'); }
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (document.activeElement === document.body || document.activeElement === document.getElementById('labelCanvas'))
+                window.LabelEvents.emit('element:delete');
+        }
+    });
+
+    // ── Add element buttons ───────────────────────────────────────────────
+    document.getElementById('addTextBtn').addEventListener('click', () =>
+        window.LabelEvents.emit('element:add', { type: 'Text' }));
+    document.getElementById('addBarcodeBtn').addEventListener('click', () =>
+        window.LabelEvents.emit('element:add', { type: 'Barcode' }));
+    document.getElementById('addQRBtn').addEventListener('click', () =>
+        window.LabelEvents.emit('element:add', { type: 'QRCode' }));
+    document.getElementById('addLineBtn').addEventListener('click', () =>
+        window.LabelEvents.emit('element:add', { type: 'Line' }));
+    document.getElementById('deleteElemBtn').addEventListener('click', () =>
+        window.LabelEvents.emit('element:delete'));
+
+    // ── Label Size Presets ────────────────────────────────────────────────
+    document.getElementById('labelSizeSelect').addEventListener('change', e => {
+        if (e.target.value === 'custom') {
+            const w = parseFloat(prompt('Width (mm):', '100') || '100');
+            const h = parseFloat(prompt('Height (mm):', '50')  || '50');
+            if (w > 0 && h > 0) window.LabelEvents.emit('canvas:resize', { width_mm: w, height_mm: h });
+        } else {
+            const [w, h] = e.target.value.split(',').map(Number);
+            window.LabelEvents.emit('canvas:resize', { width_mm: w, height_mm: h });
+        }
+        updateCanvasInfo();
+    });
+
+    // ── SKU / Item Lookup ─────────────────────────────────────────────────
+    async function loadSKU() {
+        const code = document.getElementById('skuInput').value.trim();
+        if (!code) { toast('Please enter an Item Code or Barcode', 'error'); return; }
+        setStatus('Loading item data…', 'info');
+        try {
+            const item = await api('smriti_retail_os.label_studio.api.label_api.get_item_for_label', { item_code: code });
+            // Show item info panel
+            document.getElementById('iiName').textContent    = item.item_name  || '—';
+            document.getElementById('iiBarcode').textContent = item.barcode    || '—';
+            document.getElementById('iiMRP').textContent     = item.mrp ? `₹${item.mrp}` : '—';
+            document.getElementById('iiHSN').textContent     = item.hsn_code   || '—';
+            document.getElementById('iiBrand').textContent   = item.brand      || '—';
+            document.getElementById('itemInfo').classList.add('visible');
+
+            // Push item data to designer (scaffolds standard retail layout if canvas empty)
+            window.LabelEvents.emit('element:load_item', item);
+            setStatus(`Loaded: ${item.item_name}`, 'success');
+            toast(`Loaded: ${item.item_name}`, 'success');
+        } catch(err) {
+            setStatus('Item not found', 'error');
+            toast(err.message || 'Product not found. Check the Item Code and try again.', 'error');
+        }
+    }
+    document.getElementById('loadSkuBtn').addEventListener('click', loadSKU);
+    document.getElementById('skuInput').addEventListener('keydown', e => { if (e.key === 'Enter') loadSKU(); });
+
+    // ── Load Printers ─────────────────────────────────────────────────────
+    (async () => {
+        try {
+            const printers = await api('smriti_retail_os.label_studio.api.label_api.get_printers_list');
+            const sel = document.getElementById('printerSelect');
+            sel.innerHTML = (printers || []).map(p =>
+                `<option value="${p.name}">${p.printer_name}</option>`
+            ).join('');
+        } catch(e) {
+            // Leave default option
+        }
+    })();
+
+    // ── Print ─────────────────────────────────────────────────────────────
+    document.getElementById('printBtn').addEventListener('click', async () => {
+        const state   = window.LabelStudioState;
+        const printer = document.getElementById('printerSelect').value;
+        const format  = document.getElementById('formatSelect').value;
+        const copies  = parseInt(document.getElementById('copiesInput').value) || 1;
+
+        if (!state.document.elements.length) {
+            toast('Add at least one element before printing', 'error'); return;
+        }
+        const labelData = {
+            width_mm:  state.canvas.width,
+            height_mm: state.canvas.height,
+            elements:  state.document.elements
+        };
+        setStatus('Sending to printer…', 'info');
+        try {
+            // Print N copies by calling print_label N times (or pass copies to backend)
+            for (let i = 0; i < copies; i++) {
+                await api('smriti_retail_os.label_studio.api.label_api.print_label', {
+                    label_data: labelData, printer_id: printer, format_type: format
+                });
+            }
+            setStatus(`Printed ${copies} copy/copies`, 'success');
+            toast(`Sent ${copies} label${copies > 1 ? 's' : ''} to printer`, 'success');
+        } catch(err) {
+            setStatus('Print failed', 'error');
+            toast('Could not send to printer. Check printer connection.', 'error');
+        }
+    });
+
+    // ── Export ZPL / TSPL ─────────────────────────────────────────────────
+    document.getElementById('exportZplBtn').addEventListener('click', async () => {
+        const state  = window.LabelStudioState;
+        const format = document.getElementById('formatSelect').value;
+        if (!state.document.elements.length) { toast('Nothing to export', 'error'); return; }
+        try {
+            const labelData = {
+                width_mm:  state.canvas.width,
+                height_mm: state.canvas.height,
+                elements:  state.document.elements
+            };
+            const result = await api('smriti_retail_os.label_studio.api.label_api.generate_preview_canvas', { label_data: labelData });
+            // For export, we generate via render engine — build a temp download
+            const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href     = url; a.download = `smriti_label_${Date.now()}.${format.toLowerCase()}.json`;
+            a.click(); URL.revokeObjectURL(url);
+            toast('Label exported', 'success');
+        } catch(err) {
+            toast('Export failed', 'error');
+        }
+    });
+
+    // ── Init user badge ───────────────────────────────────────────────────
+    if (window.SMRITI && typeof SMRITI.initUIEngine === 'function') SMRITI.initUIEngine();
+    const user = frappe && frappe.session ? frappe.session.user : '';
+    if (user) document.getElementById('userBadge').textContent = user.split('@')[0];
+
+    setStatus('Ready — add elements or load a product to begin');
+    updateCanvasInfo();
+});
+</script>
 </body>
 </html>
 {% endblock %}

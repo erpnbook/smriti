@@ -13,15 +13,28 @@ class BaseRenderer:
 class ZPLRenderer(BaseRenderer):
     """Strategy rendering elements into Zebra Programming Language stream."""
     def render(self, elements, width, height):
-        stream = ["^XA", f"^PW{int(width * 8)}", f"^LL{int(height * 8)}"]  # mm to dots at 203 DPI
+        stream = ["^XA", f"^PW{int(width * 8)}", f"^LL{int(height * 8)}"]
         for el in elements:
+            if not el.get("visible", True):
+                continue
             x_dots = int(float(el.get("x", 0)) * 8)
             y_dots = int(float(el.get("y", 0)) * 8)
             content = el.get("content", "")
-            if el.get("type") == "Barcode":
+            el_type = el.get("type", "Text")
+
+            if el_type == "Barcode":
+                # Code 128 barcode
                 stream.append(f"^FO{x_dots},{y_dots}^BCN,60,Y,N,N^FD{content}^FS")
-            else:
-                stream.append(f"^FO{x_dots},{y_dots}^A0N,28,28^FD{content}^FS")
+            elif el_type == "QRCode":
+                # QR Code — model 2, magnification 3
+                stream.append(f"^FO{x_dots},{y_dots}^BQN,2,3^FDMM,A{content}^FS")
+            elif el_type == "Line":
+                w_dots = int(float(el.get("width", 20)) * 8)
+                h_dots = max(1, int(float(el.get("height", 1)) * 8))
+                stream.append(f"^FO{x_dots},{y_dots}^GB{w_dots},{h_dots},2^FS")
+            else:  # Text
+                font_size = max(20, int(float(el.get("font_size", 8)) * 3.5))
+                stream.append(f"^FO{x_dots},{y_dots}^A0N,{font_size},{font_size}^FD{content}^FS")
         stream.append("^XZ")
         return "\n".join(stream)
 
@@ -30,12 +43,21 @@ class TSPLRenderer(BaseRenderer):
     def render(self, elements, width, height):
         stream = [f"SIZE {width} mm, {height} mm", "CLS"]
         for el in elements:
+            if not el.get("visible", True):
+                continue
             x_dots = int(float(el.get("x", 0)) * 8)
             y_dots = int(float(el.get("y", 0)) * 8)
             content = el.get("content", "")
-            if el.get("type") == "Barcode":
+            el_type = el.get("type", "Text")
+
+            if el_type == "Barcode":
                 stream.append(f'BARCODE {x_dots},{y_dots},"128",60,1,0,2,2,"{content}"')
-            else:
+            elif el_type == "QRCode":
+                stream.append(f'QRCODE {x_dots},{y_dots},H,3,M,0,M2,"{content}"')
+            elif el_type == "Line":
+                w_dots = int(float(el.get("width", 20)) * 8)
+                stream.append(f'BAR {x_dots},{y_dots},{w_dots},2')
+            else:  # Text
                 stream.append(f'TEXT {x_dots},{y_dots},"3",0,1,1,"{content}"')
         stream.append("PRINT 1,1")
         return "\n".join(stream)
