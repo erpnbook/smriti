@@ -1,0 +1,954 @@
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+<!--
+  @file: smriti_retail_os/www/smriti-quotation.html
+  @description: SMRITI Quotation Manager — Standalone UI Page with Matrix Grid
+  @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
+  @version: 2.0.0
+  @license: GPL-3.0-only
+   SPDX-License-Identifier: GPL-3.0-only
+-->
+<html lang="en">
+<head>
+    {%- include "smriti_retail_os/templates/includes/smriti_token_loader.html" -%}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMRITI Quotation Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg:         #0a0f1e;
+    --bg2:        #0f1629;
+    --card:       #131d35;
+    --card2:      #172040;
+    --border:     rgba(255,255,255,0.07);
+    --border2:    rgba(255,255,255,0.12);
+    --primary:    #6366f1;
+    --primary-lt: #818cf8;
+    --accent:     #10b981;
+    --accent-lt:  #34d399;
+    --warning:    #f59e0b;
+    --danger:     #ef4444;
+    --success:    #10b981;
+    --text:       #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-sub:   #475569;
+    --radius:     12px;
+    --radius-sm:  8px;
+    --radius-lg:  16px;
+    --t:          0.2s ease;
+}
+
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; font-size:14px; }
+
+/* ── App Shell ── */
+#app { width:100vw; height:100vh; display:flex; flex-direction:row; overflow:hidden; }
+
+/* Main Wrapper */
+.main-wrapper { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+/* ── Top Bar ── */
+.topbar { flex-shrink:0; height:52px; background:var(--card); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 16px; gap:14px; }
+.topbar-breadcrumbs { display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:var(--text-muted); }
+.topbar-breadcrumbs span.sep { color:var(--text-sub); }
+.topbar-breadcrumbs span.active { color:var(--text); }
+.topbar-breadcrumbs a.breadcrumb-link { color: inherit; text-decoration: none; cursor: pointer; }
+.topbar-breadcrumbs a.breadcrumb-link:hover { color: var(--primary-lt); text-decoration: underline; }
+.topbar-divider { width:1px; height:24px; background:var(--border2); flex-shrink:0; }
+.topbar-user { font-size:0.82rem; color:var(--text-muted); flex-shrink:0; }
+.topbar-user b { color:var(--text); }
+.topbar-tabs { display:flex; gap:4px; }
+.tab-btn { padding:6px 14px; border-radius:var(--radius-sm); font-size:12px; font-weight:700; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); display:flex; align-items:center; gap:5px; }
+.tab-btn span { font-size:16px; }
+.tab-btn.active { background:var(--primary); border-color:var(--primary); color:white; box-shadow:0 4px 12px rgba(99,102,241,0.3); }
+.tab-btn:hover:not(.active) { border-color:var(--primary-lt); color:var(--primary-lt); }
+.topbar-right { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
+.topbtn { display:inline-flex; align-items:center; gap:4px; padding:5px 11px; border-radius:var(--radius-sm); font-size:11px; font-weight:600; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); white-space:nowrap; }
+.topbtn span { font-size:15px; }
+.topbtn:hover { border-color:var(--primary); color:var(--primary-lt); }
+
+/* ── Main Layout ── */
+.main-content { flex:1; display:flex; overflow:hidden; min-height:0; }
+
+/* ── LEFT: Quotation List Panel ── */
+.q-list-panel { width:300px; flex-shrink:0; display:flex; flex-direction:column; border-right:1px solid var(--border); background:var(--bg2); overflow:hidden; }
+.panel-hdr { padding:12px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.panel-hdr-title { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); display:flex; align-items:center; gap:6px; }
+.panel-hdr-title span { font-size:16px; color:var(--primary-lt); }
+.search-box { padding:8px 12px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.search-input { width:100%; padding:8px 12px; background:var(--card); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.88rem; outline:none; transition:all var(--t); }
+.search-input:focus { border-color:var(--primary); }
+.q-list { flex:1; overflow-y:auto; }
+.q-item { padding:12px 14px; border-bottom:1px solid var(--border); cursor:pointer; transition:background var(--t); }
+.q-item:hover { background:rgba(99,102,241,0.06); }
+.q-item.active { background:rgba(99,102,241,0.12); border-left:3px solid var(--primary); }
+.q-item-name { font-weight:700; font-size:0.88rem; color:var(--text); margin-bottom:2px; }
+.q-item-customer { font-size:0.78rem; color:var(--text-muted); }
+.q-item-meta { display:flex; justify-content:space-between; margin-top:6px; }
+.q-item-total { font-size:0.82rem; font-weight:700; color:var(--accent); }
+.q-empty { padding:40px 20px; text-align:center; color:var(--text-sub); }
+.q-empty span { font-size:40px; display:block; margin-bottom:10px; opacity:0.3; }
+
+/* ── RIGHT: Detail Panel ── */
+.detail-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; min-height:0; }
+.tab-view { display:none; flex:1; flex-direction:column; overflow:hidden; min-height:0; }
+.tab-view.active { display:flex; }
+
+/* ── Quotation Detail View ── */
+.detail-hdr { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; flex-shrink:0; background:var(--card); }
+.detail-q-name { font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:800; color:var(--primary-lt); }
+.detail-q-customer { font-size:0.85rem; color:var(--text-muted); }
+.q-items-wrap { flex:1; overflow:auto; padding:16px 18px; }
+.detail-actions { padding:12px 18px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; flex-shrink:0; background:var(--card); }
+
+.q-table { width:100%; border-collapse:collapse; }
+.q-table th { padding:9px 12px; background:var(--card2); color:var(--text-muted); font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; border-bottom:1px solid var(--border); text-align:left; position:sticky; top:0; z-index:1; white-space:nowrap; }
+.q-table td { padding:10px 12px; border-bottom:1px solid var(--border); color:var(--text); font-size:0.88rem; vertical-align:middle; }
+.q-table tbody tr:hover td { background:rgba(99,102,241,0.04); }
+.item-name-cell { font-weight:600; }
+.item-code-cell { font-size:0.75rem; color:var(--text-sub); margin-top:2px; }
+
+/* Placeholder */
+.placeholder-panel { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-sub); gap:12px; }
+.placeholder-panel span { font-size:56px; opacity:0.25; }
+.placeholder-panel h3 { font-size:1rem; font-weight:600; color:var(--text-muted); }
+.placeholder-panel p { font-size:0.85rem; text-align:center; max-width:320px; line-height:1.6; }
+
+/* ── NEW Quotation Form ── */
+.new-q-wrap { flex:1; overflow-y:auto; padding:20px 24px; }
+.form-section { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px; margin-bottom:16px; }
+.form-section-title { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--primary-lt); margin-bottom:14px; display:flex; align-items:center; gap:6px; }
+.form-section-title span { font-size:18px; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+.form-row.full { grid-template-columns:1fr; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-label { font-size:0.75rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; }
+.form-input { padding:10px 12px; background:var(--bg2); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--text); font-size:0.9rem; outline:none; transition:all var(--t); font-family:'Inter',sans-serif; }
+.form-input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(99,102,241,0.12); }
+
+/* Entry mode tabs */
+.entry-mode-tabs { display:flex; gap:4px; margin-bottom:14px; }
+.entry-mode-tab { padding:6px 14px; border-radius:var(--radius-sm); font-size:11px; font-weight:700; border:1px solid var(--border2); background:transparent; color:var(--text-muted); cursor:pointer; transition:all var(--t); display:flex; align-items:center; gap:5px; }
+.entry-mode-tab span { font-size:16px; }
+.entry-mode-tab.active { background:var(--accent); border-color:var(--accent); color:white; }
+.entry-mode-tab:hover:not(.active) { border-color:var(--accent-lt); color:var(--accent-lt); }
+
+/* Manual item rows */
+.q-new-item-row { display:grid; grid-template-columns:2fr 1fr 1fr 1fr auto; gap:8px; margin-bottom:8px; align-items:start; }
+.btn-del-row { padding:10px 10px; border-radius:var(--radius-sm); background:none; border:1px solid rgba(239,68,68,0.25); color:var(--danger); cursor:pointer; transition:all var(--t); display:flex; align-items:center; justify-content:center; }
+.btn-del-row:hover { background:rgba(239,68,68,0.1); }
+.btn-del-row span { font-size:18px; }
+.btn-add-row { display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:var(--radius-sm); background:rgba(99,102,241,0.1); border:1px dashed rgba(99,102,241,0.3); color:var(--primary-lt); cursor:pointer; font-size:0.85rem; font-weight:600; transition:all var(--t); margin-top:8px; }
+.btn-add-row:hover { background:rgba(99,102,241,0.15); border-color:var(--primary); }
+.btn-add-row span { font-size:18px; }
+
+/* Matrix grid */
+.matrix-section { display:none; }
+.matrix-section.active { display:block; }
+.manual-section { display:none; }
+.manual-section.active { display:block; }
+.matrix-controls { display:flex; gap:12px; margin-bottom:14px; align-items:end; flex-wrap:wrap; }
+.matrix-controls .form-group { min-width:140px; }
+.matrix-table-wrap { overflow-x:auto; margin-top:12px; }
+.matrix-table { width:100%; border-collapse:collapse; min-width:600px; }
+.matrix-table th { padding:8px 10px; background:var(--card2); color:var(--text-muted); font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; border:1px solid var(--border); text-align:center; white-space:nowrap; position:sticky; top:0; z-index:1; }
+.matrix-table td { padding:4px 6px; border:1px solid var(--border); text-align:center; }
+.matrix-table input[type="number"] { width:52px; padding:6px 4px; background:var(--bg2); border:1px solid var(--border2); border-radius:4px; color:var(--text); font-size:0.85rem; text-align:center; outline:none; transition:border-color var(--t); }
+.matrix-table input[type="number"]:focus { border-color:var(--primary); }
+.matrix-table input[type="text"] { width:100%; padding:6px 8px; background:var(--bg2); border:1px solid var(--border2); border-radius:4px; color:var(--text); font-size:0.85rem; outline:none; }
+.matrix-table input[type="text"]:focus { border-color:var(--primary); }
+.matrix-table .total-cell { font-weight:700; color:var(--accent); background:rgba(16,185,129,0.06); }
+.matrix-table tfoot td { background:var(--card2); font-weight:700; color:var(--accent); }
+
+.q-new-actions { display:flex; gap:12px; justify-content:flex-end; padding:16px 0; }
+.btn-submit-q { padding:12px 28px; background:linear-gradient(135deg,var(--accent),#059669); border:none; border-radius:var(--radius); color:white; font-size:0.95rem; font-weight:700; cursor:pointer; transition:all var(--t); display:flex; align-items:center; gap:6px; box-shadow:0 4px 16px rgba(16,185,129,0.25); }
+.btn-submit-q span { font-size:20px; }
+.btn-submit-q:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(16,185,129,0.4); }
+.btn-submit-q:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+.btn-action { padding:10px 20px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all var(--t); }
+.btn-action.secondary { background:transparent; border:1px solid var(--border2); color:var(--text-muted); }
+.btn-action.secondary:hover { border-color:var(--primary); color:var(--primary-lt); }
+.btn-action.convert { background:linear-gradient(135deg,var(--warning),#d97706); border:none; color:white; box-shadow:0 4px 12px rgba(245,158,11,0.25); }
+.btn-action.convert:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(245,158,11,0.35); }
+
+/* Status badge */
+.status-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:99px; font-size:0.72rem; font-weight:700; }
+.status-badge.open { background:rgba(16,185,129,0.12); color:var(--success); }
+.status-badge.ordered { background:rgba(99,102,241,0.12); color:var(--primary-lt); }
+.status-badge.expired { background:rgba(239,68,68,0.12); color:var(--danger); }
+.status-badge.cancelled { background:rgba(100,116,139,0.12); color:var(--text-sub); }
+
+/* ── Toast ── */
+#toast-container { position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:99999; }
+.toast { padding:12px 18px; border-radius:var(--radius); font-size:0.88rem; font-weight:600; color:white; min-width:220px; display:flex; align-items:center; gap:10px; animation:toast-in 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+.toast.success { background:#065f46; border:1px solid rgba(16,185,129,0.3); }
+.toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,0.3); }
+.toast.info    { background:#1e1b4b; border:1px solid rgba(99,102,241,0.3); }
+.toast span { font-size:20px; }
+@keyframes toast-in { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+/* ── Modal ── */
+.modal-backdrop { position:fixed; inset:0; z-index:9000; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+.modal-backdrop.open { opacity:1; pointer-events:all; }
+.modal { background:var(--card2); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:28px; width:100%; max-width:520px; max-height:80vh; overflow-y:auto; transform:translateY(20px); transition:transform 0.2s; }
+.modal-backdrop.open .modal { transform:translateY(0); }
+.modal-title { font-family:'Outfit',sans-serif; font-size:1.1rem; font-weight:800; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.modal-title span { color:var(--primary-lt); font-size:22px; }
+.modal-close { margin-left:auto; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:22px; display:flex; align-items:center; transition:color var(--t); }
+.modal-close:hover { color:var(--danger); }
+.modal-input { width:100%; padding:11px 14px; background:var(--bg2); border:1px solid var(--border2); border-radius:var(--radius); color:var(--text); font-size:0.95rem; outline:none; margin-bottom:10px; transition:all var(--t); }
+.modal-input:focus { border-color:var(--primary); }
+.result-item { padding:10px 14px; border-radius:var(--radius-sm); cursor:pointer; transition:background var(--t); border-bottom:1px solid var(--border); }
+.result-item:hover { background:rgba(99,102,241,0.08); }
+.result-item:last-child { border-bottom:none; }
+.ri-name { font-weight:600; font-size:0.9rem; }
+.ri-sub { font-size:0.78rem; color:var(--text-muted); margin-top:2px; }
+</style>
+
+<link rel="stylesheet" href="/assets/smriti_retail_os/css/smriti_sidebar_standalone.css"></head>
+<body>
+
+<!-- App -->
+<div id="app">
+    <!-- Sidebar -->
+    <div id="smriti-sidebar-target" class="sidebar"></div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="topbar-breadcrumbs">
+                <a href="/smriti" class="breadcrumb-link">SMRITI</a>
+                <span class="sep">/</span>
+                <a href="/sales_orders" class="breadcrumb-link">Sales</a>
+                <span class="sep">/</span>
+                <span class="active">Quotations</span>
+            </div>
+            <div class="topbar-divider"></div>
+            <div class="topbar-user">Manager: <b>{{ cashier }}</b></div>
+            <div class="topbar-divider"></div>
+            <div class="topbar-tabs">
+                <button class="tab-btn active" id="tab-list" onclick="switchTab('list')">
+                    <span class="material-symbols-outlined">request_quote</span> Quotations
+                </button>
+                <button class="tab-btn" id="tab-new-q" onclick="switchTab('new-q')">
+                    <span class="material-symbols-outlined">add_circle</span> New Quotation
+                </button>
+            </div>
+            <div class="topbar-right">
+                <button class="topbtn" onclick="history.back()" title="Go Back">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+                <button class="topbtn" onclick="refreshList()"><span class="material-symbols-outlined">refresh</span> Refresh</button>
+            </div>
+        </div>
+
+        <!-- Main -->
+        <div class="main-content">
+
+            <!-- Left: Quotation List -->
+            <div class="q-list-panel">
+                <div class="panel-hdr">
+                    <div class="panel-hdr-title"><span class="material-symbols-outlined">request_quote</span> Quotations</div>
+                    <span id="q-count-badge" style="font-size:0.75rem;font-weight:700;color:var(--accent);padding:2px 8px;background:rgba(16,185,129,0.1);border-radius:99px;">0</span>
+                </div>
+                <div class="search-box">
+                    <input type="text" class="search-input" id="q-search" placeholder="Filter by QTN# or customer…" oninput="filterList(this.value)">
+                </div>
+                <div class="q-list" id="q-list">
+                    <div class="q-empty"><span class="material-symbols-outlined">inbox</span>Loading…</div>
+                </div>
+            </div>
+
+            <!-- Right: Tabs -->
+            <div class="detail-panel">
+
+                <!-- List / Detail Tab -->
+                <div class="tab-view active" id="tab-view-list">
+                    <!-- No Quotation selected -->
+                    <div class="placeholder-panel" id="q-placeholder">
+                        <span class="material-symbols-outlined">request_quote</span>
+                        <h3>Select a Quotation</h3>
+                        <p>Pick a Quotation from the left panel to review items and convert it to a Sales Order.</p>
+                    </div>
+                    <!-- Quotation Detail -->
+                    <div id="q-detail" style="display:none; flex:1; flex-direction:column; overflow:hidden; min-height:0;">
+                        <div class="detail-hdr">
+                            <div>
+                                <div class="detail-q-name" id="detail-q-name">—</div>
+                                <div class="detail-q-customer" id="detail-q-customer">—</div>
+                            </div>
+                            <div style="margin-left:auto;">
+                                <span class="status-badge open" id="detail-q-status">Open</span>
+                            </div>
+                        </div>
+                        <div class="q-items-wrap">
+                            <table class="q-table">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Qty</th>
+                                        <th>Rate (₹)</th>
+                                        <th>Amount (₹)</th>
+                                        <th>Warehouse</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="q-tbody"></tbody>
+                            </table>
+                        </div>
+                        <div class="detail-actions">
+                            <div id="detail-q-total" style="font-size:1rem;font-weight:800;color:var(--accent);margin-right:auto;">Grand Total: ₹ 0</div>
+                            <button class="btn-action convert" id="btn-convert-so" onclick="convertToSO()">
+                                <span class="material-symbols-outlined">swap_horiz</span> Convert to Sales Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- New Quotation Tab -->
+                <div class="tab-view" id="tab-view-new-q">
+                    <div class="new-q-wrap">
+
+                        <div class="form-section">
+                            <div class="form-section-title"><span class="material-symbols-outlined">person</span> Customer Details</div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Customer *</label>
+                                    <input type="text" class="form-input" id="new-q-customer" placeholder="Click to search customer…" readonly onclick="openCustomerSearch()" style="cursor:pointer;">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Valid Till</label>
+                                    <input type="date" class="form-input" id="new-q-valid-till">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="form-section-title"><span class="material-symbols-outlined">inventory_2</span> Items</div>
+
+                            <!-- Entry Mode Toggle -->
+                            <div class="entry-mode-tabs">
+                                <button class="entry-mode-tab active" id="mode-manual" onclick="setEntryMode('manual')">
+                                    <span class="material-symbols-outlined">list</span> Manual Entry
+                                </button>
+                                <button class="entry-mode-tab" id="mode-matrix" onclick="setEntryMode('matrix')">
+                                    <span class="material-symbols-outlined">grid_on</span> Matrix Grid
+                                </button>
+                            </div>
+
+                            <!-- Manual Entry -->
+                            <div class="manual-section active" id="manual-section">
+                                <div class="q-new-item-row" style="font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;padding:0 4px;margin-bottom:4px;">
+                                    <div>Item</div><div>Qty</div><div>Rate (₹)</div><div>UOM</div><div></div>
+                                </div>
+                                <div id="new-q-rows"></div>
+                                <button class="btn-add-row" onclick="addManualRow()">
+                                    <span class="material-symbols-outlined">add</span> Add Item Row
+                                </button>
+                            </div>
+
+                            <!-- Matrix Grid Entry -->
+                            <div class="matrix-section" id="matrix-section">
+                                <div class="matrix-controls">
+                                    <div class="form-group">
+                                        <label class="form-label">Size Preset</label>
+                                        <select class="form-input" id="matrix-preset" onchange="updateMatrixColumns()"></select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Common Article</label>
+                                        <input type="text" class="form-input" id="matrix-common-article" placeholder="Article No.">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Common Rate</label>
+                                        <input type="number" class="form-input" id="matrix-common-rate" placeholder="₹ Rate" step="0.01">
+                                    </div>
+                                    <button class="btn-add-row" onclick="applyCommonFill()">
+                                        <span class="material-symbols-outlined">arrow_downward</span> Fill Down
+                                    </button>
+                                    <button class="btn-add-row" onclick="addMatrixRow()">
+                                        <span class="material-symbols-outlined">add</span> Add Row
+                                    </button>
+                                </div>
+                                <div class="matrix-table-wrap">
+                                    <table class="matrix-table">
+                                        <thead><tr id="matrix-header-row"><th>Article</th><th>Color</th><th>Total</th><th>Rate</th></tr></thead>
+                                        <tbody id="matrix-body"></tbody>
+                                        <tfoot><tr id="matrix-total-row"><td colspan="2" style="text-align:right;">TOTAL</td><td class="total-cell">0</td><td></td></tr></tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="form-section-title"><span class="material-symbols-outlined">edit_note</span> Notes</div>
+                            <div class="form-row full">
+                                <input type="text" class="form-input" id="new-q-remarks" placeholder="Add any special instructions or remarks here…">
+                            </div>
+                        </div>
+
+                        <div class="q-new-actions">
+                            <button class="btn-action secondary" onclick="resetForm()">
+                                <span class="material-symbols-outlined">restart_alt</span> Reset
+                            </button>
+                            <button class="btn-submit-q" id="btn-create-q" onclick="createQuotation()">
+                                <span class="material-symbols-outlined">send</span> Submit Quotation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Search Modal -->
+<div class="modal-backdrop" id="customer-modal">
+    <div class="modal" style="max-width: 450px;">
+        <div class="modal-title">
+            <span class="material-symbols-outlined">person</span> Search Customer
+            <button class="modal-close" onclick="closeModal('customer-modal')"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <input type="text" class="modal-input" id="customer-search-input" placeholder="Type customer name…" autocomplete="off">
+        <div id="customer-results" style="max-height: 250px; overflow-y: auto;"></div>
+    </div>
+</div>
+
+<!-- Item Search Modal -->
+<div class="modal-backdrop" id="item-modal">
+    <div class="modal">
+        <div class="modal-title">
+            <span class="material-symbols-outlined">search</span> Search Item
+            <button class="modal-close" onclick="closeModal('item-modal')"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <input type="text" class="modal-input" id="item-search-input" placeholder="Type item name or code…" autocomplete="off">
+        <div id="item-results"></div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- JS Dependencies -->
+<script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
+<script>
+    const CSRF_TOKEN = "{{ csrf_token }}";
+    const S = {
+        user: "{{ cashier }}",
+        activeQ: null,
+        allQs: [],
+        manualRows: [],
+        activeItemRowIdx: null,
+        entryMode: 'manual'
+    };
+
+    let sizePresets = {};
+    let sizeColumns = [];
+    let activePreset = '';
+
+    function api(method, params = {}) {
+        return fetch(`/api/method/${method}`, {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json', 'x-frappe-csrf-token': CSRF_TOKEN },
+            body: JSON.stringify(params),
+        })
+        .then(r => r.json())
+        .then(d => { if (d.exc) throw new Error(d._error_message || d.exc); return d.message; });
+    }
+
+    function toast(msg, type='info') {
+        const c = document.getElementById('toast-container');
+        const t = document.createElement('div');
+        t.className = `toast ${type}`;
+        t.innerHTML = `<span class="material-symbols-outlined">${type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info'}</span> ${msg}`;
+        c.appendChild(t);
+        setTimeout(() => t.remove(), 4000);
+    }
+
+    function switchTab(tab) {
+        ['list','new-q'].forEach(t => {
+            document.getElementById(`tab-view-${t}`).classList.toggle('active', t === tab);
+            document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+        });
+    }
+
+    function showModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    // ── Entry Mode ──
+    function setEntryMode(mode) {
+        S.entryMode = mode;
+        document.getElementById('mode-manual').classList.toggle('active', mode === 'manual');
+        document.getElementById('mode-matrix').classList.toggle('active', mode === 'matrix');
+        document.getElementById('manual-section').classList.toggle('active', mode === 'manual');
+        document.getElementById('matrix-section').classList.toggle('active', mode === 'matrix');
+    }
+
+    // ── Load Quotation List ──
+    async function loadList() {
+        try {
+            const list = await api('smriti_retail_os.sales_studio.api.sales_api.get_open_quotations');
+            S.allQs = list || [];
+            renderList(S.allQs);
+        } catch(e) { toast('Failed to load quotations: ' + e.message, 'error'); }
+    }
+
+    function renderList(list) {
+        const el = document.getElementById('q-list');
+        document.getElementById('q-count-badge').textContent = list.length;
+        if (!list.length) {
+            el.innerHTML = '<div class="q-empty"><span class="material-symbols-outlined">inbox</span>No quotations found</div>';
+            return;
+        }
+        el.innerHTML = list.map((q, i) => {
+            const statusCls = (q.status || 'Open').toLowerCase().includes('order') ? 'ordered' :
+                              (q.status || '').toLowerCase().includes('expire') ? 'expired' :
+                              (q.status || '').toLowerCase().includes('cancel') ? 'cancelled' : 'open';
+            return `
+            <div class="q-item" id="qi-${i}" onclick="selectQ('${q.name}', ${i})">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                    <div class="q-item-name">${q.name}</div>
+                    <span class="status-badge ${statusCls}">${q.status || 'Open'}</span>
+                </div>
+                <div class="q-item-customer">${q.customer_name || q.customer || q.party_name || ''}</div>
+                <div class="q-item-meta">
+                    <div class="q-item-total">₹ ${(q.grand_total||0).toLocaleString('en-IN',{minimumFractionDigits:2})}</div>
+                    <div style="font-size:0.75rem;color:var(--text-sub);">${q.transaction_date || ''}</div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function filterList(query) {
+        const q = query.toLowerCase();
+        const filtered = S.allQs.filter(item =>
+            item.name.toLowerCase().includes(q) ||
+            (item.customer_name || '').toLowerCase().includes(q) ||
+            (item.customer || '').toLowerCase().includes(q)
+        );
+        renderList(filtered);
+    }
+
+    function refreshList() { S.activeQ = null; showPlaceholder(); loadList(); toast('Quotation list refreshed', 'info'); }
+
+    function showPlaceholder() {
+        document.getElementById('q-placeholder').style.display = 'flex';
+        document.getElementById('q-detail').style.display = 'none';
+    }
+
+    async function selectQ(name, idx) {
+        document.querySelectorAll('.q-item').forEach(el => el.classList.remove('active'));
+        document.getElementById(`qi-${idx}`)?.classList.add('active');
+        switchTab('list');
+        try {
+            const details = await api('smriti_retail_os.sales_studio.api.sales_api.get_quotation_details', { quotation_name: name });
+            S.activeQ = details;
+            renderDetail(details);
+        } catch(e) { toast('Failed to load details: ' + e.message, 'error'); }
+    }
+
+    function renderDetail(q) {
+        document.getElementById('q-placeholder').style.display = 'none';
+        const detail = document.getElementById('q-detail');
+        detail.style.display = 'flex';
+        detail.style.flexDirection = 'column';
+
+        document.getElementById('detail-q-name').textContent = q.name;
+        document.getElementById('detail-q-customer').textContent = q.customer_name || q.customer;
+
+        const statusCls = (q.status || 'Open').toLowerCase().includes('order') ? 'ordered' :
+                          (q.status || '').toLowerCase().includes('expire') ? 'expired' :
+                          (q.status || '').toLowerCase().includes('cancel') ? 'cancelled' : 'open';
+        const badge = document.getElementById('detail-q-status');
+        badge.className = `status-badge ${statusCls}`;
+        badge.textContent = q.status || 'Open';
+
+        document.getElementById('detail-q-total').textContent = `Grand Total: ₹ ${(q.grand_total||0).toLocaleString('en-IN',{minimumFractionDigits:2})}`;
+
+        document.getElementById('q-tbody').innerHTML = q.items.map(it => `
+            <tr>
+                <td>
+                    <div class="item-name-cell">${it.item_name || ''}</div>
+                    <div class="item-code-cell">${it.item_code}</div>
+                </td>
+                <td>${it.qty}</td>
+                <td>₹ ${(it.rate||0).toLocaleString('en-IN')}</td>
+                <td>₹ ${(it.amount||0).toLocaleString('en-IN')}</td>
+                <td>${it.warehouse || '—'}</td>
+            </tr>
+        `).join('');
+
+        // Enable/disable convert button based on status
+        const canConvert = (q.status || '').toLowerCase() === 'open' || q.status === 'Submitted';
+        document.getElementById('btn-convert-so').disabled = !canConvert;
+        document.getElementById('btn-convert-so').style.opacity = canConvert ? '1' : '0.4';
+    }
+
+    // ── Convert to SO ──
+    async function convertToSO() {
+        if (!S.activeQ) return;
+        const btn = document.getElementById('btn-convert-so');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span> Converting…';
+        try {
+            const res = await api('smriti_retail_os.sales_studio.api.sales_api.convert_quotation_to_sales_order', {
+                quotation_name: S.activeQ.name
+            });
+            toast(res.message || `Sales Order ${res.name} created!`, 'success');
+            loadList();
+        } catch(e) {
+            toast('Conversion failed: ' + e.message, 'error');
+        }
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined">swap_horiz</span> Convert to Sales Order';
+    }
+
+    // ── Customer Search ──
+    let customerTimer;
+    function openCustomerSearch() {
+        document.getElementById('customer-search-input').value = '';
+        document.getElementById('customer-results').innerHTML = '';
+        showModal('customer-modal');
+        setTimeout(() => document.getElementById('customer-search-input').focus(), 200);
+    }
+
+    document.getElementById('customer-search-input').addEventListener('input', function() {
+        clearTimeout(customerTimer);
+        const q = this.value.trim();
+        if (!q) { document.getElementById('customer-results').innerHTML = ''; return; }
+        customerTimer = setTimeout(() => searchCustomers(q), 300);
+    });
+
+    async function searchCustomers(q) {
+        const el = document.getElementById('customer-results');
+        el.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">Searching…</div>';
+        try {
+            const res = await api('frappe.client.get_list', {
+                doctype: 'Customer',
+                filters: [['customer_name', 'like', `%${q}%`]],
+                fields: ['name', 'customer_name', 'customer_type']
+            });
+            if (!res.length) { el.innerHTML = '<div style="color:var(--text-sub);padding:12px;text-align:center;">No results.</div>'; return; }
+            el.innerHTML = res.map(c => `
+                <div class="result-item" onclick="selectCustomer('${c.name}', '${c.customer_name.replace(/'/g, "\\'")}')">
+                    <div class="ri-name">${c.customer_name}</div>
+                    <div class="ri-sub">${c.name} (${c.customer_type})</div>
+                </div>
+            `).join('');
+        } catch(e) { el.innerHTML = `<div style="color:var(--danger);padding:12px;text-align:center;">Error: ${e.message}</div>`; }
+    }
+
+    function selectCustomer(id, name) {
+        const input = document.getElementById('new-q-customer');
+        input.value = name || id;
+        input.dataset.id = id;
+        closeModal('customer-modal');
+    }
+
+    // ── Manual Item Rows ──
+    let itemTimer;
+    let manualRowCount = 0;
+
+    function addManualRow() {
+        const idx = manualRowCount++;
+        S.manualRows.push(idx);
+        const row = document.createElement('div');
+        row.className = 'q-new-item-row';
+        row.id = `new-q-row-${idx}`;
+        row.innerHTML = `
+            <input type="text" class="form-input" id="new-q-item-${idx}" placeholder="Click to search item…" readonly onclick="openItemSearch(${idx})" style="cursor:pointer;">
+            <input type="number" class="form-input" id="new-q-qty-${idx}" value="1" min="0.001" step="0.001">
+            <input type="number" class="form-input" id="new-q-rate-${idx}" value="0.00" min="0" step="0.01" placeholder="₹ Rate">
+            <input type="text" class="form-input" id="new-q-uom-${idx}" value="Nos" placeholder="UOM">
+            <button class="btn-del-row" onclick="removeManualRow(${idx})">
+                <span class="material-symbols-outlined">delete</span>
+            </button>
+        `;
+        document.getElementById('new-q-rows').appendChild(row);
+    }
+
+    function removeManualRow(idx) {
+        document.getElementById(`new-q-row-${idx}`)?.remove();
+        S.manualRows = S.manualRows.filter(id => id !== idx);
+    }
+
+    function openItemSearch(idx) {
+        S.activeItemRowIdx = idx;
+        document.getElementById('item-search-input').value = '';
+        document.getElementById('item-results').innerHTML = '';
+        showModal('item-modal');
+        setTimeout(() => document.getElementById('item-search-input').focus(), 200);
+    }
+
+    document.getElementById('item-search-input').addEventListener('input', function() {
+        clearTimeout(itemTimer);
+        const q = this.value.trim();
+        if (!q) { document.getElementById('item-results').innerHTML = ''; return; }
+        itemTimer = setTimeout(() => searchItems(q), 300);
+    });
+
+    async function searchItems(q) {
+        const el = document.getElementById('item-results');
+        el.innerHTML = '<div style="color:var(--text-muted);padding:12px;text-align:center;">Searching…</div>';
+        try {
+            const res = await api('frappe.client.get_list', {
+                doctype: 'Item',
+                filters: [['item_name', 'like', `%${q}%`]],
+                fields: ['name', 'item_name', 'stock_uom', 'standard_rate']
+            });
+            if (!res.length) { el.innerHTML = '<div style="color:var(--text-sub);padding:12px;text-align:center;">No results.</div>'; return; }
+            el.innerHTML = res.map(it => `
+                <div class="result-item" onclick="selectItem('${it.name}', '${it.item_name.replace(/'/g, "\\'")}', ${it.standard_rate||0}, '${it.stock_uom||'Nos'}')">
+                    <div class="ri-name">${it.item_name}</div>
+                    <div class="ri-sub">${it.name} | Rate: ₹ ${it.standard_rate || 0}</div>
+                </div>
+            `).join('');
+        } catch(e) { el.innerHTML = `<div style="color:var(--danger);padding:12px;text-align:center;">Error: ${e.message}</div>`; }
+    }
+
+    function selectItem(code, name, rate, uom) {
+        const idx = S.activeItemRowIdx;
+        const input = document.getElementById(`new-q-item-${idx}`);
+        input.value = name || code;
+        input.dataset.code = code;
+        document.getElementById(`new-q-rate-${idx}`).value = rate.toFixed(2);
+        document.getElementById(`new-q-uom-${idx}`).value = uom;
+        closeModal('item-modal');
+    }
+
+    // ── Matrix Grid ──
+    async function loadSizePresets() {
+        try {
+            const res = await api('smriti_retail_os.sales_studio.api.sales_api.get_size_presets');
+            sizePresets = res || {};
+            const select = document.getElementById('matrix-preset');
+            select.innerHTML = '';
+            Object.keys(sizePresets).forEach((key, i) => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = key;
+                if (i === 0) opt.selected = true;
+                select.appendChild(opt);
+            });
+            if (Object.keys(sizePresets).length) {
+                activePreset = Object.keys(sizePresets)[0];
+                updateMatrixColumns();
+            }
+        } catch(e) { console.error("Failed to load presets", e); }
+    }
+
+    function updateMatrixColumns() {
+        activePreset = document.getElementById('matrix-preset').value;
+        sizeColumns = sizePresets[activePreset] || [];
+        const headerRow = document.getElementById('matrix-header-row');
+        headerRow.innerHTML = '<th>Article</th><th>Color</th>';
+        sizeColumns.forEach(size => {
+            const th = document.createElement('th');
+            th.textContent = size;
+            headerRow.appendChild(th);
+        });
+        headerRow.innerHTML += '<th>Total</th><th>Rate</th>';
+        document.getElementById('matrix-body').innerHTML = '';
+        addMatrixRow();
+        updateMatrixFooter();
+    }
+
+    function addMatrixRow() {
+        const tbody = document.getElementById('matrix-body');
+        const tr = document.createElement('tr');
+        const commonArt = document.getElementById('matrix-common-article').value || '';
+        const commonRate = document.getElementById('matrix-common-rate').value || '';
+
+        let html = `
+            <td><input type="text" class="art-field" value="${commonArt}" placeholder="Article No."></td>
+            <td><input type="text" class="col-field" placeholder="Color"></td>
+        `;
+        sizeColumns.forEach(size => {
+            html += `<td><input type="number" class="size-qty-field" data-size="${size}" value="0" min="0" oninput="calcMatrixRowTotal(this.closest('tr'))"></td>`;
+        });
+        html += `
+            <td class="total-cell row-total-qty">0</td>
+            <td><input type="number" class="row-rate-field" value="${commonRate}" placeholder="Rate" step="0.01" style="width:80px;"></td>
+        `;
+        tr.innerHTML = html;
+        tbody.appendChild(tr);
+    }
+
+    function calcMatrixRowTotal(row) {
+        let total = 0;
+        row.querySelectorAll('.size-qty-field').forEach(input => {
+            total += parseInt(input.value || 0);
+        });
+        row.querySelector('.row-total-qty').textContent = total;
+        updateMatrixFooter();
+    }
+
+    function updateMatrixFooter() {
+        const totalRow = document.getElementById('matrix-total-row');
+        let footerHtml = '<td colspan="2" style="text-align:right;">TOTAL</td>';
+        let grandTotal = 0;
+        const sizeTotals = {};
+        sizeColumns.forEach(s => sizeTotals[s] = 0);
+
+        document.querySelectorAll('#matrix-body tr').forEach(row => {
+            row.querySelectorAll('.size-qty-field').forEach(input => {
+                const size = input.getAttribute('data-size');
+                const val = parseInt(input.value || 0);
+                sizeTotals[size] += val;
+                grandTotal += val;
+            });
+        });
+
+        sizeColumns.forEach(size => {
+            footerHtml += `<td>${sizeTotals[size] > 0 ? sizeTotals[size] : '-'}</td>`;
+        });
+        footerHtml += `<td class="total-cell" style="font-weight:700;">${grandTotal}</td><td></td>`;
+        totalRow.innerHTML = footerHtml;
+    }
+
+    function applyCommonFill() {
+        const commonArt = document.getElementById('matrix-common-article').value;
+        const commonRate = document.getElementById('matrix-common-rate').value;
+        document.querySelectorAll('.art-field').forEach(input => { if (commonArt) input.value = commonArt; });
+        document.querySelectorAll('.row-rate-field').forEach(input => { if (commonRate) input.value = commonRate; });
+    }
+
+    // ── Collect items from either mode ──
+    function collectManualItems() {
+        const items = [];
+        for (let idx of S.manualRows) {
+            const item_code = document.getElementById(`new-q-item-${idx}`).dataset.code;
+            const qty = parseFloat(document.getElementById(`new-q-qty-${idx}`).value);
+            const rate = parseFloat(document.getElementById(`new-q-rate-${idx}`).value);
+            const uom = document.getElementById(`new-q-uom-${idx}`).value.trim();
+            if (!item_code) { toast('Please specify item code for all rows.', 'error'); return null; }
+            if (!qty || qty <= 0) { toast('Quantity must be greater than zero.', 'error'); return null; }
+            items.push({ item_code, qty, rate, uom });
+        }
+        return items;
+    }
+
+    async function collectMatrixItems() {
+        const rows = document.querySelectorAll('#matrix-body tr');
+        if (rows.length === 0) { toast('Please add at least one matrix row.', 'error'); return null; }
+
+        const itemsList = [];
+        for (const row of rows) {
+            const article = row.querySelector('.art-field').value.trim();
+            const color = row.querySelector('.col-field').value.trim();
+            const rate = parseFloat(row.querySelector('.row-rate-field').value || 0);
+            if (!article || !color) { toast('Article and Color are required for all rows.', 'error'); return null; }
+
+            const sizeQtyFields = row.querySelectorAll('.size-qty-field');
+            for (const input of sizeQtyFields) {
+                const qty = parseInt(input.value || 0);
+                if (qty <= 0) continue;
+                const size = input.getAttribute('data-size');
+
+                toast(`Resolving ${article} - ${color} - ${size}…`, 'info');
+                try {
+                    const itemCode = await api('smriti_retail_os.sales_studio.api.sales_api.resolve_variant_item', {
+                        article, color, size
+                    });
+                    if (!itemCode) {
+                        toast(`Could not resolve variant: ${article}, ${color}, ${size}`, 'error');
+                        return null;
+                    }
+                    itemsList.push({
+                        item_code: itemCode,
+                        qty: qty,
+                        rate: rate,
+                        uom: 'Nos'
+                    });
+                } catch(e) {
+                    toast(`Resolve error: ${e.message}`, 'error');
+                    return null;
+                }
+            }
+        }
+        return itemsList;
+    }
+
+    // ── Create Quotation ──
+    async function createQuotation() {
+        const customer = document.getElementById('new-q-customer').dataset.id;
+        const valid_till = document.getElementById('new-q-valid-till').value;
+        const remarks = document.getElementById('new-q-remarks').value.trim();
+        if (!customer) { toast('Please select a customer.', 'error'); return; }
+
+        let items;
+        if (S.entryMode === 'manual') {
+            items = collectManualItems();
+        } else {
+            items = await collectMatrixItems();
+        }
+        if (!items || !items.length) { toast('Please add at least one item.', 'error'); return; }
+
+        const btn = document.getElementById('btn-create-q');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span> Submitting…';
+
+        try {
+            const res = await api('smriti_retail_os.sales_studio.api.sales_api.create_quotation', {
+                customer,
+                items: JSON.stringify(items),
+                valid_till: valid_till || null,
+                remarks
+            });
+            toast(res.message, 'success');
+            resetForm();
+            switchTab('list');
+            loadList();
+        } catch(e) {
+            toast('Failed to create Quotation: ' + e.message, 'error');
+        }
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined">send</span> Submit Quotation';
+    }
+
+    function resetForm() {
+        document.getElementById('new-q-customer').value = '';
+        document.getElementById('new-q-customer').removeAttribute('data-id');
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 30);
+        document.getElementById('new-q-valid-till').value = tomorrow.toISOString().split('T')[0];
+        document.getElementById('new-q-remarks').value = '';
+        document.getElementById('new-q-rows').innerHTML = '';
+        S.manualRows = [];
+        manualRowCount = 0;
+        addManualRow();
+        // Reset matrix body
+        document.getElementById('matrix-body').innerHTML = '';
+        if (sizeColumns.length) addMatrixRow();
+        updateMatrixFooter();
+    }
+
+    // ── Initialization ──
+    document.addEventListener('DOMContentLoaded', () => {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 30);
+        document.getElementById('new-q-valid-till').value = tomorrow.toISOString().split('T')[0];
+        addManualRow();
+        loadList();
+        loadSizePresets();
+
+        // Dynamic Sidebar Load
+        if (typeof SMRITI !== 'undefined' && SMRITI.renderFlexibleSidebar) {
+            SMRITI.renderFlexibleSidebar("smriti_quotation");
+        }
+    });
+</script>
+<script src="/assets/smriti_retail_os/js/smriti_sidebar_standalone.js"></script>
+<script>
+    setTimeout(() => {
+        if (typeof SMRITI !== 'undefined' && SMRITI.renderFlexibleSidebar) {
+            SMRITI.renderFlexibleSidebar("smriti_quotation");
+        }
+    }, 100);
+</script>
+</body>
+</html>
+{% endblock %}

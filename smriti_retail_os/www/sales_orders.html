@@ -1,4 +1,4 @@
-﻿{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
+{% extends "smriti_retail_os/templates/blank.html" %}{% block content %}<!DOCTYPE html>
 <!--
   @file: smriti_retail_os/www/sales_orders.html
   @description: SMRITI Sales Orders Manager — Standalone UI Page
@@ -408,7 +408,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
     // ── Load SOs ──
     async function loadSOList() {
         try {
-            const list = await api('smriti_retail_os.sales_order_api.get_open_sales_orders');
+            const list = await api('smriti_retail_os.sales_studio.api.sales_api.get_open_sales_orders');
             S.allSOs = list || [];
             renderSOList(S.allSOs);
         } catch(e) { toast('Failed to load orders: ' + e.message, 'error'); }
@@ -464,7 +464,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
         document.getElementById(`soi-${idx}`)?.classList.add('active');
         switchTab('list');
         try {
-            const details = await api('smriti_retail_os.sales_order_api.get_so_details', { so_name: soName });
+            const details = await api('smriti_retail_os.sales_studio.api.sales_api.get_sales_order_details', { so_name: soName });
             S.activeSO = details;
             renderSODetails(details);
         } catch(e) { toast('Failed to load details: ' + e.message, 'error'); }
@@ -485,10 +485,10 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
                     <div class="item-name-cell">${it.item_name}</div>
                     <div class="item-code-cell">${it.item_code}</div>
                 </td>
-                <td>${it.so_qty}</td>
+                <td>${it.qty}</td>
                 <td>${it.delivered_qty}</td>
-                <td><strong style="color:var(--accent);">${it.qty}</strong></td>
-                <td>₹ ${it.rate.toLocaleString('en-IN')}</td>
+                <td><strong style="color:var(--accent);">${it.pending_qty}</strong></td>
+                <td>₹ ${(it.rate||0).toLocaleString('en-IN')}</td>
                 <td>${it.warehouse || '—'}</td>
             </tr>
         `).join('');
@@ -637,7 +637,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); col
         btn.innerHTML = '<span class="material-symbols-outlined">hourglass_empty</span> Submitting…';
 
         try {
-            const res = await api('smriti_retail_os.sales_order_api.create_sales_order', {
+            const res = await api('smriti_retail_os.sales_studio.api.sales_api.create_sales_order', {
                 customer,
                 items: JSON.stringify(items),
                 delivery_date,

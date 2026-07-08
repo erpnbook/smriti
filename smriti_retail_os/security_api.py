@@ -909,6 +909,7 @@ def check_page_access(page_name):
         "inventory": manager_roles,
         "purchase": manager_roles,
         "sales_orders": manager_roles,
+        "smriti_quotation": manager_roles,
         "reports": manager_roles | {Roles.ACCOUNTANT},
         "smriti-sfm": manager_roles | {Roles.SALES_MANAGER},
         "smriti-uie": manager_roles | {Roles.ACCOUNTANT},
