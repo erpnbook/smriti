@@ -34,6 +34,7 @@ This index lists all implementation, architecture, and verification walkthroughs
 | 2026-07-08 | Foundation  | v1.0.0 | [Foundation_SRLE_Layout_Engine_v1.0.md](foundation/Foundation_SRLE_Layout_Engine_v1.0.md) |
 | 2026-07-08 | Procurement | v2.3.1 | [Procurement_Deep_Review_Fixes_v2.3.1.md](procurement/Procurement_Deep_Review_Fixes_v2.3.1.md) |
 | 2026-07-08 | Foundation  | v2.4.0 | [Label_Studio_Retail_Phase_A_v2.4.0.md](foundation/Label_Studio_Retail_Phase_A_v2.4.0.md) |
+| 2026-07-08 | Architecture | v1.0.0 | [Architecture_Constitution_Integration_v1.0.0.md](architecture/Architecture_Constitution_Integration_v1.0.0.md) |
 
 
 

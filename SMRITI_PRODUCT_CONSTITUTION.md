@@ -147,6 +147,8 @@ The following candidate articles carry **no blocking authority** until promoted 
 | — | Registry Philosophy | Database | Architectural registry pattern definition |
 | — | Backward Compatibility | Tests | Needs compatibility test suite |
 | — | Quality Gate | Checklists | Needs each sub-check to exist independently first |
+| SPC-C-012 | SMRITI Component Library Standard | UI Components | Needs formal component library built; interim baseline is inline patterns in `www/` HTML files. See `SMRITI_UI_ARCHITECTURE.md` §Component Inventory. |
+| SPC-C-013 | SMRITI Document Format Standard | Business Documents | Needs Print Studio scoped and implemented. Every business document must define Screen View, Print View, PDF, Email, and Mobile View. See `SMRITI_UI_ARCHITECTURE.md` §Document Format Matrix. |
 
 ---
 
@@ -155,3 +157,4 @@ The following candidate articles carry **no blocking authority** until promoted 
 | Version | Date | Change | Author |
 |---|---|---|---|
 | v1.0.0 | 2026-07-01 | Split from v0.2 draft. Added Hierarchy, SPC-006 (Scope Integrity), SPC-007 (Single Source of Evidence). | Jawahar R. Mallah |
+| v1.1.0 | 2026-07-08 | Added Candidate Articles SPC-C-012 (SMRITI Component Library Standard) and SPC-C-013 (SMRITI Document Format Standard), derived from Independent Product Architecture Constitution review. | AI Architecture Agent |

@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [Governance] — 2026-07-08
+
+### Governance — Architecture Constitution Integration
+
+- **`SMRITI_PRODUCT_CONSTITUTION.md` v1.1.0:** Added Candidate Articles `SPC-C-012` (SMRITI Component Library Standard) and `SPC-C-013` (SMRITI Document Format Standard). Amendment log updated.
+- **`SMRITI_EXPERIENCE_CONSTITUTION.md`:** Added `Document Experience Constitution` section — Rules DOC-E1 through DOC-E5 covering the five-format document standard (Screen, Print, PDF, Email, Mobile), document branding, business language, chrome-free print views, and Print Studio registration.
+- **`SMRITI_UI_ARCHITECTURE.md` (NEW — DRAFT):** Companion document filling the gap referenced in `SMRITI_EXPERIENCE_CONSTITUTION.md` §Purpose. Contains: Component Inventory, Document Format Matrix (completion tracker for 13 documents), current `www/` + `*_studio/` layout, module UI ownership table, naming conventions, and Future-State Layout (explicitly labelled not-current; requires ADR before implementation).
+
+---
+
 ## [2.4.0] — 2026-07-08
 
 ### Added — Label Studio Phase A (Retail Chain Store complete)
