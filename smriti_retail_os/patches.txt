@@ -44,3 +44,5 @@ smriti_retail_os.patches.v1_8_7.add_idempotency_key_index
 smriti_retail_os.patches.seed_purchase_report_templates
 # v2.3.0 -- SRLE Layout Engine: create smriti_layout_prefs Custom Field on User
 smriti_retail_os.patches.install_srle_layout_prefs_field
+# v2.3.1 -- Add tds_category to SMRITI Supplier + approval_threshold_inclusive_of_tax to SMRITI Purchase Settings
+smriti_retail_os.patches.add_tds_and_threshold_fields

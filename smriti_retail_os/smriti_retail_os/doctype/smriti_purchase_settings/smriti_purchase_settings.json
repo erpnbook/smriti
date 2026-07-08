@@ -32,8 +32,17 @@
    "description": "Set to 0 to disable approval workflow",
    "fieldname": "approval_threshold",
    "fieldtype": "Currency",
-   "label": "Approval Threshold (\u20b9)",
+   "label": "Approval Threshold (₹)",
    "reqd": 1
+  },
+  {
+   "fieldname": "approval_threshold_inclusive_of_tax",
+   "fieldtype": "Check",
+   "label": "Approval Threshold Inclusive of Tax",
+   "insert_after": "approval_threshold",
+   "default": "0",
+   "description": "If enabled, the approval threshold is compared against the GST-inclusive grand total. If disabled (default), it is compared against the pre-GST net total (line-item subtotal before taxes).",
+   "translatable": 0
   },
   {
    "fieldname": "col_break_1",
