@@ -6,7 +6,7 @@
 #               and report column configuration.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-26
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
@@ -15,15 +15,15 @@
 #   UI → field_explorer_api.py → FieldExplorerService → frappe.get_meta()
 #
 # Key design decisions:
-#   1. Field ID Registry: Barcode Studio stores ITEM_BARCODE, not Item.barcodes[].barcode
-#      If the underlying path changes, only the registry entry changes — templates stay stable.
-#   2. Cache: frappe.cache() with 1-hour TTL; auto-invalidated when Custom Field / DocType saved.
+#   1. Field ID Registry: stable abstraction over underlying Frappe field paths.
+#   2. Cache: smriti.cache with 1-hour TTL; auto-invalidated on Custom Field / DocType save.
 #   3. No shadow database: reads Frappe meta live, stores nothing independently.
 #   4. Permission enforcement: frappe.has_permission() on every call.
 
-import frappe
+import frappe   # frappe.get_meta, frappe.has_permission, frappe.cache, frappe.logger, frappe.get_roles — framework utilities
 import json
 import re
+from smriti_retail_os import smriti
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FIELD ID REGISTRY — Barcode Studio uses these IDs, not raw paths.
@@ -83,7 +83,7 @@ class FieldExplorerService:
         Returns all DocTypes readable by current user, grouped by module.
         Used to populate the DocType selector in the Field Explorer page.
         """
-        all_doctypes = frappe.get_all(
+        all_doctypes = smriti.db.get_list(
             "DocType",
             filters={"istable": 0, "issingle": 0},
             fields=["name", "module"],
@@ -117,7 +117,7 @@ class FieldExplorerService:
         frappe.has_permission(doctype, "read", throw=True)
 
         cache_key = f"smriti:ufe:fields:{doctype}:{int(show_custom)}:{int(show_hidden)}:{int(show_child_tables)}"
-        cached = frappe.cache().get_value(cache_key)
+        cached = smriti.cache.get(cache_key)
         if cached:
             result = json.loads(cached)
             # Apply search filter on cached result if needed
@@ -129,7 +129,7 @@ class FieldExplorerService:
         result = cls._build_sections(meta, doctype, show_standard, show_custom,
                                      show_hidden, show_child_tables)
 
-        frappe.cache().set_value(cache_key, json.dumps(result), expires_in_sec=cls.CACHE_TTL_SEC)
+        smriti.cache.set(cache_key, json.dumps(result), ttl=cls.CACHE_TTL_SEC)
 
         if search:
             result = cls._apply_search(result, search)
@@ -144,7 +144,7 @@ class FieldExplorerService:
         frappe.has_permission(doctype, "read", throw=True)
         frappe.has_permission(doctype, doc=docname, throw=True)
 
-        doc = frappe.get_doc(doctype, docname)
+        doc = smriti.documents.get_raw(doctype, docname)
         meta = frappe.get_meta(doctype)
 
         fields_data = []
@@ -271,7 +271,7 @@ class FieldExplorerService:
         frappe.has_permission(doctype, "read", throw=True)
         frappe.has_permission(doctype, doc=docname, throw=True)
 
-        doc = frappe.get_doc(doctype, docname)
+        doc = smriti.documents.get_raw(doctype, docname)
         resolved = []
         blank_count = 0
 
@@ -532,7 +532,7 @@ def invalidate_ufe_cache(doc, method=None):
                 for hidden in (0, 1):
                     for child in (0, 1):
                         key = f"smriti:ufe:fields:{doctype_name}:{custom}:{hidden}:{child}"
-                        frappe.cache().delete_value(key)
+                        smriti.cache.delete(key)
             frappe.logger().info(f"UFE cache cleared for DocType: {doctype_name}")
     except Exception:
         pass  # Never raise in a hook — fail silently

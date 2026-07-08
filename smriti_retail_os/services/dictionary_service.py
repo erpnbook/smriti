@@ -4,18 +4,16 @@
 # @description: SMRITI Dictionary Service — retail operating system module.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-# Copyright (c) 2026, SMRITI Retail OS and contributors
-# For license information, please see license.txt
 
 import json
-import frappe
-from frappe.utils import now_datetime
+import frappe                          # frappe.throw, frappe.session, frappe.conf — framework utilities
+from frappe.utils import now_datetime  # framework utility
+from smriti_retail_os import smriti
 
 # ---------------------------------------------------------------------------
 # TERM_INDEX — Governance gateway for the Business Dictionary.
@@ -48,8 +46,8 @@ def get_active_terms(category=None):
     if category:
         filters["term_category"] = category
 
-    terms = frappe.get_all(
-        "SMRITI Business Term",
+    terms = smriti.db.get_list(
+        "BusinessTerm",
         filters=filters,
         fields=["name", "term_id", "term_name", "term_category", "definition", "term_version"],
         order_by="term_id asc"
@@ -79,8 +77,8 @@ def get_term_detail(term_id, version=None):
 
     # 1. Determine active version if not specified
     if not version:
-        version = frappe.db.get_value(
-            "SMRITI Business Term",
+        version = smriti.db.get(
+            "BusinessTerm",
             {"term_id": term_id, "is_active": 1, "status": "Approved"},
             "term_version"
         )
@@ -91,15 +89,15 @@ def get_term_detail(term_id, version=None):
 
     # 2. Check Redis Cache
     cache_key = f"smriti:dictionary:{term_id}:{version}"
-    cached_data = frappe.cache().get_value(cache_key)
+    cached_data = smriti.cache.get(cache_key)
     if cached_data:
         payload = json.loads(cached_data)
         log_dictionary_access(term_id, version, payload.get("term_category"))
         return payload
 
     # 3. Cache Miss: Fetch from DB
-    docs = frappe.get_all(
-        "SMRITI Business Term",
+    docs = smriti.db.get_list(
+        "BusinessTerm",
         filters={"term_id": term_id, "term_version": version},
         fields=[
             "name", "term_id", "term_name", "term_category", "term_version",
@@ -120,31 +118,31 @@ def get_term_detail(term_id, version=None):
     category = doc.get("term_category")
 
     # 4. Fetch child tables
-    formulas_list = frappe.get_all(
-        "SMRITI Related Formula",
+    formulas_list = smriti.db.get_list(
+        "RelatedFormula",
         filters={"parent": parent_name, "parenttype": "SMRITI Business Term"},
         fields=["formula_id"]
     )
     related_formulas = []
     for f in formulas_list:
-        f_id = frappe.db.get_value("SMRITI Formula Definition", f["formula_id"], "formula_id")
+        f_id = smriti.db.get("FormulaDef", f["formula_id"], "formula_id")
         if f_id:
             related_formulas.append(f_id)
 
-    terms_list = frappe.get_all(
-        "SMRITI Related Term",
+    terms_list = smriti.db.get_list(
+        "RelatedTerm",
         filters={"parent": parent_name, "parenttype": "SMRITI Business Term"},
         fields=["related_term_id"]
     )
     related_terms = []
     for t in terms_list:
-        rt_id = frappe.db.get_value("SMRITI Business Term", t["related_term_id"], "term_id")
+        rt_id = smriti.db.get("BusinessTerm", t["related_term_id"], "term_id")
         if rt_id:
             related_terms.append(rt_id)
 
     replaces_term = None
     if doc.get("replaces_term_id"):
-        replaces_term = frappe.db.get_value("SMRITI Business Term", doc.get("replaces_term_id"), "term_id")
+        replaces_term = smriti.db.get("BusinessTerm", doc.get("replaces_term_id"), "term_id")
 
     # 5. Build payload
     payload = {
@@ -186,7 +184,7 @@ def get_term_detail(term_id, version=None):
             pass
 
     # 6. Save to Redis Cache (TTL = 3600 seconds)
-    frappe.cache().set_value(cache_key, json.dumps(payload), expires_in_sec=3600)
+    smriti.cache.set(cache_key, json.dumps(payload), ttl=3600)
 
     # 7. Log Access Audit Record
     log_dictionary_access(term_id, version, category)
@@ -200,8 +198,8 @@ def log_dictionary_access(term_id, version, category):
     from smriti_retail_os.utils import get_client_ip
     ip_addr = get_client_ip()
 
-    log = frappe.get_doc({
-        "doctype": "SMRITI PSV Activity Log",
+    log = smriti.documents.new("PSVActivityLog")
+    log.update({
         "timestamp": now_datetime(),
         "user": frappe.session.user or "Administrator",
         "action_type": "Dictionary Accessed",
@@ -212,4 +210,4 @@ def log_dictionary_access(term_id, version, category):
         "details": f"Version: {version}, Category: {category}"
     })
     log.insert(ignore_permissions=True)
-    frappe.db.commit()
+    smriti.db.commit()

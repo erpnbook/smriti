@@ -6,16 +6,17 @@
 #               network transfer optimization, and variant curve health.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
 import json
 import time
-from frappe.utils import now_datetime, getdate, today, add_days
+import frappe                                        # frappe.enqueue, frappe.logger — framework utilities
+from frappe.utils import now_datetime, getdate, today, add_days  # framework utilities
+from smriti_retail_os import smriti
 from smriti_retail_os.balance_engine import get_party_balance
 from smriti_retail_os.services.forecasting_service import (
     calculate_weekly_velocity_stats,
@@ -41,13 +42,12 @@ def enqueue_rebuild_twin_cache(company, party_stock_account, item_code, source_e
     lock_key = _get_rebuild_lock_key(company, party_stock_account, item_code)
     try:
         # Check if already locked in queue
-        if frappe.cache().get_value(lock_key):
+        if smriti.cache.get(lock_key):
             return  # Lock exists — skip to prevent queue storm
-        
-        # Set lock with 5 minutes expiry
-        frappe.cache().set_value(lock_key, 1, expires_in_sec=300)
-    except Exception:
-        frappe.log_error(frappe.get_traceback(), "SMRITI: Exception in services/pdt_service.py")
+
+        smriti.cache.set(lock_key, 1, ttl=300)
+    except Exception as e:
+        smriti.errors.log_error("SMRITI pdt_service enqueue lock failed", exc=e)
         
     frappe.enqueue(
         "smriti_retail_os.services.pdt_service.rebuild_twin_cache",
@@ -69,14 +69,13 @@ def rebuild_twin_cache(company, party_stock_account=None, item_code=None, source
     # 1. Handle full sweep vs delta rebuild targets
     if not party_stock_account or not item_code:
         # Fetch all active PSAs for this company
-        psas = frappe.get_all(
-            "SMRITI Party Stock Account",
+        psas = smriti.db.get_list(
+            "PartyStockAccount",
             filters={"company": company, "active": 1},
             fields=["name"]
         )
         for p in psas:
-            # Fetch all items with ledger activity in this PSA
-            items = frappe.db.sql("""
+            items = smriti.db.sql("""
                 SELECT DISTINCT item_code 
                 FROM `tabSMRITI Party Stock Ledger Entry`
                 WHERE party_stock_account = %s
@@ -97,7 +96,7 @@ def rebuild_twin_cache(company, party_stock_account=None, item_code=None, source
         
         # 3. Calculate Dead Stock metrics
         # Fetch last sale date
-        last_sale = frappe.db.sql("""
+        last_sale = smriti.db.sql("""
             SELECT MAX(posting_datetime)
             FROM `tabSMRITI Party Stock Ledger Entry`
             WHERE party_stock_account = %s
@@ -111,7 +110,7 @@ def rebuild_twin_cache(company, party_stock_account=None, item_code=None, source
             no_sale_days = 90.0
             
         # Fetch first receipt date
-        first_receipt = frappe.db.sql("""
+        first_receipt = smriti.db.sql("""
             SELECT MIN(posting_datetime)
             FROM `tabSMRITI Party Stock Ledger Entry`
             WHERE party_stock_account = %s
@@ -125,7 +124,7 @@ def rebuild_twin_cache(company, party_stock_account=None, item_code=None, source
             aging_days = 90.0
             
         # Sales lookback total
-        sales_qty = float(frappe.db.sql("""
+        sales_qty = float(smriti.db.sql("""
             SELECT COALESCE(SUM(ABS(qty)), 0)
             FROM `tabSMRITI Party Stock Ledger Entry`
             WHERE party_stock_account = %s
@@ -180,9 +179,10 @@ def rebuild_twin_cache(company, party_stock_account=None, item_code=None, source
         }
         
         # 6. Database Persistence (Read Model Write)
-        twin_name = frappe.db.get_value(
-            "SMRITI SKU Twin",
-            {"company": company, "party_stock_account": party_stock_account, "item_code": item_code}
+        twin_name = smriti.db.get(
+            "SKUTwin",
+            {"company": company, "party_stock_account": party_stock_account, "item_code": item_code},
+            "name"
         )
         
         vals = {
@@ -225,23 +225,24 @@ def rebuild_twin_cache(company, party_stock_account=None, item_code=None, source
         }
         
         if twin_name:
-            doc = frappe.get_doc("SMRITI SKU Twin", twin_name)
+            doc = smriti.documents.get("SKUTwin", twin_name)
             doc.update(vals)
             doc.flags.ignore_permissions = True
             doc.save()
         else:
-            doc = frappe.get_doc(vals)
+            doc = smriti.documents.new("SKUTwin")
+            doc.update(vals)
             doc.flags.ignore_permissions = True
             doc.insert()
-            
+
         # 7. Redis Cache Acceleration Layer Write
         try:
-            frappe.cache().set_value(redis_key, doc.as_dict(), expires_in_sec=3600)
-        except Exception:
-            frappe.log_error(frappe.get_traceback(), "SMRITI: Exception in services/pdt_service.py")
+            smriti.cache.set(redis_key, doc.as_dict(), ttl=3600)
+        except Exception as e:
+            smriti.errors.log_error("SMRITI pdt_service cache write failed", exc=e)
             
     except Exception as e:
-        frappe.log_error(f"PDT Rebuild Failure for {party_stock_account} / {item_code}: {str(e)}", "SMRITI PDT Error")
+        smriti.errors.log_error(f"PDT Rebuild Failure for {party_stock_account} / {item_code}: {str(e)}", exc=e)
         
     finally:
         # 8. Release Rebuild Lock
@@ -249,7 +250,7 @@ def rebuild_twin_cache(company, party_stock_account=None, item_code=None, source
         # The lock will expire naturally via Redis TTL (300s) if delete fails.
         lock_key = _get_rebuild_lock_key(company, party_stock_account, item_code)
         try:
-            frappe.cache().delete_key(lock_key)
+            smriti.cache.delete(lock_key)
         except Exception:
             frappe.logger().debug(f"PDT: lock release failed for {lock_key} — will expire via TTL")
 

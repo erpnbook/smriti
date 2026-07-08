@@ -4,16 +4,17 @@
 # @description: Knowledge Center service layer for SMRITI Retail OS.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-19
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
 
-import frappe
+import frappe   # frappe.whitelist, frappe.throw, frappe.get_roles, frappe.get_app_path, frappe.session — framework utilities
 import os
 import re
 import json
+from smriti_retail_os import smriti
 
 REDIS_INDEX_KEY = "smriti:knowledge:index"
 CACHE_TTL = 86400  # 24 hours persistent cache for search index
@@ -38,20 +39,20 @@ def rebuild_knowledge_index():
     a persistent search index, and caches it in Redis.
     """
     # Invalidate enablement dynamic assets cache
-    frappe.cache().delete_value("smriti:enablement:assets:PSV:Enablement")
+    smriti.cache.delete("smriti:enablement:assets:PSV:Enablement")
     
     index = []
 
     # 1. Index Business Terms (Weight 100)
-    terms = frappe.get_all(
-        "SMRITI Business Term",
+    terms = smriti.db.get_list(
+        "BusinessTerm",
         filters={"is_active": 1, "status": "Approved"},
         fields=["name", "term_id", "term_name", "term_category", "term_aliases", "definition", "hinglish_definition", "faq", "common_mistakes", "manual_reference", "training_reference"]
     )
     for t in terms:
         # Resolve related terms and formulas
-        related_formulas = [rf.formula_id for rf in frappe.get_all("SMRITI Related Formula", filters={"parent": t.name}, fields=["formula_id"])]
-        related_terms = [rt.related_term_id for rt in frappe.get_all("SMRITI Related Term", filters={"parent": t.name}, fields=["related_term_id"])]
+        related_formulas = [rf.formula_id for rf in smriti.db.get_list("RelatedFormula", filters={"parent": t.name}, fields=["formula_id"])]
+        related_terms = [rt.related_term_id for rt in smriti.db.get_list("RelatedTerm", filters={"parent": t.name}, fields=["related_term_id"])]
         
         metadata = {
             "term_id": t.term_id,
@@ -87,8 +88,8 @@ def rebuild_knowledge_index():
         })
 
     # 2. Index Formula Definitions (Weight 90)
-    formulas = frappe.get_all(
-        "SMRITI Formula Definition",
+    formulas = smriti.db.get_list(
+        "FormulaDef",
         filters={"is_active": 1, "status": "Approved"},
         fields=["name", "formula_id", "formula_name", "formula_category", "formula_expression", "business_meaning", "worked_example", "interpretation_guide", "recommended_action"]
     )
@@ -164,7 +165,7 @@ def rebuild_knowledge_index():
         _index_markdown_directory(docs_root, index)
 
     # Save to Redis
-    frappe.cache().set_value(REDIS_INDEX_KEY, json.dumps(index), expires_in_sec=CACHE_TTL)
+    smriti.cache.set(REDIS_INDEX_KEY, json.dumps(index), ttl=CACHE_TTL)
     return len(index)
 
 def _index_markdown_directory(docs_dir, index):
@@ -331,10 +332,10 @@ def search_knowledge_index(query):
     query = query.strip().lower()
     
     # Load index from cache
-    cached_data = frappe.cache().get_value(REDIS_INDEX_KEY)
+    cached_data = smriti.cache.get(REDIS_INDEX_KEY)
     if not cached_data:
         rebuild_knowledge_index()
-        cached_data = frappe.cache().get_value(REDIS_INDEX_KEY)
+        cached_data = smriti.cache.get(REDIS_INDEX_KEY)
         
     if not cached_data:
         return []
@@ -391,8 +392,8 @@ def calculate_knowledge_coverage():
     Calculates KGF Coverage % (Formula GOV-001):
     Active terms with definition + FAQ + manual ref + training ref / total active terms * 100
     """
-    terms = frappe.get_all(
-        "SMRITI Business Term",
+    terms = smriti.db.get_list(
+        "BusinessTerm",
         filters={"is_active": 1, "status": "Approved"},
         fields=["definition", "faq", "manual_reference", "training_reference"]
     )
@@ -413,8 +414,8 @@ def calculate_knowledge_coverage():
             faq_list = json.loads(t.faq) if t.faq else []
             if isinstance(faq_list, list) and len(faq_list) > 0:
                 has_faq = True
-        except Exception:
-            frappe.log_error(frappe.get_traceback(), "SMRITI: Exception in services/knowledge_service.py")
+        except Exception as e:
+            smriti.errors.log_error("SMRITI knowledge_service FAQ parse failed", exc=e)
             
         has_manual = bool(t.manual_reference and len(t.manual_reference.strip()) > 0)
         has_training = bool(t.training_reference and len(t.training_reference.strip()) > 0)
@@ -433,20 +434,20 @@ def get_governance_stats():
     - top_viewed_terms
     - top_viewed_formulas
     """
-    terms_count = frappe.db.count("SMRITI Business Term", filters={"is_active": 1, "status": "Approved"})
-    formulas_count = frappe.db.count("SMRITI Formula Definition", filters={"is_active": 1, "status": "Approved"})
+    terms_count = smriti.db.count("BusinessTerm", filters={"is_active": 1, "status": "Approved"})
+    formulas_count = smriti.db.count("FormulaDef", filters={"is_active": 1, "status": "Approved"})
     coverage = calculate_knowledge_coverage()
     
     # Query Activity Logs for views count
     # Action type matches from dictionary and explain service logs
-    top_terms_data = frappe.get_all(
-        "SMRITI PSV Activity Log",
+    top_terms_data = smriti.db.get_list(
+        "PSVActivityLog",
         filters={"action_type": "Dictionary Accessed", "event_type": "DICTIONARY_ACCESSED"},
         fields=["reference_name"],
         limit=500
     )
-    top_formulas_data = frappe.get_all(
-        "SMRITI PSV Activity Log",
+    top_formulas_data = smriti.db.get_list(
+        "PSVActivityLog",
         filters={"action_type": "Formula Explained", "event_type": "FORMULA_EXPLAINED"},
         fields=["reference_name"],
         limit=500
@@ -470,12 +471,12 @@ def get_governance_stats():
     # Enrich with names
     top_terms = []
     for term_id, count in sorted_terms:
-        term_name = frappe.db.get_value("SMRITI Business Term", {"term_id": term_id}, "term_name") or term_id
+        term_name = smriti.db.get("BusinessTerm", {"term_id": term_id}, "term_name") or term_id
         top_terms.append({"id": term_id, "name": term_name, "views": count})
         
     top_formulas = []
     for formula_id, count in sorted_formulas:
-        formula_name = frappe.db.get_value("SMRITI Formula Definition", {"formula_id": formula_id}, "formula_name") or formula_id
+        formula_name = smriti.db.get("FormulaDef", {"formula_id": formula_id}, "formula_name") or formula_id
         top_formulas.append({"id": formula_id, "name": formula_name, "views": count})
         
     return {
@@ -506,23 +507,22 @@ def get_asset_by_uri(uri):
     Uses SMRITI Redis Cache to optimize repetitive fetches.
     """
     cache_key = get_skos_cache_key("asset", uri)
-    cached_data = frappe.cache().get_value(cache_key)
+    cached_data = smriti.cache.get(cache_key)
     if cached_data:
         asset_info = cached_data
     else:
-        asset_info = frappe.db.get_value(
-            "SMRITI Knowledge Asset",
+        asset_info = smriti.db.get(
+            "KnowledgeAsset",
             {"asset_uri": uri},
-            ["reference_doctype", "reference_name", "access_policy", "status", "is_active"],
-            as_dict=True
+            ["reference_doctype", "reference_name", "access_policy", "status", "is_active"]
         )
         if not asset_info:
-            frappe.throw(frappe._("Asset with URI {0} not found.").format(uri), frappe.DoesNotExistError)
-        frappe.cache().set_value(cache_key, asset_info, expires_in_sec=3600)
+            smriti.errors.throw(f"Asset with URI {uri} not found.")
+        smriti.cache.set(cache_key, asset_info, ttl=3600)
         
     # Enforce runtime active check
     if not asset_info.is_active:
-        frappe.throw(frappe._("This asset is currently inactive."), frappe.PermissionError)
+        smriti.errors.throw("This asset is currently inactive.", code=403)
 
     # Enforce asset lifecycle status check
     if asset_info.status in ("Deprecated", "Archived") and "System Manager" not in frappe.get_roles():
@@ -531,7 +531,7 @@ def get_asset_by_uri(uri):
     # Validate access policy
     _validate_access_policy(asset_info.access_policy)
 
-    return frappe.get_doc(asset_info.reference_doctype, asset_info.reference_name)
+    return smriti.documents.get_raw(asset_info.reference_doctype, asset_info.reference_name)
 
 
 @frappe.whitelist()
@@ -553,8 +553,8 @@ def _traverse_graph(asset_id, tenant_context, max_depth, current_depth, visited)
     visited.add(asset_id)
     
     # 1. Fetch outgoing connections
-    outgoing = frappe.get_all(
-        "SMRITI Knowledge Relation",
+    outgoing = smriti.db.get_list(
+        "KnowledgeRelation",
         filters={"source_asset_id": asset_id},
         fields=["target_asset_id as asset_id", "relationship_type", "strength", "is_primary", "tenant_scope", "visibility"]
     )
@@ -562,8 +562,8 @@ def _traverse_graph(asset_id, tenant_context, max_depth, current_depth, visited)
         r["direction"] = "outgoing"
 
     # 2. Fetch incoming connections
-    incoming = frappe.get_all(
-        "SMRITI Knowledge Relation",
+    incoming = smriti.db.get_list(
+        "KnowledgeRelation",
         filters={"target_asset_id": asset_id},
         fields=["source_asset_id as asset_id", "relationship_type", "strength", "is_primary", "tenant_scope", "visibility"]
     )
@@ -619,8 +619,8 @@ def search_assets(query, asset_type=None):
         
     filters["access_policy"] = ["in", allowed_policies]
         
-    results = frappe.get_all(
-        "SMRITI Knowledge Asset",
+    results = smriti.db.get_list(
+        "KnowledgeAsset",
         filters=filters,
         or_filters={
             "asset_code": ["like", f"%{query}%"],
@@ -638,7 +638,7 @@ def invalidate_asset_cache(doc):
     Call from save/on_update hooks.
     """
     if doc.get("asset_uri"):
-        frappe.cache().delete_value(get_skos_cache_key("asset", doc.asset_uri))
+        smriti.cache.delete(get_skos_cache_key("asset", doc.asset_uri))
 
 
 def _validate_access_policy(policy):
@@ -694,7 +694,7 @@ def sync_knowledge_asset_on_save(doc, method=None):
         return
 
     # Check if asset already exists
-    asset_name = frappe.db.get_value("SMRITI Knowledge Asset", {"asset_uri": asset_uri})
+    asset_name = smriti.db.get("KnowledgeAsset", {"asset_uri": asset_uri}, "name")
     
     status_mapping = {
         "Draft": "Draft",
@@ -709,8 +709,7 @@ def sync_knowledge_asset_on_save(doc, method=None):
     access_policy = "Public" if doc.status == "Approved" else "Authenticated"
 
     if asset_name:
-        # Update existing
-        asset_doc = frappe.get_doc("SMRITI Knowledge Asset", asset_name)
+        asset_doc = smriti.documents.get("KnowledgeAsset", asset_name)
         asset_doc.asset_code = asset_code
         asset_doc.title = title
         asset_doc.status = asset_status
@@ -720,9 +719,8 @@ def sync_knowledge_asset_on_save(doc, method=None):
         asset_doc.access_policy = access_policy
         asset_doc.save(ignore_permissions=True)
     else:
-        # Create new
-        new_asset = frappe.get_doc({
-            "doctype": "SMRITI Knowledge Asset",
+        new_asset = smriti.documents.new("KnowledgeAsset")
+        new_asset.update({
             "asset_code": asset_code,
             "asset_uri": asset_uri,
             "asset_type": asset_type,
@@ -741,14 +739,15 @@ def sync_knowledge_asset_on_save(doc, method=None):
     # For SMRITI Business Term, sync related formulas and terms into SMRITI Knowledge Relation (KGR-01)
     if doc.doctype == "SMRITI Business Term":
         # Delete existing outgoing relations for this term to avoid duplicate/stale relations
-        frappe.db.delete("SMRITI Knowledge Relation", {"source_asset_id": asset_name})
+        smriti.db.delete("KnowledgeRelation", {"source_asset_id": asset_name})
         
         for rf in doc.get("related_formulas", []):
             if not rf.formula_id:
                 continue
-            target_asset = frappe.db.get_value("SMRITI Knowledge Asset", {"reference_doctype": "SMRITI Formula Definition", "reference_name": rf.formula_id})
+            target_asset = smriti.db.get("KnowledgeAsset", {"reference_doctype": "SMRITI Formula Definition", "reference_name": rf.formula_id}, "name")
             if target_asset:
-                frappe.get_doc({
+                rel = smriti.documents.new("KnowledgeRelation")
+                rel.update({
                     "doctype": "SMRITI Knowledge Relation",
                     "source_asset_id": asset_name,
                     "target_asset_id": target_asset,
@@ -757,14 +756,16 @@ def sync_knowledge_asset_on_save(doc, method=None):
                     "is_primary": 1,
                     "tenant_scope": "Global",
                     "visibility": "Internal"
-                }).insert(ignore_permissions=True)
+                })
+                rel.insert(ignore_permissions=True)
                 
         for rt in doc.get("related_terms", []):
             if not rt.related_term_id:
                 continue
-            target_asset = frappe.db.get_value("SMRITI Knowledge Asset", {"reference_doctype": "SMRITI Business Term", "reference_name": rt.related_term_id})
+            target_asset = smriti.db.get("KnowledgeAsset", {"reference_doctype": "SMRITI Business Term", "reference_name": rt.related_term_id}, "name")
             if target_asset:
-                frappe.get_doc({
+                rel = smriti.documents.new("KnowledgeRelation")
+                rel.update({
                     "doctype": "SMRITI Knowledge Relation",
                     "source_asset_id": asset_name,
                     "target_asset_id": target_asset,
@@ -773,9 +774,10 @@ def sync_knowledge_asset_on_save(doc, method=None):
                     "is_primary": 1,
                     "tenant_scope": "Global",
                     "visibility": "Internal"
-                }).insert(ignore_permissions=True)
-        
-    frappe.db.commit()
+                })
+                rel.insert(ignore_permissions=True)
+
+    smriti.db.commit()
 
 
 def cleanup_knowledge_asset_on_trash(doc, method=None):
@@ -790,19 +792,15 @@ def cleanup_knowledge_asset_on_trash(doc, method=None):
     else:
         return
 
-    asset_name = frappe.db.get_value("SMRITI Knowledge Asset", {"asset_uri": asset_uri})
+    asset_name = smriti.db.get("KnowledgeAsset", {"asset_uri": asset_uri}, "name")
     if asset_name:
-        # 1. Delete directed relations where this asset is source or target
-        frappe.db.delete("SMRITI Knowledge Relation", {"source_asset_id": asset_name})
-        frappe.db.delete("SMRITI Knowledge Relation", {"target_asset_id": asset_name})
-        
-        # 2. Delete the asset registry index record itself
-        frappe.db.delete("SMRITI Knowledge Asset", {"name": asset_name})
-        
-        # 3. Clear cached values
-        frappe.cache().delete_value(get_skos_cache_key("asset", asset_uri))
-        
-        frappe.db.commit()
+        smriti.db.delete("KnowledgeRelation", {"source_asset_id": asset_name})
+        smriti.db.delete("KnowledgeRelation", {"target_asset_id": asset_name})
+        smriti.db.delete("KnowledgeAsset", {"name": asset_name})
+
+        smriti.cache.delete(get_skos_cache_key("asset", asset_uri))
+
+        smriti.db.commit()
 
 
 def get_assets(module="PSV", category="Enablement"):
@@ -816,7 +814,7 @@ def get_assets(module="PSV", category="Enablement"):
     
     # Check cache first
     cache_key = f"smriti:enablement:assets:{module}:{category}"
-    cached = frappe.cache().get_value(cache_key)
+    cached = smriti.cache.get(cache_key)
     if cached:
         try:
             return json.loads(cached)
@@ -897,7 +895,7 @@ def get_assets(module="PSV", category="Enablement"):
                                 metadata["title"] = line.lstrip("#").strip()
                                 break
                 except Exception as e:
-                    frappe.log_error(f"Error parsing metadata for {file}: {str(e)}", "SMRITI Enablement Dynamic Scan")
+                    smriti.errors.log_error(f"Error parsing metadata for {file}: {str(e)}", exc=e)
                 
             # Override category if not specified in frontmatter
             if "category" not in metadata or metadata["category"] == "Executive Resources":
@@ -912,7 +910,7 @@ def get_assets(module="PSV", category="Enablement"):
             assets.append(metadata)
             
     # Cache scan results in Redis
-    frappe.cache().set_value(cache_key, json.dumps(assets), expires_in_sec=86400)
+    smriti.cache.set(cache_key, json.dumps(assets), ttl=86400)
     
     return assets
 

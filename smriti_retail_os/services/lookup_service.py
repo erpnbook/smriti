@@ -5,14 +5,16 @@
 #           and handles generic search, recents, validation, and Quick Create.
 # @author:  Jawahar R. Mallah <jawahar.mallah@gmail.com>
 # @std:     AES-002 SSDL v1.0.0 — Layer 4 (Business Logic)
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK. All rights reserved.
 #
 
-import frappe
-from frappe import _
-from frappe.utils import flt, cint, nowdate
+import frappe                              # frappe.throw, frappe.get_meta — framework utilities
+from frappe import _                       # i18n only
+from frappe.utils import flt, cint, nowdate  # framework utilities
+from smriti_retail_os import smriti
 from smriti_retail_os.repositories.lookup_repository import LookupRepository
 
 
@@ -190,7 +192,7 @@ class LookupService:
     def validate(entity, value):
         config = LookupService.get_config(entity)
         doctype = config["doctype"]
-        exists = frappe.db.exists(doctype, value)
+        exists = smriti.db.exists(entity, value)
         return {"exists": bool(exists), "value": value}
 
     @staticmethod
@@ -208,8 +210,8 @@ class LookupService:
         if entity == "Customer":
             doc.customer_name = data.get("customer_name")
             doc.mobile_no = data.get("mobile_no")
-            doc.customer_group = data.get("customer_group") or frappe.db.get_value("Customer Group", {"is_group": 0}, "name") or "Individual"
-            doc.territory = data.get("territory") or frappe.db.get_value("Territory", {"is_group": 0}, "name") or "India"
+            doc.customer_group = data.get("customer_group") or smriti.db.get("CustomerGroup", {"is_group": 0}, "name") or "Individual"
+            doc.territory = data.get("territory") or smriti.db.get("Territory", {"is_group": 0}, "name") or "India"
             doc.customer_type = data.get("customer_type") or "Company"
 
         elif entity == "Supplier":
@@ -217,18 +219,18 @@ class LookupService:
             doc.mobile_no = data.get("mobile_no")
             doc.email_id = data.get("email_id")
             doc.supplier_type = data.get("supplier_type") or "Company"
-            doc.supplier_group = data.get("supplier_group") or frappe.db.get_value("Supplier Group", {"is_group": 0}, "name") or "All Supplier Groups"
+            doc.supplier_group = data.get("supplier_group") or smriti.db.get("SupplierGroup", {"is_group": 0}, "name") or "All Supplier Groups"
 
         elif entity == "Product":
             doc.item_code = data.get("item_code") or data.get("barcode")
             doc.item_name = data.get("item_name")
             doc.standard_rate = flt(data.get("standard_rate"))
             doc.stock_uom = data.get("uom") or "Nos"
-            doc.item_group = data.get("item_group") or frappe.db.get_value("Item Group", {"is_group": 0}, "name") or "Products"
-            
+            doc.item_group = data.get("item_group") or smriti.db.get("Category", {"is_group": 0}, "name") or "Products"
+
             # Resolve HSN for India Compliance
             try:
-                default_hsn = frappe.db.get_single_value("SMRITI Settings", "default_hsn_code")
+                default_hsn = smriti.db.get_single("SMRITISettings", "default_hsn_code")
                 if default_hsn:
                     doc.gst_hsn_code = default_hsn
             except Exception:
@@ -238,7 +240,7 @@ class LookupService:
             doc.warehouse_name = data.get("warehouse_name")
             # Warehouse needs warehouse_type
             doc.warehouse_type = data.get("warehouse_type") or "Transit"
-            doc.company = data.get("company") or frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company")
+            doc.company = data.get("company") or smriti.db.get_single("GlobalDefaults", "default_company")
 
         elif entity == "Employee":
             doc.employee_name = data.get("employee_name")

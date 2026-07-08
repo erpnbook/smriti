@@ -4,19 +4,17 @@
 # @description: SMRITI Master Data Validator Service — retail operating system module.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-06-27
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-# Copyright (c) 2026, SMRITI Retail OS and contributors
-# For license information, please see license.txt
 
 import re
-import frappe
-from frappe import _
-from frappe.utils import cint, flt
+import frappe                          # frappe.throw — framework utility
+from frappe import _                   # i18n only
+from frappe.utils import cint, flt    # framework utilities
+from smriti_retail_os import smriti
 
 def validate(doc, strict=True, collect_errors=False):
     """
@@ -66,7 +64,7 @@ def _handle_error(msg, errors, title=None):
 
 def validate_brand(doc, errors=None):
     if doc.brand:
-        if not frappe.db.exists("Brand", doc.brand):
+        if not smriti.db.exists("Brand", doc.brand):
             _handle_error(
                 _("Brand '{0}' does not exist in the master database.").format(doc.brand),
                 errors,
@@ -75,7 +73,7 @@ def validate_brand(doc, errors=None):
 
 def validate_category(doc, errors=None):
     if doc.item_group:
-        if not frappe.db.exists("Item Group", doc.item_group):
+        if not smriti.db.exists("Category", doc.item_group):
             _handle_error(
                 _("Item Group '{0}' does not exist in the master database.").format(doc.item_group),
                 errors,
@@ -84,7 +82,7 @@ def validate_category(doc, errors=None):
 
 def validate_uom(doc, errors=None):
     if doc.stock_uom:
-        if not frappe.db.exists("UOM", doc.stock_uom):
+        if not smriti.db.exists("UOM", doc.stock_uom):
             _handle_error(
                 _("UOM '{0}' does not exist in the master database.").format(doc.stock_uom),
                 errors,
@@ -94,9 +92,9 @@ def validate_uom(doc, errors=None):
 def validate_gst(doc, errors=None):
     if doc.get("custom_gst_percentage"):
         allowed_rates = [0, 5, 12, 18, 28]
-        if frappe.db.exists("DocType", "SMRITI Barcode Settings"):
+        if smriti.db.exists("BarcodeSettings", "SMRITI Barcode Settings"):
             try:
-                raw_rates = frappe.db.get_single_value("SMRITI Barcode Settings", "allowed_gst_rates")
+                raw_rates = smriti.db.get_single("BarcodeSettings", "allowed_gst_rates")
                 if raw_rates:
                     allowed_rates = [cint(r.strip()) for r in raw_rates.split(",") if r.strip().isdigit()]
             except Exception:
@@ -119,7 +117,7 @@ def validate_gst(doc, errors=None):
 
 def validate_hsn(doc, errors=None):
     if doc.gst_hsn_code:
-        if not frappe.db.exists("GST HSN Code", doc.gst_hsn_code):
+        if not smriti.db.exists("GSTHSNCode", doc.gst_hsn_code):
             _handle_error(
                 _("HSN Code '{0}' does not exist in the master database.").format(doc.gst_hsn_code),
                 errors,
@@ -129,9 +127,9 @@ def validate_hsn(doc, errors=None):
 def validate_suppliers(doc, errors=None):
     # Check if supplier is required in barcode settings
     require_supplier = False
-    if frappe.db.exists("DocType", "SMRITI Barcode Settings"):
+    if smriti.db.exists("BarcodeSettings", "SMRITI Barcode Settings"):
         try:
-            require_supplier = cint(frappe.db.get_single_value("SMRITI Barcode Settings", "require_supplier"))
+            require_supplier = cint(smriti.db.get_single("BarcodeSettings", "require_supplier"))
         except Exception:
             pass
 
@@ -144,7 +142,7 @@ def validate_suppliers(doc, errors=None):
 
     for row in doc.get("supplier_items") or []:
         if row.supplier:
-            if not frappe.db.exists("Supplier", row.supplier):
+            if not smriti.db.exists("Supplier", row.supplier):
                 _handle_error(
                     _("Supplier '{0}' does not exist in the master database.").format(row.supplier),
                     errors,
@@ -157,7 +155,7 @@ def validate_barcodes(doc, errors=None):
         filters = {"barcode": doc.item_code}
         if doc.name:
             filters["parent"] = ["!=", doc.name]
-        conflicting_parent = frappe.db.get_value("Item Barcode", filters, "parent")
+        conflicting_parent = smriti.db.get("ItemBarcode", filters, "parent")
         if conflicting_parent:
             _handle_error(
                 _("Item Code '{0}' conflicts with an existing barcode assigned to item '{1}'.").format(doc.item_code, conflicting_parent),
@@ -191,7 +189,7 @@ def validate_barcodes(doc, errors=None):
         filters = {"barcode": barcode}
         if doc.name:
             filters["parent"] = ["!=", doc.name]
-        existing_parent = frappe.db.get_value("Item Barcode", filters, "parent")
+        existing_parent = smriti.db.get("ItemBarcode", filters, "parent")
         if existing_parent:
             _handle_error(
                 _("Barcode '{0}' is already assigned to item '{1}'.").format(barcode, existing_parent),
@@ -201,7 +199,7 @@ def validate_barcodes(doc, errors=None):
             
         # Conflict check with existing item code
         if barcode != doc.name and barcode != doc.get("item_code"):
-            existing_item = frappe.db.get_value("Item", {"name": barcode}, "name")
+            existing_item = smriti.db.get("Product", {"name": barcode}, "name")
             if existing_item:
                 _handle_error(
                     _("Barcode '{0}' conflicts with the item code of another item '{1}'.").format(barcode, existing_item),

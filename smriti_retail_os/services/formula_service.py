@@ -4,17 +4,15 @@
 # @description: SMRITI Formula Service — retail operating system module.
 # @author: Jawahar R Mallah <jawahar.mallah@gmail.com>
 # @date: 2026-05-28
-# @version: 1.8.6
+# @version: 1.9.0 — Migrated to smriti.core.platform (SPC-012)
 # @license: GPL-3.0-only
 # SPDX-License-Identifier: GPL-3.0-only
 # * Copyright (c) 2026 AITDL NETWORK & ERPNbook.com. All rights reserved.
 #
-# -*- coding: utf-8 -*-
-# Copyright (c) 2026, SMRITI Retail OS and contributors
-# For license information, please see license.txt
 
-import frappe
+import frappe        # whitelist, throw, get_roles, flags — framework utilities
 import json
+from smriti_retail_os import smriti
 
 FORMULA_INDEX = {
     "INV-001",
@@ -44,8 +42,8 @@ def get_active_formulas(category=None):
     if category:
         filters["formula_category"] = category
 
-    formulas = frappe.get_all(
-        "SMRITI Formula Definition",
+    formulas = smriti.db.get_list(
+        "FormulaDef",
         filters=filters,
         fields=[
             "name", "formula_id", "formula_name", "formula_version",
@@ -96,8 +94,8 @@ def get_formula_detail(formula_id, version=None):
     if version:
         filters["formula_version"] = version
 
-    docs = frappe.get_all(
-        "SMRITI Formula Definition",
+    docs = smriti.db.get_list(
+        "FormulaDef",
         filters=filters,
         fields=["name", "status", "is_active"],
         order_by="is_active desc, status desc, formula_version desc"
@@ -123,10 +121,9 @@ def get_formula_detail(formula_id, version=None):
                 frappe._("Not permitted to view this formula (Draft/Inactive)."),
                 frappe.PermissionError
             )
-        doc = frappe.get_doc("SMRITI Formula Definition", target_doc_name)
+        doc = smriti.documents.get("FormulaDef", target_doc_name)
     else:
-        # System Managers can view any retrieved version
-        doc = frappe.get_doc("SMRITI Formula Definition", docs[0]["name"])
+        doc = smriti.documents.get("FormulaDef", docs[0]["name"])
 
     return doc
 
@@ -138,8 +135,8 @@ def validate_formula_registered(formula_id):
     if not formula_id:
         return False
 
-    exists = frappe.db.exists(
-        "SMRITI Formula Definition",
+    exists = smriti.db.exists(
+        "FormulaDef",
         {
             "formula_id": formula_id,
             "is_active": 1,
@@ -153,12 +150,9 @@ def calculate_kgf_coverage():
     Calculates KGF Coverage % based on total expected dashboard metrics (12).
     """
     total_kpis = 14
-    registered_kpis = frappe.db.count(
-        "SMRITI Formula Definition",
-        {
-            "is_active": 1,
-            "status": "Approved"
-        }
+    registered_kpis = smriti.db.count(
+        "FormulaDef",
+        {"is_active": 1, "status": "Approved"}
     )
     if not total_kpis:
         return 0.0
