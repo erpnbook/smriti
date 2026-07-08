@@ -82,6 +82,9 @@ app_include_css = [
     "/assets/smriti_retail_os/css/smriti-ui-hardening.css",
     "/assets/smriti_retail_os/css/smriti_theme.css",
     "/assets/smriti_retail_os/css/smriti_sidebar.css",
+    # SRLE Layout Engine — must load after sidebar tokens so --srle-* vars are available
+    "/assets/smriti_retail_os/css/layout_engine/layout_tokens.css",
+    "/assets/smriti_retail_os/css/layout_engine/layout.css",
     "/assets/smriti_retail_os/css/smriti_branding.css",
     "/assets/smriti_retail_os/css/smriti-reports.css",
     "/assets/smriti_retail_os/css/smriti_sales_invoice.css",
@@ -97,6 +100,11 @@ app_include_js = [
     # SMRITI_NAV, resolveSmritiRoute, or SMRITI_NAV_META anywhere in repo). renderFlexibleSidebar
     # reads window.frappe.boot.smriti_navigation or calls get_user_navigation API directly.
     "/assets/smriti_retail_os/js/smriti_sidebar.js",
+    # SRLE Layout Engine — load order is strict: store → dock → responsive → manager
+    "/assets/smriti_retail_os/js/layout_engine/layout_store.js",
+    "/assets/smriti_retail_os/js/layout_engine/dock_manager.js",
+    "/assets/smriti_retail_os/js/layout_engine/responsive_manager.js",
+    "/assets/smriti_retail_os/js/layout_engine/layout_manager.js",
     "/assets/smriti_retail_os/js/smriti_reports.js",
     "/assets/smriti_retail_os/js/main.js",
     "/assets/smriti_retail_os/js/smriti_payload_bridge.js",
