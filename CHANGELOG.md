@@ -5,6 +5,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.5.0] - 2026-07-08
+
+### Added
+
+#### Purchase Studio
+- **`www/smriti-po-print.html`** (rebuild): Full replacement of the bare-bones PO print page with a SMRITI-styled view/print/PDF page modelled on `sizewise_invoice`. Includes SMRITI shell (sidebar, topbar, bg-grid, bg-glow, Inter/Outfit fonts, Material Symbols), 6 collapsible panels (PO Header, Transport/Remarks, Product Image, Sizewise Matrix Grid, Order Totals, Signatures), chrome-free `#print-layout` for `@media print`, PDF export via html2pdf.js (landscape A4), PO History drawer with search, and Load PO modal. Zero backend changes — uses existing `get_po_matrix_print_data` API.
+
+#### Sidebar / Navigation
+- **`smriti_sidebar_standalone.js`**: `coming_soon` status tier — items with `status: "coming_soon"` render with `.coming-soon` CSS class, amber `SOON` badge, tooltip with ETA date, `tabindex="-1"`, always navigate to `/smriti-coming-soon`. Pin-to-favorites and popout actions suppressed for coming-soon items.
+- **`smriti_sidebar.js`**: Same `coming_soon` render logic ported (Frappe Desk variant parity). Also adds missing `badge` rendering that was absent. Coming-soon items excluded from Command Palette search results.
+- **`smriti_sidebar_standalone.css` + `smriti_sidebar.css`**: `.smriti-nav-badge--soon` (amber variant), `.smriti-sidebar-item.coming-soon` (55% opacity, italic label, 50% icon opacity, default cursor, slight hover lift).
+
+### Changed
+
+#### Navigation — `CANONICAL_NAV` full refactor (`navigation_service.py`)
+- **7 broken routes fixed** (pointed to non-existent pages → corrected or marked `coming_soon`): `/psv-channel-partner`, `/psv-aging`, `/opening-stock`, `/inventory-ops`, `/receipts`, `/advances`, `/config-portal`, `/security-workflows`
+- **8 route mismatches fixed** (hyphen vs underscore — Frappe slug normalisation): `item_master`, `category_master`, `scheme_creator`, `brand_master`, `sales_orders`, `sales_return`, `delivery_challan`, `print_templates`, `release_notes`, `smriti_support`, `psv_reconciliation`, `psv_exception_analysis`
+- **3 duplicates removed**: 3 shift entries → 1 "Day / Shift Register"; `credit_notes` (duplicate of `tax_invoice`); `user_manual` (duplicate of `knowledge_center`)
+- **13 CGE sub-items** marked `coming_soon` (dedicated pages not yet built; routes now hash-anchor to `/smriti-cge`)
+
+### Added to Sidebar (13 missing pages now have menu entries)
+`sfm_master`, `sfc_catalog`, `quotation`, `grn_receipts` (standalone), `purchase_invoice_pg`, `purchase_receipt_pg`, `purchase_returns`, `tally`, `safe_cash`, `platform_admin`, `nav_health`, `field_explorer`, `go_live`, `setup_wizard`
+
+---
+
 ## [Governance] — 2026-07-08
 
 ### Governance — Architecture Constitution Integration
