@@ -519,21 +519,32 @@ Every document format must be registered in the SMRITI Print Studio (`/print_tem
 
 This constitution is enforced by:
 
-1. **Architecture Guard (Guard 5 -- UX Boundary)** [Planned]
-   Automated checks for missing Search, Save, Cancel, and Breadcrumb on every page.
+1. **Architecture Guard 1 — Persistence Boundary** [Active]
+   No frappe.* DB calls outside `smriti_retail_os/core/platform/` in Python.
 
-2. **Design Tokens** (smriti_retail_os/public/css/smriti_tokens.css)
+2. **Architecture Guard 6 — UI Persistence Boundary** [Active — Warning Mode]
+   No `frappe.call()`, `frappe.show_alert()`, `frappe.set_route()`, or other `frappe.*`
+   calls in any `www/` JavaScript or HTML file. All UI data access routes through:
+   ```javascript
+   smriti.api.call("smriti_retail_os.module.method", { args })
+   smriti.notify.success("Title", "Message")
+   smriti.navigation.go(smriti.navigation.routes.customers)
+   ```
+   Violations reported by `python smriti_architecture_guard.py --report`.
+
+3. **Design Tokens** (smriti_retail_os/public/css/smriti_tokens.css)
    Token-based CSS ensures visual consistency without page-level overrides.
 
-3. **Code Review**
+4. **Code Review**
    Any PR that introduces:
    - Forbidden vocabulary in user-facing text
    - Missing breadcrumb or search
    - Missing form Save/Cancel
-   - Direct frappe.client.* calls from UI
+   - Direct `frappe.*` calls from www/ UI (use `smriti.api.*` instead)
+   - HREP violations (error messages with technical stack traces or DocType names)
    ...must be rejected and revised.
 
-4. **User Acceptance Testing**
+5. **User Acceptance Testing**
    Every new page must be tested by a non-technical user (matching one of the five personas)
    before it is considered complete.
 
@@ -562,9 +573,11 @@ Forms:
 - [ ] No stack traces or exception names visible
 
 Data layer:
-- [ ] No frappe.client.* calls in the page JavaScript
-- [ ] All data routed through SMRITI API endpoints
-- [ ] Architecture Guard clean (Guard 1, ratchet mode)
+- [ ] No `frappe.call()`, `frappe.show_alert()`, or `frappe.set_route()` in page JavaScript
+- [ ] All data calls routed through `smriti.api.call()` (public/js/smriti_core.js)
+- [ ] Notifications use `smriti.notify.success/error/warning/info()`
+- [ ] Navigation uses `smriti.navigation.go()` with a route from `smriti.navigation.routes`
+- [ ] Architecture Guard 6 clean (run: `python smriti_architecture_guard.py --report`)
 
 Language:
 - [ ] No forbidden vocabulary in any user-visible text
