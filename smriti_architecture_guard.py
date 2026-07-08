@@ -50,11 +50,16 @@ Exit code: 0 = pass, 1 = violations found.
 
 GUARDS ROADMAP
 --------------
-  Guard 1 (this file): Persistence Boundary Guard
+  Guard 1 (this file): Persistence Boundary Guard   — ACTIVE
   Guard 2 (planned):   Navigation Guard     — no /app/* or /desk/* in UI code
   Guard 3 (planned):   UI Vocabulary Guard  — no DocType/Workspace/Repository in user-facing text
   Guard 4 (planned):   Brand Guard          — no 'ERPNext' in page titles or footers
   Guard 5 (planned):   UX Guard             — mandatory Search/Save/Cancel/Breadcrumb on every screen
+  Guard 6 (this file): UI Persistence Boundary — no frappe.* in www/ JS/HTML (WARNING MODE)
+                        Flags: frappe.call, frappe.client, frappe.show_alert,
+                               frappe.msgprint, frappe.set_route, frappe.new_doc
+                        Compliant pattern: smriti.api.call(), smriti.notify.*, smriti.navigation.*
+                        Reference: SMRITI Core Framework v1.0
 """
 import argparse
 import json
@@ -260,6 +265,9 @@ def main():
     # ── Report mode ───────────────────────────────────────────────────────
     if args.report:
         print_report(current, baseline)
+        # Guard 6 runs in all modes (warning only — never fails the build)
+        g6_violations = guard_6_ui_persistence()
+        print_guard6_report(g6_violations)
         return 0
 
     # ── Strict mode ───────────────────────────────────────────────────────
@@ -315,7 +323,133 @@ def main():
               f"run --write-baseline to lock in the progress.")
     else:
         print("[OK] No new architecture boundary violations.")
+
+    # Guard 6 always runs (warning mode — never fails the build)
+    g6_violations = guard_6_ui_persistence()
+    print_guard6_report(g6_violations)
     return 0
+
+
+# ── Guard 6 — UI Persistence Boundary (Warning Mode) ─────────────────────────
+# Flags any www/ HTML or JS file that calls frappe.* directly instead of smriti.*
+# Status: WARNING MODE — reports violations but does not fail the build.
+# Transition to ERROR MODE once all www/ pages are migrated to smriti.api.*
+
+GUARD6_JS_PATTERNS = [
+    (r"frappe\.call\s*\(",        "frappe.call()",        "smriti.api.call()"),
+    (r"frappe\.client\b",         "frappe.client",        "smriti.api.*"),
+    (r"frappe\.show_alert\s*\(",  "frappe.show_alert()",  "smriti.notify.*"),
+    (r"frappe\.msgprint\s*\(",    "frappe.msgprint()",    "smriti.dialog.alert()"),
+    (r"frappe\.set_route\s*\(",   "frappe.set_route()",   "smriti.navigation.go()"),
+    (r"frappe\.new_doc\s*\(",     "frappe.new_doc()",     "smriti.api.save()"),
+    (r"frappe\.confirm\s*\(",     "frappe.confirm()",     "smriti.dialog.confirm()"),
+    (r"frappe\.prompt\s*\(",      "frappe.prompt()",      "smriti.dialog.prompt()"),
+]
+GUARD6_RE = [(re.compile(pat), old, new) for pat, old, new in GUARD6_JS_PATTERNS]
+
+# Python-side: flag frappe.* ORM calls outside core/platform/
+GUARD6_PY_EXEMPT = {"core/platform", "core\\platform"}
+GUARD6_PY_PATTERN = re.compile(
+    r"frappe\.(get_doc|get_all|new_doc|delete_doc|db\.get_value|db\.set_value|"
+    r"db\.sql|db\.delete|db\.exists|enqueue|publish_realtime|cache|has_permission)\s*\("
+)
+
+
+def guard_6_ui_persistence() -> list:
+    """
+    Guard 6 — UI Persistence Boundary (Warning Mode).
+
+    Scans:
+      1. www/*.html, www/*.js — flags any frappe.* call that should be smriti.*
+      2. *.py outside core/platform/ — flags frappe.* ORM calls that should
+         route through smriti.core.platform
+
+    Returns:
+        list of (file, line_number, violation_description, replacement_hint) tuples
+    """
+    violations = []
+    www_dir = ROOT / "www"
+
+    # ── Scan 1: JS and HTML in www/ ──────────────────────────────────────────
+    if www_dir.exists():
+        for ext in ("*.js", "*.html"):
+            for path in www_dir.rglob(ext):
+                try:
+                    lines = path.read_text(errors="ignore").splitlines()
+                except OSError:
+                    continue
+                for lineno, line in enumerate(lines, 1):
+                    for compiled_re, old_api, new_api in GUARD6_RE:
+                        if compiled_re.search(line):
+                            rel = str(path.relative_to(GUARD_DIR)).replace("\\", "/")
+                            violations.append((
+                                rel, lineno,
+                                f"Forbidden: {old_api}",
+                                f"Use: {new_api}"
+                            ))
+                            break  # one violation per line
+
+    # ── Scan 2: Python files with frappe.* ORM calls outside core/platform/ ──
+    for path in ROOT.rglob("*.py"):
+        rel_str = str(path.relative_to(ROOT)).replace("\\", "/")
+        # Exempt core/platform itself and tests
+        if "core/platform" in rel_str or rel_str.startswith("tests/") or \
+                "/tests/" in rel_str or path.name.startswith("test_"):
+            continue
+        try:
+            lines = path.read_text(errors="ignore").splitlines()
+        except OSError:
+            continue
+        for lineno, line in enumerate(lines, 1):
+            if GUARD6_PY_PATTERN.search(line):
+                rel = str(path.relative_to(GUARD_DIR)).replace("\\", "/")
+                violations.append((
+                    rel, lineno,
+                    "Direct frappe.* call outside core/platform/",
+                    "Route through: from smriti_retail_os.core.platform import documents, db, ..."
+                ))
+
+    return violations
+
+
+def print_guard6_report(violations: list) -> None:
+    """Print a formatted Guard 6 warning report."""
+    print()
+    print("=" * 64)
+    print("  Guard 6 — UI Persistence Boundary (WARNING MODE)")
+    print("=" * 64)
+    if not violations:
+        print("  [OK] No Guard 6 violations found.")
+        print("       All scanned files use smriti.* APIs correctly.")
+        return
+
+    # Group by file
+    by_file: dict = {}
+    for (fpath, lineno, violation, hint) in violations:
+        by_file.setdefault(fpath, []).append((lineno, violation, hint))
+
+    print(f"  WARNING: {len(violations)} violation(s) in {len(by_file)} file(s).")
+    print(f"  Status:  Warning mode — build NOT failed.")
+    print(f"  Action:  Replace frappe.* calls with smriti.* equivalents.")
+    print(f"  Guide:   public/js/smriti_core.js")
+    print()
+    shown = 0
+    for fpath, hits in sorted(by_file.items()):
+        print(f"  {fpath}  ({len(hits)} violation(s))")
+        for lineno, violation, hint in hits[:5]:  # show first 5 per file
+            print(f"    Line {lineno:>4}: {violation}")
+            print(f"             => {hint}")
+        if len(hits) > 5:
+            print(f"    ... and {len(hits) - 5} more")
+        shown += 1
+        if shown >= 20:  # cap output at 20 files
+            remaining = len(by_file) - 20
+            if remaining > 0:
+                print(f"  ... and {remaining} more file(s) not shown.")
+            break
+    print()
+    print("  Migration Backlog tracked in: ARCHITECTURE_MIGRATION_BACKLOG.md")
+    print("  Once all violations are cleared, switch Guard 6 to ERROR MODE.")
 
 
 if __name__ == "__main__":

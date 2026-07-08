@@ -44,3 +44,4 @@ This index lists all implementation, architecture, and verification walkthroughs
 
 
 
+| 2026-07-08 | Foundation   | v1.0.0 | [SMRITI_Core_Framework_v1.0.md](foundation/SMRITI_Core_Framework_v1.0.md) |

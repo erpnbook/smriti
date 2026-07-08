@@ -20,3 +20,4 @@ This index lists all SMRITI implementation plans in chronological order, in acco
 | 2026-07-08 | Foundation  | Phase 1 | v2.4.0  | Completed | [Label_Studio_Retail_Phase_A_v2.4.0.md](../walkthrough/foundation/Label_Studio_Retail_Phase_A_v2.4.0.md) |
 
 
+| 2026-07-08 | Foundation  | Phase 1 | v1.0.0  | Completed | [SMRITI_Core_Framework_v1.0.md](foundation/SMRITI_Core_Framework_v1.0.md) |

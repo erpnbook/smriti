@@ -119,3 +119,60 @@ Everything else â€” `api/brand_api.py`, `api/udne_api.py`, `api/category_api.py`
 3. **Sprint 2â€“3:** Tier P1, starting with the PSV family as one cohesive migration, then the remaining high-traffic APIs (barcode, reports, item master, master, setup wizard).
 4. **Sprint 4:** Tier P2 â€” start with `purchase_studio` since the adapter already exists; then `cge_service.py`.
 5. **Ongoing:** Tier P3 as a backlog of small tickets, picked up opportunistically once CI prevents regression.
+
+
+---
+
+## Phase 0 Audit — SMRITI Core Framework (2026-07-08)
+
+Complete platform dependency audit conducted before implementing the SMRITI Core Framework.
+Measurement covers ALL direct rappe.* calls across production Python and JS/HTML files.
+
+### Python Platform API (production files, tests excluded)
+
+| Platform API | Files | Lines | Priority |
+|---|---|---|---|
+| rappe.db.exists | 156 | 807 | Critical |
+| rappe.get_doc | 157 | 705 | Critical |
+| rappe.db.get_value | 143 | 698 | Critical |
+| rappe.throw | 146 | 619 | High |
+| rappe.new_doc | 77 | 592 | Critical |
+| rappe.db.delete | 56 | 478 | High |
+| rappe.get_all | 114 | 342 | Critical |
+| rappe.db.sql | 76 | 317 | High |
+| rappe.cache | 38 | 137 | Medium |
+| rappe.db.set_value | 55 | 118 | High |
+| rappe.delete_doc | 31 | 72 | Medium |
+| rappe.get_list | 13 | 28 | Medium |
+| rappe.has_permission | 5 | 20 | Medium |
+| rappe.enqueue | 9 | 11 | Low |
+| rappe.publish_realtime | 5 | 10 | Low |
+| rappe.msgprint | 4 | 5 | Low |
+| **TOTAL** | **266 files** | **3,380 lines** | — |
+
+### JavaScript / HTML Platform API
+
+| Platform API | Files | Lines | Priority |
+|---|---|---|---|
+| rappe.call | 46 | 162 | Critical |
+| rappe.client | 36 | 115 | Critical |
+| rappe.show_alert | 14 | 64 | High |
+| rappe.ui.form | 29 | 30 | High |
+| rappe.msgprint | 11 | 29 | High |
+| rappe.set_route | 5 | 14 | Medium |
+| rappe.realtime.on | 3 | 3 | Low |
+
+### Migration Progress (Phase 0 ? Phase 1)
+
+| Layer | Total Files | Migrated | Remaining |
+|---|---|---|---|
+| epositories/ | 4 | 4 ? | 0 |
+| services/ | 21 | 0 | 21 |
+| *_studio/api/ | ~30 | 0 | ~30 |
+| Core APIs (illing_api, etc.) | ~15 | 0 | ~15 |
+| 	ransaction_kernel.py | 1 | 0 | 1 |
+| www/ JS/HTML | 46+ | 0 | 46+ |
+
+**Adapter created:** smriti_retail_os/core/platform/ — the migration target for all rows above.
+
+Guard 6 (warning mode) in smriti_architecture_guard.py now tracks JS/HTML violations automatically.

@@ -1,0 +1,188 @@
+# SMRITI Platform Registry — Document Model Map
+# ===========================================================================
+# Maps SMRITI business model names to the underlying platform DocType names.
+#
+# Rules:
+#   1. Never reference platform DocType names outside core/platform/.
+#   2. SMRITI services, studios, and UI use SMRITI model names only.
+#   3. Only core/platform/registry.py reads this file.
+#   4. To migrate to a new platform: update 'platform' values here only.
+#   5. To add a new SMRITI model: add a new entry with 'platform' and 'description'.
+#
+# Format:
+#   <SmritiModelName>:
+#     platform: <ERPNext DocType Name>
+#     description: <Human-readable description>
+#
+# Author:  Jawahar R. Mallah <jawahar.mallah@gmail.com>
+# Version: 1.0.0
+# License: GPL-3.0-only
+# ===========================================================================
+
+# ── Procurement ──────────────────────────────────────────────────────────────
+Purchase:
+  platform: Purchase Order
+  description: A purchase order raised to a supplier
+
+PurchaseReceipt:
+  platform: Purchase Receipt
+  description: Goods received note / GRN confirming physical receipt of goods
+
+PurchaseInvoice:
+  platform: Purchase Invoice
+  description: A supplier invoice for received goods
+
+GoodsReceipt:
+  platform: Purchase Receipt
+  description: Alias for PurchaseReceipt — use in GRN-specific flows
+
+LandedCost:
+  platform: Landed Cost Voucher
+  description: Additional costs applied to a purchase receipt (freight, customs, etc.)
+
+# ── Sales ─────────────────────────────────────────────────────────────────────
+Sale:
+  platform: POS Invoice
+  description: A retail sale at the point of sale terminal
+
+SalesOrder:
+  platform: Sales Order
+  description: A pre-sale order (non-POS, B2B or order-ahead flows)
+
+SalesInvoice:
+  platform: Sales Invoice
+  description: A formal tax invoice for a completed sale
+
+ReturnSale:
+  platform: POS Invoice
+  description: A POS return / credit note (is_return = 1)
+
+# ── Inventory ─────────────────────────────────────────────────────────────────
+StockTransfer:
+  platform: Stock Entry
+  description: Internal stock movement between warehouses
+
+StockAudit:
+  platform: Stock Reconciliation
+  description: Physical stock count / audit reconciliation
+
+StockLedgerEntry:
+  platform: Stock Ledger Entry
+  description: Read-only stock movement record (source of truth for inventory)
+
+# ── Master Data ───────────────────────────────────────────────────────────────
+Customer:
+  platform: Customer
+  description: A retail customer
+
+Supplier:
+  platform: Supplier
+  description: A product supplier or vendor
+
+Product:
+  platform: Item
+  description: A product or item in the catalog
+
+ProductGroup:
+  platform: Item Group
+  description: A category grouping of products
+
+ProductAttribute:
+  platform: Item Attribute
+  description: A product variant attribute (Size, Color, etc.)
+
+ProductVariant:
+  platform: Item
+  description: A specific variant of a product (Item with variant_of set)
+
+Brand:
+  platform: Brand
+  description: A product brand
+
+UOM:
+  platform: UOM
+  description: A unit of measure
+
+# ── Pricing ───────────────────────────────────────────────────────────────────
+PriceList:
+  platform: Price List
+  description: A product price list (Standard, Wholesale, Retail, etc.)
+
+ProductPrice:
+  platform: Item Price
+  description: A specific price for a product in a price list
+
+# ── Payments ──────────────────────────────────────────────────────────────────
+Payment:
+  platform: Payment Entry
+  description: A payment received from a customer or made to a supplier
+
+PaymentMode:
+  platform: Mode of Payment
+  description: A payment method (Cash, Card, UPI, etc.)
+
+# ── Store Operations ──────────────────────────────────────────────────────────
+Shift:
+  platform: POS Opening Entry
+  description: A cashier shift opening session
+
+ShiftClose:
+  platform: POS Closing Entry
+  description: A cashier shift closing session
+
+POSProfile:
+  platform: POS Profile
+  description: A POS terminal configuration profile
+
+# ── Company & Location ────────────────────────────────────────────────────────
+Company:
+  platform: Company
+  description: A business entity / legal store entity
+
+Warehouse:
+  platform: Warehouse
+  description: A physical storage or retail location
+
+CostCenter:
+  platform: Cost Center
+  description: An accounting cost center for a store or department
+
+# ── People ────────────────────────────────────────────────────────────────────
+Employee:
+  platform: Employee
+  description: A store employee
+
+User:
+  platform: User
+  description: A system user account
+
+Role:
+  platform: Role
+  description: A permission role
+
+# ── Tax & Compliance ──────────────────────────────────────────────────────────
+TaxTemplate:
+  platform: Sales Taxes and Charges Template
+  description: A GST or tax charge template for sales
+
+PurchaseTaxTemplate:
+  platform: Purchase Taxes and Charges Template
+  description: A GST or tax charge template for purchases
+
+# ── Communication ─────────────────────────────────────────────────────────────
+EmailTemplate:
+  platform: Email Template
+  description: A reusable email notification template
+
+Notification:
+  platform: Notification
+  description: An automated notification rule
+
+# ── Accounting (Read access for SMRITI summaries — ERPNext owns computation) ──
+AccountingEntry:
+  platform: GL Entry
+  description: Read-only general ledger entry (ERPNext is SOR for accounting)
+
+JournalEntry:
+  platform: Journal Entry
+  description: A manual accounting journal entry
