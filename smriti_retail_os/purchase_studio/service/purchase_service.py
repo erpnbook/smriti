@@ -334,38 +334,38 @@ def get_supplier_ledger(supplier, from_date, to_date, company=None):
     if not from_date or not to_date:
         frappe.throw(_("From Date and To Date are required."))
     company = company or frappe.defaults.get_user_default("Company")
-    pos = frappe.get_all(
-        "SMRITI Purchase Order",
-        filters={
-            "supplier": supplier,
-            "company": company,
-            "transaction_date": ["between", [from_date, to_date]],
-            "docstatus": 1
-        },
-        fields=["name", "transaction_date", "grand_total", "status", "remarks"]
-    )
-    
-    entries = []
+
+    # Bridge SMRITI Supplier → ERPNext Supplier for GL lookup
+    erp_supplier = frappe.db.get_value("SMRITI Supplier", supplier, "erpnext_supplier") or supplier
+    supplier_name = frappe.db.get_value("SMRITI Supplier", supplier, "supplier_name") or supplier
+
+    # Read actual GL entries — SMRITI reads GL, never writes it
+    gl_entries = erp_adapter.get_supplier_gl_entries(erp_supplier, from_date, to_date, company)
+    outstanding = erp_adapter.get_supplier_outstanding(erp_supplier, company)
+    overdue = erp_adapter.get_supplier_overdue_payable(erp_supplier, company)
+
     balance = 0.0
-    for po in pos:
-        credit = flt(po.grand_total)
-        balance += credit
+    entries = []
+    for row in gl_entries:
+        debit  = flt(row.get("debit", 0))
+        credit = flt(row.get("credit", 0))
+        balance += credit - debit
         entries.append({
-            "posting_date": po.transaction_date,
-            "voucher_type": "Purchase Order",
-            "voucher_no": po.name,
-            "debit": 0.0,
-            "credit": credit,
-            "balance": balance,
-            "remarks": po.remarks or f"SMRITI PO status: {po.status}"
+            "posting_date": str(row.get("posting_date", "")),
+            "voucher_type": row.get("voucher_type", ""),
+            "voucher_no":   row.get("voucher_no", ""),
+            "debit":        debit,
+            "credit":       credit,
+            "balance":      balance,
+            "remarks":      row.get("remarks", "")
         })
-    
+
     return {
-        "supplier": supplier,
-        "supplier_name": frappe.db.get_value("SMRITI Supplier", supplier, "supplier_name") or supplier,
-        "total_payable": balance,
-        "overdue": 0.0,
-        "entries": entries
+        "supplier":       supplier,
+        "supplier_name":  supplier_name,
+        "total_payable":  outstanding,
+        "overdue":        overdue,
+        "entries":        entries
     }
 
 
@@ -374,10 +374,16 @@ def get_supplier_ledger(supplier, from_date, to_date, company=None):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def search_suppliers(query, company=None):
+    """SC-13 — thin alias for get_suppliers; kept for API backward compatibility."""
     check_any_purchase_role()
     if not query or len(query) < 2:
         return []
-    return PurchaseOrderService.list_suppliers(search_term=query, limit=20)
+    return get_suppliers(company=company, search=query, limit=20)
+
+
+def get_suppliers(company=None, search=None, limit=50):
+    check_any_purchase_role()
+    return PurchaseOrderService.list_suppliers(search_term=search, limit=limit)
 
 
 def search_items(query):
@@ -392,64 +398,19 @@ def search_items(query):
     )
 
 
-def get_suppliers(company=None, search=None, limit=50):
-    check_any_purchase_role()
-    return PurchaseOrderService.list_suppliers(search_term=search, limit=limit)
-
-
 # ─────────────────────────────────────────────────────────────────────────────
 # ANALYTICS & PERFORMANCE
 # ─────────────────────────────────────────────────────────────────────────────
 
 def get_purchase_analytics(company=None, from_date=None, to_date=None):
+    """
+    Returns spend analytics based on actual ERPNext Purchase Invoices.
+    Data source: tabPurchase Invoice (GST-inclusive, real payments)
+    — not SMRITI PO amounts which are pre-GST intent records.
+    """
     check_any_purchase_role()
     company = company or frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
-    
-    # Aggregation by Supplier
-    by_supplier = frappe.db.sql("""
-        SELECT 
-            supplier as supplier,
-            MAX(supplier_name) as supplier_name,
-            SUM(grand_total) as total_spend
-        FROM `tabSMRITI Purchase Order`
-        WHERE company = %s AND docstatus = 1 AND status != 'Cancelled'
-        GROUP BY supplier
-        ORDER BY total_spend DESC
-        LIMIT 10
-    """, (company,), as_dict=True)
-
-    # Aggregation by Item Group
-    by_item_group = frappe.db.sql("""
-        SELECT 
-            i.item_group,
-            SUM(poi.amount) as total_spend
-        FROM `tabSMRITI Purchase Order Item` poi
-        INNER JOIN `tabItem` i ON poi.item_code = i.name
-        INNER JOIN `tabSMRITI Purchase Order` po ON poi.parent = po.name
-        WHERE po.company = %s AND po.docstatus = 1 AND po.status != 'Cancelled'
-        GROUP BY i.item_group
-        ORDER BY total_spend DESC
-        LIMIT 10
-    """, (company,), as_dict=True)
-
-    # Aggregation by Month
-    by_month = frappe.db.sql("""
-        SELECT 
-            DATE_FORMAT(transaction_date, '%%Y-%%m') as month,
-            COUNT(name) as invoice_count,
-            SUM(grand_total) as total_spend
-        FROM `tabSMRITI Purchase Order`
-        WHERE company = %s AND docstatus = 1 AND status != 'Cancelled'
-        GROUP BY month
-        ORDER BY month DESC
-        LIMIT 12
-    """, (company,), as_dict=True)
-
-    return {
-        "by_supplier": by_supplier,
-        "by_item_group": by_item_group,
-        "by_month": by_month
-    }
+    return erp_adapter.get_purchase_spend_analytics(company, from_date=from_date, to_date=to_date)
 
 
 def get_supplier_performance(company=None, from_date=None, to_date=None, top_n=10):
@@ -653,47 +614,42 @@ def get_size_presets():
 
 def resolve_variant_item(article, color, size):
     """
-    Returns the item_code for a variant matching the given article, color, and size.
+    Returns the item_code for a variant matching article, color, and size.
+    Uses a single batch query for attributes instead of N+1 per variant.
     """
     check_any_purchase_role()
 
     if not article or not color or not size:
         return None
 
-    # Resolve parent items matching article code
-    items = frappe.db.get_all("Item", filters={
-        "disabled": 0,
-        "variant_of": article
-    }, fields=["name"])
-
+    # Find all variants of the article (by variant_of or custom_style_code)
+    items = frappe.db.get_all("Item", filters={"disabled": 0, "variant_of": article}, fields=["name"])
     if not items:
-        items = frappe.db.get_all("Item", filters={
-            "disabled": 0,
-            "custom_style_code": article
-        }, fields=["name"])
-
+        items = frappe.db.get_all("Item", filters={"disabled": 0, "custom_style_code": article}, fields=["name"])
     if not items:
-        # Fallback to direct name match
-        if frappe.db.exists("Item", article):
-            return article
-        return None
+        return article if frappe.db.exists("Item", article) else None
+
+    # Batch-fetch ALL attributes for ALL variants in a single query (eliminates N+1)
+    item_codes = [i.name for i in items]
+    all_attrs = frappe.db.get_all(
+        "Item Variant Attribute",
+        filters={"parent": ["in", item_codes]},
+        fields=["parent", "attribute", "attribute_value"]
+    )
+
+    # Group by item_code → {item_code: {attribute_lower: value_lower}}
+    attr_by_item = {}
+    for a in all_attrs:
+        attr_by_item.setdefault(a.parent, {})[a.attribute.lower()] = a.attribute_value.lower()
+
+    color_lower = color.lower()
+    size_lower  = size.lower()
 
     for item in items:
-        attrs = frappe.db.get_all("Item Variant Attribute", filters={"parent": item.name}, fields=["attribute", "attribute_value"])
-        attr_map = {a.attribute.lower(): a.attribute_value.lower() for a in attrs}
-
-        has_color = False
-        has_size = False
-
+        attr_map = attr_by_item.get(item.name, {})
         c_val = attr_map.get("colour") or attr_map.get("color")
-        if c_val and c_val == color.lower():
-            has_color = True
-
         s_val = attr_map.get("size") or attr_map.get("shoe size")
-        if s_val and s_val == size.lower():
-            has_size = True
-
-        if has_color and has_size:
+        if c_val == color_lower and s_val == size_lower:
             return item.name
 
     return None

@@ -7,6 +7,7 @@ from smriti_retail_os.purchase_studio.repository import PurchaseRepository
 from smriti_retail_os.purchase_studio.service.purchase_calculation_service import PurchaseCalculationService
 from smriti_retail_os.purchase_studio.service.purchase_validation_service import PurchaseValidationService
 from smriti_retail_os.purchase_studio.service.purchase_workflow_service import PurchaseWorkflowService
+from smriti_retail_os.purchase_studio.adapter import erp_adapter
 
 class PurchaseOrderService:
     @staticmethod
@@ -185,47 +186,31 @@ class PurchaseOrderService:
     @staticmethod
     def get_dashboard_data(company=None):
         company = company or frappe.defaults.get_user_default("Company") or frappe.db.get_value("Company", {}, "name")
-        
-        # Count open SMRITI POs
+
+        # Count open SMRITI POs (intent + approval layer)
         open_pos = frappe.db.count("SMRITI Purchase Order", {
             "company": company,
             "status": ["in", ["Submitted", "Approved", "Ordered", "Partially Received"]]
         })
 
-        # Calculate monthly spend
-        from datetime import date
-        today = date.today()
-        month_start = today.replace(day=1).isoformat()
-        
-        month_spend_res = PurchaseRepository.db_sql("""
-            SELECT SUM(grand_total) 
-            FROM `tabSMRITI Purchase Order` 
-            WHERE company = %s AND docstatus = 1 AND status != 'Cancelled' AND transaction_date >= %s
-        """, (company, month_start))
-        month_spend = flt(month_spend_res[0][0]) if month_spend_res and month_spend_res[0][0] else 0.0
+        # Real GRNs pending full billing (Purchase Receipts with per_billed < 100%)
+        pending_grns = erp_adapter.count_pending_grns(company)
 
-        # Recent activities - last 10 SMRITI POs
-        recent = frappe.get_all("SMRITI Purchase Order",
-            filters={"company": company},
-            fields=["name", "supplier", "supplier_name", "transaction_date", "grand_total", "status"],
-            order_by="creation desc",
-            limit=10
-        )
-        recent_activities = []
-        for r in recent:
-            recent_activities.append({
-                "doctype": "PO",
-                "name": r.name,
-                "supplier": r.supplier_name or r.supplier,
-                "amount": flt(r.grand_total),
-                "date": str(r.transaction_date),
-                "status": r.status
-            })
+        # Real outstanding payable from ERPNext Purchase Invoices (GST-inclusive)
+        unpaid_invoices_amt = erp_adapter.get_outstanding_payables_total(company)
+
+        # Monthly spend from ERPNext Purchase Invoices (actual GST-inclusive payments)
+        from datetime import date
+        month_start = date.today().replace(day=1).isoformat()
+        month_spend = erp_adapter.get_monthly_spend_total(company, month_start)
+
+        # Recent cross-doctype activity: PO + GRN + PI from ERPNext
+        recent_activities = erp_adapter.get_recent_activities(company, limit=10)
 
         return {
             "open_pos": open_pos,
-            "pending_grns": open_pos, 
-            "unpaid_invoices_amt": month_spend * 0.4, 
+            "pending_grns": pending_grns,
+            "unpaid_invoices_amt": unpaid_invoices_amt,
             "month_spend": month_spend,
             "recent_activity": recent_activities
         }
